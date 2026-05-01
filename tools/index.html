@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>石澤紳司 | 不動産ビジネスハックツール集</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --dark: #0d0d0d;
+      --dark2: #1a1a1a;
+      --dark3: #242424;
+      --text: #f0ede8;
+      --text-muted: #999;
+      --accent: #2563eb;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--dark2) 0%, #1e1a0e 100%);
+      border-bottom: 1px solid rgba(201,168,76,0.3);
+      padding: 24px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; flex-direction: column; }
+    .logo-name { font-size: 22px; font-weight: 900; color: var(--gold); letter-spacing: 2px; }
+    .logo-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 3px; margin-top: 2px; }
+    .header-badge {
+      background: rgba(201,168,76,0.15);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #1a1a0a 0%, #0d0d1a 50%, #1a0d0d 100%);
+      padding: 80px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 70%);
+    }
+    .hero-eyebrow {
+      font-size: 12px; letter-spacing: 4px; color: var(--gold);
+      text-transform: uppercase; margin-bottom: 20px;
+    }
+    .hero-title {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .hero-title span { color: var(--gold); }
+    .hero-desc { font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto 40px; line-height: 1.8; }
+    .hero-stats { display: flex; justify-content: center; gap: 60px; }
+    .stat { text-align: center; }
+    .stat-num { font-size: 36px; font-weight: 900; color: var(--gold); }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* Tools Grid */
+    .tools-section { padding: 80px 40px; max-width: 1200px; margin: 0 auto; }
+    .section-title {
+      font-size: 14px; letter-spacing: 4px; color: var(--gold);
+      text-transform: uppercase; margin-bottom: 40px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px; background: rgba(201,168,76,0.2);
+    }
+    .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+
+    .tool-card {
+      background: var(--dark2);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      display: block;
+      color: var(--text);
+    }
+    .tool-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .tool-card:hover { border-color: rgba(201,168,76,0.4); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+    .tool-card:hover::before { opacity: 1; }
+
+    .card-num {
+      font-size: 11px; font-weight: 700; letter-spacing: 3px;
+      color: var(--gold); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-num::before {
+      content: '';
+      width: 24px; height: 1px; background: var(--gold);
+    }
+    .card-icon { font-size: 40px; margin-bottom: 16px; }
+    .card-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; line-height: 1.4; }
+    .card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+    .card-features { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+    .feature-tag {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 100px;
+      padding: 4px 12px;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .card-revenue {
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--gold);
+      margin-bottom: 20px;
+    }
+    .card-revenue strong { font-size: 18px; font-weight: 900; }
+    .card-cta {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 700;
+      color: var(--gold);
+    }
+    .card-cta svg { transition: transform 0.2s; }
+    .tool-card:hover .card-cta svg { transform: translateX(4px); }
+
+    /* Status badges */
+    .status-badge {
+      position: absolute; top: 20px; right: 20px;
+      padding: 4px 10px; border-radius: 100px;
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    }
+    .status-ready { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 40px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo">
+      <div class="logo-name">ISHIZAWA SHINJI</div>
+      <div class="logo-sub">Real Estate Business Hack Suite</div>
+    </div>
+    <div class="header-badge">5 TOOLS READY</div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-eyebrow">Business Hack Dashboard</div>
+    <h1 class="hero-title">不動産業界を<br><span>石澤紳司</span>がハックする</h1>
+    <p class="hero-desc">AIと自動化で競合が知らない5つの収益エンジンを動かせ。全ツール無料・データはローカル保存。</p>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">5</div>
+        <div class="stat-label">収益エンジン</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">¥0</div>
+        <div class="stat-label">月額費用</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">∞</div>
+        <div class="stat-label">スケール上限</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tools-section">
+    <div class="section-title">収益ツール一覧</div>
+    <div class="tools-grid">
+
+      <a href="1-ai-satei.html" class="tool-card">
+        <span class="status-badge status-ready">稼働中</span>
+        <div class="card-num">TOOL 01</div>
+        <div class="card-icon">🏠</div>
+        <div class="card-title">AI即時査定<br>リード爆取りマシン</div>
+        <div class="card-desc">住所・物件情報を入れるだけで5秒でAI査定額を表示。連絡先と交換して温かいリードを自動蓄積。</div>
+        <div class="card-features">
+          <span class="feature-tag">AI価格算出</span>
+          <span class="feature-tag">多段階フォーム</span>
+          <span class="feature-tag">リストCSV書出</span>
+          <span class="feature-tag">管理画面</span>
+        </div>
+        <div class="card-revenue">月間リード50件獲得で <strong>150〜500万円</strong>/月の仲介収入</div>
+        <div class="card-cta">
+          ツールを開く
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </a>
+
+      <a href="2-akiya-hunter.html" class="tool-card">
+        <span class="status-badge status-ready">稼働中</span>
+        <div class="card-num">TOOL 02</div>
+        <div class="card-icon">🏚️</div>
+        <div class="card-title">空き家ハンター<br>買取転売システム</div>
+        <div class="card-desc">空き家スコアリングで有望物件を発見。所有者へのDMを自動生成し、案件をパイプラインで管理。</div>
+        <div class="card-features">
+          <span class="feature-tag">空き家スコアリング</span>
+          <span class="feature-tag">DM自動生成</span>
+          <span class="feature-tag">交渉スクリプト</span>
+          <span class="feature-tag">案件管理</span>
+        </div>
+        <div class="card-revenue">1件成約で利ざや <strong>200〜500万円</strong>、民泊転用で月次CF確保</div>
+        <div class="card-cta">
+          ツールを開く
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </a>
+
+      <a href="3-owner-direct.html" class="tool-card">
+        <span class="status-badge status-ready">稼働中</span>
+        <div class="card-num">TOOL 03</div>
+        <div class="card-icon">🤝</div>
+        <div class="card-title">オーナーダイレクト<br>仲介プラットフォーム</div>
+        <div class="card-desc">売主・買主を直接マッチング。低手数料で信頼を獲得し、成約数を増やして総収益を最大化。</div>
+        <div class="card-features">
+          <span class="feature-tag">売主登録</span>
+          <span class="feature-tag">買主登録</span>
+          <span class="feature-tag">AIマッチング</span>
+          <span class="feature-tag">商談管理</span>
+        </div>
+        <div class="card-revenue">両手仲介独占で <strong>手数料100%自社取り</strong>、投資家会員月2万円</div>
+        <div class="card-cta">
+          ツールを開く
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </a>
+
+      <a href="4-kanri-saas.html" class="tool-card">
+        <span class="status-badge status-ready">稼働中</span>
+        <div class="card-num">TOOL 04</div>
+        <div class="card-icon">🏢</div>
+        <div class="card-title">家賃保証×管理SaaS<br>地主囲い込みシステム</div>
+        <div class="card-desc">物件・テナント・家賃・修繕を一元管理。収益ダッシュボードで月次ストック収入を可視化。</div>
+        <div class="card-features">
+          <span class="feature-tag">物件管理</span>
+          <span class="feature-tag">家賃台帳</span>
+          <span class="feature-tag">修繕管理</span>
+          <span class="feature-tag">収益ダッシュボード</span>
+        </div>
+        <div class="card-revenue">50戸管理で <strong>月20万円</strong>の安定ストック収入</div>
+        <div class="card-cta">
+          ツールを開く
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </a>
+
+      <a href="5-toushi-bunseki.html" class="tool-card">
+        <span class="status-badge status-ready">稼働中</span>
+        <div class="card-num">TOOL 05</div>
+        <div class="card-icon">📊</div>
+        <div class="card-title">不動産投資家向け<br>AIデータ分析ツール</div>
+        <div class="card-desc">物件情報を入れるだけで表面・実質利回り、ローン返済後CF、10年シミュレーション、感度分析を即算出。</div>
+        <div class="card-features">
+          <span class="feature-tag">利回り計算</span>
+          <span class="feature-tag">ローンシミュ</span>
+          <span class="feature-tag">10年CF予測</span>
+          <span class="feature-tag">感度分析</span>
+        </div>
+        <div class="card-revenue">月額1万×1,000人で <strong>月1,000万円</strong>のSaaS収益</div>
+        <div class="card-cta">
+          ツールを開く
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="tools-section" style="padding-top:0">
+    <div class="section-title">マニュアル</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <a href="manual-user.html" style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;text-decoration:none;color:var(--text);display:flex;align-items:center;gap:18px;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(201,168,76,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'">
+        <div style="font-size:32px">📖</div>
+        <div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px">ユーザーマニュアル</div>
+          <div style="font-size:12px;color:var(--text-muted)">各ツールの使い方・機能説明・よくある質問</div>
+        </div>
+      </a>
+      <a href="manual-dev.html" style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;text-decoration:none;color:var(--text);display:flex;align-items:center;gap:18px;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(59,130,246,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'">
+        <div style="font-size:32px">⚙️</div>
+        <div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px">開発者マニュアル</div>
+          <div style="font-size:12px;color:var(--text-muted)">アーキテクチャ・データ設計・拡張方法・既知のバグ一覧</div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 Ishizawa Shinji Real Estate Business Hack Suite — All data stored locally. No external servers.</p>
+  </footer>
+
+</body>
+</html>

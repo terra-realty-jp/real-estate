@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>空き家ハンター | 石澤紳司 不動産ビジネスハック</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #c9a84c; --gold-light: #e8c97a;
+      --dark: #0d0d0d; --dark2: #1a1a1a; --dark3: #242424;
+      --text: #f0ede8; --text-muted: #999;
+      --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
+      --orange: #f97316;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+    .topnav { background: var(--dark2); border-bottom: 1px solid rgba(201,168,76,0.2); padding: 14px 32px; display: flex; align-items: center; gap: 16px; }
+    .back-link { color: var(--gold); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+    .back-link:hover { text-decoration: underline; }
+    .nav-title { font-size: 14px; color: var(--text-muted); }
+    .tabs { display: flex; background: var(--dark2); border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .tab-btn { padding: 16px 28px; background: none; border: none; color: var(--text-muted); font-size: 14px; font-family: inherit; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .main { max-width: 960px; margin: 0 auto; padding: 48px 32px; }
+    .page-title { font-size: 28px; font-weight: 900; margin-bottom: 8px; }
+    .page-title span { color: var(--gold); }
+    .page-desc { color: var(--text-muted); font-size: 14px; margin-bottom: 40px; line-height: 1.8; }
+    .card { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 32px; margin-bottom: 24px; }
+    .card-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .card-title .icon { font-size: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    input, select, textarea { background: var(--dark3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 16px; color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; width: 100%; }
+    input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+    select option { background: #1a1a1a; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+    .btn-gold { background: var(--gold); color: #000; }
+    .btn-gold:hover { background: var(--gold-light); }
+    .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--text); }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+    .btn-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .btn-sm { padding: 7px 14px; font-size: 12px; }
+
+    /* スコアリングチェックリスト */
+    .checklist { display: flex; flex-direction: column; gap: 10px; }
+    .check-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: var(--dark3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: all 0.2s; user-select: none; }
+    .check-item:hover { border-color: rgba(201,168,76,0.3); }
+    .check-item.checked { border-color: rgba(201,168,76,0.4); background: rgba(201,168,76,0.06); }
+    .check-box { width: 20px; height: 20px; border-radius: 5px; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .check-item.checked .check-box { background: var(--gold); border-color: var(--gold); }
+    .check-label { flex: 1; font-size: 14px; }
+    .check-score { font-size: 13px; font-weight: 700; color: var(--gold); }
+    .score-display { background: linear-gradient(135deg, #1a1a0a, #0d1a0d); border: 1px solid rgba(201,168,76,0.3); border-radius: 12px; padding: 24px; text-align: center; margin-top: 20px; }
+    .score-num { font-size: 64px; font-weight: 900; color: var(--gold); line-height: 1; }
+    .score-label { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+    .score-bar { background: rgba(255,255,255,0.06); border-radius: 100px; height: 10px; margin: 16px 0 8px; }
+    .score-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--green), var(--gold)); transition: width 0.5s ease; }
+    .score-rank { font-size: 20px; font-weight: 700; }
+    .score-rank.S { color: #ff6b6b; }
+    .score-rank.A { color: var(--gold); }
+    .score-rank.B { color: var(--blue); }
+    .score-rank.C { color: var(--text-muted); }
+
+    /* DM生成 */
+    .dm-preview { background: var(--dark3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 24px; font-size: 13px; line-height: 2; white-space: pre-wrap; min-height: 300px; color: var(--text); }
+    .dm-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+
+    /* 案件パイプライン */
+    .pipeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .pipe-col { background: var(--dark3); border-radius: 12px; padding: 16px; min-height: 300px; }
+    .pipe-col-title { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .pipe-col-title .count { background: rgba(255,255,255,0.08); border-radius: 100px; padding: 2px 8px; font-size: 11px; margin-left: 8px; }
+    .deal-card { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.2s; }
+    .deal-card:hover { border-color: rgba(201,168,76,0.3); }
+    .deal-name { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .deal-addr { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+    .deal-meta { display: flex; justify-content: space-between; font-size: 11px; }
+    .deal-price { color: var(--gold); font-weight: 700; }
+    .deal-date { color: var(--text-muted); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .dot-prospect { background: var(--blue); }
+    .dot-contact { background: var(--orange); }
+    .dot-nego { background: var(--gold); }
+    .dot-closed { background: var(--green); }
+
+    /* モーダル */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .modal { background: var(--dark2); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 24px; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+    /* テーブル */
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: var(--dark3); padding: 12px 14px; font-size: 11px; color: var(--text-muted); text-align: left; letter-spacing: 1px; text-transform: uppercase; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+    tbody td { padding: 13px 14px; font-size: 13px; vertical-align: middle; }
+    .empty-state { text-align: center; padding: 60px; color: var(--text-muted); }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .badge { padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+    .badge-prospect { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
+    .badge-contact { background: rgba(249,115,22,0.15); color: var(--orange); border: 1px solid rgba(249,115,22,0.25); }
+    .badge-nego { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.25); }
+    .badge-closed { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+
+    @media (max-width: 700px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .pipeline { grid-template-columns: 1fr 1fr; }
+      .main { padding: 24px 16px; }
+      .card { overflow-x: auto; }
+      table { min-width: 480px; }
+    }
+    @media (max-width: 480px) {
+      .pipeline { grid-template-columns: 1fr; }
+    }
+    @media print {
+      .topnav,.tabs,.btn,.dm-actions { display:none!important; }
+      body { background:#fff!important; color:#000!important; }
+      .card { background:#fff!important; border:1px solid #ccc!important; border-radius:4px!important; color:#000!important; page-break-inside:avoid; }
+      .main { padding:0!important; max-width:100%!important; }
+      .tab-content { display:block!important; }
+      .dm-preview { border:1px solid #ccc!important; color:#000!important; background:#fff!important; }
+      :root { --text:#000; --text-muted:#555; --gold:#c9a84c; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    ダッシュボードに戻る
+  </a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span class="nav-title">TOOL 02 — 空き家ハンター×買取転売システム</span>
+</nav>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('score')">🔍 空き家スコアリング</button>
+  <button class="tab-btn" onclick="switchTab('dm')">✉️ DM自動生成</button>
+  <button class="tab-btn" onclick="switchTab('pipeline')">📌 案件パイプライン</button>
+  <button class="tab-btn" onclick="switchTab('script')">💬 交渉スクリプト</button>
+</div>
+
+<!-- スコアリングタブ -->
+<div id="tab-score" class="tab-content active">
+<div class="main">
+  <h1 class="page-title"><span>空き家</span>スコアリング</h1>
+  <p class="page-desc">現地調査時や周辺情報から、空き家の有望度をスコアリング。高スコア物件を優先的にアプローチすることで、交渉成功率を最大化します。</p>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🏠</span>物件情報</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>物件所在地（番地まで）</label>
+        <input type="text" id="sc_addr" placeholder="例: 東京都杉並区〇〇3-5-12">
+      </div>
+      <div class="form-group">
+        <label>目視判断：空き家の可能性</label>
+        <select id="sc_visual">
+          <option value="">選択</option>
+          <option value="high">高い（明らかに人が住んでいない）</option>
+          <option value="mid">中程度（不在がち・荒れている）</option>
+          <option value="low">低い（時々人の気配あり）</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📋</span>チェックリスト（該当項目をクリック）</div>
+    <div class="checklist" id="checklist">
+      <!-- JS で生成 -->
+    </div>
+    <div class="score-display">
+      <div class="score-num" id="scoreNum">0</div>
+      <div class="score-label">/ 100点</div>
+      <div class="score-bar"><div class="score-fill" id="scoreBar" style="width:0%"></div></div>
+      <div class="score-rank" id="scoreRank">—</div>
+      <div id="scoreComment" style="font-size:13px;color:var(--text-muted);margin-top:8px;">チェックリストを入力してください</div>
+    </div>
+  </div>
+
+  <div class="card" id="scoreActionCard" style="display:none;">
+    <div class="card-title"><span class="icon">🎯</span>推奨アクション</div>
+    <div id="scoreActions"></div>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <button class="btn btn-gold" onclick="saveDeal()">案件として登録する</button>
+    <button class="btn btn-outline" onclick="resetScore()">リセット</button>
+  </div>
+</div>
+</div>
+
+<!-- DM生成タブ -->
+<div id="tab-dm" class="tab-content">
+<div class="main">
+  <h1 class="page-title">DM<span>自動生成</span></h1>
+  <p class="page-desc">所有者へのアプローチ文を自動生成します。状況に合わせてテンプレートを選び、必要に応じて編集してください。</p>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">⚙️</span>生成設定</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>DMテンプレート種別</label>
+        <select id="dm_type">
+          <option value="polite">丁寧・穏やか（初回接触向け）</option>
+          <option value="benefit">メリット強調（買取希望者向け）</option>
+          <option value="urgent">緊急性訴求（近隣トラブル・維持費問題）</option>
+          <option value="inheritance">相続・空き家対策向け</option>
+          <option value="investment">投資リノベ転用提案向け</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>所有者（宛名）</label>
+        <input type="text" id="dm_owner" placeholder="例: 田中様 / ご所有者様">
+      </div>
+      <div class="form-group">
+        <label>物件所在地</label>
+        <input type="text" id="dm_addr" placeholder="例: 杉並区〇〇3丁目の物件">
+      </div>
+      <div class="form-group">
+        <label>概算提示価格（任意）</label>
+        <input type="text" id="dm_price" placeholder="例: 3,200万円前後">
+      </div>
+      <div class="form-group full">
+        <label>追記したいポイント（任意）</label>
+        <textarea id="dm_extra" rows="2" placeholder="例: リフォーム後転用希望、現状渡し可、など"></textarea>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn btn-gold" onclick="generateDM()">DMを生成する</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">📄</span>生成されたDM</div>
+    <div class="dm-preview" id="dmPreview">← 左側で設定してDMを生成してください</div>
+    <div class="dm-actions">
+      <button class="btn btn-outline" onclick="copyDM()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        コピー
+      </button>
+      <button class="btn btn-outline" onclick="printDM()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        印刷
+      </button>
+      <button class="btn btn-gold" onclick="generateDM()">再生成</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- パイプラインタブ -->
+<div id="tab-pipeline" class="tab-content">
+<div class="main">
+  <h1 class="page-title">案件<span>パイプライン</span></h1>
+  <p class="page-desc">空き家案件の進捗をカンバン方式で管理。各ステージの件数と潜在収益を一覧把握します。</p>
+
+  <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:24px;">
+    <button class="btn btn-gold" onclick="openNewDealModal()">＋ 新規案件登録</button>
+    <button class="btn btn-outline btn-sm" onclick="exportDealsCSV()">CSVエクスポート</button>
+  </div>
+
+  <!-- サマリー -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
+
+  <!-- カンバン -->
+  <div class="pipeline" id="kanbanBoard"></div>
+
+  <!-- テーブルビュー -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📋</span>全案件一覧</div>
+    <div id="dealsTableWrap"></div>
+  </div>
+</div>
+</div>
+
+<!-- 交渉スクリプトタブ -->
+<div id="tab-script" class="tab-content">
+<div class="main">
+  <h1 class="page-title">交渉<span>スクリプト</span></h1>
+  <p class="page-desc">場面別の交渉トークスクリプト。初回接触から価格交渉・クロージングまで、成功率を上げる言葉を即参照できます。</p>
+
+  <div id="scripts-container"></div>
+</div>
+</div>
+
+<!-- 案件登録モーダル -->
+<div class="modal-overlay" id="dealModal" style="display:none;" onclick="closeDealModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="dealModalTitle">新規案件登録</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>物件名・メモ</label>
+        <input type="text" id="d_name" placeholder="例: 杉並区〇〇の空き家">
+      </div>
+      <div class="form-group full">
+        <label>住所</label>
+        <input type="text" id="d_addr" placeholder="例: 東京都杉並区〇〇3-5-12">
+      </div>
+      <div class="form-group">
+        <label>ステータス</label>
+        <select id="d_status">
+          <option value="prospect">発見・調査中</option>
+          <option value="contact">接触・アプローチ中</option>
+          <option value="nego">交渉中</option>
+          <option value="closed">成約</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>想定買取価格（万円）</label>
+        <input type="number" id="d_buy" placeholder="例: 2000" min="0">
+      </div>
+      <div class="form-group">
+        <label>想定売却価格（万円）</label>
+        <input type="number" id="d_sell" placeholder="例: 2800" min="0">
+      </div>
+      <div class="form-group">
+        <label>スコア（0-100）</label>
+        <input type="number" id="d_score" placeholder="例: 72" min="0" max="100">
+      </div>
+      <div class="form-group full">
+        <label>備考・所有者情報</label>
+        <textarea id="d_memo" rows="3" placeholder="所有者名・連絡先・経緯など"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeDealModal()">キャンセル</button>
+      <button class="btn btn-gold" onclick="saveDealFromModal()">登録する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+// ===== チェックリスト定義 =====
+const CHECKS = [
+  { id:'c1',  label:'表札がない・消えかけている',           score: 8,  cat:'外観' },
+  { id:'c2',  label:'ポストに大量の郵便物・チラシが溢れている', score: 10, cat:'外観' },
+  { id:'c3',  label:'電気メーターが止まっている',           score: 12, cat:'設備' },
+  { id:'c4',  label:'雨戸・シャッターが常時閉まっている',    score: 9,  cat:'外観' },
+  { id:'c5',  label:'雑草・庭木が手入れされていない',        score: 8,  cat:'外観' },
+  { id:'c6',  label:'窓が汚れている・結露跡がある',          score: 6,  cat:'外観' },
+  { id:'c7',  label:'近隣住民から「空き家」と聞いた',        score: 15, cat:'情報' },
+  { id:'c8',  label:'固定資産税の滞納情報を把握している',    score: 14, cat:'情報' },
+  { id:'c9',  label:'相続登記が未了（法務局で確認）',        score: 12, cat:'法務' },
+  { id:'c10', label:'建物が老朽化・一部破損している',        score: 7,  cat:'建物' },
+  { id:'c11', label:'周辺相場より明らかに安く出せる',        score: 10, cat:'価値' },
+  { id:'c12', label:'駅徒歩10分以内の好立地',               score: 9,  cat:'立地' },
+];
+
+let checked = new Set();
+
+function buildChecklist() {
+  const el = document.getElementById('checklist');
+  el.innerHTML = CHECKS.map(c => `
+    <div class="check-item" id="ci_${c.id}" onclick="toggleCheck('${c.id}')">
+      <div class="check-box" id="cb_${c.id}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" id="ck_${c.id}" style="display:none"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="check-label">${c.label} <span style="font-size:11px;color:var(--text-muted);">[${c.cat}]</span></div>
+      <div class="check-score">+${c.score}</div>
+    </div>
+  `).join('');
+}
+
+function toggleCheck(id) {
+  if(checked.has(id)) checked.delete(id);
+  else checked.add(id);
+  document.getElementById('ci_'+id).classList.toggle('checked', checked.has(id));
+  document.getElementById('ck_'+id).style.display = checked.has(id) ? 'block' : 'none';
+  updateScore();
+}
+
+function updateScore() {
+  const score = [...checked].reduce((s,id) => {
+    const c = CHECKS.find(x=>x.id===id);
+    return s + (c ? c.score : 0);
+  }, 0);
+  const capped = Math.min(score, 100);
+  document.getElementById('scoreNum').textContent = capped;
+  document.getElementById('scoreBar').style.width = capped + '%';
+
+  let rank, comment;
+  if(capped >= 70) { rank='S'; comment='最優先アプローチ対象。即アクションを起こしてください。'; }
+  else if(capped >= 50) { rank='A'; comment='有望案件。早めに所有者へのアプローチを開始しましょう。'; }
+  else if(capped >= 30) { rank='B'; comment='可能性あり。追加調査を行いながら様子を見ましょう。'; }
+  else { rank='C'; comment='現時点では優先度低め。継続観察リストに追加しておきましょう。'; }
+
+  const rankEl = document.getElementById('scoreRank');
+  rankEl.textContent = `ランク ${rank}`;
+  rankEl.className = 'score-rank ' + rank;
+  document.getElementById('scoreComment').textContent = comment;
+
+  // 推奨アクション
+  const actCard = document.getElementById('scoreActionCard');
+  if(capped > 0) {
+    actCard.style.display = 'block';
+    const actions = getActions(capped, [...checked]);
+    document.getElementById('scoreActions').innerHTML = actions.map(a =>
+      `<div style="display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:8px;">
+        <span style="font-size:18px">${a.icon}</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px;">${a.title}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${a.desc}</div>
+        </div>
+      </div>`
+    ).join('');
+  } else {
+    actCard.style.display = 'none';
+  }
+}
+
+function getActions(score, ids) {
+  const actions = [];
+  if(ids.includes('c9')) actions.push({icon:'⚖️', title:'相続人調査を実施', desc:'法務局で登記簿謄本を取得し、相続人を特定してください。相続未了物件は交渉成功率が高い。'});
+  if(ids.includes('c8')) actions.push({icon:'💰', title:'固定資産税滞納から所有者を割り出す', desc:'市区町村役場に問い合わせ、または法務局で固定資産課税台帳を確認。所有者の住所を把握。'});
+  if(ids.includes('c7') || ids.includes('c2')) actions.push({icon:'✉️', title:'DM送付を今すぐ開始', desc:'「DM自動生成」タブで状況に合ったレターを作成し、今週中に発送しましょう。'});
+  if(score >= 50) actions.push({icon:'📞', title:'近隣住民へのヒアリング', desc:'所有者の連絡先・状況を把握するため、両隣・向かいの住民に丁寧にアプローチ。'});
+  if(score >= 70) actions.push({icon:'🎯', title:'価格シミュレーションを実施', desc:'「投資家分析ツール」で買取→リノベ→売却の利ざやを計算してから交渉価格を設定。'});
+  actions.push({icon:'📌', title:'案件パイプラインに登録', desc:'この物件を「案件パイプライン」タブに登録して進捗を管理しましょう。'});
+  return actions;
+}
+
+function resetScore() {
+  checked.clear();
+  document.querySelectorAll('.check-item').forEach(el => el.classList.remove('checked'));
+  document.querySelectorAll('[id^=ck_]').forEach(el => el.style.display='none');
+  updateScore();
+}
+
+function saveDeal() {
+  const addr = document.getElementById('sc_addr').value || '住所未入力';
+  const score = parseInt(document.getElementById('scoreNum').textContent) || 0;
+  document.getElementById('d_name').value = addr + ' の空き家';
+  document.getElementById('d_addr').value = addr;
+  document.getElementById('d_score').value = score;
+  document.getElementById('d_status').value = score >= 50 ? 'contact' : 'prospect';
+  openNewDealModal();
+}
+
+// ===== DM生成 =====
+const DM_TEMPLATES = {
+  polite: (owner, addr, price, extra) => `
+拝啓
+
+突然のお手紙にて失礼いたします。
+私、不動産コンサルタントの石澤紳司と申します。
+
+この度、${addr}にございます御物件につきまして、
+ご所有者様に一度ご相談させていただきたく、ご連絡差し上げました。
+
+昨今、空き家の管理や維持費のご負担、また将来的な活用についてお悩みの方が
+大変多くなっております。弊社では、所有者様のご事情に合わせた柔軟なご提案を
+させていただいております。
+
+もしよろしければ、一度お気軽にお電話・メールにてご相談ください。
+${price ? `なお、現時点での概算として${price}程度でのお取引も検討しております。` : ''}
+${extra ? extra : ''}
+
+ご連絡をお待ちしております。
+何卒よろしくお願い申し上げます。
+
+                              敬具
+
+石澤 紳司（いしざわ しんじ）
+不動産コンサルタント
+TEL: 【電話番号】
+MAIL: 【メールアドレス】
+`.trim(),
+
+  benefit: (owner, addr, price, extra) => `
+${owner || 'ご所有者様'}へ
+
+突然のご連絡、誠に失礼いたします。
+石澤紳司と申します。不動産の買取・売却を専門に行っております。
+
+${addr}の物件について、ぜひお話を聞かせていただけないでしょうか。
+
+【弊社買取のメリット】
+✅ 仲介手数料は一切不要
+✅ 現状のままでOK（リフォーム・清掃不要）
+✅ 最短2週間でのお引き渡し可能
+✅ 税金・法律面のご相談も無料サポート
+${price ? `✅ 概算 ${price} での買取を検討中` : ''}
+
+空き家を持ち続けることによる固定資産税・管理費の負担から解放されませんか。
+${extra ? extra : ''}
+
+まずはお気軽にご連絡ください。
+石澤紳司 TEL: 【電話番号】 / MAIL: 【メールアドレス】
+`.trim(),
+
+  urgent: (owner, addr, price, extra) => `
+${owner || 'ご所有者様'}
+
+突然のご連絡、大変失礼いたします。石澤紳司と申します。
+
+${addr}の物件についてご連絡しております。
+現在、空き家の長期放置による近隣問題（草木の繁茂、害虫・動物の発生等）が
+社会問題化しており、行政による「特定空き家」指定を受けると固定資産税の
+優遇措置（住宅用地特例）が外れ、税額が最大6倍になるケースもございます。
+
+現状のうちに適切に手放すことで、この問題を未然に回避できます。
+${price ? `買取価格は ${price} を目安に検討可能です。` : ''}
+${extra ? extra : ''}
+
+ぜひ一度、無料相談だけでもご検討ください。
+石澤紳司 TEL: 【電話番号】 / MAIL: 【メールアドレス】
+`.trim(),
+
+  inheritance: (owner, addr, price, extra) => `
+${owner || '相続人・ご所有者様'}
+
+突然のお手紙にて失礼いたします。石澤紳司と申します。
+
+${addr}の物件について、相続・空き家対策のご提案をさせていただきたく
+ご連絡差し上げました。
+
+相続した物件をそのままにしておくと、
+・固定資産税（毎年）・管理費・修繕費の負担
+・相続放棄ができなくなるリスク
+・2024年4月より「相続登記の義務化」（未了で過料のリスク）
+などのリスクがございます。
+
+弊社では相続物件の買取・整理を数多く手がけており、
+税理士・司法書士との連携で、ワンストップでサポートいたします。
+${price ? `概算 ${price} での買取を目標に動いております。` : ''}
+${extra ? extra : ''}
+
+お気軽にご相談ください。
+石澤紳司 TEL: 【電話番号】 / MAIL: 【メールアドレス】
+`.trim(),
+
+  investment: (owner, addr, price, extra) => `
+${owner || 'ご所有者様'}
+
+突然のご連絡、失礼いたします。石澤紳司と申します。
+不動産の再生・活用を専門に手がけております。
+
+${addr}の物件について、リノベーション・活用のご提案をさせていただきたく
+ご連絡しております。
+
+現在、空き家をリノベーションして民泊・シェアハウス・賃貸物件として
+活用する事例が急増しており、地域の空き家問題解消にも貢献できます。
+
+弊社では買取後のリノベ〜活用まで一貫してサポートしており、
+所有者様が手間をかけることなく、まとまった売却益を得ていただけます。
+${price ? `現時点での買取価格：${price} を想定しております。` : ''}
+${extra ? extra : ''}
+
+ぜひ一度お会いしてご説明させてください。
+石澤紳司 TEL: 【電話番号】 / MAIL: 【メールアドレス】
+`.trim(),
+};
+
+function generateDM() {
+  const type = document.getElementById('dm_type').value;
+  const owner = document.getElementById('dm_owner').value || 'ご所有者様';
+  const addr = document.getElementById('dm_addr').value || '【物件所在地】';
+  const price = document.getElementById('dm_price').value;
+  const extra = document.getElementById('dm_extra').value;
+  const fn = DM_TEMPLATES[type];
+  document.getElementById('dmPreview').textContent = fn ? fn(owner, addr, price, extra) : '';
+}
+
+function copyDM() {
+  const text = document.getElementById('dmPreview').textContent;
+  navigator.clipboard.writeText(text).then(() => alert('クリップボードにコピーしました'));
+}
+
+function printDM() {
+  const text = document.getElementById('dmPreview').textContent;
+  const w = window.open('','_blank');
+  w.document.write(`<pre style="font-family:sans-serif;font-size:14px;line-height:2;padding:40px;white-space:pre-wrap">${text}</pre>`);
+  w.print();
+}
+
+// ===== 案件管理 =====
+let deals = JSON.parse(localStorage.getItem('akiya_deals') || '[]');
+let editingDealId = null;
+
+function renderPipeline() {
+  const statuses = ['prospect','contact','nego','closed'];
+  const labels = { prospect:'発見・調査中', contact:'接触・アプローチ中', nego:'交渉中', closed:'成約' };
+  const dotClass = { prospect:'dot-prospect', contact:'dot-contact', nego:'dot-nego', closed:'dot-closed' };
+  const badgeClass = { prospect:'badge-prospect', contact:'badge-contact', nego:'badge-nego', closed:'badge-closed' };
+
+  // サマリー
+  const summaryEl = document.getElementById('pipelineSummary');
+  const totalProfit = deals.filter(d=>d.status==='closed').reduce((s,d)=>s+(d.sell-d.buy||0),0);
+  summaryEl.innerHTML = [
+    { label:'総案件数', value: deals.length + '件', color: 'var(--text)' },
+    { label:'交渉中', value: deals.filter(d=>d.status==='nego').length + '件', color: 'var(--gold)' },
+    { label:'成約件数', value: deals.filter(d=>d.status==='closed').length + '件', color: 'var(--green)' },
+    { label:'成約利ざや合計', value: totalProfit > 0 ? totalProfit.toLocaleString()+'万円' : '—', color: 'var(--gold)' },
+  ].map(s => `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;text-align:center">
+    <div style="font-size:24px;font-weight:900;color:${s.color}">${s.value}</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${s.label}</div>
+  </div>`).join('');
+
+  // カンバン
+  const kanban = document.getElementById('kanbanBoard');
+  kanban.innerHTML = statuses.map(st => {
+    const ds = deals.filter(d => d.status === st);
+    return `<div class="pipe-col">
+      <div class="pipe-col-title"><span class="status-dot ${dotClass[st]}"></span>${labels[st]}<span class="count">${ds.length}</span></div>
+      ${ds.map(d => `<div class="deal-card" onclick="editDeal(${d.id})">
+        <div class="deal-name">${esc(d.name)}</div>
+        <div class="deal-addr">${esc(d.addr)}</div>
+        <div class="deal-meta">
+          <span class="deal-price">${d.buy||d.sell ? '買'+(d.buy||'?')+'→売'+(d.sell||'?')+'万' : '価格未設定'}</span>
+          <span class="deal-date">スコア${d.score||'—'}</span>
+        </div>
+      </div>`).join('') || '<div style="font-size:12px;color:var(--text-muted);padding:8px">案件なし</div>'}
+    </div>`;
+  }).join('');
+
+  // テーブル
+  const tableWrap = document.getElementById('dealsTableWrap');
+  if(!deals.length) {
+    tableWrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>案件がまだありません</p></div>`;
+    return;
+  }
+  tableWrap.innerHTML = `<table>
+    <thead><tr><th>物件名</th><th>住所</th><th>ステータス</th><th>買取価格</th><th>売却価格</th><th>利ざや</th><th>スコア</th><th></th></tr></thead>
+    <tbody>
+      ${deals.map(d => `<tr>
+        <td><strong>${esc(d.name)}</strong></td>
+        <td style="font-size:12px">${esc(d.addr)}</td>
+        <td><span class="badge ${badgeClass[d.status]}">${labels[d.status]}</span></td>
+        <td>${d.buy ? d.buy.toLocaleString()+'万' : '—'}</td>
+        <td>${d.sell ? d.sell.toLocaleString()+'万' : '—'}</td>
+        <td style="color:${(d.sell-d.buy)>0?'var(--green)':'var(--text-muted)'}; font-weight:700">${d.buy&&d.sell ? (d.sell-d.buy).toLocaleString()+'万' : '—'}</td>
+        <td>${d.score||'—'}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="editDeal(${d.id})">編集</button></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function openNewDealModal() {
+  editingDealId = null;
+  document.getElementById('dealModalTitle').textContent = '新規案件登録';
+  document.getElementById('dealModal').style.display = 'flex';
+}
+
+function closeDealModal(e) {
+  if(!e || e.target === document.getElementById('dealModal')) {
+    document.getElementById('dealModal').style.display = 'none';
+  }
+}
+
+function editDeal(id) {
+  const d = deals.find(x=>x.id===id);
+  if(!d) return;
+  editingDealId = id;
+  document.getElementById('dealModalTitle').textContent = '案件を編集';
+  document.getElementById('d_name').value = d.name;
+  document.getElementById('d_addr').value = d.addr;
+  document.getElementById('d_status').value = d.status;
+  document.getElementById('d_buy').value = d.buy||'';
+  document.getElementById('d_sell').value = d.sell||'';
+  document.getElementById('d_score').value = d.score||'';
+  document.getElementById('d_memo').value = d.memo||'';
+  document.getElementById('dealModal').style.display = 'flex';
+}
+
+function saveDealFromModal() {
+  const name = document.getElementById('d_name').value.trim();
+  if(!name) { alert('物件名を入力してください'); return; }
+  const deal = {
+    id: editingDealId || Date.now(),
+    name, addr: document.getElementById('d_addr').value,
+    status: document.getElementById('d_status').value,
+    buy: parseInt(document.getElementById('d_buy').value)||0,
+    sell: parseInt(document.getElementById('d_sell').value)||0,
+    score: parseInt(document.getElementById('d_score').value)||0,
+    memo: document.getElementById('d_memo').value,
+    date: new Date().toLocaleDateString('ja-JP'),
+  };
+  if(editingDealId) deals = deals.map(d => d.id===editingDealId ? deal : d);
+  else deals.unshift(deal);
+  localStorage.setItem('akiya_deals', JSON.stringify(deals));
+  closeDealModal();
+  renderPipeline();
+}
+
+function exportDealsCSV() {
+  if(!deals.length) { alert('案件がありません'); return; }
+  const labels = { prospect:'発見中', contact:'接触中', nego:'交渉中', closed:'成約' };
+  const h = ['物件名','住所','ステータス','買取価格(万)','売却価格(万)','利ざや(万)','スコア','備考'];
+  const rows = deals.map(d => [d.name,d.addr,labels[d.status]||d.status,d.buy||'',d.sell||'',(d.sell-d.buy)||'',d.score||'',d.memo||'']);
+  const csv = [h,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));
+  a.download = `akiya_deals_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+
+// ===== 交渉スクリプト =====
+const SCRIPTS = [
+  {
+    title: '初回電話 / 訪問トーク（所有者本人）',
+    icon: '📞',
+    color: 'var(--blue)',
+    lines: [
+      { role:'あなた', text:'突然のご連絡、大変失礼いたします。私、不動産コンサルタントの石澤と申します。〇〇のお宅の件で少しお話できますでしょうか。' },
+      { role:'想定反応', text:'（警戒）何でしょう？' },
+      { role:'あなた', text:'ご所有の物件についてご相談があり連絡いたしました。今後の活用や、もし売却をお考えでしたら、お役に立てる情報があります。今5分ほどよろしいですか？' },
+      { role:'ポイント', text:'「売りませんか」とは絶対に言わない。まず「ご相談」「情報提供」として入る。', type:'tip' },
+    ]
+  },
+  {
+    title: '価格交渉（所有者が高値を希望する場合）',
+    icon: '💴',
+    color: 'var(--gold)',
+    lines: [
+      { role:'所有者', text:'2,500万円以下では売れない' },
+      { role:'あなた', text:'おっしゃる気持ちはよくわかります。実は現在の市場では、築〇年のこのエリアの物件は2,000〜2,200万円帯が多く流通しており、仲介ですと3〜6ヶ月かかるケースが多いんです。' },
+      { role:'あなた', text:'弊社では現金買取ですので、最短2週間・諸費用ゼロで手続きが完了します。時間的・精神的コストを考えると実質的に有利な条件です。2,200万円で進めさせていただけますか？' },
+      { role:'ポイント', text:'数字は必ず「市場データ」として提示。感情論でなく事実で説得する。仲介との比較で現金買取の価値を訴求。', type:'tip' },
+    ]
+  },
+  {
+    title: '相続人が複数いて話がまとまらない場合',
+    icon: '⚖️',
+    color: 'var(--orange)',
+    lines: [
+      { role:'所有者', text:'兄弟で意見が合わなくて…' },
+      { role:'あなた', text:'ご相続の場合、共有名義になると売却の際に全員の同意が必要です。実は今後さらに相続が重なると権利関係がより複雑になります。' },
+      { role:'あなた', text:'早めに整理されることが、全員にとって有利です。無料で司法書士をご紹介できますので、まずそちらでご相談されてみてはいかがでしょう。' },
+      { role:'ポイント', text:'専門家（司法書士）を無料紹介することで信頼を獲得。「急かしている」印象を与えず「親切なアドバイザー」として入る。', type:'tip' },
+    ]
+  },
+  {
+    title: 'クロージング（迷っている所有者）',
+    icon: '🤝',
+    color: 'var(--green)',
+    lines: [
+      { role:'所有者', text:'もう少し考えてみます…' },
+      { role:'あなた', text:'もちろんです。ただ、弊社ではこの価格でご提案できる期間が〇月末までになっております。その後は市場状況により再算定となる可能性がございます。' },
+      { role:'あなた', text:'一つだけ確認させてください。今、踏み切れない一番の理由はなんでしょうか？お答えいただければ、何か解決策をご提案できるかもしれません。' },
+      { role:'ポイント', text:'「期限」を設けることで意思決定を促す。「なぜ迷っているか」を聞き出すことで真の懸念点を把握しフォローアップする。', type:'tip' },
+    ]
+  },
+];
+
+function buildScripts() {
+  const container = document.getElementById('scripts-container');
+  container.innerHTML = SCRIPTS.map(s => `
+    <div class="card">
+      <div class="card-title"><span class="icon">${s.icon}</span>${s.title}</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${s.lines.map(l => `
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="min-width:80px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;text-align:center;flex-shrink:0;
+              background:${l.type==='tip'?'rgba(201,168,76,0.15)':l.role==='あなた'?'rgba(34,197,94,0.12)':'rgba(255,255,255,0.06)'};
+              color:${l.type==='tip'?'var(--gold)':l.role==='あなた'?'var(--green)':'var(--text-muted)'};
+              border:1px solid ${l.type==='tip'?'rgba(201,168,76,0.3)':l.role==='あなた'?'rgba(34,197,94,0.2)':'rgba(255,255,255,0.08)'}">${l.type==='tip'?'POINT':l.role}</div>
+            <div style="font-size:13px;line-height:1.8;${l.type==='tip'?'color:var(--gold)':''}">${l.text}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== タブ切替 =====
+function switchTab(tab) {
+  const tabs = ['score','dm','pipeline','script'];
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', tabs[i]===tab));
+  tabs.forEach(t => document.getElementById('tab-'+t).classList.toggle('active', t===tab));
+  if(tab==='pipeline') renderPipeline();
+}
+
+// Escape key でモーダルを閉じる
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') {
+    var modal=document.getElementById('dealModal'); if(modal) modal.style.display='none';
+  }
+});
+
+// ストレージ警告
+function checkStorageWarning() {
+  try {
+    let used = 0;
+    for(let k in localStorage) { if(localStorage.hasOwnProperty(k)) used += (localStorage[k]||'').length * 2; }
+    if(used > 3*1024*1024) {
+      const mb = (used/1024/1024).toFixed(1);
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:70px;right:20px;background:#ef4444;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;z-index:9999;max-width:300px;box-shadow:0 4px 12px rgba(0,0,0,0.3);line-height:1.5;';
+      el.innerHTML = '⚠️ ストレージ使用量が'+mb+'MBです。<br>CSVエクスポートで定期バックアップを推奨します。';
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 8000);
+    }
+  } catch(e){}
+}
+
+// 初期化
+checkStorageWarning();
+buildChecklist();
+updateScore();
+buildScripts();
+renderPipeline();
+</script>
+</body>
+</html>

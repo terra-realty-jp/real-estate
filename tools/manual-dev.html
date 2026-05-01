@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>開発者マニュアル | 石澤紳司 不動産ビジネスハックツール集</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #c9a84c; --gold-light: #e8c97a;
+      --dark: #0d0d0d; --dark2: #1a1a1a; --dark3: #242424;
+      --text: #f0ede8; --text-muted: #999;
+      --green: #22c55e; --red: #ef4444; --blue: #3b82f6; --orange: #f97316; --purple: #a855f7;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--dark); color: var(--text); }
+    .header { background: linear-gradient(135deg, #0d0d1a, #1a0d0d); border-bottom: 1px solid rgba(59,130,246,0.3); padding: 24px 40px; display: flex; align-items: center; justify-content: space-between; }
+    .logo-name { font-size: 20px; font-weight: 900; color: var(--blue); }
+    .logo-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 3px; margin-top: 2px; }
+    .header-badge { background: rgba(59,130,246,0.12); border: 1px solid var(--blue); color: var(--blue); padding: 6px 16px; border-radius: 100px; font-size: 12px; }
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 260px; flex-shrink: 0; background: var(--dark2); border-right: 1px solid rgba(255,255,255,0.06); padding: 32px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    .sidebar-title { font-size: 11px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; padding: 0 24px 12px; }
+    .nav-item { display: block; padding: 10px 24px; font-size: 13px; color: var(--text-muted); text-decoration: none; border-left: 2px solid transparent; transition: all 0.2s; }
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+    .nav-item.active { color: var(--blue); border-left-color: var(--blue); background: rgba(59,130,246,0.05); }
+    .nav-section { padding: 20px 24px 6px; font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.2); text-transform: uppercase; }
+    .content { flex: 1; padding: 48px 60px; max-width: 920px; }
+    h1 { font-size: 32px; font-weight: 900; margin-bottom: 12px; }
+    h1 span { color: var(--blue); }
+    h2 { font-size: 22px; font-weight: 700; margin: 48px 0 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+    h3 { font-size: 16px; font-weight: 700; margin: 28px 0 12px; color: var(--blue); }
+    h4 { font-size: 14px; font-weight: 700; margin: 20px 0 8px; color: var(--gold); }
+    p { font-size: 14px; line-height: 1.9; color: rgba(240,237,232,0.85); margin-bottom: 14px; }
+    ul, ol { padding-left: 20px; margin-bottom: 14px; }
+    li { font-size: 14px; line-height: 1.9; color: rgba(240,237,232,0.85); margin-bottom: 4px; }
+    pre { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 20px 24px; overflow-x: auto; margin: 16px 0; }
+    code { font-family: 'Courier New', monospace; font-size: 13px; }
+    p code, li code { background: var(--dark3); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 8px; font-size: 12px; color: var(--gold); }
+    .code-label { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+    .kw { color: #c678dd; }
+    .fn { color: #61afef; }
+    .str { color: #98c379; }
+    .cm { color: #5c6370; }
+    .num { color: #d19a66; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th { background: var(--dark3); padding: 10px 14px; font-size: 12px; color: var(--text-muted); text-align: left; }
+    td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+    .file-tree { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 20px 24px; font-family: monospace; font-size: 13px; line-height: 2; }
+    .ft-dir { color: var(--blue); }
+    .ft-file { color: var(--text); }
+    .ft-note { color: var(--text-muted); font-size: 11px; }
+    .info-box { background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.2); border-left: 3px solid var(--blue); border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+    .info-box .ib-label { font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: 1px; margin-bottom: 6px; }
+    .info-box p { margin: 0; font-size: 13px; color: rgba(240,237,232,0.8); }
+    .warn-box { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); border-left: 3px solid var(--red); border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+    .warn-box .wb-label { font-size: 11px; font-weight: 700; color: var(--red); letter-spacing: 1px; margin-bottom: 6px; }
+    .warn-box p { margin: 0; font-size: 13px; }
+    .fix-box { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); border-left: 3px solid var(--green); border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+    .fix-box .fb-label { font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 1px; margin-bottom: 6px; }
+    .fix-box p { margin: 0; font-size: 13px; }
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 100px; font-size: 10px; font-weight: 700; margin-left: 6px; }
+    .b-fixed { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .b-known { background: rgba(249,115,22,0.12); color: var(--orange); border: 1px solid rgba(249,115,22,0.2); }
+    .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 40px 0; }
+    .back-link { color: var(--blue); text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 32px; }
+    .back-link:hover { text-decoration: underline; }
+    .ls-key { color: var(--gold); font-family: monospace; }
+    @media(max-width:900px){ .sidebar{display:none;} .content{padding:28px 20px;} }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <div class="logo-name">DEVELOPER DOCS</div>
+    <div class="logo-sub">開発者マニュアル</div>
+  </div>
+  <div class="header-badge">DEV GUIDE v1.0</div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-title">目次</div>
+    <a href="#overview" class="nav-item">プロジェクト概要</a>
+    <a href="#structure" class="nav-item">ファイル構成</a>
+    <a href="#architecture" class="nav-item">アーキテクチャ</a>
+    <a href="#data" class="nav-item">データ設計</a>
+    <div class="nav-section">各ツール詳細</div>
+    <a href="#t1" class="nav-item">Tool 1 — AI査定</a>
+    <a href="#t2" class="nav-item">Tool 2 — 空き家ハンター</a>
+    <a href="#t3" class="nav-item">Tool 3 — オーナーダイレクト</a>
+    <a href="#t4" class="nav-item">Tool 4 — 管理SaaS</a>
+    <a href="#t5" class="nav-item">Tool 5 — 投資分析</a>
+    <div class="nav-section">品質・セキュリティ</div>
+    <a href="#security" class="nav-item">セキュリティ</a>
+    <a href="#known-issues" class="nav-item">既知の問題</a>
+    <a href="#extend" class="nav-item">拡張ガイド</a>
+    <a href="#deploy" class="nav-item">デプロイ方針</a>
+  </nav>
+
+  <main class="content">
+    <a href="index.html" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      ダッシュボードに戻る
+    </a>
+
+    <h1>開発者<span>マニュアル</span></h1>
+    <p style="color:var(--text-muted)">このドキュメントはツールの修正・拡張・保守を行う開発者向けです。</p>
+
+    <!-- ===== プロジェクト概要 ===== -->
+    <section id="overview">
+      <h2>📋 プロジェクト概要</h2>
+      <table>
+        <tr><th>項目</th><th>内容</th></tr>
+        <tr><td>目的</td><td>石澤紳司氏の不動産ビジネスを支援する5つの業務ツール</td></tr>
+        <tr><td>技術スタック</td><td>HTML / CSS / Vanilla JavaScript のみ（フレームワークなし）</td></tr>
+        <tr><td>外部依存</td><td>Google Fonts（フォント）、Chart.js 4.4.0 via jsDelivr CDN（グラフ）</td></tr>
+        <tr><td>データ永続化</td><td>ブラウザ localStorage のみ（バックエンドなし）</td></tr>
+        <tr><td>認証</td><td>なし（ローカル単一ユーザー前提）</td></tr>
+        <tr><td>ビルド</td><td>不要（直接ブラウザで開くだけ）</td></tr>
+      </table>
+    </section>
+
+    <!-- ===== ファイル構成 ===== -->
+    <section id="structure">
+      <h2>📁 ファイル構成</h2>
+      <div class="file-tree">
+<span class="ft-dir">real-estate-project/</span><br>
+├── <span class="ft-dir">css/</span>          <span class="ft-note">← メイン会社サイト用CSS</span><br>
+├── <span class="ft-dir">js/</span>           <span class="ft-note">← メイン会社サイト用JS</span><br>
+├── <span class="ft-dir">images/</span>       <span class="ft-note">← 画像リソース</span><br>
+├── <span class="ft-file">index.html</span>   <span class="ft-note">← 会社サイトトップ</span><br>
+├── <span class="ft-file">privacy.html</span> <span class="ft-note">← プライバシーポリシー</span><br>
+└── <span class="ft-dir">tools/</span>        <span class="ft-note">← ビジネスハックツール集（本マニュアル対象）</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="ft-file">index.html</span>         <span class="ft-note">← ハブ・ダッシュボード</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="ft-file">1-ai-satei.html</span>    <span class="ft-note">← AI査定ツール</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="ft-file">2-akiya-hunter.html</span> <span class="ft-note">← 空き家ハンター</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="ft-file">3-owner-direct.html</span> <span class="ft-note">← オーナーダイレクト</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="ft-file">4-kanri-saas.html</span>   <span class="ft-note">← 管理SaaS</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="ft-file">5-toushi-bunseki.html</span> <span class="ft-note">← 投資分析ツール</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="ft-file">manual-user.html</span>    <span class="ft-note">← ユーザーマニュアル</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="ft-file">manual-dev.html</span>     <span class="ft-note">← 開発者マニュアル（本ファイル）</span>
+      </div>
+    </section>
+
+    <!-- ===== アーキテクチャ ===== -->
+    <section id="architecture">
+      <h2>🏗️ アーキテクチャ</h2>
+      <h3>設計方針</h3>
+      <ul>
+        <li>各ツールは完全に自己完結した単一HTMLファイル（CSS・JS全てインライン）</li>
+        <li>共通ライブラリなし → ファイル間の依存関係ゼロ</li>
+        <li>localStorageをシンプルなJSONストアとして使用</li>
+        <li>全ての計算はクライアントサイドで完結</li>
+      </ul>
+
+      <h3>各ファイルの内部構造</h3>
+      <pre><code><span class="cm">&lt;!-- 1. &lt;head&gt;: CSS変数・スタイル定義 --&gt;</span>
+<span class="cm">&lt;!-- 2. &lt;nav&gt;: 上部ナビ（ダッシュボードへ戻るリンク）--&gt;</span>
+<span class="cm">&lt;!-- 3. タブナビゲーション --&gt;</span>
+<span class="cm">&lt;!-- 4. タブコンテンツ (id="tab-xxx") --&gt;</span>
+<span class="cm">&lt;!-- 5. モーダル群 --&gt;</span>
+<span class="cm">&lt;!-- 6. &lt;script&gt;: データ定義 → 計算関数 → 描画関数 → イベント処理 --&gt;</span></code></pre>
+
+      <h3>共通パターン</h3>
+      <h4>タブ切替</h4>
+      <pre><code><span class="kw">function</span> <span class="fn">switchTab</span>(t) {
+  <span class="kw">const</span> tabs = [<span class="str">'tab1'</span>, <span class="str">'tab2'</span>, ...];
+  document.querySelectorAll(<span class="str">'.tab-btn'</span>)
+    .forEach((b,i) => b.classList.toggle(<span class="str">'active'</span>, tabs[i]===t));
+  tabs.forEach(tab =>
+    document.getElementById(<span class="str">'tab-'</span>+tab).classList.toggle(<span class="str">'active'</span>, tab===t));
+}</code></pre>
+
+      <h4>XSSエスケープ（全ツール共通）</h4>
+      <pre><code><span class="cm">// 全ツールのscript先頭に定義済み</span>
+<span class="kw">function</span> <span class="fn">esc</span>(s) {
+  <span class="kw">const</span> d = document.createElement(<span class="str">'div'</span>);
+  d.textContent = String(s ?? <span class="str">''</span>);
+  <span class="kw">return</span> d.innerHTML; <span class="cm">// HTMLエンティティ化された文字列を返す</span>
+}
+<span class="cm">// 使用例: innerHTML内でユーザーデータを展開する際は必ずesc()を通す</span>
+el.innerHTML = <span class="str">`&lt;td&gt;</span><span class="kw">${</span><span class="fn">esc</span>(user.name)<span class="kw">}</span><span class="str">&lt;/td&gt;`</span>;</code></pre>
+
+      <h4>localStorage 操作パターン</h4>
+      <pre><code><span class="cm">// 読み込み（アプリ起動時）</span>
+<span class="kw">let</span> items = JSON.parse(localStorage.getItem(<span class="str">'key'</span>) || <span class="str">'[]'</span>);
+
+<span class="cm">// 保存</span>
+<span class="kw">function</span> <span class="fn">save</span>(key) {
+  localStorage.setItem(<span class="str">'prefix_'</span>+key, JSON.stringify(data[key]));
+}</code></pre>
+    </section>
+
+    <!-- ===== データ設計 ===== -->
+    <section id="data">
+      <h2>💾 データ設計（localStorageキー一覧）</h2>
+      <table>
+        <tr><th>ツール</th><th>localStorageキー</th><th>データ型</th><th>主なフィールド</th></tr>
+        <tr>
+          <td>Tool 1</td>
+          <td><span class="ls-key">satei_leads</span></td>
+          <td>Array&lt;Lead&gt;</td>
+          <td>id, date, name, phone, email, timing, area, propType, sqm, age, estimatePrice</td>
+        </tr>
+        <tr>
+          <td>Tool 2</td>
+          <td><span class="ls-key">akiya_deals</span></td>
+          <td>Array&lt;Deal&gt;</td>
+          <td>id, name, addr, status, buy, sell, score, memo, date</td>
+        </tr>
+        <tr>
+          <td>Tool 3</td>
+          <td><span class="ls-key">od_sellers</span></td>
+          <td>Array&lt;Seller&gt;</td>
+          <td>id, name, phone, price, type, area, sqm, age, timing, status</td>
+        </tr>
+        <tr>
+          <td>Tool 3</td>
+          <td><span class="ls-key">od_buyers</span></td>
+          <td>Array&lt;Buyer&gt;</td>
+          <td>id, name, phone, budget, type, area, sqm, purpose, timing, loan</td>
+        </tr>
+        <tr>
+          <td>Tool 3</td>
+          <td><span class="ls-key">od_deals3</span></td>
+          <td>Array&lt;Deal3&gt;</td>
+          <td>id, title, seller, buyer, price, rate, status</td>
+        </tr>
+        <tr>
+          <td>Tool 4</td>
+          <td><span class="ls-key">saas_properties</span></td>
+          <td>Array&lt;Property&gt;</td>
+          <td>id, name, addr, type, units, rate, start</td>
+        </tr>
+        <tr>
+          <td>Tool 4</td>
+          <td><span class="ls-key">saas_tenants</span></td>
+          <td>Array&lt;Tenant&gt;</td>
+          <td>id, name, phone, propertyId, room, rent, deposit, start, end, status</td>
+        </tr>
+        <tr>
+          <td>Tool 4</td>
+          <td><span class="ls-key">saas_rents</span></td>
+          <td>Array&lt;RentRecord&gt;</td>
+          <td>id, tenantId, month(YYYY-MM), charge, paid, date, status</td>
+        </tr>
+        <tr>
+          <td>Tool 4</td>
+          <td><span class="ls-key">saas_repairs</span></td>
+          <td>Array&lt;Repair&gt;</td>
+          <td>id, propertyId, room, content, priority, date, cost, vendor, status</td>
+        </tr>
+        <tr>
+          <td>Tool 5</td>
+          <td><span class="ls-key">inv_history</span></td>
+          <td>Array&lt;Analysis&gt;</td>
+          <td>id, date, name, price, rent, grossYield, netYield, annualCF, ccr, verdict, inp(full)</td>
+        </tr>
+      </table>
+
+      <div class="info-box">
+        <div class="ib-label">ID採番方式</div>
+        <p>全レコードのIDは <code>Date.now()</code>（UNIXミリ秒タイムスタンプ）を使用。単一ユーザー前提のため衝突リスクは実質ゼロ。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ===== Tool 1 詳細 ===== -->
+    <section id="t1">
+      <h2>🏠 Tool 1 — AI査定ツール</h2>
+      <h3>価格算出アルゴリズム</h3>
+      <p>ヘドニック価格モデルをベースに7因子の積で推定価格を算出する。</p>
+      <pre><code><span class="fn">price</span> = baseUnitPrice(area) × sqm
+        × ageFactor(age)          <span class="cm">// 0.44〜1.0</span>
+        × typeFactor(propType)    <span class="cm">// 0.65〜1.05</span>
+        × floorFactor(floor)      <span class="cm">// 0.86〜1.20</span>
+        × stationFactor(station)  <span class="cm">// 0.86〜1.15</span>
+        × directionFactor(dir)    <span class="cm">// 0.93〜1.04</span>
+        × reformFactor(reform)    <span class="cm">// 1.00〜1.10</span></code></pre>
+
+      <h4>エリア基準単価（円/㎡）の修正方法</h4>
+      <p>ファイル内の <code>AREA_UNIT</code> オブジェクトの値を変更することで各エリアの基準単価を更新できる。</p>
+      <pre><code><span class="kw">const</span> AREA_UNIT = {
+  tokyo_central: <span class="num">1500000</span>, <span class="cm">// ← この数値を変更</span>
+  tokyo_yamate:  <span class="num">1200000</span>,
+  ...
+};</code></pre>
+
+      <h3>流動性スコア計算式</h3>
+      <pre><code>liquidity = (stationFac - <span class="num">0.86</span>) / (<span class="num">1.15</span> - <span class="num">0.86</span>) × <span class="num">40</span>
+          + (<span class="num">1</span> - min(age, <span class="num">40</span>) / <span class="num">40</span>) × <span class="num">40</span>
+          + (dirFac - <span class="num">0.93</span>) / (<span class="num">1.04</span> - <span class="num">0.93</span>) × <span class="num">20</span>
+<span class="cm">// 合計 0〜100 でキャップ</span></code></pre>
+    </section>
+
+    <!-- ===== Tool 2 詳細 ===== -->
+    <section id="t2">
+      <h2>🏚️ Tool 2 — 空き家ハンター</h2>
+      <h3>スコアリング項目の追加・変更方法</h3>
+      <p><code>CHECKS</code> 配列にオブジェクトを追加するだけで項目を増やせる。合計スコアは100点を超えても <code>Math.min(score, 100)</code> でキャップされる。</p>
+      <pre><code><span class="kw">const</span> CHECKS = [
+  { id:<span class="str">'c1'</span>, label:<span class="str">'表札がない'</span>, score: <span class="num">8</span>, cat:<span class="str">'外観'</span> },
+  <span class="cm">// ← ここに追加</span>
+  { id:<span class="str">'c13'</span>, label:<span class="str">'新しい項目'</span>, score: <span class="num">10</span>, cat:<span class="str">'カテゴリ名'</span> },
+];</code></pre>
+
+      <h3>DMテンプレートの追加方法</h3>
+      <p><code>DM_TEMPLATES</code> オブジェクトに新しいキーと関数を追加し、セレクトボックスの <code>&lt;option&gt;</code> も追加する。</p>
+      <pre><code><span class="kw">const</span> DM_TEMPLATES = {
+  <span class="cm">// 既存テンプレート...</span>
+  myNewTemplate: (owner, addr, price, extra) => <span class="str">`
+    ${owner}様へ
+    ... テンプレート本文 ...
+  `</span>.trim(),
+};</code></pre>
+    </section>
+
+    <!-- ===== Tool 3 詳細 ===== -->
+    <section id="t3">
+      <h2>🤝 Tool 3 — オーナーダイレクト</h2>
+      <h3>マッチングアルゴリズム</h3>
+      <p><code>calcMatchScore(seller, buyer)</code> 関数が4つの基準でスコアを算出する（最大100点）。</p>
+      <table>
+        <tr><th>基準</th><th>最大点</th><th>条件</th></tr>
+        <tr><td>価格帯一致</td><td>40点</td><td>buyer.budget ≥ seller.price × 90%</td></tr>
+        <tr><td>エリア一致</td><td>30点</td><td>エリア文字列の部分一致（先頭4文字）</td></tr>
+        <tr><td>物件種別一致</td><td>20点</td><td>buyer.type === seller.type または "any"</td></tr>
+        <tr><td>面積条件</td><td>10点</td><td>seller.sqm ≥ buyer.sqm（希望面積以上）</td></tr>
+      </table>
+      <p>スコア30点以上のペアのみ表示される。閾値を変更するには <code>if(m.score >= 30)</code> の値を変える。</p>
+
+      <h3>手数料計算式</h3>
+      <pre><code><span class="cm">// 仲介手数料上限（宅建業法）</span>
+<span class="kw">const</span> baseFee =
+  price &lt;= <span class="num">200</span>  ? price × <span class="num">0.05</span> :
+  price &lt;= <span class="num">400</span>  ? price × <span class="num">0.04</span> + <span class="num">2</span> :
+                  price × <span class="num">0.03</span> + <span class="num">6</span>;  <span class="cm">// 万円単位</span>
+<span class="cm">// 両手: × 2 、割引両手: price × 0.01 × 2</span></code></pre>
+    </section>
+
+    <!-- ===== Tool 4 詳細 ===== -->
+    <section id="t4">
+      <h2>🏢 Tool 4 — 管理SaaS</h2>
+      <h3>管理委託費の計算ロジック</h3>
+      <pre><code><span class="cm">// ダッシュボードの manageFee 計算</span>
+<span class="kw">const</span> manageFee = properties.reduce((sum, prop) => {
+  <span class="kw">const</span> tenants = activeTenants.filter(t => t.propertyId === prop.id);
+  <span class="kw">const</span> rentSum = tenants.reduce((x,t) => x + (t.rent || <span class="num">0</span>), <span class="num">0</span>);
+  <span class="kw">return</span> sum + rentSum × (prop.rate || <span class="num">5</span>) / <span class="num">100</span>;
+}, <span class="num">0</span>);</code></pre>
+
+      <h3>アクション必要リストの条件</h3>
+      <ul>
+        <li><strong>家賃未入金</strong>：当月の家賃レコードが <code>unpaid</code> のテナント</li>
+        <li><strong>契約更新</strong>：契約終了日まで90日以内のアクティブテナント</li>
+        <li><strong>緊急修繕</strong>：<code>priority === 'urgent'</code> かつ <code>status !== 'done'</code> の修繕</li>
+      </ul>
+
+      <h3>収益グラフ（Chart.js）</h3>
+      <p>グラフは <code>renderDashboard()</code> 呼び出し時に過去12ヶ月の <code>saas_rents</code> データを集計して描画する。同関数は毎回 <code>revenueChart.destroy()</code> してから再生成するため、タブ切替で重複描画しない。</p>
+    </section>
+
+    <!-- ===== Tool 5 詳細 ===== -->
+    <section id="t5">
+      <h2>📊 Tool 5 — 投資分析ツール</h2>
+      <h3>主要計算関数</h3>
+
+      <h4>calcLoanPayment(loan, rate, term, type)</h4>
+      <pre><code><span class="cm">// 元利均等返済の月次返済額</span>
+r = rate / <span class="num">100</span> / <span class="num">12</span>;  <span class="cm">// 月利</span>
+monthly = L × r × (1+r)^n / ((1+r)^n - 1);  <span class="cm">// n = term×12</span>
+
+<span class="cm">// 元金均等返済（初月最大）</span>
+firstMonth = L/(term×12) + L×r;</code></pre>
+
+      <h4>calcNOI(rent, mgmt, tax, ins, mrate, vacancy)</h4>
+      <pre><code>annualRent  = rent × 12 × (1 - vacancy/100);
+annualMgmt  = mgmt × 12;
+mrateFee    = annualRent × mrate/100;
+NOI = annualRent - annualMgmt - mrateFee - tax - ins;</code></pre>
+
+      <h4>IRR近似式（簡易CAGR）</h4>
+      <pre><code><span class="cm">// ⚠️ 真のIRRではなく保有期間CAGR近似</span>
+irr = (exitNet + NOI×hold - balance) / equity)^(1/hold) - 1</code></pre>
+      <div class="warn-box">
+        <div class="wb-label">開発者注意</div>
+        <p>現在のIRRはキャッシュフローの時間的価値を考慮しないCGAR近似です。真のIRRはNewton-Raphson法などで求める必要があります。将来バージョンで改善予定。</p>
+      </div>
+
+      <h3>感度分析マトリクス</h3>
+      <p>空室率0〜25%（6段階）× 家賃変化-20%〜+10%（6段階）の36セルを総当りで <code>calcNOI()</code> を呼び出し、実質利回りを計算・色分けして表示する。</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ===== セキュリティ ===== -->
+    <section id="security">
+      <h2>🔒 セキュリティ</h2>
+
+      <h3>XSS（クロスサイトスクリプティング）対策</h3>
+      <p>ユーザー入力データを <code>innerHTML</code> に展開する箇所は全て <code>esc()</code> 関数を通している。</p>
+      <pre><code><span class="cm">// ✅ 安全: esc()でエスケープ</span>
+el.innerHTML = <span class="str">`&lt;td&gt;</span><span class="kw">${</span><span class="fn">esc</span>(user.name)<span class="kw">}</span><span class="str">&lt;/td&gt;`</span>;
+
+<span class="cm">// ❌ 危険: 直接展開（修正済み）</span>
+el.innerHTML = <span class="str">`&lt;td&gt;</span><span class="kw">${</span>user.name<span class="kw">}</span><span class="str">&lt;/td&gt;`</span>;</code></pre>
+
+      <div class="fix-box">
+        <div class="fb-label">適用済み</div>
+        <p>Tool 1〜5の全 <code>innerHTML</code> ユーザーデータ展開箇所に <code>esc()</code> を適用済み（v1.0時点）。</p>
+      </div>
+
+      <h3>データ漏洩リスク</h3>
+      <ul>
+        <li>localStorageは同一オリジン（file://）からのみアクセス可能</li>
+        <li>外部サーバーへのデータ送信は一切ない</li>
+        <li>ただし、端末の物理アクセスを得た第三者はlocalStorageを読み取れる</li>
+      </ul>
+
+      <h3>CDN依存のリスク</h3>
+      <p>Chart.js（jsDelivr）・Google Fontsを外部CDNから読み込んでいる。信頼性は高いが以下のリスクがある。</p>
+      <ul>
+        <li>オフライン時にグラフ・フォントが使えない</li>
+        <li>CDNサービス側の障害時に影響を受ける</li>
+      </ul>
+      <div class="info-box">
+        <div class="ib-label">完全オフライン化する場合</div>
+        <p>Chart.js（<code>chart.umd.min.js</code>）をダウンロードしてローカルに配置し、CDNのURLをローカルパスに変更する。Google FontsはCSS内の <code>font-family</code> をシステムフォントにフォールバックさせるか、フォントファイルを同梱する。</p>
+      </div>
+    </section>
+
+    <!-- ===== 既知の問題 ===== -->
+    <section id="known-issues">
+      <h2>⚠️ 既知の問題・制限事項</h2>
+      <table>
+        <tr><th>重要度</th><th>ツール</th><th>内容</th><th>状態</th></tr>
+        <tr>
+          <td style="color:var(--red)">High</td>
+          <td>Tool 5</td>
+          <td><code>${'{}'}</code>内セミコロンによるSyntaxError（CFテーブルのスタイル）</td>
+          <td><span class="badge b-fixed">修正済</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--red)">High</td>
+          <td>Tool 2</td>
+          <td>カンバン描画での全角括弧 <code>（</code> によるSyntaxError</td>
+          <td><span class="badge b-fixed">修正済</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Med</td>
+          <td>Tool 5</td>
+          <td>ラベル文字列内の <code>${inp.hold}</code> が展開されない</td>
+          <td><span class="badge b-fixed">修正済</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Med</td>
+          <td>全ツール</td>
+          <td>XSS（innerHTML + ユーザー入力の直接展開）</td>
+          <td><span class="badge b-fixed">修正済</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange)">Med</td>
+          <td>Tool 5</td>
+          <td>IRRがCGAR近似であり真の内部収益率ではない</td>
+          <td><span class="badge b-known">既知・未修正</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text-muted)">Low</td>
+          <td>全ツール</td>
+          <td>localStorage上限5MB。大量データ登録で <code>QuotaExceededError</code> になる可能性</td>
+          <td><span class="badge b-known">既知・未修正</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text-muted)">Low</td>
+          <td>Tool 4/5</td>
+          <td>オフライン環境でChart.jsが読めずグラフ非表示</td>
+          <td><span class="badge b-known">既知・未修正</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text-muted)">Low</td>
+          <td>Tool 3</td>
+          <td>マッチングのエリア判定が文字列先頭4文字の部分一致のみ</td>
+          <td><span class="badge b-known">既知・低優先</span></td>
+        </tr>
+      </table>
+    </section>
+
+    <!-- ===== 拡張ガイド ===== -->
+    <section id="extend">
+      <h2>🔧 拡張ガイド</h2>
+
+      <h3>新しいエリアをTool 1に追加する</h3>
+      <pre><code><span class="cm">// 1. AREA_UNIT にキーと単価を追加</span>
+<span class="kw">const</span> AREA_UNIT = {
+  ...
+  sendai: <span class="num">280000</span>,  <span class="cm">// 仙台市</span>
+};
+
+<span class="cm">// 2. AREA_LABEL にラベルを追加</span>
+<span class="kw">const</span> AREA_LABEL = {
+  ...
+  sendai: <span class="str">'宮城県仙台市'</span>,
+};
+
+<span class="cm">// 3. HTML の select に option を追加</span>
+<span class="kw">&lt;option</span> value=<span class="str">"sendai"</span><span class="kw">&gt;</span>宮城県 / 仙台市<span class="kw">&lt;/option&gt;</span></code></pre>
+
+      <h3>Tool 4でCSVインポート機能を追加する場合</h3>
+      <pre><code><span class="kw">function</span> <span class="fn">importCSV</span>(file) {
+  <span class="kw">const</span> reader = <span class="kw">new</span> FileReader();
+  reader.onload = (e) => {
+    <span class="kw">const</span> rows = e.target.result.split(<span class="str">'\n'</span>).slice(<span class="num">1</span>); <span class="cm">// ヘッダ除去</span>
+    rows.forEach(row => {
+      <span class="kw">const</span> [name, addr, ...] = row.split(<span class="str">','</span>);
+      tenants.push({ id: Date.now(), name, addr, ... });
+    });
+    <span class="fn">save</span>(<span class="str">'tenants'</span>);
+    <span class="fn">renderTenants</span>();
+  };
+  reader.readAsText(file, <span class="str">'utf-8'</span>);
+}</code></pre>
+
+      <h3>バックエンドAPI連携に移行する場合</h3>
+      <p>現在 <code>localStorage.getItem/setItem</code> を呼び出している箇所を <code>fetch()</code> + REST API に置き換えることで、マルチデバイス対応・データ共有が実現できる。各ツールの <code>save(key)</code> 関数と初期化部分（<code>let data = JSON.parse(...)</code>）が変更対象となる。</p>
+    </section>
+
+    <!-- ===== デプロイ ===== -->
+    <section id="deploy">
+      <h2>🚀 デプロイ方針</h2>
+
+      <h3>現状（ローカル運用）</h3>
+      <p>現在はローカルファイルとして運用。追加のセットアップ不要。</p>
+
+      <h3>静的ホスティングへの公開（将来）</h3>
+      <div class="warn-box">
+        <div class="wb-label">公開前の必須対応</div>
+        <p>石澤さんの指示により現在は非公開。公開する場合は以下を対応すること：</p>
+      </div>
+      <ol>
+        <li>認証機能の追加（現在なし）</li>
+        <li>localStorageではなくサーバーサイドDBへのデータ移行</li>
+        <li>HTTPS対応（静的ホスティングサービスを使用）</li>
+        <li>プライバシーポリシーの整備（個人情報取扱いの明示）</li>
+        <li>宅建業法上の表示義務の確認（AI査定の免責事項）</li>
+      </ol>
+
+      <h3>推奨ホスティング候補（無料）</h3>
+      <table>
+        <tr><th>サービス</th><th>特徴</th></tr>
+        <tr><td>GitHub Pages</td><td>gitリポジトリと直接連携。無料HTTPS。</td></tr>
+        <tr><td>Netlify</td><td>ドラッグ&ドロップデプロイ可。無料HTTPS。</td></tr>
+        <tr><td>Cloudflare Pages</td><td>高速CDN。無料HTTPS。</td></tr>
+      </table>
+    </section>
+
+    <div class="divider"></div>
+    <div style="text-align:center;padding:20px 0;color:var(--text-muted);font-size:12px">
+      © 2026 Ishizawa Shinji Real Estate Business Hack Suite — Developer Manual v1.0
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ユーザーマニュアル | 石澤紳司 不動産ビジネスハックツール集</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #c9a84c; --gold-light: #e8c97a;
+      --dark: #0d0d0d; --dark2: #1a1a1a; --dark3: #242424;
+      --text: #f0ede8; --text-muted: #999;
+      --green: #22c55e; --blue: #3b82f6; --orange: #f97316;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--dark); color: var(--text); }
+
+    /* Header */
+    .header { background: linear-gradient(135deg, var(--dark2), #1e1a0e); border-bottom: 1px solid rgba(201,168,76,0.3); padding: 24px 40px; display: flex; align-items: center; justify-content: space-between; }
+    .logo-name { font-size: 20px; font-weight: 900; color: var(--gold); }
+    .logo-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 3px; margin-top: 2px; }
+    .header-badge { background: rgba(201,168,76,0.12); border: 1px solid var(--gold); color: var(--gold); padding: 6px 16px; border-radius: 100px; font-size: 12px; }
+
+    /* Layout */
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 260px; flex-shrink: 0; background: var(--dark2); border-right: 1px solid rgba(255,255,255,0.06); padding: 32px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    .sidebar-title { font-size: 11px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; padding: 0 24px 12px; }
+    .nav-item { display: block; padding: 10px 24px; font-size: 13px; color: var(--text-muted); text-decoration: none; border-left: 2px solid transparent; transition: all 0.2s; }
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+    .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,168,76,0.05); }
+    .nav-section { padding: 20px 24px 6px; font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.2); text-transform: uppercase; }
+    .content { flex: 1; padding: 48px 60px; max-width: 900px; }
+
+    /* Typography */
+    h1 { font-size: 32px; font-weight: 900; margin-bottom: 12px; }
+    h1 span { color: var(--gold); }
+    h2 { font-size: 22px; font-weight: 700; margin: 48px 0 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+    h3 { font-size: 16px; font-weight: 700; margin: 28px 0 12px; color: var(--gold); }
+    p { font-size: 14px; line-height: 1.9; color: rgba(240,237,232,0.85); margin-bottom: 14px; }
+    ul, ol { padding-left: 20px; margin-bottom: 14px; }
+    li { font-size: 14px; line-height: 1.9; color: rgba(240,237,232,0.85); margin-bottom: 4px; }
+
+    /* Components */
+    .intro-card { background: linear-gradient(135deg, #1a1a0a, #0d0d1a); border: 1px solid rgba(201,168,76,0.3); border-radius: 14px; padding: 28px; margin-bottom: 40px; }
+    .intro-card p { color: var(--text-muted); }
+    .tool-header { display: flex; align-items: center; gap: 16px; background: var(--dark2); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; }
+    .tool-icon { font-size: 36px; }
+    .tool-num { font-size: 11px; letter-spacing: 3px; color: var(--gold); }
+    .tool-title { font-size: 18px; font-weight: 700; margin-top: 2px; }
+    .step-list { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; }
+    .step-item { display: flex; gap: 16px; align-items: flex-start; padding: 16px 20px; background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; }
+    .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: #000; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .step-body { flex: 1; }
+    .step-label { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .step-desc { font-size: 12px; color: var(--text-muted); line-height: 1.8; }
+    .tip-box { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); border-left: 3px solid var(--green); border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+    .tip-box .tip-label { font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 1px; margin-bottom: 6px; }
+    .tip-box p { color: rgba(240,237,232,0.8); margin: 0; font-size: 13px; }
+    .warn-box { background: rgba(249,115,22,0.07); border: 1px solid rgba(249,115,22,0.2); border-left: 3px solid var(--orange); border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+    .warn-box .warn-label { font-size: 11px; font-weight: 700; color: var(--orange); letter-spacing: 1px; margin-bottom: 6px; }
+    .warn-box p { color: rgba(240,237,232,0.8); margin: 0; font-size: 13px; }
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+    .feature-item { background: var(--dark3); border-radius: 8px; padding: 12px 14px; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
+    .feature-item .fi-icon { font-size: 16px; flex-shrink: 0; }
+    .back-link { color: var(--gold); text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 32px; }
+    .back-link:hover { text-decoration: underline; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; margin-left: 8px; }
+    .b-green { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .b-gold { background: rgba(201,168,76,0.12); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); }
+    .b-blue { background: rgba(59,130,246,0.12); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }
+    .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 40px 0; }
+    code { background: var(--dark3); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 8px; font-size: 12px; font-family: monospace; color: var(--gold); }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th { background: var(--dark3); padding: 10px 14px; font-size: 12px; color: var(--text-muted); text-align: left; }
+    td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    @media(max-width:900px) { .sidebar{display:none;} .content{padding:28px 20px;} .feature-grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <div class="logo-name">ISHIZAWA SHINJI</div>
+    <div class="logo-sub">ユーザーマニュアル</div>
+  </div>
+  <div class="header-badge">USER GUIDE v1.0</div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-title">目次</div>
+    <a href="#overview" class="nav-item">はじめに</a>
+    <a href="#start" class="nav-item">起動方法</a>
+    <a href="#data" class="nav-item">データ保存について</a>
+    <div class="nav-section">各ツール</div>
+    <a href="#tool1" class="nav-item">Tool 1 — AI査定</a>
+    <a href="#tool2" class="nav-item">Tool 2 — 空き家ハンター</a>
+    <a href="#tool3" class="nav-item">Tool 3 — オーナーダイレクト</a>
+    <a href="#tool4" class="nav-item">Tool 4 — 管理SaaS</a>
+    <a href="#tool5" class="nav-item">Tool 5 — 投資分析</a>
+    <div class="nav-section">その他</div>
+    <a href="#faq" class="nav-item">よくある質問</a>
+    <a href="#caution" class="nav-item">注意事項</a>
+  </nav>
+
+  <main class="content">
+    <a href="index.html" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      ダッシュボードに戻る
+    </a>
+
+    <h1>不動産ビジネスハック<br><span>ユーザーマニュアル</span></h1>
+
+    <div class="intro-card">
+      <p>このツール集は、石澤紳司さんが不動産業界で圧倒的な収益を上げるために開発した5つのビジネスハックツールです。全てブラウザ上で動作し、インターネット上にデータを送信しません。</p>
+    </div>
+
+    <!-- ===== はじめに ===== -->
+    <section id="overview">
+      <h2>🏠 はじめに — ツール全体像</h2>
+      <p>5つのツールはそれぞれ独立した収益エンジンです。連携して使うことで相乗効果が生まれます。</p>
+      <table>
+        <tr><th>ツール</th><th>目的</th><th>主な収益源</th></tr>
+        <tr><td><strong>Tool 1</strong> AI査定</td><td>売却検討者のリードを自動取得</td><td>仲介手数料・リード販売</td></tr>
+        <tr><td><strong>Tool 2</strong> 空き家ハンター</td><td>空き家オーナーへアプローチ</td><td>買取転売・民泊転用</td></tr>
+        <tr><td><strong>Tool 3</strong> オーナーダイレクト</td><td>売主・買主を直接マッチング</td><td>両手仲介・会員費</td></tr>
+        <tr><td><strong>Tool 4</strong> 管理SaaS</td><td>物件・家賃・修繕を一元管理</td><td>管理委託費（月次安定収入）</td></tr>
+        <tr><td><strong>Tool 5</strong> 投資分析</td><td>投資物件の採算を即計算</td><td>SaaSサブスク・紹介料</td></tr>
+      </table>
+    </section>
+
+    <!-- ===== 起動方法 ===== -->
+    <section id="start">
+      <h2>🚀 起動方法</h2>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-label">フォルダを開く</div>
+            <div class="step-desc"><code>real-estate-project/tools/</code> フォルダを開きます</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-label">ハブページをブラウザで開く</div>
+            <div class="step-desc"><code>index.html</code> をダブルクリック、またはブラウザにドラッグ＆ドロップします</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-label">使いたいツールをクリック</div>
+            <div class="step-desc">ハブ画面から5つのツールに直接アクセスできます</div>
+          </div>
+        </div>
+      </div>
+      <div class="tip-box">
+        <div class="tip-label">TIPS</div>
+        <p>Chrome または Edge の使用を推奨します。Safari・Firefox でも動作しますが、グラフ表示に Chart.js（CDN）が必要なためインターネット接続が必要です。</p>
+      </div>
+    </section>
+
+    <!-- ===== データ保存 ===== -->
+    <section id="data">
+      <h2>💾 データ保存について</h2>
+      <p>全ツールのデータは <strong>ブラウザのlocalStorage</strong> に保存されます。</p>
+      <div class="feature-grid">
+        <div class="feature-item"><div class="fi-icon">✅</div><div>インターネット上にデータは送信されない</div></div>
+        <div class="feature-item"><div class="fi-icon">✅</div><div>サーバー不要・月額費用ゼロ</div></div>
+        <div class="feature-item"><div class="fi-icon">⚠️</div><div>ブラウザのキャッシュクリアでデータが消える</div></div>
+        <div class="feature-item"><div class="fi-icon">⚠️</div><div>保存上限は約5MB（通常の使用では問題なし）</div></div>
+      </div>
+      <div class="warn-box">
+        <div class="warn-label">重要</div>
+        <p>ブラウザの「閲覧履歴の消去」「キャッシュクリア」を行うとデータが消えます。各ツールのCSVエクスポート機能で定期的にバックアップしてください。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ===== Tool 1 ===== -->
+    <section id="tool1">
+      <div class="tool-header">
+        <div class="tool-icon">🏠</div>
+        <div>
+          <div class="tool-num">TOOL 01</div>
+          <div class="tool-title">AI即時査定リード爆取りマシン</div>
+        </div>
+      </div>
+
+      <h3>何ができるか</h3>
+      <p>物件情報を入力すると5秒でAI査定額を算出。<strong>結果を見るために連絡先を入力してもらう</strong>ことで、売却意向のある温かいリードを自動蓄積します。</p>
+
+      <h3>使い方（査定する）</h3>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-label">エリア・物件種別・面積・築年数を入力</div><div class="step-desc">必須項目（*マーク）を全て入力して「次へ」</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-label">詳細情報を入力</div><div class="step-desc">階数・駅距離・方角・リフォーム状況を選択して「次へ」</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-label">相手の連絡先を入力</div><div class="step-desc">氏名・電話番号・売却時期を入力。「査定結果を見る」をクリック</div></div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-body"><div class="step-label">査定結果表示 → リード自動保存</div><div class="step-desc">推定価格・レンジ・市場流通性・売却期間が表示。同時にリードタブに自動登録される</div></div></div>
+      </div>
+
+      <h3>リード管理タブ</h3>
+      <ul>
+        <li>蓄積したリスト一覧の閲覧・削除が可能</li>
+        <li>「CSVエクスポート」ボタンで全リードをExcelで開けるCSVとして保存できる</li>
+      </ul>
+
+      <div class="tip-box">
+        <div class="tip-label">活用TIPS</div>
+        <p>このツールを自社ウェブサイトへの誘導導線として活用すると効果的です。「無料で査定してみる→連絡先入力」の流れで、営業電話よりも圧倒的に心理的ハードルが低くなります。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ===== Tool 2 ===== -->
+    <section id="tool2">
+      <div class="tool-header">
+        <div class="tool-icon">🏚️</div>
+        <div>
+          <div class="tool-num">TOOL 02</div>
+          <div class="tool-title">空き家ハンター × 買取転売システム</div>
+        </div>
+      </div>
+
+      <h3>4つのタブ構成</h3>
+      <table>
+        <tr><th>タブ</th><th>内容</th></tr>
+        <tr><td>🔍 空き家スコアリング</td><td>現地調査結果を12項目でチェックし有望度を100点満点でスコアリング</td></tr>
+        <tr><td>✉️ DM自動生成</td><td>所有者向けの手紙文を5種類のテンプレートから自動生成・印刷</td></tr>
+        <tr><td>📌 案件パイプライン</td><td>案件の進捗をカンバン＋テーブルで管理。利ざや合計を自動計算</td></tr>
+        <tr><td>💬 交渉スクリプト</td><td>初回接触〜クロージングまでの場面別トーク台本を即参照</td></tr>
+      </table>
+
+      <h3>スコアリングの使い方</h3>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-label">物件住所を入力</div><div class="step-desc">後で案件登録に自動反映されます</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-label">現地で該当する項目をクリック</div><div class="step-desc">「表札がない」「ポストが溢れている」など12項目</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-label">スコアと推奨アクションを確認</div><div class="step-desc">Sランク（70点以上）は最優先アプローチ</div></div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-body"><div class="step-label">「案件として登録する」でパイプラインへ</div><div class="step-desc">スコアと住所が自動入力された状態でモーダルが開く</div></div></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ===== Tool 3 ===== -->
+    <section id="tool3">
+      <div class="tool-header">
+        <div class="tool-icon">🤝</div>
+        <div>
+          <div class="tool-num">TOOL 03</div>
+          <div class="tool-title">オーナーダイレクト仲介プラットフォーム</div>
+        </div>
+      </div>
+
+      <h3>基本フロー</h3>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-label">売主タブで売却物件を登録</div><div class="step-desc">物件情報・価格・希望条件を入力</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-label">買主タブで購入希望者を登録</div><div class="step-desc">予算・希望エリア・物件種別・購入目的を入力</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-label">AIマッチングタブで「マッチングを実行」</div><div class="step-desc">価格・エリア・物件種別・面積の条件を自動照合してスコアリング</div></div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-body"><div class="step-label">高スコアのペアを「商談登録」</div><div class="step-desc">商談パイプラインに進み、新規→マッチング済→交渉中→成約と進捗管理</div></div></div>
+      </div>
+
+      <h3>手数料シミュレーター</h3>
+      <p>売買価格・仲介形態・月間成約件数を入力すると、月間・年間の手数料収入を即計算します。成約件数ごとのシミュレーション表も自動生成。</p>
+
+      <div class="tip-box">
+        <div class="tip-label">活用TIPS</div>
+        <p>「両手仲介（売主・買主双方から）」を選択することで、他社仲介より手数料を完全に自社で受け取れます。オーナーダイレクトの最大のメリットです。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ===== Tool 4 ===== -->
+    <section id="tool4">
+      <div class="tool-header">
+        <div class="tool-icon">🏢</div>
+        <div>
+          <div class="tool-num">TOOL 04</div>
+          <div class="tool-title">家賃保証 × 管理SaaS（地主囲い込みシステム）</div>
+        </div>
+      </div>
+
+      <h3>5つのタブ構成</h3>
+      <table>
+        <tr><th>タブ</th><th>内容</th></tr>
+        <tr><td>📊 ダッシュボード</td><td>入居率・月間家賃収入・管理委託費・収益グラフ・アクション必要リストを表示</td></tr>
+        <tr><td>🏢 物件管理</td><td>管理物件の登録・委託費率の設定</td></tr>
+        <tr><td>👥 テナント管理</td><td>入居者情報・契約期間の管理。90日以内の更新期限をアラート</td></tr>
+        <tr><td>💴 家賃台帳</td><td>月別の入金状況を管理。未入金者を赤字で表示</td></tr>
+        <tr><td>🔧 修繕管理</td><td>修繕依頼の受付・進捗・費用を管理。緊急案件はダッシュボードにアラート</td></tr>
+      </table>
+
+      <h3>初期設定手順</h3>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-label">物件管理タブで物件を登録</div><div class="step-desc">物件名・戸数・管理委託費率（通常5%）を設定</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-label">テナント管理タブで入居者を登録</div><div class="step-desc">どの物件の何号室か、月額家賃・契約期間を入力</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-label">毎月、家賃台帳タブで入金を記録</div><div class="step-desc">「入金登録」または行末の「入金登録」ボタンから素早く記録</div></div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-body"><div class="step-label">ダッシュボードで月次収益を確認</div><div class="step-desc">管理委託費（石澤さんの取り分）がリアルタイムで表示される</div></div></div>
+      </div>
+
+      <div class="warn-box">
+        <div class="warn-label">注意</div>
+        <p>家賃台帳は「対象月」セレクトで月を切り替えて記録します。過去月の記録も可能です。同じテナントの同月入金を再登録すると上書きされます。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ===== Tool 5 ===== -->
+    <section id="tool5">
+      <div class="tool-header">
+        <div class="tool-icon">📊</div>
+        <div>
+          <div class="tool-num">TOOL 05</div>
+          <div class="tool-title">不動産投資家向け AIデータ分析ツール</div>
+        </div>
+      </div>
+
+      <h3>算出される指標の説明</h3>
+      <table>
+        <tr><th>指標</th><th>意味</th><th>目安</th></tr>
+        <tr><td>表面利回り</td><td>年間家賃収入 ÷ 購入価格</td><td>6%以上が優良</td></tr>
+        <tr><td>実質利回り</td><td>経費・空室控除後の純収益 ÷ 購入価格</td><td>5%以上推奨</td></tr>
+        <tr><td>NOI</td><td>純営業収益（経費控除後の年間収入）</td><td>ローン前の実力値</td></tr>
+        <tr><td>CF after DS</td><td>NOIからローン返済を引いた手残りCF</td><td>プラスが必須</td></tr>
+        <tr><td>CCR</td><td>自己資本に対する年間CFの割合</td><td>10%以上が理想</td></tr>
+        <tr><td>DSCR</td><td>NOI ÷ ローン返済額（1.2以上が安全）</td><td>1.0以下は危険</td></tr>
+        <tr><td>IRR</td><td>保有期間全体の投資収益率</td><td>8%以上が優良</td></tr>
+      </table>
+
+      <h3>分析の手順</h3>
+      <div class="step-list">
+        <div class="step-item"><div class="step-num">1</div><div class="step-body"><div class="step-label">「物件入力」タブで情報を入力</div><div class="step-desc">購入価格・家賃入力でリアルタイムにクイック結果が表示される</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-body"><div class="step-label">「分析実行」ボタンをクリック</div><div class="step-desc">全指標・ローン比較・出口試算を一括計算。結果タブに自動移動</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-body"><div class="step-label">「CF予測」タブで10年シミュレーション確認</div><div class="step-desc">年次キャッシュフロー・累積回収グラフで投資回収タイミングを把握</div></div></div>
+        <div class="step-item"><div class="step-num">4</div><div class="step-body"><div class="step-label">「感度分析」タブでリスク確認</div><div class="step-desc">空室率・家賃変化・金利変動に対して実質利回りがどう変化するか確認</div></div></div>
+      </div>
+
+      <div class="tip-box">
+        <div class="tip-label">活用TIPS</div>
+        <p>「分析履歴」タブには直近50件の分析結果が保存されます。複数物件を比較する際は各物件を分析して履歴から比べましょう。「再読込」ボタンで過去の分析条件を復元できます。</p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ===== FAQ ===== -->
+    <section id="faq">
+      <h2>❓ よくある質問</h2>
+
+      <h3>Q. データが消えてしまった</h3>
+      <p>ブラウザのキャッシュや履歴を消去するとlocalStorageのデータも削除されます。各ツールの「CSVエクスポート」ボタンで定期的にバックアップを取ってください。</p>
+
+      <h3>Q. グラフが表示されない</h3>
+      <p>Tool 4と5はグラフ描画にChart.js（CDN）を使用しています。インターネット接続がない環境では表示されません。接続環境で開いてください。</p>
+
+      <h3>Q. 別のパソコンでも使えるか</h3>
+      <p>現在のデータは使用しているブラウザのlocalStorageに保存されているため、別のPCには引き継げません。CSVエクスポートしたファイルを手動でバックアップしてください。</p>
+
+      <h3>Q. 複数人で共有できるか</h3>
+      <p>現状は個人向けの設計です。共有する場合はCSVファイルを共有する形が現実的です。</p>
+
+      <h3>Q. 査定額はどのように計算されているか</h3>
+      <p>エリア基準単価・築年数・物件種別・階数・駅距離・方角・リフォーム状況の7つのファクターを掛け合わせたヘドニック価格モデルを採用しています。参考値としてご利用ください（宅地建物取引業法上の正式査定ではありません）。</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ===== 注意事項 ===== -->
+    <section id="caution">
+      <h2>⚠️ 注意事項</h2>
+      <ul>
+        <li>AI査定額は参考値です。正式な不動産査定は宅地建物取引士による査定が必要です。</li>
+        <li>DM送付・空き家への無断侵入は法律違反になる場合があります。適法な範囲で活用してください。</li>
+        <li>投資分析ツールの計算結果は投資の成果を保証するものではありません。</li>
+        <li>顧客の個人情報（名前・電話番号等）はlocalStorageに保存されます。端末の管理には十分ご注意ください。</li>
+      </ul>
+    </section>
+
+    <div class="divider"></div>
+    <div style="text-align:center;padding:20px 0;color:var(--text-muted);font-size:12px">
+      © 2026 Ishizawa Shinji Real Estate Business Hack Suite — User Manual v1.0
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

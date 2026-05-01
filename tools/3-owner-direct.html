@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オーナーダイレクト | 石澤紳司 不動産ビジネスハック</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #c9a84c; --gold-light: #e8c97a;
+      --dark: #0d0d0d; --dark2: #1a1a1a; --dark3: #242424;
+      --text: #f0ede8; --text-muted: #999;
+      --green: #22c55e; --red: #ef4444; --blue: #3b82f6; --purple: #a855f7;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+    .topnav { background: var(--dark2); border-bottom: 1px solid rgba(201,168,76,0.2); padding: 14px 32px; display: flex; align-items: center; gap: 16px; }
+    .back-link { color: var(--gold); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+    .back-link:hover { text-decoration: underline; }
+    .nav-title { font-size: 14px; color: var(--text-muted); }
+    .tabs { display: flex; background: var(--dark2); border-bottom: 1px solid rgba(255,255,255,0.06); overflow-x: auto; }
+    .tab-btn { padding: 16px 24px; background: none; border: none; color: var(--text-muted); font-size: 13px; font-family: inherit; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .main { max-width: 1000px; margin: 0 auto; padding: 40px 32px; }
+    .page-title { font-size: 26px; font-weight: 900; margin-bottom: 6px; }
+    .page-title span { color: var(--gold); }
+    .page-desc { color: var(--text-muted); font-size: 13px; margin-bottom: 36px; line-height: 1.8; }
+    .card { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 28px; margin-bottom: 20px; }
+    .card-title { font-size: 15px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 7px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group.third { grid-column: span 1; }
+    label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    label span.req { color: var(--gold); }
+    input, select, textarea { background: var(--dark3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s; width: 100%; }
+    input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+    select option { background: #1a1a1a; }
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 22px; border-radius: 9px; border: none; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+    .btn-gold { background: var(--gold); color: #000; }
+    .btn-gold:hover { background: var(--gold-light); }
+    .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--text); }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+    .btn-blue { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
+    .btn-purple { background: rgba(168,85,247,0.15); color: var(--purple); border: 1px solid rgba(168,85,247,0.25); }
+
+    /* Stats bar */
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+    .stat-box { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-val { font-size: 28px; font-weight: 900; }
+    .stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    /* Cards grid */
+    .listings-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 16px; }
+    .listing-card { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; transition: all 0.2s; }
+    .listing-card:hover { border-color: rgba(201,168,76,0.35); transform: translateY(-2px); }
+    .listing-img { height: 140px; background: linear-gradient(135deg, #1a1a2e, #16213e); display: flex; align-items: center; justify-content: center; font-size: 48px; position: relative; }
+    .listing-type-badge { position: absolute; top: 12px; left: 12px; padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 700; }
+    .type-sell { background: rgba(34,197,94,0.2); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+    .type-buy { background: rgba(59,130,246,0.2); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+    .match-badge { position: absolute; top: 12px; right: 12px; background: rgba(201,168,76,0.2); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); padding: 3px 8px; border-radius: 100px; font-size: 10px; font-weight: 700; }
+    .listing-body { padding: 16px; }
+    .listing-price { font-size: 20px; font-weight: 900; color: var(--gold); margin-bottom: 4px; }
+    .listing-name { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .listing-meta { font-size: 11px; color: var(--text-muted); line-height: 1.8; margin-bottom: 12px; }
+    .listing-actions { display: flex; gap: 8px; }
+
+    /* Match UI */
+    .match-pair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; padding: 20px; background: var(--dark3); border-radius: 12px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.06); }
+    .match-side { background: var(--dark2); border-radius: 10px; padding: 16px; }
+    .match-side-label { font-size: 10px; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 8px; }
+    .match-arrow { font-size: 24px; color: var(--gold); text-align: center; }
+    .match-score-box { text-align: center; padding: 12px; }
+    .match-score { font-size: 28px; font-weight: 900; color: var(--gold); }
+    .match-reasons { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .match-item { font-size: 11px; padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+    .match-item .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+
+    /* Pipeline */
+    .deal-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
+    .deal-row:hover { background: rgba(255,255,255,0.02); }
+    .deal-info { flex: 1; }
+    .deal-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+    .deal-sub { font-size: 11px; color: var(--text-muted); }
+    .deal-price-col { font-size: 14px; font-weight: 700; color: var(--gold); text-align: right; }
+    .deal-commission { font-size: 11px; color: var(--green); text-align: right; }
+    .badge { padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+    .b-new { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
+    .b-matched { background: rgba(168,85,247,0.15); color: var(--purple); border: 1px solid rgba(168,85,247,0.25); }
+    .b-nego { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.25); }
+    .b-closed { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .modal { background: var(--dark2); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 28px; max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .empty-state { text-align: center; padding: 60px; color: var(--text-muted); }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    @media(max-width:700px) { .form-grid { grid-template-columns:1fr; } .stats-grid { grid-template-columns:1fr 1fr; } .match-pair { grid-template-columns:1fr; } .main { padding:24px 16px; } .card { overflow-x:auto; } table { min-width:480px; } }
+    @media print {
+      .topnav,.tabs,.btn { display:none!important; }
+      body { background:#fff!important; color:#000!important; }
+      .card { background:#fff!important; border:1px solid #ccc!important; border-radius:4px!important; color:#000!important; page-break-inside:avoid; }
+      .main { padding:0!important; max-width:100%!important; }
+      .tab-content { display:block!important; }
+      :root { --text:#000; --text-muted:#555; --gold:#c9a84c; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    ダッシュボードに戻る
+  </a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span class="nav-title">TOOL 03 — オーナーダイレクト仲介プラットフォーム</span>
+</nav>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('sellers')">🏠 売主リスト</button>
+  <button class="tab-btn" onclick="switchTab('buyers')">🙋 買主リスト</button>
+  <button class="tab-btn" onclick="switchTab('matching')">✨ AIマッチング</button>
+  <button class="tab-btn" onclick="switchTab('pipeline')">📊 商談パイプライン</button>
+  <button class="tab-btn" onclick="switchTab('fee')">💰 手数料シミュ</button>
+</div>
+
+<!-- 売主タブ -->
+<div id="tab-sellers" class="tab-content active">
+<div class="main">
+  <h1 class="page-title"><span>売主</span>リスト</h1>
+  <p class="page-desc">売却を検討しているオーナーを登録・管理します。AIマッチングで買主と自動マッチングされます。</p>
+
+  <div id="seller-stats" class="stats-grid"></div>
+
+  <div style="display:flex;justify-content:flex-end;margin-bottom:20px;gap:10px">
+    <button class="btn btn-gold" onclick="openSellerModal()">＋ 売主登録</button>
+    <button class="btn btn-outline btn-sm" onclick="exportCSV('sellers')">CSVエクスポート</button>
+  </div>
+  <div id="sellers-list"></div>
+</div>
+</div>
+
+<!-- 買主タブ -->
+<div id="tab-buyers" class="tab-content">
+<div class="main">
+  <h1 class="page-title"><span>買主</span>リスト</h1>
+  <p class="page-desc">購入希望者の条件を登録します。登録後AIが自動でマッチング候補を生成します。</p>
+
+  <div id="buyer-stats" class="stats-grid"></div>
+
+  <div style="display:flex;justify-content:flex-end;margin-bottom:20px;gap:10px">
+    <button class="btn btn-gold" onclick="openBuyerModal()">＋ 買主登録</button>
+    <button class="btn btn-outline btn-sm" onclick="exportCSV('buyers')">CSVエクスポート</button>
+  </div>
+  <div id="buyers-list"></div>
+</div>
+</div>
+
+<!-- マッチングタブ -->
+<div id="tab-matching" class="tab-content">
+<div class="main">
+  <h1 class="page-title">AI<span>マッチング</span></h1>
+  <p class="page-desc">売主・買主の条件を自動照合し、マッチスコアの高いペアを提示します。</p>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:20px">
+    <button class="btn btn-gold" onclick="runMatching()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      マッチングを実行
+    </button>
+  </div>
+  <div id="matching-result"></div>
+</div>
+</div>
+
+<!-- パイプラインタブ -->
+<div id="tab-pipeline" class="tab-content">
+<div class="main">
+  <h1 class="page-title">商談<span>パイプライン</span></h1>
+  <p class="page-desc">マッチングから成約までの進捗と手数料収入を管理します。</p>
+
+  <div id="pipeline-stats" class="stats-grid"></div>
+
+  <div style="display:flex;justify-content:flex-end;margin-bottom:20px;gap:10px">
+    <button class="btn btn-gold" onclick="openDealRegModal()">＋ 商談登録</button>
+    <button class="btn btn-outline btn-sm" onclick="exportCSV('deals3')">CSVエクスポート</button>
+  </div>
+  <div class="card" id="pipeline-list"></div>
+</div>
+</div>
+
+<!-- 手数料シミュタブ -->
+<div id="tab-fee" class="tab-content">
+<div class="main">
+  <h1 class="page-title">手数料<span>シミュレーター</span></h1>
+  <p class="page-desc">売買価格と仲介形態に応じた手数料を即計算。石澤さんが受け取る金額を可視化します。</p>
+
+  <div class="card">
+    <div class="card-title">🧮 シミュレーション設定</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>売買価格（万円）</label>
+        <input type="number" id="fee_price" value="3000" min="0" oninput="calcFee()">
+      </div>
+      <div class="form-group">
+        <label>仲介形態</label>
+        <select id="fee_type" onchange="calcFee()">
+          <option value="both">両手仲介（売主・買主両方から）</option>
+          <option value="seller">片手仲介（売主側のみ）</option>
+          <option value="buyer">片手仲介（買主側のみ）</option>
+          <option value="discount">割引両手（1%×2）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>消費税</label>
+        <select id="fee_tax" onchange="calcFee()">
+          <option value="1.10">込み（10%）</option>
+          <option value="1">別（税抜き）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>月間成約件数（予測）</label>
+        <input type="number" id="fee_count" value="2" min="1" max="100" oninput="calcFee()">
+      </div>
+    </div>
+  </div>
+
+  <div id="fee-result"></div>
+
+  <div class="card" style="margin-top:24px;">
+    <div class="card-title">📈 成約件数シミュレーション</div>
+    <div id="fee-table"></div>
+  </div>
+</div>
+</div>
+
+<!-- 売主登録モーダル -->
+<div class="modal-overlay" id="sellerModal" style="display:none;" onclick="closeModal('sellerModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="sellerModalTitle">売主登録</div>
+    <div class="form-grid">
+      <div class="form-group"><label>氏名<span class="req">*</span></label><input id="s_name" placeholder="山田 太郎"></div>
+      <div class="form-group"><label>電話番号</label><input id="s_phone" placeholder="090-0000-0000"></div>
+      <div class="form-group"><label>メール</label><input id="s_email" placeholder="sample@mail.com"></div>
+      <div class="form-group"><label>希望売却価格（万円）</label><input type="number" id="s_price" placeholder="3000" min="0"></div>
+      <div class="form-group"><label>物件種別</label>
+        <select id="s_type"><option value="mansion">マンション</option><option value="kodate">一戸建て</option><option value="tochi">土地</option><option value="other">その他</option></select>
+      </div>
+      <div class="form-group"><label>エリア</label><input id="s_area" placeholder="東京都杉並区"></div>
+      <div class="form-group"><label>面積（㎡）</label><input type="number" id="s_sqm" placeholder="75" min="1" max="9999"></div>
+      <div class="form-group"><label>築年数</label><input type="number" id="s_age" placeholder="15" min="0" max="100"></div>
+      <div class="form-group"><label>売却時期</label>
+        <select id="s_timing"><option value="asap">3ヶ月以内</option><option value="half">半年以内</option><option value="year">1年以内</option><option value="think">検討中</option></select>
+      </div>
+      <div class="form-group"><label>ステータス</label>
+        <select id="s_status"><option value="active">募集中</option><option value="nego">交渉中</option><option value="sold">成約済</option></select>
+      </div>
+      <div class="form-group full"><label>備考</label><textarea id="s_memo" rows="2" placeholder="駐車場付き・現状渡し可など"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('sellerModal')">キャンセル</button>
+      <button class="btn btn-gold" onclick="saveSeller()">登録する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 買主登録モーダル -->
+<div class="modal-overlay" id="buyerModal" style="display:none;" onclick="closeModal('buyerModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="buyerModalTitle">買主登録</div>
+    <div class="form-grid">
+      <div class="form-group"><label>氏名<span class="req">*</span></label><input id="b_name" placeholder="鈴木 花子"></div>
+      <div class="form-group"><label>電話番号</label><input id="b_phone" placeholder="090-0000-0000"></div>
+      <div class="form-group"><label>メール</label><input id="b_email"></div>
+      <div class="form-group"><label>予算上限（万円）</label><input type="number" id="b_budget" placeholder="4000" min="0"></div>
+      <div class="form-group"><label>希望物件種別</label>
+        <select id="b_type"><option value="mansion">マンション</option><option value="kodate">一戸建て</option><option value="tochi">土地</option><option value="any">こだわらない</option></select>
+      </div>
+      <div class="form-group"><label>希望エリア</label><input id="b_area" placeholder="東京都杉並区・世田谷区"></div>
+      <div class="form-group"><label>希望面積（㎡以上）</label><input type="number" id="b_sqm" placeholder="60" min="0" max="9999"></div>
+      <div class="form-group"><label>購入目的</label>
+        <select id="b_purpose"><option value="self">自己居住</option><option value="invest">投資</option><option value="both">どちらでも</option></select>
+      </div>
+      <div class="form-group"><label>購入時期</label>
+        <select id="b_timing"><option value="asap">すぐにでも</option><option value="half">半年以内</option><option value="year">1年以内</option></select>
+      </div>
+      <div class="form-group"><label>ローン利用</label>
+        <select id="b_loan"><option value="yes">利用予定</option><option value="cash">現金購入</option><option value="tbd">未定</option></select>
+      </div>
+      <div class="form-group full"><label>備考・こだわり</label><textarea id="b_memo" rows="2" placeholder="駅徒歩10分以内・南向き希望など"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('buyerModal')">キャンセル</button>
+      <button class="btn btn-gold" onclick="saveBuyer()">登録する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 商談登録モーダル -->
+<div class="modal-overlay" id="dealRegModal" style="display:none;" onclick="closeModal('dealRegModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">商談登録</div>
+    <div class="form-grid">
+      <div class="form-group full"><label>商談タイトル</label><input id="dr_title" placeholder="杉並区〇〇 マンション成約案件"></div>
+      <div class="form-group"><label>売主名</label><input id="dr_seller" placeholder="山田太郎"></div>
+      <div class="form-group"><label>買主名</label><input id="dr_buyer" placeholder="鈴木花子"></div>
+      <div class="form-group"><label>成約価格（万円）</label><input type="number" id="dr_price" placeholder="3200" min="0"></div>
+      <div class="form-group"><label>仲介手数料率（%）</label><input type="number" id="dr_rate" value="3" min="0" max="10" step="0.1"></div>
+      <div class="form-group"><label>ステータス</label>
+        <select id="dr_status"><option value="new">新規</option><option value="matched">マッチング済</option><option value="nego">交渉中</option><option value="closed">成約</option></select>
+      </div>
+      <div class="form-group full"><label>備考</label><textarea id="dr_memo" rows="2"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('dealRegModal')">キャンセル</button>
+      <button class="btn btn-gold" onclick="saveDeal3()">登録する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+let sellers = JSON.parse(localStorage.getItem('od_sellers') || '[]');
+let buyers  = JSON.parse(localStorage.getItem('od_buyers')  || '[]');
+let deals3  = JSON.parse(localStorage.getItem('od_deals3')  || '[]');
+let editSelId = null, editBuyId = null;
+
+const TYPE_LABEL = {mansion:'マンション', kodate:'一戸建て', tochi:'土地', other:'その他', any:'こだわらない'};
+const STATUS_LABEL = {active:'募集中', nego:'交渉中', sold:'成約済'};
+const D_STATUS_LABEL = {new:'新規', matched:'マッチング済', nego:'交渉中', closed:'成約'};
+const FMT = v => v >= 10000 ? Math.round(v/10000*10)/10 + '億' : (v||0).toLocaleString() + '万円';
+
+// ===== 売主 =====
+function renderSellers() {
+  const el = document.getElementById('sellers-list');
+  const statsEl = document.getElementById('seller-stats');
+  statsEl.innerHTML = [
+    {v: sellers.length + '件', l:'登録売主数', c:'var(--text)'},
+    {v: sellers.filter(s=>s.status==='active').length + '件', l:'募集中', c:'var(--green)'},
+    {v: sellers.filter(s=>s.status==='nego').length + '件', l:'交渉中', c:'var(--gold)'},
+    {v: sellers.filter(s=>s.status==='sold').length + '件', l:'成約済', c:'var(--text-muted)'},
+  ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
+
+  if(!sellers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏠</div><p>売主がまだ登録されていません</p></div>`; return; }
+  el.innerHTML = `<div class="listings-grid">${sellers.map(s=>`
+    <div class="listing-card">
+      <div class="listing-img">🏠
+        <span class="listing-type-badge type-sell">売主</span>
+        ${s.status==='active'?'<span class="match-badge">募集中</span>':''}
+      </div>
+      <div class="listing-body">
+        <div class="listing-price">${FMT(s.price)}</div>
+        <div class="listing-name">${esc(s.name)}</div>
+        <div class="listing-meta">
+          ${s.area} | ${TYPE_LABEL[s.type]||s.type}<br>
+          ${s.sqm?s.sqm+'㎡':''} ${s.age?'築'+s.age+'年':''}
+        </div>
+        <div class="listing-actions">
+          <button class="btn btn-outline btn-sm" onclick="editSeller(${s.id})">編集</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteSeller(${s.id})">削除</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function openSellerModal(id) {
+  editSelId = id||null;
+  if(id) {
+    const s = sellers.find(x=>x.id===id);
+    if(s) {
+      ['name','phone','email','price','area','sqm','age','memo'].forEach(f => { const el=document.getElementById('s_'+f); if(el) el.value=s[f]||''; });
+      ['type','timing','status'].forEach(f => { const el=document.getElementById('s_'+f); if(el) el.value=s[f]||''; });
+    }
+    document.getElementById('sellerModalTitle').textContent = '売主編集';
+  } else {
+    document.getElementById('sellerModalTitle').textContent = '売主登録';
+    ['name','phone','email','price','area','sqm','age','memo'].forEach(f => { const el=document.getElementById('s_'+f); if(el) el.value=''; });
+  }
+  document.getElementById('sellerModal').style.display = 'flex';
+}
+function editSeller(id) { openSellerModal(id); }
+function deleteSeller(id) { if(!confirm('削除しますか？')) return; sellers=sellers.filter(s=>s.id!==id); save('sellers'); renderSellers(); }
+
+function saveSeller() {
+  const name = document.getElementById('s_name').value.trim();
+  if(!name) { alert('氏名を入力してください'); return; }
+  const obj = {
+    id: editSelId || Date.now(),
+    name, phone:document.getElementById('s_phone').value, email:document.getElementById('s_email').value,
+    price:parseInt(document.getElementById('s_price').value)||0,
+    type:document.getElementById('s_type').value, area:document.getElementById('s_area').value,
+    sqm:parseInt(document.getElementById('s_sqm').value)||0, age:parseInt(document.getElementById('s_age').value)||0,
+    timing:document.getElementById('s_timing').value, status:document.getElementById('s_status').value,
+    memo:document.getElementById('s_memo').value, date:new Date().toLocaleDateString('ja-JP'),
+  };
+  if(editSelId) sellers=sellers.map(s=>s.id===editSelId?obj:s); else sellers.unshift(obj);
+  save('sellers'); closeModal('sellerModal'); renderSellers();
+}
+
+// ===== 買主 =====
+function renderBuyers() {
+  const el = document.getElementById('buyers-list');
+  const statsEl = document.getElementById('buyer-stats');
+  statsEl.innerHTML = [
+    {v:buyers.length+'件', l:'登録買主数', c:'var(--text)'},
+    {v:buyers.filter(b=>b.timing==='asap').length+'件', l:'今すぐ検討', c:'var(--green)'},
+    {v:buyers.filter(b=>b.loan==='cash').length+'件', l:'現金買い', c:'var(--gold)'},
+    {v:buyers.filter(b=>b.purpose==='invest').length+'件', l:'投資目的', c:'var(--blue)'},
+  ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
+
+  if(!buyers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🙋</div><p>買主がまだ登録されていません</p></div>`; return; }
+  el.innerHTML = `<div class="listings-grid">${buyers.map(b=>`
+    <div class="listing-card">
+      <div class="listing-img">🙋
+        <span class="listing-type-badge type-buy">買主</span>
+      </div>
+      <div class="listing-body">
+        <div class="listing-price">予算 ${FMT(b.budget)}</div>
+        <div class="listing-name">${esc(b.name)}</div>
+        <div class="listing-meta">
+          ${b.area} | ${TYPE_LABEL[b.type]}<br>
+          ${b.sqm?b.sqm+'㎡以上':''} ${b.purpose==='invest'?'投資目的':'自己居住'}
+        </div>
+        <div class="listing-actions">
+          <button class="btn btn-outline btn-sm" onclick="editBuyer(${b.id})">編集</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBuyer(${b.id})">削除</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function openBuyerModal(id) {
+  editBuyId = id||null;
+  if(id) {
+    const b = buyers.find(x=>x.id===id);
+    if(b) {
+      ['name','phone','email','budget','area','sqm','memo'].forEach(f=>{ const el=document.getElementById('b_'+f); if(el) el.value=b[f]||''; });
+      ['type','purpose','timing','loan'].forEach(f=>{ const el=document.getElementById('b_'+f); if(el) el.value=b[f]||''; });
+    }
+    document.getElementById('buyerModalTitle').textContent = '買主編集';
+  } else {
+    document.getElementById('buyerModalTitle').textContent = '買主登録';
+    ['name','phone','email','budget','area','sqm','memo'].forEach(f=>{ const el=document.getElementById('b_'+f); if(el) el.value=''; });
+  }
+  document.getElementById('buyerModal').style.display = 'flex';
+}
+function editBuyer(id) { openBuyerModal(id); }
+function deleteBuyer(id) { if(!confirm('削除しますか？')) return; buyers=buyers.filter(b=>b.id!==id); save('buyers'); renderBuyers(); }
+
+function saveBuyer() {
+  const name = document.getElementById('b_name').value.trim();
+  if(!name) { alert('氏名を入力してください'); return; }
+  const obj = {
+    id: editBuyId || Date.now(),
+    name, phone:document.getElementById('b_phone').value, email:document.getElementById('b_email').value,
+    budget:parseInt(document.getElementById('b_budget').value)||0,
+    type:document.getElementById('b_type').value, area:document.getElementById('b_area').value,
+    sqm:parseInt(document.getElementById('b_sqm').value)||0,
+    purpose:document.getElementById('b_purpose').value,
+    timing:document.getElementById('b_timing').value, loan:document.getElementById('b_loan').value,
+    memo:document.getElementById('b_memo').value, date:new Date().toLocaleDateString('ja-JP'),
+  };
+  if(editBuyId) buyers=buyers.map(b=>b.id===editBuyId?obj:b); else buyers.unshift(obj);
+  save('buyers'); closeModal('buyerModal'); renderBuyers();
+}
+
+// ===== マッチング =====
+function calcMatchScore(s, b) {
+  let score = 0; const reasons = [];
+  // 価格: 売主希望 ≤ 買主予算×110%
+  if(b.budget >= s.price * 0.9) { score += 40; reasons.push('価格帯一致'); }
+  else if(b.budget >= s.price * 0.8) { score += 20; reasons.push('価格帯やや近い'); }
+  // エリア: 部分一致
+  if((s.area||'') && (b.area||'')) {
+    const sa = s.area.replace(/[都道府県市区町村]/g,'');
+    const ba = b.area.replace(/[都道府県市区町村]/g,'');
+    if(sa && ba && (s.area.includes(ba.slice(0,4)) || b.area.includes(sa.slice(0,4)))) {
+      score += 30; reasons.push('エリア一致');
+    }
+  }
+  // 物件種別
+  if(b.type === 'any' || b.type === s.type) { score += 20; reasons.push('物件種別一致'); }
+  // 面積
+  if(!b.sqm || !s.sqm || s.sqm >= b.sqm) { score += 10; reasons.push('面積条件クリア'); }
+  return { score: Math.min(score, 100), reasons };
+}
+
+function runMatching() {
+  const el = document.getElementById('matching-result');
+  if(!sellers.length || !buyers.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🤖</div><p>売主・買主を両方登録するとマッチングが実行できます</p></div>`;
+    return;
+  }
+  const pairs = [];
+  sellers.filter(s=>s.status==='active').forEach(s => {
+    buyers.forEach(b => {
+      const m = calcMatchScore(s, b);
+      if(m.score >= 30) pairs.push({s, b, ...m});
+    });
+  });
+  pairs.sort((a,b) => b.score - a.score);
+
+  if(!pairs.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">😔</div><p>条件が合うマッチングが見つかりません</p><p style="font-size:12px;margin-top:8px">売主・買主の条件を確認してください</p></div>`;
+    return;
+  }
+
+  el.innerHTML = `<div style="margin-bottom:16px;font-size:13px;color:var(--text-muted)">${pairs.length}件のマッチング候補が見つかりました</div>` +
+  pairs.map(p => `
+    <div class="match-pair">
+      <div class="match-side">
+        <div class="match-side-label">SELLER — 売主</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px">${esc(p.s.name)}</div>
+        <div style="font-size:13px;color:var(--gold);font-weight:700">${FMT(p.s.price)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${p.s.area} | ${TYPE_LABEL[p.s.type]}</div>
+      </div>
+      <div class="match-score-box">
+        <div class="match-score">${p.score}</div>
+        <div style="font-size:10px;color:var(--text-muted)">MATCH</div>
+        <div class="match-reasons">${p.reasons.join(' / ')}</div>
+        <div style="margin-top:10px"><button class="btn btn-gold btn-sm" onclick="createDealFromMatch('${p.s.name}','${p.b.name}',${p.s.price})">商談登録</button></div>
+      </div>
+      <div class="match-side">
+        <div class="match-side-label">BUYER — 買主</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px">${esc(p.b.name)}</div>
+        <div style="font-size:13px;color:var(--blue);font-weight:700">予算 ${FMT(p.b.budget)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${p.b.area} | ${TYPE_LABEL[p.b.type]}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function createDealFromMatch(seller, buyer, price) {
+  document.getElementById('dr_title').value = `${seller} × ${buyer}`;
+  document.getElementById('dr_seller').value = seller;
+  document.getElementById('dr_buyer').value = buyer;
+  document.getElementById('dr_price').value = price;
+  document.getElementById('dr_status').value = 'matched';
+  document.getElementById('dealRegModal').style.display = 'flex';
+}
+
+// ===== 商談 =====
+function renderPipeline3() {
+  const el = document.getElementById('pipeline-list');
+  const statsEl = document.getElementById('pipeline-stats');
+  const closed = deals3.filter(d=>d.status==='closed');
+  const totalFee = closed.reduce((s,d) => s + calcDealFee(d), 0);
+  statsEl.innerHTML = [
+    {v:deals3.length+'件', l:'総商談数', c:'var(--text)'},
+    {v:deals3.filter(d=>d.status==='nego').length+'件', l:'交渉中', c:'var(--gold)'},
+    {v:closed.length+'件', l:'成約', c:'var(--green)'},
+    {v: totalFee>0 ? Math.round(totalFee).toLocaleString()+'万円' : '—', l:'成約手数料合計', c:'var(--gold)'},
+  ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
+
+  if(!deals3.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><p>商談がありません</p></div>`; return; }
+  const badgeClass = {new:'b-new',matched:'b-matched',nego:'b-nego',closed:'b-closed'};
+  el.innerHTML = deals3.map(d => `
+    <div class="deal-row">
+      <div class="deal-info">
+        <div class="deal-title">${esc(d.title)}</div>
+        <div class="deal-sub">${d.seller} → ${d.buyer} | ${d.date}</div>
+      </div>
+      <span class="badge ${badgeClass[d.status]||'b-new'}">${D_STATUS_LABEL[d.status]||d.status}</span>
+      <div>
+        <div class="deal-price-col">${d.price?FMT(d.price):'—'}</div>
+        <div class="deal-commission">${d.price?'手数料 '+Math.round(calcDealFee(d)).toLocaleString()+'万':'—'}</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="deleteDeal3(${d.id})">削除</button>
+    </div>
+  `).join('');
+}
+
+function calcDealFee(d) {
+  const p = d.price || 0;
+  const rate = d.rate || 3;
+  return p * rate / 100 * 2 + 12 / 10000; // 両手: ×2
+}
+
+function openDealRegModal() { document.getElementById('dealRegModal').style.display='flex'; }
+function deleteDeal3(id) { if(!confirm('削除しますか？')) return; deals3=deals3.filter(d=>d.id!==id); save('deals3'); renderPipeline3(); }
+
+function saveDeal3() {
+  const title = document.getElementById('dr_title').value.trim() || '無題商談';
+  const deal = {
+    id: Date.now(), title,
+    seller: document.getElementById('dr_seller').value,
+    buyer: document.getElementById('dr_buyer').value,
+    price: parseInt(document.getElementById('dr_price').value)||0,
+    rate: parseFloat(document.getElementById('dr_rate').value)||3,
+    status: document.getElementById('dr_status').value,
+    memo: document.getElementById('dr_memo').value,
+    date: new Date().toLocaleDateString('ja-JP'),
+  };
+  deals3.unshift(deal); save('deals3'); closeModal('dealRegModal'); renderPipeline3();
+}
+
+// ===== 手数料シミュ =====
+function calcFee() {
+  const p = parseInt(document.getElementById('fee_price').value)||0;
+  const type = document.getElementById('fee_type').value;
+  const tax = parseFloat(document.getElementById('fee_tax').value)||1.1;
+  const cnt = parseInt(document.getElementById('fee_count').value)||1;
+
+  const baseFee = (p <= 200 ? p*0.05 : p <= 400 ? p*0.04+2 : p*0.03+6);
+  let fee;
+  if(type==='both') fee = baseFee * 2;
+  else if(type==='discount') fee = p * 0.01 * 2;
+  else fee = baseFee;
+  fee = fee * tax;
+  const monthly = fee * cnt;
+  const annual = monthly * 12;
+
+  document.getElementById('fee-result').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px">
+      ${[
+        {l:'1件あたり手数料', v:Math.round(fee*10)/10+'万円', c:'var(--gold)'},
+        {l:'月間手数料収入（'+cnt+'件）', v:Math.round(monthly*10)/10+'万円', c:'var(--green)'},
+        {l:'年間手数料収入', v:Math.round(annual).toLocaleString()+'万円', c:'var(--gold)'},
+      ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c};font-size:22px">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('')}
+    </div>
+    <div style="margin-top:14px;font-size:12px;color:var(--text-muted);padding:12px;background:var(--dark3);border-radius:8px">
+      ※仲介手数料上限：売買価格×3%+6万円（400万円超）。両手仲介は売主・買主双方から受領。
+    </div>`;
+
+  const counts = [1,2,3,5,8,10];
+  document.getElementById('fee-table').innerHTML = `<table>
+    <thead><tr><th>月間成約件数</th><th>月間収入</th><th>年間収入</th></tr></thead>
+    <tbody>
+      ${counts.map(c=>`<tr>
+        <td>${c}件</td>
+        <td style="color:var(--gold);font-weight:700">${Math.round(fee*c*10)/10}万円</td>
+        <td style="color:var(--green);font-weight:700">${Math.round(fee*c*12).toLocaleString()}万円</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+// ===== 共通 =====
+function save(key) {
+  if(key==='sellers') localStorage.setItem('od_sellers', JSON.stringify(sellers));
+  if(key==='buyers')  localStorage.setItem('od_buyers',  JSON.stringify(buyers));
+  if(key==='deals3')  localStorage.setItem('od_deals3',  JSON.stringify(deals3));
+}
+
+function closeModal(id, e) {
+  if(!e || e.target === document.getElementById(id)) document.getElementById(id).style.display='none';
+}
+
+function exportCSV(type) {
+  let data, headers, rows;
+  if(type==='sellers') {
+    data=sellers; headers=['氏名','電話','メール','希望価格(万)','種別','エリア','面積','築年','時期','ステータス'];
+    rows=data.map(s=>[s.name,s.phone,s.email,s.price,TYPE_LABEL[s.type],s.area,s.sqm,s.age,s.timing,STATUS_LABEL[s.status]]);
+  } else if(type==='buyers') {
+    data=buyers; headers=['氏名','電話','メール','予算(万)','希望種別','エリア','面積','目的','時期'];
+    rows=data.map(b=>[b.name,b.phone,b.email,b.budget,TYPE_LABEL[b.type],b.area,b.sqm,b.purpose,b.timing]);
+  } else {
+    data=deals3; headers=['タイトル','売主','買主','価格(万)','ステータス'];
+    rows=data.map(d=>[d.title,d.seller,d.buyer,d.price,D_STATUS_LABEL[d.status]]);
+  }
+  if(!data.length) { alert('データがありません'); return; }
+  const csv=[headers,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));
+  a.download=`${type}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+
+function switchTab(t) {
+  const tabs=['sellers','buyers','matching','pipeline','fee'];
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));
+  tabs.forEach(tab=>document.getElementById('tab-'+tab).classList.toggle('active',tab===t));
+  if(t==='sellers') renderSellers();
+  else if(t==='buyers') renderBuyers();
+  else if(t==='matching') runMatching();
+  else if(t==='pipeline') renderPipeline3();
+  else if(t==='fee') calcFee();
+}
+
+// Escape key でモーダルを閉じる
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') {
+    ['sellerModal','buyerModal','dealRegModal'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.display='none';
+    });
+  }
+});
+
+// ストレージ警告
+function checkStorageWarning() {
+  try {
+    let used = 0;
+    for(let k in localStorage) { if(localStorage.hasOwnProperty(k)) used += (localStorage[k]||'').length * 2; }
+    if(used > 3*1024*1024) {
+      const mb = (used/1024/1024).toFixed(1);
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:70px;right:20px;background:#ef4444;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;z-index:9999;max-width:300px;box-shadow:0 4px 12px rgba(0,0,0,0.3);line-height:1.5;';
+      el.innerHTML = '⚠️ ストレージ使用量が'+mb+'MBです。<br>CSVエクスポートで定期バックアップを推奨します。';
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 8000);
+    }
+  } catch(e){}
+}
+
+// 初期化
+checkStorageWarning();
+renderSellers();
+renderBuyers();
+calcFee();
+</script>
+</body>
+</html>

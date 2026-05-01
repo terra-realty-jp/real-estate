@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>投資分析ツール | 石澤紳司 不動産ビジネスハック</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" onerror="window._noChart=true"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #c9a84c; --gold-light: #e8c97a;
+      --dark: #0d0d0d; --dark2: #1a1a1a; --dark3: #242424;
+      --text: #f0ede8; --text-muted: #999;
+      --green: #22c55e; --red: #ef4444; --blue: #3b82f6; --orange: #f97316;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+    .topnav { background: var(--dark2); border-bottom: 1px solid rgba(201,168,76,0.2); padding: 14px 32px; display: flex; align-items: center; gap: 16px; }
+    .back-link { color: var(--gold); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+    .back-link:hover { text-decoration: underline; }
+    .nav-title { font-size: 14px; color: var(--text-muted); }
+    .tabs { display: flex; background: var(--dark2); border-bottom: 1px solid rgba(255,255,255,0.06); overflow-x: auto; }
+    .tab-btn { padding: 15px 22px; background: none; border: none; color: var(--text-muted); font-size: 13px; font-family: inherit; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .main { max-width: 1100px; margin: 0 auto; padding: 36px 28px; }
+    .page-title { font-size: 24px; font-weight: 900; margin-bottom: 6px; }
+    .page-title span { color: var(--gold); }
+    .page-desc { color: var(--text-muted); font-size: 13px; margin-bottom: 28px; line-height: 1.8; }
+    .card { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    input, select, textarea { background: var(--dark3); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; padding: 9px 13px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s; width: 100%; }
+    input:focus, select:focus { border-color: var(--gold); }
+    select option { background: #1a1a1a; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border-radius: 8px; border: none; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+    .btn-gold { background: var(--gold); color: #000; }
+    .btn-gold:hover { background: var(--gold-light); }
+    .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--text); }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+    /* 結果KPI */
+    .result-kpi { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+    .rkpi { background: var(--dark3); border-radius: 10px; padding: 16px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+    .rkpi-val { font-size: 24px; font-weight: 900; }
+    .rkpi-lbl { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .rkpi-sub { font-size: 11px; margin-top: 4px; }
+    .good { color: var(--green); }
+    .warn { color: var(--orange); }
+    .bad  { color: var(--red); }
+    .gold { color: var(--gold); }
+
+    /* 判定バー */
+    .verdict-bar { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 10px; margin-bottom: 16px; border: 1px solid; }
+    .verdict-buy { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.25); }
+    .verdict-hold { background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.25); }
+    .verdict-pass { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
+    .verdict-icon { font-size: 28px; }
+    .verdict-text { font-size: 16px; font-weight: 700; }
+    .verdict-reason { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+    /* チャート */
+    .chart-container { position: relative; height: 260px; }
+    .chart-container-sm { position: relative; height: 200px; }
+
+    /* 感度分析テーブル */
+    .sensitivity-table { width: 100%; border-collapse: collapse; }
+    .sensitivity-table th, .sensitivity-table td { padding: 10px 12px; text-align: center; font-size: 12px; border: 1px solid rgba(255,255,255,0.06); }
+    .sensitivity-table th { background: var(--dark3); color: var(--text-muted); font-weight: 700; }
+    .cell-good { background: rgba(34,197,94,0.15); color: var(--green); font-weight: 700; }
+    .cell-warn { background: rgba(249,115,22,0.12); color: var(--orange); }
+    .cell-bad  { background: rgba(239,68,68,0.10); color: var(--red); }
+    .cell-highlight { outline: 2px solid var(--gold); }
+
+    /* ローン比較 */
+    .loan-compare { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    .loan-card { background: var(--dark3); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 16px; }
+    .loan-card.recommended { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+    .loan-type { font-size: 11px; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 8px; }
+    .loan-payment { font-size: 22px; font-weight: 900; color: var(--gold); }
+    .loan-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.8; }
+
+    /* 履歴 */
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: var(--dark3); padding: 10px 12px; font-size: 11px; color: var(--text-muted); text-align: left; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+    tbody td { padding: 11px 12px; font-size: 12px; vertical-align: middle; }
+    .badge { padding: 2px 9px; border-radius: 100px; font-size: 10px; font-weight: 700; }
+    .b-buy { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .b-hold { background: rgba(249,115,22,0.12); color: var(--orange); border: 1px solid rgba(249,115,22,0.2); }
+    .b-pass { background: rgba(239,68,68,0.10); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+    .empty-state { text-align: center; padding: 50px; color: var(--text-muted); }
+    .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+    @media(max-width:700px) { .result-kpi,.two-col,.three-col,.loan-compare { grid-template-columns:1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } }
+    @media print {
+      .topnav,.tabs,.btn { display:none!important; }
+      body { background:#fff!important; color:#000!important; }
+      .card { background:#fff!important; border:1px solid #ccc!important; border-radius:4px!important; color:#000!important; page-break-inside:avoid; }
+      .main { padding:0!important; max-width:100%!important; }
+      .tab-content { display:block!important; }
+      :root { --text:#000; --text-muted:#555; --gold:#c9a84c; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    ダッシュボードに戻る
+  </a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span class="nav-title">TOOL 05 — 不動産投資家向けAI分析ツール</span>
+</nav>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('input')">📋 物件入力</button>
+  <button class="tab-btn" onclick="switchTab('result')">📊 分析結果</button>
+  <button class="tab-btn" onclick="switchTab('cashflow')">💹 CF予測</button>
+  <button class="tab-btn" onclick="switchTab('sensitivity')">🎯 感度分析</button>
+  <button class="tab-btn" onclick="switchTab('history')">🗂️ 分析履歴</button>
+</div>
+
+<!-- 物件入力 -->
+<div id="tab-input" class="tab-content active">
+<div class="main">
+  <h1 class="page-title">物件<span>入力</span></h1>
+  <p class="page-desc">投資物件の情報を入力してください。入力後すぐに表面・実質利回り、ローン後CF、10年シミュレーションを算出します。</p>
+
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <div class="card-title">🏠 物件基本情報</div>
+        <div class="form-grid">
+          <div class="form-group full"><label>物件名（任意）</label><input id="i_name" placeholder="〇〇マンション 101号室"></div>
+          <div class="form-group"><label>購入価格（万円）*</label><input type="number" id="i_price" placeholder="2500" min="0" oninput="autoCalc()"></div>
+          <div class="form-group"><label>想定月額家賃（円）*</label><input type="number" id="i_rent" placeholder="80000" min="0" oninput="autoCalc()"></div>
+          <div class="form-group"><label>管理費・修繕積立（円/月）</label><input type="number" id="i_mgmt" placeholder="15000" min="0" oninput="autoCalc()"></div>
+          <div class="form-group"><label>固定資産税（円/年）</label><input type="number" id="i_tax" placeholder="120000" min="0" oninput="autoCalc()"></div>
+          <div class="form-group"><label>火災保険（円/年）</label><input type="number" id="i_ins" placeholder="30000" min="0" oninput="autoCalc()"></div>
+          <div class="form-group"><label>管理委託費率（%）</label><input type="number" id="i_mrate" value="5" min="0" max="30" step="0.5" oninput="autoCalc()"></div>
+          <div class="form-group"><label>想定空室率（%）</label><input type="number" id="i_vacancy" value="10" min="0" max="100" step="1" oninput="autoCalc()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🏦 ローン条件</div>
+        <div class="form-grid">
+          <div class="form-group"><label>借入額（万円）</label><input type="number" id="i_loan" placeholder="2000" min="0" oninput="autoCalc()"></div>
+          <div class="form-group"><label>金利（年率 %）</label><input type="number" id="i_rate" value="1.5" min="0" max="30" step="0.1" oninput="autoCalc()"></div>
+          <div class="form-group"><label>返済期間（年）</label><input type="number" id="i_term" value="25" min="1" max="50" oninput="autoCalc()"></div>
+          <div class="form-group"><label>返済方式</label>
+            <select id="i_repay" onchange="autoCalc()">
+              <option value="equal">元利均等</option>
+              <option value="principal">元金均等</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">📤 出口戦略</div>
+        <div class="form-grid">
+          <div class="form-group"><label>保有期間（年）</label><input type="number" id="i_hold" value="10" min="1" max="30" oninput="autoCalc()"></div>
+          <div class="form-group"><label>売却時利回り想定（%）</label><input type="number" id="i_exit_yield" value="6" min="0" max="50" step="0.1" oninput="autoCalc()"></div>
+          <div class="form-group"><label>家賃年間下落率（%）</label><input type="number" id="i_decline" value="1" min="0" max="20" step="0.1" oninput="autoCalc()"></div>
+          <div class="form-group"><label>売却時費用率（%）</label><input type="number" id="i_exit_cost" value="4" min="0" max="20" step="0.1" oninput="autoCalc()"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💡 簡易判断ガイド</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.8">
+          <div style="padding:10px;background:rgba(34,197,94,0.08);border-radius:8px;border-left:3px solid var(--green)">
+            <strong style="color:var(--green)">実質利回り 5%以上</strong><br>良好な投資案件。積極的に検討。
+          </div>
+          <div style="padding:10px;background:rgba(249,115,22,0.08);border-radius:8px;border-left:3px solid var(--orange)">
+            <strong style="color:var(--orange)">実質利回り 3〜5%</strong><br>エリアや出口次第。慎重に判断。
+          </div>
+          <div style="padding:10px;background:rgba(239,68,68,0.08);border-radius:8px;border-left:3px solid var(--red)">
+            <strong style="color:var(--red)">実質利回り 3%未満</strong><br>キャピタルゲイン狙いのみ。リスク大。
+          </div>
+          <div style="padding:10px;background:rgba(59,130,246,0.08);border-radius:8px;border-left:3px solid var(--blue)">
+            <strong style="color:var(--blue)">CCR（自己資本利回り）10%以上</strong><br>レバレッジ効果大。高収益投資。
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-gold" style="flex:1;justify-content:center" onclick="analyze()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          分析実行
+        </button>
+        <button class="btn btn-outline" onclick="clearInputs()">クリア</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- クイック結果 -->
+  <div id="quick-result" style="display:none">
+    <div class="card" style="border-color:rgba(201,168,76,0.3)">
+      <div class="card-title">⚡ クイック結果（リアルタイム）</div>
+      <div class="result-kpi" id="quick-kpi"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 分析結果 -->
+<div id="tab-result" class="tab-content">
+<div class="main">
+  <h1 class="page-title">分析<span>結果</span></h1>
+  <div id="result-content">
+    <div class="empty-state"><div class="empty-icon">📊</div><p>物件入力タブで分析を実行してください</p></div>
+  </div>
+</div>
+</div>
+
+<!-- CF予測 -->
+<div id="tab-cashflow" class="tab-content">
+<div class="main">
+  <h1 class="page-title">キャッシュフロー<span>予測</span></h1>
+  <div id="cf-content">
+    <div class="empty-state"><div class="empty-icon">💹</div><p>物件入力タブで分析を実行してください</p></div>
+  </div>
+</div>
+</div>
+
+<!-- 感度分析 -->
+<div id="tab-sensitivity" class="tab-content">
+<div class="main">
+  <h1 class="page-title">感度<span>分析</span></h1>
+  <p class="page-desc">空室率と利回りの変化に対するNOI・実質利回りの変化を表形式で確認します。</p>
+  <div id="sensitivity-content">
+    <div class="empty-state"><div class="empty-icon">🎯</div><p>物件入力タブで分析を実行してください</p></div>
+  </div>
+</div>
+</div>
+
+<!-- 履歴 -->
+<div id="tab-history" class="tab-content">
+<div class="main">
+  <h1 class="page-title">分析<span>履歴</span></h1>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;gap:10px">
+    <button class="btn btn-outline btn-sm" onclick="exportHistory()">CSVエクスポート</button>
+    <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="clearHistory()">履歴削除</button>
+  </div>
+  <div id="history-list"></div>
+</div>
+</div>
+
+<script>
+function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+let history = JSON.parse(localStorage.getItem('inv_history') || '[]');
+let cfChart = null, loanChart = null;
+let lastResult = null;
+
+// ===== 計算コア =====
+function calcLoanPayment(loan, rate, term, type) {
+  const L = loan * 10000;
+  const r = rate / 100 / 12;
+  if(r === 0) return { monthly: L/(term*12), total: L };
+  if(type === 'equal') {
+    const m = L * r * Math.pow(1+r, term*12) / (Math.pow(1+r, term*12) - 1);
+    return { monthly: m, total: m * term * 12 };
+  } else {
+    const principal = L / (term * 12);
+    const firstMonth = principal + L * r;
+    return { monthly: firstMonth, total: L + L * r * (term*12+1)/2 };
+  }
+}
+
+function calcNOI(rent, mgmt, tax, ins, mrate, vacancy) {
+  const annualRent = rent * 12 * (1 - vacancy/100);
+  const annualMgmt = mgmt * 12;
+  const annualMrateFee = annualRent * mrate / 100;
+  return annualRent - annualMgmt - annualMrateFee - tax - ins;
+}
+
+function getInputs() {
+  return {
+    name: document.getElementById('i_name').value || '無題物件',
+    price: parseFloat(document.getElementById('i_price').value) || 0,
+    rent: parseFloat(document.getElementById('i_rent').value) || 0,
+    mgmt: parseFloat(document.getElementById('i_mgmt').value) || 0,
+    tax: parseFloat(document.getElementById('i_tax').value) || 0,
+    ins: parseFloat(document.getElementById('i_ins').value) || 0,
+    mrate: parseFloat(document.getElementById('i_mrate').value) || 5,
+    vacancy: parseFloat(document.getElementById('i_vacancy').value) || 10,
+    loan: parseFloat(document.getElementById('i_loan').value) || 0,
+    rate: parseFloat(document.getElementById('i_rate').value) || 1.5,
+    term: parseInt(document.getElementById('i_term').value) || 25,
+    repay: document.getElementById('i_repay').value,
+    hold: parseInt(document.getElementById('i_hold').value) || 10,
+    exitYield: parseFloat(document.getElementById('i_exit_yield').value) || 6,
+    decline: parseFloat(document.getElementById('i_decline').value) || 1,
+    exitCost: parseFloat(document.getElementById('i_exit_cost').value) || 4,
+  };
+}
+
+function calcAll(inp) {
+  const pY = inp.price * 10000;
+  const grossYield = inp.price > 0 ? (inp.rent * 12 / (inp.price * 10000)) * 100 : 0;
+  const noi = calcNOI(inp.rent, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+  const netYield = inp.price > 0 ? (noi / pY) * 100 : 0;
+  const equity = (inp.price - inp.loan) * 10000;
+
+  const loanResult = inp.loan > 0 ? calcLoanPayment(inp.loan, inp.rate, inp.term, inp.repay) : {monthly:0, total:0};
+  const annualLoanPayment = loanResult.monthly * 12;
+  const annualCF = noi - annualLoanPayment;
+  const ccr = equity > 0 ? (annualCF / equity) * 100 : 0;
+  const dscr = annualLoanPayment > 0 ? noi / annualLoanPayment : 999;
+
+  // 出口試算
+  const holdRent = inp.rent * Math.pow(1 - inp.decline/100, inp.hold);
+  const holdNOI = calcNOI(holdRent, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+  const exitPrice = inp.exitYield > 0 ? holdNOI / (inp.exitYield/100) : 0;
+  const exitNet = exitPrice * (1 - inp.exitCost/100);
+
+  // ローン残高（保有期間後）
+  let balance = inp.loan * 10000;
+  const r = inp.rate/100/12;
+  for(let m=0; m<inp.hold*12; m++) {
+    const interest = balance * r;
+    const principal = inp.repay==='equal' ? loanResult.monthly - interest : (inp.loan*10000/(inp.term*12));
+    balance = Math.max(0, balance - principal);
+  }
+
+  const totalProfit = exitNet - equity - (annualLoanPayment * inp.hold) + (noi * inp.hold) - balance;
+  const irr = equity > 0 ? Math.pow((exitNet + noi * inp.hold - balance) / (equity), 1/inp.hold) - 1 : 0;
+
+  return { grossYield, netYield, noi, annualCF, ccr, dscr, loanMonthly: loanResult.monthly,
+    loanTotal: loanResult.total, exitPrice, exitNet, totalProfit, balance, equity, irr };
+}
+
+function getVerdict(r) {
+  if(r.netYield >= 5 && r.ccr >= 8 && r.dscr >= 1.2) return {type:'buy', icon:'✅', text:'購入推奨', reason:`実質利回り${r.netYield.toFixed(1)}% / CCR${r.ccr.toFixed(1)}% / DSCR${r.dscr.toFixed(2)} — 優良案件です`};
+  if(r.netYield >= 3 && r.dscr >= 1.0) return {type:'hold', icon:'⚠️', text:'要精査', reason:`実質利回り${r.netYield.toFixed(1)}% — エリア・出口を慎重に確認してから判断してください`};
+  return {type:'pass', icon:'❌', text:'見送り推奨', reason:`実質利回り${r.netYield.toFixed(1)}% — 収益性が低いか、ローン返済負担が大きすぎます`};
+}
+
+function autoCalc() {
+  const inp = getInputs();
+  if(!inp.price || !inp.rent) { document.getElementById('quick-result').style.display='none'; return; }
+  const r = calcAll(inp);
+  document.getElementById('quick-result').style.display='block';
+  const v = getVerdict(r);
+  document.getElementById('quick-kpi').innerHTML = [
+    {l:'表面利回り', v:r.grossYield.toFixed(2)+'%', c:r.grossYield>=6?'var(--green)':r.grossYield>=4?'var(--orange)':'var(--red)'},
+    {l:'実質利回り', v:r.netYield.toFixed(2)+'%', c:r.netYield>=5?'var(--green)':r.netYield>=3?'var(--orange)':'var(--red)'},
+    {l:'年間CF', v:(r.annualCF>=0?'+':'')+Math.round(r.annualCF/10000)+'万円', c:r.annualCF>=0?'var(--green)':'var(--red)'},
+    {l:'判定', v:v.icon+' '+v.text, c:v.type==='buy'?'var(--green)':v.type==='hold'?'var(--orange)':'var(--red)'},
+  ].map(k=>`<div class="rkpi"><div class="rkpi-val" style="color:${k.c}">${k.v}</div><div class="rkpi-lbl">${k.l}</div></div>`).join('');
+}
+
+function analyze() {
+  const inp = getInputs();
+  if(!inp.price || !inp.rent) { alert('購入価格と家賃を入力してください'); return; }
+  const r = calcAll(inp);
+  lastResult = {inp, r};
+  renderResult(inp, r);
+  renderCashflow(inp, r);
+  renderSensitivity(inp);
+
+  // 履歴保存
+  history.unshift({
+    id: Date.now(), date: new Date().toLocaleDateString('ja-JP'),
+    name: inp.name, price: inp.price, rent: inp.rent,
+    grossYield: r.grossYield, netYield: r.netYield,
+    annualCF: r.annualCF, ccr: r.ccr, verdict: getVerdict(r).type,
+    inp: JSON.parse(JSON.stringify(inp)),
+  });
+  if(history.length > 50) history = history.slice(0,50);
+  localStorage.setItem('inv_history', JSON.stringify(history));
+  renderHistory();
+
+  switchTab('result');
+}
+
+function renderResult(inp, r) {
+  const v = getVerdict(r);
+  const fmt = v2 => Math.round(v2/10000).toLocaleString()+'万円';
+
+  document.getElementById('result-content').innerHTML = `
+    <div class="verdict-bar verdict-${v.type}">
+      <div class="verdict-icon">${v.icon}</div>
+      <div><div class="verdict-text">${v.text}</div><div class="verdict-reason">${v.reason}</div></div>
+    </div>
+
+    <div class="result-kpi">
+      ${[
+        {l:'表面利回り', v:r.grossYield.toFixed(2)+'%', s:'NOI考慮前', c:r.grossYield>=6?'var(--green)':r.grossYield>=4?'var(--orange)':'var(--red)'},
+        {l:'実質利回り', v:r.netYield.toFixed(2)+'%', s:'諸経費控除後', c:r.netYield>=5?'var(--green)':r.netYield>=3?'var(--orange)':'var(--red)'},
+        {l:'NOI（年間）', v:fmt(r.noi), s:'純営業収益', c:'var(--gold)'},
+        {l:'CF after DS（年）', v:(r.annualCF>=0?'+':'')+fmt(r.annualCF), s:'ローン返済後CF', c:r.annualCF>=0?'var(--green)':'var(--red)'},
+      ].map(k=>`<div class="rkpi"><div class="rkpi-val" style="color:${k.c}">${k.v}</div><div class="rkpi-lbl">${k.l}</div><div class="rkpi-sub" style="color:var(--text-muted)">${k.s}</div></div>`).join('')}
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">📊 投資指標詳細</div>
+        ${[
+          {l:'CCR（自己資本利回り）', v:r.ccr.toFixed(2)+'%', c:r.ccr>=10?'good':r.ccr>=6?'warn':'bad'},
+          {l:'DSCR（借入返済比率）', v:r.dscr>=99?'—':r.dscr.toFixed(2), c:r.dscr>=1.2?'good':r.dscr>=1.0?'warn':'bad'},
+          {l:'月次ローン返済額', v:Math.round(r.loanMonthly).toLocaleString()+'円', c:'gold'},
+          {l:'月次CF（ローン後）', v:(r.annualCF/12>=0?'+':'')+Math.round(r.annualCF/12).toLocaleString()+'円', c:r.annualCF/12>=0?'good':'bad'},
+          {l:'自己資本額', v:fmt(r.equity), c:'gold'},
+          {l:'ローン総返済額', v:fmt(r.loanTotal), c:'gold'},
+        ].map(x=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <span style="font-size:13px;color:var(--text-muted)">${x.l}</span>
+          <span class="${x.c}" style="font-size:14px;font-weight:700">${x.v}</span>
+        </div>`).join('')}
+      </div>
+
+      <div class="card">
+        <div class="card-title">📤 出口戦略（${inp.hold}年後）</div>
+        ${[
+          {l:'想定売却価格', v:fmt(r.exitPrice), c:'gold'},
+          {l:'売却費用控除後', v:fmt(r.exitNet), c:'gold'},
+          {l:inp.hold+'年後ローン残高', v:fmt(r.balance), c:'warn'},
+          {l:inp.hold+'年間累積CF', v:fmt(r.noi*inp.hold - r.loanMonthly*12*inp.hold), c:r.annualCF>=0?'good':'bad'},
+          {l:'IRR（内部収益率）', v:(r.irr*100).toFixed(1)+'%', c:r.irr*100>=8?'good':r.irr*100>=5?'warn':'bad'},
+        ].map(x=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <span style="font-size:13px;color:var(--text-muted)">${x.l}</span>
+          <span class="${x.c}" style="font-size:14px;font-weight:700">${x.v}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏦 ローンパターン比較</div>
+      <div class="loan-compare">
+        ${[
+          {label:'現在の設定', rate:inp.rate, term:inp.term, recommended:true},
+          {label:'金利 +0.5%', rate:inp.rate+0.5, term:inp.term, recommended:false},
+          {label:'期間 -5年', rate:inp.rate, term:Math.max(inp.term-5,1), recommended:false},
+        ].map(p=>{
+          if(!inp.loan) return `<div class="loan-card${p.recommended?' recommended':''}"><div class="loan-type">${p.label}</div><div class="loan-payment">—</div><div class="loan-sub">借入なし</div></div>`;
+          const lr = calcLoanPayment(inp.loan, p.rate, p.term, inp.repay);
+          const cf = r.noi - lr.monthly * 12;
+          return `<div class="loan-card${p.recommended?' recommended':''}">
+            ${p.recommended?'<div style="font-size:10px;color:var(--gold);margin-bottom:6px">◀ 設定中</div>':''}
+            <div class="loan-type">${p.label}</div>
+            <div class="loan-payment">${Math.round(lr.monthly).toLocaleString()}円/月</div>
+            <div class="loan-sub">
+              年間CF: <strong style="color:${cf>=0?'var(--green)':'var(--red)'}">${cf>=0?'+':''}${Math.round(cf/10000)}万円</strong><br>
+              金利${p.rate}% / ${p.term}年
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCashflow(inp, r) {
+  const years = Array.from({length:inp.hold}, (_,i)=>i+1);
+  const cfData = [], noiData = [], loanData = [], cumData = [];
+  let cumCF = -r.equity;
+  const r2 = inp.rate/100/12;
+  let balance = inp.loan*10000;
+
+  years.forEach(y => {
+    const rent = inp.rent * Math.pow(1-inp.decline/100, y-1);
+    const noi = calcNOI(rent, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+    const ds = r.loanMonthly * 12;
+    const cf = noi - ds;
+    for(let m=0;m<12;m++){
+      const interest=balance*r2;
+      const principal=inp.repay==='equal'?r.loanMonthly-interest:(inp.loan*10000/(inp.term*12));
+      balance=Math.max(0,balance-principal);
+    }
+    cumCF += cf;
+    noiData.push(Math.round(noi/10000));
+    loanData.push(Math.round(ds/10000));
+    cfData.push(Math.round(cf/10000));
+    cumData.push(Math.round(cumCF/10000));
+  });
+
+  // 売却年のCF（最終年）
+  const exitCF = r.exitNet - balance;
+  cumData[inp.hold-1] += Math.round(exitCF/10000);
+
+  const labels = years.map(y => y+'年');
+  const ctx = document.getElementById('cfChart');
+
+  document.getElementById('cf-content').innerHTML = `
+    <div class="card">
+      <div class="card-title">年間NOI・DS・CFの推移</div>
+      <div class="chart-container"><canvas id="cfChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">累積CF（投資回収シミュレーション）</div>
+      <div class="chart-container"><canvas id="cumChart"></canvas></div>
+      <div style="margin-top:12px;font-size:13px;color:var(--text-muted)">
+        ※最終年（${inp.hold}年）の累積CFには売却収益を含みます。0を超えた時点が投資回収完了です。
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">年次キャッシュフロー詳細表</div>
+      <table>
+        <thead><tr><th>年</th><th>年間NOI（万）</th><th>年間DS（万）</th><th>年間CF（万）</th><th>ローン残高（万）</th><th>累積CF（万）</th></tr></thead>
+        <tbody>${years.map((y,i)=>`<tr>
+          <td>${y}年目</td>
+          <td>${noiData[i].toLocaleString()}</td>
+          <td>${loanData[i].toLocaleString()}</td>
+          <td style="color:${cfData[i]>=0?'var(--green)':'var(--red)'};font-weight:700">${cfData[i]>=0?'+':''}${cfData[i].toLocaleString()}</td>
+          <td>${Math.round((() => { let b=inp.loan*10000; const r3=inp.rate/100/12; for(let m=0;m<y*12;m++){const int=b*r3;const pri=inp.repay==='equal'?r.loanMonthly-int:(inp.loan*10000/(inp.term*12));b=Math.max(0,b-pri);} return b; })()/10000).toLocaleString()}</td>
+          <td style="color:${cumData[i]>=0?'var(--green)':'var(--red)'};font-weight:700">${cumData[i]>=0?'+':''}${cumData[i].toLocaleString()}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  `;
+
+  if(cfChart) cfChart.destroy();
+  cfChart = new Chart(document.getElementById('cfChart').getContext('2d'), {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'NOI（万円）', data:noiData, backgroundColor:'rgba(201,168,76,0.5)', borderColor:'rgba(201,168,76,1)', borderWidth:1, borderRadius:3},
+        {label:'DS（万円）', data:loanData, backgroundColor:'rgba(239,68,68,0.35)', borderColor:'rgba(239,68,68,0.8)', borderWidth:1, borderRadius:3},
+        {label:'CF（万円）', data:cfData, type:'line', borderColor:'var(--green)', backgroundColor:'rgba(34,197,94,0.1)', tension:0.3, borderWidth:2},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#999',font:{size:11}}}},
+      scales:{x:{ticks:{color:'#999'},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#999'},grid:{color:'rgba(255,255,255,0.06)'}}}
+    }
+  });
+
+  const cumChart = new Chart(document.getElementById('cumChart').getContext('2d'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'累積CF（万円）', data:cumData,
+        borderColor:'var(--gold)', backgroundColor:'rgba(201,168,76,0.08)',
+        tension:0.3, borderWidth:2, fill:true, pointBackgroundColor:'var(--gold)',
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#999',font:{size:11}}},
+        annotation:{annotations:{zero:{type:'line',yMin:0,yMax:0,borderColor:'rgba(255,255,255,0.2)',borderWidth:1}}}
+      },
+      scales:{x:{ticks:{color:'#999'},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#999'},grid:{color:'rgba(255,255,255,0.06)'}}}
+    }
+  });
+}
+
+function renderSensitivity(inp) {
+  const vacancies = [0, 5, 10, 15, 20, 25];
+  const rents = [-20, -10, -5, 0, 5, 10].map(d => inp.rent * (1 + d/100));
+  const rentLabels = [-20, -10, -5, 0, 5, 10].map(d => (d>=0?'+':'')+d+'%');
+
+  const rows = vacancies.map(v => {
+    const cells = rents.map(rent => {
+      const noi = calcNOI(rent, inp.mgmt, inp.tax, inp.ins, inp.mrate, v);
+      const ny = inp.price > 0 ? noi / (inp.price*10000) * 100 : 0;
+      return ny;
+    });
+    return {v, cells};
+  });
+
+  const baseNY = calcAll(inp).netYield;
+
+  let tableHTML = `<table class="sensitivity-table">
+    <thead>
+      <tr><th>空室率 \\ 家賃変化</th>${rentLabels.map(l=>`<th>${l}</th>`).join('')}</tr>
+    </thead>
+    <tbody>
+      ${rows.map(row=>`<tr>
+        <td><strong>${row.v}%</strong></td>
+        ${row.cells.map((c,j)=>{
+          const cls = c>=5?'cell-good':c>=3?'cell-warn':'cell-bad';
+          const isBase = Math.abs(c-baseNY)<0.1;
+          return `<td class="${cls}${isBase?' cell-highlight':''}">${c.toFixed(1)}%</td>`;
+        }).join('')}
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+
+  document.getElementById('sensitivity-content').innerHTML = `
+    <div class="card">
+      <div class="card-title">実質利回り感度マトリクス（空室率 × 家賃変化）</div>
+      <div style="overflow-x:auto">${tableHTML}</div>
+      <div style="margin-top:16px;display:flex;gap:16px;font-size:12px">
+        <span><span style="display:inline-block;width:14px;height:14px;background:rgba(34,197,94,0.15);border-radius:3px;vertical-align:middle;margin-right:4px"></span>5%以上（良好）</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:rgba(249,115,22,0.12);border-radius:3px;vertical-align:middle;margin-right:4px"></span>3〜5%（要注意）</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:rgba(239,68,68,0.10);border-radius:3px;vertical-align:middle;margin-right:4px"></span>3%未満（危険）</span>
+        <span><span style="display:inline-block;width:14px;height:14px;border:2px solid var(--gold);border-radius:3px;vertical-align:middle;margin-right:4px"></span>現在の設定値</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">金利感度（ローン返済後CF）</div>
+      <div style="overflow-x:auto">
+        <table class="sensitivity-table">
+          <thead><tr><th>金利</th><th>月次返済</th><th>年間CF</th><th>CCR</th></tr></thead>
+          <tbody>
+            ${[0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0].map(rate=>{
+              const lr = calcLoanPayment(inp.loan, rate, inp.term, inp.repay);
+              const noi = calcNOI(inp.rent, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+              const cf = noi - lr.monthly*12;
+              const eq = (inp.price - inp.loan)*10000;
+              const ccr = eq>0?cf/eq*100:0;
+              const cls = cf>=0?'cell-good':cf>=-500000?'cell-warn':'cell-bad';
+              return `<tr>
+                <td><strong>${rate}%</strong>${Math.abs(rate-inp.rate)<0.01?' ◀':''}</td>
+                <td>${Math.round(lr.monthly).toLocaleString()}円</td>
+                <td class="${cls}">${cf>=0?'+':''}${Math.round(cf/10000)}万円</td>
+                <td class="${ccr>=10?'cell-good':ccr>=5?'cell-warn':'cell-bad'}">${ccr.toFixed(1)}%</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if(!history.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🗂️</div><p>分析履歴がありません</p></div>`;
+    return;
+  }
+  const bClass = {buy:'b-buy', hold:'b-hold', pass:'b-pass'};
+  const bLabel = {buy:'購入推奨', hold:'要精査', pass:'見送り'};
+  el.innerHTML = `<table>
+    <thead><tr><th>日付</th><th>物件名</th><th>購入価格</th><th>家賃</th><th>表面利回り</th><th>実質利回り</th><th>年間CF</th><th>判定</th><th></th></tr></thead>
+    <tbody>
+      ${history.map(h=>`<tr>
+        <td>${h.date}</td>
+        <td><strong>${esc(h.name)}</strong></td>
+        <td>${h.price.toLocaleString()}万円</td>
+        <td>${Number(h.rent).toLocaleString()}円</td>
+        <td style="color:var(--gold)">${h.grossYield.toFixed(2)}%</td>
+        <td style="color:${h.netYield>=5?'var(--green)':h.netYield>=3?'var(--orange)':'var(--red)'}; font-weight:700">${h.netYield.toFixed(2)}%</td>
+        <td style="color:${h.annualCF>=0?'var(--green)':'var(--red)'}; font-weight:700">${h.annualCF>=0?'+':''}${Math.round(h.annualCF/10000)}万</td>
+        <td><span class="badge ${bClass[h.verdict]||'b-hold'}">${bLabel[h.verdict]||h.verdict}</span></td>
+        <td><button class="btn btn-outline btn-sm" onclick="loadHistory(${h.id})">再読込</button></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function loadHistory(id) {
+  const h = history.find(x=>x.id===id);
+  if(!h || !h.inp) return;
+  const inp = h.inp;
+  document.getElementById('i_name').value = inp.name||'';
+  document.getElementById('i_price').value = inp.price||'';
+  document.getElementById('i_rent').value = inp.rent||'';
+  document.getElementById('i_mgmt').value = inp.mgmt||'';
+  document.getElementById('i_tax').value = inp.tax||'';
+  document.getElementById('i_ins').value = inp.ins||'';
+  document.getElementById('i_mrate').value = inp.mrate||5;
+  document.getElementById('i_vacancy').value = inp.vacancy||10;
+  document.getElementById('i_loan').value = inp.loan||'';
+  document.getElementById('i_rate').value = inp.rate||1.5;
+  document.getElementById('i_term').value = inp.term||25;
+  document.getElementById('i_repay').value = inp.repay||'equal';
+  document.getElementById('i_hold').value = inp.hold||10;
+  document.getElementById('i_exit_yield').value = inp.exitYield||6;
+  document.getElementById('i_decline').value = inp.decline||1;
+  document.getElementById('i_exit_cost').value = inp.exitCost||4;
+  autoCalc();
+  switchTab('input');
+}
+
+function clearInputs() {
+  ['i_name','i_price','i_rent','i_mgmt','i_tax','i_ins','i_loan'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('i_mrate').value='5';
+  document.getElementById('i_vacancy').value='10';
+  document.getElementById('i_rate').value='1.5';
+  document.getElementById('i_term').value='25';
+  document.getElementById('i_hold').value='10';
+  document.getElementById('i_exit_yield').value='6';
+  document.getElementById('i_decline').value='1';
+  document.getElementById('i_exit_cost').value='4';
+  document.getElementById('quick-result').style.display='none';
+}
+
+function exportHistory() {
+  if(!history.length) { alert('履歴がありません'); return; }
+  const h2=['日付','物件名','購入価格(万)','家賃(円)','表面利回り','実質利回り','年間CF(万)','判定'];
+  const rows=history.map(h=>[h.date,h.name,h.price,h.rent,h.grossYield.toFixed(2)+'%',h.netYield.toFixed(2)+'%',Math.round(h.annualCF/10000),h.verdict]);
+  const csv=[h2,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));
+  a.download=`investment_history_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+function clearHistory() {
+  if(!confirm('全履歴を削除しますか？')) return;
+  history=[];localStorage.setItem('inv_history',JSON.stringify(history));renderHistory();
+}
+
+function switchTab(t) {
+  const tabs=['input','result','cashflow','sensitivity','history'];
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));
+  tabs.forEach(tab=>document.getElementById('tab-'+tab).classList.toggle('active',tab===t));
+  if(t==='history') renderHistory();
+}
+
+// Chart.js オフラインフォールバック
+function showChartOfflineMsg(canvasId) {
+  const el = document.getElementById(canvasId);
+  if(el && window._noChart) {
+    el.style.display='none';
+    const msg = document.createElement('p');
+    msg.style.cssText='color:var(--text-muted);text-align:center;padding:40px;font-size:13px;';
+    msg.textContent='グラフの表示にはインターネット接続が必要です（Chart.jsが読み込めませんでした）';
+    el.parentNode.insertBefore(msg, el.nextSibling);
+  }
+}
+
+// ストレージ警告
+function checkStorageWarning() {
+  try {
+    let used = 0;
+    for(let k in localStorage) { if(localStorage.hasOwnProperty(k)) used += (localStorage[k]||'').length * 2; }
+    if(used > 3*1024*1024) {
+      const mb = (used/1024/1024).toFixed(1);
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:70px;right:20px;background:#ef4444;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;z-index:9999;max-width:300px;box-shadow:0 4px 12px rgba(0,0,0,0.3);line-height:1.5;';
+      el.innerHTML = '⚠️ ストレージ使用量が'+mb+'MBです。<br>CSVエクスポートで定期バックアップを推奨します。';
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 8000);
+    }
+  } catch(e){}
+}
+
+// 初期化
+checkStorageWarning();
+showChartOfflineMsg('cfChart');
+showChartOfflineMsg('cumChart');
+renderHistory();
+</script>
+</body>
+</html>

@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理SaaS | 石澤紳司 不動産ビジネスハック</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" onerror="window._noChart=true"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #c9a84c; --gold-light: #e8c97a;
+      --dark: #0d0d0d; --dark2: #1a1a1a; --dark3: #242424;
+      --text: #f0ede8; --text-muted: #999;
+      --green: #22c55e; --red: #ef4444; --blue: #3b82f6; --orange: #f97316; --purple: #a855f7;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+    .topnav { background: var(--dark2); border-bottom: 1px solid rgba(201,168,76,0.2); padding: 14px 32px; display: flex; align-items: center; gap: 16px; }
+    .back-link { color: var(--gold); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+    .back-link:hover { text-decoration: underline; }
+    .nav-title { font-size: 14px; color: var(--text-muted); }
+    .tabs { display: flex; background: var(--dark2); border-bottom: 1px solid rgba(255,255,255,0.06); overflow-x: auto; }
+    .tab-btn { padding: 15px 22px; background: none; border: none; color: var(--text-muted); font-size: 13px; font-family: inherit; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .main { max-width: 1100px; margin: 0 auto; padding: 36px 28px; }
+    .page-title { font-size: 24px; font-weight: 900; margin-bottom: 6px; }
+    .page-title span { color: var(--gold); }
+    .page-desc { color: var(--text-muted); font-size: 13px; margin-bottom: 32px; line-height: 1.8; }
+    .card { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 13px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    input, select, textarea { background: var(--dark3); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; padding: 9px 13px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s; width: 100%; }
+    input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+    select option { background: #1a1a1a; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 8px; border: none; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+    .btn-gold { background: var(--gold); color: #000; }
+    .btn-gold:hover { background: var(--gold-light); }
+    .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--text); }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-sm { padding: 5px 12px; font-size: 11px; }
+    .btn-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+    .btn-red { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+
+    /* KPI */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+    .kpi { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 18px; position: relative; overflow: hidden; }
+    .kpi::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(201,168,76,0.03) 0%,transparent 60%); }
+    .kpi-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 8px; }
+    .kpi-value { font-size: 26px; font-weight: 900; }
+    .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .kpi-trend { font-size: 11px; margin-top: 4px; }
+    .trend-up { color: var(--green); }
+    .trend-down { color: var(--red); }
+
+    /* テーブル */
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: var(--dark3); padding: 10px 13px; font-size: 11px; color: var(--text-muted); text-align: left; letter-spacing: 1px; }
+    thead th:first-child { border-radius: 7px 0 0 7px; }
+    thead th:last-child { border-radius: 0 7px 7px 0; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+    tbody td { padding: 12px 13px; font-size: 13px; vertical-align: middle; }
+    .empty-state { text-align: center; padding: 50px; color: var(--text-muted); }
+    .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+    /* バッジ */
+    .badge { padding: 2px 9px; border-radius: 100px; font-size: 10px; font-weight: 700; }
+    .b-vacant { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+    .b-occupied { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .b-paid { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+    .b-unpaid { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+    .b-partial { background: rgba(249,115,22,0.12); color: var(--orange); border: 1px solid rgba(249,115,22,0.2); }
+    .b-open { background: rgba(249,115,22,0.12); color: var(--orange); border: 1px solid rgba(249,115,22,0.2); }
+    .b-progress { background: rgba(59,130,246,0.12); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }
+    .b-done { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+
+    /* モーダル */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: var(--dark2); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 26px; max-width: 620px; width: 100%; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+
+    /* 収益チャート */
+    .chart-container { position: relative; height: 280px; }
+
+    @media(max-width:700px) { .form-grid,.form-grid-3 { grid-template-columns:1fr; } .kpi-grid { grid-template-columns:1fr 1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } }
+    @media print {
+      .topnav,.tabs,.btn { display:none!important; }
+      body { background:#fff!important; color:#000!important; }
+      .card { background:#fff!important; border:1px solid #ccc!important; border-radius:4px!important; color:#000!important; page-break-inside:avoid; }
+      .main { padding:0!important; max-width:100%!important; }
+      .tab-content { display:block!important; }
+      :root { --text:#000; --text-muted:#555; --gold:#c9a84c; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    ダッシュボードに戻る
+  </a>
+  <span style="color:rgba(255,255,255,0.2)">|</span>
+  <span class="nav-title">TOOL 04 — 家賃保証×管理SaaS</span>
+</nav>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('dashboard')">📊 ダッシュボード</button>
+  <button class="tab-btn" onclick="switchTab('properties')">🏢 物件管理</button>
+  <button class="tab-btn" onclick="switchTab('tenants')">👥 テナント管理</button>
+  <button class="tab-btn" onclick="switchTab('rent')">💴 家賃台帳</button>
+  <button class="tab-btn" onclick="switchTab('repair')">🔧 修繕管理</button>
+</div>
+
+<!-- ダッシュボード -->
+<div id="tab-dashboard" class="tab-content active">
+<div class="main">
+  <h1 class="page-title">収益<span>ダッシュボード</span></h1>
+  <p class="page-desc">全管理物件の収益・稼働状況をリアルタイムで把握。ストック収入を最大化します。</p>
+  <div class="kpi-grid" id="kpi-grid"></div>
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+    <div class="card">
+      <div class="card-title">月次収益推移（過去12ヶ月）</div>
+      <div class="chart-container"><canvas id="revenueChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">稼働率・家賃回収率</div>
+      <div id="occupancy-detail"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:0">
+    <div class="card-title">今月のアクション必要リスト</div>
+    <div id="action-list"></div>
+  </div>
+</div>
+</div>
+
+<!-- 物件管理 -->
+<div id="tab-properties" class="tab-content">
+<div class="main">
+  <h1 class="page-title"><span>物件</span>管理</h1>
+  <p class="page-desc">管理物件を登録・管理します。物件ごとの収益状況を一覧把握できます。</p>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;gap:10px">
+    <button class="btn btn-gold" onclick="openPropertyModal()">＋ 物件登録</button>
+    <button class="btn btn-outline btn-sm" onclick="exportData('properties')">CSVエクスポート</button>
+  </div>
+  <div id="properties-list"></div>
+</div>
+</div>
+
+<!-- テナント管理 -->
+<div id="tab-tenants" class="tab-content">
+<div class="main">
+  <h1 class="page-title"><span>テナント</span>管理</h1>
+  <p class="page-desc">入居者情報・契約情報を管理します。更新期限アラート付き。</p>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;gap:10px">
+    <button class="btn btn-gold" onclick="openTenantModal()">＋ テナント登録</button>
+    <button class="btn btn-outline btn-sm" onclick="exportData('tenants')">CSVエクスポート</button>
+  </div>
+  <div id="tenants-list"></div>
+</div>
+</div>
+
+<!-- 家賃台帳 -->
+<div id="tab-rent" class="tab-content">
+<div class="main">
+  <h1 class="page-title"><span>家賃</span>台帳</h1>
+  <p class="page-desc">月別の家賃入金状況を記録・管理。滞納者を即把握します。</p>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;gap:10px;align-items:center">
+      <label style="font-size:13px;color:var(--text-muted)">対象月:</label>
+      <select id="rent_month" onchange="renderRentLedger()"></select>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-gold" onclick="openRentModal()">＋ 入金登録</button>
+      <button class="btn btn-outline btn-sm" onclick="exportData('rent')">CSVエクスポート</button>
+    </div>
+  </div>
+  <div id="rent-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px"></div>
+  <div class="card" id="rent-list"></div>
+</div>
+</div>
+
+<!-- 修繕管理 -->
+<div id="tab-repair" class="tab-content">
+<div class="main">
+  <h1 class="page-title"><span>修繕</span>管理</h1>
+  <p class="page-desc">修繕依頼・対応状況を管理。費用を記録して経費管理にも活用できます。</p>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;gap:10px">
+    <button class="btn btn-gold" onclick="openRepairModal()">＋ 修繕依頼登録</button>
+    <button class="btn btn-outline btn-sm" onclick="exportData('repairs')">CSVエクスポート</button>
+  </div>
+  <div id="repairs-list"></div>
+</div>
+</div>
+
+<!-- 物件登録モーダル -->
+<div class="modal-overlay" id="propertyModal" style="display:none;" onclick="closeModal('propertyModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="propModalTitle">物件登録</div>
+    <div class="form-grid">
+      <div class="form-group full"><label>物件名*</label><input id="p_name" placeholder="〇〇ハイツ"></div>
+      <div class="form-group full"><label>所在地</label><input id="p_addr" placeholder="東京都杉並区〇〇1-2-3"></div>
+      <div class="form-group"><label>物件種別</label>
+        <select id="p_type"><option value="apartment">アパート</option><option value="mansion">マンション</option><option value="kodate">一戸建て</option><option value="office">事務所・店舗</option></select>
+      </div>
+      <div class="form-group"><label>総戸数</label><input type="number" id="p_units" placeholder="6" value="1" min="1" max="9999"></div>
+      <div class="form-group"><label>管理委託費率（%）</label><input type="number" id="p_rate" placeholder="5" value="5" min="0" max="30" step="0.1"></div>
+      <div class="form-group"><label>管理開始日</label><input type="date" id="p_start"></div>
+      <div class="form-group full"><label>備考</label><textarea id="p_memo" rows="2"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('propertyModal')">キャンセル</button>
+      <button class="btn btn-gold" onclick="saveProperty()">登録</button>
+    </div>
+  </div>
+</div>
+
+<!-- テナント登録モーダル -->
+<div class="modal-overlay" id="tenantModal" style="display:none;" onclick="closeModal('tenantModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="tenantModalTitle">テナント登録</div>
+    <div class="form-grid">
+      <div class="form-group"><label>氏名*</label><input id="t_name" placeholder="田中 太郎"></div>
+      <div class="form-group"><label>電話番号</label><input id="t_phone" placeholder="090-0000-0000"></div>
+      <div class="form-group"><label>メール</label><input id="t_email"></div>
+      <div class="form-group"><label>物件</label><select id="t_property"></select></div>
+      <div class="form-group"><label>部屋番号</label><input id="t_room" placeholder="101"></div>
+      <div class="form-group"><label>月額家賃（円）</label><input type="number" id="t_rent" placeholder="80000" min="0"></div>
+      <div class="form-group"><label>敷金（円）</label><input type="number" id="t_deposit" placeholder="160000" min="0"></div>
+      <div class="form-group"><label>入居日</label><input type="date" id="t_start"></div>
+      <div class="form-group"><label>契約終了日</label><input type="date" id="t_end"></div>
+      <div class="form-group"><label>ステータス</label>
+        <select id="t_status"><option value="active">入居中</option><option value="notice">退去予告</option><option value="vacant">退去済</option></select>
+      </div>
+      <div class="form-group full"><label>備考</label><textarea id="t_memo" rows="2"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('tenantModal')">キャンセル</button>
+      <button class="btn btn-gold" onclick="saveTenant()">登録</button>
+    </div>
+  </div>
+</div>
+
+<!-- 入金登録モーダル -->
+<div class="modal-overlay" id="rentModal" style="display:none;" onclick="closeModal('rentModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">入金登録</div>
+    <div class="form-grid">
+      <div class="form-group"><label>テナント</label><select id="r_tenant"></select></div>
+      <div class="form-group"><label>対象月</label><input type="month" id="r_month"></div>
+      <div class="form-group"><label>請求額（円）</label><input type="number" id="r_charge" min="0"></div>
+      <div class="form-group"><label>入金額（円）</label><input type="number" id="r_paid" min="0"></div>
+      <div class="form-group"><label>入金日</label><input type="date" id="r_date"></div>
+      <div class="form-group"><label>ステータス</label>
+        <select id="r_status"><option value="paid">入金済</option><option value="partial">一部入金</option><option value="unpaid">未入金</option></select>
+      </div>
+      <div class="form-group full"><label>備考</label><input id="r_memo" placeholder="振込/現金など"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('rentModal')">キャンセル</button>
+      <button class="btn btn-gold" onclick="saveRent()">登録</button>
+    </div>
+  </div>
+</div>
+
+<!-- 修繕登録モーダル -->
+<div class="modal-overlay" id="repairModal" style="display:none;" onclick="closeModal('repairModal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="repairModalTitle">修繕依頼登録</div>
+    <div class="form-grid">
+      <div class="form-group"><label>物件</label><select id="rp_property"></select></div>
+      <div class="form-group"><label>部屋番号</label><input id="rp_room" placeholder="101 / 共用部など"></div>
+      <div class="form-group full"><label>内容*</label><input id="rp_content" placeholder="給湯器故障・壁の染み・エアコン不具合など"></div>
+      <div class="form-group"><label>優先度</label>
+        <select id="rp_priority"><option value="urgent">緊急</option><option value="high">高</option><option value="normal" selected>通常</option><option value="low">低</option></select>
+      </div>
+      <div class="form-group"><label>報告日</label><input type="date" id="rp_date"></div>
+      <div class="form-group"><label>見積費用（円）</label><input type="number" id="rp_cost" min="0"></div>
+      <div class="form-group"><label>業者名</label><input id="rp_vendor" placeholder="〇〇設備会社"></div>
+      <div class="form-group"><label>ステータス</label>
+        <select id="rp_status"><option value="open">受付済</option><option value="progress">対応中</option><option value="done">完了</option></select>
+      </div>
+      <div class="form-group full"><label>備考</label><textarea id="rp_memo" rows="2"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('repairModal')">キャンセル</button>
+      <button class="btn btn-gold" onclick="saveRepair()">登録</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+let properties = JSON.parse(localStorage.getItem('saas_properties') || '[]');
+let tenants    = JSON.parse(localStorage.getItem('saas_tenants')    || '[]');
+let rents      = JSON.parse(localStorage.getItem('saas_rents')      || '[]');
+let repairs    = JSON.parse(localStorage.getItem('saas_repairs')    || '[]');
+
+let editPropId=null, editTenantId=null, editRepairId=null;
+let revenueChart=null;
+
+const PROP_TYPE = {apartment:'アパート',mansion:'マンション',kodate:'一戸建て',office:'事務所・店舗'};
+const REPAIR_PRI = {urgent:'緊急',high:'高',normal:'通常',low:'低'};
+const REPAIR_ST = {open:'受付済',progress:'対応中',done:'完了'};
+
+function save(key) {
+  const map = {properties,tenants,rents,repairs};
+  localStorage.setItem('saas_'+key, JSON.stringify(map[key]));
+}
+
+function closeModal(id,e) {
+  if(!e||e.target===document.getElementById(id)) document.getElementById(id).style.display='none';
+}
+
+// ===== ダッシュボード =====
+function renderDashboard() {
+  const activeTenants = tenants.filter(t=>t.status==='active');
+  const totalUnits = properties.reduce((s,p)=>s+(p.units||0),0);
+  const monthlyRent = activeTenants.reduce((s,t)=>s+(t.rent||0),0);
+  const manageFee = properties.reduce((s,p)=>{
+    const propTenants = activeTenants.filter(t=>t.propertyId===p.id);
+    const rent = propTenants.reduce((x,t)=>x+(t.rent||0),0);
+    return s + rent * (p.rate||5) / 100;
+  },0);
+
+  // 今月の回収率
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const thisMonthRents = rents.filter(r=>r.month===thisMonth);
+  const collected = thisMonthRents.filter(r=>r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+  const collectRate = monthlyRent>0 ? Math.round(collected/monthlyRent*100) : 0;
+
+  const occupancyRate = totalUnits>0 ? Math.round(activeTenants.length/totalUnits*100) : 0;
+
+  document.getElementById('kpi-grid').innerHTML = [
+    {l:'管理物件数',v:properties.length+'棟',s:`${totalUnits}戸 管理中`,c:'var(--text)'},
+    {l:'入居率',v:occupancyRate+'%',s:`${activeTenants.length}/${totalUnits}戸 入居中`,c:occupancyRate>=80?'var(--green)':'var(--orange)'},
+    {l:'月間家賃収入',v:(monthlyRent/10000).toLocaleString()+'万円',s:'入居者全体合計',c:'var(--gold)'},
+    {l:'月間管理委託費',v:Math.round(manageFee/10000)+'万円',s:'石澤さんのストック収入',c:'var(--green)'},
+  ].map(k=>`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
+
+  // 収益グラフ
+  const months = [];
+  const revenues = [];
+  for(let i=11;i>=0;i--) {
+    const d = new Date(); d.setMonth(d.getMonth()-i);
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    months.push(`${d.getMonth()+1}月`);
+    const mRents = rents.filter(r=>r.month===ym&&r.status==='paid');
+    revenues.push(Math.round(mRents.reduce((s,r)=>s+(r.paid||0),0)/10000));
+  }
+
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  if(revenueChart) revenueChart.destroy();
+  revenueChart = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:months,
+      datasets:[{label:'家賃回収（万円）',data:revenues,backgroundColor:'rgba(201,168,76,0.5)',borderColor:'rgba(201,168,76,1)',borderWidth:1,borderRadius:4}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#999',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#999',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#999',font:{size:11}},grid:{color:'rgba(255,255,255,0.06)'}}
+      }
+    }
+  });
+
+  // 稼働率詳細
+  document.getElementById('occupancy-detail').innerHTML = [
+    {l:'入居率',v:occupancyRate+'%',c:occupancyRate>=80?'var(--green)':'var(--orange)'},
+    {l:'今月家賃回収率',v:collectRate+'%',c:collectRate>=90?'var(--green)':collectRate>=70?'var(--orange)':'var(--red)'},
+    {l:'未対応修繕',v:repairs.filter(r=>r.status!=='done').length+'件',c:'var(--orange)'},
+    {l:'90日以内契約更新',v:getExpiringTenants().length+'件',c:'var(--gold)'},
+  ].map(x=>`<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+    <span style="font-size:13px;color:var(--text-muted)">${x.l}</span>
+    <span style="font-size:16px;font-weight:700;color:${x.c}">${x.v}</span>
+  </div>`).join('');
+
+  // アクションリスト
+  const actions = [];
+  rents.filter(r=>r.month===thisMonth&&r.status==='unpaid').forEach(r=>{
+    const t=tenants.find(x=>x.id===r.tenantId);
+    if(t) actions.push({icon:'⚠️',text:`【家賃未入金】${t.name} — ${r.month}分`,color:'var(--red)'});
+  });
+  getExpiringTenants().forEach(t=>{
+    const daysLeft=Math.ceil((new Date(t.end)-new Date())/86400000);
+    actions.push({icon:'📅',text:`【契約更新】${t.name} — あと${daysLeft}日`,color:'var(--gold)'});
+  });
+  repairs.filter(r=>r.priority==='urgent'&&r.status!=='done').forEach(r=>{
+    actions.push({icon:'🔧',text:`【緊急修繕】${r.content} (${r.room||'共用部'})`,color:'var(--orange)'});
+  });
+
+  document.getElementById('action-list').innerHTML = actions.length
+    ? actions.map(a=>`<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <span style="font-size:18px">${a.icon}</span>
+        <span style="font-size:13px;color:${a.color}">${a.text}</span>
+      </div>`).join('')
+    : `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">現在、対応必要な項目はありません ✅</div>`;
+}
+
+function getExpiringTenants() {
+  const now = new Date();
+  const limit = new Date(); limit.setDate(limit.getDate()+90);
+  return tenants.filter(t=>t.status==='active'&&t.end&&new Date(t.end)<=limit&&new Date(t.end)>=now);
+}
+
+// ===== 物件 =====
+function renderProperties() {
+  const el = document.getElementById('properties-list');
+  if(!properties.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏢</div><p>物件が登録されていません</p></div>`; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>物件名</th><th>所在地</th><th>種別</th><th>戸数</th><th>入居中</th><th>委託費率</th><th>管理開始</th><th></th></tr></thead>
+    <tbody>
+      ${properties.map(p=>{
+        const occ = tenants.filter(t=>t.propertyId===p.id&&t.status==='active').length;
+        return `<tr>
+          <td><strong>${esc(p.name)}</strong></td>
+          <td style="font-size:12px">${p.addr||'—'}</td>
+          <td>${PROP_TYPE[p.type]||p.type}</td>
+          <td>${p.units}戸</td>
+          <td><span class="badge ${occ>0?'b-occupied':'b-vacant'}">${occ}/${p.units}戸</span></td>
+          <td>${p.rate||5}%</td>
+          <td style="font-size:12px">${p.start||'—'}</td>
+          <td style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="editProperty(${p.id})">編集</button>
+            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteProperty(${p.id})">削除</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+function openPropertyModal(id) {
+  editPropId=id||null;
+  const titleEl=document.getElementById('propModalTitle');
+  if(id) {
+    const p=properties.find(x=>x.id===id); if(!p) return;
+    titleEl.textContent='物件編集';
+    ['name','addr','units','rate','start','memo'].forEach(f=>{ const el=document.getElementById('p_'+f); if(el) el.value=p[f]||''; });
+    document.getElementById('p_type').value=p.type||'apartment';
+  } else {
+    titleEl.textContent='物件登録';
+    ['name','addr','memo'].forEach(f=>{ const el=document.getElementById('p_'+f); if(el) el.value=''; });
+    document.getElementById('p_units').value='1'; document.getElementById('p_rate').value='5';
+    document.getElementById('p_start').value='';
+  }
+  document.getElementById('propertyModal').style.display='flex';
+}
+function editProperty(id){openPropertyModal(id);}
+function deleteProperty(id){if(!confirm('削除しますか？'))return;properties=properties.filter(p=>p.id!==id);save('properties');renderProperties();}
+
+function saveProperty(){
+  const name=document.getElementById('p_name').value.trim();
+  if(!name){alert('物件名を入力してください');return;}
+  const obj={
+    id:editPropId||Date.now(),name,addr:document.getElementById('p_addr').value,
+    type:document.getElementById('p_type').value,units:parseInt(document.getElementById('p_units').value)||1,
+    rate:parseFloat(document.getElementById('p_rate').value)||5,
+    start:document.getElementById('p_start').value,memo:document.getElementById('p_memo').value,
+  };
+  if(editPropId) properties=properties.map(p=>p.id===editPropId?obj:p); else properties.unshift(obj);
+  save('properties');closeModal('propertyModal');renderProperties();
+}
+
+// ===== テナント =====
+function renderTenants(){
+  const el=document.getElementById('tenants-list');
+  if(!tenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><p>テナントが登録されていません</p></div>`;return;}
+  const STATUS_L={active:'入居中',notice:'退去予告',vacant:'退去済'};
+  const STATUS_B={active:'b-occupied',notice:'b-partial',vacant:'b-vacant'};
+  el.innerHTML=`<table>
+    <thead><tr><th>氏名</th><th>物件/部屋</th><th>月額家賃</th><th>入居日</th><th>契約終了</th><th>ステータス</th><th></th></tr></thead>
+    <tbody>
+      ${tenants.map(t=>{
+        const p=properties.find(x=>x.id===t.propertyId);
+        const daysToEnd=t.end?Math.ceil((new Date(t.end)-new Date())/86400000):'';
+        const expiring=t.end&&daysToEnd<=90&&daysToEnd>=0;
+        return `<tr>
+          <td><strong>${t.name}</strong><br><span style="font-size:11px;color:var(--text-muted)">${t.phone||''}</span></td>
+          <td>${p?p.name:'不明'} / ${t.room||'—'}</td>
+          <td style="color:var(--gold);font-weight:700">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
+          <td style="font-size:12px">${t.start||'—'}</td>
+          <td style="font-size:12px">${t.end||'—'} ${expiring?`<span style="color:var(--gold);font-size:10px">更新${daysToEnd}日前</span>`:''}</td>
+          <td><span class="badge ${STATUS_B[t.status]||''}">${STATUS_L[t.status]||t.status}</span></td>
+          <td style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="editTenant(${t.id})">編集</button>
+            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteTenant(${t.id})">削除</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+function openTenantModal(id){
+  editTenantId=id||null;
+  // 物件セレクト更新
+  const sel=document.getElementById('t_property');
+  sel.innerHTML=properties.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('') || '<option value="">物件を先に登録してください</option>';
+  if(id){
+    const t=tenants.find(x=>x.id===id);if(!t)return;
+    document.getElementById('tenantModalTitle').textContent='テナント編集';
+    ['name','phone','email','room','rent','deposit','start','end','memo'].forEach(f=>{const el=document.getElementById('t_'+f);if(el)el.value=t[f]||'';});
+    document.getElementById('t_property').value=t.propertyId||'';
+    document.getElementById('t_status').value=t.status||'active';
+  } else {
+    document.getElementById('tenantModalTitle').textContent='テナント登録';
+    ['name','phone','email','room','rent','deposit','start','end','memo'].forEach(f=>{const el=document.getElementById('t_'+f);if(el)el.value='';});
+    document.getElementById('t_status').value='active';
+  }
+  document.getElementById('tenantModal').style.display='flex';
+}
+function editTenant(id){openTenantModal(id);}
+function deleteTenant(id){if(!confirm('削除しますか？'))return;tenants=tenants.filter(t=>t.id!==id);save('tenants');renderTenants();}
+function saveTenant(){
+  const name=document.getElementById('t_name').value.trim();
+  if(!name){alert('氏名を入力してください');return;}
+  const obj={
+    id:editTenantId||Date.now(),name,phone:document.getElementById('t_phone').value,
+    email:document.getElementById('t_email').value,
+    propertyId:parseInt(document.getElementById('t_property').value)||0,
+    room:document.getElementById('t_room').value,rent:parseInt(document.getElementById('t_rent').value)||0,
+    deposit:parseInt(document.getElementById('t_deposit').value)||0,
+    start:document.getElementById('t_start').value,end:document.getElementById('t_end').value,
+    status:document.getElementById('t_status').value,memo:document.getElementById('t_memo').value,
+  };
+  if(editTenantId) tenants=tenants.map(t=>t.id===editTenantId?obj:t); else tenants.unshift(obj);
+  save('tenants');closeModal('tenantModal');renderTenants();
+}
+
+// ===== 家賃台帳 =====
+function initRentMonthSelect(){
+  const sel=document.getElementById('rent_month');
+  const now=new Date();
+  sel.innerHTML='';
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const ym=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label=`${d.getFullYear()}年${d.getMonth()+1}月`;
+    sel.innerHTML+=`<option value="${ym}">${label}</option>`;
+  }
+}
+
+function renderRentLedger(){
+  const month=document.getElementById('rent_month').value;
+  const activeTenants=tenants.filter(t=>t.status==='active');
+  const monthRents=rents.filter(r=>r.month===month);
+
+  const charged=activeTenants.reduce((s,t)=>s+(t.rent||0),0);
+  const paid=monthRents.filter(r=>r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+  const unpaid=activeTenants.filter(t=>!monthRents.find(r=>r.tenantId===t.id&&r.status==='paid')).reduce((s,t)=>s+(t.rent||0),0);
+
+  document.getElementById('rent-summary').innerHTML=[
+    {l:'請求合計',v:charged.toLocaleString()+'円',c:'var(--text)'},
+    {l:'入金済合計',v:paid.toLocaleString()+'円',c:'var(--green)'},
+    {l:'未入金合計',v:unpaid.toLocaleString()+'円',c:unpaid>0?'var(--red)':'var(--text-muted)'},
+  ].map(x=>`<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;text-align:center">
+    <div style="font-size:18px;font-weight:700;color:${x.c}">${x.v}</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${x.l}</div>
+  </div>`).join('');
+
+  const el=document.getElementById('rent-list');
+  if(!activeTenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">💴</div><p>入居中のテナントがいません</p></div>`;return;}
+  el.innerHTML=`<table>
+    <thead><tr><th>テナント名</th><th>物件/部屋</th><th>請求額</th><th>入金額</th><th>入金日</th><th>ステータス</th><th></th></tr></thead>
+    <tbody>
+      ${activeTenants.map(t=>{
+        const p=properties.find(x=>x.id===t.propertyId);
+        const r=monthRents.find(x=>x.tenantId===t.id);
+        const bClass=r?r.status==='paid'?'b-paid':r.status==='partial'?'b-partial':'b-unpaid':'b-unpaid';
+        const bLabel=r?r.status==='paid'?'入金済':r.status==='partial'?'一部入金':'未入金':'未登録';
+        return `<tr>
+          <td><strong>${esc(t.name)}</strong></td>
+          <td>${p?p.name:'—'} / ${t.room||'—'}</td>
+          <td>${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
+          <td>${r&&r.paid?Number(r.paid).toLocaleString()+'円':'—'}</td>
+          <td style="font-size:12px">${r&&r.date?r.date:'—'}</td>
+          <td><span class="badge ${bClass}">${bLabel}</span></td>
+          <td><button class="btn btn-outline btn-sm" onclick="quickRent(${t.id},'${month}',${t.rent||0})">入金登録</button></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+function openRentModal(){
+  const sel=document.getElementById('r_tenant');
+  sel.innerHTML=tenants.filter(t=>t.status==='active').map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  const now=new Date();
+  document.getElementById('r_month').value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('r_date').value=now.toISOString().slice(0,10);
+  document.getElementById('r_status').value='paid';
+  document.getElementById('r_charge').value='';
+  document.getElementById('r_paid').value='';
+  document.getElementById('r_memo').value='';
+  document.getElementById('rentModal').style.display='flex';
+}
+
+function quickRent(tenantId, month, rent){
+  const sel=document.getElementById('r_tenant');
+  sel.innerHTML=tenants.filter(t=>t.status==='active').map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  sel.value=tenantId;
+  document.getElementById('r_month').value=month;
+  document.getElementById('r_charge').value=rent;
+  document.getElementById('r_paid').value=rent;
+  const now=new Date();
+  document.getElementById('r_date').value=now.toISOString().slice(0,10);
+  document.getElementById('r_status').value='paid';
+  document.getElementById('rentModal').style.display='flex';
+}
+
+function saveRent(){
+  const tenantId=parseInt(document.getElementById('r_tenant').value);
+  const month=document.getElementById('r_month').value;
+  if(!month){alert('対象月を入力してください');return;}
+  const obj={
+    id:Date.now(),tenantId,month,
+    charge:parseInt(document.getElementById('r_charge').value)||0,
+    paid:parseInt(document.getElementById('r_paid').value)||0,
+    date:document.getElementById('r_date').value,
+    status:document.getElementById('r_status').value,
+    memo:document.getElementById('r_memo').value,
+  };
+  // 同月・同テナントの既存を上書き
+  rents=rents.filter(r=>!(r.tenantId===tenantId&&r.month===month));
+  rents.push(obj);
+  save('rents');closeModal('rentModal');renderRentLedger();
+}
+
+// ===== 修繕 =====
+function renderRepairs(){
+  const el=document.getElementById('repairs-list');
+  if(!repairs.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔧</div><p>修繕依頼がありません</p></div>`;return;}
+  const PCOLOR={urgent:'var(--red)',high:'var(--orange)',normal:'var(--text-muted)',low:'var(--text-muted)'};
+  const ST_B={open:'b-open',progress:'b-progress',done:'b-done'};
+  el.innerHTML=`<table>
+    <thead><tr><th>物件/部屋</th><th>内容</th><th>優先度</th><th>報告日</th><th>費用</th><th>業者</th><th>ステータス</th><th></th></tr></thead>
+    <tbody>
+      ${repairs.map(r=>{
+        const p=properties.find(x=>x.id===r.propertyId);
+        return `<tr>
+          <td>${p?p.name:'—'} / ${r.room||'—'}</td>
+          <td><strong>${esc(r.content)}</strong></td>
+          <td style="color:${PCOLOR[r.priority]};font-weight:700">${REPAIR_PRI[r.priority]}</td>
+          <td style="font-size:12px">${r.date||'—'}</td>
+          <td>${r.cost?Number(r.cost).toLocaleString()+'円':'—'}</td>
+          <td style="font-size:12px">${r.vendor||'—'}</td>
+          <td><span class="badge ${ST_B[r.status]||''}">${REPAIR_ST[r.status]||r.status}</span></td>
+          <td style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="editRepair(${r.id})">編集</button>
+            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteRepair(${r.id})">削除</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+}
+
+function openRepairModal(id){
+  editRepairId=id||null;
+  const pSel=document.getElementById('rp_property');
+  pSel.innerHTML=properties.map(p=>`<option value="${p.id}">${p.name}</option>`).join('') || '<option value="">物件なし</option>';
+  const now=new Date();
+  if(id){
+    const r=repairs.find(x=>x.id===id);if(!r)return;
+    document.getElementById('repairModalTitle').textContent='修繕編集';
+    ['room','content','date','cost','vendor','memo'].forEach(f=>{const el=document.getElementById('rp_'+f);if(el)el.value=r[f]||'';});
+    pSel.value=r.propertyId||'';
+    document.getElementById('rp_priority').value=r.priority||'normal';
+    document.getElementById('rp_status').value=r.status||'open';
+  } else {
+    document.getElementById('repairModalTitle').textContent='修繕依頼登録';
+    ['room','content','cost','vendor','memo'].forEach(f=>{const el=document.getElementById('rp_'+f);if(el)el.value='';});
+    document.getElementById('rp_date').value=now.toISOString().slice(0,10);
+    document.getElementById('rp_priority').value='normal';
+    document.getElementById('rp_status').value='open';
+  }
+  document.getElementById('repairModal').style.display='flex';
+}
+function editRepair(id){openRepairModal(id);}
+function deleteRepair(id){if(!confirm('削除しますか？'))return;repairs=repairs.filter(r=>r.id!==id);save('repairs');renderRepairs();}
+function saveRepair(){
+  const content=document.getElementById('rp_content').value.trim();
+  if(!content){alert('内容を入力してください');return;}
+  const obj={
+    id:editRepairId||Date.now(),content,
+    propertyId:parseInt(document.getElementById('rp_property').value)||0,
+    room:document.getElementById('rp_room').value,
+    priority:document.getElementById('rp_priority').value,
+    date:document.getElementById('rp_date').value,
+    cost:parseInt(document.getElementById('rp_cost').value)||0,
+    vendor:document.getElementById('rp_vendor').value,
+    status:document.getElementById('rp_status').value,
+    memo:document.getElementById('rp_memo').value,
+  };
+  if(editRepairId) repairs=repairs.map(r=>r.id===editRepairId?obj:r); else repairs.unshift(obj);
+  save('repairs');closeModal('repairModal');renderRepairs();
+}
+
+// ===== CSV =====
+function exportData(type){
+  let rows, headers, data;
+  if(type==='properties'){
+    data=properties; headers=['物件名','所在地','種別','戸数','委託費率'];
+    rows=data.map(p=>[p.name,p.addr,PROP_TYPE[p.type],p.units,p.rate+'%']);
+  } else if(type==='tenants'){
+    data=tenants; headers=['氏名','電話','物件','部屋','月額家賃','入居日','契約終了','ステータス'];
+    rows=data.map(t=>{const p=properties.find(x=>x.id===t.propertyId);return[t.name,t.phone,p?p.name:'',t.room,t.rent,t.start,t.end,t.status];});
+  } else if(type==='rent'){
+    data=rents; headers=['テナント','対象月','請求額','入金額','入金日','ステータス'];
+    rows=data.map(r=>{const t=tenants.find(x=>x.id===r.tenantId);return[t?t.name:'',r.month,r.charge,r.paid,r.date,r.status];});
+  } else {
+    data=repairs; headers=['物件','部屋','内容','優先度','報告日','費用','業者','ステータス'];
+    rows=data.map(r=>{const p=properties.find(x=>x.id===r.propertyId);return[p?p.name:'',r.room,r.content,REPAIR_PRI[r.priority],r.date,r.cost,r.vendor,REPAIR_ST[r.status]];});
+  }
+  if(!data.length){alert('データがありません');return;}
+  const csv=[headers,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));
+  a.download=`${type}_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+// ===== タブ =====
+function switchTab(t){
+  const tabs=['dashboard','properties','tenants','rent','repair'];
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));
+  tabs.forEach(tab=>document.getElementById('tab-'+tab).classList.toggle('active',tab===t));
+  if(t==='dashboard') renderDashboard();
+  else if(t==='properties') renderProperties();
+  else if(t==='tenants') renderTenants();
+  else if(t==='rent') renderRentLedger();
+  else if(t==='repair') renderRepairs();
+}
+
+// Escape key でモーダルを閉じる
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') {
+    ['propertyModal','tenantModal','rentModal','repairModal'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.display='none';
+    });
+  }
+});
+
+// Chart.js オフラインフォールバック
+function showChartOfflineMsg(canvasId) {
+  const el = document.getElementById(canvasId);
+  if(el && window._noChart) {
+    el.style.display='none';
+    const msg = document.createElement('p');
+    msg.style.cssText='color:var(--text-muted);text-align:center;padding:40px;font-size:13px;';
+    msg.textContent='グラフの表示にはインターネット接続が必要です（Chart.jsが読み込めませんでした）';
+    el.parentNode.insertBefore(msg, el.nextSibling);
+  }
+}
+
+// ストレージ警告
+function checkStorageWarning() {
+  try {
+    let used = 0;
+    for(let k in localStorage) { if(localStorage.hasOwnProperty(k)) used += (localStorage[k]||'').length * 2; }
+    if(used > 3*1024*1024) {
+      const mb = (used/1024/1024).toFixed(1);
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:70px;right:20px;background:#ef4444;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;z-index:9999;max-width:300px;box-shadow:0 4px 12px rgba(0,0,0,0.3);line-height:1.5;';
+      el.innerHTML = '⚠️ ストレージ使用量が'+mb+'MBです。<br>CSVエクスポートで定期バックアップを推奨します。';
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 8000);
+    }
+  } catch(e){}
+}
+
+// 初期化
+checkStorageWarning();
+showChartOfflineMsg('revenueChart');
+initRentMonthSelect();
+renderDashboard();
+</script>
+</body>
+</html>
