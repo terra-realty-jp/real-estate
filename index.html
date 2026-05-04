@@ -3,537 +3,416 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>石澤不動産 | 不動産オーナー・投資家向けサービス</title>
-  <meta name="description" content="不動産オーナー・投資家のためのAIツール完備の不動産サービス。AI査定・空き家活用・投資分析・管理まで一貫対応。まず無料ツールをお試しください。">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <title>不動産かんたんツール | 無料で使える不動産ツール集</title>
+  <meta name="description" content="査定・投資分析・物件管理など、不動産に関する無料ツールが揃っています。登録不要ですぐ使えます。">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #2563eb;
+      --blue-light: #3b82f6;
+      --bg: #f8f9fc;
+      --white: #ffffff;
+      --text: #1a1a2e;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --green: #16a34a;
+      --orange: #ea580c;
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size: 18px; font-weight: 900; color: var(--blue); }
+    .logo span { color: var(--text-muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+    .header-badge {
+      background: #eff6ff; border: 1px solid #bfdbfe; color: var(--blue);
+      padding: 6px 16px; border-radius: 100px; font-size: 12px; font-weight: 700;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+      padding: 72px 40px; text-align: center; color: white;
+    }
+    .hero-label {
+      display: inline-block; background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3); padding: 6px 18px;
+      border-radius: 100px; font-size: 12px; letter-spacing: 2px; margin-bottom: 24px;
+    }
+    .hero-title { font-size: clamp(26px, 5vw, 48px); font-weight: 900; line-height: 1.25; margin-bottom: 16px; }
+    .hero-title em { font-style: normal; color: #fde68a; }
+    .hero-desc { font-size: 15px; color: rgba(255,255,255,0.8); max-width: 520px; margin: 0 auto 36px; line-height: 1.8; }
+    .hero-points { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+    .hero-point {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 700;
+      background: rgba(255,255,255,0.12); padding: 10px 18px; border-radius: 100px;
+    }
+    .hero-point .check { color: #86efac; }
+
+    /* Tool Cards */
+    .tools-section { padding: 64px 40px; max-width: 1000px; margin: 0 auto; }
+    .section-label { font-size: 12px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px; font-weight: 700; }
+
+    .tool-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 16px; margin-bottom: 16px; overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .tool-card:hover { box-shadow: 0 4px 20px rgba(37,99,235,0.08); }
+
+    .card-main {
+      padding: 24px 28px; display: flex; align-items: flex-start; gap: 20px;
+    }
+    .card-icon { font-size: 36px; flex-shrink: 0; margin-top: 2px; }
+    .card-body { flex: 1; min-width: 0; }
+    .card-header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+    .card-title { font-size: 17px; font-weight: 700; }
+    .card-step { font-size: 10px; font-weight: 700; color: var(--blue); background: #eff6ff; border: 1px solid #bfdbfe; padding: 2px 9px; border-radius: 100px; letter-spacing: 1px; }
+    .card-who { font-size: 11px; font-weight: 700; color: var(--orange); background: #fff7ed; border: 1px solid #fed7aa; padding: 2px 9px; border-radius: 100px; }
+    .card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 12px; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { background: #f3f4f6; border-radius: 6px; padding: 3px 10px; font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+    .card-actions { display: flex; align-items: center; gap: 12px; padding: 0 28px 0 0; flex-shrink: 0; }
+    .btn-open {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--blue); color: white; font-size: 13px; font-weight: 700;
+      padding: 10px 20px; border-radius: 8px; text-decoration: none;
+      white-space: nowrap; transition: background 0.2s;
+    }
+    .btn-open:hover { background: #1d4ed8; }
+    .btn-guide {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: none; border: 1px solid var(--border); color: var(--text-muted);
+      font-size: 12px; font-weight: 700; padding: 9px 16px; border-radius: 8px;
+      cursor: pointer; font-family: inherit; transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-guide:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-guide.open { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
+
+    /* Guide Panel */
+    .guide-panel {
+      display: none; border-top: 1px solid var(--border);
+      background: #f9fafb; padding: 28px 28px 28px 84px;
+    }
+    .guide-panel.open { display: block; }
+    .guide-title { font-size: 13px; font-weight: 700; color: var(--blue); margin-bottom: 16px; letter-spacing: 0.5px; }
+    .guide-steps { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .guide-step { display: flex; gap: 14px; align-items: flex-start; }
+    .guide-step-num {
+      width: 24px; height: 24px; border-radius: 50%; background: var(--blue);
+      color: white; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+    }
+    .guide-step-text { font-size: 13px; line-height: 1.7; color: var(--text); }
+    .guide-step-text strong { color: var(--text); }
+    .guide-note {
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+      padding: 12px 16px; font-size: 12px; color: #92400e; line-height: 1.7;
+    }
+    .guide-note-good {
+      background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
+      padding: 12px 16px; font-size: 12px; color: #166534; line-height: 1.7;
+    }
+
+    /* Caution badge on card */
+    .card-caution {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 700; color: var(--orange);
+      background: #fff7ed; border: 1px solid #fed7aa;
+      padding: 2px 8px; border-radius: 100px;
+    }
+
+    footer {
+      border-top: 1px solid var(--border); padding: 32px 40px;
+      text-align: center; color: var(--text-muted); font-size: 12px; background: var(--white);
+    }
+    footer a { color: var(--text-muted); text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      .header { padding: 14px 20px; }
+      .hero { padding: 48px 20px; }
+      .tools-section { padding: 40px 16px; }
+      .card-main { flex-direction: column; gap: 12px; padding: 20px; }
+      .card-actions { padding: 0; margin-top: 4px; }
+      .guide-panel { padding: 20px; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- ========== ヘッダー ========== -->
-  <header class="header" id="header">
-    <div class="header-inner">
-      <div class="logo">
-        <a href="index.html">
-          <!-- ロゴ画像を使用する場合: <img src="images/logo.svg" alt="石澤不動産"> -->
-          <span class="logo-text">石澤不動産</span>
-        </a>
-      </div>
-
-      <nav class="nav-desktop" aria-label="メインナビゲーション">
-        <ul>
-          <li><a href="#properties">物件一覧</a></li>
-          <li><a href="#buy">購入をお考えの方</a></li>
-          <li><a href="#sell">売却をお考えの方</a></li>
-          <li><a href="#services">サービス一覧</a></li>
-          <li><a href="#about">会社概要</a></li>
-          <li><a href="#contact">お問い合わせ</a></li>
-        </ul>
-      </nav>
-
-      <div class="header-cta">
-        <a href="tel:03-6000-0000" class="header-tel">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.09 3.18 2 2 0 012.07 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-          <span>03-6000-0000</span>
-        </a>
-        <button class="hamburger" id="hamburger" aria-label="メニューを開く">
-          <span></span><span></span><span></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- モバイルメニュー -->
-    <nav class="nav-mobile" id="navMobile" aria-label="モバイルナビゲーション">
-      <ul>
-        <li><a href="#properties">物件一覧</a></li>
-        <li><a href="#buy">購入をお考えの方</a></li>
-        <li><a href="#sell">売却をお考えの方</a></li>
-        <li><a href="#services">サービス一覧</a></li>
-        <li><a href="#about">会社概要</a></li>
-        <li><a href="#contact">お問い合わせ</a></li>
-      </ul>
-    </nav>
+  <header class="header">
+    <div class="logo">不動産かんたんツール<span>powered by 石澤不動産</span></div>
+    <div class="header-badge">全5ツール 無料</div>
   </header>
 
-  <!-- ========== ヒーロー ========== -->
   <section class="hero">
-    <div class="hero-overlay"></div>
-    <!-- 背景画像: css/style.css の .hero セクションで設定 -->
-    <div class="hero-content">
-      <p class="hero-sub">不動産オーナー・投資家のための、AIと人がつながる不動産会社</p>
-      <h1 class="hero-title">資産を、次のステージへ。<br>石澤不動産のプロが寄り添います</h1>
-
-      <!-- 物件検索ボックス -->
-      <div class="search-box">
-        <div class="search-tabs">
-          <button class="search-tab active" data-tab="buy">購入</button>
-          <button class="search-tab" data-tab="rent">賃貸</button>
-        </div>
-        <div class="search-form" id="searchForm">
-          <select class="search-select" aria-label="エリアを選択">
-            <option value="">エリアを選択</option>
-            <!-- エリアは properties.js から動的生成 -->
-          </select>
-          <select class="search-select" aria-label="物件種別を選択">
-            <option value="">物件種別</option>
-            <option value="mansion">マンション</option>
-            <option value="house">一戸建て</option>
-            <option value="land">土地</option>
-            <option value="invest">収益物件</option>
-          </select>
-          <select class="search-select" aria-label="価格帯を選択">
-            <option value="">価格帯</option>
-            <option value="0-2000">〜2,000万円</option>
-            <option value="2000-4000">2,000万〜4,000万円</option>
-            <option value="4000-6000">4,000万〜6,000万円</option>
-            <option value="6000-8000">6,000万〜8,000万円</option>
-            <option value="8000-">8,000万円〜</option>
-          </select>
-          <button class="search-btn" id="searchBtn">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            物件を探す
-          </button>
-        </div>
-      </div>
+    <div class="hero-label">登録不要・無料・すぐ使える</div>
+    <h1 class="hero-title">不動産のことが<br><em>もっとわかる</em>ツール集</h1>
+    <p class="hero-desc">査定額の目安、投資の収益計算、物件の管理まで。不動産に関するちょっとした疑問を解決するツールを無料で提供しています。</p>
+    <div class="hero-points">
+      <div class="hero-point"><span class="check">✓</span> 会員登録不要</div>
+      <div class="hero-point"><span class="check">✓</span> 完全無料</div>
+      <div class="hero-point"><span class="check">✓</span> スマホ対応</div>
     </div>
   </section>
 
-  <!-- ========== 実績バー ========== -->
-  <section class="stats-bar">
-    <div class="container">
-      <div class="stats-list">
-        <!-- 数値は会社の実績に合わせて変更してください -->
-        <div class="stats-item">
-          <span class="stats-num" data-target="500">0</span>
-          <span class="stats-unit">件+</span>
-          <span class="stats-label">累計取引実績</span>
+  <section class="tools-section">
+    <div class="section-label">ツール一覧 — 使い方ガイド付き</div>
+
+    <!-- ツール1 -->
+    <div class="tool-card">
+      <div class="card-main">
+        <div class="card-icon">🏠</div>
+        <div class="card-body">
+          <div class="card-header-row">
+            <div class="card-title">AI物件査定</div>
+            <div class="card-step">TOOL 01</div>
+            <div class="card-who">売却を考えている方</div>
+          </div>
+          <p class="card-desc">住所・物件の情報を入力するだけで、査定額の目安を即時に表示します。売却価格の相場を手軽に把握したい方に。</p>
+          <div class="card-tags">
+            <span class="tag">価格の目安</span>
+            <span class="tag">エリア別相場</span>
+            <span class="tag">築年・面積対応</span>
+            <span class="tag">即時表示</span>
+          </div>
         </div>
-        <div class="stats-item">
-          <span class="stats-num" data-target="98">0</span>
-          <span class="stats-unit">%</span>
-          <span class="stats-label">お客様満足度</span>
+        <div class="card-actions">
+          <a href="tools/1-ai-satei.html" class="btn-open">使ってみる →</a>
+          <button class="btn-guide" onclick="toggleGuide('g1', this)">使い方</button>
         </div>
-        <div class="stats-item">
-          <span class="stats-num" data-target="15">0</span>
-          <span class="stats-unit">年</span>
-          <span class="stats-label">営業実績</span>
+      </div>
+      <div class="guide-panel" id="g1">
+        <div class="guide-title">使い方ガイド — AI物件査定</div>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-text"><strong>エリアと物件種別を選ぶ</strong><br>都道府県・市区、そして「マンション」「一戸建て」「土地」などを選択します。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-text"><strong>面積・築年数などを入力する</strong><br>専有面積（㎡）、築年数、最寄り駅からの徒歩分数、リフォームの有無などを入力します。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-text"><strong>お名前と電話番号を入力して結果を見る</strong><br>査定結果を表示するためにお名前と連絡先をご入力ください。入力後すぐに「推定価格・価格レンジ・市場流通性」が表示されます。</div>
+          </div>
         </div>
-        <div class="stats-item">
-          <span class="stats-num" data-target="24">0</span>
-          <span class="stats-unit">h</span>
-          <span class="stats-label">相談受付</span>
+        <div class="guide-note">
+          ⚠️ この査定はAIによる概算です。エリアごとの相場データをもとにした目安であり、実際の取引価格とは異なる場合があります。正確な査定は不動産会社への相談をおすすめします。
         </div>
       </div>
     </div>
+
+    <!-- ツール2 -->
+    <div class="tool-card">
+      <div class="card-main">
+        <div class="card-icon">🏚️</div>
+        <div class="card-body">
+          <div class="card-header-row">
+            <div class="card-title">空き家活用診断</div>
+            <div class="card-step">TOOL 02</div>
+            <div class="card-who">空き家を持っている方</div>
+          </div>
+          <p class="card-desc">空き家の状況をチェックリストで入力すると、「売却・賃貸・リノベーション」のどれが最適かをスコアで診断します。放置し続けるリスクも確認できます。</p>
+          <div class="card-tags">
+            <span class="tag">活用方法の診断</span>
+            <span class="tag">放置リスク確認</span>
+            <span class="tag">選択肢の比較</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="tools/2-akiya-hunter.html" class="btn-open">使ってみる →</a>
+          <button class="btn-guide" onclick="toggleGuide('g2', this)">使い方</button>
+        </div>
+      </div>
+      <div class="guide-panel" id="g2">
+        <div class="guide-title">使い方ガイド — 空き家活用診断</div>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-text"><strong>物件の住所を入力する</strong><br>空き家の所在地を入力します（任意）。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-text"><strong>チェックリストに答える</strong><br>「3年以上誰も住んでいない」「建物が老朽化している」「相続物件である」など、当てはまる項目にチェックを入れます。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-text"><strong>スコアと推奨アクションを確認する</strong><br>チェック内容に応じてスコアが算出され、「売却を検討すべき」「賃貸活用が向いている」などのアドバイスが表示されます。</div>
+          </div>
+        </div>
+        <div class="guide-note-good">
+          ✅ 空き家を放置すると固定資産税の優遇がなくなったり（最大6倍）、行政から「特定空き家」に指定されるリスクがあります。まず現状を診断することから始めましょう。
+        </div>
+      </div>
+    </div>
+
+    <!-- ツール3 -->
+    <div class="tool-card">
+      <div class="card-main">
+        <div class="card-icon">🤝</div>
+        <div class="card-body">
+          <div class="card-header-row">
+            <div class="card-title">売主・買主マッチング</div>
+            <div class="card-step">TOOL 03</div>
+            <div class="card-who">売りたい方・買いたい方</div>
+          </div>
+          <p class="card-desc">売却したい物件の情報と、購入したい条件を登録して、条件が合う相手を探します。手数料を抑えた取引の実現を目指します。</p>
+          <div class="card-tags">
+            <span class="tag">売却・購入の登録</span>
+            <span class="tag">条件マッチング</span>
+            <span class="tag">直接相談</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="tools/3-owner-direct.html" class="btn-open">使ってみる →</a>
+          <button class="btn-guide" onclick="toggleGuide('g3', this)">使い方</button>
+        </div>
+      </div>
+      <div class="guide-panel" id="g3">
+        <div class="guide-title">使い方ガイド — 売主・買主マッチング</div>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-text"><strong>売主または買主として情報を登録する</strong><br>売りたい物件の情報（価格・エリア・種別）、または購入希望の条件（予算・エリア・物件種別）を入力します。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-text"><strong>マッチング結果を確認する</strong><br>登録した条件をもとに、価格帯・エリア・物件種別が合う相手を自動的に探して表示します。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-text"><strong>石澤不動産に相談する</strong><br>気になる相手が見つかったら、石澤不動産が間に入って詳しいご相談をサポートします。</div>
+          </div>
+        </div>
+        <div class="guide-note">
+          ⚠️ このツールのデータはお使いのブラウザ内にのみ保存されます。実際に相手とつながるには石澤不動産へのご相談が必要です。
+        </div>
+      </div>
+    </div>
+
+    <!-- ツール4 -->
+    <div class="tool-card">
+      <div class="card-main">
+        <div class="card-icon">🏢</div>
+        <div class="card-body">
+          <div class="card-header-row">
+            <div class="card-title">賃貸物件かんたん管理</div>
+            <div class="card-step">TOOL 04</div>
+            <div class="card-who">賃貸オーナーの方</div>
+          </div>
+          <p class="card-desc">賃貸物件・入居者・家賃・修繕をまとめて管理。月々の収支が一目でわかるダッシュボードで、手元の不動産を見える化します。</p>
+          <div class="card-tags">
+            <span class="tag">物件・テナント管理</span>
+            <span class="tag">家賃台帳</span>
+            <span class="tag">修繕履歴</span>
+            <span class="tag">収支ダッシュボード</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="tools/4-kanri-saas.html" class="btn-open">使ってみる →</a>
+          <button class="btn-guide" onclick="toggleGuide('g4', this)">使い方</button>
+        </div>
+      </div>
+      <div class="guide-panel" id="g4">
+        <div class="guide-title">使い方ガイド — 賃貸物件かんたん管理</div>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-text"><strong>物件を登録する</strong><br>「物件管理」タブで、管理している賃貸物件の名前・住所・戸数を登録します。複数物件も登録可能です。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-text"><strong>入居者（テナント）を登録する</strong><br>「テナント管理」タブで、各部屋の入居者名・月額家賃・入居日・契約終了日を入力します。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-text"><strong>毎月の家賃入金を記録する</strong><br>「家賃台帳」タブで月ごとの入金状況を記録。未入金の確認や収支の把握がかんたんにできます。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">4</div>
+            <div class="guide-step-text"><strong>修繕や対応事項を管理する</strong><br>「修繕管理」タブで修繕依頼・業者・費用・対応状況を記録できます。</div>
+          </div>
+        </div>
+        <div class="guide-note-good">
+          ✅ データはすべてあなたのブラウザ内にのみ保存されます。個人情報が外部に送信されることはありません。CSVエクスポートでバックアップも可能です。
+        </div>
+      </div>
+    </div>
+
+    <!-- ツール5 -->
+    <div class="tool-card">
+      <div class="card-main">
+        <div class="card-icon">📊</div>
+        <div class="card-body">
+          <div class="card-header-row">
+            <div class="card-title">不動産投資シミュレーター</div>
+            <div class="card-step">TOOL 05</div>
+            <div class="card-who">投資を検討している方</div>
+          </div>
+          <p class="card-desc">物件情報を入れるだけで、利回り・ローン返済・10年後のキャッシュフローを自動計算。「この物件、本当に買って大丈夫？」を数字で判断できます。</p>
+          <div class="card-tags">
+            <span class="tag">表面・実質利回り</span>
+            <span class="tag">ローン計算</span>
+            <span class="tag">10年CF予測</span>
+            <span class="tag">感度分析</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <a href="tools/5-toushi-bunseki.html" class="btn-open">使ってみる →</a>
+          <button class="btn-guide" onclick="toggleGuide('g5', this)">使い方</button>
+        </div>
+      </div>
+      <div class="guide-panel" id="g5">
+        <div class="guide-title">使い方ガイド — 不動産投資シミュレーター</div>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="guide-step-num">1</div>
+            <div class="guide-step-text"><strong>物件の基本情報を入力する</strong><br>購入価格（万円）・月額想定家賃（円）・ローン金額・金利・返済期間を入力します。管理費・固定資産税・空室率なども入力するとより精度が上がります。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">2</div>
+            <div class="guide-step-text"><strong>「計算する」を押す</strong><br>表面利回り・実質利回り・年間キャッシュフロー・CCR（自己資本利回り）などがすぐに表示されます。</div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step-num">3</div>
+            <div class="guide-step-text"><strong>キャッシュフロー・感度分析タブを確認する</strong><br>10年後までの年間収支グラフ、空室率が変化した場合の利回り変動（感度分析）で、リスクと将来性を確認できます。</div>
+          </div>
+        </div>
+        <div class="guide-note-good">
+          ✅ 利回り・CF・CCR・DSCR・IRR・感度分析など、プロが使う指標がすべて無料で計算できます。複数の物件を比較した履歴も保存されます。
+        </div>
+        <div style="margin-top: 12px;">
+          <div class="guide-note">
+            📖 用語の目安：表面利回り5%以上・実質利回り3%以上が一般的な目安。年間キャッシュフローがプラスであれば毎月手元にお金が残ります。
+          </div>
+        </div>
+      </div>
+    </div>
+
   </section>
 
-  <!-- ========== 新着物件 ========== -->
-  <section class="section" id="properties">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-label">PROPERTIES</span>
-        <h2 class="section-title">新着・おすすめ物件</h2>
-        <p class="section-desc">厳選した物件をご紹介します。ご希望に合った物件をお探しください。</p>
-      </div>
-
-      <!-- フィルタータブ -->
-      <div class="filter-tabs" role="tablist">
-        <button class="filter-tab active" data-filter="all" role="tab">すべて</button>
-        <button class="filter-tab" data-filter="mansion" role="tab">マンション</button>
-        <button class="filter-tab" data-filter="house" role="tab">一戸建て</button>
-        <button class="filter-tab" data-filter="land" role="tab">土地</button>
-        <button class="filter-tab" data-filter="invest" role="tab">収益物件</button>
-      </div>
-
-      <!-- 物件グリッド: JS(properties.js)から動的に生成されます -->
-      <div class="property-grid" id="propertyGrid">
-        <!-- 物件データは js/properties.js の PROPERTIES_DATA 配列に追加してください -->
-        <div class="no-property-msg" id="noPropertyMsg">
-          <p>現在掲載中の物件はありません。<br>新着物件をお待ちください。</p>
-        </div>
-      </div>
-
-      <div class="section-more">
-        <a href="#contact" class="btn-outline">物件について問い合わせる</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== サービス ========== -->
-  <section class="section section-gray" id="services">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-label">SERVICES</span>
-        <h2 class="section-title">ご利用サービス</h2>
-        <p class="section-desc">購入・売却・賃貸・管理まで、不動産に関するあらゆるご相談に対応いたします。</p>
-      </div>
-
-      <div class="service-grid">
-        <!-- 購入 -->
-        <div class="service-card" id="buy">
-          <div class="service-icon">
-            <svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="2.5">
-              <rect x="10" y="25" width="40" height="28" rx="2"/>
-              <path d="M5 28L30 8L55 28" stroke-linecap="round"/>
-              <rect x="22" y="38" width="16" height="15" rx="1" stroke-width="2"/>
-            </svg>
-          </div>
-          <h3 class="service-title">物件購入</h3>
-          <p class="service-desc">豊富な物件ラインナップから、ライフスタイルに合った理想の住まいをご提案します。資金計画から引き渡しまでワンストップでサポートします。</p>
-          <ul class="service-list">
-            <li>新築・中古マンション</li>
-            <li>新築・中古一戸建て</li>
-            <li>土地・収益物件</li>
-            <li>住宅ローン相談</li>
-          </ul>
-          <a href="#contact" class="service-link">相談する &rarr;</a>
-        </div>
-
-        <!-- 売却 -->
-        <div class="service-card" id="sell">
-          <div class="service-icon">
-            <svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="2.5">
-              <circle cx="30" cy="30" r="22"/>
-              <path d="M22 38L30 18L38 38" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M24 33H36" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <h3 class="service-title">物件売却</h3>
-          <p class="service-desc">大切な不動産を最適な価格で売却します。無料査定から迅速な売却活動まで、経験豊富なスタッフが誠実に対応します。</p>
-          <ul class="service-list">
-            <li>無料不動産査定</li>
-            <li>買取・仲介どちらも対応</li>
-            <li>スピード売却プラン</li>
-            <li>相続・離婚による売却相談</li>
-          </ul>
-          <a href="#contact" class="service-link">無料査定を依頼する &rarr;</a>
-        </div>
-
-        <!-- 賃貸管理 -->
-        <div class="service-card">
-          <div class="service-icon">
-            <svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="2.5">
-              <rect x="8" y="14" width="44" height="32" rx="3"/>
-              <path d="M8 22H52"/>
-              <path d="M20 14V22" stroke-width="2"/>
-              <path d="M40 14V22" stroke-width="2"/>
-              <circle cx="30" cy="37" r="5" stroke-width="2"/>
-            </svg>
-          </div>
-          <h3 class="service-title">賃貸管理</h3>
-          <p class="service-desc">オーナー様の物件を責任を持って管理します。入居者募集から家賃管理、退去精算まで煩わしい手続きをすべてお任せいただけます。</p>
-          <ul class="service-list">
-            <li>入居者募集・審査</li>
-            <li>家賃集金・送金代行</li>
-            <li>建物・設備メンテナンス</li>
-            <li>退去立会・精算対応</li>
-          </ul>
-          <a href="#contact" class="service-link">相談する &rarr;</a>
-        </div>
-
-        <!-- 投資 -->
-        <div class="service-card">
-          <div class="service-icon">
-            <svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M10 45L22 30L32 37L45 20L55 25" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="22" cy="30" r="3" fill="currentColor" stroke="none"/>
-              <circle cx="32" cy="37" r="3" fill="currentColor" stroke="none"/>
-              <circle cx="45" cy="20" r="3" fill="currentColor" stroke="none"/>
-            </svg>
-          </div>
-          <h3 class="service-title">不動産投資</h3>
-          <p class="service-desc">安定した資産運用を実現するための投資物件をご提案します。収益シミュレーションから融資相談まで、投資のプロがサポートします。</p>
-          <ul class="service-list">
-            <li>収益マンション・アパート</li>
-            <li>利回りシミュレーション</li>
-            <li>融資・税務相談</li>
-            <li>資産運用コンサルティング</li>
-          </ul>
-          <a href="#contact" class="service-link">相談する &rarr;</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== エリアガイド ========== -->
-  <section class="section" id="areas">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-label">AREA GUIDE</span>
-        <h2 class="section-title">エリアから探す</h2>
-        <p class="section-desc">対応エリアの物件情報をご覧いただけます。</p>
-      </div>
-
-      <!-- エリアグリッド: js/areas.js の AREAS_DATA 配列で管理 -->
-      <div class="area-grid" id="areaGrid">
-        <!-- エリアカードは areas.js から動的生成 -->
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== 選ばれる理由 ========== -->
-  <section class="section section-dark" id="reasons">
-    <div class="container">
-      <div class="section-header section-header--light">
-        <span class="section-label">WHY CHOOSE US</span>
-        <h2 class="section-title">選ばれる理由</h2>
-      </div>
-
-      <div class="reason-grid">
-        <!-- 理由1〜4: 実際の会社の強みに合わせて変更してください -->
-        <div class="reason-card">
-          <div class="reason-num">01</div>
-          <h3 class="reason-title">AIと人による二重査定</h3>
-          <p class="reason-desc">AI自動査定で即時価格目安を提示し、さらに担当者がエリア需給・個別事情を加味してリアルな査定額をご提示。数字の根拠まで丁寧に説明します。</p>
-        </div>
-        <div class="reason-card">
-          <div class="reason-num">02</div>
-          <h3 class="reason-title">オーナー・投資家に特化した提案力</h3>
-          <p class="reason-desc">空き家活用・相続対策・収益改善など、保有不動産の課題をトータルで解決。売るだけでなく「活かす」視点でベストプランを提案します。</p>
-        </div>
-        <div class="reason-card">
-          <div class="reason-num">03</div>
-          <h3 class="reason-title">15年・500件超の地域密着実績</h3>
-          <p class="reason-desc">東京・神奈川エリアを中心に15年・累計500件以上の取引実績。地域の相場・行政動向・開発計画まで熟知した担当者が対応します。</p>
-        </div>
-        <div class="reason-card">
-          <div class="reason-num">04</div>
-          <h3 class="reason-title">24時間・スピード対応</h3>
-          <p class="reason-desc">WEBフォームは24時間受付。急ぎの売却・投資判断にも当日〜翌営業日中にご連絡します。お客様のタイミングに合わせた柔軟な対応が強みです。</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== お客様の声 ========== -->
-  <section class="section section-gray" id="testimonials">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-label">TESTIMONIALS</span>
-        <h2 class="section-title">お客様の声</h2>
-      </div>
-
-      <!-- 口コミ: js/testimonials.js の TESTIMONIALS_DATA 配列で管理 -->
-      <div class="testimonial-grid" id="testimonialGrid">
-        <!-- 口コミデータが登録されるまでの表示 -->
-        <p class="placeholder-text">お客様の声は随時更新いたします。</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== 会社概要 ========== -->
-  <section class="section" id="about">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-label">ABOUT US</span>
-        <h2 class="section-title">会社概要</h2>
-      </div>
-
-      <div class="about-layout">
-        <div class="about-table-wrap">
-          <table class="about-table">
-            <tbody>
-              <tr>
-                <th scope="row">会社名</th>
-                <td>石澤不動産</td>
-              </tr>
-              <tr>
-                <th scope="row">設立</th>
-                <td>2010年4月</td>
-              </tr>
-              <tr>
-                <th scope="row">代表者</th>
-                <td>代表取締役　石澤 信二</td>
-              </tr>
-              <tr>
-                <th scope="row">所在地</th>
-                <td>〒150-0001 東京都渋谷区神宮前1丁目1番1号</td>
-              </tr>
-              <tr>
-                <th scope="row">電話番号</th>
-                <td><a href="tel:03-6000-0000">03-6000-0000</a></td>
-              </tr>
-              <tr>
-                <th scope="row">FAX</th>
-                <td>03-6000-0001</td>
-              </tr>
-              <tr>
-                <th scope="row">営業時間</th>
-                <td>10:00〜19:00（定休日：水曜日）</td>
-              </tr>
-              <tr>
-                <th scope="row">宅建業免許番号</th>
-                <td>東京都知事（3）第99999号</td>
-              </tr>
-              <tr>
-                <th scope="row">加盟団体</th>
-                <td>公益社団法人 東京都宅地建物取引業協会</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="about-map">
-          <!-- Google マップ埋め込みコードをここに貼り付けてください -->
-          <!-- 例: <iframe src="https://www.google.com/maps/embed?..." width="100%" height="400" ...></iframe> -->
-          <div class="map-placeholder">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-              <circle cx="12" cy="9" r="2.5"/>
-            </svg>
-            <p>Google マップをここに埋め込んでください</p>
-            <small>（Google マップ &gt; 共有 &gt; 地図を埋め込む で取得したコードを貼り付けます）</small>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== お問い合わせ ========== -->
-  <section class="section section-primary" id="contact">
-    <div class="container">
-      <div class="section-header section-header--light">
-        <span class="section-label">CONTACT</span>
-        <h2 class="section-title">お問い合わせ</h2>
-        <p class="section-desc">物件に関するご質問・ご相談はお気軽にお問い合わせください。</p>
-      </div>
-
-      <div class="contact-layout">
-        <!-- 電話・メール情報 -->
-        <div class="contact-info">
-          <div class="contact-tel-block">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.09 3.18 2 2 0 012.07 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-            <div>
-              <p class="contact-label">お電話でのお問い合わせ</p>
-              <a href="tel:03-6000-0000" class="contact-tel">03-6000-0000</a>
-              <p class="contact-hours">受付時間：10:00〜19:00<br>（定休日：水曜日）</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- お問い合わせフォーム -->
-        <!-- ※ サーバーサイド処理 (PHP/メール送信API等) は別途実装が必要です -->
-        <form class="contact-form" id="contactForm" novalidate>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="name">お名前 <span class="required">必須</span></label>
-              <input type="text" id="name" name="name" autocomplete="name" placeholder="例：山田 太郎" required>
-              <span class="form-error" id="nameError"></span>
-            </div>
-            <div class="form-group">
-              <label for="email">メールアドレス <span class="required">必須</span></label>
-              <input type="email" id="email" name="email" autocomplete="email" placeholder="例：example@mail.com" required>
-              <span class="form-error" id="emailError"></span>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="tel">電話番号</label>
-              <input type="tel" id="tel" name="tel" autocomplete="tel" placeholder="例：090-0000-0000">
-            </div>
-            <div class="form-group">
-              <label for="subject">お問い合わせ種別 <span class="required">必須</span></label>
-              <select id="subject" name="subject" required>
-                <option value="">選択してください</option>
-                <option value="buy">物件購入について</option>
-                <option value="sell">物件売却について</option>
-                <option value="rent">賃貸管理について</option>
-                <option value="invest">不動産投資について</option>
-                <option value="other">その他</option>
-              </select>
-              <span class="form-error" id="subjectError"></span>
-            </div>
-          </div>
-          <div class="form-group form-group--full">
-            <label for="message">ご相談内容 <span class="required">必須</span></label>
-            <textarea id="message" name="message" rows="5" placeholder="ご相談内容をご記入ください" required></textarea>
-            <span class="form-error" id="messageError"></span>
-          </div>
-          <div class="form-group form-group--full">
-            <label class="checkbox-label">
-              <input type="checkbox" id="agree" name="agree" required>
-              <a href="privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>に同意する
-            </label>
-            <span class="form-error" id="agreeError"></span>
-          </div>
-          <div class="form-submit">
-            <button type="submit" class="btn-primary">送信する</button>
-          </div>
-          <div class="form-notice" id="formNotice"></div>
-        </form>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== フッター ========== -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="container">
-        <div class="footer-grid">
-          <div class="footer-brand">
-            <div class="footer-logo">
-              <!-- ロゴ画像: <img src="images/logo-white.svg" alt="石澤不動産"> -->
-              <span class="footer-logo-text">石澤不動産</span>
-            </div>
-            <p class="footer-catch">不動産オーナー・投資家の資産を、次のステージへ。</p>
-            <address class="footer-address">
-              〒150-0001 東京都渋谷区神宮前1丁目1番1号<br>
-              TEL: <a href="tel:03-6000-0000">03-6000-0000</a>
-            </address>
-          </div>
-
-          <div class="footer-nav-group">
-            <h4 class="footer-nav-title">物件を探す</h4>
-            <ul>
-              <li><a href="#properties">新着物件</a></li>
-              <li><a href="#properties">マンション</a></li>
-              <li><a href="#properties">一戸建て</a></li>
-              <li><a href="#properties">土地</a></li>
-              <li><a href="#properties">収益物件</a></li>
-            </ul>
-          </div>
-
-          <div class="footer-nav-group">
-            <h4 class="footer-nav-title">サービス</h4>
-            <ul>
-              <li><a href="#buy">物件購入</a></li>
-              <li><a href="#sell">物件売却</a></li>
-              <li><a href="#services">賃貸管理</a></li>
-              <li><a href="#services">不動産投資</a></li>
-            </ul>
-          </div>
-
-          <div class="footer-nav-group">
-            <h4 class="footer-nav-title">会社情報</h4>
-            <ul>
-              <li><a href="#about">会社概要</a></li>
-              <li><a href="#contact">お問い合わせ</a></li>
-              <li><a href="privacy.html">プライバシーポリシー</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <div class="container">
-        <p class="copyright">&copy; <span id="currentYear"></span> 石澤不動産 All Rights Reserved.</p>
-      </div>
-    </div>
+  <footer>
+    <p>© 2026 石澤不動産 &nbsp;|&nbsp; <a href="privacy.html">プライバシーポリシー</a></p>
+    <p style="margin-top:8px">入力データはお使いのブラウザにのみ保存されます。外部サーバーへの送信はありません。</p>
   </footer>
 
-  <!-- ページトップボタン -->
-  <button class="page-top" id="pageTop" aria-label="ページトップへ戻る">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <path d="M18 15l-6-6-6 6" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </button>
+  <script>
+    function toggleGuide(id, btn) {
+      const panel = document.getElementById(id);
+      const isOpen = panel.classList.toggle('open');
+      btn.classList.toggle('open', isOpen);
+      btn.textContent = isOpen ? '閉じる ✕' : '使い方';
+    }
+  </script>
 
-  <script src="js/properties.js"></script>
-  <script src="js/areas.js"></script>
-  <script src="js/testimonials.js"></script>
-  <script src="js/main.js"></script>
 </body>
 </html>
