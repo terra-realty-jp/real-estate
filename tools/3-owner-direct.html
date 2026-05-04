@@ -205,35 +205,28 @@
 <!-- 手数料シミュタブ -->
 <div id="tab-fee" class="tab-content">
 <div class="main">
-  <h1 class="page-title">手数料<span>シミュレーター</span></h1>
-  <p class="page-desc">売買価格と仲介形態に応じた手数料を即計算。石澤さんが受け取る金額を可視化します。</p>
+  <h1 class="page-title">仲介手数料の<span>目安を知る</span></h1>
+  <p class="page-desc">不動産を売る・買う際に不動産会社に支払う仲介手数料の目安を確認できます。<br>金額は法律で上限が決まっており、実際には交渉により割引されることもあります。</p>
+
+  <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:13px;line-height:1.8;color:rgba(240,237,232,0.9)">
+    📌 <strong style="color:#93c5fd">仲介手数料とは？</strong><br>
+    不動産を売買する際に、仲介してくれた不動産会社に支払う成功報酬です。売主・買主それぞれが仲介した会社に支払います。売買が成立しなければ発生しません（無料）。
+  </div>
 
   <div class="card">
-    <div class="card-title">🧮 シミュレーション設定</div>
+    <div class="card-title">🧮 手数料を計算する</div>
     <div class="form-grid">
       <div class="form-group">
         <label>売買価格（万円）</label>
         <input type="number" id="fee_price" value="3000" min="0" oninput="calcFee()">
       </div>
       <div class="form-group">
-        <label>仲介形態</label>
+        <label>あなたの立場</label>
         <select id="fee_type" onchange="calcFee()">
-          <option value="both">両手仲介（売主・買主両方から）</option>
-          <option value="seller">片手仲介（売主側のみ）</option>
-          <option value="buyer">片手仲介（買主側のみ）</option>
-          <option value="discount">割引両手（1%×2）</option>
+          <option value="seller">売主として売る</option>
+          <option value="buyer">買主として買う</option>
+          <option value="both">両方の立場で確認したい</option>
         </select>
-      </div>
-      <div class="form-group">
-        <label>消費税</label>
-        <select id="fee_tax" onchange="calcFee()">
-          <option value="1.10">込み（10%）</option>
-          <option value="1">別（税抜き）</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>月間成約件数（予測）</label>
-        <input type="number" id="fee_count" value="2" min="1" max="100" oninput="calcFee()">
       </div>
     </div>
   </div>
@@ -241,7 +234,8 @@
   <div id="fee-result"></div>
 
   <div class="card" style="margin-top:24px;">
-    <div class="card-title">📈 成約件数シミュレーション</div>
+    <div class="card-title">📊 価格帯別の手数料目安表</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">上限額（税込）の目安です。実際は会社・条件により異なります。</p>
     <div id="fee-table"></div>
   </div>
 </div>
@@ -611,39 +605,54 @@ function saveDeal3() {
 function calcFee() {
   const p = parseInt(document.getElementById('fee_price').value)||0;
   const type = document.getElementById('fee_type').value;
-  const tax = parseFloat(document.getElementById('fee_tax').value)||1.1;
-  const cnt = parseInt(document.getElementById('fee_count').value)||1;
 
-  const baseFee = (p <= 200 ? p*0.05 : p <= 400 ? p*0.04+2 : p*0.03+6);
-  let fee;
-  if(type==='both') fee = baseFee * 2;
-  else if(type==='discount') fee = p * 0.01 * 2;
-  else fee = baseFee;
-  fee = fee * tax;
-  const monthly = fee * cnt;
-  const annual = monthly * 12;
+  // 法定上限（税別、万円）: 200万以下→×5%, 200〜400万→×4%+2万, 400万超→×3%+6万
+  const baseFee = p <= 0 ? 0 : p <= 200 ? p*0.05 : p <= 400 ? p*0.04+2 : p*0.03+6;
+  const feeWithTax = Math.round(baseFee * 1.1 * 10) / 10;
 
-  document.getElementById('fee-result').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px">
-      ${[
-        {l:'1件あたり手数料', v:Math.round(fee*10)/10+'万円', c:'var(--gold)'},
-        {l:'月間手数料収入（'+cnt+'件）', v:Math.round(monthly*10)/10+'万円', c:'var(--green)'},
-        {l:'年間手数料収入', v:Math.round(annual).toLocaleString()+'万円', c:'var(--gold)'},
-      ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c};font-size:22px">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('')}
-    </div>
-    <div style="margin-top:14px;font-size:12px;color:var(--text-muted);padding:12px;background:var(--dark3);border-radius:8px">
-      ※仲介手数料上限：売買価格×3%+6万円（400万円超）。両手仲介は売主・買主双方から受領。
+  let resultHtml = '';
+  if(type === 'both') {
+    const total = Math.round(feeWithTax * 2 * 10) / 10;
+    resultHtml = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px">
+        <div class="stat-box"><div class="stat-val" style="color:var(--green);font-size:22px">${feeWithTax}万円</div><div class="stat-lbl">売主が支払う手数料（上限・税込）</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:var(--blue);font-size:22px">${feeWithTax}万円</div><div class="stat-lbl">買主が支払う手数料（上限・税込）</div></div>
+      </div>
+      <div class="stat-box" style="margin-top:14px"><div class="stat-val" style="color:var(--gold);font-size:24px">${total}万円</div><div class="stat-lbl">合計支払い手数料（売主＋買主）</div></div>`;
+  } else {
+    const label = type === 'seller' ? '売主として支払う手数料（上限・税込）' : '買主として支払う手数料（上限・税込）';
+    resultHtml = `
+      <div style="margin-top:20px">
+        <div class="stat-box"><div class="stat-val" style="color:var(--gold);font-size:28px">${feeWithTax}万円</div><div class="stat-lbl">${label}</div></div>
+      </div>`;
+  }
+  resultHtml += `
+    <div style="margin-top:14px;font-size:12px;color:var(--text-muted);padding:12px;background:var(--dark3);border-radius:8px;line-height:1.8">
+      ※売買価格 ${p.toLocaleString()}万円 の場合の上限額（税込）です。実際の手数料は交渉により異なる場合があります。<br>
+      ※法定上限（税別）: 200万円以下→×5%、200〜400万円→×4%＋2万円、400万円超→×3%＋6万円
     </div>`;
+  document.getElementById('fee-result').innerHTML = resultHtml;
 
-  const counts = [1,2,3,5,8,10];
-  document.getElementById('fee-table').innerHTML = `<table>
-    <thead><tr><th>月間成約件数</th><th>月間収入</th><th>年間収入</th></tr></thead>
+  const thStyle = 'padding:8px 10px;color:var(--text-muted);font-weight:500;border-bottom:1px solid rgba(255,255,255,0.08);text-align:right';
+  const tdStyle = 'padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:right';
+  const bands = [100,300,500,1000,2000,3000,5000,8000,10000];
+  document.getElementById('fee-table').innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr>
+      <th style="${thStyle.replace('text-align:right','text-align:left')}">売買価格</th>
+      <th style="${thStyle}">手数料（税別）</th>
+      <th style="${thStyle}">手数料（税込）</th>
+    </tr></thead>
     <tbody>
-      ${counts.map(c=>`<tr>
-        <td>${c}件</td>
-        <td style="color:var(--gold);font-weight:700">${Math.round(fee*c*10)/10}万円</td>
-        <td style="color:var(--green);font-weight:700">${Math.round(fee*c*12).toLocaleString()}万円</td>
-      </tr>`).join('')}
+      ${bands.map(b=>{
+        const f = b<=200?b*0.05:b<=400?b*0.04+2:b*0.03+6;
+        const ft = Math.round(f*1.1*10)/10;
+        const hl = b===p ? 'background:rgba(201,168,76,0.08);' : '';
+        return `<tr style="${hl}">
+          <td style="${tdStyle.replace('text-align:right','text-align:left')}">${b.toLocaleString()}万円</td>
+          <td style="${tdStyle}">${Math.round(f*10)/10}万円</td>
+          <td style="${tdStyle}color:var(--gold);font-weight:700">${ft}万円</td>
+        </tr>`;
+      }).join('')}
     </tbody>
   </table>`;
 }
