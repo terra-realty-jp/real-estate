@@ -22,12 +22,13 @@
 
 ---
 
-## 絶対に守るルール
-1. `git push` は絶対に実行しない（ローカル変更のみ）
+## ルール
+1. **`git push` は毎回の改善サイクル最後に必ず実行すること**（origin/main へのプッシュが許可されている）
 2. localStorage以外のデータ永続化を導入しない
 3. localStorageのキー名・データ構造を変更しない（既存データが消える）
 4. どこかのサーバーにファイルをアップロードしない
 5. `git add -A` や `git add .` は使わない。必ず対象ファイルを明示してステージングする
+6. コミット後は必ず `git push origin main` を実行してリモートに反映する
 
 ---
 
@@ -114,11 +115,12 @@ git -C /home/sishizaw/real-estate-project log --oneline -15
 - localStorageのキー名が既存と一致しているか確認
 - モバイル表示が壊れていないか（max-width スタイルを確認）
 
-### git commit
+### git commit & push
 ```bash
 cd /home/sishizaw/real-estate-project
 git add [変更したファイルを個別に指定]
 git commit -m "改善内容の一言要約"
+git push origin main
 ```
 
 ### ログ記録
