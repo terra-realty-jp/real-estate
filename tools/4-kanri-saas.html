@@ -154,6 +154,13 @@
     </div>
     <div id="unpaid-tenant-list"></div>
   </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title" style="justify-content:space-between">
+      <span>📅 契約更新まもなく（90日以内）</span>
+      <span id="expiring-count-badge" style="font-size:11px;padding:2px 10px;border-radius:100px;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.2)"></span>
+    </div>
+    <div id="expiring-tenant-list"></div>
+  </div>
 </div>
 </div>
 
@@ -456,6 +463,33 @@ function renderDashboard() {
       </table>`;
     }
   }
+
+  // 契約更新まもなくテナント一覧
+  const expiringTenants = getExpiringTenants().sort((a,b)=>new Date(a.end)-new Date(b.end));
+  const expBadge = document.getElementById('expiring-count-badge');
+  if(expBadge) expBadge.textContent = expiringTenants.length > 0 ? expiringTenants.length+'名' : '';
+  const etEl = document.getElementById('expiring-tenant-list');
+  if(etEl) {
+    if(!expiringTenants.length) {
+      etEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">✅ 90日以内に更新期限を迎えるテナントはいません</div>`;
+    } else {
+      etEl.innerHTML = `<table>
+        <thead><tr><th>氏名</th><th>物件/部屋</th><th>契約終了日</th><th>残り日数</th><th></th></tr></thead>
+        <tbody>${expiringTenants.map(t=>{
+          const p=properties.find(x=>x.id===t.propertyId);
+          const daysLeft=Math.ceil((new Date(t.end)-new Date())/86400000);
+          const urgentColor=daysLeft<=30?'var(--red)':daysLeft<=60?'var(--orange)':'var(--gold)';
+          return `<tr style="background:rgba(201,168,76,0.04)">
+            <td><strong>${esc(t.name)}</strong></td>
+            <td style="font-size:12px">${p?esc(p.name):'—'} / ${t.room||'—'}</td>
+            <td style="font-size:12px">${t.end}</td>
+            <td><span style="color:${urgentColor};font-weight:700;font-size:14px">あと${daysLeft}日</span></td>
+            <td><button class="btn btn-outline btn-sm" onclick="editTenant(${t.id});switchTab('tenants')">契約確認</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    }
+  }
 }
 
 function getExpiringTenants() {
@@ -538,17 +572,20 @@ function renderTenants(){
       ${tenants.map(t=>{
         const p=properties.find(x=>x.id===t.propertyId);
         const daysToEnd=t.end?Math.ceil((new Date(t.end)-new Date())/86400000):'';
-        const expiring=t.end&&daysToEnd<=90&&daysToEnd>=0;
+        const expiring=t.end&&typeof daysToEnd==='number'&&daysToEnd<=90&&daysToEnd>=0;
         const mr=thisMonthRents.find(r=>r.tenantId===t.id);
         const unpaidRow=t.status==='active'&&(!mr||mr.status==='unpaid'||mr.status==='partial');
         const rentBadge=t.status!=='active'?'':mr?mr.status==='paid'?'<span class="badge b-paid">入金済</span>':mr.status==='partial'?'<span class="badge b-partial">一部入金</span>':'<span class="badge b-unpaid">未入金</span>':'<span class="badge b-unpaid">未登録</span>';
-        return `<tr${unpaidRow?' style="background:rgba(239,68,68,0.06)"':''}>
+        const rowBg=unpaidRow?'background:rgba(239,68,68,0.06)':expiring?'background:rgba(201,168,76,0.06)':'';
+        const expiryColor=expiring?(daysToEnd<=30?'var(--red)':daysToEnd<=60?'var(--orange)':'var(--gold)'):'var(--gold)';
+        const expiryBadge=expiring?`<span style="display:inline-block;margin-left:6px;padding:2px 7px;border-radius:100px;background:rgba(201,168,76,0.12);color:${expiryColor};font-size:10px;font-weight:700;border:1px solid rgba(201,168,76,0.25)">更新${daysToEnd}日前</span>`:'';
+        return `<tr${rowBg?' style="'+rowBg+'"':''}>
           <td><strong>${t.name}</strong><br><span style="font-size:11px;color:var(--text-muted)">${t.phone||''}</span></td>
-          <td>${p?p.name:'不明'} / ${t.room||'—'}</td>
+          <td>${p?esc(p.name):'不明'} / ${t.room||'—'}</td>
           <td style="color:var(--gold);font-weight:700">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
           <td>${rentBadge}</td>
           <td style="font-size:12px">${t.start||'—'}</td>
-          <td style="font-size:12px">${t.end||'—'} ${expiring?`<span style="color:var(--gold);font-size:10px">更新${daysToEnd}日前</span>`:''}</td>
+          <td style="font-size:12px">${t.end||'—'}${expiryBadge}</td>
           <td><span class="badge ${STATUS_B[t.status]||''}">${STATUS_L[t.status]||t.status}</span></td>
           <td style="display:flex;gap:6px">
             <button class="btn btn-outline btn-sm" onclick="editTenant(${t.id})">編集</button>
