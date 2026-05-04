@@ -401,7 +401,7 @@ function saveSeller() {
     memo:document.getElementById('s_memo').value, date:new Date().toLocaleDateString('ja-JP'),
   };
   if(editSelId) sellers=sellers.map(s=>s.id===editSelId?obj:s); else sellers.unshift(obj);
-  save('sellers'); closeModal('sellerModal'); renderSellers();
+  save('sellers'); closeModal('sellerModal'); renderSellers(); showToast('売主情報を保存しました ✓');
 }
 
 // ===== 買主 =====
@@ -468,7 +468,7 @@ function saveBuyer() {
     memo:document.getElementById('b_memo').value, date:new Date().toLocaleDateString('ja-JP'),
   };
   if(editBuyId) buyers=buyers.map(b=>b.id===editBuyId?obj:b); else buyers.unshift(obj);
-  save('buyers'); closeModal('buyerModal'); renderBuyers();
+  save('buyers'); closeModal('buyerModal'); renderBuyers(); showToast('買主情報を保存しました ✓');
 }
 
 // ===== マッチング =====
@@ -598,7 +598,7 @@ function saveDeal3() {
     memo: document.getElementById('dr_memo').value,
     date: new Date().toLocaleDateString('ja-JP'),
   };
-  deals3.unshift(deal); save('deals3'); closeModal('dealRegModal'); renderPipeline3();
+  deals3.unshift(deal); save('deals3'); closeModal('dealRegModal'); renderPipeline3(); showToast('商談を登録しました ✓');
 }
 
 // ===== 手数料シミュ =====
@@ -666,6 +666,15 @@ function save(key) {
 
 function closeModal(id, e) {
   if(!e || e.target === document.getElementById(id)) document.getElementById(id).style.display='none';
+}
+
+function showToast(msg) {
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:11px 26px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.25);pointer-events:none;white-space:nowrap';
+  t.textContent=msg||'保存しました ✓';
+  document.body.appendChild(t);
+  setTimeout(()=>t.style.opacity='0',2000);
+  setTimeout(()=>t.remove(),2300);
 }
 
 function exportCSV(type) {

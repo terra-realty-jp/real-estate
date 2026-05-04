@@ -343,6 +343,15 @@ function closeModal(id,e) {
   if(!e||e.target===document.getElementById(id)) document.getElementById(id).style.display='none';
 }
 
+function showToast(msg) {
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:11px 26px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.25);pointer-events:none;white-space:nowrap';
+  t.textContent=msg||'保存しました ✓';
+  document.body.appendChild(t);
+  setTimeout(()=>t.style.opacity='0',2000);
+  setTimeout(()=>t.remove(),2300);
+}
+
 // ===== ダッシュボード =====
 function renderDashboard() {
   const activeTenants = tenants.filter(t=>t.status==='active');
@@ -554,7 +563,7 @@ function saveProperty(){
     start:document.getElementById('p_start').value,memo:document.getElementById('p_memo').value,
   };
   if(editPropId) properties=properties.map(p=>p.id===editPropId?obj:p); else properties.unshift(obj);
-  save('properties');closeModal('propertyModal');renderProperties();
+  save('properties');closeModal('propertyModal');renderProperties();showToast('物件を保存しました ✓');
 }
 
 // ===== テナント =====
@@ -630,7 +639,7 @@ function saveTenant(){
     status:document.getElementById('t_status').value,memo:document.getElementById('t_memo').value,
   };
   if(editTenantId) tenants=tenants.map(t=>t.id===editTenantId?obj:t); else tenants.unshift(obj);
-  save('tenants');closeModal('tenantModal');renderTenants();
+  save('tenants');closeModal('tenantModal');renderTenants();showToast('テナント情報を保存しました ✓');
 }
 
 // ===== 家賃台帳 =====
@@ -729,7 +738,7 @@ function saveRent(){
   // 同月・同テナントの既存を上書き
   rents=rents.filter(r=>!(r.tenantId===tenantId&&r.month===month));
   rents.push(obj);
-  save('rents');closeModal('rentModal');renderRentLedger();
+  save('rents');closeModal('rentModal');renderRentLedger();showToast('家賃入金を記録しました ✓');
 }
 
 // ===== 修繕 =====
@@ -801,7 +810,7 @@ function saveRepair(){
     memo:document.getElementById('rp_memo').value,
   };
   if(editRepairId) repairs=repairs.map(r=>r.id===editRepairId?obj:r); else repairs.unshift(obj);
-  save('repairs');closeModal('repairModal');renderRepairs();
+  save('repairs');closeModal('repairModal');renderRepairs();showToast('修繕記録を保存しました ✓');
 }
 
 // ===== CSV =====
