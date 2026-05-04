@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>空き家ハンター | 石澤紳司 不動産ビジネスハック</title>
+  <title>空き家・実家の活用診断 | 無料チェックリスト | 石澤不動産</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -139,51 +139,51 @@
     ツール一覧に戻る
   </a>
   <span style="color:rgba(255,255,255,0.2)">|</span>
-  <span class="nav-title">TOOL 02 — 空き家活用診断</span>
+  <span class="nav-title">TOOL 02 — 空き家・実家の活用診断</span>
 </nav>
 <div style="background:#1e3a8a;border-bottom:1px solid rgba(255,255,255,0.1);padding:14px 32px;display:flex;align-items:flex-start;gap:12px">
   <span style="font-size:20px;flex-shrink:0">🏚️</span>
   <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.7">
     <strong style="color:#fde68a">このツールでできること：</strong>
-    空き家の状況をチェックリストで入力すると、活用スコアと推奨アクションが表示されます。<br>
-    <span style="color:rgba(255,255,255,0.6);font-size:12px">💡 空き家を放置した場合の固定資産税リスクや、売却・賃貸・リノベのどれが向いているかも確認できます。</span>
+    空き家や実家をお持ちの方が「今どうすべきか」を把握するための診断ツールです。<br>
+    <span style="color:rgba(255,255,255,0.6);font-size:12px">💡 放置した場合のリスク（税金・維持費・特定空き家指定）、専門家への相談準備チェックリスト、よくある質問が確認できます。</span>
   </div>
 </div>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('score')">🔍 空き家スコアリング</button>
-  <button class="tab-btn" onclick="switchTab('dm')">✉️ DM自動生成</button>
-  <button class="tab-btn" onclick="switchTab('pipeline')">📌 案件パイプライン</button>
-  <button class="tab-btn" onclick="switchTab('script')">💬 交渉スクリプト</button>
+  <button class="tab-btn active" onclick="switchTab('score')">🔍 空き家診断</button>
+  <button class="tab-btn" onclick="switchTab('dm')">📋 相談準備リスト</button>
+  <button class="tab-btn" onclick="switchTab('pipeline')">📌 進捗管理</button>
+  <button class="tab-btn" onclick="switchTab('script')">❓ よくある質問</button>
 </div>
 
 <!-- スコアリングタブ -->
 <div id="tab-score" class="tab-content active">
 <div class="main">
-  <h1 class="page-title"><span>空き家</span>スコアリング</h1>
-  <p class="page-desc">現地調査時や周辺情報から、空き家の有望度をスコアリング。高スコア物件を優先的にアプローチすることで、交渉成功率を最大化します。</p>
+  <h1 class="page-title"><span>空き家</span>活用診断</h1>
+  <p class="page-desc">空き家や実家を所有されている方向けの診断です。<br>当てはまる項目をすべてチェックすると、緊急度スコアと推奨アクションが表示されます。</p>
 
   <div class="card">
-    <div class="card-title"><span class="icon">🏠</span>物件情報</div>
+    <div class="card-title"><span class="icon">🏠</span>物件情報（任意）</div>
     <div class="form-grid">
       <div class="form-group">
-        <label>物件所在地（番地まで）</label>
-        <input type="text" id="sc_addr" placeholder="例: 東京都杉並区〇〇3-5-12">
+        <label>物件所在地（メモ用）</label>
+        <input type="text" id="sc_addr" placeholder="例: 実家（東京都杉並区〇〇）">
       </div>
       <div class="form-group">
-        <label>目視判断：空き家の可能性</label>
+        <label>現在の物件の状態</label>
         <select id="sc_visual">
-          <option value="">選択</option>
-          <option value="high">高い（明らかに人が住んでいない）</option>
-          <option value="mid">中程度（不在がち・荒れている）</option>
-          <option value="low">低い（時々人の気配あり）</option>
+          <option value="">選択してください</option>
+          <option value="high">誰も住んでおらず管理もできていない</option>
+          <option value="mid">たまに様子を見に行く程度</option>
+          <option value="low">定期的に管理できている</option>
         </select>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title"><span class="icon">📋</span>チェックリスト（該当項目をクリック）</div>
+    <div class="card-title"><span class="icon">📋</span>当てはまるものをすべてクリックしてください</div>
     <div class="checklist" id="checklist">
       <!-- JS で生成 -->
     </div>
@@ -202,66 +202,41 @@
   </div>
 
   <div style="display:flex;gap:12px;flex-wrap:wrap">
-    <button class="btn btn-gold" onclick="saveDeal()">案件として登録する</button>
+    <button class="btn btn-gold" onclick="saveDeal()">📌 この物件を進捗管理に登録する</button>
     <button class="btn btn-outline" onclick="resetScore()">リセット</button>
   </div>
 </div>
 </div>
 
-<!-- DM生成タブ -->
+<!-- 相談準備リストタブ -->
 <div id="tab-dm" class="tab-content">
 <div class="main">
-  <h1 class="page-title">DM<span>自動生成</span></h1>
-  <p class="page-desc">所有者へのアプローチ文を自動生成します。状況に合わせてテンプレートを選び、必要に応じて編集してください。</p>
+  <h1 class="page-title">専門家への<span>相談準備</span></h1>
+  <p class="page-desc">不動産会社に相談する前に確認・準備しておくと話がスムーズになります。印刷して当日持参するのもおすすめです。</p>
 
   <div class="card">
-    <div class="card-title"><span class="icon">⚙️</span>生成設定</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>DMテンプレート種別</label>
-        <select id="dm_type">
-          <option value="polite">丁寧・穏やか（初回接触向け）</option>
-          <option value="benefit">メリット強調（買取希望者向け）</option>
-          <option value="urgent">緊急性訴求（近隣トラブル・維持費問題）</option>
-          <option value="inheritance">相続・空き家対策向け</option>
-          <option value="investment">投資リノベ転用提案向け</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>所有者（宛名）</label>
-        <input type="text" id="dm_owner" placeholder="例: 田中様 / ご所有者様">
-      </div>
-      <div class="form-group">
-        <label>物件所在地</label>
-        <input type="text" id="dm_addr" placeholder="例: 杉並区〇〇3丁目の物件">
-      </div>
-      <div class="form-group">
-        <label>概算提示価格（任意）</label>
-        <input type="text" id="dm_price" placeholder="例: 3,200万円前後">
-      </div>
-      <div class="form-group full">
-        <label>追記したいポイント（任意）</label>
-        <textarea id="dm_extra" rows="2" placeholder="例: リフォーム後転用希望、現状渡し可、など"></textarea>
-      </div>
-    </div>
-    <div style="margin-top:16px">
-      <button class="btn btn-gold" onclick="generateDM()">DMを生成する</button>
-    </div>
+    <div class="card-title"><span class="icon">📂</span>準備しておく書類チェックリスト</div>
+    <div id="prep-doc-list"></div>
   </div>
 
   <div class="card">
-    <div class="card-title"><span class="icon">📄</span>生成されたDM</div>
-    <div class="dm-preview" id="dmPreview">← 左側で設定してDMを生成してください</div>
-    <div class="dm-actions">
-      <button class="btn btn-outline" onclick="copyDM()">
+    <div class="card-title"><span class="icon">💭</span>事前に考えておくこと</div>
+    <div id="prep-think-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">❓</span>専門家への質問メモ</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">相談時に聞きたいことをメモしておきましょう。</p>
+    <textarea id="consult_memo" rows="6" placeholder="例:&#10;・売るのと貸すのどちらが得か&#10;・売るとしたらいくらが相場か&#10;・いつまでに動く必要があるか&#10;・税金はどう変わるか" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;color:var(--text);font-size:14px;font-family:inherit;line-height:1.8;resize:vertical;outline:none;"></textarea>
+    <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="copyConsultMemo()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
         コピー
       </button>
-      <button class="btn btn-outline" onclick="printDM()">
+      <button class="btn btn-outline" onclick="window.print()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
         印刷
       </button>
-      <button class="btn btn-gold" onclick="generateDM()">再生成</button>
     </div>
   </div>
 </div>
@@ -270,8 +245,8 @@
 <!-- パイプラインタブ -->
 <div id="tab-pipeline" class="tab-content">
 <div class="main">
-  <h1 class="page-title">案件<span>パイプライン</span></h1>
-  <p class="page-desc">空き家案件の進捗をカンバン方式で管理。各ステージの件数と潜在収益を一覧把握します。</p>
+  <h1 class="page-title">空き家<span>進捗管理</span></h1>
+  <p class="page-desc">所有している空き家の対応状況を管理します。「空き家診断」タブからすぐに登録できます。</p>
 
   <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:24px;">
     <button class="btn btn-gold" onclick="openNewDealModal()">＋ 新規案件登録</button>
@@ -292,13 +267,13 @@
 </div>
 </div>
 
-<!-- 交渉スクリプトタブ -->
+<!-- FAQタブ -->
 <div id="tab-script" class="tab-content">
 <div class="main">
-  <h1 class="page-title">交渉<span>スクリプト</span></h1>
-  <p class="page-desc">場面別の交渉トークスクリプト。初回接触から価格交渉・クロージングまで、成功率を上げる言葉を即参照できます。</p>
+  <h1 class="page-title">空き家<span>よくある質問</span></h1>
+  <p class="page-desc">空き家・実家の取り扱いについて、多くの方から寄せられるご質問をまとめました。</p>
 
-  <div id="scripts-container"></div>
+  <div id="faq-container"></div>
 </div>
 </div>
 
@@ -316,29 +291,29 @@
         <input type="text" id="d_addr" placeholder="例: 東京都杉並区〇〇3-5-12">
       </div>
       <div class="form-group">
-        <label>ステータス</label>
+        <label>対応状況</label>
         <select id="d_status">
-          <option value="prospect">発見・調査中</option>
-          <option value="contact">接触・アプローチ中</option>
-          <option value="nego">交渉中</option>
-          <option value="closed">成約</option>
+          <option value="prospect">状況を確認中</option>
+          <option value="contact">専門家に相談中</option>
+          <option value="nego">売却・活用を交渉中</option>
+          <option value="closed">解決済み</option>
         </select>
       </div>
       <div class="form-group">
-        <label>想定買取価格（万円）</label>
+        <label>査定価格の目安（万円）</label>
         <input type="number" id="d_buy" placeholder="例: 2000" min="0">
       </div>
       <div class="form-group">
-        <label>想定売却価格（万円）</label>
+        <label>希望売却価格（万円）</label>
         <input type="number" id="d_sell" placeholder="例: 2800" min="0">
       </div>
       <div class="form-group">
-        <label>スコア（0-100）</label>
+        <label>緊急度スコア（診断結果）</label>
         <input type="number" id="d_score" placeholder="例: 72" min="0" max="100">
       </div>
       <div class="form-group full">
-        <label>備考・所有者情報</label>
-        <textarea id="d_memo" rows="3" placeholder="所有者名・連絡先・経緯など"></textarea>
+        <label>メモ・進捗メモ</label>
+        <textarea id="d_memo" rows="3" placeholder="相談した内容・次のアクションなど"></textarea>
       </div>
     </div>
     <div class="modal-actions">
@@ -350,20 +325,20 @@
 
 <script>
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
-// ===== チェックリスト定義 =====
+// ===== チェックリスト定義（空き家オーナー向け緊急度診断）=====
 const CHECKS = [
-  { id:'c1',  label:'表札がない・消えかけている',           score: 8,  cat:'外観' },
-  { id:'c2',  label:'ポストに大量の郵便物・チラシが溢れている', score: 10, cat:'外観' },
-  { id:'c3',  label:'電気メーターが止まっている',           score: 12, cat:'設備' },
-  { id:'c4',  label:'雨戸・シャッターが常時閉まっている',    score: 9,  cat:'外観' },
-  { id:'c5',  label:'雑草・庭木が手入れされていない',        score: 8,  cat:'外観' },
-  { id:'c6',  label:'窓が汚れている・結露跡がある',          score: 6,  cat:'外観' },
-  { id:'c7',  label:'近隣住民から「空き家」と聞いた',        score: 15, cat:'情報' },
-  { id:'c8',  label:'固定資産税の滞納情報を把握している',    score: 14, cat:'情報' },
-  { id:'c9',  label:'相続登記が未了（法務局で確認）',        score: 12, cat:'法務' },
-  { id:'c10', label:'建物が老朽化・一部破損している',        score: 7,  cat:'建物' },
-  { id:'c11', label:'周辺相場より明らかに安く出せる',        score: 10, cat:'価値' },
-  { id:'c12', label:'駅徒歩10分以内の好立地',               score: 9,  cat:'立地' },
+  { id:'c1',  label:'1年以上ほとんど誰も住んでいない',              score: 15, cat:'状況' },
+  { id:'c2',  label:'外壁・屋根・床が傷んできている',               score: 12, cat:'建物' },
+  { id:'c3',  label:'草木が伸び放題で手入れが追いつかない',          score: 10, cat:'外観' },
+  { id:'c4',  label:'固定資産税を年間5万円以上支払っている',         score: 12, cat:'費用' },
+  { id:'c5',  label:'使っていないのに水道・光熱費の基本料がかかっている', score: 8, cat:'費用' },
+  { id:'c6',  label:'相続で取得したが登記手続きが終わっていない',    score: 14, cat:'法務' },
+  { id:'c7',  label:'近隣から苦情や問い合わせが来たことがある',      score: 15, cat:'リスク' },
+  { id:'c8',  label:'「特定空き家」に指定されそうな状態になっている', score: 18, cat:'リスク' },
+  { id:'c9',  label:'修繕・清掃に費用がかかる状態になっている',      score: 10, cat:'建物' },
+  { id:'c10', label:'売るか・貸すか・壊すかまだ決まっていない',      score: 8,  cat:'状況' },
+  { id:'c11', label:'管理・維持が精神的・体力的に負担になっている',   score: 7,  cat:'状況' },
+  { id:'c12', label:'このまま放置するつもりはない',                  score: 6,  cat:'意向' },
 ];
 
 let checked = new Set();
@@ -399,10 +374,10 @@ function updateScore() {
   document.getElementById('scoreBar').style.width = capped + '%';
 
   let rank, comment;
-  if(capped >= 70) { rank='S'; comment='最優先アプローチ対象。即アクションを起こしてください。'; }
-  else if(capped >= 50) { rank='A'; comment='有望案件。早めに所有者へのアプローチを開始しましょう。'; }
-  else if(capped >= 30) { rank='B'; comment='可能性あり。追加調査を行いながら様子を見ましょう。'; }
-  else { rank='C'; comment='現時点では優先度低め。継続観察リストに追加しておきましょう。'; }
+  if(capped >= 70) { rank='S'; comment='緊急度が高い状態です。早急に不動産会社や専門家に相談することをお勧めします。'; }
+  else if(capped >= 50) { rank='A'; comment='放置するリスクが高まっています。今のうちに具体的な対策を検討しましょう。'; }
+  else if(capped >= 30) { rank='B'; comment='いくつか注意点があります。まずは選択肢（売る・貸す・リノベ）を整理しましょう。'; }
+  else { rank='C'; comment='現時点では比較的余裕がある状態です。将来に向けた情報収集から始めましょう。'; }
 
   const rankEl = document.getElementById('scoreRank');
   rankEl.textContent = `ランク ${rank}`;
@@ -430,12 +405,13 @@ function updateScore() {
 
 function getActions(score, ids) {
   const actions = [];
-  if(ids.includes('c9')) actions.push({icon:'⚖️', title:'相続人調査を実施', desc:'法務局で登記簿謄本を取得し、相続人を特定してください。相続未了物件は交渉成功率が高い。'});
-  if(ids.includes('c8')) actions.push({icon:'💰', title:'固定資産税滞納から所有者を割り出す', desc:'市区町村役場に問い合わせ、または法務局で固定資産課税台帳を確認。所有者の住所を把握。'});
-  if(ids.includes('c7') || ids.includes('c2')) actions.push({icon:'✉️', title:'DM送付を今すぐ開始', desc:'「DM自動生成」タブで状況に合ったレターを作成し、今週中に発送しましょう。'});
-  if(score >= 50) actions.push({icon:'📞', title:'近隣住民へのヒアリング', desc:'所有者の連絡先・状況を把握するため、両隣・向かいの住民に丁寧にアプローチ。'});
-  if(score >= 70) actions.push({icon:'🎯', title:'価格シミュレーションを実施', desc:'「投資家分析ツール」で買取→リノベ→売却の利ざやを計算してから交渉価格を設定。'});
-  actions.push({icon:'📌', title:'案件パイプラインに登録', desc:'この物件を「案件パイプライン」タブに登録して進捗を管理しましょう。'});
+  if(ids.includes('c6')) actions.push({icon:'⚖️', title:'相続登記を早めに完了させる', desc:'2024年4月から相続登記が義務化されました。未登記のまま放置すると10万円以下の過料が課される場合があります。司法書士にご相談ください。'});
+  if(ids.includes('c8')) actions.push({icon:'🚨', title:'特定空き家指定への対応', desc:'特定空き家に指定されると住宅用地の固定資産税特例（1/6軽減）が外れ、税額が最大6倍になります。まず市区町村の担当窓口に相談しましょう。'});
+  if(ids.includes('c7')) actions.push({icon:'🤝', title:'近隣への対応と管理強化', desc:'苦情が来ている場合は早急な対応が必要です。最低限の草刈り・清掃を行い、不動産会社に管理委託する方法もあります。'});
+  if(ids.includes('c4') || ids.includes('c5')) actions.push({icon:'💰', title:'年間コストを試算してみる', desc:'固定資産税＋維持管理費＋保険料を合計すると、年間数十万円かかることも。売却・賃貸のどちらがトータルでメリットが大きいか比較しましょう。'});
+  if(score >= 50) actions.push({icon:'🏠', title:'無料の不動産査定を受けてみる', desc:'まず「どれくらいで売れるか」を知ることが大切です。複数の会社に査定を依頼すると相場観がつかめます。費用はかかりません。'});
+  if(ids.includes('c10')) actions.push({icon:'📋', title:'「相談準備リスト」タブを確認', desc:'専門家に相談する前に準備しておくと良い書類・質問事項をまとめています。当日スムーズに話を進めるために活用してください。'});
+  actions.push({icon:'📌', title:'この物件を進捗管理に登録する', desc:'「進捗管理」タブで対応状況を記録しておくと、次に何をすべきかが明確になります。'});
   return actions;
 }
 
@@ -571,26 +547,53 @@ ${extra ? extra : ''}
 `.trim(),
 };
 
-function generateDM() {
-  const type = document.getElementById('dm_type').value;
-  const owner = document.getElementById('dm_owner').value || 'ご所有者様';
-  const addr = document.getElementById('dm_addr').value || '【物件所在地】';
-  const price = document.getElementById('dm_price').value;
-  const extra = document.getElementById('dm_extra').value;
-  const fn = DM_TEMPLATES[type];
-  document.getElementById('dmPreview').textContent = fn ? fn(owner, addr, price, extra) : '';
+// ===== 相談準備リスト =====
+const PREP_DOCS = [
+  { label: '固定資産税の課税明細書（最新年度）', desc: '年間の税額と評価額が確認できます' },
+  { label: '登記事項証明書（登記簿謄本）', desc: '法務局・オンラインで取得可。誰の名義かを確認' },
+  { label: '固定資産評価証明書', desc: '市区町村の窓口で取得。売却時の参考価格になります' },
+  { label: '建築確認済証・検査済証', desc: 'ない場合でも相談可。「ない」ことも伝えておく' },
+  { label: '住宅地図・公図（任意）', desc: '土地の形状・隣地との境界が確認できます' },
+  { label: '修繕・リフォームの履歴（任意）', desc: 'いつ・何を直したかメモしておくと査定が有利になることも' },
+];
+const PREP_THINK = [
+  { label: '売る・貸す・リノベのどれが希望か（なんとなくでOK）', desc: '決まっていなくても相談可。専門家が選択肢を整理してくれます' },
+  { label: '「いつまでに解決したいか」の希望時期', desc: '急ぎ・1年以内・特に急いでいない、などのざっくりした感覚でOK' },
+  { label: '物件の大まかな状態（外観・内装）', desc: '「外壁が剥がれている」「水回りが古い」など気になる点をメモ' },
+  { label: '住宅ローン残高（現在もローンがある場合）', desc: '残債がある場合は売却価格との兼ね合いで戦略が変わります' },
+  { label: '相続の場合：共同相続人（兄弟など）の同意確認', desc: '全員の同意がないと売却できないため、事前に話し合いを' },
+];
+
+function buildPrepList() {
+  const docEl = document.getElementById('prep-doc-list');
+  const thinkEl = document.getElementById('prep-think-list');
+  if(!docEl || !thinkEl) return;
+
+  docEl.innerHTML = PREP_DOCS.map((d,i) => `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:8px;background:var(--dark3)">
+      <input type="checkbox" id="doc${i}" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer;accent-color:var(--gold)">
+      <label for="doc${i}" style="cursor:pointer;flex:1">
+        <div style="font-size:13px;font-weight:700">${d.label}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:3px">${d.desc}</div>
+      </label>
+    </div>
+  `).join('');
+
+  thinkEl.innerHTML = PREP_THINK.map((d,i) => `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:8px;background:var(--dark3)">
+      <input type="checkbox" id="think${i}" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer;accent-color:var(--gold)">
+      <label for="think${i}" style="cursor:pointer;flex:1">
+        <div style="font-size:13px;font-weight:700">${d.label}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:3px">${d.desc}</div>
+      </label>
+    </div>
+  `).join('');
 }
 
-function copyDM() {
-  const text = document.getElementById('dmPreview').textContent;
+function copyConsultMemo() {
+  const text = document.getElementById('consult_memo').value;
+  if(!text.trim()) { alert('メモが入力されていません'); return; }
   navigator.clipboard.writeText(text).then(() => alert('クリップボードにコピーしました'));
-}
-
-function printDM() {
-  const text = document.getElementById('dmPreview').textContent;
-  const w = window.open('','_blank');
-  w.document.write(`<pre style="font-family:sans-serif;font-size:14px;line-height:2;padding:40px;white-space:pre-wrap">${text}</pre>`);
-  w.print();
 }
 
 // ===== 案件管理 =====
@@ -599,7 +602,7 @@ let editingDealId = null;
 
 function renderPipeline() {
   const statuses = ['prospect','contact','nego','closed'];
-  const labels = { prospect:'発見・調査中', contact:'接触・アプローチ中', nego:'交渉中', closed:'成約' };
+  const labels = { prospect:'状況を確認中', contact:'専門家に相談中', nego:'売却・活用交渉中', closed:'解決済み' };
   const dotClass = { prospect:'dot-prospect', contact:'dot-contact', nego:'dot-nego', closed:'dot-closed' };
   const badgeClass = { prospect:'badge-prospect', contact:'badge-contact', nego:'badge-nego', closed:'badge-closed' };
 
@@ -607,10 +610,10 @@ function renderPipeline() {
   const summaryEl = document.getElementById('pipelineSummary');
   const totalProfit = deals.filter(d=>d.status==='closed').reduce((s,d)=>s+(d.sell-d.buy||0),0);
   summaryEl.innerHTML = [
-    { label:'総案件数', value: deals.length + '件', color: 'var(--text)' },
-    { label:'交渉中', value: deals.filter(d=>d.status==='nego').length + '件', color: 'var(--gold)' },
-    { label:'成約件数', value: deals.filter(d=>d.status==='closed').length + '件', color: 'var(--green)' },
-    { label:'成約利ざや合計', value: totalProfit > 0 ? totalProfit.toLocaleString()+'万円' : '—', color: 'var(--gold)' },
+    { label:'登録物件数', value: deals.length + '件', color: 'var(--text)' },
+    { label:'交渉・相談中', value: deals.filter(d=>d.status==='nego'||d.status==='contact').length + '件', color: 'var(--gold)' },
+    { label:'解決済み', value: deals.filter(d=>d.status==='closed').length + '件', color: 'var(--green)' },
+    { label:'希望売却価格合計', value: totalProfit > 0 ? totalProfit.toLocaleString()+'万円' : '—', color: 'var(--gold)' },
   ].map(s => `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;text-align:center">
     <div style="font-size:24px;font-weight:900;color:${s.color}">${s.value}</div>
     <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${s.label}</div>
@@ -626,8 +629,8 @@ function renderPipeline() {
         <div class="deal-name">${esc(d.name)}</div>
         <div class="deal-addr">${esc(d.addr)}</div>
         <div class="deal-meta">
-          <span class="deal-price">${d.buy||d.sell ? '買'+(d.buy||'?')+'→売'+(d.sell||'?')+'万' : '価格未設定'}</span>
-          <span class="deal-date">スコア${d.score||'—'}</span>
+          <span class="deal-price">${d.sell ? '希望価格'+d.sell+'万円' : d.buy ? '査定'+d.buy+'万円' : '価格未設定'}</span>
+          <span class="deal-date">緊急度${d.score||'—'}</span>
         </div>
       </div>`).join('') || '<div style="font-size:12px;color:var(--text-muted);padding:8px">案件なし</div>'}
     </div>`;
@@ -640,16 +643,15 @@ function renderPipeline() {
     return;
   }
   tableWrap.innerHTML = `<table>
-    <thead><tr><th>物件名</th><th>住所</th><th>ステータス</th><th>買取価格</th><th>売却価格</th><th>利ざや</th><th>スコア</th><th></th></tr></thead>
+    <thead><tr><th>物件名</th><th>住所</th><th>対応状況</th><th>査定価格</th><th>希望売却価格</th><th>緊急度</th><th></th></tr></thead>
     <tbody>
       ${deals.map(d => `<tr>
         <td><strong>${esc(d.name)}</strong></td>
         <td style="font-size:12px">${esc(d.addr)}</td>
         <td><span class="badge ${badgeClass[d.status]}">${labels[d.status]}</span></td>
-        <td>${d.buy ? d.buy.toLocaleString()+'万' : '—'}</td>
-        <td>${d.sell ? d.sell.toLocaleString()+'万' : '—'}</td>
-        <td style="color:${(d.sell-d.buy)>0?'var(--green)':'var(--text-muted)'}; font-weight:700">${d.buy&&d.sell ? (d.sell-d.buy).toLocaleString()+'万' : '—'}</td>
-        <td>${d.score||'—'}</td>
+        <td>${d.buy ? d.buy.toLocaleString()+'万円' : '—'}</td>
+        <td>${d.sell ? d.sell.toLocaleString()+'万円' : '—'}</td>
+        <td>${d.score ? d.score+'点' : '—'}</td>
         <td><button class="btn btn-outline btn-sm" onclick="editDeal(${d.id})">編集</button></td>
       </tr>`).join('')}
     </tbody>
@@ -713,72 +715,40 @@ function exportDealsCSV() {
   a.download = `akiya_deals_${new Date().toISOString().slice(0,10)}.csv`; a.click();
 }
 
-// ===== 交渉スクリプト =====
-const SCRIPTS = [
-  {
-    title: '初回電話 / 訪問トーク（所有者本人）',
-    icon: '📞',
-    color: 'var(--blue)',
-    lines: [
-      { role:'あなた', text:'突然のご連絡、大変失礼いたします。私、不動産コンサルタントの石澤と申します。〇〇のお宅の件で少しお話できますでしょうか。' },
-      { role:'想定反応', text:'（警戒）何でしょう？' },
-      { role:'あなた', text:'ご所有の物件についてご相談があり連絡いたしました。今後の活用や、もし売却をお考えでしたら、お役に立てる情報があります。今5分ほどよろしいですか？' },
-      { role:'ポイント', text:'「売りませんか」とは絶対に言わない。まず「ご相談」「情報提供」として入る。', type:'tip' },
-    ]
-  },
-  {
-    title: '価格交渉（所有者が高値を希望する場合）',
-    icon: '💴',
-    color: 'var(--gold)',
-    lines: [
-      { role:'所有者', text:'2,500万円以下では売れない' },
-      { role:'あなた', text:'おっしゃる気持ちはよくわかります。実は現在の市場では、築〇年のこのエリアの物件は2,000〜2,200万円帯が多く流通しており、仲介ですと3〜6ヶ月かかるケースが多いんです。' },
-      { role:'あなた', text:'弊社では現金買取ですので、最短2週間・諸費用ゼロで手続きが完了します。時間的・精神的コストを考えると実質的に有利な条件です。2,200万円で進めさせていただけますか？' },
-      { role:'ポイント', text:'数字は必ず「市場データ」として提示。感情論でなく事実で説得する。仲介との比較で現金買取の価値を訴求。', type:'tip' },
-    ]
-  },
-  {
-    title: '相続人が複数いて話がまとまらない場合',
-    icon: '⚖️',
-    color: 'var(--orange)',
-    lines: [
-      { role:'所有者', text:'兄弟で意見が合わなくて…' },
-      { role:'あなた', text:'ご相続の場合、共有名義になると売却の際に全員の同意が必要です。実は今後さらに相続が重なると権利関係がより複雑になります。' },
-      { role:'あなた', text:'早めに整理されることが、全員にとって有利です。無料で司法書士をご紹介できますので、まずそちらでご相談されてみてはいかがでしょう。' },
-      { role:'ポイント', text:'専門家（司法書士）を無料紹介することで信頼を獲得。「急かしている」印象を与えず「親切なアドバイザー」として入る。', type:'tip' },
-    ]
-  },
-  {
-    title: 'クロージング（迷っている所有者）',
-    icon: '🤝',
-    color: 'var(--green)',
-    lines: [
-      { role:'所有者', text:'もう少し考えてみます…' },
-      { role:'あなた', text:'もちろんです。ただ、弊社ではこの価格でご提案できる期間が〇月末までになっております。その後は市場状況により再算定となる可能性がございます。' },
-      { role:'あなた', text:'一つだけ確認させてください。今、踏み切れない一番の理由はなんでしょうか？お答えいただければ、何か解決策をご提案できるかもしれません。' },
-      { role:'ポイント', text:'「期限」を設けることで意思決定を促す。「なぜ迷っているか」を聞き出すことで真の懸念点を把握しフォローアップする。', type:'tip' },
-    ]
-  },
+// ===== よくある質問（FAQ）=====
+const FAQS = [
+  { q:'空き家を売るのと貸すのはどちらが得ですか？', a:'物件の状態・立地・築年数によって大きく変わります。一般的に「売る」と手間がなくなり資金化できる反面、定期収入はなくなります。「貸す」と毎月収入が入りますが、修繕費や管理の手間がかかります。まずは不動産会社に両方の試算を出してもらって比較するのが一番です。' },
+  { q:'特定空き家に指定されるとどうなりますか？', a:'特定空き家に指定されると、①行政から改善命令が出される、②従わない場合は代執行（強制撤去）される、③住宅用地の固定資産税特例（1/6軽減措置）が外れ、最大で税額が6倍になる、というリスクがあります。指定される前に市区町村の空き家担当窓口に相談するのが大切です。' },
+  { q:'売却前に修繕・掃除は必要ですか？', a:'必ずしも必要ではありません。「現状渡し（現況渡し）」という形で、傷んだままの状態で売ることも一般的です。その場合は価格が低くなる可能性がありますが、修繕費をかけるより手取りが多くなるケースもあります。不動産会社に相談して判断するのが安心です。' },
+  { q:'相続した物件で登記がまだですが問題ありますか？', a:'2024年4月から相続登記が義務化されました。相続を知った日から3年以内に登記を済ませないと、10万円以下の過料（罰則）が課される場合があります。また、登記されていない物件は売却もできません。司法書士に相談すると手続きを代行してもらえます（費用：数万円〜）。' },
+  { q:'空き家の管理を誰かに頼むことはできますか？', a:'はい、「空き家管理サービス」を提供している不動産会社や専門業者があります。月に1〜2回の巡回・換気・郵便物確認・草刈りなどを代行してくれます。費用は月5,000〜15,000円程度が目安です。遠方にお住まいの方や管理が難しい方に特におすすめです。' },
+  { q:'空き家を売るとき税金はどれくらいかかりますか？', a:'売却益（売った金額 − 購入費用 − 諸経費）に対して譲渡所得税がかかります。所有期間5年超で約20%、5年以内で約39%が目安です。ただし「空き家の3,000万円特別控除」や「マイホームの特例」が使える場合は大幅に減税されます。税理士や不動産会社に確認するとよいでしょう。' },
+  { q:'「活用診断」のスコアが高かった場合、何をすればいい？', a:'スコアが高いほど早めの対応が必要な状況です。まず「相談準備リスト」タブで書類を確認し、地元の不動産会社に無料査定を依頼してみてください。複数社に依頼すると相場感がつかめます。石澤不動産でも無料相談を受け付けています。' },
 ];
 
-function buildScripts() {
-  const container = document.getElementById('scripts-container');
-  container.innerHTML = SCRIPTS.map(s => `
-    <div class="card">
-      <div class="card-title"><span class="icon">${s.icon}</span>${s.title}</div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        ${s.lines.map(l => `
-          <div style="display:flex;gap:12px;align-items:flex-start;">
-            <div style="min-width:80px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;text-align:center;flex-shrink:0;
-              background:${l.type==='tip'?'rgba(201,168,76,0.15)':l.role==='あなた'?'rgba(34,197,94,0.12)':'rgba(255,255,255,0.06)'};
-              color:${l.type==='tip'?'var(--gold)':l.role==='あなた'?'var(--green)':'var(--text-muted)'};
-              border:1px solid ${l.type==='tip'?'rgba(201,168,76,0.3)':l.role==='あなた'?'rgba(34,197,94,0.2)':'rgba(255,255,255,0.08)'}">${l.type==='tip'?'POINT':l.role}</div>
-            <div style="font-size:13px;line-height:1.8;${l.type==='tip'?'color:var(--gold)':''}">${l.text}</div>
-          </div>
-        `).join('')}
+function buildFAQ() {
+  const container = document.getElementById('faq-container');
+  if(!container) return;
+  container.innerHTML = FAQS.map((faq, i) => `
+    <div class="card" style="margin-bottom:12px">
+      <div style="cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:16px" onclick="toggleFAQ(${i})">
+        <div style="font-size:14px;font-weight:700;line-height:1.6">Q. ${faq.q}</div>
+        <span id="faq-arrow-${i}" style="font-size:18px;flex-shrink:0;transition:transform 0.2s;color:var(--gold)">▼</span>
+      </div>
+      <div id="faq-body-${i}" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:13px;line-height:1.9;color:var(--text)">A. ${faq.a}</div>
       </div>
     </div>
   `).join('');
+}
+
+function toggleFAQ(i) {
+  const body = document.getElementById('faq-body-'+i);
+  const arrow = document.getElementById('faq-arrow-'+i);
+  if(!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if(arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 
 // ===== タブ切替 =====
@@ -787,6 +757,8 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', tabs[i]===tab));
   tabs.forEach(t => document.getElementById('tab-'+t).classList.toggle('active', t===tab));
   if(tab==='pipeline') renderPipeline();
+  if(tab==='dm') buildPrepList();
+  if(tab==='script') buildFAQ();
 }
 
 // Escape key でモーダルを閉じる
@@ -816,7 +788,7 @@ function checkStorageWarning() {
 checkStorageWarning();
 buildChecklist();
 updateScore();
-buildScripts();
+buildFAQ();
 renderPipeline();
 </script>
 </body>
