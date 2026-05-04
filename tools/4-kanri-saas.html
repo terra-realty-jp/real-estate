@@ -147,6 +147,13 @@
     <div class="card-title">今月のアクション必要リスト</div>
     <div id="action-list"></div>
   </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title" style="justify-content:space-between">
+      <span>今月の未入金テナント</span>
+      <span id="unpaid-count-badge" style="font-size:11px;padding:2px 10px;border-radius:100px;background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.2)"></span>
+    </div>
+    <div id="unpaid-tenant-list"></div>
+  </div>
 </div>
 </div>
 
@@ -296,6 +303,7 @@
       <div class="form-group"><label>ステータス</label>
         <select id="rp_status"><option value="open">受付済</option><option value="progress">対応中</option><option value="done">完了</option></select>
       </div>
+      <div class="form-group"><label>完了日</label><input type="date" id="rp_done"></div>
       <div class="form-group full"><label>備考</label><textarea id="rp_memo" rows="2"></textarea></div>
     </div>
     <div class="modal-actions">
@@ -415,6 +423,39 @@ function renderDashboard() {
         <span style="font-size:13px;color:${a.color}">${a.text}</span>
       </div>`).join('')
     : `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">現在、対応必要な項目はありません ✅</div>`;
+
+  // 今月の未入金テナント一覧
+  const unpaidTenants = activeTenants.filter(t => {
+    const r = thisMonthRents.find(x => x.tenantId===t.id);
+    return !r || r.status==='unpaid' || r.status==='partial';
+  });
+  const badge = document.getElementById('unpaid-count-badge');
+  if(badge) badge.textContent = unpaidTenants.length > 0 ? unpaidTenants.length+'名' : '';
+  const utEl = document.getElementById('unpaid-tenant-list');
+  if(utEl) {
+    if(!activeTenants.length) {
+      utEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">入居中のテナントがいません</div>`;
+    } else if(!unpaidTenants.length) {
+      utEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--green);font-size:13px">✅ 全員の入金が確認されています</div>`;
+    } else {
+      utEl.innerHTML = `<table>
+        <thead><tr><th>氏名</th><th>物件/部屋</th><th>月額家賃</th><th>状況</th><th></th></tr></thead>
+        <tbody>${unpaidTenants.map(t=>{
+          const p=properties.find(x=>x.id===t.propertyId);
+          const r=thisMonthRents.find(x=>x.tenantId===t.id);
+          const st=r?r.status==='partial'?'一部入金':'未入金':'未登録';
+          const stColor=r&&r.status==='partial'?'var(--orange)':'var(--red)';
+          return `<tr style="background:rgba(239,68,68,0.04)">
+            <td><strong>${esc(t.name)}</strong></td>
+            <td style="font-size:12px">${p?p.name:'—'} / ${t.room||'—'}</td>
+            <td style="color:var(--gold)">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
+            <td><span style="color:${stColor};font-weight:700;font-size:13px">${st}</span></td>
+            <td><button class="btn btn-outline btn-sm" onclick="quickRent(${t.id},'${thisMonth}',${t.rent||0});switchTab('rent')">入金登録</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    }
+  }
 }
 
 function getExpiringTenants() {
@@ -467,7 +508,7 @@ function openPropertyModal(id) {
   document.getElementById('propertyModal').style.display='flex';
 }
 function editProperty(id){openPropertyModal(id);}
-function deleteProperty(id){if(!confirm('削除しますか？'))return;properties=properties.filter(p=>p.id!==id);save('properties');renderProperties();}
+function deleteProperty(id){const p=properties.find(x=>x.id===id);if(!confirm('「'+(p?p.name:'この物件')+'」を削除しますか？\nこの操作は元に戻せません。'))return;properties=properties.filter(p=>p.id!==id);save('properties');renderProperties();}
 
 function saveProperty(){
   const name=document.getElementById('p_name').value.trim();
@@ -486,19 +527,26 @@ function saveProperty(){
 function renderTenants(){
   const el=document.getElementById('tenants-list');
   if(!tenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><p>テナントが登録されていません</p></div>`;return;}
+  const now=new Date();
+  const thisMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const thisMonthRents=rents.filter(r=>r.month===thisMonth);
   const STATUS_L={active:'入居中',notice:'退去予告',vacant:'退去済'};
   const STATUS_B={active:'b-occupied',notice:'b-partial',vacant:'b-vacant'};
   el.innerHTML=`<table>
-    <thead><tr><th>氏名</th><th>物件/部屋</th><th>月額家賃</th><th>入居日</th><th>契約終了</th><th>ステータス</th><th></th></tr></thead>
+    <thead><tr><th>氏名</th><th>物件/部屋</th><th>月額家賃</th><th>今月入金</th><th>入居日</th><th>契約終了</th><th>ステータス</th><th></th></tr></thead>
     <tbody>
       ${tenants.map(t=>{
         const p=properties.find(x=>x.id===t.propertyId);
         const daysToEnd=t.end?Math.ceil((new Date(t.end)-new Date())/86400000):'';
         const expiring=t.end&&daysToEnd<=90&&daysToEnd>=0;
-        return `<tr>
+        const mr=thisMonthRents.find(r=>r.tenantId===t.id);
+        const unpaidRow=t.status==='active'&&(!mr||mr.status==='unpaid'||mr.status==='partial');
+        const rentBadge=t.status!=='active'?'':mr?mr.status==='paid'?'<span class="badge b-paid">入金済</span>':mr.status==='partial'?'<span class="badge b-partial">一部入金</span>':'<span class="badge b-unpaid">未入金</span>':'<span class="badge b-unpaid">未登録</span>';
+        return `<tr${unpaidRow?' style="background:rgba(239,68,68,0.06)"':''}>
           <td><strong>${t.name}</strong><br><span style="font-size:11px;color:var(--text-muted)">${t.phone||''}</span></td>
           <td>${p?p.name:'不明'} / ${t.room||'—'}</td>
           <td style="color:var(--gold);font-weight:700">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
+          <td>${rentBadge}</td>
           <td style="font-size:12px">${t.start||'—'}</td>
           <td style="font-size:12px">${t.end||'—'} ${expiring?`<span style="color:var(--gold);font-size:10px">更新${daysToEnd}日前</span>`:''}</td>
           <td><span class="badge ${STATUS_B[t.status]||''}">${STATUS_L[t.status]||t.status}</span></td>
@@ -531,7 +579,7 @@ function openTenantModal(id){
   document.getElementById('tenantModal').style.display='flex';
 }
 function editTenant(id){openTenantModal(id);}
-function deleteTenant(id){if(!confirm('削除しますか？'))return;tenants=tenants.filter(t=>t.id!==id);save('tenants');renderTenants();}
+function deleteTenant(id){const t=tenants.find(x=>x.id===id);if(!confirm('「'+(t?t.name:'このテナント')+'」を削除しますか？\nこの操作は元に戻せません。'))return;tenants=tenants.filter(t=>t.id!==id);save('tenants');renderTenants();}
 function saveTenant(){
   const name=document.getElementById('t_name').value.trim();
   if(!name){alert('氏名を入力してください');return;}
@@ -654,7 +702,7 @@ function renderRepairs(){
   const PCOLOR={urgent:'var(--red)',high:'var(--orange)',normal:'var(--text-muted)',low:'var(--text-muted)'};
   const ST_B={open:'b-open',progress:'b-progress',done:'b-done'};
   el.innerHTML=`<table>
-    <thead><tr><th>物件/部屋</th><th>内容</th><th>優先度</th><th>報告日</th><th>費用</th><th>業者</th><th>ステータス</th><th></th></tr></thead>
+    <thead><tr><th>物件/部屋</th><th>内容</th><th>優先度</th><th>報告日</th><th>完了日</th><th>費用</th><th>業者</th><th>ステータス</th><th></th></tr></thead>
     <tbody>
       ${repairs.map(r=>{
         const p=properties.find(x=>x.id===r.propertyId);
@@ -663,6 +711,7 @@ function renderRepairs(){
           <td><strong>${esc(r.content)}</strong></td>
           <td style="color:${PCOLOR[r.priority]};font-weight:700">${REPAIR_PRI[r.priority]}</td>
           <td style="font-size:12px">${r.date||'—'}</td>
+          <td style="font-size:12px;color:${r.done?'var(--green)':'var(--text-muted)'}">${r.done||'—'}</td>
           <td>${r.cost?Number(r.cost).toLocaleString()+'円':'—'}</td>
           <td style="font-size:12px">${r.vendor||'—'}</td>
           <td><span class="badge ${ST_B[r.status]||''}">${REPAIR_ST[r.status]||r.status}</span></td>
@@ -684,13 +733,13 @@ function openRepairModal(id){
   if(id){
     const r=repairs.find(x=>x.id===id);if(!r)return;
     document.getElementById('repairModalTitle').textContent='修繕編集';
-    ['room','content','date','cost','vendor','memo'].forEach(f=>{const el=document.getElementById('rp_'+f);if(el)el.value=r[f]||'';});
+    ['room','content','date','cost','vendor','done','memo'].forEach(f=>{const el=document.getElementById('rp_'+f);if(el)el.value=r[f]||'';});
     pSel.value=r.propertyId||'';
     document.getElementById('rp_priority').value=r.priority||'normal';
     document.getElementById('rp_status').value=r.status||'open';
   } else {
     document.getElementById('repairModalTitle').textContent='修繕依頼登録';
-    ['room','content','cost','vendor','memo'].forEach(f=>{const el=document.getElementById('rp_'+f);if(el)el.value='';});
+    ['room','content','cost','vendor','done','memo'].forEach(f=>{const el=document.getElementById('rp_'+f);if(el)el.value='';});
     document.getElementById('rp_date').value=now.toISOString().slice(0,10);
     document.getElementById('rp_priority').value='normal';
     document.getElementById('rp_status').value='open';
@@ -698,7 +747,7 @@ function openRepairModal(id){
   document.getElementById('repairModal').style.display='flex';
 }
 function editRepair(id){openRepairModal(id);}
-function deleteRepair(id){if(!confirm('削除しますか？'))return;repairs=repairs.filter(r=>r.id!==id);save('repairs');renderRepairs();}
+function deleteRepair(id){const r=repairs.find(x=>x.id===id);if(!confirm('「'+(r?r.content:'この修繕記録')+'」を削除しますか？\nこの操作は元に戻せません。'))return;repairs=repairs.filter(r=>r.id!==id);save('repairs');renderRepairs();}
 function saveRepair(){
   const content=document.getElementById('rp_content').value.trim();
   if(!content){alert('内容を入力してください');return;}
@@ -711,6 +760,7 @@ function saveRepair(){
     cost:parseInt(document.getElementById('rp_cost').value)||0,
     vendor:document.getElementById('rp_vendor').value,
     status:document.getElementById('rp_status').value,
+    done:document.getElementById('rp_done').value,
     memo:document.getElementById('rp_memo').value,
   };
   if(editRepairId) repairs=repairs.map(r=>r.id===editRepairId?obj:r); else repairs.unshift(obj);

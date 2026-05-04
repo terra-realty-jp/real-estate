@@ -100,7 +100,15 @@
     .empty-state { text-align: center; padding: 50px; color: var(--text-muted); }
     .empty-icon { font-size: 36px; margin-bottom: 12px; }
 
-    @media(max-width:700px) { .result-kpi,.two-col,.three-col,.loan-compare { grid-template-columns:1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } }
+    /* ツールチップ */
+    .tip-wrap { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+    .tip-btn { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.12); color: var(--text-muted); font-size: 10px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; line-height: 1; flex-shrink: 0; }
+    .tip-btn:hover { background: rgba(201,168,76,0.3); color: var(--gold); }
+    .tip-popup { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #2d2d2d; border: 1px solid rgba(201,168,76,0.3); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--text); line-height: 1.7; white-space: nowrap; z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,0.5); min-width: 200px; max-width: 280px; white-space: normal; pointer-events: none; }
+    .tip-popup::after { content:''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: rgba(201,168,76,0.3); }
+    .tip-wrap:hover .tip-popup, .tip-wrap.open .tip-popup { display: block; }
+
+    @media(max-width:700px) { .result-kpi,.two-col,.three-col,.loan-compare { grid-template-columns:1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .tip-popup { left: 0; transform: none; } }
     @media print {
       .topnav,.tabs,.btn { display:none!important; }
       body { background:#fff!important; color:#000!important; }
@@ -365,11 +373,11 @@ function autoCalc() {
   document.getElementById('quick-result').style.display='block';
   const v = getVerdict(r);
   document.getElementById('quick-kpi').innerHTML = [
-    {l:'表面利回り', v:r.grossYield.toFixed(2)+'%', c:r.grossYield>=6?'var(--green)':r.grossYield>=4?'var(--orange)':'var(--red)'},
-    {l:'実質利回り', v:r.netYield.toFixed(2)+'%', c:r.netYield>=5?'var(--green)':r.netYield>=3?'var(--orange)':'var(--red)'},
-    {l:'年間CF', v:(r.annualCF>=0?'+':'')+Math.round(r.annualCF/10000)+'万円', c:r.annualCF>=0?'var(--green)':'var(--red)'},
-    {l:'判定', v:v.icon+' '+v.text, c:v.type==='buy'?'var(--green)':v.type==='hold'?'var(--orange)':'var(--red)'},
-  ].map(k=>`<div class="rkpi"><div class="rkpi-val" style="color:${k.c}">${k.v}</div><div class="rkpi-lbl">${k.l}</div></div>`).join('');
+    {l:'表面利回り', tip:'gross', v:r.grossYield.toFixed(2)+'%', c:r.grossYield>=6?'var(--green)':r.grossYield>=4?'var(--orange)':'var(--red)'},
+    {l:'実質利回り', tip:'net', v:r.netYield.toFixed(2)+'%', c:r.netYield>=5?'var(--green)':r.netYield>=3?'var(--orange)':'var(--red)'},
+    {l:'年間CF', tip:null, v:(r.annualCF>=0?'+':'')+Math.round(r.annualCF/10000)+'万円', c:r.annualCF>=0?'var(--green)':'var(--red)'},
+    {l:'判定', tip:null, v:v.icon+' '+v.text, c:v.type==='buy'?'var(--green)':v.type==='hold'?'var(--orange)':'var(--red)'},
+  ].map(k=>`<div class="rkpi"><div class="rkpi-val" style="color:${k.c}">${k.v}</div><div class="rkpi-lbl" style="display:flex;align-items:center;justify-content:center;gap:4px">${k.l}${k.tip?tip(k.tip):''}</div></div>`).join('');
 }
 
 function analyze() {
@@ -396,6 +404,18 @@ function analyze() {
   switchTab('result');
 }
 
+const TIPS = {
+  noi: 'NOI（純営業収益）<br>年間家賃収入から空室損失・管理費・税金・保険を差し引いた純粋な収益。ローン返済前の物件の実力値。',
+  ccr: 'CCR（自己資本利回り）<br>頭金など自己資金に対して年間いくら手元に残るかの割合。レバレッジ効果を表す指標。10%以上が優良。',
+  dscr: 'DSCR（借入返済比率）<br>NOIがローン返済額の何倍かを示す数値。1.2以上あれば安全圏。1.0未満だと毎月持ち出しが発生する。',
+  irr: 'IRR（内部収益率）<br>家賃収入・売却収益・投資額を総合した投資全体の年間平均収益率（複利計算）。8%以上が優良。',
+  gross: '表面利回り<br>年間家賃 ÷ 購入価格 × 100。経費を引く前の粗利ベースの利回り。実際の手取りより高く出る。',
+  net: '実質利回り（NOI利回り）<br>管理費・税金などを差し引いたNOI ÷ 購入価格 × 100。こちらが投資判断の本来の指標。',
+};
+function tip(key) {
+  return `<span class="tip-wrap"><button class="tip-btn" onclick="this.closest('.tip-wrap').classList.toggle('open')" onblur="this.closest('.tip-wrap').classList.remove('open')">?</button><span class="tip-popup">${TIPS[key]}</span></span>`;
+}
+
 function renderResult(inp, r) {
   const v = getVerdict(r);
   const fmt = v2 => Math.round(v2/10000).toLocaleString()+'万円';
@@ -408,25 +428,25 @@ function renderResult(inp, r) {
 
     <div class="result-kpi">
       ${[
-        {l:'表面利回り', v:r.grossYield.toFixed(2)+'%', s:'NOI考慮前', c:r.grossYield>=6?'var(--green)':r.grossYield>=4?'var(--orange)':'var(--red)'},
-        {l:'実質利回り', v:r.netYield.toFixed(2)+'%', s:'諸経費控除後', c:r.netYield>=5?'var(--green)':r.netYield>=3?'var(--orange)':'var(--red)'},
-        {l:'NOI（年間）', v:fmt(r.noi), s:'純営業収益', c:'var(--gold)'},
+        {l:'表面利回り'+tip('gross'), v:r.grossYield.toFixed(2)+'%', s:'NOI考慮前', c:r.grossYield>=6?'var(--green)':r.grossYield>=4?'var(--orange)':'var(--red)'},
+        {l:'実質利回り'+tip('net'), v:r.netYield.toFixed(2)+'%', s:'諸経費控除後', c:r.netYield>=5?'var(--green)':r.netYield>=3?'var(--orange)':'var(--red)'},
+        {l:'NOI（年間）'+tip('noi'), v:fmt(r.noi), s:'純営業収益', c:'var(--gold)'},
         {l:'CF after DS（年）', v:(r.annualCF>=0?'+':'')+fmt(r.annualCF), s:'ローン返済後CF', c:r.annualCF>=0?'var(--green)':'var(--red)'},
-      ].map(k=>`<div class="rkpi"><div class="rkpi-val" style="color:${k.c}">${k.v}</div><div class="rkpi-lbl">${k.l}</div><div class="rkpi-sub" style="color:var(--text-muted)">${k.s}</div></div>`).join('')}
+      ].map(k=>`<div class="rkpi"><div class="rkpi-val" style="color:${k.c}">${k.v}</div><div class="rkpi-lbl" style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap">${k.l}</div><div class="rkpi-sub" style="color:var(--text-muted)">${k.s}</div></div>`).join('')}
     </div>
 
     <div class="two-col">
       <div class="card">
         <div class="card-title">📊 投資指標詳細</div>
         ${[
-          {l:'CCR（自己資本利回り）', v:r.ccr.toFixed(2)+'%', c:r.ccr>=10?'good':r.ccr>=6?'warn':'bad'},
-          {l:'DSCR（借入返済比率）', v:r.dscr>=99?'—':r.dscr.toFixed(2), c:r.dscr>=1.2?'good':r.dscr>=1.0?'warn':'bad'},
+          {l:'CCR（自己資本利回り）'+tip('ccr'), v:r.ccr.toFixed(2)+'%', c:r.ccr>=10?'good':r.ccr>=6?'warn':'bad'},
+          {l:'DSCR（借入返済比率）'+tip('dscr'), v:r.dscr>=99?'—':r.dscr.toFixed(2), c:r.dscr>=1.2?'good':r.dscr>=1.0?'warn':'bad'},
           {l:'月次ローン返済額', v:Math.round(r.loanMonthly).toLocaleString()+'円', c:'gold'},
           {l:'月次CF（ローン後）', v:(r.annualCF/12>=0?'+':'')+Math.round(r.annualCF/12).toLocaleString()+'円', c:r.annualCF/12>=0?'good':'bad'},
           {l:'自己資本額', v:fmt(r.equity), c:'gold'},
           {l:'ローン総返済額', v:fmt(r.loanTotal), c:'gold'},
-        ].map(x=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-          <span style="font-size:13px;color:var(--text-muted)">${x.l}</span>
+        ].map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <span style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:4px">${x.l}</span>
           <span class="${x.c}" style="font-size:14px;font-weight:700">${x.v}</span>
         </div>`).join('')}
       </div>
@@ -438,9 +458,9 @@ function renderResult(inp, r) {
           {l:'売却費用控除後', v:fmt(r.exitNet), c:'gold'},
           {l:inp.hold+'年後ローン残高', v:fmt(r.balance), c:'warn'},
           {l:inp.hold+'年間累積CF', v:fmt(r.noi*inp.hold - r.loanMonthly*12*inp.hold), c:r.annualCF>=0?'good':'bad'},
-          {l:'IRR（内部収益率）', v:(r.irr*100).toFixed(1)+'%', c:r.irr*100>=8?'good':r.irr*100>=5?'warn':'bad'},
-        ].map(x=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-          <span style="font-size:13px;color:var(--text-muted)">${x.l}</span>
+          {l:'IRR（内部収益率）'+tip('irr'), v:(r.irr*100).toFixed(1)+'%', c:r.irr*100>=8?'good':r.irr*100>=5?'warn':'bad'},
+        ].map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <span style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:4px">${x.l}</span>
           <span class="${x.c}" style="font-size:14px;font-weight:700">${x.v}</span>
         </div>`).join('')}
       </div>
@@ -603,8 +623,16 @@ function renderSensitivity(inp) {
   document.getElementById('sensitivity-content').innerHTML = `
     <div class="card">
       <div class="card-title">実質利回り感度マトリクス（空室率 × 家賃変化）</div>
+      <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.8;color:rgba(240,237,232,0.85)">
+        📌 <strong style="color:#93c5fd">このマトリクスの見方：</strong>
+        横軸が家賃の変化（-20%〜+10%）、縦軸が空室率（0%〜25%）です。
+        マス目の数値は<strong>実質利回り</strong>を表します。
+        <strong style="color:var(--gold)">金枠のマス</strong>が現在あなたが入力した条件の値です。
+        右上ほど好条件、左下ほど厳しい条件です。
+        家賃が下がったり空室が増えても<span style="color:var(--green)">緑色</span>のマス（5%以上）に収まっているかどうかが安全性の目安です。
+      </div>
       <div style="overflow-x:auto">${tableHTML}</div>
-      <div style="margin-top:16px;display:flex;gap:16px;font-size:12px">
+      <div style="margin-top:16px;display:flex;gap:16px;font-size:12px;flex-wrap:wrap">
         <span><span style="display:inline-block;width:14px;height:14px;background:rgba(34,197,94,0.15);border-radius:3px;vertical-align:middle;margin-right:4px"></span>5%以上（良好）</span>
         <span><span style="display:inline-block;width:14px;height:14px;background:rgba(249,115,22,0.12);border-radius:3px;vertical-align:middle;margin-right:4px"></span>3〜5%（要注意）</span>
         <span><span style="display:inline-block;width:14px;height:14px;background:rgba(239,68,68,0.10);border-radius:3px;vertical-align:middle;margin-right:4px"></span>3%未満（危険）</span>
