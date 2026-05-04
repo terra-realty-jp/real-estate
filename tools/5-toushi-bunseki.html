@@ -152,6 +152,42 @@
   <h1 class="page-title">物件<span>入力</span></h1>
   <p class="page-desc">投資物件の情報を入力してください。入力後すぐに表面・実質利回り、ローン後CF、10年シミュレーションを算出します。</p>
 
+  <!-- モード切り替え -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+    <div style="display:flex;background:var(--dark3);border-radius:9px;padding:3px;border:1px solid rgba(255,255,255,0.08)">
+      <button id="mode-btn-simple" class="btn btn-sm" style="border-radius:7px;background:var(--gold);color:#000;border:none;padding:7px 18px" onclick="setMode('simple')">⚡ かんたん入力</button>
+      <button id="mode-btn-detail" class="btn btn-sm" style="border-radius:7px;background:transparent;color:var(--text-muted);border:none;padding:7px 18px" onclick="setMode('detail')">🔧 詳細入力</button>
+    </div>
+    <span id="mode-hint" style="font-size:12px;color:var(--text-muted)">初めての方は「かんたん入力」がおすすめです</span>
+  </div>
+
+  <!-- かんたんモードカード -->
+  <div id="simple-mode-card">
+    <div class="card" style="border-color:rgba(201,168,76,0.3)">
+      <div class="card-title">⚡ 必要な情報は5つだけ</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">管理費・空室率などはよくある平均値で自動補完します。後から「詳細入力」で細かく調整できます。</p>
+      <div class="form-grid">
+        <div class="form-group full"><label>物件名（任意）</label><input id="s_name" placeholder="〇〇マンション 101号室"></div>
+        <div class="form-group"><label>購入価格（万円）*</label><input type="number" id="s_price" placeholder="2500" min="0"></div>
+        <div class="form-group"><label>想定月額家賃（円）*</label><input type="number" id="s_rent" placeholder="80000" min="0"></div>
+        <div class="form-group"><label>頭金（万円）</label><input type="number" id="s_downpay" placeholder="500" min="0"></div>
+        <div class="form-group"><label>金利（年率 %）</label><input type="number" id="s_rate" value="1.5" min="0" max="30" step="0.1"></div>
+        <div class="form-group"><label>返済期間（年）</label><input type="number" id="s_term" value="25" min="1" max="50"></div>
+      </div>
+      <div style="margin-top:20px;padding:12px 16px;background:var(--dark3);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.8">
+        自動補完する値：管理費 15,000円/月・空室率 10%・管理委託費 5%・固定資産税 12万円/年・保有期間 10年
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="btn btn-gold" style="flex:1;justify-content:center" onclick="analyzeSimple()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          分析する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 詳細モードカード（既存） -->
+  <div id="detail-mode-cards" style="display:none">
   <div class="two-col">
     <div>
       <div class="card">
@@ -230,6 +266,7 @@
       <div class="result-kpi" id="quick-kpi"></div>
     </div>
   </div>
+  </div><!-- end detail-mode-cards -->
 </div>
 </div>
 
@@ -742,6 +779,49 @@ function exportHistory() {
 function clearHistory() {
   if(!confirm('全履歴を削除しますか？')) return;
   history=[];localStorage.setItem('inv_history',JSON.stringify(history));renderHistory();
+}
+
+let _mode = 'simple';
+
+function setMode(m) {
+  _mode = m;
+  document.getElementById('simple-mode-card').style.display = m==='simple' ? 'block' : 'none';
+  document.getElementById('detail-mode-cards').style.display = m==='detail' ? 'block' : 'none';
+  const sb=document.getElementById('mode-btn-simple'), db=document.getElementById('mode-btn-detail');
+  sb.style.background = m==='simple' ? 'var(--gold)' : 'transparent';
+  sb.style.color = m==='simple' ? '#000' : 'var(--text-muted)';
+  db.style.background = m==='detail' ? 'var(--gold)' : 'transparent';
+  db.style.color = m==='detail' ? '#000' : 'var(--text-muted)';
+  document.getElementById('mode-hint').textContent = m==='simple'
+    ? '初めての方は「かんたん入力」がおすすめです'
+    : '詳細モード：すべての条件を細かく設定できます';
+}
+
+function analyzeSimple() {
+  const price = parseFloat(document.getElementById('s_price').value)||0;
+  const rent  = parseFloat(document.getElementById('s_rent').value)||0;
+  if(!price||!rent) { alert('購入価格と月額家賃を入力してください'); return; }
+  const downpay = parseFloat(document.getElementById('s_downpay').value)||0;
+  const loan = Math.max(0, price - downpay);
+  // copy simple inputs → detail inputs
+  document.getElementById('i_name').value    = document.getElementById('s_name').value;
+  document.getElementById('i_price').value   = price;
+  document.getElementById('i_rent').value    = rent;
+  document.getElementById('i_loan').value    = loan;
+  document.getElementById('i_rate').value    = document.getElementById('s_rate').value;
+  document.getElementById('i_term').value    = document.getElementById('s_term').value;
+  // defaults
+  document.getElementById('i_mgmt').value     = '15000';
+  document.getElementById('i_tax').value      = '120000';
+  document.getElementById('i_ins').value      = '30000';
+  document.getElementById('i_mrate').value    = '5';
+  document.getElementById('i_vacancy').value  = '10';
+  document.getElementById('i_hold').value     = '10';
+  document.getElementById('i_exit_yield').value = '6';
+  document.getElementById('i_decline').value  = '1';
+  document.getElementById('i_exit_cost').value = '4';
+  document.getElementById('i_repay').value    = 'equal';
+  analyze();
 }
 
 function switchTab(t) {
