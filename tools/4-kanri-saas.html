@@ -160,6 +160,18 @@
     </div>
   </div>
   <div class="kpi-grid" id="kpi-grid"></div>
+  <div class="card" style="margin-bottom:20px;padding:18px 24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-size:14px;font-weight:700">📄 月次収支レポート</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:3px">今月の家賃回収・入金状況・修繕費を印刷用にまとめます</div>
+      </div>
+      <button class="btn btn-outline" onclick="printMonthlyReport()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        今月のレポートを印刷
+      </button>
+    </div>
+  </div>
   <div class="dashboard-grid" style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
     <div class="card">
       <div class="card-title">月次収益推移（過去12ヶ月）</div>
@@ -865,6 +877,88 @@ function saveRepair(){
   };
   if(editRepairId) repairs=repairs.map(r=>r.id===editRepairId?obj:r); else repairs.unshift(obj);
   save('repairs');closeModal('repairModal');renderRepairs();showToast('修繕記録を保存しました ✓');
+}
+
+// ===== 月次収支レポート印刷 =====
+function printMonthlyReport() {
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const displayMonth = `${now.getFullYear()}年${now.getMonth()+1}月`;
+  const activeTenants = tenants.filter(t => t.status === 'active');
+  const thisMonthRents = rents.filter(r => r.month === thisMonth);
+  const totalExpected = activeTenants.reduce((s, t) => s + (t.rent || 0), 0);
+  const totalCollected = thisMonthRents.filter(r => r.status === 'paid').reduce((s, r) => s + (r.paid || 0), 0);
+  const outstanding = totalExpected - totalCollected;
+  const monthRepairs = repairs.filter(r => {
+    const d = r.done || r.date || '';
+    return d.startsWith(thisMonth);
+  });
+  const repairCost = monthRepairs.reduce((s, r) => s + (r.cost || 0), 0);
+
+  const propRows = properties.map(p => {
+    const pts = activeTenants.filter(t => t.propertyId === p.id);
+    return { p, pts: pts.map(t => {
+      const r = thisMonthRents.find(x => x.tenantId === t.id);
+      const statusLabel = r ? (r.status === 'paid' ? '入金済' : r.status === 'partial' ? '一部入金' : '未入金') : '未登録';
+      const statusClass = r ? (r.status === 'paid' ? 'paid' : r.status === 'partial' ? 'partial' : 'unpaid') : 'unpaid';
+      return { t, r, statusLabel, statusClass };
+    })};
+  });
+
+  const html = `<!DOCTYPE html><html lang="ja"><head>
+<meta charset="UTF-8"><title>${displayMonth} 家賃収支レポート</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;color:#1a1a2e;padding:32px 40px;font-size:14px;line-height:1.6;}
+h1{font-size:22px;font-weight:900;margin-bottom:4px;}
+.subtitle{font-size:12px;color:#6b7280;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #1e3a8a;}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
+.sum-card{border:1px solid #e5e7eb;border-radius:8px;padding:16px;}
+.sum-label{font-size:11px;color:#6b7280;margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;}
+.sum-value{font-size:24px;font-weight:900;}
+.prop-header{background:#1e3a8a;color:#fff;padding:8px 14px;font-size:12px;font-weight:700;margin-top:20px;margin-bottom:0;border-radius:4px 4px 0 0;}
+table{width:100%;border-collapse:collapse;margin-bottom:8px;}
+th{background:#f3f4f6;padding:8px 12px;font-size:11px;text-align:left;color:#6b7280;letter-spacing:1px;}
+td{padding:9px 12px;font-size:13px;border-bottom:1px solid #f3f4f6;vertical-align:middle;}
+.paid{color:#166534;font-weight:700;}
+.unpaid{color:#991b1b;font-weight:700;}
+.partial{color:#92400e;font-weight:700;}
+.repair-section{margin-top:20px;}
+.repair-section h2{font-size:15px;font-weight:700;margin-bottom:12px;}
+.footer{text-align:center;font-size:11px;color:#9ca3af;margin-top:32px;border-top:1px solid #e5e7eb;padding-top:16px;}
+@media print{body{padding:16px 20px;}button{display:none!important;}}
+</style>
+</head><body>
+<h1>📊 ${displayMonth} 家賃収支レポート</h1>
+<p class="subtitle">石澤不動産かんたん管理ツール　出力日: ${now.toLocaleDateString('ja-JP', {year:'numeric',month:'long',day:'numeric'})}</p>
+<div class="summary">
+  <div class="sum-card"><div class="sum-label">請求合計</div><div class="sum-value">${(totalExpected).toLocaleString()}円</div></div>
+  <div class="sum-card"><div class="sum-label">回収済み</div><div class="sum-value" style="color:#166534">${(totalCollected).toLocaleString()}円</div></div>
+  <div class="sum-card"><div class="sum-label">未回収</div><div class="sum-value" style="color:${outstanding>0?'#991b1b':'#166534'}">${outstanding.toLocaleString()}円</div></div>
+</div>
+${propRows.map(({p, pts}) => `
+<div class="prop-header">🏢 ${p.name}${p.addr ? '　' + p.addr : ''}</div>
+<table><thead><tr><th>部屋</th><th>入居者</th><th>月額家賃</th><th>入金状況</th><th>入金額</th></tr></thead>
+<tbody>${pts.length ? pts.map(({t, r, statusLabel, statusClass}) => `
+<tr><td>${t.room||'—'}</td><td>${t.name}</td><td>${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
+<td class="${statusClass}">${statusLabel}</td>
+<td>${r&&r.paid?Number(r.paid).toLocaleString()+'円':'—'}</td></tr>`).join('') :
+'<tr><td colspan="5" style="color:#9ca3af;text-align:center;padding:14px">入居者がいません</td></tr>'}
+</tbody></table>`).join('')}
+${monthRepairs.length ? `<div class="repair-section"><h2>🔧 今月の修繕費</h2>
+<table><thead><tr><th>内容</th><th>部屋</th><th>業者</th><th>金額</th></tr></thead>
+<tbody>${monthRepairs.map(r=>`<tr><td>${r.content}</td><td>${r.room||'—'}</td><td>${r.vendor||'—'}</td><td>${r.cost?Number(r.cost).toLocaleString()+'円':'—'}</td></tr>`).join('')}
+<tr style="font-weight:700;background:#f9fafb"><td colspan="3" style="text-align:right">合計修繕費</td><td>${repairCost.toLocaleString()}円</td></tr>
+</tbody></table></div>` : ''}
+<div class="footer">石澤不動産かんたん管理ツール（不動産かんたんツール）にて自動生成。データはあなたのブラウザにのみ保存されています。</div>
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+
+  const win = window.open('', '_blank', 'width=900,height=720');
+  if (!win) { showErrorToast('ポップアップがブロックされました。ブラウザの設定を確認してください'); return; }
+  win.document.write(html);
+  win.document.close();
 }
 
 // ===== CSV =====
