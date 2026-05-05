@@ -235,10 +235,11 @@
     <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:rgba(255,255,255,0.75);line-height:1.7">
       💡 入力は約3分で完了します。登録不要・完全無料。連絡先の入力は任意です。
     </div>
+    <div id="area-hint-banner" style="display:none;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:rgba(255,255,255,0.85);line-height:1.7"></div>
     <div class="form-grid">
       <div class="form-group">
         <label>都道府県<span class="req">*</span></label>
-        <select id="pref">
+        <select id="pref" onchange="updateAreaHint()">
           <option value="">選択してください</option>
           <optgroup label="関東">
             <option value="tokyo_central">東京都 / 23区中心部（千代田・中央・港）</option>
@@ -568,6 +569,48 @@ const REFORM_FACTOR = { none:1.0, partial:1.04, full:1.10 };
 
 let leads = JSON.parse(localStorage.getItem('satei_leads') || '[]');
 let currentEstimate = null;
+
+// ===== エリア別相場ヒント =====
+const AREA_HINT = {
+  tokyo_central: '東京・23区中心部（千代田・中央・港）は全国トップクラスの価格帯。マンション坪単価 約200〜400万円が目安。',
+  tokyo_yamate:  '東京・山手線内側エリア。マンション坪単価 約150〜250万円。新宿・渋谷・目黒などの人気エリア。',
+  tokyo_23:      '東京23区（その他）。マンション坪単価 約80〜150万円。路線・駅距離で価格差が大きい。',
+  tokyo_city:    '東京都市部（多摩・八王子など）。23区より手頃な価格帯。坪単価 約50〜80万円が目安。',
+  kanagawa:      '横浜・川崎。マンション坪単価 約80〜130万円。都心へのアクセスで価格が変わる。',
+  kanagawa_other:'神奈川県（横浜・川崎以外）。坪単価 約50〜80万円。鎌倉・湘南エリアは高め。',
+  saitama:       '埼玉県。マンション坪単価 約45〜70万円。大宮・浦和など主要駅近くは高め。',
+  chiba:         '千葉県。マンション坪単価 約40〜65万円。千葉市内や市川・船橋は比較的高め。',
+  osaka_central: '大阪・中心部（北区・中央区）。マンション坪単価 約90〜150万円。梅田・難波周辺は全国上位の価格帯。',
+  osaka_other:   '大阪府（中心部以外）。マンション坪単価 約40〜80万円。エリア差が大きい。',
+  kyoto:         '京都府。マンション坪単価 約60〜100万円。京都市内の人気エリアは高め。',
+  hyogo:         '神戸市。マンション坪単価 約50〜90万円。灘区・東灘区は人気が高い。',
+  hyogo_other:   '兵庫県（神戸以外）。坪単価 約30〜60万円。',
+  aichi:         '愛知県・名古屋市。マンション坪単価 約60〜100万円。名駅・栄エリアは高め。',
+  aichi_other:   '愛知県（名古屋市以外）。坪単価 約35〜60万円。',
+  shizuoka:      '静岡県。坪単価 約30〜55万円。沼津・静岡市内は比較的高め。',
+  niigata:       '新潟県。坪単価 約25〜45万円。新潟市内中心部はやや高め。',
+  ishikawa:      '石川県（金沢市など）。坪単価 約30〜55万円。金沢市内は需要が高い。',
+  toyama:        '富山県。坪単価 約25〜45万円。',
+  fukui:         '福井県。坪単価 約25〜45万円。',
+  hiroshima:     '広島県・広島市。マンション坪単価 約45〜75万円。広島市内は需要安定。',
+  fukuoka:       '福岡市。マンション坪単価 約65〜100万円。九州最大都市で需要旺盛。',
+  fukuoka_other: '福岡県（福岡市以外）。坪単価 約30〜55万円。',
+  sendai:        '宮城県・仙台市。マンション坪単価 約45〜75万円。東北最大都市。',
+  sapporo:       '北海道・札幌市。マンション坪単価 約40〜70万円。札幌市内中心部は高め。',
+  other:         '地方エリア。物件の個別条件（駅近・学区など）が価格を大きく左右します。',
+};
+
+function updateAreaHint() {
+  const pref = document.getElementById('pref').value;
+  const banner = document.getElementById('area-hint-banner');
+  if(!banner) return;
+  if(pref && AREA_HINT[pref]) {
+    banner.style.display = 'block';
+    banner.innerHTML = '📍 <strong>相場の目安：</strong>' + AREA_HINT[pref];
+  } else {
+    banner.style.display = 'none';
+  }
+}
 
 // ===== バリデーション =====
 const FIELD_LABELS = {
