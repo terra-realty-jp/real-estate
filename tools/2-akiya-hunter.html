@@ -208,6 +208,12 @@
     <div id="scoreActions"></div>
   </div>
 
+  <!-- 行動タイムライン -->
+  <div class="card" id="timelineCard" style="display:none;">
+    <div class="card-title"><span class="icon">📅</span>今後の行動スケジュール（目安）</div>
+    <div id="timelineContent"></div>
+  </div>
+
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
     <button class="btn btn-gold" onclick="saveDeal()">📌 この物件を進捗管理に登録する</button>
     <button class="btn btn-outline" onclick="resetScore()">リセット</button>
@@ -458,6 +464,7 @@ function updateScore() {
   } else {
     actCard.style.display = 'none';
   }
+  renderTimeline(capped, [...checked]);
 }
 
 function getActions(score, ids) {
@@ -470,6 +477,49 @@ function getActions(score, ids) {
   if(ids.includes('c10')) actions.push({icon:'📋', title:'「相談準備リスト」タブを確認', desc:'専門家に相談する前に準備しておくと良い書類・質問事項をまとめています。当日スムーズに話を進めるために活用してください。'});
   actions.push({icon:'📌', title:'この物件を進捗管理に登録する', desc:'「進捗管理」タブで対応状況を記録しておくと、次に何をすべきかが明確になります。'});
   return actions;
+}
+
+function renderTimeline(score, ids) {
+  const tlCard = document.getElementById('timelineCard');
+  const tlContent = document.getElementById('timelineContent');
+  if(!tlCard || !tlContent || score === 0) { if(tlCard) tlCard.style.display='none'; return; }
+  tlCard.style.display = 'block';
+
+  let steps;
+  if(score >= 70) {
+    steps = [
+      { when: '今すぐ（〜2週間）', color: 'var(--red)', items: ['固定資産税の請求書・課税明細書を確認する', ids.includes('c6') ? '相続登記の手続きを司法書士に相談する' : '物件の鍵・書類の場所を確認する', '写真を撮って建物の現状を記録しておく'] },
+      { when: '1ヶ月以内', color: 'var(--orange)', items: ['「相談準備リスト」タブで書類を確認・準備する', '不動産会社に無料査定を依頼する（複数社比較推奨）', '家族で売却・賃貸・活用の方針を話し合う'] },
+      { when: '3ヶ月以内', color: 'var(--gold)', items: ['査定結果をもとに売却・賃貸・リノベの選択肢を比較する', '石澤不動産など専門家に詳しい相談をする', '活用方針が決まったら手続きを進める'] },
+    ];
+  } else if(score >= 40) {
+    steps = [
+      { when: '今すぐ（〜1ヶ月）', color: 'var(--orange)', items: ['固定資産税の金額を確認する', '建物の外観・内部の状態を確認する', '「相談準備リスト」タブに目を通す'] },
+      { when: '3ヶ月以内', color: 'var(--gold)', items: ['売るか・貸すか・そのままにするかの方針を家族で相談する', '地元の不動産会社に相場感を聞いてみる（無料）'] },
+      { when: '半年〜1年以内', color: 'var(--text-muted)', items: ['活用方針を決定する', '必要であれば片付け・リフォームの検討を始める'] },
+    ];
+  } else {
+    steps = [
+      { when: 'まずやること', color: 'var(--blue)', items: ['物件の現状（建物・固定資産税・書類）を把握する', '将来的な活用について家族で話し合う場を設ける'] },
+      { when: '半年〜1年以内', color: 'var(--text-muted)', items: ['必要に応じて不動産会社に相談する', '空き家の維持管理コストを年間で確認する'] },
+      { when: '任意のタイミングで', color: 'var(--text-muted)', items: ['このツールで定期的に診断を行い、状況の変化を記録する'] },
+    ];
+  }
+
+  tlContent.innerHTML = steps.map((s, i) => `
+    <div style="display:flex;gap:14px;margin-bottom:${i<steps.length-1?'18':'0'}px">
+      <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+        <div style="width:30px;height:30px;border-radius:50%;background:${s.color};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#000;flex-shrink:0">${i+1}</div>
+        ${i<steps.length-1?`<div style="width:2px;flex:1;background:rgba(255,255,255,0.08);margin-top:6px;min-height:24px"></div>`:''}
+      </div>
+      <div style="flex:1;padding-bottom:${i<steps.length-1?'8':'0'}px">
+        <div style="font-size:12px;font-weight:700;color:${s.color};margin-bottom:8px">${s.when}</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:6px">
+          ${s.items.map(item => `<li style="font-size:13px;color:var(--text-muted);display:flex;gap:8px;align-items:flex-start"><span style="color:${s.color};flex-shrink:0;margin-top:2px">▸</span>${item}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+  `).join('');
 }
 
 function resetScore() {
