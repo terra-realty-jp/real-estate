@@ -82,6 +82,8 @@
     .cell-good { background: rgba(34,197,94,0.15); color: var(--green); font-weight: 700; }
     .cell-warn { background: rgba(249,115,22,0.12); color: var(--orange); }
     .cell-bad  { background: rgba(239,68,68,0.10); color: var(--red); }
+    .cell-highlight { outline: 2px solid var(--gold); outline-offset: -2px; position: relative; z-index: 1; }
+    .cell-highlight::after { content: '◀現在'; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--gold); white-space: nowrap; font-weight: 700; }
     .cell-highlight { outline: 2px solid var(--gold); }
 
     /* ローン比較 */
@@ -678,16 +680,18 @@ function renderSensitivity(inp) {
   const rents = [-20, -10, -5, 0, 5, 10].map(d => inp.rent * (1 + d/100));
   const rentLabels = [-20, -10, -5, 0, 5, 10].map(d => (d>=0?'+':'')+d+'%');
 
-  const rows = vacancies.map(v => {
-    const cells = rents.map(rent => {
+  const rentDeltas = [-20, -10, -5, 0, 5, 10];
+  const baseVacancyIdx = vacancies.reduce((best,v,i)=>Math.abs(v-inp.vacancy)<Math.abs(vacancies[best]-inp.vacancy)?i:best,0);
+  const baseRentIdx = 3; // 0% change
+
+  const rows = vacancies.map((v,ri) => {
+    const cells = rents.map((rent,ci) => {
       const noi = calcNOI(rent, inp.mgmt, inp.tax, inp.ins, inp.mrate, v);
       const ny = inp.price > 0 ? noi / (inp.price*10000) * 100 : 0;
-      return ny;
+      return {ny, isBase: ri===baseVacancyIdx && ci===baseRentIdx};
     });
     return {v, cells};
   });
-
-  const baseNY = calcAll(inp).netYield;
 
   let tableHTML = `<table class="sensitivity-table">
     <thead>
@@ -696,10 +700,9 @@ function renderSensitivity(inp) {
     <tbody>
       ${rows.map(row=>`<tr>
         <td><strong>${row.v}%</strong></td>
-        ${row.cells.map((c,j)=>{
-          const cls = c>=5?'cell-good':c>=3?'cell-warn':'cell-bad';
-          const isBase = Math.abs(c-baseNY)<0.1;
-          return `<td class="${cls}${isBase?' cell-highlight':''}">${c.toFixed(1)}%</td>`;
+        ${row.cells.map(cell=>{
+          const cls = cell.ny>=5?'cell-good':cell.ny>=3?'cell-warn':'cell-bad';
+          return `<td class="${cls}${cell.isBase?' cell-highlight':''}">${cell.ny.toFixed(1)}%</td>`;
         }).join('')}
       </tr>`).join('')}
     </tbody>
