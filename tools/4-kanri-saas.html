@@ -323,6 +323,8 @@
 
 <script>
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+function showFieldError(el,msg){el.style.borderColor='var(--red)';let e=el.parentNode.querySelector('.field-error');if(!e){e=document.createElement('span');e.className='field-error';e.style.cssText='color:var(--red);font-size:11px;margin-top:2px;display:block;';el.parentNode.appendChild(e);}e.textContent=msg;}
+function clearFieldError(el){el.style.borderColor='';const e=el.parentNode.querySelector('.field-error');if(e)e.remove();}
 let properties = JSON.parse(localStorage.getItem('saas_properties') || '[]');
 let tenants    = JSON.parse(localStorage.getItem('saas_tenants')    || '[]');
 let rents      = JSON.parse(localStorage.getItem('saas_rents')      || '[]');
@@ -337,7 +339,13 @@ const REPAIR_ST = {open:'受付済',progress:'対応中',done:'完了'};
 
 function save(key) {
   const map = {properties,tenants,rents,repairs};
-  localStorage.setItem('saas_'+key, JSON.stringify(map[key]));
+  try {
+    localStorage.setItem('saas_'+key, JSON.stringify(map[key]));
+  } catch(e) {
+    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED') {
+      showErrorToast('保存容量の上限に達しました。古いデータを削除してからお試しください。');
+    }
+  }
 }
 
 function closeModal(id,e) {
@@ -351,6 +359,14 @@ function showToast(msg) {
   document.body.appendChild(t);
   setTimeout(()=>t.style.opacity='0',2000);
   setTimeout(()=>t.remove(),2300);
+}
+function showErrorToast(msg) {
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#ef4444;color:#fff;padding:13px 28px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.4);white-space:nowrap;max-width:calc(100vw - 40px);text-align:center;line-height:1.5';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.style.opacity='0',4000);
+  setTimeout(()=>t.remove(),4300);
 }
 
 // ===== ダッシュボード =====
@@ -555,8 +571,9 @@ function editProperty(id){openPropertyModal(id);}
 function deleteProperty(id){const p=properties.find(x=>x.id===id);if(!confirm('「'+(p?p.name:'この物件')+'」を削除しますか？\nこの操作は元に戻せません。'))return;properties=properties.filter(p=>p.id!==id);save('properties');renderProperties();}
 
 function saveProperty(){
-  const name=document.getElementById('p_name').value.trim();
-  if(!name){alert('物件名を入力してください');return;}
+  const nameEl=document.getElementById('p_name'); clearFieldError(nameEl);
+  if(!nameEl.value.trim()){showFieldError(nameEl,'物件名を入力してください');nameEl.focus();return;}
+  const name=nameEl.value.trim();
   const obj={
     id:editPropId||Date.now(),name,addr:document.getElementById('p_addr').value,
     type:document.getElementById('p_type').value,units:parseInt(document.getElementById('p_units').value)||1,
@@ -628,8 +645,9 @@ function openTenantModal(id){
 function editTenant(id){openTenantModal(id);}
 function deleteTenant(id){const t=tenants.find(x=>x.id===id);if(!confirm('「'+(t?t.name:'このテナント')+'」を削除しますか？\nこの操作は元に戻せません。'))return;tenants=tenants.filter(t=>t.id!==id);save('tenants');renderTenants();}
 function saveTenant(){
-  const name=document.getElementById('t_name').value.trim();
-  if(!name){alert('氏名を入力してください');return;}
+  const nameEl=document.getElementById('t_name'); clearFieldError(nameEl);
+  if(!nameEl.value.trim()){showFieldError(nameEl,'氏名を入力してください');nameEl.focus();return;}
+  const name=nameEl.value.trim();
   const obj={
     id:editTenantId||Date.now(),name,phone:document.getElementById('t_phone').value,
     email:document.getElementById('t_email').value,
@@ -726,8 +744,9 @@ function quickRent(tenantId, month, rent){
 
 function saveRent(){
   const tenantId=parseInt(document.getElementById('r_tenant').value);
-  const month=document.getElementById('r_month').value;
-  if(!month){alert('対象月を入力してください');return;}
+  const monthEl=document.getElementById('r_month'); clearFieldError(monthEl);
+  if(!monthEl.value){showFieldError(monthEl,'対象月を入力してください');monthEl.focus();return;}
+  const month=monthEl.value;
   const obj={
     id:Date.now(),tenantId,month,
     charge:parseInt(document.getElementById('r_charge').value)||0,
@@ -796,8 +815,9 @@ function openRepairModal(id){
 function editRepair(id){openRepairModal(id);}
 function deleteRepair(id){const r=repairs.find(x=>x.id===id);if(!confirm('「'+(r?r.content:'この修繕記録')+'」を削除しますか？\nこの操作は元に戻せません。'))return;repairs=repairs.filter(r=>r.id!==id);save('repairs');renderRepairs();}
 function saveRepair(){
-  const content=document.getElementById('rp_content').value.trim();
-  if(!content){alert('内容を入力してください');return;}
+  const contentEl=document.getElementById('rp_content'); clearFieldError(contentEl);
+  if(!contentEl.value.trim()){showFieldError(contentEl,'修繕内容を入力してください');contentEl.focus();return;}
+  const content=contentEl.value.trim();
   const obj={
     id:editRepairId||Date.now(),content,
     propertyId:parseInt(document.getElementById('rp_property').value)||0,

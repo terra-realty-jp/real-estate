@@ -328,6 +328,8 @@
 
 <script>
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+function showFieldError(el,msg){el.style.borderColor='var(--red)';let e=el.parentNode.querySelector('.field-error');if(!e){e=document.createElement('span');e.className='field-error';e.style.cssText='color:var(--red);font-size:11px;margin-top:2px;display:block;';el.parentNode.appendChild(e);}e.textContent=msg;}
+function clearFieldError(el){el.style.borderColor='';const e=el.parentNode.querySelector('.field-error');if(e)e.remove();}
 let sellers = JSON.parse(localStorage.getItem('od_sellers') || '[]');
 let buyers  = JSON.parse(localStorage.getItem('od_buyers')  || '[]');
 let deals3  = JSON.parse(localStorage.getItem('od_deals3')  || '[]');
@@ -390,8 +392,10 @@ function editSeller(id) { openSellerModal(id); }
 function deleteSeller(id) { if(!confirm('削除しますか？')) return; sellers=sellers.filter(s=>s.id!==id); save('sellers'); renderSellers(); }
 
 function saveSeller() {
-  const name = document.getElementById('s_name').value.trim();
-  if(!name) { alert('氏名を入力してください'); return; }
+  const nameEl = document.getElementById('s_name');
+  clearFieldError(nameEl);
+  if(!nameEl.value.trim()) { showFieldError(nameEl,'氏名を入力してください'); nameEl.focus(); return; }
+  const name = nameEl.value.trim();
   const obj = {
     id: editSelId || Date.now(),
     name, phone:document.getElementById('s_phone').value, email:document.getElementById('s_email').value,
@@ -456,8 +460,10 @@ function editBuyer(id) { openBuyerModal(id); }
 function deleteBuyer(id) { if(!confirm('削除しますか？')) return; buyers=buyers.filter(b=>b.id!==id); save('buyers'); renderBuyers(); }
 
 function saveBuyer() {
-  const name = document.getElementById('b_name').value.trim();
-  if(!name) { alert('氏名を入力してください'); return; }
+  const nameEl = document.getElementById('b_name');
+  clearFieldError(nameEl);
+  if(!nameEl.value.trim()) { showFieldError(nameEl,'氏名を入力してください'); nameEl.focus(); return; }
+  const name = nameEl.value.trim();
   const obj = {
     id: editBuyId || Date.now(),
     name, phone:document.getElementById('b_phone').value, email:document.getElementById('b_email').value,
@@ -660,9 +666,15 @@ function calcFee() {
 
 // ===== 共通 =====
 function save(key) {
-  if(key==='sellers') localStorage.setItem('od_sellers', JSON.stringify(sellers));
-  if(key==='buyers')  localStorage.setItem('od_buyers',  JSON.stringify(buyers));
-  if(key==='deals3')  localStorage.setItem('od_deals3',  JSON.stringify(deals3));
+  const kv = {sellers:['od_sellers',sellers], buyers:['od_buyers',buyers], deals3:['od_deals3',deals3]};
+  if(!kv[key]) return;
+  try {
+    localStorage.setItem(kv[key][0], JSON.stringify(kv[key][1]));
+  } catch(e) {
+    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED') {
+      showErrorToast('保存容量の上限に達しました。古いデータを削除してからお試しください。');
+    }
+  }
 }
 
 function closeModal(id, e) {
@@ -676,6 +688,14 @@ function showToast(msg) {
   document.body.appendChild(t);
   setTimeout(()=>t.style.opacity='0',2000);
   setTimeout(()=>t.remove(),2300);
+}
+function showErrorToast(msg) {
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#ef4444;color:#fff;padding:13px 28px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.4);white-space:nowrap;max-width:calc(100vw - 40px);text-align:center;line-height:1.5';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.style.opacity='0',4000);
+  setTimeout(()=>t.remove(),4300);
 }
 
 function exportCSV(type) {

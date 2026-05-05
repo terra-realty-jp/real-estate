@@ -453,7 +453,13 @@ function analyze() {
     inp: JSON.parse(JSON.stringify(inp)),
   });
   if(history.length > 50) history = history.slice(0,50);
-  localStorage.setItem('inv_history', JSON.stringify(history));
+  try {
+    localStorage.setItem('inv_history', JSON.stringify(history));
+  } catch(e) {
+    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED') {
+      showErrToast('保存容量の上限に達しました。履歴を削除してからお試しください。');
+    }
+  }
   renderHistory();
 
   switchTab('result');
@@ -862,6 +868,14 @@ function showChartOfflineMsg(canvasId) {
 }
 
 // ストレージ警告
+function showErrToast(msg) {
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#ef4444;color:#fff;padding:13px 28px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.4);max-width:calc(100vw - 40px);text-align:center;line-height:1.5';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.style.opacity='0',4000);
+  setTimeout(()=>t.remove(),4300);
+}
 function checkStorageWarning() {
   try {
     let used = 0;
