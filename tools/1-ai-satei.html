@@ -503,13 +503,42 @@ let leads = JSON.parse(localStorage.getItem('satei_leads') || '[]');
 let currentEstimate = null;
 
 // ===== バリデーション =====
+const FIELD_LABELS = {
+  pref: '都道府県', propType: '物件種別', area: '面積', age: '築年数',
+  leadName: 'お名前', leadPhone: '電話番号'
+};
+function showFieldError(el, msg) {
+  el.style.borderColor = 'var(--red)';
+  let errEl = el.parentNode.querySelector('.field-error');
+  if (!errEl) {
+    errEl = document.createElement('span');
+    errEl.className = 'field-error';
+    errEl.style.cssText = 'color:var(--red);font-size:11px;margin-top:2px;display:block;';
+    el.parentNode.appendChild(errEl);
+  }
+  errEl.textContent = msg;
+}
+function clearFieldError(el) {
+  el.style.borderColor = '';
+  const errEl = el.parentNode.querySelector('.field-error');
+  if (errEl) errEl.textContent = '';
+}
 function validate(fields) {
+  let first = null;
+  let hasError = false;
   for (let f of fields) {
     const el = document.getElementById(f);
-    if (!el.value.trim()) { el.focus(); el.style.borderColor='var(--red)'; return false; }
-    el.style.borderColor='';
+    if (!el.value.trim()) {
+      const label = FIELD_LABELS[f] || f;
+      showFieldError(el, `${label}を入力してください`);
+      if (!first) first = el;
+      hasError = true;
+    } else {
+      clearFieldError(el);
+    }
   }
-  return true;
+  if (first) first.focus();
+  return !hasError;
 }
 
 // ===== ステップ制御 =====

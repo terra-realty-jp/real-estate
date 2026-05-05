@@ -381,17 +381,34 @@ function calcAll(inp) {
   const exitPrice = inp.exitYield > 0 ? holdNOI / (inp.exitYield/100) : 0;
   const exitNet = exitPrice * (1 - inp.exitCost/100);
 
-  // ローン残高（保有期間後）
+  // 年次CF配列を構築（ローン残高計算＋IRR計算に使用）
+  const rMo = inp.rate/100/12;
   let balance = inp.loan * 10000;
-  const r = inp.rate/100/12;
-  for(let m=0; m<inp.hold*12; m++) {
-    const interest = balance * r;
-    const principal = inp.repay==='equal' ? loanResult.monthly - interest : (inp.loan*10000/(inp.term*12));
-    balance = Math.max(0, balance - principal);
+  const irrCFs = [-equity];
+  for(let y = 1; y <= inp.hold; y++) {
+    const rentY = inp.rent * Math.pow(1 - inp.decline/100, y-1);
+    const noiY = calcNOI(rentY, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+    for(let m = 0; m < 12; m++) {
+      const interest = balance * rMo;
+      const principal = inp.repay==='equal' ? loanResult.monthly - interest : (inp.loan*10000/(inp.term*12));
+      balance = Math.max(0, balance - principal);
+    }
+    const cfY = noiY - loanResult.monthly * 12;
+    irrCFs.push(y < inp.hold ? cfY : cfY + (exitNet - balance));
   }
 
+  // Newton-Raphson法による真のIRR
+  const npvFn = (r) => irrCFs.reduce((s, cf, t) => s + cf / Math.pow(1 + r, t), 0);
+  const dnpvFn = (r) => irrCFs.reduce((s, cf, t) => s - t * cf / Math.pow(1 + r, t + 1), 0);
+  let irrRate = 0.1;
+  for(let i = 0; i < 60; i++) {
+    const f = npvFn(irrRate), df = dnpvFn(irrRate);
+    if(Math.abs(f) < 10 || !df) break;
+    irrRate = Math.min(10, Math.max(-0.99, irrRate - f / df));
+  }
+  const irr = equity > 0 && isFinite(irrRate) ? irrRate : 0;
+
   const totalProfit = exitNet - equity - (annualLoanPayment * inp.hold) + (noi * inp.hold) - balance;
-  const irr = equity > 0 ? Math.pow((exitNet + noi * inp.hold - balance) / (equity), 1/inp.hold) - 1 : 0;
 
   return { grossYield, netYield, noi, annualCF, ccr, dscr, loanMonthly: loanResult.monthly,
     loanTotal: loanResult.total, exitPrice, exitNet, totalProfit, balance, equity, irr };

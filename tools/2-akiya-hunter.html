@@ -196,6 +196,12 @@
     </div>
   </div>
 
+  <!-- 放置リスク試算カード -->
+  <div class="card" id="riskCalcCard" style="display:none;">
+    <div class="card-title"><span class="icon">💴</span>このまま放置すると…（年間コスト試算）</div>
+    <div id="riskCalcContent"></div>
+  </div>
+
   <div class="card" id="scoreActionCard" style="display:none;">
     <div class="card-title"><span class="icon">🎯</span>推奨アクション</div>
     <div id="scoreActions"></div>
@@ -383,6 +389,39 @@ function updateScore() {
   rankEl.textContent = `ランク ${rank}`;
   rankEl.className = 'score-rank ' + rank;
   document.getElementById('scoreComment').textContent = comment;
+
+  // 放置リスク試算
+  const riskCard = document.getElementById('riskCalcCard');
+  if(capped > 0) {
+    riskCard.style.display = 'block';
+    const hasSpecialCase = checked.has('c8'); // 特定空き家リスク
+    const hasInheritance = checked.has('c6'); // 相続未了
+    const baseTax = checked.has('c4') ? 80000 : 60000; // 固定資産税（チェックなしは平均値）
+    const taxMultiplier = hasSpecialCase ? 6 : 1;
+    const annualTax = baseTax * taxMultiplier;
+    const maintenance = 30000; // 管理・清掃
+    const insurance = 15000;   // 火災保険
+    const total = annualTax + maintenance + insurance;
+    const total5y = total * 5;
+    const inheritancePenalty = hasInheritance ? '＋相続登記義務違反 最大10万円の過料リスク' : '';
+    document.getElementById('riskCalcContent').innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+        ${[
+          {l:'固定資産税（年）', v:annualTax.toLocaleString()+'円', note: hasSpecialCase?'※特定空き家で6倍':'', c: hasSpecialCase?'var(--red)':'var(--gold)'},
+          {l:'維持管理費（年）', v:maintenance.toLocaleString()+'円', note:'清掃・雑草刈りなど', c:'var(--text)'},
+          {l:'合計（年）', v:total.toLocaleString()+'円', note:'5年で'+Math.round(total5y/10000)+'万円', c:'var(--red)'},
+        ].map(s=>`<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:14px;text-align:center">
+          <div style="font-size:20px;font-weight:900;color:${s.c}">${s.v}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${s.l}</div>
+          ${s.note?`<div style="font-size:10px;color:var(--red);margin-top:2px">${s.note}</div>`:''}
+        </div>`).join('')}
+      </div>
+      <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px;font-size:12px;color:var(--text-muted);line-height:1.8">
+        ⚠️ 上記は概算です。実際の固定資産税は物件の評価額によって異なります。${inheritancePenalty}${hasSpecialCase?'<br>🚨 <strong style="color:var(--red)">特定空き家に指定されると固定資産税の住宅用地特例（1/6軽減）が外れ、税額が最大6倍になる場合があります。</strong>':''}
+      </div>`;
+  } else {
+    riskCard.style.display = 'none';
+  }
 
   // 推奨アクション
   const actCard = document.getElementById('scoreActionCard');
