@@ -590,12 +590,12 @@ function renderPipeline3() {
   const el = document.getElementById('pipeline-list');
   const statsEl = document.getElementById('pipeline-stats');
   const closed = deals3.filter(d=>d.status==='closed');
-  const totalFee = closed.reduce((s,d) => s + calcDealFee(d), 0);
+  const totalPrice = closed.reduce((s,d) => s + (d.price||0), 0);
   statsEl.innerHTML = [
-    {v:deals3.length+'件', l:'総商談数', c:'var(--text)'},
+    {v:deals3.length+'件', l:'登録商談数', c:'var(--text)'},
     {v:deals3.filter(d=>d.status==='nego').length+'件', l:'交渉中', c:'var(--gold)'},
-    {v:closed.length+'件', l:'成約', c:'var(--green)'},
-    {v: totalFee>0 ? Math.round(totalFee).toLocaleString()+'万円' : '—', l:'成約手数料合計', c:'var(--gold)'},
+    {v:closed.length+'件', l:'成約済み', c:'var(--green)'},
+    {v: totalPrice>0 ? totalPrice.toLocaleString()+'万円' : '—', l:'成約価格合計', c:'var(--gold)'},
   ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
 
   if(!deals3.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><p>商談がありません</p><p style="font-size:12px;margin-top:8px">マッチング結果から商談を作成するか、「商談追加」ボタンから登録してください</p></div>`; return; }
@@ -609,7 +609,7 @@ function renderPipeline3() {
       <span class="badge ${badgeClass[d.status]||'b-new'}">${D_STATUS_LABEL[d.status]||d.status}</span>
       <div>
         <div class="deal-price-col">${d.price?FMT(d.price):'—'}</div>
-        <div class="deal-commission">${d.price?'手数料 '+Math.round(calcDealFee(d)).toLocaleString()+'万':'—'}</div>
+        <div class="deal-commission">${d.price?'手数料上限 '+Math.round((d.price*3/100+2)*1.1).toLocaleString()+'万（片手目安）':'—'}</div>
       </div>
       <button class="btn btn-outline btn-sm" onclick="deleteDeal3(${d.id})">削除</button>
     </div>
