@@ -188,6 +188,26 @@
       .cta-section { padding: 32px 14px; }
       .tool-card:hover { transform: none; }
     }
+
+    /* Welcome-back banner */
+    .welcome-back {
+      display: none;
+      background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+      color: white; padding: 16px 40px;
+      align-items: center; justify-content: space-between; gap: 16px;
+      flex-wrap: wrap;
+    }
+    .welcome-back.visible { display: flex; }
+    .wb-text { font-size: 14px; font-weight: 700; }
+    .wb-text small { display: block; font-size: 12px; font-weight: 400; opacity: 0.8; margin-top: 2px; }
+    .wb-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #fde68a; color: #1e3a8a; font-size: 13px; font-weight: 900;
+      padding: 9px 20px; border-radius: 8px; text-decoration: none; white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .wb-link:hover { background: #fef08a; }
+    @media (max-width: 640px) { .welcome-back { padding: 14px 20px; } }
   </style>
 </head>
 <body>
@@ -196,6 +216,14 @@
     <div class="logo">不動産かんたんツール<span>powered by 石澤不動産</span></div>
     <div class="header-badge">全5ツール 無料</div>
   </header>
+
+  <div class="welcome-back" id="welcome-back-banner">
+    <div class="wb-text">
+      おかえりなさい！<span id="wb-tool-name"></span>に保存済みのデータがあります。
+      <small>前回の続きからすぐに確認できます</small>
+    </div>
+    <a class="wb-link" id="wb-link" href="#">続きを確認する →</a>
+  </div>
 
   <section class="hero">
     <div class="hero-label">登録不要・無料・すぐ使える</div>
@@ -487,6 +515,40 @@
       el.classList.add('visible');
     }
 
+    function updateWelcomeBack() {
+      const candidates = [];
+      try {
+        const props = JSON.parse(localStorage.getItem('saas_properties') || '[]');
+        const tenants = JSON.parse(localStorage.getItem('saas_tenants') || '[]');
+        if (props.length > 0) candidates.push({ score: props.length * 3 + tenants.length, name: '賃貸物件かんたん管理', href: 'tools/4-kanri-saas.html' });
+      } catch(e) {}
+      try {
+        const deals = JSON.parse(localStorage.getItem('akiya_deals') || '[]');
+        if (deals.length > 0) candidates.push({ score: deals.length * 2, name: '空き家活用診断', href: 'tools/2-akiya-hunter.html' });
+      } catch(e) {}
+      try {
+        const sellers = JSON.parse(localStorage.getItem('od_sellers') || '[]');
+        const buyers  = JSON.parse(localStorage.getItem('od_buyers')  || '[]');
+        if (sellers.length + buyers.length > 0) candidates.push({ score: sellers.length + buyers.length, name: '売主・買主マッチング', href: 'tools/3-owner-direct.html' });
+      } catch(e) {}
+      try {
+        const leads = JSON.parse(localStorage.getItem('satei_leads') || '[]');
+        if (leads.length > 0) candidates.push({ score: leads.length, name: 'AI物件査定', href: 'tools/1-ai-satei.html' });
+      } catch(e) {}
+
+      if (candidates.length === 0) return;
+      candidates.sort((a, b) => b.score - a.score);
+      const best = candidates[0];
+      const banner = document.getElementById('welcome-back-banner');
+      const nameEl = document.getElementById('wb-tool-name');
+      const linkEl = document.getElementById('wb-link');
+      if (banner && nameEl && linkEl) {
+        nameEl.textContent = best.name;
+        linkEl.href = best.href;
+        banner.classList.add('visible');
+      }
+    }
+
     function updateUsageBadges() {
       try {
         const leads = JSON.parse(localStorage.getItem('satei_leads') || '[]');
@@ -516,7 +578,10 @@
       } catch(e) {}
     }
 
-    document.addEventListener('DOMContentLoaded', updateUsageBadges);
+    document.addEventListener('DOMContentLoaded', function() {
+      updateWelcomeBack();
+      updateUsageBadges();
+    });
   </script>
 
 </body>
