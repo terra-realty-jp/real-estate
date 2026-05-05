@@ -527,7 +527,7 @@ function getExpiringTenants() {
 // ===== 物件 =====
 function renderProperties() {
   const el = document.getElementById('properties-list');
-  if(!properties.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏢</div><p>物件が登録されていません</p></div>`; return; }
+  if(!properties.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏢</div><p>物件が登録されていません</p><p style="font-size:12px;margin-top:8px">右上の「＋ 物件追加」ボタンからはじめてください</p><button class="btn btn-gold" style="margin-top:16px" onclick="openPropertyModal()">＋ 物件を追加する</button></div>`; return; }
   el.innerHTML = `<table>
     <thead><tr><th>物件名</th><th>所在地</th><th>種別</th><th>戸数</th><th>入居中</th><th>委託費率</th><th>管理開始</th><th></th></tr></thead>
     <tbody>
@@ -587,7 +587,7 @@ function saveProperty(){
 // ===== テナント =====
 function renderTenants(){
   const el=document.getElementById('tenants-list');
-  if(!tenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><p>テナントが登録されていません</p></div>`;return;}
+  if(!tenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><p>テナントが登録されていません</p><p style="font-size:12px;margin-top:8px">${properties.length?'右上の「＋ テナント追加」からはじめてください':'先に「物件管理」タブで物件を登録してください'}</p>${properties.length?'<button class="btn btn-gold" style="margin-top:16px" onclick="openTenantModal()">＋ テナントを追加する</button>':''}</div>`;return;}
   const now=new Date();
   const thisMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const thisMonthRents=rents.filter(r=>r.month===thisMonth);
@@ -764,7 +764,7 @@ function saveRent(){
 // ===== 修繕 =====
 function renderRepairs(){
   const el=document.getElementById('repairs-list');
-  if(!repairs.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔧</div><p>修繕依頼がありません</p></div>`;return;}
+  if(!repairs.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔧</div><p>修繕依頼がありません</p><p style="font-size:12px;margin-top:8px">右上の「＋ 修繕登録」から記録を追加してください</p><button class="btn btn-gold" style="margin-top:16px" onclick="openRepairModal()">＋ 修繕記録を追加する</button></div>`;return;}
   const PCOLOR={urgent:'var(--red)',high:'var(--orange)',normal:'var(--text-muted)',low:'var(--text-muted)'};
   const ST_B={open:'b-open',progress:'b-progress',done:'b-done'};
   el.innerHTML=`<table>
