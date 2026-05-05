@@ -133,6 +133,15 @@
       padding: 2px 8px; border-radius: 100px;
     }
 
+    /* Usage badge — shown when the user has saved data in a tool */
+    .card-usage-badge {
+      display: none; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 700; color: #166534;
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      padding: 2px 9px; border-radius: 100px;
+    }
+    .card-usage-badge.visible { display: inline-flex; }
+
     footer {
       border-top: 1px solid var(--border); padding: 32px 40px;
       text-align: center; color: var(--text-muted); font-size: 12px; background: var(--white);
@@ -211,6 +220,7 @@
             <div class="card-title">AI物件査定</div>
             <div class="card-step">TOOL 01</div>
             <div class="card-who">売却を考えている方</div>
+            <span class="card-usage-badge" id="badge-t1"></span>
           </div>
           <p class="card-desc">エリア・面積・築年数を入力するだけ、約3分で売却価格の目安がわかります。連絡先の入力は不要。まず相場を知りたい方に。</p>
           <div class="card-tags">
@@ -261,6 +271,7 @@
             <div class="card-title">空き家活用診断</div>
             <div class="card-step">TOOL 02</div>
             <div class="card-who">空き家を持っている方</div>
+            <span class="card-usage-badge" id="badge-t2"></span>
           </div>
           <p class="card-desc">実家の空き家を放置していませんか？12項目のチェックで「売る・貸す・活用する」のベストな選択肢と放置リスクをスコアで診断します。</p>
           <div class="card-tags">
@@ -305,6 +316,7 @@
             <div class="card-title">売主・買主マッチング</div>
             <div class="card-step">TOOL 03</div>
             <div class="card-who">売りたい方・買いたい方</div>
+            <span class="card-usage-badge" id="badge-t3"></span>
           </div>
           <p class="card-desc">売りたい物件・買いたい条件を登録して、AIが条件の合う相手を自動でマッチング。仲介手数料の目安も価格帯別に確認できます。</p>
           <div class="card-tags">
@@ -349,6 +361,7 @@
             <div class="card-title">賃貸物件かんたん管理</div>
             <div class="card-step">TOOL 04</div>
             <div class="card-who">賃貸オーナーの方</div>
+            <span class="card-usage-badge" id="badge-t4"></span>
           </div>
           <p class="card-desc">「今月まだ払っていない人は誰？」「契約更新が近いテナントは？」が一目でわかります。家賃入金・修繕・テナント管理をまとめて無料で。</p>
           <div class="card-tags">
@@ -466,6 +479,44 @@
       btn.classList.toggle('open', isOpen);
       btn.textContent = isOpen ? '閉じる ✕' : '使い方';
     }
+
+    function setBadge(id, text) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      el.classList.add('visible');
+    }
+
+    function updateUsageBadges() {
+      try {
+        const leads = JSON.parse(localStorage.getItem('satei_leads') || '[]');
+        if (leads.length > 0) setBadge('badge-t1', '📋 ' + leads.length + '件の問い合わせ記録');
+      } catch(e) {}
+
+      try {
+        const deals = JSON.parse(localStorage.getItem('akiya_deals') || '[]');
+        const checked = JSON.parse(localStorage.getItem('akiya_checked') || '[]');
+        if (deals.length > 0) setBadge('badge-t2', '📌 ' + deals.length + '件管理中');
+        else if (checked.length > 0) setBadge('badge-t2', '✓ 診断済み');
+      } catch(e) {}
+
+      try {
+        const sellers = JSON.parse(localStorage.getItem('od_sellers') || '[]');
+        const buyers  = JSON.parse(localStorage.getItem('od_buyers')  || '[]');
+        const total = sellers.length + buyers.length;
+        if (total > 0) setBadge('badge-t3', '🤝 ' + total + '件登録済み');
+      } catch(e) {}
+
+      try {
+        const props   = JSON.parse(localStorage.getItem('saas_properties') || '[]');
+        const tenants = JSON.parse(localStorage.getItem('saas_tenants')    || '[]');
+        if (props.length > 0) {
+          setBadge('badge-t4', '🏢 ' + props.length + '物件・' + tenants.length + '名管理中');
+        }
+      } catch(e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', updateUsageBadges);
   </script>
 
 </body>
