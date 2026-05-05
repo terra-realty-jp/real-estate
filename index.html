@@ -189,6 +189,19 @@
       .tool-card:hover { transform: none; }
     }
 
+    /* FAQ */
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q {
+      width: 100%; background: none; border: none; text-align: left; cursor: pointer;
+      padding: 18px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      font-size: 14px; font-weight: 700; color: var(--text); font-family: inherit; line-height: 1.5;
+    }
+    .faq-q:hover { color: var(--blue); }
+    .faq-chevron { font-size: 16px; color: var(--text-muted); transition: transform 0.25s; flex-shrink: 0; }
+    .faq-chevron.open { transform: rotate(180deg); }
+    .faq-a { display: none; font-size: 13px; color: var(--text-muted); line-height: 1.9; padding-bottom: 16px; }
+    .faq-a.open { display: block; }
+
     /* Welcome-back banner */
     .welcome-back {
       display: none;
@@ -482,6 +495,14 @@
 
   </section>
 
+  <!-- FAQ Section -->
+  <section style="background: var(--white); padding: 64px 40px;">
+    <div style="max-width: 760px; margin: 0 auto;">
+      <div class="section-label">よくある質問</div>
+      <div id="faq-list"></div>
+    </div>
+  </section>
+
   <section class="cta-section">
     <div class="cta-label">PROFESSIONAL SUPPORT</div>
     <h2 class="cta-title">ツールで確認したら、<br><em>専門家に相談してみませんか？</em></h2>
@@ -501,6 +522,37 @@
   </footer>
 
   <script>
+    const FAQS = [
+      { q: '登録・会員登録は必要ですか？費用はかかりますか？', a: 'いいえ。5つのツールはすべて無料・登録不要でご利用いただけます。ページを開いてすぐに使い始めることができます。連絡先の入力も任意で、入力しなくても査定結果などをご確認いただけます。' },
+      { q: '入力したデータはどこに保存されますか？外部に送信されますか？', a: 'データはすべてあなたのブラウザ内（localStorage）にのみ保存されます。外部のサーバーには一切送信されません。ただし、同じブラウザ・同じデバイスでのみデータが引き継がれます。別の端末やブラウザをお使いの場合はデータが引き継がれません。' },
+      { q: 'AI査定の結果はどのくらい正確ですか？', a: 'エリア・物件種別・面積・築年数・駅距離などをもとにした統計的な概算です。実際の取引価格とは異なる場合があります。あくまで「相場感をつかむ目安」としてご利用ください。正確な査定には不動産会社への無料相談をおすすめしています。' },
+      { q: '不動産の知識がなくても使えますか？', a: 'はい、初心者の方を想定して作られています。専門用語には「？」マークの説明を付けており、投資シミュレーターにはかんたん入力モードもあります。わからない点は石澤不動産に無料でご質問いただけます。' },
+      { q: '石澤不動産に相談すると費用がかかりますか？', a: '初回相談は無料です。「査定結果を見てもらいたい」「このツールの数字について聞きたい」という気軽なご連絡から大歓迎です。売却・購入・投資・賃貸管理など、どのようなご相談でも対応しています。' },
+      { q: 'スマートフォンでも使えますか？', a: 'はい、スマートフォン・タブレット・パソコンのすべてに対応しています。インターネット接続があればお使いいただけます（一部のグラフ表示はインターネット接続が必要です）。' },
+      { q: 'どのツールを使えばいいかわかりません', a: '「自分の家をいくらで売れるか知りたい」→ AI物件査定 / 「実家の空き家をどうするか迷っている」→ 空き家活用診断 / 「売りたい/買いたい物件を探している」→ 売主・買主マッチング / 「賃貸の入居者や修繕を管理したい」→ 賃貸物件かんたん管理 / 「投資用物件の収益を計算したい」→ 不動産投資シミュレーター をお使いください。' },
+    ];
+
+    function buildFAQ() {
+      const el = document.getElementById('faq-list');
+      if (!el) return;
+      el.innerHTML = FAQS.map((f, i) => `
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(${i})">
+            <span>Q. ${f.q}</span>
+            <span class="faq-chevron" id="faq-chevron-${i}">▼</span>
+          </button>
+          <div class="faq-a" id="faq-a-${i}">A. ${f.a}</div>
+        </div>
+      `).join('');
+    }
+
+    function toggleFAQ(i) {
+      const a = document.getElementById('faq-a-'+i);
+      const c = document.getElementById('faq-chevron-'+i);
+      const isOpen = a.classList.toggle('open');
+      c.classList.toggle('open', isOpen);
+    }
+
     function toggleGuide(id, btn) {
       const panel = document.getElementById(id);
       const isOpen = panel.classList.toggle('open');
@@ -581,6 +633,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       updateWelcomeBack();
       updateUsageBadges();
+      buildFAQ();
     });
   </script>
 
