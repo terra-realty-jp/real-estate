@@ -365,14 +365,18 @@ const CHECKS = [
   { id:'c12', label:'このまま放置するつもりはない',                  score: 6,  cat:'意向' },
 ];
 
-let checked = new Set();
+let checked = new Set(JSON.parse(localStorage.getItem('akiya_checked') || '[]'));
+
+function saveChecked() {
+  try { localStorage.setItem('akiya_checked', JSON.stringify([...checked])); } catch(e) {}
+}
 
 function buildChecklist() {
   const el = document.getElementById('checklist');
   el.innerHTML = CHECKS.map(c => `
-    <div class="check-item" id="ci_${c.id}" onclick="toggleCheck('${c.id}')">
+    <div class="check-item${checked.has(c.id)?' checked':''}" id="ci_${c.id}" onclick="toggleCheck('${c.id}')">
       <div class="check-box" id="cb_${c.id}">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" id="ck_${c.id}" style="display:none"><polyline points="20 6 9 17 4 12"/></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" id="ck_${c.id}" style="display:${checked.has(c.id)?'block':'none'}"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <div class="check-label">${c.label} <span style="font-size:11px;color:var(--text-muted);">[${c.cat}]</span></div>
       <div class="check-score">+${c.score}</div>
@@ -385,6 +389,7 @@ function toggleCheck(id) {
   else checked.add(id);
   document.getElementById('ci_'+id).classList.toggle('checked', checked.has(id));
   document.getElementById('ck_'+id).style.display = checked.has(id) ? 'block' : 'none';
+  saveChecked();
   updateScore();
 }
 
@@ -474,6 +479,7 @@ function getActions(score, ids) {
 
 function resetScore() {
   checked.clear();
+  saveChecked();
   document.querySelectorAll('.check-item').forEach(el => el.classList.remove('checked'));
   document.querySelectorAll('[id^=ck_]').forEach(el => el.style.display='none');
   updateScore();
