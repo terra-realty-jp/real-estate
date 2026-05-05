@@ -434,9 +434,15 @@
 
       <div class="cta-box">
         <p id="cta-text">この査定結果を持って、石澤不動産に無料でご相談いただけます。<br>「この結果について聞きたい」という気軽なご連絡から大歓迎です。</p>
-        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">
           <a href="mailto:shinji.japaaan@gmail.com?subject=AI査定の結果について相談したい&body=査定結果を確認しました。詳しくご相談したいです。" class="btn btn-gold" style="text-decoration:none">石澤不動産に相談する →</a>
           <button class="btn btn-outline" onclick="resetForm()">別の物件を査定する</button>
+        </div>
+        <div style="text-align:center">
+          <a id="line-share-btn" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#06C755;color:#fff;font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 7.5c.14 1.96-.69 3.9-2.36 5.38-.56.49-1.13.95-1.75 1.37-.31.21-.63.41-.97.58-.16.08-.33.1-.48.04-.25-.09-.33-.34-.25-.6.09-.29.2-.58.32-.86.13-.29.1-.56-.1-.79-.63-.74-1.02-1.62-1.14-2.57-.22-1.73.56-3.41 2.04-4.42.64-.44 1.37-.68 2.14-.66.73.02 1.42.32 1.95.84.54.52.8 1.2.6 1.69z"/></svg>
+            LINEで共有する
+          </a>
         </div>
       </div>
     </div>
@@ -657,6 +663,11 @@ function calcAndShowResult() {
   };
   leads.unshift(lead);
   localStorage.setItem('satei_leads', JSON.stringify(leads));
+
+  // LINE シェアURL更新
+  const shareText = `不動産AI査定ツールで物件価格を調べました。推定価格: ${fmtV(price)}（石澤不動産の無料ツール）`;
+  const lineBtn = document.getElementById('line-share-btn');
+  if(lineBtn) lineBtn.href = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(shareText);
 
   setStep(4);
   renderLeads();
