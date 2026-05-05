@@ -438,7 +438,12 @@ function autoCalc() {
 
 function analyze() {
   const inp = getInputs();
-  if(!inp.price || !inp.rent) { alert('購入価格と家賃を入力してください'); return; }
+  if(!inp.price || !inp.rent) {
+    const priceEl=document.getElementById('i_price'), rentEl=document.getElementById('i_rent');
+    if(!inp.price){priceEl.style.borderColor='#ef4444';const e=document.createElement('span');e.style.cssText='color:#ef4444;font-size:11px;margin-top:2px;display:block;';e.textContent='購入価格を入力してください';priceEl.parentNode.appendChild(e);priceEl.focus();}
+    if(!inp.rent){rentEl.style.borderColor='#ef4444';const e=document.createElement('span');e.style.cssText='color:#ef4444;font-size:11px;margin-top:2px;display:block;';e.textContent='月額家賃を入力してください';rentEl.parentNode.appendChild(e);if(inp.price)rentEl.focus();}
+    return;
+  }
   const r = calcAll(inp);
   lastResult = {inp, r};
   renderResult(inp, r);
@@ -829,9 +834,15 @@ function setMode(m) {
 }
 
 function analyzeSimple() {
-  const price = parseFloat(document.getElementById('s_price').value)||0;
-  const rent  = parseFloat(document.getElementById('s_rent').value)||0;
-  if(!price||!rent) { alert('購入価格と月額家賃を入力してください'); return; }
+  const priceEl = document.getElementById('s_price');
+  const rentEl  = document.getElementById('s_rent');
+  [priceEl, rentEl].forEach(el => { el.style.borderColor=''; const e=el.parentNode.querySelector('.field-error'); if(e)e.remove(); });
+  let hasErr = false;
+  if(!priceEl.value||parseFloat(priceEl.value)<=0){const e=document.createElement('span');e.className='field-error';e.style.cssText='color:#ef4444;font-size:11px;margin-top:2px;display:block;';e.textContent='購入価格を入力してください';priceEl.style.borderColor='#ef4444';priceEl.parentNode.appendChild(e);hasErr=true;}
+  if(!rentEl.value||parseFloat(rentEl.value)<=0){const e=document.createElement('span');e.className='field-error';e.style.cssText='color:#ef4444;font-size:11px;margin-top:2px;display:block;';e.textContent='月額家賃を入力してください';rentEl.style.borderColor='#ef4444';rentEl.parentNode.appendChild(e);hasErr=true;}
+  if(hasErr){if(!priceEl.value)priceEl.focus();else rentEl.focus();return;}
+  const price = parseFloat(priceEl.value);
+  const rent  = parseFloat(rentEl.value);
   const downpay = parseFloat(document.getElementById('s_downpay').value)||0;
   const loan = Math.max(0, price - downpay);
   // copy simple inputs → detail inputs
