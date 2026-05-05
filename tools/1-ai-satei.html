@@ -476,6 +476,10 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 7.5c.14 1.96-.69 3.9-2.36 5.38-.56.49-1.13.95-1.75 1.37-.31.21-.63.41-.97.58-.16.08-.33.1-.48.04-.25-.09-.33-.34-.25-.6.09-.29.2-.58.32-.86.13-.29.1-.56-.1-.79-.63-.74-1.02-1.62-1.14-2.57-.22-1.73.56-3.41 2.04-4.42.64-.44 1.37-.68 2.14-.66.73.02 1.42.32 1.95.84.54.52.8 1.2.6 1.69z"/></svg>
             LINEで共有する
           </a>
+          <button id="native-share-btn" onclick="nativeShare()" style="display:none;align-items:center;gap:8px;background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:inherit">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            シェアする
+          </button>
           <button id="copy-result-btn" onclick="copyResultText()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);color:var(--text-muted);border:1px solid rgba(255,255,255,0.12);font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:inherit">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
             テキストでコピー
@@ -813,6 +817,10 @@ function calcAndShowResult() {
   const lineBtn = document.getElementById('line-share-btn');
   if(lineBtn) lineBtn.href = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(shareText);
 
+  // Web Share API ボタン（モバイル対応ブラウザのみ表示）
+  const nativeShareBtn = document.getElementById('native-share-btn');
+  if(nativeShareBtn && navigator.share) nativeShareBtn.style.display = 'inline-flex';
+
   setStep(4);
   renderLeads();
 }
@@ -877,7 +885,17 @@ function showHistoryToast(msg, isError) {
   setTimeout(()=>t.remove(), isError?4300:2300);
 }
 
-// ===== コピー機能 =====
+// ===== Web Share / コピー機能 =====
+function nativeShare() {
+  if(!currentEstimate) return;
+  const fmtV = v => v >= 100000000 ? Math.round(v/10000000)/10+'億円' : Math.round(v/10000).toLocaleString()+'万円';
+  navigator.share({
+    title: 'AI不動産査定結果',
+    text: `物件の推定価格: ${fmtV(currentEstimate.price)}\n価格レンジ: ${fmtV(currentEstimate.low)} 〜 ${fmtV(currentEstimate.high)}\n売却想定期間: ${currentEstimate.period}\n\n石澤不動産の無料AI査定ツール`,
+    url: location.href
+  }).catch(()=>{});
+}
+
 function copyResultText() {
   if(!currentEstimate) return;
   const fmtV = v => v >= 100000000 ? Math.round(v/10000000)/10+'億円' : Math.round(v/10000).toLocaleString()+'万円';
