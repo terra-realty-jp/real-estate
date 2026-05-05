@@ -94,7 +94,7 @@
     /* 収益チャート */
     .chart-container { position: relative; height: 280px; }
 
-    @media(max-width:700px) { .form-grid,.form-grid-3 { grid-template-columns:1fr; } .kpi-grid { grid-template-columns:1fr 1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .dashboard-grid { grid-template-columns:1fr!important; } }
+    @media(max-width:700px) { .form-grid,.form-grid-3 { grid-template-columns:1fr; } .kpi-grid { grid-template-columns:1fr 1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .dashboard-grid { grid-template-columns:1fr!important; } #welcome-guide>div:last-child { grid-template-columns:1fr!important; } }
     @media(max-width:375px) { .kpi-grid { grid-template-columns:1fr; } .kpi-value { font-size:20px; } .topnav { padding:12px 14px; } .modal-overlay { padding:12px; } .modal { padding:18px 16px; } .btn { min-height:44px; } input,select,textarea { min-height:44px; } }
     @media print {
       .topnav,.tabs,.btn { display:none!important; }
@@ -138,6 +138,27 @@
 <div class="main">
   <h1 class="page-title">収益<span>ダッシュボード</span></h1>
   <p class="page-desc">管理物件の収益・入金状況・更新アラートをひと目で確認。未入金テナントの対応も画面上で完結します。</p>
+  <div id="welcome-guide" style="display:none;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:28px;margin-bottom:24px">
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px;color:var(--gold)">🏘️ はじめての方へ — 3ステップで使い始めましょう</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div style="background:var(--dark3);border-radius:10px;padding:16px">
+        <div style="font-size:20px;margin-bottom:8px">1️⃣</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">物件を登録する</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.7">「物件管理」タブから管理する建物を追加してください（アパート・マンション・戸建て）</div>
+        <button class="btn btn-gold btn-sm" onclick="switchTab('properties')">物件を追加する →</button>
+      </div>
+      <div style="background:var(--dark3);border-radius:10px;padding:16px">
+        <div style="font-size:20px;margin-bottom:8px">2️⃣</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">テナントを登録する</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.7">「テナント管理」タブで入居者の名前・家賃・契約期間を入力してください</div>
+      </div>
+      <div style="background:var(--dark3);border-radius:10px;padding:16px">
+        <div style="font-size:20px;margin-bottom:8px">3️⃣</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">毎月の入金を記録する</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.7">「家賃台帳」タブで入金があったら記録します。ダッシュボードに自動集計されます</div>
+      </div>
+    </div>
+  </div>
   <div class="kpi-grid" id="kpi-grid"></div>
   <div class="dashboard-grid" style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
     <div class="card">
@@ -376,6 +397,10 @@ function showErrorToast(msg) {
 
 // ===== ダッシュボード =====
 function renderDashboard() {
+  // はじめての方向けガイド
+  const guideEl = document.getElementById('welcome-guide');
+  if(guideEl) guideEl.style.display = properties.length === 0 ? 'block' : 'none';
+
   const activeTenants = tenants.filter(t=>t.status==='active');
   const totalUnits = properties.reduce((s,p)=>s+(p.units||0),0);
   const monthlyRent = activeTenants.reduce((s,t)=>s+(t.rent||0),0);
