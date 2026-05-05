@@ -138,8 +138,8 @@
 </div>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('sellers')">🏠 売主リスト</button>
-  <button class="tab-btn" onclick="switchTab('buyers')">🙋 買主リスト</button>
+  <button class="tab-btn active" onclick="switchTab('sellers')">🏠 売却情報</button>
+  <button class="tab-btn" onclick="switchTab('buyers')">🙋 購入希望</button>
   <button class="tab-btn" onclick="switchTab('matching')">✨ AIマッチング</button>
   <button class="tab-btn" onclick="switchTab('pipeline')">📊 商談パイプライン</button>
   <button class="tab-btn" onclick="switchTab('fee')">💰 手数料シミュ</button>
@@ -148,13 +148,24 @@
 <!-- 売主タブ -->
 <div id="tab-sellers" class="tab-content active">
 <div class="main">
-  <h1 class="page-title"><span>売主</span>リスト</h1>
-  <p class="page-desc">売却を検討しているオーナーを登録・管理します。AIマッチングで買主と自動マッチングされます。</p>
+  <h1 class="page-title"><span>売却</span>情報を登録</h1>
+  <p class="page-desc">売却したい物件の条件を入力してください。石澤不動産に送ると、購入希望者とのマッチングをお手伝いします。</p>
+
+  <div style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:12px;line-height:1.8;display:flex;align-items:flex-start;gap:12px">
+    <span style="font-size:18px;flex-shrink:0">💾</span>
+    <div>
+      <strong style="color:#93c5fd">入力した情報はこのブラウザにのみ保存されます（外部には送信されません）。</strong><br>
+      <span style="color:var(--text-muted)">石澤不動産にメールで情報を送ると、購入希望者との実際のマッチングを無料でご支援します。</span>
+      <div style="margin-top:8px">
+        <a href="mailto:shinji.japaaan@gmail.com?subject=売却物件の情報を送ります&body=物件の情報をお送りします。マッチングをお願いします。" style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none">石澤不動産に相談する →</a>
+      </div>
+    </div>
+  </div>
 
   <div id="seller-stats" class="stats-grid"></div>
 
   <div style="display:flex;justify-content:flex-end;margin-bottom:20px;gap:10px">
-    <button class="btn btn-gold" onclick="openSellerModal()">＋ 売主登録</button>
+    <button class="btn btn-gold" onclick="openSellerModal()">＋ 売却情報を入力</button>
     <button class="btn btn-outline btn-sm" onclick="exportCSV('sellers')">CSVエクスポート</button>
   </div>
   <div id="sellers-list"></div>
@@ -164,13 +175,24 @@
 <!-- 買主タブ -->
 <div id="tab-buyers" class="tab-content">
 <div class="main">
-  <h1 class="page-title"><span>買主</span>リスト</h1>
-  <p class="page-desc">購入希望者の条件を登録します。登録後AIが自動でマッチング候補を生成します。</p>
+  <h1 class="page-title"><span>購入希望</span>条件を登録</h1>
+  <p class="page-desc">購入したい物件の希望条件を入力してください。石澤不動産に送ると、条件に合う物件を探してご連絡します。</p>
+
+  <div style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:12px;line-height:1.8;display:flex;align-items:flex-start;gap:12px">
+    <span style="font-size:18px;flex-shrink:0">💾</span>
+    <div>
+      <strong style="color:#93c5fd">入力した情報はこのブラウザにのみ保存されます（外部には送信されません）。</strong><br>
+      <span style="color:var(--text-muted)">石澤不動産にメールで情報を送ると、条件に合う物件・売主とのマッチングを無料でご支援します。</span>
+      <div style="margin-top:8px">
+        <a href="mailto:shinji.japaaan@gmail.com?subject=購入希望条件を送ります&body=購入希望の条件をお送りします。マッチングをお願いします。" style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none">石澤不動産に相談する →</a>
+      </div>
+    </div>
+  </div>
 
   <div id="buyer-stats" class="stats-grid"></div>
 
   <div style="display:flex;justify-content:flex-end;margin-bottom:20px;gap:10px">
-    <button class="btn btn-gold" onclick="openBuyerModal()">＋ 買主登録</button>
+    <button class="btn btn-gold" onclick="openBuyerModal()">＋ 購入希望を入力</button>
     <button class="btn btn-outline btn-sm" onclick="exportCSV('buyers')">CSVエクスポート</button>
   </div>
   <div id="buyers-list"></div>
@@ -546,7 +568,12 @@ function runMatching() {
         <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${p.b.area} | ${TYPE_LABEL[p.b.type]}</div>
       </div>
     </div>
-  `).join('');
+  `).join('') +
+  `<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:20px 24px;margin-top:20px;text-align:center">
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">マッチングが見つかりました！次のステップ</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px">このマッチングを実際に進めるには、石澤不動産にご連絡ください。物件調査・売買契約・資金計画まで無料でサポートします。</div>
+    <a href="mailto:shinji.japaaan@gmail.com?subject=マッチング結果について相談したい&body=マッチングツールで候補が見つかりました。詳しくご相談したいです。" style="display:inline-block;background:var(--gold);color:#000;font-weight:700;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:13px">石澤不動産に無料相談する →</a>
+  </div>`;
 }
 
 function createDealFromMatch(seller, buyer, price) {
