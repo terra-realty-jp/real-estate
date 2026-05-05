@@ -53,7 +53,7 @@
     .btn-red { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
 
     /* KPI */
-    .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 24px; }
     .kpi { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 18px; position: relative; overflow: hidden; }
     .kpi::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(201,168,76,0.03) 0%,transparent 60%); }
     .kpi-label { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 8px; }
@@ -94,6 +94,7 @@
     /* 収益チャート */
     .chart-container { position: relative; height: 280px; }
 
+    @media(max-width:900px) { .kpi-grid { grid-template-columns:repeat(3,1fr); } }
     @media(max-width:700px) { .form-grid,.form-grid-3 { grid-template-columns:1fr; } .kpi-grid { grid-template-columns:1fr 1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .dashboard-grid { grid-template-columns:1fr!important; } #welcome-guide>div:last-child { grid-template-columns:1fr!important; } }
     @media(max-width:375px) { .kpi-grid { grid-template-columns:1fr; } .kpi-value { font-size:20px; } .topnav { padding:12px 14px; } .modal-overlay { padding:12px; } .modal { padding:18px 16px; } .btn { min-height:44px; } input,select,textarea { min-height:44px; } }
     @media print {
@@ -455,10 +456,17 @@ function renderDashboard() {
 
   const occupancyRate = totalUnits>0 ? Math.round(activeTenants.length/totalUnits*100) : 0;
 
+  // 今月の修繕費
+  const thisMonthRepairCost = repairs.filter(r=>{
+    const d = r.done || r.date || '';
+    return d.startsWith(thisMonth);
+  }).reduce((s,r)=>s+(Number(r.cost)||0),0);
+
   document.getElementById('kpi-grid').innerHTML = [
     {l:'管理物件数',v:properties.length+'棟',s:`${totalUnits}戸 管理中`,c:'var(--text)'},
     {l:'入居率',v:occupancyRate+'%',s:`${activeTenants.length}/${totalUnits}戸 入居中`,c:occupancyRate>=80?'var(--green)':'var(--orange)'},
     {l:'月間家賃収入',v:(monthlyRent/10000).toLocaleString()+'万円',s:'入居者全体合計',c:'var(--gold)'},
+    {l:'今月修繕費',v:thisMonthRepairCost>0?Math.round(thisMonthRepairCost/10000)+'万円':'—',s:thisMonthRepairCost>0?`${repairs.filter(r=>{const d=r.done||r.date||'';return d.startsWith(thisMonth);}).length}件分`:'今月の修繕なし',c:thisMonthRepairCost>0?'var(--orange)':'var(--text-muted)'},
     {l:'月間管理委託費（目安）',v:Math.round(manageFee/10000)+'万円',s:'家賃収入×委託費率',c:'var(--text-muted)'},
   ].map(k=>`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
 
