@@ -194,6 +194,16 @@
       <div class="score-bar"><div class="score-fill" id="scoreBar" style="width:0%"></div></div>
       <div class="score-rank" id="scoreRank">—</div>
       <div id="scoreComment" style="font-size:13px;color:var(--text-muted);margin-top:8px;">チェックリストを入力してください</div>
+      <div id="score-share-row" style="display:none;margin-top:16px;display:none;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button id="score-native-share" onclick="shareScore()" style="display:none;align-items:center;gap:8px;background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          診断結果をシェア
+        </button>
+        <button onclick="copyScore()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);color:var(--text-muted);border:1px solid rgba(255,255,255,0.12);font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:inherit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          テキストでコピー
+        </button>
+      </div>
     </div>
   </div>
 
@@ -465,6 +475,14 @@ function updateScore() {
     actCard.style.display = 'none';
   }
   renderTimeline(capped, [...checked]);
+
+  // シェアボタン表示
+  const shareRow = document.getElementById('score-share-row');
+  if(shareRow) {
+    shareRow.style.display = capped > 0 ? 'flex' : 'none';
+    const nativeBtn = document.getElementById('score-native-share');
+    if(nativeBtn) nativeBtn.style.display = (capped > 0 && navigator.share) ? 'inline-flex' : 'none';
+  }
 }
 
 function getActions(score, ids) {
@@ -520,6 +538,42 @@ function renderTimeline(score, ids) {
       </div>
     </div>
   `).join('');
+}
+
+function shareScore() {
+  const score = parseInt(document.getElementById('scoreNum').textContent) || 0;
+  const rank = document.getElementById('scoreRank').textContent || '—';
+  const comment = document.getElementById('scoreComment').textContent || '';
+  if(!navigator.share) return;
+  navigator.share({
+    title: '空き家活用診断結果',
+    text: `空き家の緊急度診断スコア: ${score}点（${rank}ランク）\n${comment}\n\n石澤不動産の無料診断ツール`,
+    url: location.href
+  }).catch(()=>{});
+}
+
+function copyScore() {
+  const score = parseInt(document.getElementById('scoreNum').textContent) || 0;
+  const rank = document.getElementById('scoreRank').textContent || '—';
+  const comment = document.getElementById('scoreComment').textContent || '';
+  const text = `【空き家活用診断結果】\n緊急度スコア: ${score}点（${rank}ランク）\n${comment}\n\n石澤不動産 無料診断ツール: ${location.href}`;
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(()=>showScoreToast('コピーしました')).catch(()=>showScoreToast('コピー失敗', true));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); showScoreToast('コピーしました'); } catch(e) { showScoreToast('コピー失敗', true); }
+    ta.remove();
+  }
+}
+
+function showScoreToast(msg, isError) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:${isError?'#ef4444':'#22c55e'};color:#fff;padding:11px 26px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.25);pointer-events:none;white-space:nowrap`;
+  t.textContent = msg; document.body.appendChild(t);
+  setTimeout(()=>t.style.opacity='0', isError?4000:2000);
+  setTimeout(()=>t.remove(), isError?4300:2300);
 }
 
 function resetScore() {
