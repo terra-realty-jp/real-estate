@@ -73,10 +73,6 @@
     .score-rank.B { color: var(--blue); }
     .score-rank.C { color: var(--text-muted); }
 
-    /* DM生成 */
-    .dm-preview { background: var(--dark3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 24px; font-size: 13px; line-height: 2; white-space: pre-wrap; min-height: 300px; color: var(--text); }
-    .dm-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-
     /* 案件パイプライン */
     .pipeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
     .pipe-col { background: var(--dark3); border-radius: 12px; padding: 16px; min-height: 300px; }
@@ -127,13 +123,12 @@
     }
     @media(max-width:375px) { .topnav { padding:12px 14px; } .btn { min-height:44px; } input,select,textarea { min-height:44px; } }
     @media print {
-      .topnav,.tabs,.btn,.dm-actions { display:none!important; }
+      .topnav,.tabs,.btn { display:none!important; }
       body { background:#fff!important; color:#000!important; }
       .card { background:#fff!important; border:1px solid #ccc!important; border-radius:4px!important; color:#000!important; page-break-inside:avoid; }
       .main { padding:0!important; max-width:100%!important; }
       .tab-content { display:block!important; }
-      .dm-preview { border:1px solid #ccc!important; color:#000!important; background:#fff!important; }
-      :root { --text:#000; --text-muted:#555; --gold:#c9a84c; }
+:root { --text:#000; --text-muted:#555; --gold:#c9a84c; }
     }
   </style>
 </head>
@@ -494,121 +489,6 @@ function saveDeal() {
   document.getElementById('d_status').value = score >= 50 ? 'contact' : 'prospect';
   openNewDealModal();
 }
-
-// ===== DM生成 =====
-const DM_TEMPLATES = {
-  polite: (owner, addr, price, extra) => `
-拝啓
-
-突然のお手紙にて失礼いたします。
-私、不動産コンサルタントの石澤紳司と申します。
-
-この度、${addr}にございます御物件につきまして、
-ご所有者様に一度ご相談させていただきたく、ご連絡差し上げました。
-
-昨今、空き家の管理や維持費のご負担、また将来的な活用についてお悩みの方が
-大変多くなっております。弊社では、所有者様のご事情に合わせた柔軟なご提案を
-させていただいております。
-
-もしよろしければ、一度お気軽にお電話・メールにてご相談ください。
-${price ? `なお、現時点での概算として${price}程度でのお取引も検討しております。` : ''}
-${extra ? extra : ''}
-
-ご連絡をお待ちしております。
-何卒よろしくお願い申し上げます。
-
-                              敬具
-
-石澤 紳司（いしざわ しんじ）
-不動産コンサルタント
-TEL: 【電話番号】
-MAIL: 【メールアドレス】
-`.trim(),
-
-  benefit: (owner, addr, price, extra) => `
-${owner || 'ご所有者様'}へ
-
-突然のご連絡、誠に失礼いたします。
-石澤紳司と申します。不動産の買取・売却を専門に行っております。
-
-${addr}の物件について、ぜひお話を聞かせていただけないでしょうか。
-
-【弊社買取のメリット】
-✅ 仲介手数料は一切不要
-✅ 現状のままでOK（リフォーム・清掃不要）
-✅ 最短2週間でのお引き渡し可能
-✅ 税金・法律面のご相談も無料サポート
-${price ? `✅ 概算 ${price} での買取を検討中` : ''}
-
-空き家を持ち続けることによる固定資産税・管理費の負担から解放されませんか。
-${extra ? extra : ''}
-
-まずはお気軽にご連絡ください。
-石澤紳司 TEL: 【電話番号】 / MAIL: 【メールアドレス】
-`.trim(),
-
-  urgent: (owner, addr, price, extra) => `
-${owner || 'ご所有者様'}
-
-突然のご連絡、大変失礼いたします。石澤紳司と申します。
-
-${addr}の物件についてご連絡しております。
-現在、空き家の長期放置による近隣問題（草木の繁茂、害虫・動物の発生等）が
-社会問題化しており、行政による「特定空き家」指定を受けると固定資産税の
-優遇措置（住宅用地特例）が外れ、税額が最大6倍になるケースもございます。
-
-現状のうちに適切に手放すことで、この問題を未然に回避できます。
-${price ? `買取価格は ${price} を目安に検討可能です。` : ''}
-${extra ? extra : ''}
-
-ぜひ一度、無料相談だけでもご検討ください。
-石澤紳司 TEL: 【電話番号】 / MAIL: 【メールアドレス】
-`.trim(),
-
-  inheritance: (owner, addr, price, extra) => `
-${owner || '相続人・ご所有者様'}
-
-突然のお手紙にて失礼いたします。石澤紳司と申します。
-
-${addr}の物件について、相続・空き家対策のご提案をさせていただきたく
-ご連絡差し上げました。
-
-相続した物件をそのままにしておくと、
-・固定資産税（毎年）・管理費・修繕費の負担
-・相続放棄ができなくなるリスク
-・2024年4月より「相続登記の義務化」（未了で過料のリスク）
-などのリスクがございます。
-
-弊社では相続物件の買取・整理を数多く手がけており、
-税理士・司法書士との連携で、ワンストップでサポートいたします。
-${price ? `概算 ${price} での買取を目標に動いております。` : ''}
-${extra ? extra : ''}
-
-お気軽にご相談ください。
-石澤紳司 TEL: 【電話番号】 / MAIL: 【メールアドレス】
-`.trim(),
-
-  investment: (owner, addr, price, extra) => `
-${owner || 'ご所有者様'}
-
-突然のご連絡、失礼いたします。石澤紳司と申します。
-不動産の再生・活用を専門に手がけております。
-
-${addr}の物件について、リノベーション・活用のご提案をさせていただきたく
-ご連絡しております。
-
-現在、空き家をリノベーションして民泊・シェアハウス・賃貸物件として
-活用する事例が急増しており、地域の空き家問題解消にも貢献できます。
-
-弊社では買取後のリノベ〜活用まで一貫してサポートしており、
-所有者様が手間をかけることなく、まとまった売却益を得ていただけます。
-${price ? `現時点での買取価格：${price} を想定しております。` : ''}
-${extra ? extra : ''}
-
-ぜひ一度お会いしてご説明させてください。
-石澤紳司 TEL: 【電話番号】 / MAIL: 【メールアドレス】
-`.trim(),
-};
 
 // ===== トースト通知 =====
 function showToast(msg, isError) {
