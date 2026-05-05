@@ -883,7 +883,7 @@ function exportData(type){
     data=repairs; headers=['物件','部屋','内容','優先度','報告日','費用','業者','ステータス'];
     rows=data.map(r=>{const p=properties.find(x=>x.id===r.propertyId);return[p?p.name:'',r.room,r.content,REPAIR_PRI[r.priority],r.date,r.cost,r.vendor,REPAIR_ST[r.status]];});
   }
-  if(!data.length){alert('データがありません');return;}
+  if(!data.length){showErrorToast('エクスポートできるデータがありません');return;}
   const csv=[headers,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));
   a.download=`${type}_${new Date().toISOString().slice(0,10)}.csv`;a.click();

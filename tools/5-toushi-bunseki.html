@@ -816,7 +816,7 @@ function clearInputs() {
 }
 
 function exportHistory() {
-  if(!history.length) { alert('履歴がありません'); return; }
+  if(!history.length) { showErrToast('エクスポートできる履歴がありません'); return; }
   const h2=['日付','物件名','購入価格(万)','家賃(円)','表面利回り','実質利回り','年間CF(万)','判定'];
   const rows=history.map(h=>[h.date,h.name,h.price,h.rent,h.grossYield.toFixed(2)+'%',h.netYield.toFixed(2)+'%',Math.round(h.annualCF/10000),h.verdict]);
   const csv=[h2,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
