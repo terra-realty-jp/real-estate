@@ -452,6 +452,7 @@
             <div class="card-title">不動産投資シミュレーター</div>
             <div class="card-step">TOOL 05</div>
             <div class="card-who">投資を検討している方</div>
+            <span class="card-usage-badge" id="badge-t5"></span>
           </div>
           <p class="card-desc">「この物件を買ったら毎月いくら手元に残る？」を数字で確認。ローンと家賃収入を入力するだけで、利回り・10年収支・リスクを自動で計算します。</p>
           <div class="card-tags">
@@ -588,6 +589,11 @@
         if (leads.length > 0) candidates.push({ score: leads.length, name: 'AI物件査定', href: 'tools/1-ai-satei.html' });
       } catch(e) {}
 
+      try {
+        const invHistory = JSON.parse(localStorage.getItem('inv_history') || '[]');
+        if (invHistory.length > 0) candidates.push({ score: invHistory.length * 2, name: '不動産投資シミュレーター', href: 'tools/5-toushi-bunseki.html' });
+      } catch(e) {}
+
       if (candidates.length === 0) return;
       candidates.sort((a, b) => b.score - a.score);
       const best = candidates[0];
@@ -627,6 +633,11 @@
         if (props.length > 0) {
           setBadge('badge-t4', '🏢 ' + props.length + '物件・' + tenants.length + '名管理中');
         }
+      } catch(e) {}
+
+      try {
+        const invHistory = JSON.parse(localStorage.getItem('inv_history') || '[]');
+        if (invHistory.length > 0) setBadge('badge-t5', '📊 ' + invHistory.length + '件の分析履歴');
       } catch(e) {}
     }
 

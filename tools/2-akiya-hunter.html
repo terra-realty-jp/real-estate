@@ -251,6 +251,8 @@
   <h1 class="page-title">専門家への<span>相談準備</span></h1>
   <p class="page-desc">不動産会社に相談する前に確認・準備しておくと話がスムーズになります。印刷して当日持参するのもおすすめです。</p>
 
+  <div id="prep-progress" style="margin-bottom:16px"></div>
+
   <div class="card">
     <div class="card-title"><span class="icon">📂</span>準備しておく書類チェックリスト</div>
     <div id="prep-doc-list"></div>
@@ -623,30 +625,52 @@ const PREP_THINK = [
   { label: '相続の場合：共同相続人（兄弟など）の同意確認', desc: '全員の同意がないと売却できないため、事前に話し合いを' },
 ];
 
+let prepState = JSON.parse(localStorage.getItem('akiya_prep') || '{}');
+
+function savePrepState() {
+  try { localStorage.setItem('akiya_prep', JSON.stringify(prepState)); } catch(e) {}
+}
+
+function togglePrep(key) {
+  prepState[key] = !prepState[key];
+  savePrepState();
+  const row = document.getElementById('prep-row-'+key);
+  if(row) { row.style.opacity = prepState[key] ? '0.5' : '1'; const lbl=row.querySelector('label'); if(lbl) lbl.style.cssText=prepState[key]?'cursor:pointer;flex:1;text-decoration:line-through;color:var(--text-muted)':'cursor:pointer;flex:1'; }
+  const cb = document.getElementById(key);
+  if(cb) cb.checked = !!prepState[key];
+  const total = PREP_DOCS.length + PREP_THINK.length;
+  const done = Object.values(prepState).filter(Boolean).length;
+  const pct = Math.round(done/total*100);
+  const progressEl = document.getElementById('prep-progress');
+  if(progressEl) progressEl.innerHTML = `<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">${done}/${total}項目 完了（${pct}%）${done===total?'　<strong style="color:var(--green)">✅ 準備完了！</strong>':''}</div><div style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--gold);border-radius:4px;transition:width 0.3s"></div></div>`;
+}
+
 function buildPrepList() {
   const docEl = document.getElementById('prep-doc-list');
   const thinkEl = document.getElementById('prep-think-list');
   if(!docEl || !thinkEl) return;
 
-  docEl.innerHTML = PREP_DOCS.map((d,i) => `
-    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:8px;background:var(--dark3)">
-      <input type="checkbox" id="doc${i}" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer;accent-color:var(--gold)">
-      <label for="doc${i}" style="cursor:pointer;flex:1">
+  const makeRow = (d, key) => {
+    const done = !!prepState[key];
+    return `<div id="prep-row-${key}" style="display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:8px;background:var(--dark3);opacity:${done?'0.5':'1'}">
+      <input type="checkbox" id="${key}" ${done?'checked':''} onchange="togglePrep('${key}')" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer;accent-color:var(--gold)">
+      <label for="${key}" style="cursor:pointer;flex:1;${done?'text-decoration:line-through;color:var(--text-muted)':''}">
         <div style="font-size:13px;font-weight:700">${d.label}</div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:3px">${d.desc}</div>
       </label>
-    </div>
-  `).join('');
+    </div>`;
+  };
 
-  thinkEl.innerHTML = PREP_THINK.map((d,i) => `
-    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:8px;background:var(--dark3)">
-      <input type="checkbox" id="think${i}" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer;accent-color:var(--gold)">
-      <label for="think${i}" style="cursor:pointer;flex:1">
-        <div style="font-size:13px;font-weight:700">${d.label}</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:3px">${d.desc}</div>
-      </label>
-    </div>
-  `).join('');
+  docEl.innerHTML = PREP_DOCS.map((d,i) => makeRow(d, 'doc'+i)).join('');
+  thinkEl.innerHTML = PREP_THINK.map((d,i) => makeRow(d, 'think'+i)).join('');
+
+  const total = PREP_DOCS.length + PREP_THINK.length;
+  const done = Object.values(prepState).filter(Boolean).length;
+  const pct = Math.round(done/total*100);
+  const progressEl = document.getElementById('prep-progress');
+  if(progressEl) {
+    progressEl.innerHTML = `<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">${done}/${total}項目 完了（${pct}%）</div><div style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--gold);border-radius:4px;transition:width 0.3s"></div></div>`;
+  }
 }
 
 function copyConsultMemo() {
