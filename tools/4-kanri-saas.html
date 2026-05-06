@@ -97,7 +97,7 @@
     .chart-container { position: relative; height: 280px; }
 
     @media(max-width:900px) { .kpi-grid { grid-template-columns:repeat(3,1fr); } }
-    @media(max-width:700px) { .form-grid,.form-grid-3 { grid-template-columns:1fr; } .kpi-grid { grid-template-columns:1fr 1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .dashboard-grid { grid-template-columns:1fr!important; } #welcome-guide>div:last-child { grid-template-columns:1fr!important; } }
+    @media(max-width:700px) { .form-grid,.form-grid-3 { grid-template-columns:1fr; } .kpi-grid { grid-template-columns:1fr 1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .dashboard-grid { grid-template-columns:1fr!important; } #welcome-guide>div:last-child { grid-template-columns:1fr!important; } #rent-summary { grid-template-columns:repeat(2,1fr)!important; } }
     @media(max-width:375px) { .kpi-grid { grid-template-columns:1fr; } .kpi-value { font-size:20px; } .topnav { padding:12px 14px; } .modal-overlay { padding:12px; } .modal { padding:18px 16px; } .btn { min-height:44px; } input,select,textarea { min-height:44px; } }
     @media print {
       .topnav,.tabs,.btn { display:none!important; }
@@ -266,7 +266,7 @@
       <button class="btn btn-outline btn-sm" onclick="exportData('rent')">CSVエクスポート</button>
     </div>
   </div>
-  <div id="rent-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px"></div>
+  <div id="rent-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px"></div>
   <div class="card" id="rent-list"></div>
 </div>
 </div>
@@ -819,10 +819,12 @@ function renderRentLedger(){
   const paid=monthRents.filter(r=>r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
   const unpaid=activeTenants.filter(t=>!monthRents.find(r=>r.tenantId===t.id&&r.status==='paid')).reduce((s,t)=>s+(t.rent||0),0);
 
+  const collectRateLedger = charged>0 ? Math.round(paid/charged*100) : 0;
   document.getElementById('rent-summary').innerHTML=[
     {l:'請求合計',v:charged.toLocaleString()+'円',c:'var(--text)'},
     {l:'入金済合計',v:paid.toLocaleString()+'円',c:'var(--green)'},
     {l:'未入金合計',v:unpaid.toLocaleString()+'円',c:unpaid>0?'var(--red)':'var(--text-muted)'},
+    {l:'入金率',v:charged>0?collectRateLedger+'%':'—',c:collectRateLedger>=100?'var(--green)':collectRateLedger>=80?'var(--orange)':'var(--red)'},
   ].map(x=>`<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;text-align:center">
     <div style="font-size:18px;font-weight:700;color:${x.c}">${x.v}</div>
     <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${x.l}</div>

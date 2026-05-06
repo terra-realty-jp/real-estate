@@ -853,7 +853,7 @@ function renderHistory() {
   const fmtV = v => v >= 100000000 ? '約' + Math.round(v/1000000)/100+'億円' : '約' + Math.round(v/10000).toLocaleString()+'万円';
   wrap.innerHTML = `<table>
     <thead><tr>
-      <th>査定日</th><th>エリア</th><th>物件種別</th><th>面積</th><th>築年数</th><th>推定価格</th>
+      <th>査定日</th><th>エリア</th><th>物件種別</th><th>面積</th><th>築年数</th><th>推定価格</th><th></th>
     </tr></thead>
     <tbody>
       ${leads.map(l => `<tr>
@@ -863,6 +863,7 @@ function renderHistory() {
         <td>${l.sqm ? l.sqm+'㎡' : '—'}</td>
         <td>${l.age !== undefined ? l.age+'年' : '—'}</td>
         <td><strong style="color:var(--gold)">${fmtV(l.estimatePrice)}</strong></td>
+        <td><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteLead(${l.id})">削除</button></td>
       </tr>`).join('')}
     </tbody>
   </table>`;
