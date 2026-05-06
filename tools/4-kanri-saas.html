@@ -21,8 +21,10 @@
     }
     body { font-family: 'Noto Sans JP', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
     .topnav { background: var(--dark2); border-bottom: 1px solid rgba(201,168,76,0.2); padding: 14px 32px; display: flex; align-items: center; gap: 16px; }
-    .back-link { color: var(--gold); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; }
-    .back-link:hover { text-decoration: underline; }
+    .back-link { color: var(--gold); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: opacity 0.15s; }
+    .back-link:hover { opacity: 0.75; }
+    .back-link svg { transition: transform 0.15s; }
+    .back-link:hover svg { transform: translateX(-3px); }
     .nav-title { font-size: 14px; color: var(--text-muted); }
     .tabs { display: flex; background: var(--dark2); border-bottom: 1px solid rgba(255,255,255,0.06); overflow-x: auto; }
     .tab-btn { padding: 15px 22px; background: none; border: none; color: var(--text-muted); font-size: 13px; font-family: inherit; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
@@ -248,9 +250,15 @@
   <h1 class="page-title"><span>家賃</span>台帳</h1>
   <p class="page-desc">月別の家賃入金状況を記録・管理。滞納者を即把握します。</p>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
-    <div style="display:flex;gap:10px;align-items:center">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <label style="font-size:13px;color:var(--text-muted)">対象月:</label>
       <select id="rent_month" onchange="renderRentLedger()"></select>
+      <select id="rent-status-filter" onchange="renderRentLedger()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <option value="all">全テナント</option>
+        <option value="unpaid">未入金・未登録のみ</option>
+        <option value="partial">一部入金のみ</option>
+        <option value="paid">入金済のみ</option>
+      </select>
     </div>
     <div style="display:flex;gap:10px">
       <button class="btn btn-gold" onclick="openRentModal()">＋ 入金登録</button>
@@ -775,6 +783,7 @@ function initRentMonthSelect(){
 
 function renderRentLedger(){
   const month=document.getElementById('rent_month').value;
+  const statusFilter=(document.getElementById('rent-status-filter')||{}).value||'all';
   const activeTenants=tenants.filter(t=>t.status==='active');
   const monthRents=rents.filter(r=>r.month===month);
 
@@ -793,15 +802,34 @@ function renderRentLedger(){
 
   const el=document.getElementById('rent-list');
   if(!activeTenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">💴</div><p>入居中のテナントがいません</p><p style="font-size:12px;margin-top:8px">${tenants.length?'テナントのステータスを「入居中」に設定してください':'先に「テナント管理」タブでテナントを登録してください'}</p></div>`;return;}
-  el.innerHTML=`<table>
+
+  const filteredTenants = activeTenants.filter(t => {
+    if(statusFilter==='all') return true;
+    const r = monthRents.find(x=>x.tenantId===t.id);
+    const st = r ? r.status : 'unregistered';
+    if(statusFilter==='unpaid') return st==='unpaid'||st==='unregistered';
+    if(statusFilter==='partial') return st==='partial';
+    if(statusFilter==='paid') return st==='paid';
+    return true;
+  });
+
+  const filterInfo = statusFilter!=='all' ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">${filteredTenants.length}件表示中 / 全${activeTenants.length}件</div>` : '';
+
+  if(!filteredTenants.length){
+    el.innerHTML = filterInfo + `<div class="empty-state"><div class="empty-icon">✅</div><p>該当するテナントはいません</p></div>`;
+    return;
+  }
+
+  el.innerHTML=filterInfo+`<table>
     <thead><tr><th>テナント名</th><th>物件/部屋</th><th>請求額</th><th>入金額</th><th>入金日</th><th>ステータス</th><th></th></tr></thead>
     <tbody>
-      ${activeTenants.map(t=>{
+      ${filteredTenants.map(t=>{
         const p=properties.find(x=>x.id===t.propertyId);
         const r=monthRents.find(x=>x.tenantId===t.id);
         const bClass=r?r.status==='paid'?'b-paid':r.status==='partial'?'b-partial':'b-unpaid':'b-unpaid';
         const bLabel=r?r.status==='paid'?'入金済':r.status==='partial'?'一部入金':'未入金':'未登録';
-        return `<tr>
+        const rowBg=r&&r.status==='paid'?'':'background:rgba(239,68,68,0.04)';
+        return `<tr style="${rowBg}">
           <td><strong>${esc(t.name)}</strong></td>
           <td>${p?p.name:'—'} / ${t.room||'—'}</td>
           <td>${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>

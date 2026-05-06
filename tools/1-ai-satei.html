@@ -25,8 +25,10 @@
       background: var(--dark2); border-bottom: 1px solid rgba(201,168,76,0.2);
       padding: 14px 32px; display: flex; align-items: center; gap: 16px;
     }
-    .back-link { color: var(--gold); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; }
-    .back-link:hover { text-decoration: underline; }
+    .back-link { color: var(--gold); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: opacity 0.15s; }
+    .back-link:hover { opacity: 0.75; }
+    .back-link svg { transition: transform 0.15s; }
+    .back-link:hover svg { transform: translateX(-3px); }
     .nav-title { font-size: 14px; color: var(--text-muted); }
 
     /* Tabs */
@@ -781,6 +783,8 @@ function calcAndShowResult() {
   };
   leads.unshift(lead);
   localStorage.setItem('satei_leads', JSON.stringify(leads));
+  const _toastMsg = lead.name || lead.phone ? '連絡先と査定結果を保存しました ✓' : '査定結果を履歴に保存しました ✓';
+  showHistoryToast(_toastMsg);
 
   // 築年数別価格比較バー
   const compareAges = [0, 5, 10, 20, 30];
@@ -964,16 +968,23 @@ function renderLeads() {
 }
 
 function deleteLead(id) {
-  leads = leads.filter(l => l.id !== id);
+  const l = leads.find(x => x.id === id);
+  if(!l) return;
+  const label = l.name ? `「${l.name}」` : 'この査定記録';
+  if(!confirm(`${label}を削除しますか？`)) return;
+  leads = leads.filter(x => x.id !== id);
   localStorage.setItem('satei_leads', JSON.stringify(leads));
   renderLeads();
+  renderHistory();
 }
 
 function clearLeads() {
-  if(!confirm('全てのリードを削除しますか？')) return;
+  if(!leads.length) return;
+  if(!confirm(`${leads.length}件の査定履歴をすべて削除しますか？`)) return;
   leads = [];
   localStorage.setItem('satei_leads', JSON.stringify(leads));
   renderLeads();
+  renderHistory();
 }
 
 function exportCSV() {
