@@ -549,20 +549,20 @@ function saveBuyer() {
 function calcMatchScore(s, b) {
   let score = 0; const reasons = [];
   // 価格: 売主希望 ≤ 買主予算×110%
-  if(b.budget >= s.price * 0.9) { score += 40; reasons.push('価格帯一致'); }
-  else if(b.budget >= s.price * 0.8) { score += 20; reasons.push('価格帯やや近い'); }
+  if(b.budget >= s.price * 0.9) { score += 40; reasons.push({tag:'price', label:'価格帯が一致', detail:`売主希望 ${FMT(s.price)} ／ 買主予算 ${FMT(b.budget)}`}); }
+  else if(b.budget >= s.price * 0.8) { score += 20; reasons.push({tag:'price-near', label:'価格帯がやや近い', detail:`売主希望 ${FMT(s.price)} ／ 買主予算 ${FMT(b.budget)}`}); }
   // エリア: 部分一致
   if((s.area||'') && (b.area||'')) {
     const sa = s.area.replace(/[都道府県市区町村]/g,'');
     const ba = b.area.replace(/[都道府県市区町村]/g,'');
     if(sa && ba && (s.area.includes(ba.slice(0,4)) || b.area.includes(sa.slice(0,4)))) {
-      score += 30; reasons.push('エリア一致');
+      score += 30; reasons.push({tag:'area', label:'エリアが一致', detail:`${s.area} ／ 希望 ${b.area}`});
     }
   }
   // 物件種別
-  if(b.type === 'any' || b.type === s.type) { score += 20; reasons.push('物件種別一致'); }
+  if(b.type === 'any' || b.type === s.type) { score += 20; reasons.push({tag:'type', label:'物件種別が一致', detail: b.type === 'any' ? `買主は種別を問わず希望` : `種別：${TYPE_LABEL[s.type]}`}); }
   // 面積
-  if(!b.sqm || !s.sqm || s.sqm >= b.sqm) { score += 10; reasons.push('面積条件クリア'); }
+  if(!b.sqm || !s.sqm || s.sqm >= b.sqm) { score += 10; reasons.push({tag:'sqm', label:'面積条件クリア', detail: (b.sqm && s.sqm) ? `物件 ${s.sqm}㎡ ≥ 希望 ${b.sqm}㎡` : '面積条件なし'}); }
   return { score: Math.min(score, 100), reasons };
 }
 
@@ -586,6 +586,8 @@ function runMatching() {
     return;
   }
 
+  const scoreColor = s => s >= 80 ? 'var(--green)' : s >= 50 ? 'var(--gold)' : 'var(--text-muted)';
+  const reasonTagColor = {price:'#22c55e', 'price-near':'#f59e0b', area:'#60a5fa', type:'#a78bfa', sqm:'#94a3b8'};
   el.innerHTML = `<div style="margin-bottom:16px;font-size:13px;color:var(--text-muted)">${pairs.length}件のマッチング候補が見つかりました</div>` +
   pairs.map(p => `
     <div class="match-pair">
@@ -596,10 +598,15 @@ function runMatching() {
         <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${p.s.area} | ${TYPE_LABEL[p.s.type]}</div>
       </div>
       <div class="match-score-box">
-        <div class="match-score">${p.score}</div>
+        <div class="match-score" style="color:${scoreColor(p.score)}">${p.score}</div>
         <div style="font-size:10px;color:var(--text-muted)">MATCH</div>
-        <div class="match-reasons">${p.reasons.join(' / ')}</div>
-        <div style="margin-top:10px"><button class="btn btn-gold btn-sm" onclick="createDealFromMatch('${p.s.name}','${p.b.name}',${p.s.price})">商談登録</button></div>
+        <div style="margin:8px 0 4px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center">
+          ${p.reasons.map(r => `<span title="${esc(r.detail)}" style="display:inline-block;background:${reasonTagColor[r.tag]||'#64748b'}22;color:${reasonTagColor[r.tag]||'#64748b'};border:1px solid ${reasonTagColor[r.tag]||'#64748b'}55;border-radius:99px;font-size:10px;padding:2px 8px;white-space:nowrap">${esc(r.label)}</span>`).join('')}
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">
+          ${p.reasons.map(r => `<div style="margin:1px 0">${esc(r.detail)}</div>`).join('')}
+        </div>
+        <div style="margin-top:6px"><button class="btn btn-gold btn-sm" onclick="createDealFromMatch('${p.s.name}','${p.b.name}',${p.s.price})">商談登録</button></div>
       </div>
       <div class="match-side">
         <div class="match-side-label">BUYER — 買主</div>
