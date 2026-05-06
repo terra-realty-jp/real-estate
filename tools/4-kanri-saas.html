@@ -185,6 +185,7 @@
       <div id="occupancy-detail"></div>
     </div>
   </div>
+  <div id="property-summary-card" style="display:none;margin-top:0"></div>
   <div class="card" style="margin-top:0">
     <div class="card-title">今月のアクション必要リスト</div>
     <div id="action-list"></div>
@@ -518,6 +519,33 @@ function renderDashboard() {
     <span style="font-size:16px;font-weight:700;color:${x.c}">${x.v}</span>
   </div>`).join('');
 
+  // 物件別サマリー（2棟以上の場合のみ表示）
+  const propSummaryEl = document.getElementById('property-summary-card');
+  if(propSummaryEl) {
+    if(properties.length >= 2) {
+      const rows = properties.map(p => {
+        const pts = activeTenants.filter(t=>t.propertyId===p.id);
+        const charged = pts.reduce((s,t)=>s+(t.rent||0),0);
+        const mRents = thisMonthRents.filter(r=>pts.some(t=>t.id===r.tenantId));
+        const paidAmt = mRents.filter(r=>r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+        const rate = charged > 0 ? Math.round(paidAmt/charged*100) : 0;
+        const occRate = (p.units||0) > 0 ? Math.round(pts.length/(p.units||1)*100) : 0;
+        const rateColor = rate>=90?'var(--green)':rate>=70?'var(--orange)':'var(--red)';
+        return `<tr>
+          <td><strong>${esc(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${PROP_TYPE[p.type]||p.type||''}</div></td>
+          <td style="text-align:center">${pts.length}/${p.units||'—'}戸<div style="font-size:11px;color:var(--text-muted)">${occRate}%</div></td>
+          <td style="text-align:right;color:var(--gold)">${charged?Math.round(charged/10000).toLocaleString()+'万':'—'}</td>
+          <td style="text-align:right;color:var(--green)">${paidAmt?Math.round(paidAmt/10000).toLocaleString()+'万':'—'}</td>
+          <td style="text-align:center;color:${rateColor};font-weight:700">${charged?rate+'%':'—'}</td>
+        </tr>`;
+      }).join('');
+      propSummaryEl.style.display='block';
+      propSummaryEl.innerHTML=`<div class="card" style="overflow-x:auto"><div class="card-title">🏢 物件別 今月の収支状況</div><table><thead><tr><th>物件名</th><th>入居率</th><th>請求額</th><th>入金済</th><th>回収率</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    } else {
+      propSummaryEl.style.display='none';
+    }
+  }
+
   // アクションリスト
   const actions = [];
   rents.filter(r=>r.month===thisMonth&&r.status==='unpaid').forEach(r=>{
@@ -561,8 +589,8 @@ function renderDashboard() {
           const st=r?r.status==='partial'?'一部入金':'未入金':'未登録';
           const stColor=r&&r.status==='partial'?'var(--orange)':'var(--red)';
           return `<tr style="background:rgba(239,68,68,0.04)">
-            <td><strong>${esc(t.name)}</strong></td>
-            <td style="font-size:12px">${p?p.name:'—'} / ${t.room||'—'}</td>
+            <td><strong>${esc(t.name)}</strong>${t.phone?`<br><a href="tel:${t.phone.replace(/[^\d\-+() ]/g,'')}" style="font-size:11px;color:#60a5fa;text-decoration:none">${esc(t.phone)}</a>`:''}</td>
+            <td style="font-size:12px">${p?esc(p.name):'—'} / ${t.room||'—'}</td>
             <td style="color:var(--gold)">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
             <td><span style="color:${stColor};font-weight:700;font-size:13px">${st}</span></td>
             <td><button class="btn btn-outline btn-sm" onclick="quickRent(${t.id},'${thisMonth}',${t.rent||0});switchTab('rent')">入金登録</button></td>
@@ -713,7 +741,7 @@ function renderTenants(){
         const expiryColor=expiring?(daysToEnd<=30?'var(--red)':daysToEnd<=60?'var(--orange)':'var(--gold)'):'var(--gold)';
         const expiryBadge=expiring?`<span style="display:inline-block;margin-left:6px;padding:2px 7px;border-radius:100px;background:rgba(201,168,76,0.12);color:${expiryColor};font-size:10px;font-weight:700;border:1px solid rgba(201,168,76,0.25)">更新${daysToEnd}日前</span>`:'';
         return `<tr${rowBg?' style="'+rowBg+'"':''}>
-          <td><strong>${t.name}</strong><br><span style="font-size:11px;color:var(--text-muted)">${t.phone||''}</span></td>
+          <td><strong>${esc(t.name)}</strong><br>${t.phone?`<a href="tel:${t.phone.replace(/[^\d\-+() ]/g,'')}" style="font-size:11px;color:#60a5fa;text-decoration:none">${esc(t.phone)}</a>`:''}</td>
           <td>${p?esc(p.name):'不明'} / ${t.room||'—'}</td>
           <td style="color:var(--gold);font-weight:700">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
           <td>${rentBadge}</td>

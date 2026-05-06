@@ -166,9 +166,20 @@
 
   <div id="seller-stats" class="stats-grid"></div>
 
-  <div style="display:flex;justify-content:flex-end;margin-bottom:20px;gap:10px">
-    <button class="btn btn-gold" onclick="openSellerModal()">＋ 売却情報を入力</button>
-    <button class="btn btn-outline btn-sm" onclick="exportCSV('sellers')">CSVエクスポート</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;gap:8px;align-items:center;flex:1">
+      <input id="seller-search" type="text" placeholder="名前・エリアで検索..." oninput="renderSellers()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;flex:1;max-width:200px">
+      <select id="seller-status-filter" onchange="renderSellers()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <option value="all">全て</option>
+        <option value="active">募集中</option>
+        <option value="nego">交渉中</option>
+        <option value="sold">成約済</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;flex-shrink:0">
+      <button class="btn btn-gold" onclick="openSellerModal()">＋ 売却情報を入力</button>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV('sellers')">CSVエクスポート</button>
+    </div>
   </div>
   <div id="sellers-list"></div>
 </div>
@@ -193,9 +204,20 @@
 
   <div id="buyer-stats" class="stats-grid"></div>
 
-  <div style="display:flex;justify-content:flex-end;margin-bottom:20px;gap:10px">
-    <button class="btn btn-gold" onclick="openBuyerModal()">＋ 購入希望を入力</button>
-    <button class="btn btn-outline btn-sm" onclick="exportCSV('buyers')">CSVエクスポート</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;gap:8px;align-items:center;flex:1">
+      <input id="buyer-search" type="text" placeholder="名前・エリアで検索..." oninput="renderBuyers()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;flex:1;max-width:200px">
+      <select id="buyer-purpose-filter" onchange="renderBuyers()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <option value="all">全て</option>
+        <option value="own">自己居住</option>
+        <option value="invest">投資目的</option>
+        <option value="other">その他</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;flex-shrink:0">
+      <button class="btn btn-gold" onclick="openBuyerModal()">＋ 購入希望を入力</button>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV('buyers')">CSVエクスポート</button>
+    </div>
   </div>
   <div id="buyers-list"></div>
 </div>
@@ -381,7 +403,15 @@ function renderSellers() {
   ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
 
   if(!sellers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏠</div><p>売主がまだ登録されていません</p><p style="font-size:12px;margin-top:8px">「売主登録」ボタンから売却したい物件を登録してください</p></div>`; return; }
-  el.innerHTML = `<div class="listings-grid">${sellers.map(s=>`
+  const sellerQ = (document.getElementById('seller-search')||{}).value||'';
+  const sellerSt = (document.getElementById('seller-status-filter')||{}).value||'all';
+  const filteredSellers = sellers.filter(s => {
+    if(sellerSt !== 'all' && s.status !== sellerSt) return false;
+    if(sellerQ) { const q=sellerQ.toLowerCase(); return (s.name||'').toLowerCase().includes(q)||(s.area||'').toLowerCase().includes(q); }
+    return true;
+  });
+  if(!filteredSellers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><p>条件に合う売主がいません</p></div>`; return; }
+  el.innerHTML = `<div class="listings-grid">${filteredSellers.map(s=>`
     <div class="listing-card">
       <div class="listing-img">🏠
         <span class="listing-type-badge type-sell">売主</span>
@@ -450,7 +480,15 @@ function renderBuyers() {
   ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
 
   if(!buyers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🙋</div><p>買主がまだ登録されていません</p><p style="font-size:12px;margin-top:8px">「買主登録」ボタンから購入希望条件を登録してください</p></div>`; return; }
-  el.innerHTML = `<div class="listings-grid">${buyers.map(b=>`
+  const buyerQ = (document.getElementById('buyer-search')||{}).value||'';
+  const buyerPurpose = (document.getElementById('buyer-purpose-filter')||{}).value||'all';
+  const filteredBuyers = buyers.filter(b => {
+    if(buyerPurpose !== 'all' && (b.purpose||'own') !== buyerPurpose) return false;
+    if(buyerQ) { const q=buyerQ.toLowerCase(); return (b.name||'').toLowerCase().includes(q)||(b.area||'').toLowerCase().includes(q); }
+    return true;
+  });
+  if(!filteredBuyers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><p>条件に合う買主がいません</p></div>`; return; }
+  el.innerHTML = `<div class="listings-grid">${filteredBuyers.map(b=>`
     <div class="listing-card">
       <div class="listing-img">🙋
         <span class="listing-type-badge type-buy">買主</span>

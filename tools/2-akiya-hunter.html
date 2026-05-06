@@ -711,10 +711,20 @@ function renderPipeline() {
         <td>${d.buy ? d.buy.toLocaleString()+'万円' : '—'}</td>
         <td>${d.sell ? d.sell.toLocaleString()+'万円' : '—'}</td>
         <td>${d.score ? d.score+'点' : '—'}</td>
-        <td><button class="btn btn-outline btn-sm" onclick="editDeal(${d.id})">編集</button></td>
+        <td style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="editDeal(${d.id})">編集</button><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteDeal(${d.id})">削除</button></td>
       </tr>`).join('')}
     </tbody>
   </table>`;
+}
+
+function deleteDeal(id) {
+  const d = deals.find(x=>x.id===id);
+  if(!d) return;
+  const label = d.name || 'この案件';
+  if(!confirm(`「${label}」を削除しますか？\nこの操作は元に戻せません。`)) return;
+  deals = deals.filter(x=>x.id!==id);
+  localStorage.setItem('akiya_deals', JSON.stringify(deals));
+  renderPipeline();
 }
 
 function openNewDealModal() {
