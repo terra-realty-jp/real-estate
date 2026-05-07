@@ -807,7 +807,41 @@ function renderSensitivity(inp) {
     </tbody>
   </table>`;
 
+  // 3シナリオ計算
+  const scenarios = [
+    {label:'ベスト', icon:'🟢', vacancy:0,  rentDelta:10,  rateDelta:-0.5, bg:'rgba(34,197,94,0.08)', border:'rgba(34,197,94,0.25)', col:'var(--green)'},
+    {label:'ベース', icon:'🟡', vacancy:inp.vacancy, rentDelta:0, rateDelta:0, bg:'rgba(201,168,76,0.08)', border:'rgba(201,168,76,0.25)', col:'var(--gold)'},
+    {label:'ワースト', icon:'🔴', vacancy:25, rentDelta:-20, rateDelta:0.5, bg:'rgba(239,68,68,0.08)', border:'rgba(239,68,68,0.25)', col:'var(--red)'},
+  ].map(sc => {
+    const scRent = inp.rent * (1 + sc.rentDelta/100);
+    const noi = calcNOI(scRent, inp.mgmt, inp.tax, inp.ins, inp.mrate, sc.vacancy);
+    const scRate = Math.max(0.1, inp.rate + sc.rateDelta);
+    const lr = calcLoanPayment(inp.loan, scRate, inp.term, inp.repay);
+    const cf = noi - lr.monthly*12;
+    const ny = inp.price > 0 ? noi/(inp.price*10000)*100 : 0;
+    return {...sc, noi, cf, ny, lr};
+  });
+
   document.getElementById('sensitivity-content').innerHTML = `
+    <div class="card">
+      <div class="card-title">📋 3シナリオ比較（ベスト / ベース / ワースト）</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px">
+        ${scenarios.map(sc=>`
+          <div style="background:${sc.bg};border:1px solid ${sc.border};border-radius:10px;padding:16px;text-align:center">
+            <div style="font-size:11px;font-weight:700;color:${sc.col};letter-spacing:0.05em;margin-bottom:8px">${sc.icon} ${sc.label}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.7">
+              空室率 ${sc.vacancy}% / 家賃 ${sc.rentDelta>=0?'+':''}${sc.rentDelta}%<br>金利 ${(inp.rate+sc.rateDelta).toFixed(1)}%
+            </div>
+            <div style="font-size:20px;font-weight:900;color:${sc.col}">${sc.ny.toFixed(1)}%</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">実質利回り</div>
+            <div style="font-size:14px;font-weight:700;color:${sc.cf>=0?'var(--green)':'var(--red)'}">${sc.cf>=0?'+':''}${Math.round(sc.cf/10000)}万円/年</div>
+            <div style="font-size:11px;color:var(--text-muted)">年間CF</div>
+          </div>
+        `).join('')}
+      </div>
+      <p style="font-size:11px;color:var(--text-muted)">※ ベスト=空室率0%・家賃+10%・金利-0.5%、ワースト=空室率25%・家賃-20%・金利+0.5%の場合の概算</p>
+    </div>
+
     <div class="card">
       <div class="card-title">実質利回り感度マトリクス（空室率 × 家賃変化）</div>
       <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.8;color:rgba(240,237,232,0.85)">
