@@ -791,8 +791,9 @@ function renderTenants(){
         const rowBg=unpaidRow?'background:rgba(239,68,68,0.06)':expiring?'background:rgba(201,168,76,0.06)':'';
         const expiryColor=expiring?(daysToEnd<=30?'var(--red)':daysToEnd<=60?'var(--orange)':'var(--gold)'):'var(--gold)';
         const expiryBadge=expiring?`<span style="display:inline-block;margin-left:6px;padding:2px 7px;border-radius:100px;background:rgba(201,168,76,0.12);color:${expiryColor};font-size:10px;font-weight:700;border:1px solid rgba(201,168,76,0.25)">更新${daysToEnd}日前</span>`:'';
+        const memoText = t.memo ? esc(t.memo.length>25 ? t.memo.slice(0,25)+'…' : t.memo) : '';
         return `<tr${rowBg?' style="'+rowBg+'"':''}>
-          <td><strong>${esc(t.name)}</strong><br>${t.phone?`<a href="tel:${t.phone.replace(/[^\d\-+() ]/g,'')}" style="font-size:11px;color:#60a5fa;text-decoration:none">${esc(t.phone)}</a>`:''}</td>
+          <td><strong>${esc(t.name)}</strong><br>${t.phone?`<a href="tel:${t.phone.replace(/[^\d\-+() ]/g,'')}" style="font-size:11px;color:#60a5fa;text-decoration:none">${esc(t.phone)}</a>`:''} ${memoText?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px" title="${esc(t.memo||'')}">📝 ${memoText}</div>`:''}</td>
           <td>${p?esc(p.name):'不明'} / ${t.room||'—'}</td>
           <td style="color:var(--gold);font-weight:700">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
           <td>${rentBadge}</td>
