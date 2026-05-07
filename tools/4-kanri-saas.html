@@ -508,13 +508,22 @@ function renderDashboard() {
     }
   });
 
+  // 前月比計算
+  const prevMonth = (() => { const d=new Date(); d.setMonth(d.getMonth()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
+  const prevCollected = rents.filter(r=>r.month===prevMonth&&r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+  const momDiff = collected - prevCollected;
+  const momPct = prevCollected > 0 ? Math.round((momDiff/prevCollected)*100) : null;
+  const momLabel = momPct !== null ? (momDiff >= 0 ? `▲${momPct}%` : `▼${Math.abs(momPct)}%`) : '—';
+  const momColor = momDiff >= 0 ? 'var(--green)' : 'var(--red)';
+
   // 稼働率詳細
   document.getElementById('occupancy-detail').innerHTML = [
     {l:'入居率',v:occupancyRate+'%',c:occupancyRate>=80?'var(--green)':'var(--orange)'},
     {l:'今月家賃回収率',v:collectRate+'%',c:collectRate>=90?'var(--green)':collectRate>=70?'var(--orange)':'var(--red)'},
+    {l:'前月比回収額',v:`${momLabel} <span style="font-size:11px;color:var(--text-muted)">(${momDiff>=0?'+':''}${Math.round(momDiff/10000)}万円)</span>`,c:momColor},
     {l:'未対応修繕',v:repairs.filter(r=>r.status!=='done').length+'件',c:'var(--orange)'},
     {l:'90日以内契約更新',v:getExpiringTenants().length+'件',c:'var(--gold)'},
-  ].map(x=>`<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+  ].map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
     <span style="font-size:13px;color:var(--text-muted)">${x.l}</span>
     <span style="font-size:16px;font-weight:700;color:${x.c}">${x.v}</span>
   </div>`).join('');
