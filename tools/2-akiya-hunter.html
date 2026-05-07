@@ -187,7 +187,7 @@
   </div>
 
   <div class="card">
-    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="display:flex;align-items:center;gap:8px"><span class="icon">📋</span>当てはまるものをすべてクリックしてください</span><span id="check-count-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3);white-space:nowrap">0/12チェック</span></div>
+    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="display:flex;align-items:center;gap:8px"><span class="icon">📋</span>当てはまるものをすべてクリックしてください</span><span style="display:flex;align-items:center;gap:8px"><button id="check-all-btn" onclick="toggleAllChecks()" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(255,255,255,0.08);color:var(--text-muted);border:1px solid rgba(255,255,255,0.15);cursor:pointer;font-family:inherit;white-space:nowrap">全選択</button><span id="check-count-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3);white-space:nowrap">0/12チェック</span></span></div>
     <div class="checklist" id="checklist">
       <!-- JS で生成 -->
     </div>
@@ -413,6 +413,20 @@ function buildChecklist() {
   `).join('');
 }
 
+function toggleAllChecks() {
+  const allChecked = checked.size === CHECKS.length;
+  if(allChecked) {
+    checked.clear();
+  } else {
+    CHECKS.forEach(c => checked.add(c.id));
+  }
+  saveChecked();
+  buildChecklist();
+  updateScore();
+  const btn = document.getElementById('check-all-btn');
+  if(btn) btn.textContent = allChecked ? '全選択' : '全解除';
+}
+
 function toggleCheck(id) {
   if(checked.has(id)) checked.delete(id);
   else checked.add(id);
@@ -420,6 +434,8 @@ function toggleCheck(id) {
   document.getElementById('ck_'+id).style.display = checked.has(id) ? 'block' : 'none';
   saveChecked();
   updateScore();
+  const btn = document.getElementById('check-all-btn');
+  if(btn) btn.textContent = checked.size === CHECKS.length ? '全解除' : '全選択';
 }
 
 function updateScore() {
