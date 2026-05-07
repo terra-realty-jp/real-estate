@@ -321,9 +321,19 @@
 <div id="tab-history" class="tab-content">
 <div class="main">
   <h1 class="page-title">分析<span>履歴</span></h1>
-  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;gap:10px">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-gold btn-sm" onclick="showComparePanel()">📊 物件を比較する</button>
     <button class="btn btn-outline btn-sm" onclick="exportHistory()">CSVエクスポート</button>
     <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="clearHistory()">履歴削除</button>
+  </div>
+  <!-- 物件比較パネル -->
+  <div id="compare-panel" style="display:none;margin-bottom:24px">
+    <div class="card" style="border-color:rgba(201,168,76,0.3)">
+      <div class="card-title">📊 物件比較（最大3件）</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">比較したい物件を履歴から選択してください。</p>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap" id="compare-selects"></div>
+      <div id="compare-table"></div>
+    </div>
   </div>
   <div id="history-list"></div>
 </div>
@@ -944,6 +954,66 @@ function renderSensitivity(inp) {
       </div>
     </div>
   `;
+}
+
+function showComparePanel() {
+  const panel = document.getElementById('compare-panel');
+  if (!panel) return;
+  const isVisible = panel.style.display !== 'none';
+  panel.style.display = isVisible ? 'none' : 'block';
+  if (!isVisible) buildCompareSelects();
+}
+
+function buildCompareSelects() {
+  const selectsEl = document.getElementById('compare-selects');
+  if (!selectsEl) return;
+  const options = history.map(h => `<option value="${h.id}">${esc(h.name)||'無名物件'} (${h.price}万円 / ${h.grossYield.toFixed(1)}%)</option>`).join('');
+  selectsEl.innerHTML = [1,2,3].map(n => `
+    <div>
+      <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件${n}</label>
+      <select id="compare-sel-${n}" onchange="renderCompareTable()" style="background:var(--dark3);color:var(--text);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:6px 10px;font-size:12px;font-family:inherit;min-width:200px">
+        <option value="">選択してください</option>
+        ${options}
+      </select>
+    </div>
+  `).join('');
+}
+
+function renderCompareTable() {
+  const tableEl = document.getElementById('compare-table');
+  if (!tableEl) return;
+  const items = [1,2,3].map(n => {
+    const id = parseInt(document.getElementById('compare-sel-'+n)?.value);
+    return id ? history.find(h=>h.id===id) : null;
+  }).filter(Boolean);
+  if (items.length < 2) { tableEl.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:16px">2件以上選択すると比較表が表示されます</p>'; return; }
+  const fmt = v => v >= 100000000 ? Math.round(v/10000000)/10+'億' : Math.round(v/10000)+'万';
+  const verdIco = {buy:'✅',hold:'⚠️',pass:'❌'};
+  const rows = [
+    ['物件名',         h => `<strong>${esc(h.name)||'無名物件'}</strong>`],
+    ['購入価格',       h => h.price.toLocaleString()+'万円'],
+    ['表面利回り',     h => `<span style="color:var(--gold)">${h.grossYield.toFixed(2)}%</span>`],
+    ['実質利回り',     h => `<span style="color:${h.netYield>=5?'var(--green)':h.netYield>=3?'var(--orange)':'var(--red)'};font-weight:700">${h.netYield.toFixed(2)}%</span>`],
+    ['年間CF',         h => `<span style="color:${h.annualCF>=0?'var(--green)':'var(--red)'};font-weight:700">${h.annualCF>=0?'+':''}${fmt(h.annualCF)}円</span>`],
+    ['CCR',            h => h.ccr.toFixed(2)+'%'],
+    ['投資判定',       h => verdIco[h.verdict]||'—'],
+  ];
+  const bestIdxs = {
+    2: items.reduce((b,h,i)=>h.netYield>items[b].netYield?i:b,0),
+    3: items.reduce((b,h,i)=>h.annualCF>items[b].annualCF?i:b,0),
+  };
+  tableEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr><th style="padding:8px;text-align:left;color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.08)">指標</th>
+      ${items.map((h,i)=>`<th style="padding:8px;text-align:center;color:var(--gold);border-bottom:1px solid rgba(255,255,255,0.08)">${esc(h.name)||'物件'+(i+1)}</th>`).join('')}
+    </tr></thead>
+    <tbody>
+      ${rows.map(([label, fn]) => `<tr>
+        <td style="padding:8px;color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px">${label}</td>
+        ${items.map((h,i)=>`<td style="padding:8px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.04);${Object.values(bestIdxs).includes(i)?'background:rgba(201,168,76,0.05)':''}">${fn(h)}</td>`).join('')}
+      </tr>`).join('')}
+    </tbody>
+  </table>
+  <p style="font-size:11px;color:var(--text-muted);margin-top:10px;text-align:center">※ ゴールドの背景はその指標でより優位な物件を示します</p>`;
 }
 
 function renderHistory() {
