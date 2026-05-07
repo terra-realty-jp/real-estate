@@ -479,31 +479,56 @@ function renderDashboard() {
     {l:'月間管理委託費（目安）',v:Math.round(manageFee/10000)+'万円',s:'家賃収入×委託費率',c:'var(--text-muted)'},
   ].map(k=>`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
 
-  // 収益グラフ
-  const months = [];
-  const revenues = [];
+  // 収益グラフ（物件が2棟以上はスタックバー、1棟以下は単色）
+  const chartMonths = [];
+  const chartYms = [];
   for(let i=11;i>=0;i--) {
     const d = new Date(); d.setMonth(d.getMonth()-i);
     const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    months.push(`${d.getMonth()+1}月`);
-    const mRents = rents.filter(r=>r.month===ym&&r.status==='paid');
-    revenues.push(Math.round(mRents.reduce((s,r)=>s+(r.paid||0),0)/10000));
+    chartYms.push(ym);
+    chartMonths.push(`${d.getMonth()+1}月`);
+  }
+
+  const propColors = [
+    'rgba(201,168,76,0.7)', 'rgba(59,130,246,0.7)', 'rgba(34,197,94,0.7)',
+    'rgba(249,115,22,0.7)', 'rgba(168,85,247,0.7)', 'rgba(236,72,153,0.7)'
+  ];
+  const propBorders = [
+    'rgba(201,168,76,1)', 'rgba(59,130,246,1)', 'rgba(34,197,94,1)',
+    'rgba(249,115,22,1)', 'rgba(168,85,247,1)', 'rgba(236,72,153,1)'
+  ];
+
+  let chartDatasets;
+  const multiProp = properties.length >= 2;
+  if(multiProp) {
+    chartDatasets = properties.map((p,pi) => {
+      const propTenants = tenants.filter(t=>t.propertyId===p.id);
+      const data = chartYms.map(ym => {
+        const mRents = rents.filter(r=>r.month===ym&&r.status==='paid'&&propTenants.some(t=>t.id===r.tenantId));
+        return Math.round(mRents.reduce((s,r)=>s+(r.paid||0),0)/10000);
+      });
+      return {label:p.name,data,backgroundColor:propColors[pi%propColors.length],borderColor:propBorders[pi%propBorders.length],borderWidth:1,borderRadius:3};
+    });
+  } else {
+    const revenues = chartYms.map(ym => Math.round(rents.filter(r=>r.month===ym&&r.status==='paid').reduce((s,r)=>s+(r.paid||0),0)/10000));
+    chartDatasets = [{label:'家賃回収（万円）',data:revenues,backgroundColor:'rgba(201,168,76,0.5)',borderColor:'rgba(201,168,76,1)',borderWidth:1,borderRadius:4}];
   }
 
   const ctx = document.getElementById('revenueChart').getContext('2d');
   if(revenueChart) revenueChart.destroy();
+  const scaleOpts = { ticks:{color:'#999',font:{size:11}}, grid:{color:'rgba(255,255,255,0.06)'} };
   revenueChart = new Chart(ctx, {
     type:'bar',
-    data:{
-      labels:months,
-      datasets:[{label:'家賃回収（万円）',data:revenues,backgroundColor:'rgba(201,168,76,0.5)',borderColor:'rgba(201,168,76,1)',borderWidth:1,borderRadius:4}]
-    },
+    data:{labels:chartMonths,datasets:chartDatasets},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#999',font:{size:11}}}},
+      plugins:{
+        legend:{labels:{color:'#999',font:{size:11}},display:multiProp},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}万円`}}
+      },
       scales:{
-        x:{ticks:{color:'#999',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}},
-        y:{ticks:{color:'#999',font:{size:11}},grid:{color:'rgba(255,255,255,0.06)'}}
+        x:{...scaleOpts,grid:{color:'rgba(255,255,255,0.04)'},...(multiProp?{stacked:true}:{})},
+        y:{...scaleOpts,ticks:{color:'#999',font:{size:11},callback:v=>v+'万'},...(multiProp?{stacked:true}:{})}
       }
     }
   });
@@ -597,12 +622,28 @@ function renderDashboard() {
           const r=thisMonthRents.find(x=>x.tenantId===t.id);
           const st=r?r.status==='partial'?'一部入金':'未入金':'未登録';
           const stColor=r&&r.status==='partial'?'var(--orange)':'var(--red)';
+          const reminderMailUrl = t.email ? (() => {
+            const subject = encodeURIComponent(`【家賃督促】${thisMonth}分の家賃についてご連絡`);
+            const body = encodeURIComponent([
+              `${esc(t.name)} 様`,``,
+              `平素よりお世話になっております。`,
+              `${p?esc(p.name):''}${t.room?' '+t.room+'号室':''}の家賃（${thisMonth}分）について、`,
+              `まだご入金の確認ができておりません。`,``,
+              `月額家賃: ${t.rent?Number(t.rent).toLocaleString()+'円':'—'}`,``,
+              `お手数ですが、ご確認・ご入金をお願いいたします。`,
+              `ご不明な点がございましたらご連絡ください。`,
+            ].join('\n'));
+            return `mailto:${t.email}?subject=${subject}&body=${body}`;
+          })() : null;
           return `<tr style="background:rgba(239,68,68,0.04)">
             <td><strong>${esc(t.name)}</strong>${t.phone?`<br><a href="tel:${t.phone.replace(/[^\d\-+() ]/g,'')}" style="font-size:11px;color:#60a5fa;text-decoration:none">${esc(t.phone)}</a>`:''}</td>
             <td style="font-size:12px">${p?esc(p.name):'—'} / ${t.room||'—'}</td>
             <td style="color:var(--gold)">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
             <td><span style="color:${stColor};font-weight:700;font-size:13px">${st}</span></td>
-            <td><button class="btn btn-outline btn-sm" onclick="quickRent(${t.id},'${thisMonth}',${t.rent||0});switchTab('rent')">入金登録</button></td>
+            <td style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <button class="btn btn-outline btn-sm" onclick="quickRent(${t.id},'${thisMonth}',${t.rent||0});switchTab('rent')">入金登録</button>
+              ${reminderMailUrl ? `<a href="${reminderMailUrl}" class="btn btn-sm" style="background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);text-decoration:none;font-size:11px;padding:5px 10px">督促メール</a>` : t.phone ? '' : `<span style="font-size:11px;color:var(--text-muted)">メール未登録</span>`}
+            </td>
           </tr>`;
         }).join('')}</tbody>
       </table>`;
