@@ -276,6 +276,7 @@
 <div class="main">
   <h1 class="page-title"><span>修繕</span>管理</h1>
   <p class="page-desc">修繕依頼・対応状況を管理。費用を記録して経費管理にも活用できます。</p>
+  <div id="repair-summary-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <select id="repair-filter" onchange="renderRepairs()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
@@ -985,6 +986,27 @@ function renderRepairs(){
   if(!filtered.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><p>条件に一致する修繕記録がありません</p></div>`;return;}
   const PCOLOR={urgent:'var(--red)',high:'var(--orange)',normal:'var(--text-muted)',low:'var(--text-muted)'};
   const ST_B={open:'b-open',progress:'b-progress',done:'b-done'};
+  // 修繕費サマリーカード
+  const repSumEl = document.getElementById('repair-summary-cards');
+  if(repSumEl && repairs.length) {
+    const thisYear = new Date().getFullYear().toString();
+    const yearRepairs = repairs.filter(r => (r.done||r.date||'').startsWith(thisYear) && r.cost);
+    const yearCost = yearRepairs.reduce((s,r)=>s+(Number(r.cost)||0),0);
+    const openCount = repairs.filter(r=>r.status!=='done').length;
+    const urgentCount = repairs.filter(r=>r.priority==='urgent'&&r.status!=='done').length;
+    const avgCost = yearRepairs.length ? Math.round(yearCost/yearRepairs.length) : 0;
+    const cards = [
+      {l:`${thisYear}年 修繕費合計`,v:yearCost?Math.round(yearCost/10000).toLocaleString()+'万円':'—',s:yearRepairs.length+'件',c:'var(--orange)'},
+      {l:'1件あたり平均',v:avgCost?Math.round(avgCost/10000*10)/10+'万円':'—',s:yearRepairs.length?`直近${yearRepairs.length}件の平均`:'費用記録なし',c:'var(--gold)'},
+      {l:'未完了修繕',v:openCount+'件',s:urgentCount>0?`うち緊急${urgentCount}件`:'緊急なし',c:urgentCount>0?'var(--red)':'var(--text-muted)'},
+      {l:'完了率',v:repairs.length?Math.round(repairs.filter(r=>r.status==='done').length/repairs.length*100)+'%':'—',s:`完了${repairs.filter(r=>r.status==='done').length}/${repairs.length}件`,c:'var(--green)'},
+    ];
+    repSumEl.innerHTML = cards.map(c=>`<div class="kpi"><div class="kpi-label">${c.l}</div><div class="kpi-value" style="color:${c.c}">${c.v}</div><div class="kpi-sub">${c.s}</div></div>`).join('');
+    repSumEl.style.display = 'grid';
+  } else if(repSumEl) {
+    repSumEl.style.display = 'none';
+  }
+
   el.innerHTML=`<table>
     <thead><tr><th>物件/部屋</th><th>内容</th><th>優先度</th><th>報告日</th><th>完了日</th><th>費用</th><th>業者</th><th>ステータス</th><th></th></tr></thead>
     <tbody>
