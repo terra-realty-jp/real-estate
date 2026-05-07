@@ -203,6 +203,7 @@
       .card-actions { padding: 0; margin-top: 4px; }
       .guide-panel { padding: 20px; }
       .cta-section { padding: 40px 20px; }
+      #scenario-cards { grid-template-columns: 1fr !important; }
     }
     @media (max-width: 375px) {
       .header { padding: 12px 14px; }
@@ -269,6 +270,14 @@
       <div class="hero-point"><span class="check">✓</span> 会員登録不要</div>
       <div class="hero-point"><span class="check">✓</span> 完全無料</div>
       <div class="hero-point"><span class="check">✓</span> スマホ対応</div>
+    </div>
+  </section>
+
+  <!-- シナリオ別おすすめ -->
+  <section style="background:#f1f5fb;padding:48px 40px;border-top:1px solid var(--border)">
+    <div style="max-width:1000px;margin:0 auto">
+      <div class="section-label">あなたの状況にあったツールを選ぶ</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px" id="scenario-cards"></div>
     </div>
   </section>
 
@@ -546,6 +555,27 @@
   </footer>
 
   <script>
+    const SCENARIOS = [
+      { icon:'🏠', situation:'自宅の売却を考えている', desc:'今売るといくらになるか相場を知りたい', tool:'AI物件査定', href:'tools/1-ai-satei.html', color:'#2563eb' },
+      { icon:'🏚', situation:'実家・空き家が空いている', desc:'放置するリスクと活用方法を知りたい', tool:'空き家活用診断', href:'tools/2-akiya-hunter.html', color:'#16a34a' },
+      { icon:'🤝', situation:'不動産の売り手・買い手を探している', desc:'仲介手数料も含めた総費用を確認したい', tool:'売主・買主マッチング', href:'tools/3-owner-direct.html', color:'#9333ea' },
+      { icon:'🏢', situation:'賃貸物件を所有している', desc:'テナント管理・家賃収入・修繕を一元管理したい', tool:'賃貸物件かんたん管理', href:'tools/4-kanri-saas.html', color:'#0891b2' },
+      { icon:'📊', situation:'投資用物件の購入を検討している', desc:'利回り・CF・IRRでリスクと収益を試算したい', tool:'不動産投資シミュレーター', href:'tools/5-toushi-bunseki.html', color:'#d97706' },
+    ];
+
+    function buildScenarios() {
+      const el = document.getElementById('scenario-cards');
+      if (!el) return;
+      el.innerHTML = SCENARIOS.map(s => `
+        <a href="${s.href}" style="text-decoration:none;display:block;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px 20px;transition:box-shadow 0.2s,transform 0.15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+          <div style="font-size:28px;margin-bottom:8px">${s.icon}</div>
+          <div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:4px;line-height:1.4">${s.situation}</div>
+          <div style="font-size:12px;color:#6b7280;margin-bottom:12px;line-height:1.6">${s.desc}</div>
+          <div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:${s.color};background:${s.color}11;border:1px solid ${s.color}33;padding:5px 12px;border-radius:100px">${s.tool} →</div>
+        </a>
+      `).join('');
+    }
+
     const FAQS = [
       { q: '登録・会員登録は必要ですか？費用はかかりますか？', a: 'いいえ。5つのツールはすべて無料・登録不要でご利用いただけます。ページを開いてすぐに使い始めることができます。連絡先の入力も任意で、入力しなくても査定結果などをご確認いただけます。' },
       { q: '入力したデータはどこに保存されますか？外部に送信されますか？', a: 'データはすべてあなたのブラウザ内（localStorage）にのみ保存されます。外部のサーバーには一切送信されません。ただし、同じブラウザ・同じデバイスでのみデータが引き継がれます。別の端末やブラウザをお使いの場合はデータが引き継がれません。' },
@@ -667,6 +697,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       updateWelcomeBack();
       updateUsageBadges();
+      buildScenarios();
       buildFAQ();
     });
   </script>
