@@ -597,13 +597,34 @@ function renderResult(inp, r) {
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
       <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">シミュレーション結果を持って、石澤不動産に無料でご相談いただけます。<br>現地調査・融資相談・収益予測のアドバイスを提供しています。</div>
-      <a href="mailto:shinji.japaaan@gmail.com?subject=投資シミュレーションの結果について相談したい&body=シミュレーション結果を確認しました。詳しくご相談したいです。" style="display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:#000;font-size:13px;font-weight:700;padding:11px 24px;border-radius:8px;text-decoration:none">石澤不動産に無料相談する →</a>
+      <a id="invest-consult-btn" href="${buildInvestEmailURL(inp,r)}" style="display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:#000;font-size:13px;font-weight:700;padding:11px 24px;border-radius:8px;text-decoration:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+        分析結果を添えて相談する →
+      </a>
     </div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px">
       ${navigator.share ? `<button onclick="shareInvestResult()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:inherit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>分析結果をシェア</button>` : ''}
       <button onclick="copyInvestResult()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);color:var(--text-muted);border:1px solid rgba(255,255,255,0.12);font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:inherit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>テキストでコピー</button>
     </div>
   `;
+}
+
+function buildInvestEmailURL(inp, r) {
+  const v = getVerdict(r);
+  const fmt = n => Math.round(n/10000).toLocaleString();
+  const body = [
+    `【不動産投資シミュレーション結果】`,
+    `物件名: ${inp.name || '未設定'}`,
+    `購入価格: ${inp.price.toLocaleString()}万円　借入: ${inp.loan.toLocaleString()}万円`,
+    `表面利回り: ${r.grossYield.toFixed(2)}%　実質利回り: ${r.netYield.toFixed(2)}%`,
+    `年間CF: ${r.annualCF>=0?'+':''}${fmt(r.annualCF)}万円　CCR: ${r.ccr.toFixed(2)}%`,
+    `DSCR: ${r.dscr.toFixed(2)}　IRR: ${(r.irr*100).toFixed(1)}%`,
+    `判定: ${v.text}`,
+    ``,
+    `---`,
+    `この物件について詳しくご相談したいです。`,
+  ].join('\n');
+  return `mailto:shinji.japaaan@gmail.com?subject=${encodeURIComponent('投資シミュレーションの結果について相談したい')}&body=${encodeURIComponent(body)}`;
 }
 
 function shareInvestResult() {

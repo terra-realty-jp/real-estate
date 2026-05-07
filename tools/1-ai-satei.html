@@ -835,6 +835,23 @@ function calcAndShowResult() {
   const lineBtn = document.getElementById('line-share-btn');
   if(lineBtn) lineBtn.href = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(shareText);
 
+  // 相談メールCTAに査定結果を自動挿入
+  const consultLinks = document.querySelectorAll('a[href^="mailto:shinji.japaaan"]');
+  const areaEl = document.getElementById('area2') || document.getElementById('area');
+  const propTypeEl = document.getElementById('propType');
+  const emailBody = [
+    `【AI査定結果】`,
+    `エリア: ${document.querySelector('#pref option:checked')?.textContent||''} ${document.querySelector('#city')?.value||''}`,
+    `物件種別: ${propTypeEl?.options[propTypeEl.selectedIndex]?.textContent||''}`,
+    `推定価格: ${fmtV(price)}（レンジ: ${fmtV(low)}〜${fmtV(high)}）`,
+    ``,
+    `---`,
+    `この査定結果について詳しくご相談したいです。`,
+  ].join('\n');
+  consultLinks.forEach(a => {
+    if(a.href.includes('AI査定')) a.href = `mailto:shinji.japaaan@gmail.com?subject=${encodeURIComponent('AI査定の結果について相談したい')}&body=${encodeURIComponent(emailBody)}`;
+  });
+
   // Web Share API ボタン（モバイル対応ブラウザのみ表示）
   const nativeShareBtn = document.getElementById('native-share-btn');
   if(nativeShareBtn && navigator.share) nativeShareBtn.style.display = 'inline-flex';

@@ -624,10 +624,32 @@ function runMatching() {
     </div>
   `).join('') +
   `<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:20px 24px;margin-top:20px;text-align:center">
-    <div style="font-size:15px;font-weight:700;margin-bottom:6px">マッチングが見つかりました！次のステップ</div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px">このマッチングを実際に進めるには、石澤不動産にご連絡ください。物件調査・売買契約・資金計画まで無料でサポートします。</div>
-    <a href="mailto:shinji.japaaan@gmail.com?subject=マッチング結果について相談したい&body=マッチングツールで候補が見つかりました。詳しくご相談したいです。" style="display:inline-block;background:var(--gold);color:#000;font-weight:700;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:13px">石澤不動産に無料相談する →</a>
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">🎉 ${pairs.length}件のマッチング候補が見つかりました！</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">このマッチングを実際に進めるには、石澤不動産にご連絡ください。物件調査・売買契約・資金計画まで無料でサポートします。</div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="${buildMatchingEmailURL(pairs)}" style="display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:#000;font-weight:700;padding:11px 24px;border-radius:8px;text-decoration:none;font-size:13px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+        マッチング結果を送って相談する →
+      </a>
+      <button onclick="copyMatchingSummary(${JSON.stringify(pairs.map(p=>({s:p.s.name,b:p.b.name,score:p.score,price:p.s.price}))).replace(/"/g,'&quot;')})" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);color:var(--text-muted);border:1px solid rgba(255,255,255,0.15);font-weight:700;padding:11px 20px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        結果をコピー
+      </button>
+    </div>
   </div>`;
+}
+
+function buildMatchingEmailURL(pairs) {
+  const top = pairs.slice(0, 3);
+  const lines = top.map((p, i) => `【候補${i+1}】売主:${p.s.name} × 買主:${p.b.name} / 希望価格:${p.s.price}万円 / マッチ度:${p.score}点 / エリア:${p.s.area}`).join('\n');
+  const body = `マッチングツールで${pairs.length}件の候補が見つかりました。詳しくご相談したいです。\n\n${lines}\n\n---\nご都合の良い日時をお知らせください。`;
+  return `mailto:shinji.japaaan@gmail.com?subject=${encodeURIComponent('マッチング結果について相談したい')}&body=${encodeURIComponent(body)}`;
+}
+
+function copyMatchingSummary(pairsData) {
+  const lines = pairsData.map((p, i) => `候補${i+1}: ${p.s} × ${p.b} / ${p.price}万円 / マッチ度${p.score}点`).join('\n');
+  const text = `【マッチング結果】\n${lines}\n\n石澤不動産への相談: shinji.japaaan@gmail.com`;
+  navigator.clipboard.writeText(text).then(() => showToast('マッチング結果をコピーしました ✓')).catch(() => showToast('コピーに失敗しました', true));
 }
 
 function createDealFromMatch(seller, buyer, price) {
