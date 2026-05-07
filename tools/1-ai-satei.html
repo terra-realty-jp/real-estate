@@ -447,6 +447,17 @@
         <p style="font-size:11px;color:var(--text-muted);margin-top:10px">※ 新築・築浅マンション基準の概算単価です。築年数・物件種別により実際は異なります。</p>
       </div>
 
+      <!-- 成約期間詳細パネル -->
+      <div id="period-detail-panel" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px;display:none">
+        <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">⏱ この価格帯での成約期間目安</div>
+        <div id="period-factors" style="display:grid;gap:8px;margin-bottom:16px"></div>
+        <div id="period-tips-box" style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:8px;padding:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--gold-light);margin-bottom:8px">💡 早期成約のためのポイント</div>
+          <div id="period-tips" style="display:grid;gap:6px;font-size:12px;line-height:1.7;color:var(--text-muted)"></div>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:10px">※ 市場動向・物件個別の状態・価格設定によって大きく変わります。概算の目安としてお使いください。</p>
+      </div>
+
       <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:24px;margin-top:24px;text-align:left">
         <div style="font-size:14px;font-weight:700;color:#93c5fd;margin-bottom:16px">📌 この結果をどう使う？</div>
         <div style="display:grid;gap:12px;">
@@ -770,9 +781,17 @@ function calcAndShowResult() {
     (1 - Math.min(age, 40) / 40) * 40 +
     (dirFac - 0.93) / (1.04 - 0.93) * 20
   );
-  const period = liquidity > 70 ? '2〜4ヶ月' : liquidity > 50 ? '3〜6ヶ月' : '5〜9ヶ月';
+  // 価格帯による期間補正（高額物件ほど買い手が絞られる）
+  const priceInMan = price / 10000;
+  const priceBonus = priceInMan < 2000 ? 15 : priceInMan < 3000 ? 10 : priceInMan < 5000 ? 5 : 0;
+  const periodScore = Math.min(100, liquidity + priceBonus);
+  const period = periodScore >= 85 ? '1〜3ヶ月'
+    : periodScore >= 70 ? '2〜4ヶ月'
+    : periodScore >= 55 ? '3〜6ヶ月'
+    : periodScore >= 40 ? '5〜8ヶ月'
+    : '6〜12ヶ月';
 
-  currentEstimate = { price, low, high, tsubo, liquidity, period };
+  currentEstimate = { price, low, high, tsubo, liquidity, period, periodScore, age, station, priceInMan, reform };
 
   // 表示
   const fmt = v => '約 ' + (v >= 10000 ? Math.round(v/10000)+'億' : '') + (v%10000/10000>0.05 ? Math.round(v%10000/1000000*100)/100+'万' : '') +
@@ -789,6 +808,46 @@ function calcAndShowResult() {
   document.getElementById('resultLiquidity').textContent = liquidity + ' / 100';
   document.getElementById('liquidityBar').style.width = liquidity + '%';
   document.getElementById('resultPeriod').textContent = period;
+
+  // 成約期間詳細パネル
+  (() => {
+    const panel = document.getElementById('period-detail-panel');
+    if (!panel) return;
+    panel.style.display = 'block';
+    // 各要因の評価
+    const factorItems = [];
+    // 価格帯
+    if (priceInMan < 2000) factorItems.push({ icon:'✅', text:`価格帯 ${Math.round(priceInMan).toLocaleString()}万円：買い手が多い価格帯で成約しやすい`, color:'var(--green)' });
+    else if (priceInMan < 3500) factorItems.push({ icon:'✅', text:`価格帯 ${Math.round(priceInMan).toLocaleString()}万円：標準的な価格帯で一定の需要が見込める`, color:'var(--green)' });
+    else if (priceInMan < 6000) factorItems.push({ icon:'⚠️', text:`価格帯 ${Math.round(priceInMan).toLocaleString()}万円：購入層が絞られるため成約まで時間がかかる傾向`, color:'#f59e0b' });
+    else factorItems.push({ icon:'⚠️', text:`価格帯 ${Math.round(priceInMan).toLocaleString()}万円：高額物件は買い手が限られ、成約まで半年以上かかることも`, color:'#f59e0b' });
+    // 駅距離
+    const stLbl = {'walk5':'徒歩5分以内','walk10':'徒歩10分以内','walk15':'徒歩15分以内','walk20':'徒歩20分以内','bus':'バス・車利用'}[station]||'';
+    if (station==='walk5'||station==='walk10') factorItems.push({ icon:'✅', text:`駅距離（${stLbl}）：交通利便性が高く需要が安定している`, color:'var(--green)' });
+    else if (station==='walk15') factorItems.push({ icon:'▶️', text:`駅距離（${stLbl}）：成約期間に影響は少ないが、価格次第`, color:'var(--text-muted)' });
+    else factorItems.push({ icon:'⚠️', text:`駅距離（${stLbl}）：徒歩圏外は需要が落ちやすく期間が延びやすい`, color:'#f59e0b' });
+    // 築年数
+    if (age <= 5) factorItems.push({ icon:'✅', text:`築${age}年：新築・築浅で市場評価が高く売却しやすい`, color:'var(--green)' });
+    else if (age <= 15) factorItems.push({ icon:'✅', text:`築${age}年：比較的新しく、一定の需要が期待できる`, color:'var(--green)' });
+    else if (age <= 25) factorItems.push({ icon:'▶️', text:`築${age}年：耐震・設備状況の確認が買い手に重視されやすい`, color:'var(--text-muted)' });
+    else factorItems.push({ icon:'⚠️', text:`築${age}年：築古物件は条件次第で期間が長くなりやすい。リフォームの検討を`, color:'#f59e0b' });
+    // リフォーム
+    if (reform==='full'||reform==='partial') factorItems.push({ icon:'✅', text:'リフォーム済み：内見時の印象が良く、成約が早まりやすい', color:'var(--green)' });
+    document.getElementById('period-factors').innerHTML = factorItems.map(f =>
+      `<div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.7;color:${f.color}">${f.icon} ${f.text}</div>`
+    ).join('');
+    // 早期成約のコツ
+    const tips = [];
+    if (priceInMan >= 3500) tips.push('査定価格の5〜10%以内で価格設定すると問い合わせが増えやすい');
+    if (station!=='walk5'&&station!=='walk10') tips.push('駅からのアクセス方法（バス・自転車）を具体的に説明資料にまとめると効果的');
+    if (age >= 20 && reform!=='full') tips.push('売却前にクロス・水回りの部分リフォームをすると成約率・価格が改善しやすい');
+    if (age <= 10) tips.push('新築・築浅は広告の露出を増やすと早期成約につながりやすい');
+    tips.push('売り出し後1ヶ月反響がなければ価格・販売戦略の見直しを不動産会社に相談しよう');
+    tips.push('内見対応は柔軟に設定することで機会損失を防げる');
+    document.getElementById('period-tips').innerHTML = tips.map(t =>
+      `<div style="display:flex;gap:6px">・ ${t}</div>`
+    ).join('');
+  })();
 
   // 算出根拠
   const factors = [
