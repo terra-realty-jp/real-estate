@@ -722,7 +722,11 @@ function renderCashflow(inp, r) {
       </div>
     </div>
     <div class="card">
-      <div class="card-title">年次キャッシュフロー詳細表</div>
+      <div class="card-title" style="justify-content:space-between">
+        <span>年次キャッシュフロー詳細表</span>
+        <button onclick="exportCFCsv()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);color:var(--text-muted);border:1px solid rgba(255,255,255,0.12);font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:inherit">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>CSVダウンロード</button>
+      </div>
       <table>
         <thead><tr><th>年</th><th>年間NOI（万）</th><th>年間DS（万）</th><th>年間CF（万）</th><th>ローン残高（万）</th><th>累積CF（万）</th></tr></thead>
         <tbody>${years.map((y,i)=>`<tr>
@@ -736,6 +740,8 @@ function renderCashflow(inp, r) {
       </table>
     </div>
   `;
+  // CSVダウンロード用にデータ保持
+  window._cfExportData = {inp, years, noiData, loanData, cfData, cumData};
 
   if(cfChart) cfChart.destroy();
   cfChart = new Chart(document.getElementById('cfChart').getContext('2d'), {
@@ -949,6 +955,20 @@ function clearInputs() {
   document.getElementById('i_decline').value='1';
   document.getElementById('i_exit_cost').value='4';
   document.getElementById('quick-result').style.display='none';
+}
+
+function exportCFCsv() {
+  const d = window._cfExportData;
+  if(!d) { showErrToast('先に分析を実行してください'); return; }
+  const {inp, years, noiData, loanData, cfData, cumData} = d;
+  const header = ['年目','年間NOI(万円)','年間DS(万円)','年間CF(万円)','累積CF(万円)'];
+  const rows = years.map((y,i) => [y, noiData[i], loanData[i], cfData[i], cumData[i]]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const name = inp.name ? inp.name.replace(/[^\w぀-鿿]/g,'_') : 'property';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿'+csv], {type:'text/csv'}));
+  a.download = `CF_${name}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
 }
 
 function exportHistory() {
