@@ -539,6 +539,19 @@
     </div>
   </div>
 
+
+  <!-- よくある質問 -->
+  <div style="max-width:800px;margin:24px auto 0">
+    <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+        &#x2753; よくあるご質問
+      </h3>
+      <div id="satei-faq">
+        <!-- JSで生成 -->
+      </div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -1226,7 +1239,42 @@ function exportCSV() {
 }
 
 // ストレージ警告
-function checkStorageWarning() {
+function 
+(function() {
+  var faqs = [
+    { q: 'この査定額で本当に売れますか？',
+      a: 'AI査定は入力されたエリア・築年数・広さなどをもとにした概算です。実際の成約価格は市場状況・物件の状態・タイミングによって変わります。目安として使い、正式査定は複数の不動産会社に依頼することをお勧めします。' },
+    { q: 'ローンが残っている場合、売却できますか？',
+      a: '売却代金でローンを返済できれば（アンダーローン）売却可能です。売却額がローン残高を下回る場合（オーバーローン）は、不足分を自己資金で補う任意売却や住み替えローンなどの選択肢があります。まずは残債額と査定額を比較してみましょう。' },
+    { q: '査定してから売却まで何ヶ月かかりますか？',
+      a: '一般的に、売り出しから成約まで平均3〜6ヶ月かかります。立地・価格設定・市場環境によって大きく異なります。急いで売りたい場合は価格設定を見直す必要がありますが、焦りは禁物です。' },
+    { q: '複数の不動産会社に査定を依頼すべきですか？',
+      a: '査定価格は不動産会社によって異なることがあります。高すぎる査定は「値引き交渉のために高く出している」場合もあるため、3社程度に査定を依頼して比較することをお勧めします。石澤不動産では他社査定との比較相談も無料で承ります。' },
+    { q: '査定を依頼したら必ず売却しなければいけませんか？',
+      a: 'まったく義務はありません。「売るかどうか迷っている」「相場だけ知りたい」という段階でも気軽にご相談いただけます。無理な営業は一切しておりません。' },
+    { q: '査定した物件の情報はどこかに送られますか？',
+      a: 'このツールで入力したデータはお使いのブラウザの中（ローカルストレージ）にのみ保存されます。外部サーバーへの送信は行いません。連絡先を入力して「石澤不動産に相談する」ボタンを押した場合のみ、ご相談内容がメール経由で送信されます。' }
+  ];
+  var el = document.getElementById('satei-faq');
+  if(!el) return;
+  var html = '';
+  faqs.forEach(function(f, i) {
+    html += '<div style="border-bottom:1px solid rgba(255,255,255,0.06);">'
+      + '<button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'span\').textContent=this.nextElementSibling.style.display===\'block\'?\' ▲\':\' ▼\'"'
+      + ' style="width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:13px;font-weight:600;padding:14px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:inherit">'
+      + 'Q. ' + f.q
+      + '<span style="color:var(--gold);flex-shrink:0;margin-left:8px"> &#x25BC;</span>'
+      + '</button>'
+      + '<div style="display:none;font-size:12px;color:var(--text-muted);line-height:1.9;padding-bottom:14px">'
+      + 'A. ' + f.a
+      + '</div></div>';
+  });
+  el.innerHTML = html;
+  html += '<div style="margin-top:16px;text-align:center"><a href="mailto:shinji.japaaan@gmail.com?subject=査定後のご質問&body=査定ツールを使用しました。いくつかご質問させてください。" style="font-size:12px;color:var(--gold);text-decoration:none">上記以外のご質問はお気軽にメールでどうぞ &#x2192;</a></div>';
+  el.innerHTML = html;
+})();
+
+checkStorageWarning() {
   try {
     let used = 0;
     for(let k in localStorage) { if(localStorage.hasOwnProperty(k)) used += (localStorage[k]||'').length * 2; }
