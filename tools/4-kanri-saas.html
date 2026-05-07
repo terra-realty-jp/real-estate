@@ -174,10 +174,16 @@
         <div style="font-size:14px;font-weight:700">📄 月次収支レポート</div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:3px">今月の家賃回収・入金状況・修繕費を印刷用にまとめます</div>
       </div>
-      <button class="btn btn-outline" onclick="printMonthlyReport()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
-        今月のレポートを印刷
-      </button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-outline" onclick="printMonthlyReport()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+          今月のレポートを印刷
+        </button>
+        <button class="btn btn-outline" onclick="exportAnnualCSV()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          年次収益レポートCSV
+        </button>
+      </div>
     </div>
   </div>
   <div class="dashboard-grid" style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
@@ -1170,6 +1176,36 @@ ${monthRepairs.length ? `<div class="repair-section"><h2>🔧 今月の修繕費
 }
 
 // ===== CSV =====
+function exportAnnualCSV() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const months = Array.from({length:12}, (_,i) => `${year}-${String(i+1).padStart(2,'0')}`);
+  const activeTenants = tenants.filter(t=>t.status==='active');
+  const headers = ['月', '家賃収入（請求額）', '入金済み（円）', '入金率', '修繕費（円）', '空室損失（円）', '純収益（円）'];
+  const rows = months.map(ym => {
+    const charged = activeTenants.reduce((s,t)=>s+(t.rent||0),0);
+    const monthRents = rents.filter(r=>r.month===ym);
+    const paid = monthRents.filter(r=>r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+    const rate = charged>0 ? Math.round(paid/charged*100) : 0;
+    const repairCost = repairs.filter(r=>{const d=r.done||r.date||'';return d.startsWith(ym);}).reduce((s,r)=>s+(Number(r.cost)||0),0);
+    const vacantUnits = properties.reduce((s,p)=>s+(p.units||0),0) - activeTenants.length;
+    const avgRent = activeTenants.length>0 ? charged/activeTenants.length : 0;
+    const vacancyLoss = Math.round(vacantUnits * avgRent);
+    const netIncome = paid - repairCost;
+    return [ym, charged, paid, rate+'%', repairCost, vacancyLoss, netIncome];
+  });
+  const totalCharged = rows.reduce((s,r)=>s+r[1],0);
+  const totalPaid = rows.reduce((s,r)=>s+r[2],0);
+  const totalRepair = rows.reduce((s,r)=>s+r[4],0);
+  const totalNet = rows.reduce((s,r)=>s+r[6],0);
+  rows.push(['合計', totalCharged, totalPaid, totalCharged>0?Math.round(totalPaid/totalCharged*100)+'%':'—', totalRepair, '—', totalNet]);
+  const csv = [headers, ...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿'+csv], {type:'text/csv'}));
+  a.download = `年次収益レポート_${year}.csv`;
+  a.click();
+}
+
 function exportData(type){
   let rows, headers, data;
   if(type==='properties'){
