@@ -528,6 +528,15 @@
 
   </section>
 
+  <!-- 利用状況サマリー（データがある場合のみ表示） -->
+  <section id="usage-summary-section" style="display:none;background:#f8faff;padding:48px 40px;border-top:1px solid var(--border)">
+    <div style="max-width:760px;margin:0 auto">
+      <div class="section-label">あなたのこれまでの利用状況</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px" id="usage-stats-grid"></div>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:16px;text-align:center">※ このブラウザに保存されているデータの集計です。他の端末では表示されません。</p>
+    </div>
+  </section>
+
   <!-- FAQ Section -->
   <section style="background: var(--white); padding: 64px 40px;">
     <div style="max-width: 760px; margin: 0 auto;">
@@ -574,6 +583,36 @@
           <div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:${s.color};background:${s.color}11;border:1px solid ${s.color}33;padding:5px 12px;border-radius:100px">${s.tool} →</div>
         </a>
       `).join('');
+    }
+
+    function buildUsageSummary() {
+      try {
+        const leads   = JSON.parse(localStorage.getItem('satei_leads') || '[]');
+        const akiya   = JSON.parse(localStorage.getItem('akiya_deals') || '[]');
+        const sellers = JSON.parse(localStorage.getItem('matching_sellers') || '[]');
+        const buyers  = JSON.parse(localStorage.getItem('matching_buyers') || '[]');
+        const tenants = JSON.parse(localStorage.getItem('kanri_tenants') || '[]');
+        const hist    = JSON.parse(localStorage.getItem('toushi_history') || '[]');
+        const stats   = [
+          { icon:'🏠', label:'AI査定の実施', count:leads.length, unit:'回', href:'tools/1-ai-satei.html' },
+          { icon:'🏚', label:'空き家案件の管理', count:akiya.length, unit:'件', href:'tools/2-akiya-hunter.html' },
+          { icon:'🤝', label:'売主・買主の登録', count:sellers.length+buyers.length, unit:'件', href:'tools/3-owner-direct.html' },
+          { icon:'🏢', label:'テナントの管理', count:tenants.length, unit:'件', href:'tools/4-kanri-saas.html' },
+          { icon:'📊', label:'投資シミュ実行', count:hist.length, unit:'回', href:'tools/5-toushi-bunseki.html' },
+        ].filter(s => s.count > 0);
+        if (stats.length === 0) return;
+        const section = document.getElementById('usage-summary-section');
+        const grid = document.getElementById('usage-stats-grid');
+        if (!section || !grid) return;
+        section.style.display = 'block';
+        grid.innerHTML = stats.map(s => `
+          <a href="${s.href}" style="text-decoration:none;display:block;background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;transition:box-shadow 0.15s" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+            <div style="font-size:22px;margin-bottom:6px">${s.icon}</div>
+            <div style="font-size:26px;font-weight:900;color:var(--blue)">${s.count}<span style="font-size:13px;font-weight:400;color:var(--text-muted);margin-left:2px">${s.unit}</span></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${s.label}</div>
+          </a>
+        `).join('');
+      } catch(e) {}
     }
 
     const FAQS = [
@@ -699,6 +738,7 @@
       updateUsageBadges();
       buildScenarios();
       buildFAQ();
+      buildUsageSummary();
     });
   </script>
 
