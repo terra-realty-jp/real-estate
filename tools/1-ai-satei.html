@@ -440,6 +440,13 @@
         <p style="font-size:11px;color:var(--text-muted);margin-top:12px">※ エリア・面積・物件種別が同じ場合の概算比較。市場状況によって異なります。</p>
       </div>
 
+      <!-- 近隣エリア坪単価比較 -->
+      <div id="area-compare-panel" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px;display:none">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">🗺 近隣エリアとの坪単価比較（参考）</div>
+        <div id="area-compare-bars" style="display:flex;flex-direction:column;gap:8px"></div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:10px">※ 新築・築浅マンション基準の概算単価です。築年数・物件種別により実際は異なります。</p>
+      </div>
+
       <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:24px;margin-top:24px;text-align:left">
         <div style="font-size:14px;font-weight:700;color:#93c5fd;margin-bottom:16px">📌 この結果をどう使う？</div>
         <div style="display:grid;gap:12px;">
@@ -584,6 +591,30 @@ const AREA_LABEL = {
   fukuoka:'福岡福岡市', fukuoka_other:'福岡その他',
   sendai:'宮城県仙台市', sapporo:'北海道札幌市', other:'その他地方'
 };
+const AREA_NEIGHBORS = {
+  tokyo_central:  ['tokyo_central','tokyo_yamate','tokyo_23','tokyo_city'],
+  tokyo_yamate:   ['tokyo_central','tokyo_yamate','tokyo_23','tokyo_city'],
+  tokyo_23:       ['tokyo_yamate','tokyo_23','tokyo_city','kanagawa'],
+  tokyo_city:     ['tokyo_23','tokyo_city','kanagawa','saitama'],
+  kanagawa:       ['tokyo_23','kanagawa','kanagawa_other','chiba'],
+  kanagawa_other: ['kanagawa','kanagawa_other','saitama','chiba'],
+  saitama:        ['tokyo_23','kanagawa','saitama','chiba'],
+  chiba:          ['tokyo_23','saitama','chiba','kanagawa'],
+  osaka_central:  ['osaka_central','osaka_other','kyoto','hyogo'],
+  osaka_other:    ['osaka_central','osaka_other','kyoto','hyogo_other'],
+  kyoto:          ['osaka_central','kyoto','hyogo','osaka_other'],
+  hyogo:          ['osaka_central','kyoto','hyogo','hyogo_other'],
+  hyogo_other:    ['osaka_other','hyogo','hyogo_other','aichi_other'],
+  aichi:          ['aichi','osaka_central','hiroshima','fukuoka'],
+  aichi_other:    ['aichi','aichi_other','shizuoka','hyogo_other'],
+  fukuoka:        ['fukuoka','fukuoka_other','hiroshima','aichi'],
+  fukuoka_other:  ['fukuoka','fukuoka_other','sendai','sapporo'],
+  sendai:         ['sendai','sapporo','hiroshima','fukuoka_other'],
+  sapporo:        ['sapporo','sendai','niigata','other'],
+  hiroshima:      ['hiroshima','fukuoka','aichi','osaka_other'],
+  other:          ['sendai','sapporo','hiroshima','other'],
+};
+
 const AGE_FACTOR = (a) => a<=0?1.0:a<=5?0.97:a<=10?0.90:a<=15?0.82:a<=20?0.74:a<=25?0.65:a<=30?0.57:a<=35?0.50:0.44;
 const TYPE_FACTOR = { mansion:1.0, kodate:0.88, tochi:0.65, mansion_rental:1.05, apartment:0.92 };
 const TYPE_LABEL = { mansion:'マンション', kodate:'一戸建て', tochi:'土地', mansion_rental:'投資用マンション(一棟)', apartment:'アパート(一棟)' };
@@ -826,6 +857,30 @@ function calcAndShowResult() {
           <div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px;transition:width 0.5s"></div>
         </div>
         <div style="width:80px;font-size:12px;color:${textColor};font-weight:${e.isUser?'700':'400'};text-align:right">${fmtV(e.price)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // 近隣エリア坪単価比較
+  const areaComparePanel = document.getElementById('area-compare-panel');
+  const areaCompareBars = document.getElementById('area-compare-bars');
+  const neighbors = AREA_NEIGHBORS[pref] || [pref];
+  if(areaComparePanel && areaCompareBars && neighbors.length > 1) {
+    areaComparePanel.style.display = 'block';
+    const maxUnit = Math.max(...neighbors.map(k => AREA_UNIT[k]||0));
+    areaCompareBars.innerHTML = neighbors.map(k => {
+      const u = AREA_UNIT[k] || 200000;
+      const tsuboUnit = Math.round(u * 3.305 / 10000);
+      const pct = Math.round(u / maxUnit * 100);
+      const isUser = k === pref;
+      const col = isUser ? 'var(--gold)' : 'rgba(255,255,255,0.15)';
+      const tc = isUser ? 'var(--gold)' : 'var(--text-muted)';
+      return `<div style="display:flex;align-items:center;gap:8px">
+        <div style="width:120px;font-size:11px;color:${tc};font-weight:${isUser?'700':'400'};flex-shrink:0">${isUser?'▶ ':''} ${AREA_LABEL[k]||k}</div>
+        <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:3px;height:16px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${col};border-radius:3px;transition:width 0.5s"></div>
+        </div>
+        <div style="width:72px;font-size:11px;color:${tc};font-weight:${isUser?'700':'400'};text-align:right">${tsuboUnit}万円/坪</div>
       </div>`;
     }).join('');
   }
