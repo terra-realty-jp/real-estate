@@ -553,6 +553,13 @@
 </div>
 
 <script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxLgo-Ghf31C6SyBxh4BiIVC3lz1CfVXplJIqIxoT1-7YDF8T54Uu5IjkcVvU3LQkBglQ/exec';
+
+function sendToGAS(data) {
+  if (!GAS_URL) return;
+  fetch(GAS_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) }).catch(() => {});
+}
+
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
 // ===== データ =====
 const AREA_UNIT = {
@@ -782,9 +789,16 @@ function calcAndShowResult() {
     remarks: document.getElementById('remarks').value
   };
   leads.unshift(lead);
-  localStorage.setItem('satei_leads', JSON.stringify(leads));
+  try {
+    localStorage.setItem('satei_leads', JSON.stringify(leads));
+  } catch(e) {
+    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED') {
+      showHistoryToast('保存容量の上限に達しました。古い履歴を削除してからお試しください。', true); return;
+    }
+  }
   const _toastMsg = lead.name || lead.phone ? '連絡先と査定結果を保存しました ✓' : '査定結果を履歴に保存しました ✓';
   showHistoryToast(_toastMsg);
+  sendToGAS({ tool: 'tool1_satei', 日付: lead.date, 名前: lead.name || '', 電話: lead.phone || '', メール: lead.email || '', 売却時期: lead.timing || '', エリア: lead.area, 物件種別: lead.propType, 面積_sqm: lead.sqm, 築年数: lead.age, 査定価格_万円: Math.round(lead.estimatePrice / 10000), 備考: lead.remarks || '' });
 
   // 築年数別価格比較バー
   const compareAges = [0, 5, 10, 20, 30];
@@ -974,7 +988,7 @@ function deleteLead(id) {
   const label = l.name ? `「${l.name}」` : 'この査定記録';
   if(!confirm(`${label}を削除しますか？`)) return;
   leads = leads.filter(x => x.id !== id);
-  localStorage.setItem('satei_leads', JSON.stringify(leads));
+  try { localStorage.setItem('satei_leads', JSON.stringify(leads)); } catch(e) {}
   renderLeads();
   renderHistory();
 }
@@ -983,7 +997,8 @@ function clearLeads() {
   if(!leads.length) return;
   if(!confirm(`${leads.length}件の査定履歴をすべて削除しますか？`)) return;
   leads = [];
-  localStorage.setItem('satei_leads', JSON.stringify(leads));
+  try { localStorage.setItem('satei_leads', JSON.stringify(leads)); } catch(e) {}
+
   renderLeads();
   renderHistory();
 }

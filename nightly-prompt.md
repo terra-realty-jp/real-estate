@@ -85,6 +85,20 @@ git -C /home/sishizaw/real-estate-project log --oneline -15
 - [ ] IRRをNewton-Raphson法による真の内部収益率に改善
 - [ ] 感度分析マトリクスに凡例と解説文を追加
 
+### GASバックエンド統合（Tool3・Tool5）
+
+Tool1・Tool2にはすでに `sendToGAS()` 関数が実装済み。`GAS_URL` が空文字の間は送信されないため安全。
+URLが設定されていれば、以下のツールにも同様の連携を追加すること。
+実装パターンは `tools/1-ai-satei.html` の `sendToGAS()` 関数と呼び出し箇所を参照。
+
+**Tool3（売主・買主マッチング）** `tools/3-owner-direct.html`
+- [ ] 物件登録・問い合わせ送信の完了時に `sendToGAS()` で送信:
+  - `{ tool: 'tool3_matching', 日付, 種別（売主/買主）, エリア, 物件種別, 希望価格, 連絡先（任意） }`
+
+**Tool5（不動産投資シミュレーター）** `tools/5-toushi-bunseki.html`
+- [ ] シミュレーション実行時に `sendToGAS()` で送信:
+  - `{ tool: 'tool5_toushi', 日付, 物件価格_万円, 表面利回り_pct, 借入額_万円, NOI_万円, CCR_pct, 投資判定 }`
+
 ### 次に重要：全ツール共通の品質改善
 
 - [ ] 削除確認ダイアログに削除対象の名前を表示（「本当に削除しますか？」→「『田中様』を削除しますか？」）

@@ -364,6 +364,14 @@
 
 <script>
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxLgo-Ghf31C6SyBxh4BiIVC3lz1CfVXplJIqIxoT1-7YDF8T54Uu5IjkcVvU3LQkBglQ/exec';
+
+function sendToGAS(data) {
+  if (!GAS_URL) return;
+  fetch(GAS_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) }).catch(() => {});
+}
+
 // ===== チェックリスト定義（空き家オーナー向け緊急度診断）=====
 const CHECKS = [
   { id:'c1',  label:'1年以上ほとんど誰も住んでいない',              score: 15, cat:'状況' },
@@ -595,6 +603,8 @@ function saveDeal() {
   document.getElementById('d_addr').value = addr;
   document.getElementById('d_score').value = score;
   document.getElementById('d_status').value = score >= 50 ? 'contact' : 'prospect';
+  const _rank = (document.getElementById('scoreRank')?.textContent || '').replace('ランク ', '');
+  sendToGAS({ tool: 'tool2_akiya', 日付: new Date().toLocaleDateString('ja-JP'), 住所: addr, 緊急度スコア: score, ランク: _rank, チェック数: checked.size });
   openNewDealModal();
 }
 
@@ -747,7 +757,7 @@ function deleteDeal(id) {
   const label = d.name || 'この案件';
   if(!confirm(`「${label}」を削除しますか？\nこの操作は元に戻せません。`)) return;
   deals = deals.filter(x=>x.id!==id);
-  localStorage.setItem('akiya_deals', JSON.stringify(deals));
+  try { localStorage.setItem('akiya_deals', JSON.stringify(deals)); } catch(e) {}
   renderPipeline();
 }
 
@@ -802,7 +812,13 @@ function saveDealFromModal() {
   };
   if(editingDealId) deals = deals.map(d => d.id===editingDealId ? deal : d);
   else deals.unshift(deal);
-  localStorage.setItem('akiya_deals', JSON.stringify(deals));
+  try {
+    localStorage.setItem('akiya_deals', JSON.stringify(deals));
+  } catch(e) {
+    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED') {
+      showToast('保存容量の上限に達しました。古い案件を削除してからお試しください。', true); return;
+    }
+  }
   closeDealModal();
   renderPipeline();
   showToast((editingDealId ? '案件を更新しました' : '案件を登録しました') + ' ✓');
