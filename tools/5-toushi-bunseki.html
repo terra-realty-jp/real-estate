@@ -325,6 +325,11 @@
 
 <script>
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxLgo-Ghf31C6SyBxh4BiIVC3lz1CfVXplJIqIxoT1-7YDF8T54Uu5IjkcVvU3LQkBglQ/exec';
+function sendToGAS(data) {
+  if (!GAS_URL) return;
+  fetch(GAS_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) }).catch(() => {});
+}
 let history = JSON.parse(localStorage.getItem('inv_history') || '[]');
 let cfChart = null, loanChart = null;
 let lastResult = null;
@@ -467,6 +472,7 @@ function analyze() {
     inp: JSON.parse(JSON.stringify(inp)),
   });
   if(history.length > 50) history = history.slice(0,50);
+  sendToGAS({ tool:'tool5_toushi', 日付:new Date().toLocaleDateString('ja-JP'), 物件名:inp.name, 物件価格_万円:inp.price, 表面利回り_pct:+r.grossYield.toFixed(2), 借入額_万円:inp.loan, NOI_万円:Math.round(r.noi/10000), CCR_pct:+r.ccr.toFixed(2), 投資判定:getVerdict(r).text });
   try {
     localStorage.setItem('inv_history', JSON.stringify(history));
     showInvestToast('分析結果を履歴に保存しました ✓');

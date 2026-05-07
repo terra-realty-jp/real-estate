@@ -379,6 +379,11 @@
 
 <script>
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxLgo-Ghf31C6SyBxh4BiIVC3lz1CfVXplJIqIxoT1-7YDF8T54Uu5IjkcVvU3LQkBglQ/exec';
+function sendToGAS(data) {
+  if (!GAS_URL) return;
+  fetch(GAS_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) }).catch(() => {});
+}
 function showFieldError(el,msg){el.style.borderColor='var(--red)';let e=el.parentNode.querySelector('.field-error');if(!e){e=document.createElement('span');e.className='field-error';e.style.cssText='color:var(--red);font-size:11px;margin-top:2px;display:block;';el.parentNode.appendChild(e);}e.textContent=msg;}
 function clearFieldError(el){el.style.borderColor='';const e=el.parentNode.querySelector('.field-error');if(e)e.remove();}
 let sellers = JSON.parse(localStorage.getItem('od_sellers') || '[]');
@@ -465,6 +470,7 @@ function saveSeller() {
     memo:document.getElementById('s_memo').value, date:new Date().toLocaleDateString('ja-JP'),
   };
   if(editSelId) sellers=sellers.map(s=>s.id===editSelId?obj:s); else sellers.unshift(obj);
+  if(!editSelId) sendToGAS({ tool:'tool3_matching', 日付:obj.date, 種別:'売主', エリア:obj.area, 物件種別:TYPE_LABEL[obj.type]||obj.type, 希望価格_万円:obj.price, 連絡先:obj.phone||obj.email||'' });
   save('sellers'); closeModal('sellerModal'); renderSellers(); showToast('売主情報を保存しました ✓');
 }
 
@@ -542,6 +548,7 @@ function saveBuyer() {
     memo:document.getElementById('b_memo').value, date:new Date().toLocaleDateString('ja-JP'),
   };
   if(editBuyId) buyers=buyers.map(b=>b.id===editBuyId?obj:b); else buyers.unshift(obj);
+  if(!editBuyId) sendToGAS({ tool:'tool3_matching', 日付:obj.date, 種別:'買主', エリア:obj.area, 物件種別:TYPE_LABEL[obj.type]||obj.type, 希望価格_万円:obj.budget, 連絡先:obj.phone||obj.email||'' });
   save('buyers'); closeModal('buyerModal'); renderBuyers(); showToast('買主情報を保存しました ✓');
 }
 
