@@ -1001,20 +1001,46 @@ function renderHistory() {
     return;
   }
   const fmtV = v => v >= 100000000 ? '約' + Math.round(v/1000000)/100+'億円' : '約' + Math.round(v/10000).toLocaleString()+'万円';
+  // 同じエリア+種別の直前査定を探して前回比を計算
+  const prevMap = {};
+  const sortedDesc = [...leads].sort((a,b)=>b.id-a.id);
+  sortedDesc.forEach(l => {
+    const key = (l.area||'')+'_'+(l.propType||'')+'_'+Math.round((l.sqm||0)/10);
+    if(!prevMap[key]) { prevMap[key] = []; }
+    prevMap[key].push(l.id);
+  });
+  function getPrevPrice(l) {
+    const key = (l.area||'')+'_'+(l.propType||'')+'_'+Math.round((l.sqm||0)/10);
+    const ids = prevMap[key] || [];
+    const idx = ids.indexOf(l.id);
+    if(idx < 0 || idx === ids.length-1) return null;
+    const prevId = ids[idx+1];
+    const prev = leads.find(x=>x.id===prevId);
+    return prev ? prev.estimatePrice : null;
+  }
   wrap.innerHTML = `<table>
     <thead><tr>
-      <th>査定日</th><th>エリア</th><th>物件種別</th><th>面積</th><th>築年数</th><th>推定価格</th><th></th>
+      <th>査定日</th><th>エリア</th><th>物件種別</th><th>面積</th><th>築年数</th><th>推定価格</th><th>前回比</th><th></th>
     </tr></thead>
     <tbody>
-      ${leads.map(l => `<tr>
-        <td style="font-size:12px;color:var(--text-muted)">${l.date}</td>
-        <td>${esc(l.area)}</td>
-        <td><span class="lead-type-badge badge-sell">${esc(l.propType)}</span></td>
-        <td>${l.sqm ? l.sqm+'㎡' : '—'}</td>
-        <td>${l.age !== undefined ? l.age+'年' : '—'}</td>
-        <td><strong style="color:var(--gold)">${fmtV(l.estimatePrice)}</strong></td>
-        <td><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteLead(${l.id})">削除</button></td>
-      </tr>`).join('')}
+      ${leads.map(l => {
+        const pp = getPrevPrice(l);
+        const diff = pp ? l.estimatePrice - pp : null;
+        const pct = pp ? Math.round(diff/pp*100) : null;
+        const diffLabel = diff !== null
+          ? `<span style="font-size:12px;font-weight:700;color:${diff>=0?'var(--green)':'var(--red)'}">${diff>=0?'▲':'▼'}${Math.abs(Math.round(diff/10000))}万<br><span style="font-weight:400;font-size:10px">(${diff>=0?'+':''}${pct}%)</span></span>`
+          : '<span style="font-size:11px;color:var(--text-muted)">初回</span>';
+        return `<tr>
+          <td style="font-size:12px;color:var(--text-muted)">${l.date}</td>
+          <td>${esc(l.area)}</td>
+          <td><span class="lead-type-badge badge-sell">${esc(l.propType)}</span></td>
+          <td>${l.sqm ? l.sqm+'㎡' : '—'}</td>
+          <td>${l.age !== undefined ? l.age+'年' : '—'}</td>
+          <td><strong style="color:var(--gold)">${fmtV(l.estimatePrice)}</strong></td>
+          <td style="text-align:center">${diffLabel}</td>
+          <td><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteLead(${l.id})">削除</button></td>
+        </tr>`;
+      }).join('')}
     </tbody>
   </table>`;
 }
