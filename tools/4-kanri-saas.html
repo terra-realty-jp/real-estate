@@ -215,6 +215,19 @@
     </div>
     <div id="expiring-tenant-list"></div>
   </div>
+  <div class="card" style="margin-top:16px" id="expiry-calendar-card">
+    <div class="card-title">🗓 向こう6ヶ月の契約満了スケジュール</div>
+    <div id="expiry-calendar"></div>
+  </div>
+  <div id="consult-cta-card" style="display:none;margin-top:16px;background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:20px">
+    <div style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:8px">💬 石澤不動産にご相談ください</div>
+    <div id="consult-cta-reason" style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:16px"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a href="mailto:shinji.japaaan@gmail.com?subject=賃貸管理の相談&body=管理ツールから相談します。" id="consult-mail-btn" style="text-decoration:none;flex:1;min-width:140px;text-align:center;padding:11px 16px;background:var(--gold);color:#000;border-radius:8px;font-weight:700;font-size:13px">メールで相談する →</a>
+      <a href="tel:0120-000-000" style="text-decoration:none;flex:1;min-width:140px;text-align:center;padding:11px 16px;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3);border-radius:8px;font-weight:700;font-size:13px">📞 電話で相談する</a>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:10px;text-align:center">相談無料・しつこい営業は一切ございません</div>
+  </div>
 </div>
 </div>
 
@@ -693,6 +706,70 @@ function renderDashboard() {
           </tr>`;
         }).join('')}</tbody>
       </table>`;
+    }
+  }
+
+  // 向こう6ヶ月の契約満了スケジュール
+  const calEl = document.getElementById('expiry-calendar');
+  if(calEl) {
+    const activeTenantsFull = tenants.filter(t=>t.status==='active'&&t.end);
+    if(!activeTenantsFull.length) {
+      calEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">入居中テナントがいません</div>`;
+    } else {
+      const sixMonths = [];
+      for(let i=0;i<6;i++) {
+        const d = new Date(now.getFullYear(), now.getMonth()+i, 1);
+        const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        sixMonths.push({ ym, label:`${d.getFullYear()}年${d.getMonth()+1}月` });
+      }
+      let hasAny = false;
+      const html = sixMonths.map(({ym,label})=>{
+        const month = activeTenantsFull.filter(t=>t.end&&t.end.startsWith(ym));
+        if(!month.length) return '';
+        hasAny = true;
+        const rows = month.map(t=>{
+          const p=properties.find(x=>x.id===t.propertyId);
+          const daysLeft=Math.ceil((new Date(t.end)-new Date())/86400000);
+          const urgColor=daysLeft<=30?'var(--red)':daysLeft<=60?'var(--orange)':'var(--gold)';
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.04);flex-wrap:wrap;gap:6px">
+            <div>
+              <span style="font-weight:700;font-size:13px">${esc(t.name)}</span>
+              <span style="font-size:11px;color:var(--text-muted);margin-left:8px">${p?esc(p.name):'—'}${t.room?' '+t.room+'号室':''}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:12px;color:var(--text-muted)">${t.end}</span>
+              <span style="font-size:12px;font-weight:700;color:${urgColor}">あと${daysLeft}日</span>
+              <button class="btn btn-outline btn-sm" onclick="editTenant(${t.id});switchTab('tenants')">確認</button>
+            </div>
+          </div>`;
+        }).join('');
+        return `<div style="margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--gold);padding:6px 10px;background:rgba(201,168,76,0.08);border-radius:6px;margin-bottom:4px">${label}（${month.length}件）</div>
+          ${rows}
+        </div>`;
+      }).join('');
+      calEl.innerHTML = hasAny ? html : `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">✅ 向こう6ヶ月に契約満了するテナントはいません</div>`;
+    }
+  }
+
+  // 問題検出時の石澤不動産相談CTA
+  const ctaCard = document.getElementById('consult-cta-card');
+  const ctaReason = document.getElementById('consult-cta-reason');
+  const ctaMailBtn = document.getElementById('consult-mail-btn');
+  if(ctaCard && ctaReason && properties.length > 0) {
+    const issues = [];
+    if(vacantUnits > 0) issues.push(`現在${vacantUnits}戸の空室があります。空室対策や家賃設定の見直しについてご相談ください。`);
+    if(unpaidTenants.length > 0) issues.push(`今月${unpaidTenants.length}名の未入金テナントがいます。家賃督促や契約管理のご相談をお受けします。`);
+    if(expiringTenants.length > 0) issues.push(`90日以内に${expiringTenants.length}件の契約更新があります。更新交渉や条件変更をサポートします。`);
+    if(repairs.filter(r=>r.priority==='urgent'&&r.status!=='done').length > 0) issues.push(`緊急修繕が未対応です。工事業者の手配や費用相場についてお気軽にご相談ください。`);
+    if(issues.length > 0) {
+      ctaReason.innerHTML = issues.map(s=>`<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span style="color:var(--gold);flex-shrink:0">・</span><span>${s}</span></div>`).join('');
+      const subj = encodeURIComponent('賃貸物件管理のご相談');
+      const body = encodeURIComponent(['管理ツールより相談申し込みをします。', '', ...issues, '', '詳しくご相談させてください。'].join('\n'));
+      ctaMailBtn.href = `mailto:shinji.japaaan@gmail.com?subject=${subj}&body=${body}`;
+      ctaCard.style.display = 'block';
+    } else {
+      ctaCard.style.display = 'none';
     }
   }
 }
