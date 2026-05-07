@@ -272,8 +272,9 @@
         <option value="paid">入金済のみ</option>
       </select>
     </div>
-    <div style="display:flex;gap:10px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-gold" onclick="openRentModal()">＋ 入金登録</button>
+      <button class="btn btn-outline btn-sm" onclick="sendBulkReminder()">📧 未入金に一括督促</button>
       <button class="btn btn-outline btn-sm" onclick="exportData('rent')">CSVエクスポート</button>
     </div>
   </div>
@@ -1176,6 +1177,40 @@ ${monthRepairs.length ? `<div class="repair-section"><h2>🔧 今月の修繕費
 }
 
 // ===== CSV =====
+function sendBulkReminder() {
+  const month = document.getElementById('rent_month')?.value;
+  if (!month) return;
+  const activeTenants = tenants.filter(t=>t.status==='active');
+  const monthRents = rents.filter(r=>r.month===month);
+  const unpaidTenants = activeTenants.filter(t => {
+    const r = monthRents.find(x=>x.tenantId===t.id);
+    return !r || r.status==='unpaid';
+  }).filter(t => t.email);
+  if (unpaidTenants.length === 0) {
+    showToast('督促メール送信対象のテナント（メール登録済・未入金）がいません', true);
+    return;
+  }
+  const [y, m] = month.split('-');
+  const monthLabel = `${y}年${parseInt(m)}月`;
+  const toList = unpaidTenants.map(t=>t.email).join(',');
+  const subject = encodeURIComponent(`【家賃ご入金のご確認】${monthLabel}分`);
+  const body = encodeURIComponent([
+    `入居者各位`,
+    ``,
+    `いつも大変お世話になっております。`,
+    `${monthLabel}分の家賃について、まだご入金の確認が取れておりません。`,
+    `お手数ですが、ご確認いただけますと幸いです。`,
+    ``,
+    `すでにお振込済みの場合は、本メールと行き違いになっている場合がございます。`,
+    `その際はご了承ください。`,
+    ``,
+    `ご不明な点がございましたらお気軽にご連絡ください。`,
+    ``,
+    `よろしくお願いいたします。`,
+  ].join('\n'));
+  window.location.href = `mailto:${toList}?subject=${subject}&body=${body}`;
+}
+
 function exportAnnualCSV() {
   const now = new Date();
   const year = now.getFullYear();
