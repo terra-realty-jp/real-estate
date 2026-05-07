@@ -159,6 +159,7 @@
   <button class="tab-btn" onclick="switchTab('result')">📊 分析結果</button>
   <button class="tab-btn" onclick="switchTab('cashflow')">💹 CF予測</button>
   <button class="tab-btn" onclick="switchTab('sensitivity')">🎯 感度分析</button>
+  <button class="tab-btn" onclick="switchTab('exit')">🏠 出口戦略</button>
   <button class="tab-btn" onclick="switchTab('history')">🗂️ 分析履歴</button>
 </div>
 
@@ -313,6 +314,18 @@
   <p class="page-desc">空室率と利回りの変化に対するNOI・実質利回りの変化を表形式で確認します。</p>
   <div id="sensitivity-content">
     <div class="empty-state"><div class="empty-icon">🎯</div><p>物件入力タブで分析を実行してください</p></div>
+  </div>
+</div>
+</div>
+
+
+<!-- 出口戦略 -->
+<div id="tab-exit" class="tab-content">
+<div class="main">
+  <h1 class="page-title">出口<span>戦略</span></h1>
+  <p class="page-desc">「いつ売るか」が投資の最終的な利益を決めます。年別の売却シミュレーションで最適な売り時を確認しましょう。</p>
+  <div id="exit-content">
+    <div class="empty-state"><div class="empty-icon">🏠</div><p>物件入力タブで分析を実行してください</p></div>
   </div>
 </div>
 </div>
@@ -500,6 +513,7 @@ function analyze() {
   renderResult(inp, r);
   renderCashflow(inp, r);
   renderSensitivity(inp);
+  renderExit(inp, r);
 
   // 履歴保存
   history.unshift({
@@ -1187,8 +1201,122 @@ function analyzeSimple() {
   analyze();
 }
 
+
+function buildExitConsultMailto(inp, r, best) {
+  var fmtM = function(n) { return Math.round(n/10000).toLocaleString(); };
+  var sign = best.netProfit >= 0 ? '+' : '';
+  var body = [
+    '出口戦略シミュレーション結果についての相談',
+    '',
+    '物件名: ' + inp.name,
+    '購入価格: ' + inp.price.toLocaleString() + '万円 借入: ' + inp.loan.toLocaleString() + '万円',
+    '保有期間（計画）: ' + inp.hold + '年',
+    '',
+    '最適売却タイミング: ' + best.y + '年目',
+    '売却手取り（税引後）: ' + fmtM(best.afterTaxProceeds) + '万円',
+    '累積CF: ' + fmtM(best.cumCF) + '万円',
+    '税引後総収益: ' + sign + fmtM(best.netProfit) + '万円',
+    '',
+    '---',
+    '実際の売却タイミングや出口戦略についてご相談したいです。',
+  ].join('\n');
+  return 'mailto:shinji.japaaan@gmail.com?subject=' + encodeURIComponent('出口戦略の相談（シミュレーション結果あり）') + '&body=' + encodeURIComponent(body);
+}
+
+function renderExit(inp, r) {
+  if(!inp.price || !inp.rent) return;
+  var maxYears = Math.max(inp.hold + 5, 20);
+  var rMo = inp.rate / 100 / 12;
+  var loanResult = inp.loan > 0 ? calcLoanPayment(inp.loan, inp.rate, inp.term, inp.repay) : {monthly: 0};
+  var balance = inp.loan * 10000;
+  var cumCF = 0;
+  var yearData = [];
+  for (var y = 1; y <= maxYears; y++) {
+    var rentY = inp.rent * Math.pow(1 - inp.decline/100, y-1);
+    var noiY = calcNOI(rentY, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+    cumCF += noiY - loanResult.monthly * 12;
+    for (var m = 0; m < 12; m++) {
+      var interest = balance * rMo;
+      var principal = inp.repay === 'equal' ? Math.max(0, loanResult.monthly - interest) : (inp.loan > 0 ? inp.loan * 10000 / (inp.term * 12) : 0);
+      balance = Math.max(0, balance - principal);
+    }
+    var rentForExit = inp.rent * Math.pow(1 - inp.decline/100, y);
+    var noiForExit = calcNOI(rentForExit, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+    var exitPriceY = inp.exitYield > 0 ? noiForExit / (inp.exitYield / 100) : inp.price * 10000;
+    var saleProceeds = exitPriceY * (1 - inp.exitCost / 100) - balance;
+    var isLongTerm = y >= 6;
+    var estTax = Math.max(0, (exitPriceY - inp.price * 10000) * (isLongTerm ? 0.20315 : 0.39363));
+    var afterTaxProceeds = saleProceeds - estTax;
+    var netProfit = afterTaxProceeds + cumCF - r.equity;
+    yearData.push({y:y, loanBalance:balance, cumCF:cumCF, exitPriceY:exitPriceY,
+      saleProceeds:saleProceeds, estTax:estTax, afterTaxProceeds:afterTaxProceeds,
+      netProfit:netProfit, roi:r.equity>0?netProfit/r.equity*100:0, isLongTerm:isLongTerm});
+  }
+  var bi = 0;
+  yearData.forEach(function(d,i){if(d.netProfit>yearData[bi].netProfit)bi=i;});
+  var best = yearData[bi];
+  var fM = function(n){return Math.round(n/10000).toLocaleString();};
+  var fP = function(n){return(n>=0?'+':'')+n.toFixed(1)+'%';};
+  var gc = function(v){return v>=0?'var(--green)':'var(--red)';};
+  var bCard = '<div style="background:rgba(201,168,76,0.08);border:2px solid rgba(201,168,76,0.4);border-radius:14px;padding:20px 24px;margin-bottom:20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">'
+    +'<div style="text-align:center;flex-shrink:0"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">最高収益の売却タイミング</div>'
+    +'<div style="font-size:56px;font-weight:900;color:var(--gold);line-height:1">'+esc(best.y)+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">年目</div></div>'
+    +'<div style="flex:1;min-width:200px"><div style="font-size:13px;font-weight:700;margin-bottom:10px">'+esc(best.y)+'年目に売却した場合の試算（税引後）</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    +'<div style="background:var(--dark3);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--text-muted)">売却手取り（税引後）</div>'
+    +'<div style="font-size:16px;font-weight:700;color:'+gc(best.afterTaxProceeds)+'">'+fM(best.afterTaxProceeds)+'万円</div></div>'
+    +'<div style="background:var(--dark3);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--text-muted)">累積CF（'+esc(best.y)+'年間）</div>'
+    +'<div style="font-size:16px;font-weight:700;color:'+gc(best.cumCF)+'">'+(best.cumCF>=0?'+':'')+fM(best.cumCF)+'万円</div></div>'
+    +'<div style="background:var(--dark3);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--text-muted)">税引後総収益</div>'
+    +'<div style="font-size:16px;font-weight:700;color:'+gc(best.netProfit)+'">'+(best.netProfit>=0?'+':'')+fM(best.netProfit)+'万円</div></div>'
+    +'<div style="background:var(--dark3);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--text-muted)">ROI（自己資金対比）</div>'
+    +'<div style="font-size:16px;font-weight:700;color:'+gc(best.roi)+'">'+fP(best.roi)+'</div></div>'
+    +'</div></div></div>';
+  var taxNote = '<div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;line-height:1.8">'
+    +'<strong style="color:var(--orange)">&#9888;&#65039; 5年ルール（譲渡所得税）</strong><br>'
+    +'<span style="color:var(--text-muted)">売却益（譲渡所得）の税率は保有期間によって大きく異なります。<br>'
+    +'保有5年以下（短期譲渡）: 約<strong style="color:var(--red)">39.6%</strong>／保有5年超（長期譲渡）: 約<strong style="color:var(--green)">20.3%</strong><br>'
+    +'&#8251;概算です。実際の計算では取得費・減価償却・各種控除が適用されます。税理士にご相談ください。</span>'
+  +'</div>';
+  var rows = yearData.map(function(d){
+    var isBest=d.y===best.y, isHold=d.y===inp.hold;
+    var rs=isBest?'background:rgba(201,168,76,0.1);outline:2px solid rgba(201,168,76,0.4);outline-offset:-1px;':isHold?'background:rgba(59,130,246,0.07);':!d.isLongTerm?'background:rgba(239,68,68,0.03);':'';
+    var bdg='';
+    if(isBest)bdg+='<span style="background:rgba(201,168,76,0.2);color:var(--gold);font-size:9px;font-weight:700;padding:1px 6px;border-radius:100px;margin-left:4px;border:1px solid rgba(201,168,76,0.4)">最適</span>';
+    if(isHold&&!isBest)bdg+='<span style="background:rgba(59,130,246,0.2);color:var(--blue);font-size:9px;font-weight:700;padding:1px 6px;border-radius:100px;margin-left:4px">計画</span>';
+    if(d.y===5)bdg+='<span style="background:rgba(249,115,22,0.15);color:var(--orange);font-size:9px;font-weight:700;padding:1px 6px;border-radius:100px;margin-left:4px">5年壁</span>';
+    return '<tr style="'+rs+'">'
+      +'<td style="font-weight:700;white-space:nowrap">'+d.y+'年目'+bdg+'</td>'
+      +'<td>'+fM(d.exitPriceY)+'万</td>'
+      +'<td style="color:var(--text-muted)">'+fM(d.loanBalance)+'万</td>'
+      +'<td style="color:'+gc(d.saleProceeds)+';font-weight:700">'+fM(d.saleProceeds)+'万</td>'
+      +'<td>'+(d.estTax>0?'<span style="color:var(--orange)">-'+fM(d.estTax)+'万</span>':'<span style="color:var(--text-muted)">0</span>')
+        +'<span style="font-size:9px;margin-left:3px;color:'+(d.isLongTerm?'var(--green)':'var(--red)')+'">('+( d.isLongTerm?'長期':'短期')+')</span></td>'
+      +'<td style="color:'+gc(d.cumCF)+'">'+(d.cumCF>=0?'+':'')+fM(d.cumCF)+'万</td>'
+      +'<td style="font-weight:700;color:'+gc(d.netProfit)+'">'+(d.netProfit>=0?'+':'')+fM(d.netProfit)+'万</td>'
+      +'<td style="color:'+gc(d.roi)+'">'+fP(d.roi)+'</td>'
+      +'</tr>';
+  }).join('');
+  var tbl = '<div class="card"><div class="card-title">年別売却シミュレーション（税引後）</div>'
+    +'<div style="overflow-x:auto"><table style="min-width:700px"><thead><tr>'
+    +'<th>売却年</th><th>想定売却価格</th><th>ローン残高</th><th>売却手取り</th>'
+    +'<th>譲渡税（概算）</th><th>累積CF</th><th>税引後総収益</th><th>ROI</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +'<p style="font-size:11px;color:var(--text-muted);margin-top:14px;line-height:1.8">'
+    +'&#8251; 想定売却価格 = 売却時NOI &divide; 売却利回り（'+esc(inp.exitYield)+'%）。売却手取り = 売却価格&times;(1-売却費用率'+esc(inp.exitCost)+'%) &minus; ローン残高。<br>'
+    +'&#8251; 譲渡税は「売却価格 − 購入価格」を課税対象とした概算。実際は取得費・減価償却・各種控除が適用。<br>'
+    +'&#8251; 税引後総収益 = 売却手取り（税引後）+ 累積CF − 自己資金（'+fM(r.equity)+'万円）'
+    +'</p></div>';
+  var cta = '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:20px 24px;text-align:center;margin-top:4px">'
+    +'<div style="font-size:16px;font-weight:700;margin-bottom:8px">最適な売却タイミングをプロに相談</div>'
+    +'<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">エリアの相場動向・税務・出口戦略は数字だけでは判断できない要素があります。<br>石澤不動産では、データに基づいた売り時アドバイスを無料でご提供しています。</p>'
+    +'<a href="'+buildExitConsultMailto(inp,r,best)+'" class="btn btn-gold">無料で売却相談する &#8594;</a>'
+  +'</div>';
+  document.getElementById('exit-content').innerHTML = bCard + taxNote + tbl + cta;
+}
 function switchTab(t) {
-  const tabs=['input','result','cashflow','sensitivity','history'];
+  const tabs=['input','result','cashflow','sensitivity','exit','history'];
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));
   tabs.forEach(tab=>document.getElementById('tab-'+tab).classList.toggle('active',tab===t));
   if(t==='history') renderHistory();
