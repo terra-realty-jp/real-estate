@@ -477,10 +477,16 @@ function renderDashboard() {
     return d.startsWith(thisMonth);
   }).reduce((s,r)=>s+(Number(r.cost)||0),0);
 
+  // 空室損失（月間）
+  const vacantUnits = totalUnits - activeTenants.length;
+  const avgRent = activeTenants.length > 0 ? monthlyRent / activeTenants.length : 0;
+  const vacancyLoss = Math.round(vacantUnits * avgRent / 10000);
+
   document.getElementById('kpi-grid').innerHTML = [
     {l:'管理物件数',v:properties.length+'棟',s:`${totalUnits}戸 管理中`,c:'var(--text)'},
     {l:'入居率',v:occupancyRate+'%',s:`${activeTenants.length}/${totalUnits}戸 入居中`,c:occupancyRate>=80?'var(--green)':'var(--orange)'},
     {l:'月間家賃収入',v:(monthlyRent/10000).toLocaleString()+'万円',s:'入居者全体合計',c:'var(--gold)'},
+    {l:'空室損失（月）',v:vacantUnits>0?vacancyLoss+'万円/月':'なし',s:vacantUnits>0?`${vacantUnits}戸空室中・早期対応を`:'全室入居中',c:vacantUnits>0?'var(--red)':'var(--green)'},
     {l:'今月修繕費',v:thisMonthRepairCost>0?Math.round(thisMonthRepairCost/10000)+'万円':'—',s:thisMonthRepairCost>0?`${repairs.filter(r=>{const d=r.done||r.date||'';return d.startsWith(thisMonth);}).length}件分`:'今月の修繕なし',c:thisMonthRepairCost>0?'var(--orange)':'var(--text-muted)'},
     {l:'月間管理委託費（目安）',v:Math.round(manageFee/10000)+'万円',s:'家賃収入×委託費率',c:'var(--text-muted)'},
   ].map(k=>`<div class="kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
