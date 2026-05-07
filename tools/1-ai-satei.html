@@ -469,6 +469,9 @@
         <p style="font-size:11px;color:var(--text-muted);margin-top:10px">※ 市場動向・物件個別の状態・価格設定によって大きく変わります。概算の目安としてお使いください。</p>
       </div>
 
+      <!-- 売却コスト試算 -->
+      <div id="sell-cost-panel" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:24px;margin-top:24px;text-align:left">
         <div style="font-size:14px;font-weight:700;color:#93c5fd;margin-bottom:16px">📌 この結果をどう使う？</div>
         <div style="display:grid;gap:12px;">
@@ -740,6 +743,50 @@ function updateAreaHint() {
   }
 }
 
+function renderSellCostPanel(price) {
+  const el = document.getElementById('sell-cost-panel');
+  if (!el) return;
+  const commission = Math.ceil((price * 0.03 + 60000) * 1.1 / 10000) * 10000;
+  const stamp = price <= 5000000 ? 5000
+    : price <= 10000000 ? 10000
+    : price <= 50000000 ? 20000
+    : price <= 100000000 ? 60000
+    : 100000;
+  const registry = 50000;
+  const totalCost = commission + stamp + registry;
+  const net = price - totalCost;
+  const M = v => Math.round(v / 10000).toLocaleString() + '万円';
+  el.innerHTML = [
+    '<div style="font-size:13px;font-weight:700;margin-bottom:14px;color:#c9a84c">💰 売却時にかかる費用の目安</div>',
+    '<div style="display:grid;gap:10px;margin-bottom:14px">',
+    '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">',
+    '<span>推定売却価格</span>',
+    '<span style="color:#c9a84c;font-weight:700">' + M(price) + '</span>',
+    '</div>',
+    '<div style="height:1px;background:rgba(255,255,255,0.07)"></div>',
+    '<div style="display:flex;justify-content:space-between;font-size:13px">',
+    '<span style="color:#999">－ 仲介手数料（税込・上限）</span>',
+    '<span style="color:#f59e0b">約 ' + M(commission) + '</span>',
+    '</div>',
+    '<div style="font-size:11px;color:#777">└ (売却価格×3%+6万円)×1.1 ・法定上限</div>',
+    '<div style="display:flex;justify-content:space-between;font-size:13px">',
+    '<span style="color:#999">－ 印紙税（売買契約書）</span>',
+    '<span style="color:#f59e0b">' + stamp.toLocaleString() + '円</span>',
+    '</div>',
+    '<div style="display:flex;justify-content:space-between;font-size:13px">',
+    '<span style="color:#999">－ 登記・司法書士費用（目安）</span>',
+    '<span style="color:#f59e0b">約 ' + M(registry) + '</span>',
+    '</div>',
+    '<div style="height:1px;background:rgba(255,255,255,0.07)"></div>',
+    '<div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700">',
+    '<span>手元に残る目安</span>',
+    '<span style="color:#22c55e;font-size:18px">' + M(net) + '</span>',
+    '</div>',
+    '</div>',
+    '<p style="font-size:11px;color:#777;line-height:1.7">※ ローン残高がある場合は完済費用も必要です。譲渡所得税（長期保有:20.315%、5年以内:39.363%）も別途かかる場合があります。詳細は石澤不動産にお気軽にご相談ください。</p>'
+  ].join('');
+}
+
 // ===== バリデーション =====
 const FIELD_LABELS = {
   pref: '都道府県', propType: '物件種別', area: '面積', age: '築年数',
@@ -909,6 +956,9 @@ function calcAndShowResult() {
       `<div style="display:flex;gap:6px">・ ${t}</div>`
     ).join('');
   })();
+
+  // 売却コスト試算パネル
+  renderSellCostPanel(price);
 
   // 算出根拠
   const factors = [
