@@ -129,8 +129,9 @@
       body { background:#fff!important; color:#000!important; }
       .card { background:#fff!important; border:1px solid #ccc!important; border-radius:4px!important; color:#000!important; page-break-inside:avoid; }
       .main { padding:0!important; max-width:100%!important; }
-      .tab-content { display:block!important; }
-:root { --text:#000; --text-muted:#555; --gold:#c9a84c; }
+      .tab-content { display:none!important; }
+      .tab-content.active { display:block!important; }
+      :root { --text:#000; --text-muted:#555; --gold:#c9a84c; }
     }
   </style>
 </head>
@@ -186,7 +187,7 @@
   </div>
 
   <div class="card">
-    <div class="card-title"><span class="icon">📋</span>当てはまるものをすべてクリックしてください</div>
+    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span style="display:flex;align-items:center;gap:8px"><span class="icon">📋</span>当てはまるものをすべてクリックしてください</span><span id="check-count-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3);white-space:nowrap">0/12チェック</span></div>
     <div class="checklist" id="checklist">
       <!-- JS で生成 -->
     </div>
@@ -399,6 +400,8 @@ function saveChecked() {
 
 function buildChecklist() {
   const el = document.getElementById('checklist');
+  const badge = document.getElementById('check-count-badge');
+  if(badge) { const n=checked.size, t=CHECKS.length; badge.textContent=`${n}/${t}チェック`; if(n>0){ badge.style.color='var(--gold)'; badge.style.borderColor='rgba(201,168,76,0.3)'; } }
   el.innerHTML = CHECKS.map(c => `
     <div class="check-item${checked.has(c.id)?' checked':''}" id="ci_${c.id}" onclick="toggleCheck('${c.id}')">
       <div class="check-box" id="cb_${c.id}">
@@ -427,6 +430,8 @@ function updateScore() {
   const capped = Math.min(score, 100);
   document.getElementById('scoreNum').textContent = capped;
   document.getElementById('scoreBar').style.width = capped + '%';
+  const badge = document.getElementById('check-count-badge');
+  if(badge) { const n=checked.size, t=CHECKS.length; badge.textContent=`${n}/${t}チェック`; badge.style.background=n===t?'rgba(34,197,94,0.15)':n>0?'rgba(201,168,76,0.15)':'rgba(255,255,255,0.06)'; badge.style.color=n===t?'var(--green)':n>0?'var(--gold)':'var(--text-muted)'; badge.style.borderColor=n===t?'rgba(34,197,94,0.3)':n>0?'rgba(201,168,76,0.3)':'rgba(255,255,255,0.15)'; }
 
   let rank, comment;
   if(capped >= 70) { rank='S'; comment='緊急度が高い状態です。早急に不動産会社や専門家に相談することをお勧めします。'; }
