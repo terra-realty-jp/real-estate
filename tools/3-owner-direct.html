@@ -746,6 +746,31 @@ function saveDeal3() {
 }
 
 // ===== 手数料シミュ =====
+function sendFeeResultByMail(p, type) {
+  const fee = p<=200 ? p*0.05 : p<=400 ? p*0.04+2 : p*0.03+6;
+  const feeWithTax = Math.round(fee*1.1*10)/10;
+  const typeLabel = {buyer:'買主側',seller:'売主側',both:'売主・買主両方'}[type] || '';
+  const subject = encodeURIComponent(`仲介手数料シミュレーション結果（${p.toLocaleString()}万円）`);
+  const body = encodeURIComponent([
+    `【仲介手数料シミュレーション結果】`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `売買価格: ${p.toLocaleString()}万円`,
+    `計算区分: ${typeLabel}`,
+    `仲介手数料（上限・税込）: 約${feeWithTax}万円`,
+    ``,
+    `【主な諸費用の目安】`,
+    `・仲介手数料（税込）: 約${feeWithTax}万円`,
+    `・印紙税: 約${p<=500?0.1:p<=1000?0.5:p<=5000?1:p<=10000?3:6}万円`,
+    `・登記費用（司法書士報酬含む）: 約${Math.round(p*0.004)}万円`,
+    ``,
+    `※いずれも概算目安。詳細は石澤不動産にご相談ください。`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `このメールは 石澤不動産 不動産かんたんツール で計算した結果です。`,
+    `より詳細なご相談は: shinji.japaaan@gmail.com`,
+  ].join('\n'));
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
 function calcFee() {
   const p = parseInt(document.getElementById('fee_price').value)||0;
   const type = document.getElementById('fee_type').value;
@@ -813,7 +838,13 @@ function calcFee() {
     ${p>0?`<div style="margin-top:16px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:16px;text-align:center">
       <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">手数料を抑えて売却・購入したい方へ</div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.7">石澤不動産では手数料の詳細や交渉についても無料でご相談いただけます。</div>
-      <a href="mailto:shinji.japaaan@gmail.com?subject=仲介手数料について相談したい&body=売買価格${p}万円の物件の仲介手数料について相談したいです。" style="display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:#000;font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none">石澤不動産に無料相談する →</a>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <a href="mailto:shinji.japaaan@gmail.com?subject=仲介手数料について相談したい&body=売買価格${p}万円の物件の仲介手数料について相談したいです。" style="display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:#000;font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none">石澤不動産に無料相談する →</a>
+        <button onclick="sendFeeResultByMail(${p}, '${type}')" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--text-muted);border:1px solid rgba(255,255,255,0.15);font-size:12px;font-weight:700;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          この計算結果をメールで受け取る
+        </button>
+      </div>
     </div>`:''}`;
   document.getElementById('fee-result').innerHTML = resultHtml;
 
