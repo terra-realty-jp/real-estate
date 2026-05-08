@@ -677,15 +677,24 @@ function updateScore() {
     const rentNet5y = Math.round(rentAnnual5 - rentMgmt5 - reformCost);
     // 放置: コスト合計5年
     const ignore5y = -Math.round(total5y / 10000);
+    // 解体＋更地（駐車場転用）: 解体費100万 - 駐車場収入(3万×60ヶ月) + 特例外れた土地税増加分
+    const demolitionCost = 100; // 万円
+    const monthlyParking = 3;   // 万円/月（1〜2台分）
+    const parkingRevenue5y = monthlyParking * 12 * 5;
+    const annualTaxFullLand = Math.round(baseTax * 6 * 5 / 10000); // 住宅特例外れで増税 × 5年(万円)
+    const demolishNet5y = parkingRevenue5y - demolitionCost - annualTaxFullLand;
     const options = [
-      { label:'🏠 売却する', color:'#4ade80', result5y: sellNet5y, unit:'万円（手取り概算）', pros:['一括でまとまったお金が入る','管理の手間がなくなる','固定資産税の負担がなくなる'], cons:['仲介手数料・諸費用がかかる','売れるまでに時間がかかる場合がある'], cta:'無料査定を依頼する' },
-      { label:'🏡 賃貸に出す', color:'#60a5fa', result5y: rentNet5y, unit:'万円（5年収入目安）', pros:['毎月定期的な収入が入る','将来的に売却も選べる','節税効果が期待できる'], cons:['入居者がいない間は収入ゼロ','管理会社費用がかかる','リフォーム費用が初期に必要'], cta:'賃料査定を依頼する' },
-      { label:'⚠️ 放置する', color:'#f87171', result5y: ignore5y, unit:'万円（5年コスト）', pros:['今すぐ何もしなくていい'], cons:['固定資産税・維持費がかかり続ける','建物劣化が進む','特定空き家に指定されるリスク'], cta:'' },
+      { label:'🏠 売却する',       color:'#4ade80', result5y: sellNet5y,    unit:'万円（手取り概算）',  pros:['一括でまとまったお金が入る','管理の手間がなくなる','固定資産税の負担がなくなる'], cons:['仲介手数料・諸費用がかかる','売れるまでに時間がかかる場合がある'] },
+      { label:'🏡 賃貸に出す',     color:'#60a5fa', result5y: rentNet5y,    unit:'万円（5年収入目安）', pros:['毎月定期的な収入が入る','将来的に売却も選べる','節税効果が期待できる'], cons:['入居者がいない間は収入ゼロ','管理会社費用がかかる','リフォーム費用が初期に必要'] },
+      { label:'🚗 解体＋駐車場転用', color:'#a78bfa', result5y: demolishNet5y, unit:'万円（5年損益目安）', pros:['建物維持費が不要になる','毎月定期収入が見込める','初期費用の回収が可能'], cons:['解体費用が初期に必要（目安100万円〜）','駐車場需要がないと収入ゼロ','住宅特例外れで固定資産税が増加'] },
+      { label:'⚠️ 放置する',       color:'#f87171', result5y: ignore5y,     unit:'万円（5年コスト）',   pros:['今すぐ何もしなくていい'], cons:['固定資産税・維持費がかかり続ける','建物劣化が進む','特定空き家に指定されるリスク'] },
     ];
+    const optBgs   = ['rgba(74,222,128,0.06)', 'rgba(96,165,250,0.06)', 'rgba(167,139,250,0.06)', 'rgba(239,68,68,0.06)'];
+    const optBords = ['rgba(74,222,128,0.25)',  'rgba(96,165,250,0.25)',  'rgba(167,139,250,0.25)', 'rgba(239,68,68,0.3)'];
     document.getElementById('compareOptionsContent').innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
-        ${options.map((o,i)=>`<div style="background:${i===2?'rgba(239,68,68,0.06)':'rgba(255,255,255,0.04)'};border:1px solid ${i===2?'rgba(239,68,68,0.3)':'rgba('+  (i===0?'74,222,128':'96,165,250')+',0.25)'};border-radius:10px;padding:14px;text-align:center">
-          <div style="font-size:13px;font-weight:700;margin-bottom:6px">${o.label}</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+        ${options.map((o,i)=>`<div style="background:${optBgs[i]};border:1px solid ${optBords[i]};border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:12px;font-weight:700;margin-bottom:6px">${o.label}</div>
           <div style="font-size:22px;font-weight:900;color:${o.color};margin-bottom:2px">${o.result5y>=0?'+':'-'}${Math.abs(o.result5y).toLocaleString()}</div>
           <div style="font-size:10px;color:var(--text-muted);margin-bottom:10px">${o.unit}</div>
           <div style="text-align:left;font-size:11px">
@@ -694,7 +703,7 @@ function updateScore() {
           </div>
         </div>`).join('')}
       </div>
-      <p style="font-size:11px;color:var(--text-muted);line-height:1.6">※概算試算です。実際の金額は物件・立地・市況により大きく異なります。正確な査定はTERRA REALTYにご相談ください。</p>`;
+      <p style="font-size:11px;color:var(--text-muted);line-height:1.6">※概算試算。解体費・駐車場収入は規模・立地により大きく異なります。実際の金額はTERRA REALTYにご相談ください。</p>`;
   } else {
     riskCard.style.display = 'none';
     const compareCard = document.getElementById('compareOptionsCard');
