@@ -450,6 +450,9 @@
         </div>
       </div>
 
+      <!-- 物件グレード評価 -->
+      <div id="property-grade-panel" style="display:none;margin-top:16px"></div>
+
       <!-- 前回査定との比較 -->
       <div id="prev-compare-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px;margin-top:16px"></div>
 
@@ -828,6 +831,74 @@ function updateAreaHint() {
   } else {
     banner.style.display = 'none';
   }
+}
+
+function renderPropertyGrade(ageFac, stationFac, dirFac, floorFac, liquidity, pref) {
+  var el = document.getElementById('property-grade-panel');
+  if (!el) return;
+
+  // 各評価軸のスコア計算（0〜100点）
+  var scoreAge     = Math.round(Math.min(ageFac, 1) * 100);
+  var scoreStation = Math.round(Math.min(stationFac, 1) * 100);
+  var scoreDir     = Math.round(Math.min(dirFac, 1) * 100);
+  var scoreFloor   = Math.round(Math.min(floorFac / 1.1, 1) * 100);  // floorFacは1.1が上限
+  var scoreLoc     = Math.round(Math.min(liquidity, 100));
+
+  var total = Math.round((scoreAge*0.30 + scoreStation*0.25 + scoreDir*0.15 + scoreFloor*0.10 + scoreLoc*0.20));
+
+  var grade, gradeColor, gradeBg, gradeDesc;
+  if (total >= 80) {
+    grade='S'; gradeColor='#fde68a'; gradeBg='rgba(201,168,76,0.15)';
+    gradeDesc='市場での競争力が高く、早期成約・高値売却が期待できます';
+  } else if (total >= 65) {
+    grade='A'; gradeColor='#4ade80'; gradeBg='rgba(34,197,94,0.1)';
+    gradeDesc='需要が安定しており、標準より有利な条件で売却できる可能性があります';
+  } else if (total >= 50) {
+    grade='B'; gradeColor='#60a5fa'; gradeBg='rgba(59,130,246,0.1)';
+    gradeDesc='平均的な物件です。価格設定と時期を適切に選べばスムーズな売却が見込めます';
+  } else if (total >= 35) {
+    grade='C'; gradeColor='#fb923c'; gradeBg='rgba(251,146,60,0.1)';
+    gradeDesc='やや苦戦する可能性があります。リフォームや価格戦略の工夫が効果的です';
+  } else {
+    grade='D'; gradeColor='#f87171'; gradeBg='rgba(239,68,68,0.1)';
+    gradeDesc='難易度が高い物件です。専門家と相談しながら適切な対策を検討しましょう';
+  }
+
+  var axes = [
+    { label:'築年数', score: scoreAge, icon:'🏗' },
+    { label:'駅距離', score: scoreStation, icon:'🚉' },
+    { label:'方角・採光', score: scoreDir, icon:'☀️' },
+    { label:'階数', score: scoreFloor, icon:'🏢' },
+    { label:'エリア需要', score: scoreLoc, icon:'📍' },
+  ];
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:'+gradeBg+';border:1px solid '+gradeColor.replace(')',',0.3)').replace('rgb(','rgba(')+';border-radius:12px;padding:20px;">'
+    + '<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">'
+      + '<div style="text-align:center;flex-shrink:0">'
+        + '<div style="font-size:48px;font-weight:900;color:'+gradeColor+';line-height:1;text-shadow:0 0 20px '+gradeColor+'80">'+grade+'</div>'
+        + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">物件グレード</div>'
+      + '</div>'
+      + '<div style="flex:1">'
+        + '<div style="font-size:13px;font-weight:700;color:'+gradeColor+';margin-bottom:4px">総合スコア '+total+'点 / 100点</div>'
+        + '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:8px;margin-bottom:8px;overflow:hidden">'
+          + '<div style="width:'+total+'%;height:100%;background:'+gradeColor+';border-radius:4px;transition:width 0.6s"></div>'
+        + '</div>'
+        + '<div style="font-size:12px;color:var(--text-muted);line-height:1.6">'+gradeDesc+'</div>'
+      + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'
+    + axes.map(function(a) {
+        var c = a.score>=70?'#4ade80':a.score>=50?'#60a5fa':a.score>=35?'#fb923c':'#f87171';
+        return '<div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 4px">'
+          +'<div style="font-size:16px;margin-bottom:4px">'+a.icon+'</div>'
+          +'<div style="font-size:18px;font-weight:900;color:'+c+'">'+a.score+'</div>'
+          +'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">'+a.label+'</div>'
+        +'</div>';
+      }).join('')
+    + '</div>'
+    + '<p style="font-size:10px;color:var(--text-muted);margin-top:10px;line-height:1.6">※ 入力情報をもとにした参考スコアです。実際の市場評価は物件の個別状態・タイミングにより変わります。</p>'
+  + '</div>';
 }
 
 function renderSellCostPanel(price) {
@@ -1272,6 +1343,9 @@ function calcAndShowResult() {
       calcTaxSim();
     }
   })();
+
+  // 物件グレード評価カード
+  renderPropertyGrade(ageFac, stationFac, dirFac, floorFac, liquidity, pref);
 
   // 算出根拠
   const factors = [
