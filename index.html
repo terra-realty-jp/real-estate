@@ -289,6 +289,40 @@
     </div>
   </section>
 
+  <!-- ツール選択クイズ -->
+  <section style="background:#fff;padding:48px 40px;border-top:1px solid var(--border)">
+    <div style="max-width:800px;margin:0 auto">
+      <div class="section-label">どのツールを使えばいい？</div>
+      <h2 style="font-size:22px;font-weight:900;margin-bottom:8px;color:var(--text)">1問で最適なツールをご案内</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px">今日一番気になることをタップしてください</p>
+      <div id="tool-quiz-container">
+        <div id="quiz-q1" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <button class="quiz-choice" onclick="quizAnswer('sell')" style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:18px 16px;text-align:left;cursor:pointer;font-family:inherit;transition:all 0.15s">
+            <div style="font-size:24px;margin-bottom:6px">🏠</div>
+            <div style="font-size:14px;font-weight:700;color:#166534;margin-bottom:3px">家を売りたい・価格を知りたい</div>
+            <div style="font-size:12px;color:#6b7280;line-height:1.5">相場確認・査定・売却相談</div>
+          </button>
+          <button class="quiz-choice" onclick="quizAnswer('akiya')" style="background:#fff7ed;border:2px solid #fed7aa;border-radius:12px;padding:18px 16px;text-align:left;cursor:pointer;font-family:inherit;transition:all 0.15s">
+            <div style="font-size:24px;margin-bottom:6px">🏚</div>
+            <div style="font-size:14px;font-weight:700;color:#9a3412;margin-bottom:3px">実家・空き家をどうするか悩んでいる</div>
+            <div style="font-size:12px;color:#6b7280;line-height:1.5">活用診断・放置リスク確認</div>
+          </button>
+          <button class="quiz-choice" onclick="quizAnswer('kanri')" style="background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px;padding:18px 16px;text-align:left;cursor:pointer;font-family:inherit;transition:all 0.15s">
+            <div style="font-size:24px;margin-bottom:6px">🏢</div>
+            <div style="font-size:14px;font-weight:700;color:#1e40af;margin-bottom:3px">賃貸物件のオーナーです</div>
+            <div style="font-size:12px;color:#6b7280;line-height:1.5">家賃管理・修繕・更新アラート</div>
+          </button>
+          <button class="quiz-choice" onclick="quizAnswer('invest')" style="background:#faf5ff;border:2px solid #e9d5ff;border-radius:12px;padding:18px 16px;text-align:left;cursor:pointer;font-family:inherit;transition:all 0.15s">
+            <div style="font-size:24px;margin-bottom:6px">📊</div>
+            <div style="font-size:14px;font-weight:700;color:#6b21a8;margin-bottom:3px">投資用物件の購入を検討している</div>
+            <div style="font-size:12px;color:#6b7280;line-height:1.5">利回り・CF・リスク試算</div>
+          </button>
+        </div>
+        <div id="quiz-result" style="display:none"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- シナリオ別おすすめ -->
   <section style="background:#f1f5fb;padding:48px 40px;border-top:1px solid var(--border)">
     <div style="max-width:1000px;margin:0 auto">
@@ -932,6 +966,34 @@
       } catch(e) {
         stats.innerHTML = '';
       }
+    }
+
+    const QUIZ_RESULTS = {
+      sell:   { icon:'🏠', tool:'AI物件査定', href:'tools/1-ai-satei.html', color:'#16a34a', bg:'#f0fdf4', border:'#bbf7d0', desc:'エリア・築年数を入力するだけで推定価格が即表示。連絡先不要で相場を確認できます。' },
+      akiya:  { icon:'🏚', tool:'空き家活用診断', href:'tools/2-akiya-hunter.html', color:'#ea580c', bg:'#fff7ed', border:'#fed7aa', desc:'12項目チェックで「売る・貸す・放置」の5年比較と放置リスクを診断します。' },
+      kanri:  { icon:'🏢', tool:'賃貸物件かんたん管理', href:'tools/4-kanri-saas.html', color:'#0891b2', bg:'#ecfeff', border:'#a5f3fc', desc:'家賃入金管理・更新アラート・修繕記録をブラウザで無料管理。登録不要。' },
+      invest: { icon:'📊', tool:'不動産投資シミュレーター', href:'tools/5-toushi-bunseki.html', color:'#d97706', bg:'#fffbeb', border:'#fde68a', desc:'利回り・CF・IRR・出口戦略を詳細試算。感度分析・ワースト条件も自動計算。' },
+    };
+    function quizAnswer(key) {
+      const r = QUIZ_RESULTS[key];
+      if(!r) return;
+      const container = document.getElementById('tool-quiz-container');
+      const result = document.getElementById('quiz-result');
+      document.getElementById('quiz-q1').style.display = 'none';
+      result.innerHTML = `<div style="background:${r.bg};border:2px solid ${r.border};border-radius:14px;padding:24px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <div style="font-size:48px">${r.icon}</div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:12px;color:#6b7280;font-weight:700;margin-bottom:4px;letter-spacing:0.05em">おすすめのツール</div>
+          <div style="font-size:20px;font-weight:900;color:${r.color};margin-bottom:8px">${r.tool}</div>
+          <p style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:14px">${r.desc}</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a href="${r.href}" style="display:inline-flex;align-items:center;gap:6px;background:${r.color};color:#fff;font-size:13px;font-weight:700;padding:10px 20px;border-radius:8px;text-decoration:none">今すぐ使う →</a>
+            <button onclick="document.getElementById('quiz-q1').style.display='grid';document.getElementById('quiz-result').style.display='none'" style="display:inline-flex;align-items:center;gap:4px;background:none;border:1px solid #d1d5db;color:#6b7280;font-size:12px;font-weight:700;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit">やり直す</button>
+          </div>
+        </div>
+      </div>`;
+      result.style.display = 'block';
+      result.scrollIntoView({behavior:'smooth',block:'nearest'});
     }
 
     document.addEventListener('DOMContentLoaded', async function() {
