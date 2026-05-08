@@ -901,10 +901,38 @@ function renderListingStrategy(price, liq, station) {
       </div>
     </div>`;
   }).join('');
+  // Timeline chart data: [startMonth, endMonth] for each strategy
+  const timeRanges = [
+    { label:'即売', color:'#ef4444', start:0.5, end:1 },
+    { label:'査定基準', color:'#3b82f6', start:1, end:3 },
+    { label:'推奨売出', color:'#22c55e', start:3, end:6 },
+    { label:'強気', color:'#f59e0b', start:6, end:12 },
+  ];
+  const maxMonth = 13;
+  const timelineChart = timeRanges.map(t => {
+    const leftPct  = Math.round(t.start / maxMonth * 100);
+    const widthPct = Math.round((t.end - t.start) / maxMonth * 100);
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+        <div style="width:60px;font-size:10px;color:${t.color};font-weight:700;flex-shrink:0">${t.label}</div>
+        <div style="flex:1;position:relative;height:16px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden">
+          <div style="position:absolute;left:${leftPct}%;width:${widthPct}%;height:100%;background:${t.color};border-radius:4px;opacity:0.75"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  const monthMarks = [1,3,6,12].map(m => {
+    return `<div style="position:absolute;left:${Math.round(m/maxMonth*100)}%;transform:translateX(-50%);font-size:9px;color:var(--text-muted)">${m}ヶ月</div>`;
+  }).join('');
   el.style.display = 'block';
   el.innerHTML = `<div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">🎯 売出価格の戦略パターン</div>
     <div style="display:flex;flex-direction:column;gap:8px">${rows}</div>
-    <div style="margin-top:14px;padding:12px 14px;background:rgba(59,130,246,0.06);border-radius:8px;border-left:3px solid #3b82f6;font-size:12px;color:var(--text-muted);line-height:1.7">
+    <div style="margin-top:18px;padding:14px 16px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;font-weight:700">価格戦略と成約までの目安期間</div>
+      ${timelineChart}
+      <div style="position:relative;height:18px;margin-top:2px">${monthMarks}</div>
+    </div>
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(59,130,246,0.06);border-radius:8px;border-left:3px solid #3b82f6;font-size:12px;color:var(--text-muted);line-height:1.7">
       💡 <strong style="color:var(--text)">流動性スコア ${liq}点</strong>に基づく戦略提案。
       ${liq>=70?'このエリアは需要が高く、推奨売出価格でも短期成約が期待できます。':liq>=40?'需要は普通。推奨価格から始め、3ヶ月で動きがなければ価格見直しを検討しましょう。':'需要が低めのエリアです。即売価格または専門家と戦略を相談することをお勧めします。'}
     </div>
