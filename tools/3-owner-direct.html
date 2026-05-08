@@ -254,6 +254,7 @@
     </div>
   </div>
   <div id="matching-heatmap" style="display:none;margin-bottom:20px"></div>
+  <div id="matching-factor-stats" style="display:none;margin-bottom:20px"></div>
   <div id="matching-result"></div>
 </div>
 </div>
@@ -749,6 +750,56 @@ function runMatching() {
     </div>`;
     hmEl.style.display='block';
   } else if(hmEl) { hmEl.style.display='none'; }
+
+  // 要因別マッチング統計
+  const fsEl = document.getElementById('matching-factor-stats');
+  if (fsEl && sellers.filter(s=>s.status==='active').length && buyers.length) {
+    const allPairs = [];
+    sellers.filter(s=>s.status==='active').forEach(s => buyers.forEach(b => {
+      const m = calcMatchScore(s, b);
+      allPairs.push(m);
+    }));
+    const total = allPairs.length;
+    const FACTORS = [
+      { key: 'price',     label: '価格一致',   color: '#22c55e', tip: '予算が合っていない買主が多い場合は価格の見直しを検討' },
+      { key: 'price-near',label: '価格やや近い',color: '#86efac', tip: null },
+      { key: 'area',      label: 'エリア一致',  color: '#60a5fa', tip: 'エリア不一致が多い場合は希望エリアを広げる交渉を試みる' },
+      { key: 'type',      label: '種別一致',    color: '#a78bfa', tip: null },
+      { key: 'sqm',       label: '面積クリア',  color: '#94a3b8', tip: null },
+    ];
+    const factorCounts = FACTORS.map(f => ({
+      ...f,
+      cnt: allPairs.filter(m => m.reasons.some(r => r.tag === f.key)).length,
+    }));
+    const missedOnlyPrice = allPairs.filter(m =>
+      m.score < 30 && m.reasons.some(r => r.tag === 'area') && !m.reasons.some(r => r.tag === 'price' || r.tag === 'price-near')
+    ).length;
+    const missedOnlyArea = allPairs.filter(m =>
+      m.score < 30 && m.reasons.some(r => r.tag === 'price' || r.tag === 'price-near') && !m.reasons.some(r => r.tag === 'area')
+    ).length;
+    const bars = factorCounts.map(f => {
+      const pct = total > 0 ? Math.round(f.cnt / total * 100) : 0;
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:70px;font-size:11px;color:var(--text-muted);flex-shrink:0">${f.label}</div>
+        <div style="flex:1;height:8px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${f.color};border-radius:4px"></div>
+        </div>
+        <div style="width:40px;font-size:11px;font-weight:700;color:${f.color};text-align:right">${pct}%</div>
+        <div style="font-size:11px;color:var(--text-muted)">${f.cnt}件</div>
+      </div>`;
+    }).join('');
+    const advices = [];
+    if (missedOnlyPrice > 0) advices.push(`価格調整のみで <strong style="color:#22c55e">${missedOnlyPrice}件</strong> のマッチングが増える可能性があります`);
+    if (missedOnlyArea > 0) advices.push(`エリア条件の緩和で <strong style="color:#60a5fa">${missedOnlyArea}件</strong> の追加マッチングが見込めます`);
+    const adviceHtml = advices.length ? `<div style="margin-top:12px;padding:11px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:8px;font-size:12px;color:var(--text);line-height:1.8">
+      💡 改善ヒント：${advices.join('　／　')}
+    </div>` : '';
+    fsEl.innerHTML = `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 18px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px">📈 マッチング要因の内訳（全${total}組）</div>
+      ${bars}${adviceHtml}
+    </div>`;
+    fsEl.style.display = 'block';
+  } else if (fsEl) { fsEl.style.display = 'none'; }
 
   if(!filteredPairs.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">😔</div><p>${pairs.length ? 'フィルター条件に合う候補がありません' : '条件が合うマッチングが見つかりません'}</p><p style="font-size:12px;margin-top:8px">${pairs.length ? 'スコア下限またはエリアフィルターを変更してください' : '売主・買主の条件を確認してください'}</p></div>`;
