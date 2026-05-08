@@ -1280,7 +1280,10 @@ function renderRentLedger(){
           <td>${r&&r.paid?Number(r.paid).toLocaleString()+'円':'—'}</td>
           <td style="font-size:12px">${r&&r.date?r.date:'—'}</td>
           <td><span class="badge ${bClass}">${bLabel}</span></td>
-          <td><button class="btn btn-outline btn-sm" onclick="quickRent(${t.id},'${month}',${t.rent||0})">入金登録</button></td>
+          <td style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="quickRent(${t.id},'${month}',${t.rent||0})">${r&&r.status==='paid'?'修正':'入金登録'}</button>
+            ${r&&r.status==='paid'?`<button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="generateReceipt('${t.id}','${month}')">領収書</button>`:''}
+          </td>
         </tr>`;
       }).join('')}
     </tbody>
@@ -1332,6 +1335,49 @@ function saveRent(){
   save('rents');
   sbSaveRow('rents', {id:obj.id, tenant_id:obj.tenantId, month:obj.month, charge:obj.charge, paid:obj.paid, date:obj.date, status:obj.status, memo:obj.memo});
   closeModal('rentModal');renderRentLedger();showToast('家賃入金を記録しました ✓');
+}
+
+function generateReceipt(tenantId, month) {
+  const t=tenants.find(x=>x.id===tenantId);if(!t)return;
+  const r=rents.find(x=>x.tenantId===tenantId&&x.month===month);if(!r)return;
+  const p=properties.find(x=>x.id===t.propertyId);
+  const ym=month.split('-');
+  const monthLabel=`${ym[0]}年${parseInt(ym[1])}月分`;
+  const today=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  const receiptNum=`R${month.replace('-','')}${String(tenantId).slice(-4)}`;
+  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>家賃領収書 ${monthLabel}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Yu Mincho','Hiragino Mincho Pro',serif;color:#1a1a2e;padding:50px;font-size:14px;line-height:2;max-width:620px;margin:0 auto;}h1{font-size:28px;text-align:center;margin-bottom:8px;letter-spacing:6px;}
+.subtitle{text-align:center;font-size:12px;color:#555;margin-bottom:32px;padding-bottom:16px;border-bottom:2px solid #1a1a2e;}
+.amount{text-align:center;font-size:40px;font-weight:700;margin:24px 0;border-bottom:1px solid #ccc;padding-bottom:16px;}
+.label{color:#666;font-size:12px}.value{font-size:14px;font-weight:700;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}td{padding:6px 12px;border:1px solid #ddd;font-size:13px;}
+td:first-child{background:#f5f5f0;width:40%;color:#555;}
+.footer{margin-top:40px;text-align:right;font-size:12px;color:#555;border-top:1px solid #ccc;padding-top:16px;}
+.stamp{display:inline-block;border:2px solid #c9a84c;color:#c9a84c;padding:4px 12px;border-radius:4px;font-size:11px;margin-top:8px;}
+@media print{body{padding:20px;}}</style></head>
+<body>
+<h1>領 収 書</h1>
+<div class="subtitle">領収書番号: ${receiptNum}　発行日: ${today}</div>
+<div style="margin-bottom:16px;font-size:13px">${esc(t.name)} 様</div>
+<div class="amount">¥ ${Number(r.paid||r.charge||0).toLocaleString()}</div>
+<table>
+  <tr><td>対象期間</td><td>${monthLabel} 家賃</td></tr>
+  <tr><td>物件名</td><td>${p?p.name:'—'}</td></tr>
+  <tr><td>部屋番号</td><td>${t.room||'—'}</td></tr>
+  <tr><td>請求額</td><td>¥ ${Number(r.charge||t.rent||0).toLocaleString()}</td></tr>
+  <tr><td>入金額</td><td>¥ ${Number(r.paid||0).toLocaleString()}</td></tr>
+  <tr><td>入金日</td><td>${r.date||'—'}</td></tr>
+  ${r.memo?`<tr><td>備考</td><td>${esc(r.memo)}</td></tr>`:''}
+</table>
+<div class="footer">
+  <div>上記の金額を正に領収いたしました。</div>
+  <div style="margin-top:16px">TERRA REALTY</div>
+  <div class="stamp">領 収 済</div>
+</div>
+<script>window.onload=function(){window.print();};<\/script>
+</body></html>`;
+  const w=window.open('','_blank','width=700,height=800');
+  w.document.write(html);w.document.close();
 }
 
 // ===== 修繕 =====
