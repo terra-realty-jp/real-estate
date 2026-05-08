@@ -253,6 +253,7 @@
       </select>
     </div>
   </div>
+  <div id="matching-heatmap" style="display:none;margin-bottom:20px"></div>
   <div id="matching-result"></div>
 </div>
 </div>
@@ -701,6 +702,45 @@ function runMatching() {
   });
   pairs.sort((a,b) => b.score - a.score);
   const filteredPairs = areaFilter ? pairs.filter(p => p.s.area===areaFilter || p.b.area===areaFilter) : pairs;
+
+  // ヒートマップ（売主別最高スコア集計）
+  const hmEl = document.getElementById('matching-heatmap');
+  const activeSellers = sellers.filter(s=>s.status==='active');
+  if(hmEl && activeSellers.length > 0) {
+    const sellerStats = activeSellers.map(s=>{
+      const sp = pairs.filter(p=>p.s.id===s.id);
+      const best = sp.length ? Math.max(...sp.map(p=>p.score)) : 0;
+      const cnt = sp.filter(p=>p.score>=30).length;
+      return {s, best, cnt};
+    }).sort((a,b)=>b.best-a.best);
+    const cards = sellerStats.map(({s,best,cnt})=>{
+      const pct = best;
+      const col = best>=80?'#22c55e':best>=50?'#c9a84c':best>=30?'#3b82f6':'#6b7280';
+      return `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;min-width:0">
+        <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px" title="${esc(s.name)}">${esc(s.name)}</div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:4px;height:6px;overflow:hidden;margin-bottom:6px">
+          <div style="width:${pct}%;height:100%;background:${col};border-radius:4px;transition:width .4s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px">
+          <span style="color:${col};font-weight:700">${best>0?'Best '+best:'—'}</span>
+          <span style="color:var(--text-muted)">${cnt}件</span>
+        </div>
+      </div>`;
+    }).join('');
+    const high=pairs.filter(p=>p.score>=70).length, mid=pairs.filter(p=>p.score>=50&&p.score<70).length;
+    hmEl.innerHTML=`<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px">
+        <div style="font-size:13px;font-weight:700">売主別マッチングスコア一覧</div>
+        <div style="display:flex;gap:10px;font-size:11px">
+          <span style="color:#22c55e">●高相性 ${high}件</span>
+          <span style="color:#c9a84c">●中 ${mid}件</span>
+          <span style="color:var(--text-muted)">総数 ${pairs.length}件</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">${cards}</div>
+    </div>`;
+    hmEl.style.display='block';
+  } else if(hmEl) { hmEl.style.display='none'; }
 
   if(!filteredPairs.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">😔</div><p>${pairs.length ? 'フィルター条件に合う候補がありません' : '条件が合うマッチングが見つかりません'}</p><p style="font-size:12px;margin-top:8px">${pairs.length ? 'スコア下限またはエリアフィルターを変更してください' : '売主・買主の条件を確認してください'}</p></div>`;
