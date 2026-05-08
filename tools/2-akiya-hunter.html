@@ -284,6 +284,14 @@
     <div id="compareOptionsContent"></div>
   </div>
 
+  <!-- 補助金・支援制度カード -->
+  <div class="card" id="subsidy-card" style="display:none;">
+    <div class="card-title"><span class="icon">🏛</span>利用できる補助金・支援制度（参考）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家の解体・活用・管理に使える主な公的支援制度です。市区町村により異なるため、必ず窓口に確認してください。</p>
+    <div id="subsidy-list"></div>
+    <p style="font-size:10px;color:var(--text-muted);margin-top:12px;line-height:1.6">※ 制度の名称・補助額・条件は自治体・年度により異なります。実際の申請には各市区町村の担当窓口（建築住宅課・空き家相談窓口）にご確認ください。</p>
+  </div>
+
   <div class="card" id="scoreActionCard" style="display:none;">
     <div class="card-title"><span class="icon">🎯</span>推奨アクション</div>
     <div id="scoreActions"></div>
@@ -757,6 +765,8 @@ function updateScore() {
   }
   renderTimeline(capped, [...checked]);
   renderCatBreakdown(capped, [...checked]);
+  // 補助金・支援制度カード
+  renderSubsidyCard(capped, [...checked]);
   const demolishCard = document.getElementById('demolish-calc-card');
   if(demolishCard) { demolishCard.style.display = capped > 0 ? 'block' : 'none'; if(capped>0) calcDemolish(); }
 
@@ -786,6 +796,75 @@ function updateScore() {
     const nativeBtn = document.getElementById('score-native-share');
     if(nativeBtn) nativeBtn.style.display = (capped > 0 && navigator.share) ? 'inline-flex' : 'none';
   }
+}
+
+function renderSubsidyCard(score, checkedArr) {
+  var card = document.getElementById('subsidy-card');
+  var list = document.getElementById('subsidy-list');
+  if(!card || !list) return;
+  if(score <= 0) { card.style.display='none'; return; }
+
+  var hasInheritance = checkedArr.indexOf('c6') >= 0;
+  var hasSpecialCase  = checkedArr.indexOf('c8') >= 0;
+  var hasDamage       = checkedArr.indexOf('c2') >= 0;
+
+  var subsidies = [
+    {
+      icon:'🏗', color:'#fb923c',
+      title:'老朽空き家解体撤去補助金',
+      target:'倒壊・危険な状態の空き家解体に対して補助',
+      amount:'解体費用の1/2〜2/3、上限50〜100万円（市区町村による）',
+      show: hasDamage || hasSpecialCase,
+    },
+    {
+      icon:'🏡', color:'#4ade80',
+      title:'空き家改修・リノベーション補助',
+      target:'居住用・賃貸用にリノベーションする費用を補助',
+      amount:'改修費用の1/3〜1/2、上限30〜100万円（自治体による）',
+      show: true,
+    },
+    {
+      icon:'📋', color:'#c9a84c',
+      title:'空き家バンク登録奨励金',
+      target:'自治体の「空き家バンク」に登録・成約した場合の奨励金',
+      amount:'10〜30万円（成約時）・広告費補助（自治体による）',
+      show: true,
+    },
+    {
+      icon:'⚖️', color:'#60a5fa',
+      title:'相続登記促進のための法務相談',
+      target:'2024年から義務化された相続登記に関する無料相談',
+      amount:'法務局・市区町村の無料相談窓口（費用なし）',
+      show: hasInheritance,
+    },
+    {
+      icon:'🌿', color:'#a78bfa',
+      title:'空き地・空き家管理サービス補助',
+      target:'空き家の草刈り・清掃・見回り委託費用への助成',
+      amount:'年間数万円（自治体の管理サービスで上限あり）',
+      show: true,
+    },
+    {
+      icon:'🏦', color:'#34d399',
+      title:'住宅金融支援機構のリフォーム融資',
+      target:'空き家を含むリフォームに使える長期・低利の融資',
+      amount:'フラット35リノベ等で最大2,000万円・金利引き下げ',
+      show: true,
+    },
+  ];
+
+  var visible = subsidies.filter(function(s){ return s.show; });
+  card.style.display = 'block';
+  list.innerHTML = visible.map(function(s) {
+    return '<div style="display:flex;gap:12px;padding:12px;border:1px solid rgba(255,255,255,0.07);border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.02)">'
+      +'<div style="font-size:22px;flex-shrink:0;margin-top:2px">'+s.icon+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:700;color:'+s.color+';margin-bottom:3px">'+s.title+'</div>'
+        +'<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;line-height:1.5">'+s.target+'</div>'
+        +'<div style="font-size:12px;color:var(--text);font-weight:600">補助額目安: '+s.amount+'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
 }
 
 function calcDemolish() {
