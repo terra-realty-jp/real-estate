@@ -269,6 +269,10 @@
 
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
     <button class="btn btn-gold" onclick="saveDeal()">📌 この物件を進捗管理に登録する</button>
+    <button class="btn btn-outline" onclick="printAkiyaReport()" style="display:inline-flex;align-items:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+      診断結果を印刷する
+    </button>
     <button class="btn btn-outline" onclick="resetScore()">リセット</button>
   </div>
 
@@ -796,6 +800,49 @@ function showScoreToast(msg, isError) {
   t.textContent = msg; document.body.appendChild(t);
   setTimeout(()=>t.style.opacity='0', isError?4000:2000);
   setTimeout(()=>t.remove(), isError?4300:2300);
+}
+
+function printAkiyaReport() {
+  const score = parseInt(document.getElementById('scoreNum').textContent)||0;
+  const rank = document.getElementById('scoreRank').textContent||'—';
+  const comment = document.getElementById('scoreComment').textContent||'';
+  const addr = document.getElementById('sc_addr').value||'住所未入力';
+  const checkedLabels = [...checked].map(id => {
+    const c = CHECKS.find(x=>x.id===id); return c?c.label:'';
+  }).filter(Boolean);
+  const riskHtml = document.getElementById('riskCalcContent')?.innerHTML||'';
+  const compareHtml = document.getElementById('compareOptionsContent')?.innerHTML||'';
+  const today = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  const w = window.open('','_blank','width=800,height=900');
+  w.document.write(`<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>空き家活用診断レポート</title><meta name="viewport" content="width=device-width"><style>
+    body{font-family:'Hiragino Kaku Gothic Pro',sans-serif;max-width:700px;margin:32px auto;padding:0 24px;color:#333;font-size:13px;line-height:1.7}
+    h1{font-size:20px;border-bottom:3px solid #c9a84c;padding-bottom:8px;margin-bottom:24px}
+    h2{font-size:15px;border-left:4px solid #c9a84c;padding-left:10px;margin:24px 0 12px}
+    .score-box{display:inline-block;background:#111;color:#c9a84c;font-size:36px;font-weight:900;padding:12px 24px;border-radius:8px;border:2px solid #c9a84c}
+    .rank{display:inline-block;background:#c9a84c;color:#000;font-size:14px;font-weight:700;padding:4px 14px;border-radius:4px;margin-left:12px}
+    .check-list{columns:2;gap:16px;margin-bottom:12px}
+    .check-item{break-inside:avoid;margin-bottom:4px}
+    .footer{margin-top:40px;padding-top:16px;border-top:1px solid #ddd;font-size:11px;color:#888;text-align:center}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}
+    th{background:#f5f5f5}
+    @media print{body{margin:0;padding:16px}}
+  </style></head><body onload="setTimeout(()=>window.print(),300)">
+    <h1>空き家活用診断レポート</h1>
+    <p style="color:#888;font-size:12px;margin-bottom:20px">診断日: ${today}　診断物件: ${addr}</p>
+    <h2>診断スコア</h2>
+    <div style="margin-bottom:16px"><span class="score-box">${score}</span><span class="rank">${rank}</span></div>
+    <p>${comment}</p>
+    <h2>チェックリスト（${checkedLabels.length}項目該当）</h2>
+    <div class="check-list">${checkedLabels.map(l=>`<div class="check-item">☑ ${l}</div>`).join('')||'<div>（該当なし）</div>'}</div>
+    ${riskHtml?`<h2>放置リスク試算</h2><div style="background:#fafafa;padding:14px;border-radius:6px;border:1px solid #eee">${riskHtml}</div>`:''}
+    ${compareHtml?`<h2>3つの選択肢を比較</h2><div style="background:#fafafa;padding:14px;border-radius:6px;border:1px solid #eee">${compareHtml}</div>`:''}
+    <h2>次のステップ</h2>
+    <p>この診断結果をもとに、TERRA REALTYでは無料相談を受け付けています。売却・賃貸・活用の具体的な方法をご提案します。</p>
+    <p><strong>Email:</strong> terra.realty.iam@gmail.com</p>
+    <div class="footer">このレポートは「不動産かんたんツール（powered by TERRA REALTY）」で作成されました。<br>数値はいずれも概算です。詳細はTERRA REALTYにご相談ください。</div>
+  </body></html>`);
+  w.document.close();
 }
 
 function resetScore() {
