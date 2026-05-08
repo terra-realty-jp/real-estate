@@ -317,6 +317,21 @@
   <div id="cf-content">
     <div class="empty-state"><div class="empty-icon">💹</div><p>物件入力タブで分析を実行してください</p></div>
   </div>
+  <div id="prepay-calc-card" style="display:none;margin-top:16px" class="card">
+    <div class="card-title">⚡ 繰り上げ返済シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">毎月または一括で追加元本返済した場合の利息削減効果を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">毎月追加返済額（万円）</label>
+        <input type="number" id="pp_monthly" placeholder="例: 2" min="0" step="0.5" oninput="calcPrepay()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">一括繰り上げ返済額（万円）</label>
+        <input type="number" id="pp_lump" placeholder="例: 100" min="0" oninput="calcPrepay()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="prepay-result"></div>
+  </div>
 </div>
 </div>
 
@@ -994,6 +1009,9 @@ function renderCashflow(inp, r) {
   `;
   // CSVダウンロード用にデータ保持
   window._cfExportData = {inp, years, noiData, loanData, cfData, cumData};
+  // 繰り上げ返済カード表示
+  const ppCard = document.getElementById('prepay-calc-card');
+  if(ppCard && inp.loan>0) ppCard.style.display='block';
 
   if(cfChart) cfChart.destroy();
   cfChart = new Chart(document.getElementById('cfChart').getContext('2d'), {
@@ -1615,6 +1633,62 @@ function prefillAndSim(typeKey) {
     const btn = document.querySelector('#simple-mode-card .btn-gold');
     if(btn) btn.click();
   }, 100);
+}
+
+function calcPrepay() {
+  if(!lastResult) return;
+  const {inp} = lastResult;
+  const el = document.getElementById('prepay-result'); if(!el) return;
+  const monthly = (parseFloat(document.getElementById('pp_monthly').value)||0) * 10000;
+  const lump = (parseFloat(document.getElementById('pp_lump').value)||0) * 10000;
+  if(!monthly && !lump) { el.innerHTML=''; return; }
+  const loanAmt = inp.loan * 10000;
+  const r = inp.rate / 100 / 12;
+  const n = inp.term * 12;
+  // 標準返済
+  const stdMonthly = r>0 ? Math.round(loanAmt * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1)) : Math.round(loanAmt/n);
+  let stdInterest = 0, stdBalance = loanAmt;
+  for(let i=0;i<n;i++){const int=stdBalance*r; stdInterest+=int; stdBalance=Math.max(0,stdBalance-stdMonthly+int-(r>0?0:0));}
+  // Actually redo properly
+  stdInterest=0; stdBalance=loanAmt;
+  for(let i=0;i<n;i++){const int=stdBalance*r;const prin=stdMonthly-int;stdBalance=Math.max(0,stdBalance-prin);stdInterest+=int;}
+  // 繰り上げ返済あり
+  let ppInterest=0, ppBalance=lumpToApply=lump, ppBalance2=loanAmt-lump;
+  ppBalance2=Math.max(0,loanAmt-lump);
+  ppInterest=0; let ppMonths=0;
+  for(let i=0;i<n*2;i++){
+    if(ppBalance2<=0) break;
+    const int=ppBalance2*r;
+    const prin=(stdMonthly+monthly)-int;
+    ppBalance2=Math.max(0,ppBalance2-prin);
+    ppInterest+=int;
+    ppMonths++;
+  }
+  const savedInterest = Math.round((stdInterest - ppInterest) / 10000);
+  const savedMonths = n - ppMonths;
+  const savedYears = Math.floor(savedMonths/12);
+  const remainMonths = savedMonths%12;
+  const M = v => Math.abs(Math.round(v/10000)).toLocaleString();
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+      <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">利息削減額</div>
+        <div style="font-size:20px;font-weight:900;color:#4ade80">${savedInterest>0?savedInterest.toLocaleString()+'万円':'—'}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">通常比</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">返済期間短縮</div>
+        <div style="font-size:20px;font-weight:900;color:var(--gold)">${savedMonths>0?(savedYears>0?savedYears+'年':'')+(remainMonths>0?remainMonths+'ヶ月':''):'—'}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">完済まで${ppMonths}ヶ月</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">効果（年利回り換算）</div>
+        <div style="font-size:20px;font-weight:900;color:var(--text)">${inp.rate.toFixed(1)}%</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">ローン金利分を確定で削減</div>
+      </div>
+    </div>
+    ${savedInterest>0?`<div style="padding:10px 12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:6px;font-size:12px;color:var(--text-muted)">✅ 繰り上げ返済で約${savedInterest.toLocaleString()}万円の利息を削減できます。投資収益を安定させるためにも有効です。</div>`:''}
+  `;
 }
 
 function updateSimpleLoanPreview() {
