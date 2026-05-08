@@ -669,16 +669,19 @@ function renderDashboard() {
         const rate = charged > 0 ? Math.round(paidAmt/charged*100) : 0;
         const occRate = (p.units||0) > 0 ? Math.round(pts.length/(p.units||1)*100) : 0;
         const rateColor = rate>=90?'var(--green)':rate>=70?'var(--orange)':'var(--red)';
+        const grade = (occRate>=90&&rate>=90)?'S':(occRate>=80&&rate>=80)?'A':(occRate>=70&&rate>=70)?'B':(occRate>=50)?'C':'D';
+        const gradeColor = {S:'#c9a84c',A:'#22c55e',B:'#3b82f6',C:'#f59e0b',D:'#ef4444'}[grade];
         return `<tr>
           <td><strong>${esc(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${PROP_TYPE[p.type]||p.type||''}</div></td>
           <td style="text-align:center">${pts.length}/${p.units||'—'}戸<div style="font-size:11px;color:var(--text-muted)">${occRate}%</div></td>
           <td style="text-align:right;color:var(--gold)">${charged?Math.round(charged/10000).toLocaleString()+'万':'—'}</td>
           <td style="text-align:right;color:var(--green)">${paidAmt?Math.round(paidAmt/10000).toLocaleString()+'万':'—'}</td>
           <td style="text-align:center;color:${rateColor};font-weight:700">${charged?rate+'%':'—'}</td>
+          <td style="text-align:center"><span style="display:inline-block;width:26px;height:26px;line-height:26px;border-radius:50%;background:${gradeColor};color:${grade==='S'?'#000':'#fff'};font-size:13px;font-weight:900">${grade}</span></td>
         </tr>`;
       }).join('');
       propSummaryEl.style.display='block';
-      propSummaryEl.innerHTML=`<div class="card" style="overflow-x:auto"><div class="card-title">🏢 物件別 今月の収支状況</div><table><thead><tr><th>物件名</th><th>入居率</th><th>請求額</th><th>入金済</th><th>回収率</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      propSummaryEl.innerHTML=`<div class="card" style="overflow-x:auto"><div class="card-title">🏢 物件別 今月の収支状況</div><table><thead><tr><th>物件名</th><th>入居率</th><th>請求額</th><th>入金済</th><th>回収率</th><th>評価</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     } else {
       propSummaryEl.style.display='none';
     }
