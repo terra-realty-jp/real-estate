@@ -489,6 +489,9 @@
       <!-- 売出価格戦略カード -->
       <div id="listing-strategy-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 成約可能性スコア -->
+      <div id="success-prob-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -904,6 +907,67 @@ function renderListingStrategy(price, liq, station) {
     <p style="font-size:11px;color:var(--text-muted);margin-top:10px">※ 成約期間はあくまで目安。実際の市場動向・物件状態・広告露出度によって大きく異なります。</p>`;
 }
 
+function renderSuccessProbPanel(price, liquidity, periodScore, station, age, reform) {
+  const el = document.getElementById('success-prob-panel');
+  if (!el || !price) return;
+  let prob = Math.round(liquidity * 0.5 + periodScore * 0.3);
+  if (station === 'walk5') prob += 15;
+  else if (station === 'walk10') prob += 10;
+  else if (station === 'walk15') prob += 4;
+  else if (station === 'bus') prob -= 10;
+  if (age <= 5) prob += 10;
+  else if (age > 30) prob -= 15;
+  else if (age > 20) prob -= 7;
+  if (reform === 'full') prob += 12;
+  else if (reform === 'partial') prob += 6;
+  prob = Math.min(92, Math.max(18, prob));
+  const color = prob >= 70 ? '#22c55e' : prob >= 50 ? '#c9a84c' : prob >= 35 ? '#f97316' : '#ef4444';
+  const label = prob >= 70 ? '高い' : prob >= 50 ? '普通' : prob >= 35 ? 'やや低め' : '低い';
+  const advice = prob >= 70
+    ? '市場条件が整っており、3ヶ月以内の成約が期待できます。適正価格での積極的な売出しが効果的です。'
+    : prob >= 50
+    ? '3ヶ月以内の成約は十分可能です。内見対応の柔軟化や価格設定の工夫で確率を高められます。'
+    : prob >= 35
+    ? '条件を整えることで確率を引き上げられます。リフォームや価格見直しを専門家と相談しましょう。'
+    : '成約まで時間がかかる可能性があります。販売戦略を不動産会社と再検討することをお勧めします。';
+  const r = 48, circumference = Math.PI * r;
+  const dashOffset = circumference * (1 - prob / 100);
+  const stLbl = {'walk5':'徒歩5分以内','walk10':'徒歩10分以内','walk15':'徒歩15分以内','walk20':'徒歩20分以内','bus':'バス・車利用'}[station] || '';
+  const checks = [
+    liquidity >= 70 ? `<div style="color:#4ade80">✅ 市場流通性 ${liquidity}/100：高い</div>`
+      : liquidity >= 45 ? `<div style="color:var(--text-muted)">▶️ 市場流通性 ${liquidity}/100：普通</div>`
+      : `<div style="color:#f97316">⚠️ 市場流通性 ${liquidity}/100：低め</div>`,
+    stLbl ? (station==='walk5'||station==='walk10' ? `<div style="color:#4ade80">✅ ${stLbl}：買い手ニーズに合致</div>` : station==='bus' ? `<div style="color:#f97316">⚠️ ${stLbl}：需要が絞られる</div>` : `<div style="color:var(--text-muted)">▶️ ${stLbl}</div>`) : '',
+    age <= 10 ? `<div style="color:#4ade80">✅ 築${age}年：需要旺盛な築浅物件</div>` : age >= 30 ? `<div style="color:#f97316">⚠️ 築${age}年：状態・価格設定がカギ</div>` : `<div style="color:var(--text-muted)">▶️ 築${age}年：一般的な物件</div>`,
+    reform === 'full' ? `<div style="color:#4ade80">✅ フルリフォーム済み：内見印象◎</div>` : reform === 'partial' ? `<div style="color:#4ade80">✅ 部分リフォーム済み：好印象</div>` : '',
+  ].filter(Boolean).join('');
+  el.style.display = 'block';
+  el.innerHTML = `<div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 3ヶ月以内の成約可能性</div>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div style="flex-shrink:0;text-align:center;position:relative;width:120px;height:72px">
+        <svg width="120" height="68" viewBox="0 0 120 68" style="overflow:visible">
+          <path d="M12,60 A48,48 0 0,1 108,60" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="10" stroke-linecap="round"/>
+          <path d="M12,60 A48,48 0 0,1 108,60" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"
+            stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${dashOffset.toFixed(2)}"
+            style="transition:stroke-dashoffset 0.9s cubic-bezier(0.22,1,0.36,1)"/>
+        </svg>
+        <div style="position:absolute;bottom:0;left:0;right:0;text-align:center">
+          <div style="font-size:28px;font-weight:900;color:${color};line-height:1">${prob}<span style="font-size:14px">%</span></div>
+          <div style="font-size:10px;font-weight:700;color:${color}">${label}</div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:12px;color:var(--text);line-height:1.7;margin-bottom:10px">${advice}</div>
+        <div style="display:grid;gap:5px;font-size:11px">${checks}</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:12px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:8px;font-size:12px;line-height:1.7">
+      💡 <strong style="color:var(--gold-light)">TERRA REALTYに相談すると？</strong>
+      <span style="color:var(--text-muted)"> 地域密着ネットワークで買い手を積極的にご紹介。成約率を高める戦略を無料でご提案します。</span>
+    </div>
+    <p style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 独自アルゴリズムによる参考値です。実際の成約可能性は市場動向・価格設定・物件状態により大きく異なります。</p>`;
+}
+
 function calcTaxSim() {
   const el = document.getElementById('tax-sim-result'); if(!el) return;
   const price = window._taxSimPrice || 0; if(!price) return;
@@ -1162,6 +1226,9 @@ function calcAndShowResult() {
     if(!lsp || !price) return;
     renderListingStrategy(price, liquidity, station);
   })();
+
+  // 成約可能性スコア
+  renderSuccessProbPanel(price, liquidity, periodScore, station, age, reform);
 
   // 譲渡所得税シミュレーター表示
   (function(){
