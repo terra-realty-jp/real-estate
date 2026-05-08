@@ -407,7 +407,10 @@
     <div style="display:flex;gap:12px;margin-top:8px;font-size:10px">
       <span style="color:#4ade80">■ 入金済</span><span style="color:#facc15">■ 一部入金</span><span style="color:#f87171">■ 未入金</span><span style="color:#374151">■ 未登録</span>
     </div>
-    <div class="modal-actions" style="margin-top:16px">
+    <div id="tdm-renewal-btn-wrap" style="margin-top:12px;display:none">
+      <button id="tdm-renewal" class="btn btn-outline" style="width:100%;border-color:var(--gold);color:var(--gold)">✉ 契約更新のご案内メールを生成</button>
+    </div>
+    <div class="modal-actions" style="margin-top:12px">
       <button class="btn btn-outline" onclick="closeModal('tenantDetailModal')">閉じる</button>
       <button id="tdm-edit" class="btn btn-gold">編集</button>
     </div>
@@ -1059,8 +1062,9 @@ function renderTenants(){
           <td style="font-size:12px">${t.start||'—'}</td>
           <td style="font-size:12px">${t.end||'—'}${expiryBadge}</td>
           <td><span class="badge ${STATUS_B[t.status]||''}">${STATUS_L[t.status]||t.status}</span></td>
-          <td style="display:flex;gap:6px">
+          <td style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-outline btn-sm" onclick="showTenantDetail('${t.id}')">詳細</button>
+            ${expiring?`<button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="generateRenewalEmail('${t.id}')">更新メール</button>`:''}
             <button class="btn btn-outline btn-sm" onclick="editTenant('${t.id}')">編集</button>
             <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteTenant('${t.id}')">削除</button>
           </td>
@@ -1130,7 +1134,57 @@ function showTenantDetail(id){
   document.getElementById('tdm-unpaid-count').textContent=unpaidCount+'ヶ月';
   document.getElementById('tdm-bars').innerHTML=bars;
   document.getElementById('tdm-edit').onclick=()=>{closeModal('tenantDetailModal');editTenant(id);};
+  // 契約更新ボタン表示判定（90日以内に終了するアクティブテナント）
+  const renewWrap=document.getElementById('tdm-renewal-btn-wrap');
+  const renewBtn=document.getElementById('tdm-renewal');
+  const endDate=t.end?new Date(t.end):null;
+  const daysLeft=endDate?Math.ceil((endDate-now)/86400000):'';
+  if(t.status==='active'&&typeof daysLeft==='number'&&daysLeft>=0&&daysLeft<=90){
+    renewWrap.style.display='block';
+    renewBtn.onclick=()=>generateRenewalEmail(id);
+  } else {
+    renewWrap.style.display='none';
+  }
   modal.style.display='flex';
+}
+function generateRenewalEmail(id) {
+  const t=tenants.find(x=>x.id===id);if(!t)return;
+  const p=properties.find(x=>x.id===t.propertyId);
+  const propName=p?p.name:'物件';
+  const now=new Date();
+  const endDate=t.end?new Date(t.end):null;
+  const dLeft=endDate?Math.ceil((endDate-now)/86400000):'';
+  const endStr=t.end?`${t.end.replace(/-/g,'年').replace(/-/,'月')}日`:'ご契約終了日';
+  const body=[
+    `${esc(t.name)} 様`,
+    ``,
+    `いつもお世話になっております。${propName} 管理担当よりご連絡申し上げます。`,
+    ``,
+    `さて、${endStr}をもちまして現在のご契約期間が満了となります。`,
+    `今後のご入居についてご意向をお聞かせいただけますでしょうか。`,
+    ``,
+    `【ご更新の場合】`,
+    `引き続きご入居いただける場合は、更新手続きのご案内をお送りいたします。`,
+    `月額家賃: ${t.rent?Number(t.rent).toLocaleString()+'円':'現行賃料'}`,
+    `更新料等: 別途ご案内いたします`,
+    ``,
+    `【ご退去の場合】`,
+    `退去日の1ヶ月前までにご連絡ください。`,
+    `退去時の手続きについては別途ご案内いたします。`,
+    ``,
+    `お忙しいところ恐れ入りますが、${endDate?`${endDate.getMonth()+1}月${endDate.getDate()-14}日`:'ご契約満了の2週間前'}までにご返答をお願いできますと幸いです。`,
+    ``,
+    `ご不明な点がございましたら、お気軽にご連絡ください。`,
+    ``,
+    `どうぞよろしくお願いいたします。`,
+  ].join('\n');
+  const subject=`【重要】ご契約更新のご確認 — ${propName} ${t.room||''}号室`;
+  if(t.email){
+    window.open(`mailto:${encodeURIComponent(t.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,'_blank');
+  } else {
+    navigator.clipboard.writeText(subject+'\n\n'+body).then(()=>showToast('メール本文をコピーしました（メールアドレス未登録）')).catch(()=>showToast('メール本文をクリップボードにコピーしてください'));
+    alert('テナントのメールアドレスが未登録のため、メール本文をクリップボードにコピーしました。\n\nメールソフトに貼り付けてお送りください。');
+  }
 }
 function deleteTenant(id){const t=tenants.find(x=>x.id===id);if(!confirm('「'+(t?t.name:'このテナント')+'」を削除しますか？\nこの操作は元に戻せません。'))return;tenants=tenants.filter(t=>t.id!==id);save('tenants');sbDeleteRow('tenants',id);renderTenants();}
 function saveTenant(){
