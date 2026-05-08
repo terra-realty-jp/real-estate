@@ -478,6 +478,9 @@
       <!-- リフォームシナリオ比較 -->
       <div id="reform-scenario-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 売出価格戦略カード -->
+      <div id="listing-strategy-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -840,6 +843,44 @@ function renderSellCostPanel(price) {
   ].join('');
 }
 
+function renderListingStrategy(price, liq, station) {
+  const el = document.getElementById('listing-strategy-panel');
+  if(!el || !price) return;
+  // 流動性に応じた交渉マージン（高流動性ほど交渉余地が小さい）
+  const margin = liq >= 75 ? 3 : liq >= 50 ? 5 : liq >= 30 ? 8 : 12;
+  const strategies = [
+    { label: '強気価格', pct: 10, desc: '時間をかけて高値狙い。流通性が高いエリアで有効。', periodHint: '6〜12ヶ月', color: '#f59e0b' },
+    { label: '推奨売出価格', pct: 5, desc: '交渉余地を確保しつつ買主を引き付けるバランス価格。', periodHint: '3〜6ヶ月', color: '#22c55e', recommended: true },
+    { label: '査定基準価格', pct: 0, desc: '市場実勢に近い値。早期売却を優先する場合。', periodHint: '1〜3ヶ月', color: '#3b82f6' },
+    { label: '即売価格', pct: -margin, desc: `交渉前提で低め設定。${margin}%値引き余地あり。`, periodHint: '1ヶ月以内', color: '#ef4444' },
+  ];
+  const rows = strategies.map(s => {
+    const p = Math.round(price * (1 + s.pct/100) / 10000) * 10000;
+    const wan = Math.round(p/10000).toLocaleString();
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;${s.recommended?'background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.25)':'border:1px solid rgba(255,255,255,0.05)'}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:${s.color};margin-bottom:2px">
+          ${s.label}${s.recommended?' <span style="font-size:10px;background:rgba(34,197,94,0.2);color:#4ade80;padding:1px 6px;border-radius:100px;margin-left:4px;border:1px solid rgba(34,197,94,0.4)">推奨</span>':''}
+          <span style="font-size:10px;color:var(--text-muted);font-weight:400;margin-left:4px">${s.pct>0?'+':''}${s.pct}%</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted)">${s.desc}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:15px;font-weight:900;color:${s.color}">${wan}万円</div>
+        <div style="font-size:10px;color:var(--text-muted)">目安 ${s.periodHint}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.style.display = 'block';
+  el.innerHTML = `<div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">🎯 売出価格の戦略パターン</div>
+    <div style="display:flex;flex-direction:column;gap:8px">${rows}</div>
+    <div style="margin-top:14px;padding:12px 14px;background:rgba(59,130,246,0.06);border-radius:8px;border-left:3px solid #3b82f6;font-size:12px;color:var(--text-muted);line-height:1.7">
+      💡 <strong style="color:var(--text)">流動性スコア ${liq}点</strong>に基づく戦略提案。
+      ${liq>=70?'このエリアは需要が高く、推奨売出価格でも短期成約が期待できます。':liq>=40?'需要は普通。推奨価格から始め、3ヶ月で動きがなければ価格見直しを検討しましょう。':'需要が低めのエリアです。即売価格または専門家と戦略を相談することをお勧めします。'}
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:10px">※ 成約期間はあくまで目安。実際の市場動向・物件状態・広告露出度によって大きく異なります。</p>`;
+}
+
 function calcTaxSim() {
   const el = document.getElementById('tax-sim-result'); if(!el) return;
   const price = window._taxSimPrice || 0; if(!price) return;
@@ -1090,6 +1131,13 @@ function calcAndShowResult() {
     panel.innerHTML = `<div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">🔧 リフォームシナリオ比較</div>
       <div style="display:flex;flex-direction:column;gap:8px">${rows}</div>
       <p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.7">※ リフォーム費用はマンション・一戸建ての面積目安。実際の費用は業者・工事内容により異なります。リフォームが手取りを上回るかどうかは総費用と所要期間で判断してください。</p>`;
+  })();
+
+  // 売出価格戦略カード
+  (function(){
+    const lsp = document.getElementById('listing-strategy-panel');
+    if(!lsp || !price) return;
+    renderListingStrategy(price, liquidity, station);
   })();
 
   // 譲渡所得税シミュレーター表示
