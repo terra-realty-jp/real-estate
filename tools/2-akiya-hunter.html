@@ -255,6 +255,28 @@
     <div id="catBreakdownContent"></div>
   </div>
 
+  <!-- 解体費用試算カード -->
+  <div class="card" id="demolish-calc-card" style="display:none;">
+    <div class="card-title"><span class="icon">🏗</span>解体費用かんたん試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">解体して更地・駐車場転用・土地売却を検討している場合の費用目安を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px">建物の構造</label>
+        <select id="demo_struct" onchange="calcDemolish()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="wood">木造（一般住宅・在来工法）</option>
+          <option value="steel">鉄骨造（プレハブ・軽量鉄骨）</option>
+          <option value="rc">RC造（コンクリート・マンション）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px">延床面積（坪）</label>
+        <input type="number" id="demo_tsubo" value="30" min="10" max="200" oninput="calcDemolish()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px">1坪 ≈ 3.3㎡（30坪 = 約99㎡）</div>
+      </div>
+    </div>
+    <div id="demolish-result"></div>
+  </div>
+
   <!-- 3択比較カード -->
   <div class="card" id="compareOptionsCard" style="display:none;">
     <div class="card-title"><span class="icon">⚖️</span>売る・貸す・放置の5年比較</div>
@@ -735,6 +757,8 @@ function updateScore() {
   }
   renderTimeline(capped, [...checked]);
   renderCatBreakdown(capped, [...checked]);
+  const demolishCard = document.getElementById('demolish-calc-card');
+  if(demolishCard) { demolishCard.style.display = capped > 0 ? 'block' : 'none'; if(capped>0) calcDemolish(); }
 
   // メールCTAに診断結果を自動挿入
   const consultBtn = document.getElementById('akiya-consult-btn');
@@ -762,6 +786,48 @@ function updateScore() {
     const nativeBtn = document.getElementById('score-native-share');
     if(nativeBtn) nativeBtn.style.display = (capped > 0 && navigator.share) ? 'inline-flex' : 'none';
   }
+}
+
+function calcDemolish() {
+  const el = document.getElementById('demolish-result');
+  if(!el) return;
+  const struct = document.getElementById('demo_struct')?.value || 'wood';
+  const tsubo = parseFloat(document.getElementById('demo_tsubo')?.value) || 30;
+  const ranges = { wood:[3,5], steel:[4,6], rc:[5,8] };
+  const [lo, hi] = ranges[struct] || [3,5];
+  const minCost = Math.round(tsubo * lo);
+  const maxCost = Math.round(tsubo * hi);
+  const midCost = Math.round((minCost+maxCost)/2);
+  const structLabels = { wood:'木造', steel:'鉄骨造', rc:'RC造' };
+  const sqm = Math.round(tsubo * 3.306);
+  // 固定資産税増加（住宅特例1/6 外れ）
+  const estTaxBase = 15; // 仮定の固定資産税(万円/年) - 全国平均目安
+  const taxIncrease = Math.round(estTaxBase * 5); // 5年分の増加 (6倍 - 1倍 = 5倍)
+  const breakEvenMonth = midCost > 0 ? Math.ceil(midCost / (20000 / 10000)) : '-'; // 仮定月2万収益
+  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">解体費（最低ライン）</div>
+      <div style="font-size:18px;font-weight:700;color:var(--red)">約${minCost}万円</div>
+      <div style="font-size:10px;color:var(--text-muted)">@${lo}万円/坪</div>
+    </div>
+    <div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">解体費（中間目安）</div>
+      <div style="font-size:18px;font-weight:700;color:var(--orange)">約${midCost}万円</div>
+      <div style="font-size:10px;color:var(--text-muted)">@${Math.round((lo+hi)/2)}万円/坪</div>
+    </div>
+    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">解体費（最高ライン）</div>
+      <div style="font-size:18px;font-weight:700;color:var(--red)">約${maxCost}万円</div>
+      <div style="font-size:10px;color:var(--text-muted)">@${hi}万円/坪</div>
+    </div>
+  </div>
+  <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:8px;padding:12px;font-size:12px;line-height:1.9;margin-bottom:10px">
+    <strong style="color:var(--orange)">&#9888;&#65039; 解体後の注意点</strong><br>
+    &#x2022; <strong>固定資産税が上がります</strong>：住宅が建っている土地は「住宅用地特例」で土地の固定資産税が<strong>1/6</strong>に軽減されていますが、解体後はこの特例が外れます。<br>
+    &#x2022; 解体後は<strong>更地として年間税額が最大6倍</strong>になる可能性があります（地域・評価額により異なります）。<br>
+    &#x2022; アスベスト含有建材・地中障害物が見つかると<strong>追加費用</strong>が発生することがあります。
+  </div>
+  <p style="font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; ${structLabels[struct]}・${tsubo}坪（約${sqm}㎡）の場合の概算。実際の費用は立地・搬出経路・残置物の量により変動します。解体業者から複数見積りを取ることをお勧めします。</p>`;
 }
 
 function renderCatBreakdown(score, ids) {
