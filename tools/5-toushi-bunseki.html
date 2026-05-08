@@ -587,6 +587,51 @@ function buildAlerts(inp, r) {
   return alerts;
 }
 
+function renderDepreciationCard(inp) {
+  if(!inp.price || !inp.age) return '';
+  // 物件種別から法定耐用年数を推定 (inp.type: 'wood','steel','rc','other')
+  const lifespanMap = {wood:22, steel:34, rc:47, other:34};
+  const buildingRatio = 0.7; // 建物比率70%想定
+  const lifespan = lifespanMap[inp.type] || 34;
+  const buildingVal = inp.price * buildingRatio * 10000;
+  // 中古の場合の残存耐用年数
+  const remaining = inp.age <= lifespan
+    ? Math.ceil((lifespan - inp.age) + lifespan * 0.2)
+    : Math.ceil(lifespan * 0.2);
+  const effectiveLife = Math.max(2, Math.min(remaining, lifespan));
+  const annualDepr = Math.round(buildingVal / effectiveLife / 10000); // 万円
+  // 税率目安（給与収入500-900万円想定: 実効税率約30%）
+  const taxRateOptions = [{label:'課税所得195万〜330万（10%+住民税）',rate:0.2},{label:'課税所得330万〜695万（20%+住民税）',rate:0.3},{label:'課税所得695万〜900万（23%+住民税）',rate:0.33},{label:'課税所得900万超（33%+住民税）',rate:0.43}];
+  const rows = taxRateOptions.map(o=>{
+    const saving = Math.round(annualDepr * o.rate);
+    return `<tr><td style="font-size:11px;color:var(--text-muted);padding:6px 8px">${o.label}</td><td style="font-weight:700;color:#4ade80;padding:6px 8px;text-align:right">${saving.toLocaleString()}万円/年</td></tr>`;
+  }).join('');
+  const typeJa = {wood:'木造',steel:'鉄骨造',rc:'RC造',other:'鉄骨造'}[inp.type]||'';
+  return `<div class="card" style="margin-top:16px">
+    <div class="card-title">🏗️ 減価償却シミュレーション（節税効果）</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
+      <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建物価格（想定）</div>
+        <div style="font-size:18px;font-weight:900;color:var(--gold)">${Math.round(inp.price*buildingRatio).toLocaleString()}万円</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">物件価格の70%</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">実効耐用年数</div>
+        <div style="font-size:18px;font-weight:900;color:var(--text)">${effectiveLife}年</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${typeJa}・築${inp.age}年</div>
+      </div>
+      <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間減価償却費</div>
+        <div style="font-size:18px;font-weight:900;color:#4ade80">${annualDepr.toLocaleString()}万円</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">定額法・所得から控除</div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">所得税率別・年間節税効果（概算）</div>
+    <table style="width:100%;border-collapse:collapse">${rows}</table>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-muted);line-height:1.7">※建物比率70%・定額法で概算。実際の耐用年数・建物評価・適用税率は税理士にご確認ください。節税効果は確定申告で経費計上した場合の目安です。</div>
+  </div>`;
+}
+
 function renderBenchmarkCard(inp, r) {
   const BENCHMARKS = [
     {label:'区分マンション（首都圏）', gross:[5,7], net:[3,5], ccr:[4,8]},
@@ -760,6 +805,7 @@ function renderResult(inp, r) {
     ${(()=>{const alerts=buildAlerts(inp,r);if(!alerts.length)return '';const colorMap={danger:'rgba(239,68,68,0.1)',warn:'rgba(249,115,22,0.1)',ok:'rgba(34,197,94,0.1)'};const borderMap={danger:'rgba(239,68,68,0.3)',warn:'rgba(249,115,22,0.3)',ok:'rgba(34,197,94,0.3)'};const iconMap={danger:'⚠️',warn:'⚡',ok:'✅'};return `<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.05em;margin-bottom:8px">この分析結果のポイント</div>${alerts.map(a=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:${colorMap[a.type]};border:1px solid ${borderMap[a.type]};border-radius:8px;margin-bottom:6px;font-size:12px;line-height:1.6">${iconMap[a.type]} ${a.msg}</div>`).join('')}</div>`;})()}
 
     ${renderBenchmarkCard(inp, r)}
+    ${renderDepreciationCard(inp)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
