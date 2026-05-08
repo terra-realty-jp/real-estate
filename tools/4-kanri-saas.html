@@ -298,7 +298,8 @@
       <button class="btn btn-outline btn-sm" onclick="exportData('rent')">CSVエクスポート</button>
     </div>
   </div>
-  <div id="rent-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px"></div>
+  <div id="rent-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px"></div>
+  <div id="rent-trend-chart" style="display:none;margin-bottom:16px"></div>
   <div class="card" id="rent-list"></div>
 </div>
 </div>
@@ -1301,6 +1302,7 @@ function renderRentLedger(){
     <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${x.l}</div>
   </div>`).join('');
 
+  renderRentTrendChart();
   const el=document.getElementById('rent-list');
   if(!activeTenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">💴</div><p>入居中のテナントがいません</p><p style="font-size:12px;margin-top:8px">${tenants.length?'テナントのステータスを「入居中」に設定してください':'先に「テナント管理」タブでテナントを登録してください'}</p></div>`;return;}
 
@@ -1345,6 +1347,52 @@ function renderRentLedger(){
       }).join('')}
     </tbody>
   </table>`;
+}
+
+function renderRentTrendChart(){
+  const el = document.getElementById('rent-trend-chart');
+  if(!el) return;
+  if(!rents.length){ el.style.display='none'; return; }
+  const now = new Date();
+  const months = [];
+  for(let i=11; i>=0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+  const activeTenants = tenants.filter(t=>t.status==='active');
+  const charged = activeTenants.reduce((s,t)=>s+(t.rent||0),0);
+  const data = months.map(m=>{
+    const paid = rents.filter(r=>r.month===m&&r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+    return {m, paid};
+  });
+  const maxVal = Math.max(...data.map(d=>d.paid), charged||1);
+  const W=480, H=90, pad={l:8,r:8,t:8,b:24};
+  const bw = Math.floor((W - pad.l - pad.r) / 12) - 3;
+  const bars = data.map((d,i)=>{
+    const x = pad.l + i * ((W-pad.l-pad.r)/12);
+    const bh = maxVal>0 ? Math.round((d.paid/maxVal)*(H-pad.t-pad.b)) : 0;
+    const y = H - pad.b - bh;
+    const isCurrentMonth = d.m === months[11];
+    const label = d.m.slice(5); // MM
+    const wan = d.paid>0 ? (d.paid>=10000?Math.round(d.paid/10000)+'万':'') : '';
+    return `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="2"
+      fill="${isCurrentMonth?'var(--gold)':'rgba(201,168,76,0.35)'}"/>
+      ${d.paid>0&&bh>14?`<text x="${x+bw/2}" y="${y-3}" text-anchor="middle" font-size="8" fill="var(--text-muted)">${wan}</text>`:''}
+      <text x="${x+bw/2}" y="${H-8}" text-anchor="middle" font-size="8" fill="${isCurrentMonth?'var(--gold)':'rgba(255,255,255,0.3)'}">${label}</text>`;
+  }).join('');
+  const totalPaid = data.reduce((s,d)=>s+d.paid,0);
+  const activeMos = data.filter(d=>d.paid>0).length;
+  el.innerHTML = `<div class="card" style="padding:16px 18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+      <div style="font-size:13px;font-weight:700">家賃入金トレンド（過去12ヶ月）</div>
+      <div style="font-size:12px;color:var(--text-muted)">入金実績 ${activeMos}ヶ月 / 合計 ${Math.round(totalPaid/10000).toLocaleString()}万円</div>
+    </div>
+    <div style="overflow-x:auto">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:${H}px;display:block">${bars}</svg>
+    </div>
+    ${charged>0?`<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">請求ライン: <span style="color:var(--gold)">${charged.toLocaleString()}円/月</span></div>`:''}
+  </div>`;
+  el.style.display = 'block';
 }
 
 function openRentModal(){
