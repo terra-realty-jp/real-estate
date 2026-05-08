@@ -591,6 +591,49 @@
     </div>
   </section>
 
+  <!-- よくあるご質問 -->
+  <section style="padding:56px 40px;border-top:1px solid rgba(255,255,255,0.06)">
+    <div style="max-width:700px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:36px">
+        <div style="font-size:11px;letter-spacing:3px;color:var(--text-muted);margin-bottom:10px;font-weight:700">FAQ</div>
+        <h2 style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px">よくあるご質問</h2>
+      </div>
+      <div id="faq-list"></div>
+      <style>
+        .faq-item { border:1px solid rgba(255,255,255,0.08); border-radius:10px; margin-bottom:10px; overflow:hidden; }
+        .faq-q { display:flex; justify-content:space-between; align-items:center; padding:16px 18px; cursor:pointer; font-size:14px; font-weight:600; color:var(--text); background:var(--card); }
+        .faq-q:hover { background:var(--dark3); }
+        .faq-q svg { flex-shrink:0; transition:transform 0.2s; }
+        .faq-q.open svg { transform:rotate(180deg); }
+        .faq-a { display:none; padding:14px 18px 16px; font-size:13px; color:var(--text-muted); line-height:1.8; background:var(--dark3); border-top:1px solid rgba(255,255,255,0.06); }
+        .faq-a.open { display:block; }
+      </style>
+      <script>
+        const FAQ_ITEMS = [
+          {q:'このツールは無料で使えますか？', a:'はい、全ツール完全無料でご利用いただけます。登録・ログインも不要で、すぐにお使いいただけます。一部のクラウド保存機能はアカウント登録（無料）が必要です。'},
+          {q:'入力したデータはどこに保存されますか？', a:'基本的にお使いのブラウザ（端末内）に保存されます。外部のサーバーに自動送信されることはありません。ログイン後はTERRA REALTYのクラウドに保存され、複数デバイスで使えるようになります。'},
+          {q:'AI査定の結果は正確ですか？', a:'エリア・築年数・面積などの統計データをもとに算出した「目安の価格」です。実際の売却価格は物件の状態・市況・交渉次第で変わります。正確な査定はTERRA REALTYへのご相談をお勧めします（無料）。'},
+          {q:'スマートフォンでも使えますか？', a:'はい、スマートフォン・タブレットに対応しています。iPhoneのSafari・AndroidのChromeでの動作を確認しています。'},
+          {q:'ツールを使った後、営業電話がかかってきますか？', a:'ツールの使用だけでは一切連絡はいたしません。ご相談のメールを送っていただいた場合のみ、TERRA REALTYからご返信します。しつこい営業は一切ございません。'},
+          {q:'複数の物件を管理できますか？', a:'「賃貸物件かんたん管理」ツールでは複数物件・テナントの管理が可能です。アカウント登録（無料）でクラウド保存にも対応しています。'},
+        ];
+        document.getElementById('faq-list').innerHTML = FAQ_ITEMS.map((f,i)=>`
+          <div class="faq-item">
+            <div class="faq-q" id="fq${i}" onclick="toggleFaq(${i})">
+              <span>Q. ${f.q}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="faq-a" id="fa${i}"><strong>A.</strong> ${f.a}</div>
+          </div>
+        `).join('');
+        function toggleFaq(i) {
+          const q=document.getElementById('fq'+i), a=document.getElementById('fa'+i);
+          q.classList.toggle('open'); a.classList.toggle('open');
+        }
+      </script>
+    </div>
+  </section>
+
   <!-- 無料相談の流れ -->
   <section style="padding:56px 40px;background:#f8faff;border-top:1px solid #e8edf4">
     <div style="max-width:800px;margin:0 auto;text-align:center">
