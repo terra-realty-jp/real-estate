@@ -266,6 +266,7 @@
   <p class="page-desc">マッチングから成約までの進捗と手数料収入を管理します。</p>
 
   <div id="pipeline-stats" class="stats-grid"></div>
+  <div id="pipeline-funnel" style="margin-bottom:20px"></div>
 
   <div style="display:flex;justify-content:flex-end;margin-bottom:20px;gap:10px">
     <button class="btn btn-gold" onclick="openDealRegModal()">＋ 商談登録</button>
@@ -935,14 +936,50 @@ function createDealFromMatch(seller, buyer, price) {
 function renderPipeline3() {
   const el = document.getElementById('pipeline-list');
   const statsEl = document.getElementById('pipeline-stats');
+  const funnelEl = document.getElementById('pipeline-funnel');
   const closed = deals3.filter(d=>d.status==='closed');
   const totalPrice = closed.reduce((s,d) => s + (d.price||0), 0);
+  const totalFee = closed.reduce((s,d)=>{
+    const p=d.price||0; const fee=p<=200?p*0.05:p<=400?p*0.04+2:p*0.03+6;
+    return s+Math.round(fee*1.1*10)/10;
+  },0);
   statsEl.innerHTML = [
     {v:deals3.length+'件', l:'登録商談数', c:'var(--text)'},
     {v:deals3.filter(d=>d.status==='nego').length+'件', l:'交渉中', c:'var(--gold)'},
     {v:closed.length+'件', l:'成約済み', c:'var(--green)'},
     {v: totalPrice>0 ? totalPrice.toLocaleString()+'万円' : '—', l:'成約価格合計', c:'var(--gold)'},
   ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
+  if(funnelEl) {
+    if(!deals3.length) { funnelEl.innerHTML=''; }
+    else {
+      const stages = [
+        {key:'new',     label:'新規',       color:'#3b82f6'},
+        {key:'matched', label:'マッチング済', color:'#a855f7'},
+        {key:'nego',    label:'交渉中',      color:'#f97316'},
+        {key:'closed',  label:'成約',        color:'#22c55e'},
+      ];
+      const counts = stages.map(s=>({...s, n:deals3.filter(d=>d.status===s.key).length}));
+      const maxN = Math.max(...counts.map(c=>c.n), 1);
+      const bars = counts.map((s,i)=>{
+        const pct = Math.round(s.n/maxN*100);
+        const conv = i>0 && counts[i-1].n>0 ? Math.round(s.n/counts[i-1].n*100)+'%' : '';
+        return `<div style="flex:1;min-width:100px;text-align:center">
+          ${conv?`<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;height:16px">↓ ${conv}</div>`:`<div style="height:20px"></div>`}
+          <div style="height:80px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:6px">
+            <div style="width:60%;background:${s.color};border-radius:5px 5px 0 0;height:${Math.max(pct,4)}%;opacity:0.85;transition:height 0.4s"></div>
+          </div>
+          <div style="font-size:20px;font-weight:900;color:${s.color}">${s.n}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${s.label}</div>
+        </div>`;
+      }).join('');
+      const feeStr = totalFee>0 ? `<span style="color:var(--green);font-weight:700">手数料合計（目安・税込）: 約${totalFee.toLocaleString()}万円</span>` : '';
+      funnelEl.innerHTML = `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px 24px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:16px">商談フロー（ステージ別件数）</div>
+        <div style="display:flex;gap:4px;align-items:stretch">${bars}</div>
+        ${feeStr?`<div style="margin-top:14px;font-size:12px;text-align:right">${feeStr}</div>`:''}
+      </div>`;
+    }
+  }
 
   if(!deals3.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><p>商談がありません</p><p style="font-size:12px;margin-top:8px">マッチング結果から商談を作成するか、「商談追加」ボタンから登録してください</p></div>`; return; }
   const badgeClass = {new:'b-new',matched:'b-matched',nego:'b-nego',closed:'b-closed'};
