@@ -249,9 +249,17 @@
 
   <!-- Step 1: 基本情報 -->
   <!-- リアルタイム価格プレビュー -->
-  <div id="live-preview-bar" style="display:none;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:12px 18px;margin-bottom:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-    <div style="font-size:12px;color:var(--text-muted)">現在の入力条件での概算価格</div>
-    <div style="font-size:20px;font-weight:900;color:var(--gold)" id="live-preview-price">—</div>
+  <div id="live-preview-bar" style="display:none;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:14px 18px;margin-bottom:16px">
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;letter-spacing:0.03em">📊 リアルタイム査定プレビュー</div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:22px;font-weight:900;color:var(--gold)" id="live-preview-price">—</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">推定価格（概算）</div>
+      </div>
+      <div id="live-preview-range" style="font-size:12px;color:var(--text-muted)"></div>
+      <div id="live-preview-tsubo" style="font-size:12px;color:var(--text-muted)"></div>
+      <div id="live-preview-hint" style="font-size:11px;color:var(--text-muted);flex:1;min-width:120px;line-height:1.5"></div>
+    </div>
   </div>
 
   <div id="form-step-1" class="form-card">
@@ -784,7 +792,22 @@ function previewCalc() {
   const price = Math.round(baseUnit * area * ageFac * typeFac * floorFac * stationFac * dirFac * reformFac / 10000) * 10000;
   const fmtV = v => v >= 100000000 ? '約' + Math.round(v/10000000)/10 + '億円' : '約' + Math.round(v/10000).toLocaleString() + '万円';
   priceEl.textContent = fmtV(price);
-  bar.style.display = 'flex';
+  // 追加詳細
+  const low = Math.round(price * 0.88 / 10000) * 10000;
+  const high = Math.round(price * 1.12 / 10000) * 10000;
+  const rangeEl = document.getElementById('live-preview-range');
+  if(rangeEl) rangeEl.innerHTML = `<span style="color:rgba(255,255,255,0.5)">レンジ:</span> ${fmtV(low)} 〜 ${fmtV(high)}`;
+  const tsuboEl = document.getElementById('live-preview-tsubo');
+  if(tsuboEl && area > 0) {
+    const tsubo = Math.round(price / (area / 3.306) / 10000);
+    tsuboEl.innerHTML = `<span style="color:rgba(255,255,255,0.5)">坪単価:</span> ${tsubo.toLocaleString()}万円/坪`;
+  }
+  const hintEl = document.getElementById('live-preview-hint');
+  if(hintEl) {
+    const hint = age <= 5 ? '築浅：市場需要が高く流動性◎' : age <= 15 ? '築10年台：主要な需要層に人気' : age <= 25 ? '築20年台：価格と広さのバランス重視層に需要' : age <= 35 ? '築古：リフォーム次第で価値向上の余地あり' : '築40年超：更地価値・再建築可否が重要';
+    hintEl.textContent = hint;
+  }
+  bar.style.display = 'block';
 }
 
 function updateAreaHint() {
