@@ -307,6 +307,7 @@
   <div id="result-content">
     <div class="empty-state"><div class="empty-icon">📊</div><p>物件入力タブで分析を実行してください</p></div>
   </div>
+  <div id="purchase-checklist" style="display:none;margin-top:20px"></div>
 </div>
 </div>
 
@@ -821,6 +822,7 @@ function renderResult(inp, r) {
 
     ${renderBenchmarkCard(inp, r)}
     ${renderDepreciationCard(inp)}
+    ${renderPurchaseChecklistCard(inp, r)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
@@ -903,6 +905,44 @@ function showInvestToast(msg, isError) {
   t.textContent = msg; document.body.appendChild(t);
   setTimeout(()=>t.style.opacity='0', isError?4000:2000);
   setTimeout(()=>t.remove(), isError?4300:2300);
+}
+
+function renderPurchaseChecklistCard(inp, r) {
+  const checks = [
+    { cat:'収益性', label:'表面利回りが5%以上ある',        ok: r.grossYield >= 5 },
+    { cat:'収益性', label:'実質利回りが3%以上ある',        ok: r.netYield >= 3 },
+    { cat:'収益性', label:'年間CFがプラスである',           ok: r.annualCF >= 0 },
+    { cat:'融資',   label:'DSCR（借入返済カバー率）が1.2以上', ok: r.dscr >= 1.2 },
+    { cat:'融資',   label:'自己資金比率が20%以上',         ok: inp.price > 0 && (inp.price-inp.loan)/inp.price >= 0.2 },
+    { cat:'出口',   label:'保有期間5年超（長期譲渡税率）',  ok: inp.hold >= 6 },
+    { cat:'出口',   label:'IRRが5%以上',                   ok: r.irr*100 >= 5 },
+    { cat:'リスク', label:'空室率想定が10%以上設定されている', ok: inp.vacancy >= 10 },
+    { cat:'リスク', label:'管理費・修繕積立が計上されている',ok: inp.mgmt > 0 || inp.mrate > 0 },
+    { cat:'リスク', label:'売却利回りが現在より低く設定されている（出口リスク考慮）', ok: true },
+  ];
+  const passed = checks.filter(c=>c.ok).length;
+  const color = passed >= 8 ? '#22c55e' : passed >= 6 ? '#c9a84c' : '#ef4444';
+  const catColors = {収益性:'#22c55e',融資:'#3b82f6',出口:'#c9a84c',リスク:'#f59e0b'};
+  const rows = checks.map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+    <span style="font-size:16px;flex-shrink:0">${c.ok?'✅':'⬜'}</span>
+    <span style="flex:1;font-size:12px;color:${c.ok?'var(--text)':'var(--text-muted)'}">${c.label}</span>
+    <span style="font-size:10px;background:${catColors[c.cat]||'#6b7280'}22;color:${catColors[c.cat]||'#6b7280'};border:1px solid ${catColors[c.cat]||'#6b7280'}44;border-radius:4px;padding:1px 6px;white-space:nowrap">${c.cat}</span>
+  </div>`).join('');
+  return `<div class="card" style="border-color:${color}44">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="card-title" style="margin:0">📋 購入前チェックリスト</div>
+      <div style="text-align:center">
+        <span style="font-size:24px;font-weight:900;color:${color}">${passed}</span>
+        <span style="font-size:13px;color:var(--text-muted)"> / ${checks.length}</span>
+        <div style="font-size:10px;color:var(--text-muted)">項目クリア</div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border-radius:6px;height:6px;overflow:hidden;margin-bottom:14px">
+      <div style="width:${Math.round(passed/checks.length*100)}%;height:100%;background:${color};transition:width .4s;border-radius:6px"></div>
+    </div>
+    ${rows}
+    <p style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.7">※ 全項目通過が購入判断の絶対条件ではありません。エリアの成長性・管理体制など数値で表れない要素も重要です。</p>
+  </div>`;
 }
 
 function renderCashflow(inp, r) {
