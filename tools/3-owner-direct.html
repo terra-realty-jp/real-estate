@@ -393,6 +393,20 @@
   </div>
 </div>
 
+<!-- 提案レターモーダル -->
+<div class="modal-overlay" id="proposalLetterModal" style="display:none;" onclick="closeModal('proposalLetterModal',event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:560px;width:100%">
+    <div class="modal-title">マッチング提案レター</div>
+    <textarea id="proposal-letter-text" rows="14" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;color:var(--text);font-size:12px;font-family:inherit;resize:vertical;line-height:1.8;box-sizing:border-box" readonly></textarea>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn btn-gold" style="flex:1" onclick="copyProposalLetter()">コピーする</button>
+      <button id="proposal-mailto-btn" class="btn btn-outline" style="flex:1">メールで送る</button>
+      <button class="btn btn-outline" onclick="closeModal('proposalLetterModal')">閉じる</button>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center">このレターは参考文例です。実際の取引にはTERRA REALTYにご相談ください。</p>
+  </div>
+</div>
+
 <div class="modal-overlay" id="dealRegModal" style="display:none;" onclick="closeModal('dealRegModal',event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-title">商談登録</div>
@@ -699,7 +713,10 @@ function runMatching() {
         <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">
           ${p.reasons.map(r => `<div style="margin:1px 0">${esc(r.detail)}</div>`).join('')}
         </div>
-        <div style="margin-top:6px"><button class="btn btn-gold btn-sm" onclick="createDealFromMatch('${p.s.name}','${p.b.name}',${p.s.price})">商談登録</button></div>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;align-items:center">
+          <button class="btn btn-gold btn-sm" onclick="createDealFromMatch('${p.s.name}','${p.b.name}',${p.s.price})">商談登録</button>
+          <button class="btn btn-outline btn-sm" style="font-size:11px" onclick="showProposalLetter(${JSON.stringify({sn:p.s.name,sa:p.s.area,st:p.s.type,sp:p.s.price,ssqm:p.s.sqm,sage:p.s.age,bn:p.b.name,ba:p.b.area,bt:p.b.type,bb:p.b.budget,bsqm:p.b.sqm,score:p.score}).replace(/"/g,'&quot;')})">提案レター</button>
+        </div>
       </div>
       <div class="match-side">
         <div class="match-side-label">BUYER — 買主</div>
@@ -736,6 +753,59 @@ function copyMatchingSummary(pairsData) {
   const lines = pairsData.map((p, i) => `候補${i+1}: ${p.s} × ${p.b} / ${p.price}万円 / マッチ度${p.score}点`).join('\n');
   const text = `【マッチング結果】\n${lines}\n\nTERRA REALTYへの相談: terra.realty.iam@gmail.com`;
   navigator.clipboard.writeText(text).then(() => showToast('マッチング結果をコピーしました ✓')).catch(() => showToast('コピーに失敗しました', true));
+}
+
+function showProposalLetter(data) {
+  const TYPE_JA = {mansion:'マンション',kodate:'一戸建て',tochi:'土地',other:'不動産'};
+  const today = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  const scoreLabel = data.score>=80?'非常に高い（'+data.score+'点）':data.score>=50?'高い（'+data.score+'点）':'まずまず（'+data.score+'点）';
+  const letter = [
+    `件名：【物件提案】${data.sa}の${TYPE_JA[data.st]||'不動産'}についてご提案`,
+    ``,
+    `${data.bn} 様`,
+    ``,
+    `平素よりお世話になっております。`,
+    `TERRA REALTY（株式会社テラリアルティ）でございます。`,
+    ``,
+    `この度、${data.bn}様のご希望条件に合致する物件をご提案させていただきます。`,
+    ``,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `【売却物件情報】`,
+    `物件種別：${TYPE_JA[data.st]||data.st}`,
+    `所在エリア：${data.sa}`,
+    `希望売却価格：${data.sp?Number(data.sp).toLocaleString()+'万円':'応相談'}`,
+    data.ssqm ? `面積：${data.ssqm}㎡` : null,
+    data.sage ? `築年数：築${data.sage}年` : null,
+    ``,
+    `【お客様のご希望条件との適合度】`,
+    `マッチングスコア：${scoreLabel}`,
+    `ご希望エリア：${data.ba}`,
+    `ご希望物件種別：${TYPE_JA[data.bt]||data.bt}`,
+    `ご予算：${data.bb?Number(data.bb).toLocaleString()+'万円以内':'応相談'}`,
+    data.bsqm ? `ご希望面積：${data.bsqm}㎡以上` : null,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    ``,
+    `本物件について詳細資料の送付・現地案内を承ります。`,
+    `ご都合のよい日時をお知らせいただければ幸いです。`,
+    ``,
+    `ご不明な点がございましたら、お気軽にご連絡ください。`,
+    `何卒よろしくお願い申し上げます。`,
+    ``,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `TERRA REALTY`,
+    `Email: terra.realty.iam@gmail.com`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `（本メールは不動産かんたんツールのマッチング機能で生成されました。${today}）`,
+  ].filter(l=>l!==null).join('\n');
+  document.getElementById('proposal-letter-text').value = letter;
+  const subj = encodeURIComponent(`【物件提案】${data.sa}の${TYPE_JA[data.st]||'不動産'}についてご提案`);
+  const body = encodeURIComponent(letter);
+  document.getElementById('proposal-mailto-btn').onclick = () => { window.location.href = `mailto:?subject=${subj}&body=${body}`; };
+  document.getElementById('proposalLetterModal').style.display = 'flex';
+}
+function copyProposalLetter() {
+  const text = document.getElementById('proposal-letter-text').value;
+  navigator.clipboard.writeText(text).then(() => showToast('提案レターをコピーしました ✓')).catch(() => showToast('コピーに失敗しました', true));
 }
 
 function createDealFromMatch(seller, buyer, price) {
@@ -995,7 +1065,7 @@ function switchTab(t) {
 // Escape key でモーダルを閉じる
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') {
-    ['sellerModal','buyerModal','dealRegModal','adCopyModal'].forEach(function(id){
+    ['sellerModal','buyerModal','dealRegModal','adCopyModal','proposalLetterModal'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.style.display='none';
     });
   }
