@@ -237,6 +237,16 @@
           <div class="form-group"><label>火災保険（円/年）</label><input type="number" id="i_ins" placeholder="30000" min="0" oninput="autoCalc()"></div>
           <div class="form-group"><label>管理委託費率（%）</label><input type="number" id="i_mrate" value="5" min="0" max="30" step="0.5" oninput="autoCalc()"></div>
           <div class="form-group"><label>想定空室率（%）</label><input type="number" id="i_vacancy" value="10" min="0" max="100" step="1" oninput="autoCalc()"></div>
+          <div class="form-group"><label>築年数（年）</label><input type="number" id="i_age" placeholder="10" min="0" max="80" oninput="autoCalc()"></div>
+          <div class="form-group"><label>建物構造</label>
+            <select id="i_type" onchange="autoCalc()">
+              <option value="">選択（任意）</option>
+              <option value="wood">木造</option>
+              <option value="steel">鉄骨造</option>
+              <option value="rc">RC造（コンクリート）</option>
+              <option value="other">その他</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -446,6 +456,8 @@ function getInputs() {
     exitYield: parseFloat(document.getElementById('i_exit_yield').value) || 6,
     decline: parseFloat(document.getElementById('i_decline').value) || 1,
     exitCost: parseFloat(document.getElementById('i_exit_cost').value) || 4,
+    age: parseInt(document.getElementById('i_age')?.value) || 0,
+    type: document.getElementById('i_type')?.value || '',
   };
 }
 
@@ -613,8 +625,8 @@ function renderDepreciationCard(inp) {
   if(!inp.price || !inp.age) return '';
   // 物件種別から法定耐用年数を推定 (inp.type: 'wood','steel','rc','other')
   const lifespanMap = {wood:22, steel:34, rc:47, other:34};
-  const buildingRatio = 0.7; // 建物比率70%想定
-  const lifespan = lifespanMap[inp.type] || 34;
+  const buildingRatio = 0.7;
+  const lifespan = lifespanMap[inp.type || 'other'] || 34;
   const buildingVal = inp.price * buildingRatio * 10000;
   // 中古の場合の残存耐用年数
   const remaining = inp.age <= lifespan
@@ -1458,6 +1470,8 @@ function loadHistory(id) {
   document.getElementById('i_exit_yield').value = inp.exitYield||6;
   document.getElementById('i_decline').value = inp.decline||1;
   document.getElementById('i_exit_cost').value = inp.exitCost||4;
+  if(document.getElementById('i_age')) document.getElementById('i_age').value = inp.age||'';
+  if(document.getElementById('i_type')) document.getElementById('i_type').value = inp.type||'';
   autoCalc();
   switchTab('input');
 }
