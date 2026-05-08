@@ -1595,6 +1595,50 @@ function buildExitConsultMailto(inp, r, best) {
   return 'mailto:terra.realty.iam@gmail.com?subject=' + encodeURIComponent('出口戦略の相談（シミュレーション結果あり）') + '&body=' + encodeURIComponent(body);
 }
 
+function renderExitMilestoneCard(inp, yearData, best) {
+  var fM = function(n){return Math.round(n/10000).toLocaleString();};
+  var fP = function(n){return(n>=0?'+':'')+n.toFixed(1)+'%';};
+  var gc = function(v){return v>=0?'var(--green)':'var(--red)';};
+  var milestones = [];
+  var tryAdd = function(y, label, color) {
+    var d = yearData.find(function(x){return x.y===y;});
+    if(d) milestones.push({y:y, label:label, color:color, data:d});
+  };
+  tryAdd(5,  '5年壁(短期)', 'var(--orange)');
+  tryAdd(6,  '5年超(長期)', 'var(--green)');
+  if(inp.hold!==5 && inp.hold!==6) tryAdd(inp.hold, '計画売却', 'var(--blue)');
+  if(best.y!==5 && best.y!==6 && best.y!==inp.hold) tryAdd(best.y, '最高収益', 'var(--gold)');
+  milestones.sort(function(a,b){return a.y-b.y;});
+  var cards = milestones.map(function(m){
+    var isBest=m.y===best.y, isPlan=m.y===inp.hold;
+    var border=isBest?'2px solid rgba(201,168,76,0.5)':isPlan?'2px solid rgba(59,130,246,0.4)':'1px solid rgba(255,255,255,0.07)';
+    var bg=isBest?'rgba(201,168,76,0.08)':isPlan?'rgba(59,130,246,0.06)':'var(--dark3)';
+    return '<div style="flex:1;min-width:130px;background:'+bg+';border:'+border+';border-radius:10px;padding:12px 8px;text-align:center">'
+      +'<div style="font-size:10px;font-weight:700;color:'+m.color+';margin-bottom:2px">'+m.label+'</div>'
+      +'<div style="font-size:28px;font-weight:900;color:'+m.color+';line-height:1.1">'+m.y+'</div>'
+      +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:8px">年目に売却</div>'
+      +'<div style="font-size:12px;font-weight:700;color:'+gc(m.data.netProfit)+'">'+( m.data.netProfit>=0?'+':'')+fM(m.data.netProfit)+'万円</div>'
+      +'<div style="font-size:9px;color:var(--text-muted)">税引後総収益</div>'
+      +'<div style="font-size:12px;font-weight:700;color:'+gc(m.data.roi)+';margin-top:4px">'+fP(m.data.roi)+'</div>'
+      +'<div style="font-size:9px;color:var(--text-muted)">ROI</div>'
+      +'<div style="margin-top:8px;font-size:9px;padding:2px 6px;border-radius:4px;display:inline-block;background:'+(m.data.isLongTerm?'rgba(34,197,94,0.12)':'rgba(239,68,68,0.12)')+';color:'+(m.data.isLongTerm?'var(--green)':'var(--red)')+'">'+(m.data.isLongTerm?'長期譲渡20%':'短期譲渡39%')+'</div>'
+      +'</div>';
+  }).join('');
+  var y5=yearData.find(function(x){return x.y===5;}), y6=yearData.find(function(x){return x.y===6;});
+  var taxNote='';
+  if(y5&&y6){
+    var diff=y6.netProfit-y5.netProfit;
+    taxNote='<div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:12px;line-height:1.9">'
+      +'<strong style="color:var(--orange)">5年超まで待つと得をする差額：</strong>'
+      +'<span style="font-weight:700;color:'+(diff>=0?'var(--green)':'var(--red)')+';margin-left:4px">'+(diff>=0?'+':'')+fM(diff)+'万円</span>'
+      +'<span style="color:var(--text-muted);font-size:11px;margin-left:6px">（税率差 39%→20% による節税効果）</span>'
+      +'</div>';
+  }
+  return '<div class="card"><div class="card-title">&#128197; 売却タイミング・マイルストーン比較</div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap">'+cards+'</div>'
+    +taxNote+'</div>';
+}
+
 function renderExit(inp, r) {
   if(!inp.price || !inp.rent) return;
   var maxYears = Math.max(inp.hold + 5, 20);
@@ -1685,7 +1729,8 @@ function renderExit(inp, r) {
     +'<p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.8">エリアの相場動向・税務・出口戦略は数字だけでは判断できない要素があります。<br>TERRA REALTYでは、データに基づいた売り時アドバイスを無料でご提供しています。</p>'
     +'<a href="'+buildExitConsultMailto(inp,r,best)+'" class="btn btn-gold">無料で売却相談する &#8594;</a>'
   +'</div>';
-  document.getElementById('exit-content').innerHTML = bCard + taxNote + tbl + cta;
+  var milestoneCard = renderExitMilestoneCard(inp, yearData, best);
+  document.getElementById('exit-content').innerHTML = milestoneCard + bCard + taxNote + tbl + cta;
 }
 function switchTab(t) {
   const tabs=['input','result','cashflow','sensitivity','exit','history','quiz'];
