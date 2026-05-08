@@ -203,6 +203,7 @@
           <span id="simple-loan-amt" style="font-size:12px;color:var(--text-muted);margin-left:8px"></span>
         </div>
         <div id="simple-yield-preview" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
+        <div id="simple-investor-comment" style="display:none;margin-top:10px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:12px;line-height:1.6"></div>
       </div>
       <div style="margin-top:12px;padding:12px 16px;background:var(--dark3);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.8">
         自動補完する値：管理費 15,000円/月・空室率 10%・管理委託費 5%・固定資産税 12万円/年・保有期間 10年
@@ -1751,13 +1752,38 @@ function updateSimpleLoanPreview() {
   document.getElementById('simple-monthly-payment').textContent = monthly.toLocaleString();
   document.getElementById('simple-loan-amt').textContent = `（借入${Math.round(loanAmt/10000).toLocaleString()}万円）`;
   const yieldEl = document.getElementById('simple-yield-preview');
+  const commentEl = document.getElementById('simple-investor-comment');
   if (rent > 0 && price > 0) {
-    const grossYield = (rent * 12 / (price * 10000) * 100).toFixed(2);
+    const grossYield = (rent * 12 / (price * 10000) * 100);
     const noi = rent - monthly;
     const noiColor = noi >= 0 ? '#4ade80' : '#f87171';
-    yieldEl.innerHTML = `表面利回り <b>${grossYield}%</b>　月次CF概算 <b style="color:${noiColor}">${noi>=0?'+':''}${noi.toLocaleString()}円</b>`;
+    yieldEl.innerHTML = `表面利回り <b>${grossYield.toFixed(2)}%</b>　月次CF概算 <b style="color:${noiColor}">${noi>=0?'+':''}${noi.toLocaleString()}円</b>`;
+    // 投資家コメント
+    let comment, color;
+    if(noi < 0){
+      comment = '⚠️ <strong style="color:#f87171">毎月赤字</strong>の見込みです。借入額を減らすか、より高い家賃が見込める物件を検討しましょう。';
+      color = 'rgba(239,68,68,0.08)';
+    } else if(grossYield >= 7){
+      comment = '🟢 <strong style="color:#4ade80">高利回り</strong>で魅力的な水準です。空室率・修繕リスクを精査すれば有望な候補です。';
+      color = 'rgba(34,197,94,0.08)';
+    } else if(grossYield >= 5){
+      comment = '✅ 利回り良好。<strong>詳細分析タブ</strong>で実質利回り・IRR・出口戦略まで確認しましょう。';
+      color = 'rgba(201,168,76,0.08)';
+    } else if(grossYield >= 3){
+      comment = '🟡 利回りはやや低め。価格交渉・ローン条件の見直しで収益改善を検討してください。';
+      color = 'rgba(249,115,22,0.08)';
+    } else {
+      comment = '🔴 <strong style="color:#f87171">利回りが低すぎ</strong>ます。この条件での収益化は難しい可能性が高いです。';
+      color = 'rgba(239,68,68,0.08)';
+    }
+    if(commentEl){
+      commentEl.innerHTML = comment;
+      commentEl.style.background = color;
+      commentEl.style.display = 'block';
+    }
   } else {
     yieldEl.textContent = '';
+    if(commentEl) commentEl.style.display = 'none';
   }
   preview.style.display = 'block';
 }
