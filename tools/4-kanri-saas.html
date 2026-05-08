@@ -204,6 +204,7 @@
   </div>
   <div id="property-summary-card" style="display:none;margin-top:0"></div>
   <div id="ytd-summary-card" style="margin-top:0"></div>
+  <div id="tax-helper-card" style="margin-top:16px"></div>
   <div class="card" style="margin-top:0">
     <div class="card-title">今月のアクション必要リスト</div>
     <div id="action-list"></div>
@@ -926,6 +927,7 @@ function renderDashboard() {
   }
   renderMonthlyHighlight();
   renderYTDSummary();
+  renderTaxHelper();
 }
 
 function renderYTDSummary() {
@@ -997,6 +999,102 @@ function renderYTDSummary() {
         <span><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:var(--gold);margin-right:3px"></span>当月</span>
       </div>
     </div>
+  </div>`;
+}
+
+function renderTaxHelper() {
+  const el = document.getElementById('tax-helper-card');
+  if (!el || properties.length === 0) { if(el) el.innerHTML=''; return; }
+  const now = new Date();
+  const year = now.getFullYear();
+  // 年間収入（支払済家賃）
+  const annualIncome = rents.filter(r => (r.month||'').startsWith(year+'') && r.status==='paid')
+    .reduce((s,r) => s+(r.paid||0), 0);
+  // 年間修繕費
+  const annualRepair = repairs.filter(r => { const d=r.done||r.date||''; return d.startsWith(year+''); })
+    .reduce((s,r) => s+(Number(r.cost)||0), 0);
+  const fmt = v => v > 0 ? Math.round(v/10000).toLocaleString()+'万円' : '0円';
+  const fmtN = v => Math.round(v/10000).toLocaleString();
+  const approxTaxable = Math.max(0, annualIncome - annualRepair);
+  const approxDeductItems = [
+    { label: '管理委託費（概算）', hint: '家賃収入の5〜10%', auto: false },
+    { label: '火災・地震保険料', hint: '証券記載の年額', auto: false },
+    { label: '固定資産税・都市計画税', hint: '納税通知書の金額', auto: false },
+    { label: '減価償却費', hint: '建物取得費×定額法率', auto: false },
+    { label: '修繕費', hint: fmt(annualRepair) + '（本ツール記録分）', auto: true, val: annualRepair },
+    { label: 'ローン利息（建物分）', hint: '返済明細の利息部分', auto: false },
+  ];
+
+  function generateTaxMemo() {
+    const tenantList = tenants.filter(t=>t.status==='active').map(t=>`  ${t.name||'不明'} ${(t.rent||0).toLocaleString()}円/月`).join('\n');
+    const text = [
+      `【${year}年 不動産所得 確定申告メモ】`,
+      `作成日: ${now.toLocaleDateString('ja-JP')}`,
+      '',
+      `■ 収入合計（入金記録済）: ${fmt(annualIncome)}`,
+      `■ 修繕費合計（記録済）: ${fmt(annualRepair)}`,
+      `■ 概算課税所得（修繕差引のみ）: ${fmt(approxTaxable)}`,
+      '',
+      '■ 控除確認リスト（税理士・確定申告で追加可）',
+      '  □ 管理委託費',
+      '  □ 火災・地震保険料',
+      '  □ 固定資産税・都市計画税',
+      '  □ 減価償却費（建物取得費×定額法）',
+      '  □ ローン利息（建物按分）',
+      '  □ 交通費（物件管理のための往来）',
+      '',
+      `■ 入居中テナント（${tenants.filter(t=>t.status==='active').length}名）`,
+      tenantList || '  （なし）',
+      '',
+      '※ 青色申告特別控除: 65万円（e-Tax）または55万円（紙）',
+      '※ 本メモは概算です。実際の申告は税理士にご確認ください。',
+    ].join('\n');
+    navigator.clipboard?.writeText(text).then(()=>showToast?.('確定申告メモをコピーしました ✓','success')).catch(()=>{});
+    const win = window.open('','_blank');
+    if(win) {
+      win.document.write('<pre style="font-family:monospace;font-size:13px;padding:20px;white-space:pre-wrap">' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</pre>');
+      win.document.close();
+    }
+  }
+  window._generateTaxMemo = generateTaxMemo;
+
+  const isLow = approxTaxable > 0 && approxTaxable <= 200000;
+  const warnHtml = isLow ? '<div style="margin-top:10px;padding:8px 12px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:7px;font-size:11px;color:#93c5fd">ℹ️ 不動産所得が年20万円以下の場合、サラリーマンは確定申告不要な場合があります（給与所得者特例）。詳細は税務署にご確認ください。</div>' : '';
+
+  el.innerHTML = `<div class="card" style="margin-bottom:0">
+    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span>📝 確定申告ヘルパー（${year}年分）</span>
+      <button onclick="window._generateTaxMemo()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3);font-size:11px;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:inherit">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        申告メモを生成
+      </button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">年間収入（記録済）</div>
+        <div style="font-size:15px;font-weight:700;color:var(--green)">${fmtN(annualIncome)}<span style="font-size:10px">万円</span></div>
+      </div>
+      <div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">修繕費（記録済）</div>
+        <div style="font-size:15px;font-weight:700;color:var(--orange)">${fmtN(annualRepair)}<span style="font-size:10px">万円</span></div>
+      </div>
+      <div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">概算課税所得</div>
+        <div style="font-size:15px;font-weight:700;color:var(--gold)">${fmtN(approxTaxable)}<span style="font-size:10px">万円</span></div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:8px">追加控除の確認リスト（税理士へ提出時に持参）</div>
+    <div style="display:grid;gap:5px">
+      ${approxDeductItems.map(d=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:${d.auto?'rgba(34,197,94,0.05)':'rgba(255,255,255,0.03)'};border:1px solid ${d.auto?'rgba(34,197,94,0.15)':'rgba(255,255,255,0.06)'}">
+        <span style="font-size:12px">${d.auto?'✅':'☐'}</span>
+        <span style="flex:1;font-size:12px;color:var(--text)">${d.label}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${d.hint}</span>
+      </div>`).join('')}
+    </div>
+    <div style="margin-top:10px;padding:8px 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:7px;font-size:11px;color:var(--text-muted)">
+      💡 青色申告（複式簿記）なら <strong style="color:var(--gold)">65万円の特別控除</strong> が利用可能。TERRA REALTYでは税理士の紹介も承っています。
+    </div>
+    ${warnHtml}
   </div>`;
 }
 
