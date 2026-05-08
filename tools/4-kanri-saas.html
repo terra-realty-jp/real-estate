@@ -272,6 +272,7 @@
     </div>
   </div>
   <div id="tenant-filter-summary" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
+  <div id="vacancy-tracker" style="display:none;margin-bottom:16px"></div>
   <div id="tenants-list"></div>
 </div>
 </div>
@@ -1065,7 +1066,54 @@ function saveProperty(){
 }
 
 // ===== テナント =====
+function renderVacancyTracker(){
+  const el = document.getElementById('vacancy-tracker');
+  if(!el) return;
+  if(!properties.length){ el.style.display='none'; return; }
+  const now = new Date();
+  const activeTenants = tenants.filter(t=>t.status==='active');
+  const vacantProps = properties.map(p=>{
+    const occ = activeTenants.filter(t=>t.propertyId===p.id).length;
+    const vacant = (p.units||0) - occ;
+    if(vacant <= 0) return null;
+    // 直近退去日を探す（同物件のvacantテナントのend日最新）
+    const departed = tenants.filter(t=>t.propertyId===p.id&&t.status==='vacant'&&t.end).map(t=>new Date(t.end)).filter(d=>!isNaN(d.getTime())).sort((a,b)=>b-a);
+    const sinceDate = departed.length ? departed[0] : null;
+    const daysSince = sinceDate ? Math.floor((now - sinceDate)/86400000) : null;
+    return {p, vacant, occ, daysSince};
+  }).filter(Boolean);
+  if(!vacantProps.length){ el.style.display='none'; return; }
+  const cards = vacantProps.map(({p,vacant,daysSince})=>{
+    const urgency = daysSince !== null && daysSince > 90 ? 'var(--red)' : daysSince !== null && daysSince > 30 ? 'var(--orange)' : 'var(--text-muted)';
+    const sinceText = daysSince !== null ? `空室${daysSince}日` : '空室日不明';
+    return `<div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:13px;font-weight:700">${esc(p.name)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${PROP_TYPE[p.type]||p.type||''}</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:22px;font-weight:900;color:var(--red)">${vacant}</div>
+        <div style="font-size:10px;color:var(--text-muted)">空室戸</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;font-weight:700;color:${urgency}">${sinceText}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">損失: 約${Math.round((tenants.filter(t=>t.propertyId===p.id&&t.status==='active').reduce((s,t)=>s+(t.rent||0),0)/Math.max(1,p.units-vacant)) * vacant / 10000)}万円/月</div>
+      </div>
+    </div>`;
+  }).join('');
+  const totalVacant = vacantProps.reduce((s,v)=>s+v.vacant, 0);
+  el.innerHTML = `<div style="background:var(--dark2);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:14px 16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+      <div style="font-size:13px;font-weight:700;color:var(--red)">🏠 空室アラート（${totalVacant}戸）</div>
+      <div style="font-size:11px;color:var(--text-muted)">早期入居募集が必要です</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">${cards}</div>
+  </div>`;
+  el.style.display = 'block';
+}
+
 function renderTenants(){
+  renderVacancyTracker();
   const el=document.getElementById('tenants-list');
   if(!tenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><p>テナントが登録されていません</p><p style="font-size:12px;margin-top:8px">${properties.length?'右上の「＋ テナント追加」からはじめてください':'先に「物件管理」タブで物件を登録してください'}</p>${properties.length?'<button class="btn btn-gold" style="margin-top:16px" onclick="openTenantModal()">＋ テナントを追加する</button>':''}</div>`;return;}
   const now=new Date();
