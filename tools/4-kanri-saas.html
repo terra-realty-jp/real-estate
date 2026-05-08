@@ -220,11 +220,15 @@
     <div id="arrears-rank-content"></div>
   </div>
   <div class="card" style="margin-top:16px">
-    <div class="card-title" style="justify-content:space-between">
+    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span>📅 契約更新まもなく（90日以内）</span>
-      <span id="expiring-count-badge" style="font-size:11px;padding:2px 10px;border-radius:100px;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.2)"></span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span id="expiring-count-badge" style="font-size:11px;padding:2px 10px;border-radius:100px;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.2)"></span>
+        <button id="bulk-renewal-btn" class="btn btn-outline btn-sm" style="display:none;border-color:var(--gold);color:var(--gold)" onclick="generateBulkRenewalPanel()">✉ 一括更新メール生成</button>
+      </div>
     </div>
     <div id="expiring-tenant-list"></div>
+    <div id="bulk-renewal-panel" style="display:none;margin-top:14px"></div>
   </div>
   <div class="card" style="margin-top:16px" id="expiry-calendar-card">
     <div class="card-title">🗓 向こう6ヶ月の契約満了スケジュール</div>
@@ -829,6 +833,10 @@ function renderDashboard() {
   const expBadge = document.getElementById('expiring-count-badge');
   if(expBadge) expBadge.textContent = expiringTenants.length > 0 ? expiringTenants.length+'名' : '';
   const etEl = document.getElementById('expiring-tenant-list');
+  const bulkBtn = document.getElementById('bulk-renewal-btn');
+  const bulkPanel = document.getElementById('bulk-renewal-panel');
+  if(bulkBtn) bulkBtn.style.display = expiringTenants.length > 0 ? '' : 'none';
+  if(bulkPanel) bulkPanel.style.display = 'none';
   if(etEl) {
     if(!expiringTenants.length) {
       etEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">✅ 90日以内に更新期限を迎えるテナントはいません</div>`;
@@ -1355,6 +1363,60 @@ function generateRenewalEmail(id) {
     navigator.clipboard.writeText(subject+'\n\n'+body).then(()=>showToast('メール本文をコピーしました（メールアドレス未登録）')).catch(()=>showToast('メール本文をクリップボードにコピーしてください'));
     alert('テナントのメールアドレスが未登録のため、メール本文をクリップボードにコピーしました。\n\nメールソフトに貼り付けてお送りください。');
   }
+}
+function generateBulkRenewalPanel() {
+  const panel = document.getElementById('bulk-renewal-panel');
+  if(!panel) return;
+  const expiring = getExpiringTenants().sort((a,b)=>new Date(a.end)-new Date(b.end));
+  if(!expiring.length) { panel.style.display='none'; return; }
+  const now = new Date();
+  const cards = expiring.map((t,idx)=>{
+    const p = properties.find(x=>x.id===t.propertyId);
+    const propName = p ? p.name : '物件';
+    const endDate = t.end ? new Date(t.end) : null;
+    const dLeft = endDate ? Math.ceil((endDate-now)/86400000) : '';
+    const endStr = t.end ? t.end.replace(/-/g,'年').replace(/-/g,'月').replace(/年(\d+)月/,'年$1月')+'日' : 'ご契約終了日';
+    const replyDeadline = endDate ? `${endDate.getMonth()+1}月${endDate.getDate()-14}日` : 'ご契約満了の2週間前';
+    const body = [
+      `${t.name} 様`,``,
+      `いつもお世話になっております。${propName} 管理担当よりご連絡申し上げます。`,``,
+      `さて、${endStr}をもちまして現在のご契約期間が満了となります。`,
+      `今後のご入居についてご意向をお聞かせいただけますでしょうか。`,``,
+      `【ご更新の場合】`,
+      `引き続きご入居いただける場合は、更新手続きのご案内をお送りいたします。`,
+      `月額家賃: ${t.rent?Number(t.rent).toLocaleString()+'円':'現行賃料'}`,
+      `更新料等: 別途ご案内いたします`,``,
+      `【ご退去の場合】`,
+      `退去日の1ヶ月前までにご連絡ください。`,``,
+      `お忙しいところ恐れ入りますが、${replyDeadline}までにご返答をお願いできますと幸いです。`,``,
+      `ご不明な点がございましたらお気軽にご連絡ください。どうぞよろしくお願いいたします。`,
+    ].join('\n');
+    const subject = `【重要】ご契約更新のご確認 — ${propName} ${t.room||''}号室`;
+    const urgentColor = dLeft<=30?'var(--red)':dLeft<=60?'var(--orange)':'var(--gold)';
+    const panelId = 'brp-body-'+idx;
+    return `<div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div>
+          <span style="font-weight:700;font-size:14px">${esc(t.name)}</span>
+          <span style="font-size:11px;color:var(--text-muted);margin-left:8px">${esc(propName)}${t.room?' '+t.room+'号室':''}</span>
+          <span style="font-size:11px;font-weight:700;color:${urgentColor};margin-left:8px">あと${dLeft}日</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${t.email?`<a href="mailto:${encodeURIComponent(t.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}" class="btn btn-gold btn-sm">メール送信</a>`:''}
+          <button class="btn btn-outline btn-sm" onclick="(function(){navigator.clipboard.writeText(document.getElementById('${panelId}').value).then(()=>showToast('コピーしました')).catch(()=>{});})()">📋 コピー</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">件名: ${esc(subject)}</div>
+      <textarea id="${panelId}" readonly style="width:100%;min-height:180px;font-size:11px;line-height:1.7;background:var(--dark2);color:var(--text-muted);resize:vertical;border-color:rgba(255,255,255,0.06)">${esc(body)}</textarea>
+    </div>`;
+  }).join('');
+  panel.innerHTML = `<div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:14px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">✉ 更新案内メール一覧（${expiring.length}件）</div>
+    ${cards}
+    <button class="btn btn-outline btn-sm" style="margin-top:4px" onclick="document.getElementById('bulk-renewal-panel').style.display='none'">閉じる</button>
+  </div>`;
+  panel.style.display = '';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function deleteTenant(id){const t=tenants.find(x=>x.id===id);if(!confirm('「'+(t?t.name:'このテナント')+'」を削除しますか？\nこの操作は元に戻せません。'))return;tenants=tenants.filter(t=>t.id!==id);save('tenants');sbDeleteRow('tenants',id);renderTenants();}
 function saveTenant(){
