@@ -311,6 +311,7 @@
   </div>
   <div id="rent-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px"></div>
   <div id="rent-trend-chart" style="display:none;margin-bottom:16px"></div>
+  <div id="rent-increase-card" style="display:none;margin-bottom:16px"></div>
   <div class="card" id="rent-list"></div>
 </div>
 </div>
@@ -1635,6 +1636,7 @@ function initRentMonthSelect(){
 }
 
 function renderRentLedger(){
+  renderRentIncreaseCard();
   const month=document.getElementById('rent_month').value;
   const statusFilter=(document.getElementById('rent-status-filter')||{}).value||'all';
   const activeTenants=tenants.filter(t=>t.status==='active');
@@ -1700,6 +1702,85 @@ function renderRentLedger(){
       }).join('')}
     </tbody>
   </table>`;
+}
+
+function renderRentIncreaseCard() {
+  const el = document.getElementById('rent-increase-card');
+  if (!el) return;
+  const active = tenants.filter(t => t.status === 'active');
+  if (!active.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const totalMonthly = active.reduce((s, t) => s + (t.rent || 0), 0);
+  const existingRate = parseFloat((document.getElementById('ri_rate') || {}).value) || 3;
+
+  function calcIncrease(rate) {
+    const addMonthly = Math.round(totalMonthly * rate / 100);
+    const addAnnual = addMonthly * 12;
+    const newMonthly = totalMonthly + addMonthly;
+    return { addMonthly, addAnnual, newMonthly };
+  }
+
+  window._riUpdate = function() {
+    const rate = parseFloat(document.getElementById('ri_rate').value) || 0;
+    const { addMonthly, addAnnual, newMonthly } = calcIncrease(rate);
+    const fmt = v => v.toLocaleString();
+    document.getElementById('ri_add_monthly').textContent = '+' + fmt(addMonthly) + '円/月';
+    document.getElementById('ri_add_annual').textContent = '+' + fmt(addAnnual) + '円/年';
+    document.getElementById('ri_new_monthly').textContent = fmt(newMonthly) + '円/月';
+    const rows = document.querySelectorAll('.ri-row');
+    rows.forEach(function(row) {
+      const base = parseInt(row.dataset.base) || 0;
+      const add = Math.round(base * rate / 100);
+      row.querySelector('.ri-new').textContent = (base + add).toLocaleString() + '円';
+      row.querySelector('.ri-diff').textContent = '+' + add.toLocaleString() + '円';
+    });
+  };
+
+  const tenantRows = active.map(function(t) {
+    const base = t.rent || 0;
+    const add = Math.round(base * existingRate / 100);
+    return '<tr class="ri-row" data-base="' + base + '" style="border-bottom:1px solid rgba(255,255,255,0.06)">'
+      + '<td style="padding:6px 8px;font-size:12px;color:var(--text)">' + (t.name || '不明') + '</td>'
+      + '<td style="padding:6px 8px;font-size:12px;color:var(--text-muted);text-align:right">' + base.toLocaleString() + '円</td>'
+      + '<td class="ri-new" style="padding:6px 8px;font-size:12px;font-weight:700;color:var(--green);text-align:right">' + (base + add).toLocaleString() + '円</td>'
+      + '<td class="ri-diff" style="padding:6px 8px;font-size:11px;color:var(--gold);text-align:right">+' + add.toLocaleString() + '円</td>'
+      + '</tr>';
+  }).join('');
+
+  const init = calcIncrease(existingRate);
+  el.innerHTML = '<div class="card" style="margin-bottom:0">'
+    + '<div class="card-title" style="justify-content:space-between">'
+    + '<span>&#x1F4C8; 賃料値上げシミュレーター</span>'
+    + '<div style="display:flex;align-items:center;gap:8px">'
+    + '<label style="font-size:11px;color:var(--text-muted)">値上げ率</label>'
+    + '<input type="number" id="ri_rate" value="' + existingRate + '" min="0.5" max="30" step="0.5" oninput="window._riUpdate()" style="width:60px;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:5px 8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;text-align:center">'
+    + '<span style="font-size:12px;color:var(--text-muted)">%</span>'
+    + '</div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
+    + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">現在の合計家賃</div>'
+    + '<div style="font-size:14px;font-weight:700;color:var(--text)">' + totalMonthly.toLocaleString() + '<span style="font-size:10px">円/月</span></div>'
+    + '</div>'
+    + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">値上げ後</div>'
+    + '<div id="ri_new_monthly" style="font-size:14px;font-weight:700;color:var(--green)">' + init.newMonthly.toLocaleString() + '<span style="font-size:10px">円/月</span></div>'
+    + '</div>'
+    + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">年間増収</div>'
+    + '<div id="ri_add_annual" style="font-size:14px;font-weight:700;color:var(--gold)">+' + init.addAnnual.toLocaleString() + '<span style="font-size:10px">円/年</span></div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    + '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">'
+    + '<th style="padding:5px 8px;font-size:10px;color:var(--text-muted);text-align:left;font-weight:700">テナント</th>'
+    + '<th style="padding:5px 8px;font-size:10px;color:var(--text-muted);text-align:right;font-weight:700">現在</th>'
+    + '<th style="padding:5px 8px;font-size:10px;color:var(--text-muted);text-align:right;font-weight:700">値上げ後</th>'
+    + '<th style="padding:5px 8px;font-size:10px;color:var(--text-muted);text-align:right;font-weight:700">増分</th>'
+    + '</tr></thead><tbody>' + tenantRows + '</tbody></table></div>'
+    + '<div style="margin-top:10px;padding:8px 12px;background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.15);border-radius:7px;font-size:11px;color:var(--text-muted)">'
+    + '&#x26A0;&#xFE0F; 賃料の値上げは契約更新時に通知が必要です。借地借家法に基づき、テナントの合意が必要な場合があります。'
+    + '</div>'
+    + '</div>';
 }
 
 function renderRentTrendChart(){
