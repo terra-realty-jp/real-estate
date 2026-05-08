@@ -598,6 +598,7 @@
         </button>
       </div>
     </div>
+    <div id="historyChartWrap" style="display:none;margin-bottom:20px"></div>
     <div id="historyTableWrap">
       <div class="empty-state">
         <div class="empty-icon">🏠</div>
@@ -1276,7 +1277,48 @@ function renderHistory() {
   if(!wrap) return;
   if(!leads.length) {
     wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🏠</div><p>まだ査定履歴がありません</p><p style="font-size:12px;margin-top:8px;color:var(--text-muted)">「査定する」タブで物件情報を入力して査定を実行すると、ここに履歴が保存されます</p><button class="btn btn-gold" style="margin-top:16px" onclick="switchTab('satei')">査定をはじめる →</button></div>`;
+    const chartWrap = document.getElementById('historyChartWrap');
+    if(chartWrap) chartWrap.style.display = 'none';
     return;
+  }
+  // 価格推移スパークライン（直近10件）
+  const chartWrap = document.getElementById('historyChartWrap');
+  if(chartWrap && leads.length >= 2) {
+    const pts = [...leads].sort((a,b)=>a.id-b.id).slice(-10);
+    const prices = pts.map(l=>Math.round(l.estimatePrice/10000));
+    const minP = Math.min(...prices), maxP = Math.max(...prices);
+    const range = maxP - minP || 1;
+    const W = 100, H = 60;
+    const step = pts.length > 1 ? W / (pts.length-1) : W;
+    const yOf = v => H - Math.round((v - minP) / range * (H-8)) - 4;
+    const pathD = pts.map((p,i)=>{
+      const x = Math.round(i * step);
+      const y = yOf(Math.round(p.estimatePrice/10000));
+      return (i===0?'M':'L')+x+','+y;
+    }).join(' ');
+    const last = prices[prices.length-1];
+    const first = prices[0];
+    const trend = last >= first ? '#4ade80' : '#f87171';
+    chartWrap.style.display = 'block';
+    chartWrap.innerHTML = `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 18px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px">📈 査定価格の推移（直近${pts.length}件）</div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <svg viewBox="0 0 ${W} ${H}" style="flex:1;min-width:160px;height:60px" preserveAspectRatio="none">
+          <path d="${pathD}" fill="none" stroke="${trend}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          ${pts.map((p,i)=>`<circle cx="${Math.round(i*step)}" cy="${yOf(Math.round(p.estimatePrice/10000))}" r="3" fill="${trend}"/>`).join('')}
+        </svg>
+        <div style="text-align:right;min-width:120px">
+          <div style="font-size:11px;color:var(--text-muted)">最新査定</div>
+          <div style="font-size:20px;font-weight:900;color:var(--gold)">${last.toLocaleString()}万円</div>
+          ${prices.length>=2?`<div style="font-size:12px;color:${trend};margin-top:4px">${last>=first?'▲':'▼'}${Math.abs(last-first).toLocaleString()}万円（初回比）</div>`:''}
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:6px">
+        <span>${pts[0].date}</span><span>${pts[pts.length-1].date}</span>
+      </div>
+    </div>`;
+  } else if(chartWrap) {
+    chartWrap.style.display = 'none';
   }
   const fmtV = v => v >= 100000000 ? '約' + Math.round(v/1000000)/100+'億円' : '約' + Math.round(v/10000).toLocaleString()+'万円';
   // 同じエリア+種別の直前査定を探して前回比を計算
