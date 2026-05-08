@@ -19,8 +19,8 @@
 ## プロジェクト概要
 - **サービス名**: 不動産かんたんツール（powered by TERRA REALTY）
 - **ターゲット**: 不動産に詳しくない一般の人（売却検討者・賃貸オーナー・投資初心者）
-- **技術**: HTML / CSS / Vanilla JavaScript のみ（バックエンドなし）
-- **データ**: ブラウザ localStorage のみ
+- **技術**: HTML / CSS / Vanilla JavaScript + Supabase（認証・クラウドDB）
+- **データ**: Supabase DB（ログイン時）/ ブラウザ localStorage（未ログイン時フォールバック）
 - **構成**:
   - `index.html` — トップページ（一般ユーザー向け入口）
   - `tools/1-ai-satei.html` — AI物件査定
@@ -33,8 +33,8 @@
 
 ## ルール
 1. **`git push` は毎回の改善サイクル最後に必ず実行すること**（origin/main へのプッシュが許可されている）
-2. localStorage以外のデータ永続化を導入しない
-3. localStorageのキー名・データ構造を変更しない（既存データが消える）
+2. Supabase（supabase-client.js）を通じてのみDBアクセスすること。直接fetch等でSupabaseを呼ばない
+3. localStorageのキー名・データ構造を変更しない（未ログインユーザーの既存データが消える）
 4. どこかのサーバーにファイルをアップロードしない
 5. `git add -A` や `git add .` は使わない。必ず対象ファイルを明示してステージングする
 6. コミット後は必ず `git push origin main` を実行してリモートに反映する

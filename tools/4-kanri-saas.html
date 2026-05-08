@@ -104,7 +104,7 @@
     .chart-container { position: relative; height: 280px; }
 
     @media(max-width:900px) { .kpi-grid { grid-template-columns:repeat(3,1fr); } }
-    @media(max-width:700px) { .form-grid,.form-grid-3 { grid-template-columns:1fr; } .kpi-grid { grid-template-columns:1fr 1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .dashboard-grid { grid-template-columns:1fr!important; } #welcome-guide>div:last-child { grid-template-columns:1fr!important; } #rent-summary { grid-template-columns:repeat(2,1fr)!important; } }
+    @media(max-width:700px) { .form-grid,.form-grid-3 { grid-template-columns:1fr; } .kpi-grid { grid-template-columns:1fr 1fr; } #monthly-highlight-card [style*="grid-template-columns:repeat(4"] { grid-template-columns:1fr 1fr!important; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .dashboard-grid { grid-template-columns:1fr!important; } #welcome-guide>div:last-child { grid-template-columns:1fr!important; } #rent-summary { grid-template-columns:repeat(2,1fr)!important; } }
     @media(max-width:375px) { .kpi-grid { grid-template-columns:1fr; } .kpi-value { font-size:20px; } .topnav { padding:12px 14px; } .modal-overlay { padding:12px; } .modal { padding:18px 16px; } .btn { min-height:44px; } input,select,textarea { min-height:44px; } }
     @media print {
       .topnav,.tabs,.btn { display:none!important; }
@@ -173,6 +173,7 @@
     </div>
   </div>
   <div class="kpi-grid" id="kpi-grid"></div>
+  <div id="monthly-highlight-card" style="margin-bottom:20px"></div>
   <div class="card" style="margin-bottom:20px;padding:18px 24px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <div>
@@ -793,6 +794,63 @@ function renderDashboard() {
       ctaCard.style.display = 'none';
     }
   }
+  renderMonthlyHighlight();
+}
+
+function renderMonthlyHighlight() {
+  const el = document.getElementById('monthly-highlight-card');
+  if (!el || properties.length === 0) { if(el) el.innerHTML=''; return; }
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const prevMonthDate = new Date(now); prevMonthDate.setMonth(prevMonthDate.getMonth()-1);
+  const prevMonth = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth()+1).padStart(2,'0')}`;
+  const activeTenants = tenants.filter(t=>t.status==='active');
+  const monthlyRentTotal = activeTenants.reduce((s,t)=>s+(t.rent||0),0);
+  const thisMonthRents = rents.filter(r=>r.month===thisMonth);
+  const collected = thisMonthRents.filter(r=>r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+  const collectRate = monthlyRentTotal>0 ? Math.round(collected/monthlyRentTotal*100) : 0;
+  const repairCost = repairs.filter(r=>{ const d=r.done||r.date||''; return d.startsWith(thisMonth); }).reduce((s,r)=>s+(Number(r.cost)||0),0);
+  const repairCount = repairs.filter(r=>{ const d=r.done||r.date||''; return d.startsWith(thisMonth); }).length;
+  const netIncome = collected - repairCost;
+  const prevCollected = rents.filter(r=>r.month===prevMonth&&r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+  const momDiff = collected - prevCollected;
+  const momPct = prevCollected > 0 ? Math.round(Math.abs(momDiff)/prevCollected*100) : null;
+  const momText = momPct !== null ? `${momDiff>=0?'▲':'▼'}${momPct}% 前月比 （${momDiff>=0?'+':''}${Math.round(momDiff/10000)}万円）` : '前月の入金データなし';
+  const momColor = momDiff >= 0 ? 'var(--green)' : 'var(--red)';
+  const fmt = v => { const man=v/10000; return man>=1?man.toLocaleString(undefined,{maximumFractionDigits:1})+'万円':Math.round(v).toLocaleString()+'円'; };
+  const rateColor = collectRate>=90?'var(--green)':collectRate>=70?'var(--orange)':'var(--red)';
+  const netColor = netIncome>=0?'var(--gold)':'var(--red)';
+  const monthLabel = `${now.getFullYear()}年${now.getMonth()+1}月`;
+  el.innerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.22);border-radius:14px;padding:20px 24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:14px;font-weight:700;color:var(--gold)">📊 今月の収支ハイライト</div>
+        <div style="font-size:12px;color:var(--text-muted)">${monthLabel}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">入金済み家賃</div>
+          <div style="font-size:20px;font-weight:700;color:var(--green)">${fmt(collected)}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">請求 ${fmt(monthlyRentTotal)}</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">修繕費支出</div>
+          <div style="font-size:20px;font-weight:700;color:${repairCost>0?'var(--orange)':'var(--text-muted)'}">${repairCost>0?fmt(repairCost):'なし'}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">${repairCount}件分</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">今月の収支</div>
+          <div style="font-size:20px;font-weight:700;color:${netColor}">${netIncome>=0?'+':''}${fmt(netIncome)}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">入金 − 修繕費</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">家賃回収率</div>
+          <div style="font-size:20px;font-weight:700;color:${rateColor}">${collectRate}%</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">${collectRate>=90?'✅ 良好':collectRate>=70?'⚠️ 要確認':'🔴 要対応'}</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:${momColor};font-weight:600">${momText}</div>
+    </div>`;
 }
 
 function getExpiringTenants() {
