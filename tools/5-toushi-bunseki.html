@@ -189,13 +189,22 @@
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">管理費・空室率などはよくある平均値で自動補完します。後から「詳細入力」で細かく調整できます。</p>
       <div class="form-grid">
         <div class="form-group full"><label>物件名（任意）</label><input id="s_name" placeholder="〇〇マンション 101号室"></div>
-        <div class="form-group"><label>購入価格（万円）*</label><input type="number" id="s_price" placeholder="2500" min="0"></div>
-        <div class="form-group"><label>想定月額家賃（円）*</label><input type="number" id="s_rent" placeholder="80000" min="0"></div>
-        <div class="form-group"><label>頭金（万円）</label><input type="number" id="s_downpay" placeholder="500" min="0"></div>
-        <div class="form-group"><label>金利（年率 %）</label><input type="number" id="s_rate" value="1.5" min="0" max="30" step="0.1"></div>
-        <div class="form-group"><label>返済期間（年）</label><input type="number" id="s_term" value="25" min="1" max="50"></div>
+        <div class="form-group"><label>購入価格（万円）*</label><input type="number" id="s_price" placeholder="2500" min="0" oninput="updateSimpleLoanPreview()"></div>
+        <div class="form-group"><label>想定月額家賃（円）*</label><input type="number" id="s_rent" placeholder="80000" min="0" oninput="updateSimpleLoanPreview()"></div>
+        <div class="form-group"><label>頭金（万円）</label><input type="number" id="s_downpay" placeholder="500" min="0" oninput="updateSimpleLoanPreview()"></div>
+        <div class="form-group"><label>金利（年率 %）</label><input type="number" id="s_rate" value="1.5" min="0" max="30" step="0.1" oninput="updateSimpleLoanPreview()"></div>
+        <div class="form-group"><label>返済期間（年）</label><input type="number" id="s_term" value="25" min="1" max="50" oninput="updateSimpleLoanPreview()"></div>
       </div>
-      <div style="margin-top:20px;padding:12px 16px;background:var(--dark3);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.8">
+      <div id="simple-loan-preview" style="margin-top:16px;padding:14px 16px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;display:none">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">ローン月額返済額（概算）</div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span id="simple-monthly-payment" style="font-size:24px;font-weight:900;color:var(--gold)">—</span>
+          <span style="font-size:12px;color:var(--text-muted)">円/月</span>
+          <span id="simple-loan-amt" style="font-size:12px;color:var(--text-muted);margin-left:8px"></span>
+        </div>
+        <div id="simple-yield-preview" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
+      </div>
+      <div style="margin-top:12px;padding:12px 16px;background:var(--dark3);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.8">
         自動補完する値：管理費 15,000円/月・空室率 10%・管理委託費 5%・固定資産税 12万円/年・保有期間 10年
       </div>
       <div style="display:flex;gap:10px;margin-top:20px">
@@ -1520,6 +1529,37 @@ function prefillAndSim(typeKey) {
     const btn = document.querySelector('#simple-mode-card .btn-gold');
     if(btn) btn.click();
   }, 100);
+}
+
+function updateSimpleLoanPreview() {
+  const price   = parseFloat(document.getElementById('s_price').value) || 0;
+  const downpay = parseFloat(document.getElementById('s_downpay').value) || 0;
+  const rate    = parseFloat(document.getElementById('s_rate').value) || 0;
+  const term    = parseFloat(document.getElementById('s_term').value) || 0;
+  const rent    = parseFloat(document.getElementById('s_rent').value) || 0;
+  const preview = document.getElementById('simple-loan-preview');
+  if (!price || !term) { preview.style.display='none'; return; }
+  const loanAmt = Math.max(0, (price - downpay) * 10000);
+  let monthly = 0;
+  if (rate > 0) {
+    const r = rate / 100 / 12;
+    const n = term * 12;
+    monthly = Math.round(loanAmt * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1));
+  } else {
+    monthly = Math.round(loanAmt / (term * 12));
+  }
+  document.getElementById('simple-monthly-payment').textContent = monthly.toLocaleString();
+  document.getElementById('simple-loan-amt').textContent = `（借入${Math.round(loanAmt/10000).toLocaleString()}万円）`;
+  const yieldEl = document.getElementById('simple-yield-preview');
+  if (rent > 0 && price > 0) {
+    const grossYield = (rent * 12 / (price * 10000) * 100).toFixed(2);
+    const noi = rent - monthly;
+    const noiColor = noi >= 0 ? '#4ade80' : '#f87171';
+    yieldEl.innerHTML = `表面利回り <b>${grossYield}%</b>　月次CF概算 <b style="color:${noiColor}">${noi>=0?'+':''}${noi.toLocaleString()}円</b>`;
+  } else {
+    yieldEl.textContent = '';
+  }
+  preview.style.display = 'block';
 }
 
 // Chart.js オフラインフォールバック
