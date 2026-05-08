@@ -324,6 +324,28 @@
 </div>
 </div>
 
+<!-- 売主詳細モーダル -->
+<div class="modal-overlay" id="sellerDetailModal" style="display:none;" onclick="closeModal('sellerDetailModal',event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:480px">
+    <div class="modal-title">売主 詳細情報</div>
+    <div id="seller-detail-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('sellerDetailModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 買主詳細モーダル -->
+<div class="modal-overlay" id="buyerDetailModal" style="display:none;" onclick="closeModal('buyerDetailModal',event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:480px">
+    <div class="modal-title">買主 詳細情報</div>
+    <div id="buyer-detail-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('buyerDetailModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <!-- 売主登録モーダル -->
 <div class="modal-overlay" id="sellerModal" style="display:none;" onclick="closeModal('sellerModal',event)">
   <div class="modal" onclick="event.stopPropagation()">
@@ -493,12 +515,80 @@ function renderSellers() {
           ${s.sqm?s.sqm+'㎡':''} ${s.age?'築'+s.age+'年':''}
         </div>
         <div class="listing-actions">
+          <button class="btn btn-outline btn-sm" onclick="showSellerDetail('${s.id}')">詳細</button>
           <button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="showAdCopy('${s.id}')">広告文</button>
           <button class="btn btn-outline btn-sm" onclick="editSeller('${s.id}')">編集</button>
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteSeller('${s.id}')">削除</button>
         </div>
       </div>
     </div>`).join('')}</div>`;
+}
+
+function showSellerDetail(id) {
+  var s = sellers.find(function(x){ return x.id===id; });
+  if(!s) return;
+  var TIMING_L = {asap:'3ヶ月以内',half:'半年以内',year:'1年以内',think:'検討中'};
+  var STATUS_L = {active:'募集中',nego:'交渉中',sold:'成約済'};
+  var rows = [
+    ['氏名', esc(s.name||'—')],
+    ['エリア', esc(s.area||'—')],
+    ['物件種別', TYPE_LABEL[s.type]||s.type||'—'],
+    ['面積', s.sqm ? s.sqm+'㎡' : '—'],
+    ['築年数', s.age ? s.age+'年' : '—'],
+    ['希望売却価格', FMT(s.price)],
+    ['売却時期', TIMING_L[s.timing]||s.timing||'—'],
+    ['ステータス', STATUS_L[s.status]||s.status||'—'],
+    ['登録日', esc(s.date||'—')],
+    ['備考', esc(s.memo||'—')],
+  ];
+  var contactHtml = '';
+  if(s.email) contactHtml += '<a href="mailto:'+encodeURIComponent(s.email)+'?subject='+encodeURIComponent('物件売却についてご連絡')+'&body='+encodeURIComponent(s.name+'様\n\nご登録いただいた物件（'+s.area+'・'+FMT(s.price)+'）についてご連絡いたします。')+'" style="display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;margin-right:8px">✉️ メール送信</a>';
+  if(s.phone) contactHtml += '<a href="tel:'+encodeURIComponent(s.phone)+'" style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);color:var(--green);border:1px solid rgba(34,197,94,0.25);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none">📞 電話する</a>';
+  var el = document.getElementById('seller-detail-content');
+  el.innerHTML = '<div style="display:grid;gap:8px;margin-bottom:16px">'
+    + rows.map(function(r) {
+        return '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)">'
+          +'<div style="width:100px;font-size:11px;color:var(--text-muted);flex-shrink:0;padding-top:1px">'+r[0]+'</div>'
+          +'<div style="font-size:13px;color:var(--text);font-weight:500;flex:1;word-break:break-all">'+r[1]+'</div>'
+        +'</div>';
+      }).join('')
+    + '</div>'
+    + (contactHtml ? '<div style="margin-top:4px">'+contactHtml+'</div>' : '<div style="font-size:12px;color:var(--text-muted)">連絡先が登録されていません</div>');
+  document.getElementById('sellerDetailModal').style.display = 'flex';
+}
+
+function showBuyerDetail(id) {
+  var b = buyers.find(function(x){ return x.id===id; });
+  if(!b) return;
+  var TIMING_L = {asap:'今すぐ',half:'半年以内',year:'1年以内',think:'柔軟'};
+  var LOAN_L = {cash:'現金',loan:'ローン',both:'両方可'};
+  var PURPOSE_L = {own:'自己居住',invest:'投資目的',other:'その他'};
+  var rows = [
+    ['氏名', esc(b.name||'—')],
+    ['希望エリア', esc(b.area||'—')],
+    ['希望物件種別', TYPE_LABEL[b.type]||b.type||'—'],
+    ['予算上限', FMT(b.budget)],
+    ['希望面積', b.sqm ? b.sqm+'㎡以上' : '—'],
+    ['購入目的', PURPOSE_L[b.purpose]||b.purpose||'—'],
+    ['購入時期', TIMING_L[b.timing]||b.timing||'—'],
+    ['資金調達', LOAN_L[b.loan]||b.loan||'—'],
+    ['登録日', esc(b.date||'—')],
+    ['備考', esc(b.memo||'—')],
+  ];
+  var contactHtml = '';
+  if(b.email) contactHtml += '<a href="mailto:'+encodeURIComponent(b.email)+'?subject='+encodeURIComponent('ご希望物件のご案内')+'&body='+encodeURIComponent(b.name+'様\n\n購入ご希望条件（'+b.area+'・'+FMT(b.budget)+'）に合う物件についてご連絡いたします。')+'" style="display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;margin-right:8px">✉️ メール送信</a>';
+  if(b.phone) contactHtml += '<a href="tel:'+encodeURIComponent(b.phone)+'" style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);color:var(--green);border:1px solid rgba(34,197,94,0.25);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none">📞 電話する</a>';
+  var el = document.getElementById('buyer-detail-content');
+  el.innerHTML = '<div style="display:grid;gap:8px;margin-bottom:16px">'
+    + rows.map(function(r) {
+        return '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)">'
+          +'<div style="width:100px;font-size:11px;color:var(--text-muted);flex-shrink:0;padding-top:1px">'+r[0]+'</div>'
+          +'<div style="font-size:13px;color:var(--text);font-weight:500;flex:1;word-break:break-all">'+r[1]+'</div>'
+        +'</div>';
+      }).join('')
+    + '</div>'
+    + (contactHtml ? '<div style="margin-top:4px">'+contactHtml+'</div>' : '<div style="font-size:12px;color:var(--text-muted)">連絡先が登録されていません</div>');
+  document.getElementById('buyerDetailModal').style.display = 'flex';
 }
 
 function openSellerModal(id) {
@@ -619,6 +709,7 @@ function renderBuyers() {
           ${b.purpose?`<span style="background:${PURPOSE_C[b.purpose]||'#64748b'}22;color:${PURPOSE_C[b.purpose]||'#94a3b8'};border:1px solid ${PURPOSE_C[b.purpose]||'#64748b'}55;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px">${PURPOSE_L[b.purpose]||b.purpose}</span>`:''}
         </div>
         <div class="listing-actions">
+          <button class="btn btn-outline btn-sm" onclick="showBuyerDetail('${b.id}')">詳細</button>
           <button class="btn btn-outline btn-sm" onclick="editBuyer('${b.id}')">編集</button>
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBuyer('${b.id}')">削除</button>
         </div>
@@ -1251,7 +1342,7 @@ function switchTab(t) {
 // Escape key でモーダルを閉じる
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') {
-    ['sellerModal','buyerModal','dealRegModal','adCopyModal','proposalLetterModal'].forEach(function(id){
+    ['sellerDetailModal','buyerDetailModal','sellerModal','buyerModal','dealRegModal','adCopyModal','proposalLetterModal'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.style.display='none';
     });
   }
