@@ -912,6 +912,9 @@ function deleteDeal(id) {
   const label = d.name || 'この案件';
   if(!confirm(`「${label}」を削除しますか？\nこの操作は元に戻せません。`)) return;
   deals = deals.filter(x=>x.id!==id);
+  if (typeof sbCurrentUser === 'function' && sbCurrentUser()) {
+    sbDelete('akiya_deals', id).catch(()=>{});
+  }
   try { localStorage.setItem('akiya_deals', JSON.stringify(deals)); } catch(e) {}
   renderPipeline();
 }
@@ -956,7 +959,7 @@ function saveDealFromModal() {
   document.getElementById('d_name').style.borderColor = '';
   const ex = document.getElementById('d_name').parentNode.querySelector('.field-error'); if(ex) ex.remove();
   const deal = {
-    id: editingDealId || Date.now(),
+    id: editingDealId || crypto.randomUUID(),
     name, addr: document.getElementById('d_addr').value,
     status: document.getElementById('d_status').value,
     buy: parseInt(document.getElementById('d_buy').value)||0,
@@ -967,6 +970,9 @@ function saveDealFromModal() {
   };
   if(editingDealId) deals = deals.map(d => d.id===editingDealId ? deal : d);
   else deals.unshift(deal);
+  if (typeof sbCurrentUser === 'function' && sbCurrentUser()) {
+    sbUpsert('akiya_deals', deal).catch(()=>{});
+  }
   try {
     localStorage.setItem('akiya_deals', JSON.stringify(deals));
   } catch(e) {
@@ -1069,7 +1075,20 @@ renderPipeline();
   if (typeof sbInit === 'function') {
     await sbInit();
     sbRenderAuthBar('sb-auth-bar');
-    sbOnAuthChange(() => sbRenderAuthBar('sb-auth-bar'));
+    if (sbCurrentUser()) {
+      const rows = await sbLoad('akiya_deals');
+      if (rows.length > 0) {
+        deals = rows;
+        renderPipeline();
+      }
+    }
+    sbOnAuthChange(async (user) => {
+      sbRenderAuthBar('sb-auth-bar');
+      if (user) {
+        const rows = await sbLoad('akiya_deals');
+        if (rows.length > 0) { deals = rows; renderPipeline(); }
+      }
+    });
   }
 })();
 </script>
