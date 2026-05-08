@@ -578,6 +578,49 @@ function buildAlerts(inp, r) {
   return alerts;
 }
 
+function renderBenchmarkCard(inp, r) {
+  const BENCHMARKS = [
+    {label:'区分マンション（首都圏）', gross:[5,7], net:[3,5], ccr:[4,8]},
+    {label:'区分マンション（地方）', gross:[8,12], net:[5,8], ccr:[8,14]},
+    {label:'一戸建て（賃貸）', gross:[7,10], net:[4,7], ccr:[7,12]},
+    {label:'アパート1棟（木造）', gross:[8,12], net:[5,8], ccr:[10,18]},
+    {label:'一般商業物件', gross:[6,9], net:[4,6], ccr:[5,10]},
+  ];
+  function judge(val, lo, hi) {
+    if(val >= hi) return {label:'高', color:'#4ade80', icon:'▲'};
+    if(val >= lo) return {label:'適正', color:'var(--gold)', icon:'◎'};
+    return {label:'低', color:'#f87171', icon:'▼'};
+  }
+  const gross = r.grossYield, net = r.netYield, ccr = r.ccr;
+  return `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px;margin-bottom:16px">
+    <div style="font-size:12px;color:var(--text-muted);font-weight:700;margin-bottom:12px;letter-spacing:0.5px">📊 市場相場との比較</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:380px">
+        <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.08)">
+          <th style="text-align:left;padding:6px 8px;color:var(--text-muted);font-weight:600">物件タイプ</th>
+          <th style="text-align:center;padding:6px 8px;color:var(--text-muted);font-weight:600">表面利回り相場</th>
+          <th style="text-align:center;padding:6px 8px;color:var(--text-muted);font-weight:600">実質利回り相場</th>
+          <th style="text-align:center;padding:6px 8px;color:var(--text-muted);font-weight:600">CCR相場</th>
+        </tr></thead>
+        <tbody>
+          ${BENCHMARKS.map(b=>{
+            const gj=judge(gross,b.gross[0],b.gross[1]);
+            const nj=judge(net,b.net[0],b.net[1]);
+            const cj=judge(ccr,b.ccr[0],b.ccr[1]);
+            return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+              <td style="padding:8px;color:var(--text)">${b.label}</td>
+              <td style="text-align:center;padding:8px"><span style="color:var(--text-muted)">${b.gross[0]}〜${b.gross[1]}%</span> <span style="color:${gj.color};font-weight:700;margin-left:6px">${gj.icon}${gj.label}</span></td>
+              <td style="text-align:center;padding:8px"><span style="color:var(--text-muted)">${b.net[0]}〜${b.net[1]}%</span> <span style="color:${nj.color};font-weight:700;margin-left:6px">${nj.icon}${nj.label}</span></td>
+              <td style="text-align:center;padding:8px"><span style="color:var(--text-muted)">${b.ccr[0]}〜${b.ccr[1]}%</span> <span style="color:${cj.color};font-weight:700;margin-left:6px">${cj.icon}${cj.label}</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:10px;color:var(--text-muted);margin-top:8px">▲高・◎適正・▼低 はあなたの入力値（表面:${gross.toFixed(1)}%、実質:${net.toFixed(1)}%、CCR:${ccr.toFixed(1)}%）との比較。相場は目安です。</p>
+  </div>`;
+}
+
 function renderResult(inp, r) {
   const v = getVerdict(r);
   const g = getGrade(r);
@@ -706,6 +749,8 @@ function renderResult(inp, r) {
     </div>
 
     ${(()=>{const alerts=buildAlerts(inp,r);if(!alerts.length)return '';const colorMap={danger:'rgba(239,68,68,0.1)',warn:'rgba(249,115,22,0.1)',ok:'rgba(34,197,94,0.1)'};const borderMap={danger:'rgba(239,68,68,0.3)',warn:'rgba(249,115,22,0.3)',ok:'rgba(34,197,94,0.3)'};const iconMap={danger:'⚠️',warn:'⚡',ok:'✅'};return `<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.05em;margin-bottom:8px">この分析結果のポイント</div>${alerts.map(a=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:${colorMap[a.type]};border:1px solid ${borderMap[a.type]};border-radius:8px;margin-bottom:6px;font-size:12px;line-height:1.6">${iconMap[a.type]} ${a.msg}</div>`).join('')}</div>`;})()}
+
+    ${renderBenchmarkCard(inp, r)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
