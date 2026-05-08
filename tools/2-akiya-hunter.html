@@ -231,17 +231,40 @@
 
   <!-- 固定資産税の精密計算入力 -->
   <div id="taxInputCard" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px;margin-bottom:16px">
-    <div style="font-size:13px;font-weight:700;margin-bottom:10px">🏛 より正確な固定資産税を試算する（任意）</div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <div style="flex:1;min-width:200px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px">🏛 物件情報を追加すると診断精度が上がります（任意）</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
         <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">固定資産税評価額（万円）</label>
-        <input type="number" id="tax_assessed" placeholder="例: 800（課税明細書に記載）" min="0" oninput="updateScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <input type="number" id="tax_assessed" placeholder="例: 800" min="0" oninput="updateScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px">課税明細書の「評価額」欄</div>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);line-height:1.7">
-        課税明細書に「評価額」として記載されています。<br>一般住宅は評価額×1.4%が固定資産税の目安です。
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">築年数（年）</label>
+        <input type="number" id="akiya_age" placeholder="例: 35" min="0" max="100" oninput="updateScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">立地タイプ</label>
+        <select id="akiya_loc" onchange="updateScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="">選択してください</option>
+          <option value="city">都市部（駅徒歩15分以内）</option>
+          <option value="suburb">郊外（駅徒歩15〜30分）</option>
+          <option value="rural">地方・農村部</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物構造</label>
+        <select id="akiya_struct" onchange="updateScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="">選択してください</option>
+          <option value="wood">木造</option>
+          <option value="steel">鉄骨造</option>
+          <option value="rc">RC造（鉄筋コンクリート）</option>
+        </select>
       </div>
     </div>
   </div>
+
+  <!-- 空き家市場性評価カード -->
+  <div id="market-eval-card" style="display:none;margin-bottom:16px"></div>
 
   <!-- 放置リスク試算カード -->
   <div class="card" id="riskCalcCard" style="display:none;">
@@ -765,6 +788,8 @@ function updateScore() {
   }
   renderTimeline(capped, [...checked]);
   renderCatBreakdown(capped, [...checked]);
+  // 市場性評価カード
+  renderMarketEval(capped, [...checked]);
   // 補助金・支援制度カード
   renderSubsidyCard(capped, [...checked]);
   const demolishCard = document.getElementById('demolish-calc-card');
@@ -796,6 +821,80 @@ function updateScore() {
     const nativeBtn = document.getElementById('score-native-share');
     if(nativeBtn) nativeBtn.style.display = (capped > 0 && navigator.share) ? 'inline-flex' : 'none';
   }
+}
+
+function renderMarketEval(score, checkedArr) {
+  var card = document.getElementById('market-eval-card');
+  if(!card) return;
+  if(score <= 0) { card.style.display='none'; return; }
+
+  var age     = parseInt(document.getElementById('akiya_age')?.value) || null;
+  var loc     = document.getElementById('akiya_loc')?.value || '';
+  var struct  = document.getElementById('akiya_struct')?.value || '';
+
+  // 各軸スコア（0-100）
+  var sAge = 100;
+  if(age !== null) {
+    if(age <= 10) sAge=95; else if(age<=20) sAge=80; else if(age<=30) sAge=60;
+    else if(age<=40) sAge=40; else if(age<=50) sAge=25; else sAge=15;
+  }
+  var sLoc = loc==='city'?90 : loc==='suburb'?60 : loc==='rural'?30 : 55;
+  var sCondition = 100 - Math.min(80,
+    (checkedArr.indexOf('c2')>=0?25:0) +
+    (checkedArr.indexOf('c3')>=0?15:0) +
+    (checkedArr.indexOf('c7')>=0?20:0) +
+    (checkedArr.indexOf('c8')>=0?30:0)
+  );
+  var sLegal = 100 - (checkedArr.indexOf('c6')>=0?40:0);
+  var sStruct = struct==='rc'?90 : struct==='steel'?75 : struct==='wood'?55 : 65;
+
+  var hasAll = age!==null && loc && struct;
+  var weights = hasAll
+    ? {age:0.25,loc:0.30,cond:0.25,legal:0.10,struct:0.10}
+    : {age:0.20,loc:0.25,cond:0.35,legal:0.10,struct:0.10};
+  var total = Math.round(
+    sAge*weights.age + sLoc*weights.loc + sCondition*weights.cond + sLegal*weights.legal + sStruct*weights.struct
+  );
+
+  var grade, gradeColor, gradeComment;
+  if(total>=75){grade='高';gradeColor='#4ade80';gradeComment='需要が見込めます。売却・賃貸ともに比較的スムーズに進む可能性があります';}
+  else if(total>=55){grade='中';gradeColor='#fde68a';gradeComment='条件次第で売却・賃貸が可能です。リフォームや価格設定の工夫で市場性を高められます';}
+  else if(total>=35){grade='やや低';gradeColor='#fb923c';gradeComment='買い手・借り手を見つけるのに苦戦する可能性があります。解体・土地売却・空き家バンクの検討も有効です';}
+  else{grade='低';gradeColor='#f87171';gradeComment='市場での売却・賃貸は難易度が高い状態です。まず専門家に相談し、撤去・活用の選択肢を整理しましょう';}
+
+  var axes = [
+    {icon:'🏗',label:'築年数',score:sAge,note:age?age+'年':'未入力'},
+    {icon:'📍',label:'立地',score:sLoc,note:loc?{city:'都市部',suburb:'郊外',rural:'地方'}[loc]||loc:'未選択'},
+    {icon:'🏠',label:'建物状態',score:sCondition,note:sCondition>=80?'良好':sCondition>=60?'普通':'要修繕'},
+    {icon:'⚖️',label:'法的問題',score:sLegal,note:sLegal>=80?'なし':'相続未了等'},
+    {icon:'🧱',label:'構造',score:sStruct,note:struct?{rc:'RC造',steel:'鉄骨',wood:'木造'}[struct]||struct:'未選択'},
+  ];
+
+  card.style.display='block';
+  card.innerHTML='<div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px 18px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">'
+      +'<div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px"><span>📊</span><span>空き家の市場性評価</span></div>'
+      +'<div style="text-align:right"><span style="font-size:22px;font-weight:900;color:'+gradeColor+'">'+grade+'</span><span style="font-size:12px;color:var(--text-muted);margin-left:4px">（スコア '+total+'点）</span></div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.05);border-radius:5px;height:8px;margin-bottom:12px;overflow:hidden">'
+      +'<div style="width:'+total+'%;height:100%;background:'+gradeColor+';border-radius:5px;transition:width 0.6s"></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px">'
+    +axes.map(function(a){
+      var c=a.score>=70?'#4ade80':a.score>=50?'#fde68a':a.score>=30?'#fb923c':'#f87171';
+      return '<div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:8px;padding:7px 4px">'
+        +'<div style="font-size:15px;margin-bottom:3px">'+a.icon+'</div>'
+        +'<div style="font-size:16px;font-weight:900;color:'+c+'">'+a.score+'</div>'
+        +'<div style="font-size:10px;color:var(--text-muted);margin-top:2px;white-space:nowrap">'+a.label+'</div>'
+        +'<div style="font-size:9px;color:var(--text-muted)">'+a.note+'</div>'
+      +'</div>';
+    }).join('')
+    +'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted);line-height:1.7;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px">'
+      +'<strong style="color:'+gradeColor+'">市場性: '+grade+'</strong> — '+gradeComment
+    +'</div>'
+    +(age===null||!loc||!struct?'<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:8px">※ 上の物件情報（築年数・立地・構造）を入力するとスコアの精度が上がります</div>':'')
+  +'</div>';
 }
 
 function renderSubsidyCard(score, checkedArr) {
