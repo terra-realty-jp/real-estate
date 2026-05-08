@@ -164,6 +164,7 @@
   <button class="tab-btn" onclick="switchTab('sensitivity')">🎯 感度分析</button>
   <button class="tab-btn" onclick="switchTab('exit')">🏠 出口戦略</button>
   <button class="tab-btn" onclick="switchTab('history')">🗂️ 分析履歴</button>
+  <button class="tab-btn" onclick="switchTab('quiz')">🧭 投資診断</button>
 </div>
 
 <!-- 物件入力 -->
@@ -334,6 +335,14 @@
 </div>
 
 <!-- 履歴 -->
+<div id="tab-quiz" class="tab-content">
+<div class="main">
+  <h1 class="page-title">投資<span>タイプ診断</span></h1>
+  <p class="page-desc">5つの質問に答えるだけで、あなたに向いている不動産投資のスタイルがわかります。</p>
+  <div id="quiz-body"></div>
+</div>
+</div>
+
 <div id="tab-history" class="tab-content">
 <div class="main">
   <h1 class="page-title">分析<span>履歴</span></h1>
@@ -1327,10 +1336,119 @@ function renderExit(inp, r) {
   document.getElementById('exit-content').innerHTML = bCard + taxNote + tbl + cta;
 }
 function switchTab(t) {
-  const tabs=['input','result','cashflow','sensitivity','exit','history'];
+  const tabs=['input','result','cashflow','sensitivity','exit','history','quiz'];
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));
   tabs.forEach(tab=>document.getElementById('tab-'+tab).classList.toggle('active',tab===t));
   if(t==='history') renderHistory();
+  if(t==='quiz') renderQuiz();
+}
+
+// ===== 投資タイプ診断 =====
+const QUIZ_QS = [
+  { q:'不動産投資の目的は？', opts:[
+    {label:'毎月の安定収入がほしい', pts:{cash:2}},
+    {label:'将来の資産を増やしたい', pts:{growth:2}},
+    {label:'老後の年金補完にしたい', pts:{cash:1,safety:1}},
+    {label:'節税・相続対策がしたい', pts:{tax:2}},
+  ]},
+  { q:'投資に使える自己資金は？', opts:[
+    {label:'100万円未満', pts:{reit:2}},
+    {label:'100〜500万円', pts:{small:2}},
+    {label:'500万〜1,500万円', pts:{mns:1,cash:1}},
+    {label:'1,500万円以上', pts:{growth:1,tax:1}},
+  ]},
+  { q:'価格が下がるリスクをどこまで許容できる？', opts:[
+    {label:'ほぼ許容できない（元本保全優先）', pts:{safety:2,reit:1}},
+    {label:'多少の下落なら許容できる', pts:{cash:1,small:1}},
+    {label:'長期的に回復すればOK', pts:{growth:2}},
+    {label:'大きなリターンのためなら許容する', pts:{growth:2,mns:1}},
+  ]},
+  { q:'物件管理にかけられる手間は？', opts:[
+    {label:'できる限り手間をかけたくない', pts:{reit:2,safety:1}},
+    {label:'月1回程度の確認なら問題ない', pts:{mns:2,cash:1}},
+    {label:'積極的に関わって利益を最大化したい', pts:{growth:2,small:1}},
+    {label:'プロ（管理会社）に全任せできれば何でも', pts:{mns:1,tax:1}},
+  ]},
+  { q:'投資の経験は？', opts:[
+    {label:'全くない（初めて）', pts:{reit:1,safety:2}},
+    {label:'株・投信などの経験はある', pts:{mns:1,growth:1}},
+    {label:'不動産の知識はある程度ある', pts:{cash:1,growth:1}},
+    {label:'不動産投資の経験がある', pts:{growth:2,tax:1}},
+  ]},
+];
+const QUIZ_TYPES = {
+  cash: {name:'インカムゲイン型', icon:'💰', color:'#4ade80', desc:'毎月の家賃収入を安定して得ることに向いています。区分マンション（1室）や築浅アパートが候補です。'},
+  growth: {name:'キャピタルゲイン型', icon:'📈', color:'#60a5fa', desc:'物件価格の上昇を狙う投資スタイルです。再開発エリアの土地・中古一棟ビルなどが候補です。'},
+  safety: {name:'安全重視・低リスク型', icon:'🛡️', color:'#a78bfa', desc:'元本をなるべく守りながら運用するスタイルです。新築区分・定期借地権物件などが候補です。'},
+  reit: {name:'REIT・少額スタート型', icon:'🏢', color:'#fb923c', desc:'まずは不動産投資信託（REIT）などで小額から試すスタイルです。本格的な不動産購入前の学習にも最適です。'},
+  small: {name:'小口・地方物件型', icon:'🏘️', color:'#f472b6', desc:'地方の割安物件で高利回りを狙うスタイルです。現地確認が必要ですが表面利回り10%超も可能です。'},
+  mns: {name:'区分マンション長期保有型', icon:'🏙️', color:'#34d399', desc:'都市部の区分マンションを長期保有するスタイルです。流動性が高く出口戦略が立てやすいのが特徴です。'},
+  tax: {name:'節税・資産承継型', icon:'📋', color:'var(--gold)', desc:'相続税対策や所得税の節税を主目的にした投資スタイルです。税理士・不動産の両専門家との連携が重要です。'},
+};
+let quizAnswers = [];
+let quizStep = 0;
+function renderQuiz() {
+  const el = document.getElementById('quiz-body');
+  if(quizStep < QUIZ_QS.length) {
+    const q = QUIZ_QS[quizStep];
+    const prog = Math.round((quizStep/QUIZ_QS.length)*100);
+    el.innerHTML = `
+      <div class="card" style="max-width:540px;margin:0 auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:12px;color:var(--text-muted)">質問 ${quizStep+1} / ${QUIZ_QS.length}</span>
+          <span style="font-size:12px;color:var(--gold)">${prog}%</span>
+        </div>
+        <div style="background:var(--dark3);border-radius:4px;height:4px;margin-bottom:20px;overflow:hidden">
+          <div style="height:4px;background:var(--gold);width:${prog}%;transition:width 0.3s;border-radius:4px"></div>
+        </div>
+        <div style="font-size:17px;font-weight:700;margin-bottom:20px;line-height:1.5">${q.q}</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${q.opts.map((o,i)=>`<button onclick="quizAnswer(${i})" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 18px;color:var(--text);font-size:14px;font-family:inherit;cursor:pointer;text-align:left;transition:all 0.2s;line-height:1.4" onmouseover="this.style.borderColor='var(--gold)';this.style.background='rgba(201,168,76,0.08)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='var(--dark3)'">${o.label}</button>`).join('')}
+        </div>
+        ${quizStep>0?`<button onclick="quizBack()" style="background:none;border:none;color:var(--text-muted);font-size:13px;font-family:inherit;cursor:pointer;margin-top:16px;padding:0">← 前の質問に戻る</button>`:''}
+      </div>`;
+  } else {
+    showQuizResult(el);
+  }
+}
+function quizAnswer(i) {
+  quizAnswers[quizStep] = i;
+  quizStep++;
+  renderQuiz();
+}
+function quizBack() {
+  quizStep = Math.max(0, quizStep-1);
+  renderQuiz();
+}
+function showQuizResult(el) {
+  const scores = {};
+  quizAnswers.forEach((ai, qi) => {
+    const pts = QUIZ_QS[qi].opts[ai].pts;
+    Object.entries(pts).forEach(([k,v]) => scores[k] = (scores[k]||0)+v);
+  });
+  const sorted = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  const top = sorted[0];
+  const second = sorted[1];
+  const t = QUIZ_TYPES[top[0]];
+  const t2 = second ? QUIZ_TYPES[second[0]] : null;
+  el.innerHTML = `
+    <div class="card" style="max-width:540px;margin:0 auto;border-color:${t.color};border-width:2px">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:48px;margin-bottom:8px">${t.icon}</div>
+        <div style="font-size:11px;letter-spacing:2px;color:var(--text-muted);margin-bottom:6px">あなたに向いている投資スタイル</div>
+        <div style="font-size:22px;font-weight:900;color:${t.color}">${t.name}</div>
+      </div>
+      <p style="font-size:14px;line-height:1.8;color:var(--text-muted);margin-bottom:16px;text-align:center">${t.desc}</p>
+      ${t2?`<div style="background:var(--dark3);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--text-muted)">
+        <strong style="color:var(--text)">次点：${t2.icon} ${QUIZ_TYPES[second[0]].name}</strong><br>
+        ${QUIZ_TYPES[second[0]].desc}
+      </div>`:''}
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+        <a href="mailto:terra.realty.iam@gmail.com?subject=${encodeURIComponent('投資タイプ診断結果について：'+t.name)}&body=${encodeURIComponent('診断結果：'+t.name+'\n\n具体的にどんな物件が候補になるか教えていただけますか？')}" class="btn btn-gold" style="text-align:center;text-decoration:none">この結果についてTERRA REALTYに相談する →</a>
+        <button onclick="quizStep=0;quizAnswers=[];renderQuiz()" class="btn btn-outline">もう一度診断する</button>
+        <button onclick="switchTab('input')" class="btn btn-outline">シミュレーターで試す →</button>
+      </div>
+    </div>`;
 }
 
 // Chart.js オフラインフォールバック
