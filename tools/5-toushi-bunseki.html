@@ -1149,6 +1149,7 @@ function deleteHistoryItem(id) {
   const label = h.name || `${h.price}万円の物件`;
   if(!confirm(`「${label}」の分析履歴を削除しますか？`)) return;
   history = history.filter(x=>x.id!==id);
+  if (typeof sbCurrentUser === 'function' && sbCurrentUser()) sbDelete('inv_history', id).catch(()=>{});
   localStorage.setItem('inv_history', JSON.stringify(history));
   renderHistory();
 }
@@ -1156,6 +1157,9 @@ function deleteHistoryItem(id) {
 function clearHistory() {
   if(!history.length) return;
   if(!confirm(`${history.length}件の分析履歴をすべて削除しますか？`)) return;
+  if (typeof sbCurrentUser === 'function' && sbCurrentUser()) {
+    history.forEach(h => sbDelete('inv_history', h.id).catch(()=>{}));
+  }
   history=[];localStorage.setItem('inv_history',JSON.stringify(history));renderHistory();
 }
 
@@ -1371,12 +1375,30 @@ showChartOfflineMsg('cfChart');
 showChartOfflineMsg('cumChart');
 renderHistory();
 
-// Supabase 認証バー
+// Supabase 認証バー + 履歴クラウドロード
 (async () => {
   if (typeof sbInit === 'function') {
     await sbInit();
     sbRenderAuthBar('sb-auth-bar');
-    sbOnAuthChange(() => sbRenderAuthBar('sb-auth-bar'));
+    if (sbCurrentUser()) {
+      const rows = await sbLoad('inv_history');
+      if (rows.length > 0) {
+        history = rows.map(r => ({ id: r.id, name: r.name, ...(r.data || {}) }));
+        localStorage.setItem('inv_history', JSON.stringify(history));
+        renderHistory();
+      }
+    }
+    sbOnAuthChange(async (user) => {
+      sbRenderAuthBar('sb-auth-bar');
+      if (user) {
+        const rows = await sbLoad('inv_history');
+        if (rows.length > 0) {
+          history = rows.map(r => ({ id: r.id, name: r.name, ...(r.data || {}) }));
+          localStorage.setItem('inv_history', JSON.stringify(history));
+          renderHistory();
+        }
+      }
+    });
   }
 })();
 </script>
