@@ -246,7 +246,7 @@
       transition: background 0.2s;
     }
     .wb-link:hover { background: #fef08a; }
-    @media (max-width: 640px) { .welcome-back { padding: 14px 20px; } }
+    @media (max-width: 640px) { .welcome-back { padding: 14px 20px; } #my-data-panel { padding: 12px 20px; } }
   </style>
 </head>
 <body>
@@ -258,6 +258,17 @@
     <div class="logo">不動産かんたんツール<span>powered by TERRA REALTY</span></div>
     <div class="header-badge">全5ツール 無料</div>
   </header>
+
+  <div id="my-data-panel" style="display:none;background:linear-gradient(135deg,#0d1f3c,#0a1628);border-bottom:1px solid rgba(201,168,76,0.2);padding:16px 40px">
+    <div style="max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);flex-shrink:0">☁ クラウドデータ</div>
+      <div id="my-data-stats" style="display:flex;gap:16px;flex-wrap:wrap;flex:1"></div>
+      <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
+        <a href="tools/4-kanri-saas.html" style="font-size:12px;padding:5px 12px;background:rgba(201,168,76,0.12);color:#c9a84c;border:1px solid rgba(201,168,76,0.25);border-radius:6px;text-decoration:none;white-space:nowrap">管理ツールを開く →</a>
+        <a href="tools/1-ai-satei.html" style="font-size:12px;padding:5px 12px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:6px;text-decoration:none;white-space:nowrap">査定する →</a>
+      </div>
+    </div>
+  </div>
 
   <div class="welcome-back" id="welcome-back-banner">
     <div class="wb-text">
@@ -768,6 +779,40 @@
       } catch(e) {}
     }
 
+    async function renderMyDataPanel() {
+      const panel = document.getElementById('my-data-panel');
+      const stats = document.getElementById('my-data-stats');
+      if (!panel || !stats) return;
+      panel.style.display = 'block';
+      stats.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,0.35)">読み込み中…</span>';
+      try {
+        const [props, tenants, leads, inv, akiya, sellers, buyers] = await Promise.all([
+          sbLoad('properties'), sbLoad('tenants'), sbLoad('satei_leads'),
+          sbLoad('inv_history'), sbLoad('akiya_deals'), sbLoad('od_sellers'), sbLoad('od_buyers')
+        ]);
+        const items = [
+          { label:'管理物件', value: props.length, unit:'棟', show: props.length>0 },
+          { label:'テナント', value: tenants.length, unit:'名', show: tenants.length>0 },
+          { label:'査定履歴', value: leads.length, unit:'回', show: leads.length>0 },
+          { label:'投資分析', value: inv.length, unit:'件', show: inv.length>0 },
+          { label:'空き家案件', value: akiya.length, unit:'件', show: akiya.length>0 },
+          { label:'マッチング', value: sellers.length+buyers.length, unit:'件', show: (sellers.length+buyers.length)>0 },
+        ].filter(x=>x.show);
+        if (items.length === 0) {
+          stats.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,0.35)">データがまだありません。各ツールを使い始めると自動保存されます。</span>';
+        } else {
+          stats.innerHTML = items.map(x =>
+            `<div style="display:flex;align-items:baseline;gap:4px">
+              <span style="font-size:18px;font-weight:700;color:#c9a84c">${x.value}</span>
+              <span style="font-size:11px;color:rgba(255,255,255,0.45)">${x.unit} ${x.label}</span>
+            </div>`
+          ).join('<div style="width:1px;background:rgba(255,255,255,0.08);align-self:stretch"></div>');
+        }
+      } catch(e) {
+        stats.innerHTML = '';
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', async function() {
       updateWelcomeBack();
       updateUsageBadges();
@@ -775,11 +820,15 @@
       buildFAQ();
       buildUsageSummary();
 
-      // Supabase 認証バー
+      // Supabase 認証バー + マイデータパネル
       if (typeof sbInit === 'function') {
         await sbInit();
         sbRenderAuthBar('sb-auth-bar');
-        sbOnAuthChange(() => sbRenderAuthBar('sb-auth-bar'));
+        if (sbCurrentUser()) renderMyDataPanel();
+        sbOnAuthChange((user) => {
+          sbRenderAuthBar('sb-auth-bar');
+          if (user) renderMyDataPanel(); else document.getElementById('my-data-panel').style.display='none';
+        });
       }
     });
   </script>
