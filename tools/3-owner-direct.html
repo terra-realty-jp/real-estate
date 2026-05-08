@@ -580,24 +580,39 @@ function renderBuyers() {
     return true;
   });
   if(!filteredBuyers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><p>条件に合う買主がいません</p></div>`; return; }
-  el.innerHTML = `<div class="listings-grid">${filteredBuyers.map(b=>`
+  const activeSellers = sellers.filter(s=>s.status==='active');
+  el.innerHTML = `<div class="listings-grid">${filteredBuyers.map(b=>{
+    const TIMING_C = {asap:'#22c55e',half:'#c9a84c',year:'#94a3b8',think:'#64748b'};
+    const TIMING_L = {asap:'今すぐ',half:'半年以内',year:'1年以内',think:'柔軟'};
+    const LOAN_C = {cash:'#c9a84c',loan:'#60a5fa',both:'#a78bfa'};
+    const LOAN_L = {cash:'現金',loan:'ローン',both:'両方可'};
+    const PURPOSE_C = {own:'#4ade80',invest:'#f59e0b',both:'#818cf8'};
+    const PURPOSE_L = {own:'自己居住',invest:'投資',both:'両方'};
+    const matchCount = activeSellers.filter(s=>{
+      const m = calcMatchScore(s, b); return m.score >= 30;
+    }).length;
+    return `
     <div class="listing-card">
       <div class="listing-img">🙋
         <span class="listing-type-badge type-buy">買主</span>
+        ${matchCount>0?`<span class="match-badge" style="background:rgba(34,197,94,0.85)">${matchCount}件候補</span>`:''}
       </div>
       <div class="listing-body">
         <div class="listing-price">予算 ${FMT(b.budget)}</div>
         <div class="listing-name">${esc(b.name)}</div>
-        <div class="listing-meta">
-          ${b.area} | ${TYPE_LABEL[b.type]}<br>
-          ${b.sqm?b.sqm+'㎡以上':''} ${b.purpose==='invest'?'投資目的':'自己居住'}
+        <div class="listing-meta">${b.area} | ${TYPE_LABEL[b.type]||b.type}${b.sqm?'<br>'+b.sqm+'㎡以上':''}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin:8px 0">
+          ${b.timing?`<span style="background:${TIMING_C[b.timing]||'#64748b'}22;color:${TIMING_C[b.timing]||'#94a3b8'};border:1px solid ${TIMING_C[b.timing]||'#64748b'}55;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px">${TIMING_L[b.timing]||b.timing}</span>`:''}
+          ${b.loan?`<span style="background:${LOAN_C[b.loan]||'#64748b'}22;color:${LOAN_C[b.loan]||'#94a3b8'};border:1px solid ${LOAN_C[b.loan]||'#64748b'}55;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px">${LOAN_L[b.loan]||b.loan}</span>`:''}
+          ${b.purpose?`<span style="background:${PURPOSE_C[b.purpose]||'#64748b'}22;color:${PURPOSE_C[b.purpose]||'#94a3b8'};border:1px solid ${PURPOSE_C[b.purpose]||'#64748b'}55;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px">${PURPOSE_L[b.purpose]||b.purpose}</span>`:''}
         </div>
         <div class="listing-actions">
           <button class="btn btn-outline btn-sm" onclick="editBuyer('${b.id}')">編集</button>
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBuyer('${b.id}')">削除</button>
         </div>
       </div>
-    </div>`).join('')}</div>`;
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function openBuyerModal(id) {
