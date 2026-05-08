@@ -1211,6 +1211,27 @@ function renderSensitivity(inp) {
   });
 
   document.getElementById('sensitivity-content').innerHTML = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">🎯 目標利回り 逆算計算機</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">
+        「利回り○%を達成するには、家賃をいくらにすればよいか？」「最大いくらの物件が買えるか？」を即座に逆算します。
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">目標 表面利回り（%）</label>
+          <input type="number" id="rev_target_yield" value="6" min="1" max="30" step="0.1" oninput="calcReverseYield()"
+            style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">目標 実質利回り（%）</label>
+          <input type="number" id="rev_target_net" value="4" min="0.5" max="30" step="0.1" oninput="calcReverseYield()"
+            style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+      <div id="reverse-yield-result" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px"></div>
+      <p style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 現在の入力値（家賃・購入価格・諸経費）をベースに逆算。実質利回りは管理費・空室率・税金・保険料を考慮します。</p>
+    </div>
+
     <div class="card">
       <div class="card-title">📋 3シナリオ比較（ベスト / ベース / ワースト）</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px">
@@ -1274,6 +1295,61 @@ function renderSensitivity(inp) {
       </div>
     </div>
   `;
+  setTimeout(calcReverseYield, 0);
+}
+
+function calcReverseYield() {
+  const el = document.getElementById('reverse-yield-result');
+  if (!el || !lastResult) return;
+  const inp = lastResult.inp;
+  const targetGross = parseFloat(document.getElementById('rev_target_yield')?.value) || 6;
+  const targetNet   = parseFloat(document.getElementById('rev_target_net')?.value)   || 4;
+  const noi = calcNOI(inp.rent, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+  const annualRent = inp.rent * 12 * (1 - inp.vacancy/100);
+  const maxPriceByGross = targetGross > 0 ? Math.round(annualRent / targetGross * 100 / 10000) : 0;
+  const maxPriceByNet   = targetNet > 0   ? Math.round(noi / (targetNet/100) / 10000) : 0;
+  const minRentByGross  = inp.price > 0   ? Math.round(inp.price * 10000 * targetGross / 100 / 12) : 0;
+  const curGross = inp.price > 0 ? (annualRent / (inp.price*10000) * 100) : 0;
+  const curNet   = inp.price > 0 ? (noi / (inp.price*10000) * 100) : 0;
+  const gDiff = curGross - targetGross;
+  const nDiff = curNet - targetNet;
+  const fmtM = v => Math.round(v).toLocaleString();
+  el.innerHTML = [
+    {
+      title: `表面利回り ${targetGross}%を達成する最大購入価格`,
+      value: maxPriceByGross > 0 ? maxPriceByGross.toLocaleString()+'万円' : '—',
+      sub: `現在の設定: ${Math.round(inp.price).toLocaleString()}万円`,
+      delta: gDiff,
+      color: maxPriceByGross >= inp.price ? '#22c55e' : '#ef4444',
+      tip: maxPriceByGross >= inp.price ? `✅ 現在の購入価格で目標達成（+${gDiff.toFixed(1)}%）` : `⚠️ ${(inp.price - maxPriceByGross).toLocaleString()}万円 価格を下げると目標達成`
+    },
+    {
+      title: `表面利回り ${targetGross}%に必要な最低月額家賃`,
+      value: minRentByGross > 0 ? fmtM(minRentByGross)+'円/月' : '—',
+      sub: `現在の設定: ${fmtM(inp.rent)}円/月`,
+      color: inp.rent >= minRentByGross ? '#22c55e' : '#ef4444',
+      tip: inp.rent >= minRentByGross ? `✅ 現在の家賃で目標達成` : `⚠️ 月${fmtM(minRentByGross - inp.rent)}円の家賃UP、または購入価格の見直しが必要`
+    },
+    {
+      title: `実質利回り ${targetNet}%を達成する最大購入価格`,
+      value: maxPriceByNet > 0 ? maxPriceByNet.toLocaleString()+'万円' : '—',
+      sub: `現在の実質利回り: ${curNet.toFixed(2)}%`,
+      color: maxPriceByNet >= inp.price ? '#22c55e' : '#ef4444',
+      tip: maxPriceByNet >= inp.price ? `✅ 現在の条件で目標達成（+${nDiff.toFixed(1)}%）` : `⚠️ ${(inp.price - maxPriceByNet).toLocaleString()}万円 価格を下げると達成`
+    },
+    {
+      title: `現在と目標のギャップ`,
+      value: gDiff >= 0 && nDiff >= 0 ? '達成中' : '未達成',
+      sub: `表面: ${curGross.toFixed(2)}% / 実質: ${curNet.toFixed(2)}%`,
+      color: gDiff >= 0 && nDiff >= 0 ? '#22c55e' : '#f97316',
+      tip: `表面 ${gDiff >= 0 ? '▲+' : '▼'}${Math.abs(gDiff).toFixed(1)}%　実質 ${nDiff >= 0 ? '▲+' : '▼'}${Math.abs(nDiff).toFixed(1)}%`
+    },
+  ].map(c => `<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:14px">
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;line-height:1.5">${c.title}</div>
+    <div style="font-size:20px;font-weight:900;color:${c.color}">${c.value}</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${c.sub}</div>
+    <div style="font-size:11px;color:${c.color};margin-top:6px;line-height:1.6">${c.tip}</div>
+  </div>`).join('');
 }
 
 function showComparePanel() {
