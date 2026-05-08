@@ -828,6 +828,7 @@ function renderResult(inp, r) {
     ${renderBenchmarkCard(inp, r)}
     ${renderDepreciationCard(inp)}
     ${renderPurchaseChecklistCard(inp, r)}
+    ${renderHoldPeriodOptimCard(inp)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
@@ -910,6 +911,71 @@ function showInvestToast(msg, isError) {
   t.textContent = msg; document.body.appendChild(t);
   setTimeout(()=>t.style.opacity='0', isError?4000:2000);
   setTimeout(()=>t.remove(), isError?4300:2300);
+}
+
+function renderHoldPeriodOptimCard(inp) {
+  if (!inp || !inp.price) return '';
+  const holdYears = [3, 5, 7, 10, 12, 15, 20].filter(y => y <= inp.term + 5);
+  function irrForHold(h) {
+    const equity = (inp.price - inp.loan) * 10000;
+    if (equity <= 0) return 0;
+    const loanResult = inp.loan > 0 ? calcLoanPayment(inp.loan, inp.rate, inp.term, inp.repay) : {monthly:0, total:0};
+    const rMo = inp.rate / 100 / 12;
+    let balance = inp.loan * 10000;
+    const irrCFs = [-equity];
+    for (let y = 1; y <= h; y++) {
+      const rentY = inp.rent * Math.pow(1 - inp.decline/100, y - 1);
+      const noiY = calcNOI(rentY, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+      for (let m = 0; m < 12; m++) {
+        const interest = balance * rMo;
+        const principal = inp.repay === 'equal' ? loanResult.monthly - interest : (inp.loan*10000/(inp.term*12));
+        balance = Math.max(0, balance - principal);
+      }
+      const cfY = noiY - loanResult.monthly * 12;
+      const holdRentY = inp.rent * Math.pow(1 - inp.decline/100, y);
+      const holdNOI = calcNOI(holdRentY, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+      const exitPrice = inp.exitYield > 0 ? holdNOI / (inp.exitYield / 100) : 0;
+      const exitNet = exitPrice * (1 - inp.exitCost / 100);
+      irrCFs.push(y < h ? cfY : cfY + (exitNet - balance));
+    }
+    const npvFn = (rt) => irrCFs.reduce((s, cf, t) => s + cf / Math.pow(1 + rt, t), 0);
+    const dnpvFn = (rt) => irrCFs.reduce((s, cf, t) => s - t * cf / Math.pow(1 + rt, t + 1), 0);
+    let irrRate = 0.1;
+    for (let i = 0; i < 60; i++) {
+      const f = npvFn(irrRate), df = dnpvFn(irrRate);
+      if (Math.abs(f) < 10 || !df) break;
+      irrRate = Math.min(10, Math.max(-0.99, irrRate - f / df));
+    }
+    return isFinite(irrRate) ? irrRate * 100 : 0;
+  }
+  const data = holdYears.map(y => ({ y, irr: irrForHold(y) }));
+  const best = data.reduce((a, b) => b.irr > a.irr ? b : a, data[0]);
+  const maxIRR = Math.max(...data.map(d => Math.abs(d.irr)), 1);
+  const bars = data.map(d => {
+    const isCurrent = d.y === inp.hold;
+    const isBest = d.y === best.y && best.irr > 0;
+    const barH = Math.max(4, Math.round((Math.abs(d.irr) / maxIRR) * 72));
+    const color = isBest ? '#22c55e' : isCurrent ? '#c9a84c' : 'rgba(255,255,255,0.12)';
+    const tc = isBest ? '#4ade80' : isCurrent ? '#c9a84c' : '#888';
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+      <div style="font-size:10px;font-weight:700;color:${tc}">${d.irr.toFixed(1)}%</div>
+      <div style="display:flex;flex-direction:column;justify-content:flex-end;height:72px;width:100%">
+        <div style="background:${color};height:${barH}px;border-radius:3px 3px 0 0;${isBest?'box-shadow:0 0 8px rgba(34,197,94,0.35)':''}"></div>
+      </div>
+      <div style="font-size:9px;color:${tc};text-align:center;line-height:1.4">${d.y}年${isBest?'<br>★最高':''}${isCurrent&&!isBest?'<br>▶現在':''}</div>
+    </div>`;
+  }).join('');
+  const advice = best.irr <= 0 ? '現在の条件では、いずれの保有期間でもプラスのIRRが見込めません。入力条件（価格・家賃・ローン）の見直しをご検討ください。'
+    : best.y < inp.hold ? `現在の計画（${inp.hold}年）より<strong style="color:#4ade80">${best.y}年での売却</strong>がIRR最大化の戦略です。早期売却で利益確定を検討しましょう。`
+    : best.y > inp.hold ? `保有期間を<strong style="color:#4ade80">${best.y}年まで延ばす</strong>とIRRが向上します。ローン残高の減少が売却益を押し上げるためです。`
+    : `現在の保有計画（${inp.hold}年）が最適です。このまま計画を進めましょう。`;
+  return `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
+    <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:3px">📅 保有年数別 IRR 最適化</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px">売却タイミングによる内部収益率（IRR）の変化</div>
+    <div style="display:flex;align-items:flex-end;gap:5px;padding:0 2px;margin-bottom:12px">${bars}</div>
+    <div style="padding:11px 14px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:8px;font-size:12px;color:var(--text);line-height:1.7">💡 ${advice}</div>
+    <p style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 家賃下落率・売却利回り・諸費用は入力値を使用。税金・修繕費等は含みません。</p>
+  </div>`;
 }
 
 function renderPurchaseChecklistCard(inp, r) {
