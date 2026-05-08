@@ -1203,13 +1203,65 @@ function renderVacancyTracker(){
     </div>`;
   }).join('');
   const totalVacant = vacantProps.reduce((s,v)=>s+v.vacant, 0);
+  // 月間損失合計
+  const totalMonthlyLoss = vacantProps.reduce(({p,vacant})=>{
+    const avgR = tenants.filter(t=>t.propertyId===p.id&&t.status==='active').reduce((s,t)=>s+(t.rent||0),0) / Math.max(1,(p.units||1)-vacant);
+    return Math.round(avgR * vacant);
+  }, 0);
+  // 年間換算損失
+  const annualLoss = Math.round(totalMonthlyLoss * 12 / 10000);
+
   el.innerHTML = `<div style="background:var(--dark2);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:14px 16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
       <div style="font-size:13px;font-weight:700;color:var(--red)">🏠 空室アラート（${totalVacant}戸）</div>
-      <div style="font-size:11px;color:var(--text-muted)">早期入居募集が必要です</div>
+      <div style="font-size:11px;color:var(--orange);font-weight:700">年間損失目安: 約${annualLoss}万円</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">${cards}</div>
+    <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">📋 入居募集アクション</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="generateVacancyListingEmail()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3);font-size:12px;font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit">✉️ 募集依頼メール生成</button>
+        <button onclick="toggleVacancyTips()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid rgba(255,255,255,0.1);font-size:12px;font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit">💡 空室対策ヒント</button>
+      </div>
+      <div id="vacancy-listing-email" style="display:none;margin-top:10px"></div>
+      <div id="vacancy-tips" style="display:none;margin-top:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:12px;font-size:12px;color:var(--text-muted);line-height:1.8">
+        <strong style="color:var(--gold)">空室期間別の対策目安</strong><br>
+        ・<span style="color:var(--green)">30日以内</span>: 現状維持。募集告知の確認を<br>
+        ・<span style="color:var(--gold)">31〜90日</span>: 家賃5%程度の見直し・礼金0に変更<br>
+        ・<span style="color:var(--orange)">91〜180日</span>: フリーレント1〜2ヶ月・仲介手数料オーナー負担<br>
+        ・<span style="color:var(--red)">180日超</span>: リフォーム検討・家賃10%以上の大幅見直し・TERRA REALTYに相談
+      </div>
+    </div>
   </div>`;
+  el.style.display = 'block';
+}
+
+function toggleVacancyTips() {
+  const el = document.getElementById('vacancy-tips');
+  if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+function generateVacancyListingEmail() {
+  const el = document.getElementById('vacancy-listing-email');
+  if(!el) return;
+  const activeTenants = tenants.filter(t=>t.status==='active');
+  const vacantProps = properties.map(p=>{
+    const occ = activeTenants.filter(t=>t.propertyId===p.id).length;
+    const vacant = (p.units||0) - occ;
+    if(vacant <= 0) return null;
+    return {p, vacant};
+  }).filter(Boolean);
+  if(!vacantProps.length) return;
+  const lines = vacantProps.map(({p,vacant})=>`・${p.name}（${PROP_TYPE[p.type]||''}）: ${vacant}戸`).join('\n');
+  const body = `お世話になっております。\n以下の物件で空室が発生しております。早急に入居者募集のご対応をお願いいたします。\n\n【空室物件】\n${lines}\n\n条件交渉・家賃設定のご提案もお待ちしております。\nよろしくお願いいたします。`;
+  const emailEl = document.createElement('div');
+  emailEl.innerHTML = `<textarea id="vacancy-email-body" rows="7" style="width:100%;background:var(--dark);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box">${body}</textarea>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button onclick="(()=>{navigator.clipboard.writeText(document.getElementById('vacancy-email-body').value);showToast('メール文をコピーしました ✓');})()" style="background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3);font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:inherit">コピー</button>
+      <a href="mailto:?subject=${encodeURIComponent('空室物件の入居者募集のお願い')}&body=${encodeURIComponent(body)}" style="display:inline-flex;align-items:center;background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;text-decoration:none">メール送信</a>
+    </div>`;
+  el.innerHTML = '';
+  el.appendChild(emailEl);
   el.style.display = 'block';
 }
 

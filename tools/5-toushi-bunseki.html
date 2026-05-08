@@ -1362,6 +1362,61 @@ function renderSensitivity(inp) {
         </table>
       </div>
     </div>
+
+    ${(()=>{
+      // 損益分岐点物件価格カード
+      const noi = calcNOI(inp.rent, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+      const lr  = calcLoanPayment(inp.loan, inp.rate, inp.term, inp.repay);
+      const ds  = lr.monthly * 12;
+      // CF=0 になる購入価格 = NOI / 目標利回り（実質）
+      // より実践的: ローンDS一定のまま、購入価格のみ変えたとき表面利回りが何%必要か
+      // P_be: CF=0 → NOI=DS → NOI/P = 定数 → P_be = NOI/r (ここでは実質利回りの視点)
+      const grossBE = inp.price > 0 ? (inp.rent * 12 / (inp.price*10000) * 100) : 0;
+      // CF=0になる最大購入価格 (ローン比率固定: loan/price = loanRatio)
+      const loanRatio = inp.price > 0 ? inp.loan / inp.price : 0.7;
+      // DS ∝ loan ∝ price*loanRatio, なので CF=NOI-DS=0 時のpriceを求める
+      // NOI = rent*12*(1-mgmt/100)*(1-vacancy/100) - tax*10000 - ins*10000 - mrate*10000/12*12
+      // DS = f(price*loanRatio) → 近似: DS/price*loanRatio = rate/12*(1-(1+r/12)^{-n*12})^{-1}
+      const r12 = inp.rate/100/12;
+      const n12 = inp.term*12;
+      const pmtFactor = r12>0 ? r12 / (1-Math.pow(1+r12,-n12)) : 1/n12;
+      // DS = price * loanRatio*10000 * pmtFactor * 12
+      // NOI = DS → price_be = NOI / (loanRatio * 10000 * pmtFactor * 12)
+      const dsFactor = loanRatio * 10000 * pmtFactor * 12;
+      const priceBE = dsFactor > 0 ? Math.round(noi / dsFactor) : 0;
+      const priceDiff = priceBE - inp.price;
+      const priceDiffPct = inp.price > 0 ? Math.round(priceDiff / inp.price * 100) : 0;
+      const isSafe = priceBE > inp.price;
+
+      return `<div class="card">
+        <div class="card-title">💎 損益分岐点 物件価格分析</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">
+          現在のローン条件（借入比率・金利・期間）のままで、年間CFがちょうど0になる「損益分岐点購入価格」を試算します。
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="background:${isSafe?'rgba(34,197,94,0.08)':'rgba(239,68,68,0.08)'};border:1px solid ${isSafe?'rgba(34,197,94,0.25)':'rgba(239,68,68,0.25)'};border-radius:10px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">損益分岐点 購入価格</div>
+            <div style="font-size:24px;font-weight:900;color:${isSafe?'var(--green)':'var(--red)'}">
+              ${priceBE > 0 ? priceBE.toLocaleString()+'万円' : '—'}
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px">この価格以下なら年間CF黒字</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">現在の購入価格との差</div>
+            <div style="font-size:24px;font-weight:900;color:${isSafe?'var(--green)':'var(--red)'}">
+              ${priceDiff >= 0 ? '+' : ''}${priceDiff.toLocaleString()}万円
+            </div>
+            <div style="font-size:11px;color:${isSafe?'var(--green)':'var(--red)'};margin-top:4px">
+              ${isSafe ? `✅ 現価格より${priceDiffPct}%高い価格でも黒字` : `⚠️ ${Math.abs(priceDiffPct)}%価格交渉すると黒字化`}
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px;font-size:12px;color:var(--text-muted);line-height:1.8">
+          <strong style="color:var(--text)">計算の前提条件</strong><br>
+          借入比率 ${Math.round(loanRatio*100)}%、金利 ${inp.rate}%、期間 ${inp.term}年、空室率 ${inp.vacancy}%、家賃 ${inp.rent.toLocaleString()}円/月
+        </div>
+      </div>`;
+    })()}
   `;
   setTimeout(calcReverseYield, 0);
 }
