@@ -1491,9 +1491,35 @@ function showQuizResult(el) {
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
         <a href="mailto:terra.realty.iam@gmail.com?subject=${encodeURIComponent('投資タイプ診断結果について：'+t.name)}&body=${encodeURIComponent('診断結果：'+t.name+'\n\n具体的にどんな物件が候補になるか教えていただけますか？')}" class="btn btn-gold" style="text-align:center;text-decoration:none">この結果についてTERRA REALTYに相談する →</a>
         <button onclick="quizStep=0;quizAnswers=[];renderQuiz()" class="btn btn-outline">もう一度診断する</button>
-        <button onclick="switchTab('input')" class="btn btn-outline">シミュレーターで試す →</button>
+        <button onclick="prefillAndSim('${top[0]}')" class="btn btn-outline">📊 モデル物件でシミュレーション →</button>
       </div>
     </div>`;
+}
+
+const QUIZ_PREFILL = {
+  cash:   {price:1500, rent:8, loan:1200, rate:1.5, term:25, vacancy:5, name:'モデル区分マンション（首都圏）'},
+  growth: {price:5000, rent:18, loan:4500, rate:2.0, term:25, vacancy:8, name:'モデル一棟アパート（首都圏）'},
+  safety: {price:2500, rent:9, loan:2000, rate:1.2, term:30, vacancy:3, name:'モデル新築区分マンション'},
+  reit:   {price:1000, rent:5, loan:800,  rate:1.5, term:25, vacancy:5, name:'モデル小口物件（低リスク）'},
+  small:  {price:500,  rent:6, loan:400,  rate:2.5, term:20, vacancy:10, name:'モデル地方物件（高利回り）'},
+  mns:    {price:3000, rent:11, loan:2700, rate:1.8, term:25, vacancy:5, name:'モデル区分マンション（長期保有）'},
+  tax:    {price:8000, rent:30, loan:7500, rate:2.0, term:30, vacancy:8, name:'モデル一棟RC（節税）'},
+};
+function prefillAndSim(typeKey) {
+  const d = QUIZ_PREFILL[typeKey] || QUIZ_PREFILL.mns;
+  setMode('simple');
+  const set = (id, v) => { const el=document.getElementById(id); if(el) el.value=v; };
+  set('s_name', d.name);
+  set('s_price', d.price);
+  set('s_rent', d.rent);
+  set('s_loan', d.loan);
+  set('s_rate', d.rate);
+  set('s_term', d.term);
+  switchTab('input');
+  setTimeout(() => {
+    const btn = document.querySelector('#simple-mode-card .btn-gold');
+    if(btn) btn.click();
+  }, 100);
 }
 
 // Chart.js オフラインフォールバック
