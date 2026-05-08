@@ -863,6 +863,69 @@ function renderResult(inp, r) {
       <button onclick="window.print()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);color:var(--text-muted);border:1px solid rgba(255,255,255,0.12);font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:inherit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>印刷・PDF</button>
     </div>
   `;
+  renderPurchaseChecklist(inp, r);
+}
+
+function renderPurchaseChecklist(inp, r) {
+  var el = document.getElementById('purchase-checklist');
+  if (!el) return;
+  var autoItems = [
+    { label: 'キャッシュフロー黒字', ok: r.annualCF > 0, val: Math.round(r.annualCF).toLocaleString() + '万円/年' },
+    { label: '実質利回り5%以上', ok: r.netYield >= 5, val: r.netYield.toFixed(1) + '%' },
+    { label: 'DSCR 1.2以上（返済安全域）', ok: r.dscr >= 1.2, val: r.dscr.toFixed(2) },
+    { label: 'CCR 8%以上（自己資本効率）', ok: r.ccr >= 8, val: r.ccr.toFixed(1) + '%' },
+  ];
+  var manualItems = [
+    '現地視察・建物の状態確認',
+    '建物診断（インスペクション）実施',
+    '法令確認（用途地域・接道・建ぺい率）',
+    '出口戦略（転売・相続・リノベ）の検討',
+    '融資審査の事前打診（金融機関へ確認）',
+    '管理会社選定・賃貸需要の調査',
+  ];
+  var okCount = autoItems.filter(function(a){ return a.ok; }).length;
+  var autoHtml = autoItems.map(function(a) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;background:' + (a.ok ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)') + ';border:1px solid ' + (a.ok ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)') + '">'
+      + '<span style="font-size:15px">' + (a.ok ? '✅' : '❌') + '</span>'
+      + '<span style="flex:1;font-size:12px;color:var(--text)">' + a.label + '</span>'
+      + '<span style="font-size:12px;font-weight:700;color:' + (a.ok ? 'var(--green)' : 'var(--red)') + '">' + a.val + '</span>'
+      + '</div>';
+  }).join('');
+  var manualHtml = manualItems.map(function(m, i) {
+    return '<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1px solid rgba(255,255,255,0.06);transition:background 0.15s" onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseout="this.style.background=\'\'">'
+      + '<input type="checkbox" class="inv-check" onchange="updateInvChecklist()" style="accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;margin-top:1px">'
+      + '<span style="font-size:12px;color:var(--text-muted);line-height:1.6">' + m + '</span>'
+      + '</label>';
+  }).join('');
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">'
+    + '<h4 style="font-size:14px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px">&#x2705; 投資判断チェックリスト</h4>'
+    + '<span id="inv-prog" style="font-size:12px;color:var(--text-muted)">' + okCount + ' / 4 指標クリア</span>'
+    + '</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6">購入前に確認すべき項目を自動チェック＋手動確認でまとめました。</p>'
+    + '<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:8px">■ 数値チェック（自動）</div>'
+    + '<div style="display:grid;gap:6px;margin-bottom:16px">' + autoHtml + '</div>'
+    + '<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;margin-bottom:8px">■ 現地・手続きチェック（手動）</div>'
+    + '<div style="display:grid;gap:6px" id="inv-manual-checks">' + manualHtml + '</div>'
+    + '<div id="inv-check-bar" style="margin-top:12px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px">'
+    + '<div id="inv-check-fill" style="height:100%;border-radius:2px;background:var(--gold);width:' + Math.round(okCount/10*100) + '%;transition:width 0.3s"></div>'
+    + '</div>'
+    + '<div id="inv-check-done" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:8px;font-size:12px;color:var(--gold);font-weight:700;text-align:center">&#x1F3AF; 全項目チェック完了！購入の検討を進めましょう</div>'
+    + '</div>';
+}
+
+function updateInvChecklist() {
+  var checks = document.querySelectorAll('.inv-check');
+  var done = 0;
+  checks.forEach(function(c){ if(c.checked) done++; });
+  var total = checks.length;
+  var autoOk = parseInt((document.getElementById('inv-prog')||{textContent:''}).textContent) || 0;
+  var totalScore = done + autoOk;
+  var fill = document.getElementById('inv-check-fill');
+  var doneMsg = document.getElementById('inv-check-done');
+  if(fill) fill.style.width = Math.round(totalScore/10*100) + '%';
+  if(doneMsg) doneMsg.style.display = done === total ? 'block' : 'none';
 }
 
 function buildInvestEmailURL(inp, r) {
