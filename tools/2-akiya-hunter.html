@@ -239,6 +239,13 @@
     <div id="riskCalcContent"></div>
   </div>
 
+  <!-- 3択比較カード -->
+  <div class="card" id="compareOptionsCard" style="display:none;">
+    <div class="card-title"><span class="icon">⚖️</span>売る・貸す・放置の5年比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">固定資産税評価額をもとに試算。実際の数値は物件・立地により異なります。</p>
+    <div id="compareOptionsContent"></div>
+  </div>
+
   <div class="card" id="scoreActionCard" style="display:none;">
     <div class="card-title"><span class="icon">🎯</span>推奨アクション</div>
     <div id="scoreActions"></div>
@@ -601,8 +608,44 @@ function updateScore() {
       <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px;font-size:12px;color:var(--text-muted);line-height:1.8">
         ⚠️ 上記は概算です。実際の固定資産税は物件の評価額によって異なります。賃貸収入は立地・築年数・間取りにより異なります。${inheritancePenalty}${hasSpecialCase?'<br>🚨 <strong style="color:var(--red)">特定空き家に指定されると固定資産税の住宅用地特例（1/6軽減）が外れ、税額が最大6倍になる場合があります。</strong>':''}
       </div>`;
+    // 3択比較カード
+    const compareCard = document.getElementById('compareOptionsCard');
+    compareCard.style.display = 'block';
+    // 売る: 評価額×1.1が概算市場価格, 手数料3%+6万×1.1, 登記司法書士5万
+    const marketPriceEst = assessedVal > 0 ? Math.round(assessedVal * 1.1) : 1500; // 万円
+    const agentFee = Math.round((marketPriceEst * 10000 * 0.03 + 60000) * 1.1 / 10000);
+    const registryFee = 5;
+    const sellNet5y = marketPriceEst - agentFee - registryFee;
+    // 貸す: 月賃料 × 12 × 5年 - 管理費(10%)- リフォーム費(50万)
+    const monthlyRentEst = assessedVal > 0 ? Math.max(5, Math.round(assessedVal * 10000 * 0.005 / 12 / 1000) * 0.1) : 6; // 万円
+    const rentAnnual5 = monthlyRentEst * 12 * 5;
+    const rentMgmt5 = rentAnnual5 * 0.1;
+    const reformCost = 50;
+    const rentNet5y = Math.round(rentAnnual5 - rentMgmt5 - reformCost);
+    // 放置: コスト合計5年
+    const ignore5y = -Math.round(total5y / 10000);
+    const options = [
+      { label:'🏠 売却する', color:'#4ade80', result5y: sellNet5y, unit:'万円（手取り概算）', pros:['一括でまとまったお金が入る','管理の手間がなくなる','固定資産税の負担がなくなる'], cons:['仲介手数料・諸費用がかかる','売れるまでに時間がかかる場合がある'], cta:'無料査定を依頼する' },
+      { label:'🏡 賃貸に出す', color:'#60a5fa', result5y: rentNet5y, unit:'万円（5年収入目安）', pros:['毎月定期的な収入が入る','将来的に売却も選べる','節税効果が期待できる'], cons:['入居者がいない間は収入ゼロ','管理会社費用がかかる','リフォーム費用が初期に必要'], cta:'賃料査定を依頼する' },
+      { label:'⚠️ 放置する', color:'#f87171', result5y: ignore5y, unit:'万円（5年コスト）', pros:['今すぐ何もしなくていい'], cons:['固定資産税・維持費がかかり続ける','建物劣化が進む','特定空き家に指定されるリスク'], cta:'' },
+    ];
+    document.getElementById('compareOptionsContent').innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
+        ${options.map((o,i)=>`<div style="background:${i===2?'rgba(239,68,68,0.06)':'rgba(255,255,255,0.04)'};border:1px solid ${i===2?'rgba(239,68,68,0.3)':'rgba('+  (i===0?'74,222,128':'96,165,250')+',0.25)'};border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:13px;font-weight:700;margin-bottom:6px">${o.label}</div>
+          <div style="font-size:22px;font-weight:900;color:${o.color};margin-bottom:2px">${o.result5y>=0?'+':'-'}${Math.abs(o.result5y).toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:10px">${o.unit}</div>
+          <div style="text-align:left;font-size:11px">
+            ${o.pros.map(p=>`<div style="color:#4ade80;margin-bottom:2px">✓ ${p}</div>`).join('')}
+            ${o.cons.map(c=>`<div style="color:#f87171;margin-bottom:2px">✗ ${c}</div>`).join('')}
+          </div>
+        </div>`).join('')}
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);line-height:1.6">※概算試算です。実際の金額は物件・立地・市況により大きく異なります。正確な査定はTERRA REALTYにご相談ください。</p>`;
   } else {
     riskCard.style.display = 'none';
+    const compareCard = document.getElementById('compareOptionsCard');
+    if(compareCard) compareCard.style.display = 'none';
   }
 
   // 推奨アクション
