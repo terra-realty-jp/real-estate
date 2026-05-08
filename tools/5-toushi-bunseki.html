@@ -1263,6 +1263,53 @@ function renderSensitivity(inp) {
       <p style="font-size:11px;color:var(--text-muted)">※ ベスト=空室率0%・家賃+10%・金利-0.5%、ワースト=空室率25%・家賃-20%・金利+0.5%の場合の概算</p>
     </div>
 
+    ${(()=>{
+      // CF安全マージン分析
+      const baseNOI = calcNOI(inp.rent, inp.mgmt, inp.tax, inp.ins, inp.mrate, inp.vacancy);
+      const ds = (scenarios.find(s=>s.label==='ベース')||{lr:calcLoanPayment(inp.loan,inp.rate,inp.term,inp.repay)}).lr.monthly * 12;
+      // Find break-even vacancy (step search 0-100%)
+      let bev = null;
+      for(let v=0;v<=100;v++){
+        const n=calcNOI(inp.rent,inp.mgmt,inp.tax,inp.ins,inp.mrate,v);
+        if(n-ds<=0){bev=v;break;}
+      }
+      // Find break-even rent drop %
+      let brd = null;
+      for(let d=0;d<=100;d++){
+        const n=calcNOI(inp.rent*(1-d/100),inp.mgmt,inp.tax,inp.ins,inp.mrate,inp.vacancy);
+        if(n-ds<=0){brd=d;break;}
+      }
+      const worstCF = Math.round(scenarios.find(s=>s.label==='ワースト').cf/10000);
+      const marginVac = bev!==null ? Math.max(0,bev-inp.vacancy) : 75;
+      const marginRent = brd!==null ? brd : 80;
+      const vcColor = marginVac>=20?'var(--green)':marginVac>=10?'var(--orange)':'var(--red)';
+      const rdColor = marginRent>=20?'var(--green)':marginRent>=10?'var(--orange)':'var(--red)';
+      const wcColor = worstCF>=0?'var(--green)':worstCF>=-30?'var(--orange)':'var(--red)';
+      return `<div class="card">
+        <div class="card-title">🛡️ CF安全マージン分析（損益分岐点）</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+          <div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">空室率があと</div>
+            <div style="font-size:26px;font-weight:900;color:${vcColor}">${marginVac}<span style="font-size:14px">%</span></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">上がるとCFがゼロに</div>
+          </div>
+          <div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">家賃があと</div>
+            <div style="font-size:26px;font-weight:900;color:${rdColor}">${marginRent}<span style="font-size:14px">%</span></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">下がるとCFがゼロに</div>
+          </div>
+          <div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">ワースト条件でのCF</div>
+            <div style="font-size:22px;font-weight:900;color:${wcColor}">${worstCF>=0?'+':''}${worstCF}<span style="font-size:12px">万円/年</span></div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">空室25%・家賃-20%時</div>
+          </div>
+        </div>
+        <div style="padding:10px 14px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.8">
+          ${marginVac>=20&&marginRent>=20?'✅ 安全マージンは十分です。空室率・家賃の変動に対して余裕のある投資です。':marginVac<10||marginRent<10?'⚠️ 安全マージンが小さいため、空室や家賃下落が発生した場合にCFが赤字になるリスクがあります。繰り上げ返済・管理費削減・利回り改善を検討してください。':'📊 安全マージンは普通の水準です。空室対策・家賃維持の管理を継続してください。'}
+        </div>
+      </div>`;
+    })()}
+
     <div class="card">
       <div class="card-title">実質利回り感度マトリクス（空室率 × 家賃変化）</div>
       <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.8;color:rgba(240,237,232,0.85)">
