@@ -189,6 +189,7 @@
       <button class="btn btn-outline btn-sm" onclick="exportCSV('sellers')">CSVエクスポート</button>
     </div>
   </div>
+  <div id="buyer-demand-card" style="display:none;margin-bottom:16px"></div>
   <div id="sellers-list"></div>
 </div>
 </div>
@@ -481,6 +482,47 @@ const STATUS_LABEL = {active:'募集中', nego:'交渉中', sold:'成約済'};
 const D_STATUS_LABEL = {new:'新規', matched:'マッチング済', nego:'交渉中', closed:'成約'};
 const FMT = v => v >= 10000 ? Math.round(v/10000*10)/10 + '億' : (v||0).toLocaleString() + '万円';
 
+function renderBuyerDemandCard() {
+  const el = document.getElementById('buyer-demand-card');
+  if (!el) return;
+  if (!buyers.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const bands = [
+    { label: '〜1000万', min: 0, max: 1000 },
+    { label: '1000〜2000万', min: 1000, max: 2000 },
+    { label: '2000〜3000万', min: 2000, max: 3000 },
+    { label: '3000〜5000万', min: 3000, max: 5000 },
+    { label: '5000万〜', min: 5000, max: Infinity },
+  ];
+  const counts = bands.map(function(b) {
+    return buyers.filter(function(buyer) {
+      const bgt = Number(buyer.budget) || 0;
+      return bgt >= b.min && bgt < b.max;
+    }).length;
+  });
+  const maxCount = Math.max(...counts, 1);
+  const barsHtml = bands.map(function(b, i) {
+    const w = Math.round(counts[i] / maxCount * 100);
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      + '<span style="font-size:11px;color:var(--text-muted);width:100px;flex-shrink:0">' + b.label + '</span>'
+      + '<div style="flex:1;background:rgba(255,255,255,0.05);border-radius:3px;height:18px;overflow:hidden">'
+      + '<div style="width:' + w + '%;height:100%;background:' + (counts[i] === maxCount ? 'var(--gold)' : 'rgba(201,168,76,0.35)') + ';border-radius:3px;transition:width 0.4s;display:flex;align-items:center;padding-left:6px;min-width:' + (counts[i]>0?'20px':'0') + '">'
+      + (counts[i] > 0 ? '<span style="font-size:10px;font-weight:700;color:' + (counts[i] === maxCount ? '#000' : 'var(--gold)') + '">' + counts[i] + '名</span>' : '')
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  const topBand = bands[counts.indexOf(maxCount)];
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px">&#x1F4CA; 登録買主の予算帯分布'
+    + '<span style="font-size:10px;font-weight:400;color:var(--text-muted)">（' + buyers.length + '名のデータ）</span></div>'
+    + barsHtml
+    + '<div style="margin-top:8px;padding:7px 10px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:7px;font-size:11px;color:var(--text-muted)">'
+    + '&#x1F4A1; 最多需要帯: <strong style="color:var(--gold)">' + topBand.label + '</strong> — この価格帯への問い合わせが最も多い状況です'
+    + '</div>'
+    + '</div>';
+}
+
 // ===== 売主 =====
 function renderSellers() {
   const el = document.getElementById('sellers-list');
@@ -492,6 +534,7 @@ function renderSellers() {
     {v: sellers.filter(s=>s.status==='sold').length + '件', l:'成約済', c:'var(--text-muted)'},
   ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
 
+  renderBuyerDemandCard();
   if(!sellers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏠</div><p>売主がまだ登録されていません</p><p style="font-size:12px;margin-top:8px">「売主登録」ボタンから売却したい物件を登録してください</p></div>`; return; }
   const sellerQ = (document.getElementById('seller-search')||{}).value||'';
   const sellerSt = (document.getElementById('seller-status-filter')||{}).value||'all';
