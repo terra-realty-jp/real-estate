@@ -417,6 +417,16 @@
   </div>
 </div>
 
+<!-- 物件詳細モーダル -->
+<div class="modal-overlay" id="propertyDetailModal" style="display:none;" onclick="closeModal('propertyDetailModal',event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:560px;width:100%">
+    <div id="pdm-content"></div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="btn btn-outline" onclick="closeModal('propertyDetailModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <!-- 入金登録モーダル -->
 <div class="modal-overlay" id="rentModal" style="display:none;" onclick="closeModal('rentModal',event)">
   <div class="modal" onclick="event.stopPropagation()">
@@ -963,6 +973,7 @@ function renderProperties() {
           <td>${p.rate||5}%</td>
           <td style="font-size:12px">${p.start||'—'}</td>
           <td style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="showPropertyDetail('${p.id}')">詳細</button>
             <button class="btn btn-outline btn-sm" onclick="editProperty('${p.id}')">編集</button>
             <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteProperty('${p.id}')">削除</button>
           </td>
@@ -990,6 +1001,46 @@ function openPropertyModal(id) {
   setTimeout(()=>{ const f=document.getElementById('p_name'); if(f)f.focus(); },50);
 }
 function editProperty(id){openPropertyModal(id);}
+function showPropertyDetail(id) {
+  const p = properties.find(x=>x.id===id); if(!p) return;
+  const propTenants = tenants.filter(t=>t.propertyId===id);
+  const activeTenants = propTenants.filter(t=>t.status==='active');
+  const monthlyRent = activeTenants.reduce((s,t)=>s+(t.rent||0),0);
+  const occ = activeTenants.length;
+  const occRate = p.units>0 ? Math.round(occ/p.units*100) : 0;
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const today = now.toISOString().slice(0,10);
+  // 今月未入金テナント
+  const unpaid = activeTenants.filter(t => {
+    const mr = rents.find(r=>r.tenantId===t.id&&r.month===thisMonth);
+    return !mr || mr.status!=='paid';
+  });
+  // 90日以内に更新
+  const soon = activeTenants.filter(t=>{
+    if(!t.end) return false;
+    const diff=(new Date(t.end)-now)/864e5;
+    return diff>=0&&diff<=90;
+  }).sort((a,b)=>new Date(a.end)-new Date(b.end));
+  // 今年の修繕費
+  const yr = now.getFullYear()+'';
+  const repairCostYTD = repairs.filter(r=>r.propertyId===id&&(r.done||r.date||'').startsWith(yr))
+    .reduce((s,r)=>s+(Number(r.cost)||0),0);
+  document.getElementById('pdm-content').innerHTML = `
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">🏢 ${esc(p.name)}</h3>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">${p.addr||'—'} | ${PROP_TYPE[p.type]||p.type} | 管理開始: ${p.start||'—'}</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px">
+      <div class="kpi" style="padding:12px"><div class="kpi-label">入居率</div><div class="kpi-value" style="font-size:20px;color:${occRate>=80?'var(--green)':'var(--orange)'}">${occRate}%</div><div class="kpi-sub">${occ}/${p.units}戸</div></div>
+      <div class="kpi" style="padding:12px"><div class="kpi-label">月間家賃収入</div><div class="kpi-value" style="font-size:20px;color:var(--gold)">${(monthlyRent/10000).toLocaleString()}万円</div><div class="kpi-sub">入居者合計</div></div>
+      <div class="kpi" style="padding:12px"><div class="kpi-label">今月未入金</div><div class="kpi-value" style="font-size:20px;color:${unpaid.length>0?'var(--red)':'var(--green)'}">${unpaid.length}件</div><div class="kpi-sub">${unpaid.length>0?unpaid.map(t=>esc(t.name)).join('・'):'全員入金済み'}</div></div>
+      <div class="kpi" style="padding:12px"><div class="kpi-label">今年の修繕費</div><div class="kpi-value" style="font-size:20px;color:${repairCostYTD>0?'var(--orange)':'var(--text-muted)'}">${repairCostYTD>0?Math.round(repairCostYTD/10000)+'万円':'—'}</div><div class="kpi-sub">${now.getFullYear()}年累計</div></div>
+    </div>
+    ${soon.length>0?`<div style="padding:10px 12px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:8px;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:8px">⚠️ 90日以内に契約更新</div>${soon.map(t=>`<div style="font-size:12px;color:var(--text);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${esc(t.name)} — ${t.end} まで（残${Math.ceil((new Date(t.end)-now)/864e5)}日）</div>`).join('')}</div>`:''}
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px">入居テナント一覧 (${occ}件)</div>
+    ${activeTenants.length?`<table style="width:100%;font-size:12px"><thead><tr><th>氏名</th><th>部屋</th><th>家賃</th><th>契約終了</th></tr></thead><tbody>${activeTenants.map(t=>`<tr><td>${esc(t.name)}</td><td>${t.room||'—'}</td><td>${(t.rent||0).toLocaleString()}円</td><td>${t.end||'—'}</td></tr>`).join('')}</tbody></table>`:`<div style="color:var(--text-muted);font-size:12px;padding:8px">入居中のテナントがありません</div>`}
+  `;
+  document.getElementById('propertyDetailModal').style.display='flex';
+}
 function deleteProperty(id){const p=properties.find(x=>x.id===id);if(!confirm('「'+(p?p.name:'この物件')+'」を削除しますか？\nこの操作は元に戻せません。'))return;properties=properties.filter(p=>p.id!==id);save('properties');sbDeleteRow('properties',id);renderProperties();}
 
 function saveProperty(){
@@ -1776,7 +1827,7 @@ function switchTab(t){
 // Escape key でモーダルを閉じる
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') {
-    ['propertyModal','tenantModal','tenantDetailModal','rentModal','repairModal'].forEach(function(id){
+    ['propertyModal','tenantModal','tenantDetailModal','propertyDetailModal','rentModal','repairModal'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.style.display='none';
     });
   }
