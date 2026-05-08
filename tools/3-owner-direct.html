@@ -288,11 +288,19 @@
   <div class="card">
     <div class="card-title">🧮 手数料を計算する</div>
     <div class="form-grid">
-      <div class="form-group">
-        <label>売買価格（万円）</label>
-        <input type="number" id="fee_price" value="3000" min="0" oninput="calcFee()">
+      <div class="form-group full">
+        <label>売買価格（万円） — <span id="fee_price_label" style="color:var(--gold);font-weight:700">3,000万円</span></label>
+        <input type="range" id="fee_slider" min="100" max="20000" step="100" value="3000"
+          oninput="document.getElementById('fee_price').value=this.value;document.getElementById('fee_price_label').textContent=parseInt(this.value).toLocaleString()+'万円';calcFee()"
+          style="width:100%;accent-color:var(--gold);height:4px;cursor:pointer;margin:6px 0">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:2px">
+          <span>100万</span><span>500万</span><span>1,000万</span><span>3,000万</span><span>5,000万</span><span>1億</span><span>2億</span>
+        </div>
+        <input type="number" id="fee_price" value="3000" min="0"
+          oninput="const v=parseInt(this.value)||0;document.getElementById('fee_slider').value=Math.min(20000,v);document.getElementById('fee_price_label').textContent=v.toLocaleString()+'万円';calcFee()"
+          style="margin-top:10px;width:100%;max-width:200px">
       </div>
-      <div class="form-group">
+      <div class="form-group full">
         <label>あなたの立場</label>
         <select id="fee_type" onchange="calcFee()">
           <option value="seller">売主として売る</option>
