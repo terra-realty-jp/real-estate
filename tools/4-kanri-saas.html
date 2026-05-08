@@ -104,7 +104,7 @@
     .chart-container { position: relative; height: 280px; }
 
     @media(max-width:900px) { .kpi-grid { grid-template-columns:repeat(3,1fr); } }
-    @media(max-width:700px) { .form-grid,.form-grid-3 { grid-template-columns:1fr; } .kpi-grid { grid-template-columns:1fr 1fr; } #monthly-highlight-card [style*="grid-template-columns:repeat(4"] { grid-template-columns:1fr 1fr!important; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .dashboard-grid { grid-template-columns:1fr!important; } #welcome-guide>div:last-child { grid-template-columns:1fr!important; } #rent-summary { grid-template-columns:repeat(2,1fr)!important; } }
+    @media(max-width:700px) { .form-grid,.form-grid-3 { grid-template-columns:1fr; } .kpi-grid { grid-template-columns:1fr 1fr; } #monthly-highlight-card [style*="grid-template-columns:repeat(4"], #ytd-summary-card [style*="grid-template-columns:repeat(4"] { grid-template-columns:1fr 1fr!important; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .dashboard-grid { grid-template-columns:1fr!important; } #welcome-guide>div:last-child { grid-template-columns:1fr!important; } #rent-summary { grid-template-columns:repeat(2,1fr)!important; } }
     @media(max-width:375px) { .kpi-grid { grid-template-columns:1fr; } .kpi-value { font-size:20px; } .topnav { padding:12px 14px; } .modal-overlay { padding:12px; } .modal { padding:18px 16px; } .btn { min-height:44px; } input,select,textarea { min-height:44px; } }
     @media print {
       .topnav,.tabs,.btn { display:none!important; }
@@ -203,6 +203,7 @@
     </div>
   </div>
   <div id="property-summary-card" style="display:none;margin-top:0"></div>
+  <div id="ytd-summary-card" style="margin-top:0"></div>
   <div class="card" style="margin-top:0">
     <div class="card-title">今月のアクション必要リスト</div>
     <div id="action-list"></div>
@@ -795,6 +796,52 @@ function renderDashboard() {
     }
   }
   renderMonthlyHighlight();
+  renderYTDSummary();
+}
+
+function renderYTDSummary() {
+  const el = document.getElementById('ytd-summary-card');
+  if (!el || properties.length === 0) { if(el) el.innerHTML=''; return; }
+  const now = new Date();
+  const year = now.getFullYear();
+  const months = [];
+  for (let m = 1; m <= 12; m++) months.push(`${year}-${String(m).padStart(2,'0')}`);
+  const passedMonths = months.filter(ym => ym <= `${year}-${String(now.getMonth()+1).padStart(2,'0')}`);
+
+  const ytdCollected = rents.filter(r => passedMonths.includes(r.month) && r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+  const ytdRepair = repairs.filter(r => { const d=r.done||r.date||''; return d.startsWith(year+''); }).reduce((s,r)=>s+(Number(r.cost)||0),0);
+  const ytdNet = ytdCollected - ytdRepair;
+  const monthlyRentTotal = tenants.filter(t=>t.status==='active').reduce((s,t)=>s+(t.rent||0),0);
+  const ytdExpected = monthlyRentTotal * passedMonths.length;
+  const ytdCollectRate = ytdExpected > 0 ? Math.round(ytdCollected/ytdExpected*100) : 0;
+
+  const fmt = v => Math.round(v/10000).toLocaleString()+'万円';
+  const netColor = ytdNet >= 0 ? 'var(--gold)' : 'var(--red)';
+
+  el.innerHTML = `<div class="card" style="margin-bottom:0;background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.08)">
+    <div class="card-title" style="justify-content:space-between">
+      <span>📅 ${year}年 累計収益サマリー（${passedMonths.length}ヶ月分）</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px">
+      <div style="text-align:center;padding:12px 8px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">年間入金累計</div>
+        <div style="font-size:16px;font-weight:700;color:var(--green)">${fmt(ytdCollected)}</div>
+      </div>
+      <div style="text-align:center;padding:12px 8px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">年間修繕費累計</div>
+        <div style="font-size:16px;font-weight:700;color:${ytdRepair>0?'var(--orange)':'var(--text-muted)'}">${ytdRepair>0?fmt(ytdRepair):'0円'}</div>
+      </div>
+      <div style="text-align:center;padding:12px 8px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">年間純収益</div>
+        <div style="font-size:16px;font-weight:700;color:${netColor}">${ytdNet>=0?'+':''}${fmt(ytdNet)}</div>
+      </div>
+      <div style="text-align:center;padding:12px 8px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">年間回収率</div>
+        <div style="font-size:16px;font-weight:700;color:${ytdCollectRate>=90?'var(--green)':ytdCollectRate>=70?'var(--orange)':'var(--red)'}">${ytdCollectRate}%</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">年間想定収入 ${fmt(ytdExpected)} に対して ${fmt(ytdCollected)} 回収（${now.getMonth()+1}月末時点）</div>
+  </div>`;
 }
 
 function renderMonthlyHighlight() {
