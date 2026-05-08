@@ -873,14 +873,19 @@ function renderPipeline() {
     const ds = deals.filter(d => d.status === st);
     return `<div class="pipe-col">
       <div class="pipe-col-title"><span class="status-dot ${dotClass[st]}"></span>${labels[st]}<span class="count">${ds.length}</span></div>
-      ${ds.map(d => `<div class="deal-card" onclick="editDeal(${d.id})">
-        <div class="deal-name">${esc(d.name)}</div>
-        <div class="deal-addr">${esc(d.addr)}</div>
-        <div class="deal-meta">
-          <span class="deal-price">${d.sell ? '希望価格'+d.sell+'万円' : d.buy ? '査定'+d.buy+'万円' : '価格未設定'}</span>
-          <span class="deal-date">緊急度${d.score||'—'}</span>
-        </div>
-      </div>`).join('') || '<div style="font-size:12px;color:var(--text-muted);padding:8px">案件なし</div>'}
+      ${ds.map(d => {
+        const scoreColor = d.score>=80?'var(--red)':d.score>=50?'var(--orange)':'var(--green)';
+        const scoreBar = d.score ? `<div style="margin-top:6px;background:rgba(255,255,255,0.07);border-radius:4px;height:4px;overflow:hidden"><div style="width:${Math.min(d.score,100)}%;height:100%;background:${scoreColor};border-radius:4px;transition:width .3s"></div></div>` : '';
+        return `<div class="deal-card" onclick="editDeal('${d.id}')">
+          <div class="deal-name">${esc(d.name)}</div>
+          <div class="deal-addr">${esc(d.addr)||'住所未登録'}</div>
+          <div class="deal-meta">
+            <span class="deal-price">${d.sell ? '希望 '+d.sell+'万円' : d.buy ? '査定 '+d.buy+'万円' : '価格未設定'}</span>
+            <span class="deal-date" style="color:${d.score?scoreColor:'var(--text-muted)'};font-weight:${d.score?700:400}">緊急度 ${d.score||'—'}</span>
+          </div>
+          ${scoreBar}
+        </div>`;
+      }).join('')} || '<div style="font-size:12px;color:var(--text-muted);padding:8px">案件なし</div>'}
     </div>`;
   }).join('');
 
@@ -900,7 +905,7 @@ function renderPipeline() {
         <td>${d.buy ? d.buy.toLocaleString()+'万円' : '—'}</td>
         <td>${d.sell ? d.sell.toLocaleString()+'万円' : '—'}</td>
         <td>${d.score ? d.score+'点' : '—'}</td>
-        <td style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="editDeal(${d.id})">編集</button><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteDeal(${d.id})">削除</button></td>
+        <td style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="editDeal('${d.id}')">編集</button><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteDeal('${d.id}')">削除</button></td>
       </tr>`).join('')}
     </tbody>
   </table>`;
