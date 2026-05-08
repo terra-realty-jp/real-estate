@@ -266,6 +266,9 @@
   <!-- 空き家市場性評価カード -->
   <div id="market-eval-card" style="display:none;margin-bottom:16px"></div>
 
+  <!-- 修繕費用概算カード -->
+  <div id="repair-cost-card" style="display:none;margin-bottom:16px"></div>
+
   <!-- 放置リスク試算カード -->
   <div class="card" id="riskCalcCard" style="display:none;">
     <div class="card-title"><span class="icon">💴</span>このまま放置すると…（年間コスト試算）</div>
@@ -790,6 +793,8 @@ function updateScore() {
   renderCatBreakdown(capped, [...checked]);
   // 市場性評価カード
   renderMarketEval(capped, [...checked]);
+  // 修繕費用概算カード
+  renderRepairCostCard();
   // 補助金・支援制度カード
   renderSubsidyCard(capped, [...checked]);
   const demolishCard = document.getElementById('demolish-calc-card');
@@ -895,6 +900,55 @@ function renderMarketEval(score, checkedArr) {
     +'</div>'
     +(age===null||!loc||!struct?'<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:8px">※ 上の物件情報（築年数・立地・構造）を入力するとスコアの精度が上がります</div>':'')
   +'</div>';
+}
+
+function renderRepairCostCard() {
+  var el = document.getElementById('repair-cost-card');
+  if (!el) return;
+  var age    = parseInt(document.getElementById('akiya_age')?.value) || null;
+  var struct = document.getElementById('akiya_struct')?.value || '';
+  if (!age && !struct) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+
+  // 構造別の費用係数（万円/坪ベースの目安）
+  var structLabel = struct === 'rc' ? 'RC造' : struct === 'steel' ? '鉄骨造' : '木造';
+  // 坪単価（万円）: [軽微, 部分, フル, 建替]
+  var unitCost = struct === 'rc' ? [8, 18, 60, 90] : struct === 'steel' ? [7, 16, 55, 85] : [5, 12, 50, 80];
+  // 標準30坪として試算
+  var sqTsubo = 30;
+  var levels = [
+    { label: '軽微補修', desc: 'クロス・水回り・外壁部分補修', color: 'var(--green)', min: unitCost[0]*sqTsubo, max: Math.round(unitCost[0]*sqTsubo*1.5) },
+    { label: '部分リフォーム', desc: '水回り全交換・内装刷新', color: 'var(--blue)', min: unitCost[1]*sqTsubo, max: Math.round(unitCost[1]*sqTsubo*1.5) },
+    { label: 'フルリフォーム', desc: '構造以外の全面改修', color: 'var(--orange)', min: unitCost[2]*sqTsubo, max: Math.round(unitCost[2]*sqTsubo*1.5) },
+    { label: '建て替え', desc: '解体＋新築（' + structLabel + '）', color: 'var(--red)', min: unitCost[3]*sqTsubo, max: Math.round(unitCost[3]*sqTsubo*1.5) },
+  ];
+
+  var ageTip = '';
+  if (age !== null) {
+    if (age >= 40) ageTip = '⚠️ 築' + age + '年以上の建物はフルリフォームより建て替えが経済的なケースがあります。';
+    else if (age >= 25) ageTip = '💡 築' + age + '年前後は水回り・屋根・外壁の大規模修繕時期が重なりやすい時期です。';
+    else if (age >= 15) ageTip = '💡 築' + age + '年は設備の耐用年数が近づく頃です。水回り交換の費用を想定しておきましょう。';
+  }
+
+  var rowsHtml = levels.map(function(lv) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">'
+      + '<span style="width:4px;height:36px;border-radius:2px;background:' + lv.color + ';flex-shrink:0"></span>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text)">' + lv.label + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);margin-top:1px">' + lv.desc + '</div>'
+      + '</div>'
+      + '<div style="text-align:right;flex-shrink:0">'
+      + '<div style="font-size:13px;font-weight:800;color:' + lv.color + '">' + lv.min.toLocaleString() + '〜' + lv.max.toLocaleString() + '<span style="font-size:10px;font-weight:400">万円</span></div>'
+      + '<div style="font-size:9px;color:var(--text-muted)">目安（30坪・' + structLabel + '）</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px">&#x1F528; 修繕費用の概算<span style="font-size:10px;font-weight:400;color:var(--text-muted)">（参考値・実費は業者見積もりで確認）</span></div>'
+    + '<div style="display:grid;gap:6px;margin-bottom:' + (ageTip ? '10px' : '0') + '">' + rowsHtml + '</div>'
+    + (ageTip ? '<div style="margin-top:8px;padding:8px 10px;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:7px;font-size:11px;color:var(--text-muted)">' + ageTip + '</div>' : '')
+    + '</div>';
 }
 
 function renderSubsidyCard(score, checkedArr) {
