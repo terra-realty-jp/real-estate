@@ -756,13 +756,29 @@
         const grid = document.getElementById('usage-stats-grid');
         if (!section || !grid) return;
         section.style.display = 'block';
-        grid.innerHTML = stats.map(s => `
+        grid.innerHTML = stats.map((s,i) => `
           <a href="${s.href}" style="text-decoration:none;display:block;background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;transition:box-shadow 0.15s" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
             <div style="font-size:22px;margin-bottom:6px">${s.icon}</div>
-            <div style="font-size:26px;font-weight:900;color:var(--blue)">${s.count}<span style="font-size:13px;font-weight:400;color:var(--text-muted);margin-left:2px">${s.unit}</span></div>
+            <div style="font-size:26px;font-weight:900;color:var(--blue)"><span class="count-up-num" data-target="${s.count}">0</span><span style="font-size:13px;font-weight:400;color:var(--text-muted);margin-left:2px">${s.unit}</span></div>
             <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${s.label}</div>
           </a>
         `).join('');
+        // カウントアップアニメーション
+        requestAnimationFrame(function() {
+          document.querySelectorAll('.count-up-num').forEach(function(el) {
+            const target = parseInt(el.dataset.target, 10);
+            if(target <= 0) return;
+            const duration = 800, start = performance.now();
+            function step(now) {
+              const t = Math.min(1, (now - start) / duration);
+              const eased = 1 - Math.pow(1 - t, 3);
+              el.textContent = Math.round(eased * target);
+              if(t < 1) requestAnimationFrame(step);
+              else el.textContent = target;
+            }
+            requestAnimationFrame(step);
+          });
+        });
       } catch(e) {}
     }
 
