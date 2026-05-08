@@ -249,6 +249,12 @@
     <div id="riskCalcContent"></div>
   </div>
 
+  <!-- カテゴリー別スコア内訳 -->
+  <div class="card" id="catBreakdownCard" style="display:none;">
+    <div class="card-title"><span class="icon">📊</span>カテゴリー別リスク内訳</div>
+    <div id="catBreakdownContent"></div>
+  </div>
+
   <!-- 3択比較カード -->
   <div class="card" id="compareOptionsCard" style="display:none;">
     <div class="card-title"><span class="icon">⚖️</span>売る・貸す・放置の5年比較</div>
@@ -728,6 +734,7 @@ function updateScore() {
     actCard.style.display = 'none';
   }
   renderTimeline(capped, [...checked]);
+  renderCatBreakdown(capped, [...checked]);
 
   // メールCTAに診断結果を自動挿入
   const consultBtn = document.getElementById('akiya-consult-btn');
@@ -755,6 +762,57 @@ function updateScore() {
     const nativeBtn = document.getElementById('score-native-share');
     if(nativeBtn) nativeBtn.style.display = (capped > 0 && navigator.share) ? 'inline-flex' : 'none';
   }
+}
+
+function renderCatBreakdown(score, ids) {
+  const card = document.getElementById('catBreakdownCard');
+  const el = document.getElementById('catBreakdownContent');
+  if (!card || !el || score === 0) { if(card) card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const CATS = [
+    { key:'リスク', color:'#ef4444', desc:'近隣苦情・特定空き家指定の可能性' },
+    { key:'法務',   color:'#f97316', desc:'相続登記・権利関係の問題' },
+    { key:'費用',   color:'#f59e0b', desc:'税金・光熱費など継続コスト' },
+    { key:'建物',   color:'#3b82f6', desc:'外壁・屋根・床などの劣化状況' },
+    { key:'状況',   color:'#8b5cf6', desc:'居住・管理状況・意思決定の遅れ' },
+    { key:'外観',   color:'#10b981', desc:'草木・景観など周辺への影響' },
+    { key:'意向',   color:'#64748b', desc:'活用方針の検討状況' },
+  ];
+  const rows = CATS.map(cat => {
+    const catChecks = CHECKS.filter(c => c.cat === cat.key);
+    const maxScore = catChecks.reduce((s, c) => s + c.score, 0);
+    const earnedScore = catChecks.filter(c => ids.includes(c.id)).reduce((s, c) => s + c.score, 0);
+    if (maxScore === 0) return '';
+    const pct = Math.round(earnedScore / maxScore * 100);
+    const checkedItems = catChecks.filter(c => ids.includes(c.id));
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;font-weight:700;color:${cat.color}">${cat.key}</span>
+          <span style="font-size:10px;color:var(--text-muted)">${cat.desc}</span>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:${earnedScore>0?cat.color:'var(--text-muted)'}">
+          ${earnedScore}/${maxScore}点${earnedScore === maxScore && maxScore > 0 ? ' ⚠️' : ''}
+        </span>
+      </div>
+      <div style="height:7px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${cat.color};border-radius:4px;transition:width 0.5s ease;${pct===100?'box-shadow:0 0 6px '+cat.color+'88':''}"></div>
+      </div>
+      ${checkedItems.length > 0 ? `<div style="margin-top:4px;font-size:10px;color:var(--text-muted)">${checkedItems.map(c=>c.label).join('、')}</div>` : ''}
+    </div>`;
+  }).filter(Boolean).join('');
+  const topCat = CATS.filter(c => {
+    const cc = CHECKS.filter(x => x.cat === c.key);
+    return cc.some(x => ids.includes(x.id));
+  }).sort((a, b) => {
+    const sa = CHECKS.filter(x=>x.cat===a.key&&ids.includes(x.id)).reduce((s,x)=>s+x.score,0);
+    const sb = CHECKS.filter(x=>x.cat===b.key&&ids.includes(x.id)).reduce((s,x)=>s+x.score,0);
+    return sb - sa;
+  })[0];
+  const tip = topCat ? `<div style="margin-top:14px;padding:11px 14px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px;font-size:12px;color:var(--text);line-height:1.7">
+    ⚠️ <strong style="color:${topCat.color}">${topCat.key}リスクが最も高い状態</strong>です。${topCat.desc}に早急に対処することをお勧めします。
+  </div>` : '';
+  el.innerHTML = rows + tip;
 }
 
 function getActions(score, ids) {
