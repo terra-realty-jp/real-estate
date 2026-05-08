@@ -9,8 +9,8 @@
 // 5. Authentication > Email でメール認証を有効にする
 // =============================================
 
-const SUPABASE_URL      = '';  // 例: https://abcdefgh.supabase.co
-const SUPABASE_ANON_KEY = '';  // 例: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+const SUPABASE_URL      = 'https://egiklnkfwynogawdfnjw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_3M5DgUWoMnXvelUiILMiAQ_aQQeGFlf';
 
 // ─────────────────────────────────────────────
 // 内部状態
