@@ -1105,8 +1105,10 @@ function renderTenants(){
         const expiryColor=expiring?(daysToEnd<=30?'var(--red)':daysToEnd<=60?'var(--orange)':'var(--gold)'):'var(--gold)';
         const expiryBadge=expiring?`<span style="display:inline-block;margin-left:6px;padding:2px 7px;border-radius:100px;background:rgba(201,168,76,0.12);color:${expiryColor};font-size:10px;font-weight:700;border:1px solid rgba(201,168,76,0.25)">更新${daysToEnd}日前</span>`:'';
         const memoText = t.memo ? esc(t.memo.length>25 ? t.memo.slice(0,25)+'…' : t.memo) : '';
+        const stayYears = t.start ? Math.floor((now - new Date(t.start)) / (365.25*24*3600*1000)) : 0;
+        const stayBadge = stayYears>=5 ? `<span style="display:inline-block;padding:1px 6px;border-radius:100px;background:rgba(201,168,76,0.15);color:var(--gold);font-size:10px;font-weight:700;border:1px solid rgba(201,168,76,0.3);margin-left:4px" title="入居${stayYears}年目">長期${stayYears}年</span>` : stayYears>=2 ? `<span style="display:inline-block;padding:1px 6px;border-radius:100px;background:rgba(34,197,94,0.12);color:#4ade80;font-size:10px;font-weight:700;border:1px solid rgba(34,197,94,0.25);margin-left:4px">${stayYears}年入居</span>` : stayYears>=1 ? `<span style="display:inline-block;padding:1px 6px;border-radius:100px;background:rgba(59,130,246,0.12);color:#60a5fa;font-size:10px;font-weight:700;border:1px solid rgba(59,130,246,0.25);margin-left:4px">${stayYears}年目</span>` : '';
         return `<tr${rowBg?' style="'+rowBg+'"':''}>
-          <td><strong>${esc(t.name)}</strong><br>${t.phone?`<a href="tel:${t.phone.replace(/[^\d\-+() ]/g,'')}" style="font-size:11px;color:#60a5fa;text-decoration:none">${esc(t.phone)}</a>`:''} ${memoText?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px" title="${esc(t.memo||'')}">📝 ${memoText}</div>`:''}</td>
+          <td><strong>${esc(t.name)}</strong>${stayBadge}<br>${t.phone?`<a href="tel:${t.phone.replace(/[^\d\-+() ]/g,'')}" style="font-size:11px;color:#60a5fa;text-decoration:none">${esc(t.phone)}</a>`:''} ${memoText?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px" title="${esc(t.memo||'')}">📝 ${memoText}</div>`:''}</td>
           <td>${p?esc(p.name):'不明'} / ${t.room||'—'}</td>
           <td style="color:var(--gold);font-weight:700">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
           <td>${rentBadge}</td>
