@@ -375,6 +375,24 @@
 </div>
 
 <!-- 商談登録モーダル -->
+<!-- 広告文生成モーダル -->
+<div class="modal-overlay" id="adCopyModal" style="display:none;" onclick="closeModal('adCopyModal',event)">
+  <div class="modal" style="max-width:540px" onclick="event.stopPropagation()">
+    <div class="modal-title">📝 物件広告文（自動生成）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">登録情報をもとに広告文を生成しました。コピーしてご活用ください。</p>
+    <div id="adcopy-tabs" style="display:flex;gap:8px;margin-bottom:12px">
+      <button id="adtab-short" class="btn btn-gold btn-sm" onclick="switchAdTab('short')">短文（SNS向け）</button>
+      <button id="adtab-long" class="btn btn-outline btn-sm" onclick="switchAdTab('long')">詳細文（掲載用）</button>
+    </div>
+    <div id="adcopy-content" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:16px;font-size:14px;line-height:1.8;white-space:pre-wrap;min-height:140px;color:var(--text)"></div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn btn-gold" style="flex:1" onclick="copyAdCopy()">📋 コピーする</button>
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal('adCopyModal')">閉じる</button>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center">実際の掲載・契約にはTERRA REALTYにご相談ください</p>
+  </div>
+</div>
+
 <div class="modal-overlay" id="dealRegModal" style="display:none;" onclick="closeModal('dealRegModal',event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-title">商談登録</div>
@@ -449,6 +467,7 @@ function renderSellers() {
           ${s.sqm?s.sqm+'㎡':''} ${s.age?'築'+s.age+'年':''}
         </div>
         <div class="listing-actions">
+          <button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="showAdCopy('${s.id}')">広告文</button>
           <button class="btn btn-outline btn-sm" onclick="editSeller('${s.id}')">編集</button>
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteSeller('${s.id}')">削除</button>
         </div>
@@ -472,6 +491,39 @@ function openSellerModal(id) {
   document.getElementById('sellerModal').style.display = 'flex';
 }
 function editSeller(id) { openSellerModal(id); }
+
+let _adCopyData = {short:'',long:''};
+let _adTabActive = 'short';
+function showAdCopy(id) {
+  const s = sellers.find(x=>x.id===id); if(!s) return;
+  const TYPE = {mansion:'マンション',kodate:'一戸建て',tochi:'土地',other:'不動産'};
+  const TIMING = {asap:'早期売却希望（3ヶ月以内）',half:'半年以内',year:'1年以内',think:'時期は柔軟'};
+  const typeName = TYPE[s.type]||'物件';
+  const area = s.area||'エリア未設定';
+  const price = s.price?Number(s.price).toLocaleString()+'万円':'価格応相談';
+  const sqm = s.sqm?s.sqm+'㎡':'';
+  const age = s.age?'築'+s.age+'年':'';
+  const timing = TIMING[s.timing]||'';
+  const memo = s.memo?'\n【特記事項】'+s.memo:'';
+  _adCopyData.short = `【売主直接】${area}の${typeName}をご紹介 🏠\n\n📍エリア: ${area}\n💰希望価格: ${price}\n🏠物件種別: ${typeName}${sqm?' / '+sqm:''}${age?' / '+age:''}\n${timing?'⏰'+timing+'\n':''}\n詳しくはTERRA REALTYまでお問い合わせください。\ntel: 03-XXXX-XXXX`;
+  _adCopyData.long = `【${typeName}売却情報】${area}\n${'─'.repeat(28)}\n\n▼ 物件概要\n・種別: ${typeName}\n・所在地: ${area}\n・面積: ${sqm||'要問合せ'}\n・築年数: ${age||'要問合せ'}\n・希望売却価格: ${price}\n・売却時期: ${timing||'要問合せ'}\n${memo}\n\n▼ この物件の特徴\n${s.type==='mansion'?'・管理状況が良好なマンションです\n・交通の便が良い立地です\n・明るい間取りで生活しやすい物件です':''}${s.type==='kodate'?'・独立した庭付きの一戸建てです\n・家族でゆったり暮らせる広さです\n・周辺環境が良好です':''}${s.type==='tochi'?'・用途の自由度が高い土地です\n・建築条件なしで計画が立てやすい物件です\n・周辺インフラが整っています':''}\n\n▼ お問い合わせ\nTERRA REALTY（売主様との橋渡し役）\nEmail: terra.realty.iam@gmail.com\n※本情報はTERRA REALTYを通じた売主様のご依頼に基づきます。`;
+  _adTabActive = 'short';
+  document.getElementById('adcopy-content').textContent = _adCopyData.short;
+  document.getElementById('adtab-short').className = 'btn btn-gold btn-sm';
+  document.getElementById('adtab-long').className = 'btn btn-outline btn-sm';
+  document.getElementById('adCopyModal').style.display = 'flex';
+}
+function switchAdTab(tab) {
+  _adTabActive = tab;
+  document.getElementById('adcopy-content').textContent = _adCopyData[tab];
+  document.getElementById('adtab-short').className = tab==='short'?'btn btn-gold btn-sm':'btn btn-outline btn-sm';
+  document.getElementById('adtab-long').className = tab==='long'?'btn btn-gold btn-sm':'btn btn-outline btn-sm';
+}
+function copyAdCopy() {
+  navigator.clipboard.writeText(_adCopyData[_adTabActive]).then(()=>showToast('クリップボードにコピーしました ✓')).catch(()=>{
+    const el=document.getElementById('adcopy-content'); el.select&&el.select(); document.execCommand('copy'); showToast('コピーしました ✓');
+  });
+}
 function deleteSeller(id) { const s=sellers.find(x=>x.id===id); if(!confirm('「'+(s?s.name:'この売主')+'」を削除しますか？\nこの操作は元に戻せません。')) return; sellers=sellers.filter(s=>s.id!==id); if(typeof sbCurrentUser==='function'&&sbCurrentUser()) sbDelete('od_sellers',id).catch(()=>{}); save('sellers'); renderSellers(); }
 
 function saveSeller() {
@@ -943,7 +995,7 @@ function switchTab(t) {
 // Escape key でモーダルを閉じる
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') {
-    ['sellerModal','buyerModal','dealRegModal'].forEach(function(id){
+    ['sellerModal','buyerModal','dealRegModal','adCopyModal'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.style.display='none';
     });
   }
