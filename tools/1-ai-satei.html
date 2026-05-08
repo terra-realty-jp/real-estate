@@ -673,6 +673,7 @@
       </div>
     </div>
 
+    <div id="lead-stats-panel" style="display:none;margin-bottom:20px"></div>
     <div id="leadsTableWrap">
       <div class="empty-state">
         <div class="empty-icon">📭</div>
@@ -1795,10 +1796,45 @@ function copyResultText() {
 // ===== リード管理 =====
 function renderLeads() {
   document.getElementById('leadCountNum').textContent = leads.length;
+  const statsEl = document.getElementById('lead-stats-panel');
   const wrap = document.getElementById('leadsTableWrap');
   if(!leads.length) {
+    if(statsEl) statsEl.style.display = 'none';
     wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>まだリードがありません</p><p style="font-size:12px;margin-top:8px;">査定タブで物件査定を行うとここにリードが蓄積されます</p></div>`;
     return;
+  }
+  if(statsEl) {
+    const timingLabel = {asap:'3ヶ月以内', half:'半年以内', year:'1年以内', thinking:'検討中'};
+    const totalVal = leads.reduce((s,l)=>s+(l.estimatePrice||0),0);
+    const fmtV2 = v => v>=100000000 ? Math.round(v/1000000)/100+'億円' : Math.round(v/10000).toLocaleString()+'万円';
+    const timingCounts = Object.entries(timingLabel).map(([k,lbl])=>{
+      const n = leads.filter(l=>l.timing===k).length;
+      return {k, lbl, n};
+    }).filter(x=>x.n>0);
+    const areaCounts = {};
+    leads.forEach(l=>{ if(l.area) areaCounts[l.area]=(areaCounts[l.area]||0)+1; });
+    const topArea = Object.entries(areaCounts).sort((a,b)=>b[1]-a[1])[0];
+    const asapCount = leads.filter(l=>l.timing==='asap').length;
+    const asapPct = Math.round(asapCount/leads.length*100);
+    statsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+      <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px 14px;text-align:center">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">査定総額合計</div>
+        <div style="font-size:16px;font-weight:900;color:var(--gold)">${fmtV2(totalVal)}</div>
+      </div>
+      <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:12px 14px;text-align:center">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">3ヶ月以内売却希望</div>
+        <div style="font-size:16px;font-weight:900;color:var(--red)">${asapCount}件 <span style="font-size:12px">(${asapPct}%)</span></div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;text-align:center">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">最多エリア</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${topArea?esc(topArea[0]):'-'}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${topArea?topArea[1]+'件':''}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:12px">
+      ${timingCounts.map(t=>`<span style="padding:4px 10px;border-radius:100px;background:rgba(255,255,255,0.06);color:var(--text-muted)">${t.lbl}: <strong style="color:var(--text)">${t.n}件</strong></span>`).join('')}
+    </div>`;
+    statsEl.style.display = 'block';
   }
   const timingLabel = {asap:'3ヶ月以内',half:'半年以内',year:'1年以内',thinking:'検討中'};
   const fmtV = v => v >= 100000000 ? Math.round(v/1000000)/100+'億' : Math.round(v/10000).toLocaleString()+'万円';
