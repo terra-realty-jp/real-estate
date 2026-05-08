@@ -378,6 +378,42 @@
   </div>
 </div>
 
+<!-- テナント詳細モーダル -->
+<div class="modal-overlay" id="tenantDetailModal" style="display:none;" onclick="closeModal('tenantDetailModal',event)">
+  <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
+    <div class="modal-title">テナント詳細</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin-bottom:16px;font-size:14px">
+      <div><span style="color:var(--text-muted);font-size:12px">氏名</span><br><strong id="tdm-name" style="font-size:16px"></strong></div>
+      <div><span style="color:var(--text-muted);font-size:12px">物件/部屋</span><br><strong id="tdm-room"></strong></div>
+      <div><span style="color:var(--text-muted);font-size:12px">月額家賃</span><br><span id="tdm-rent" style="color:var(--gold);font-weight:700"></span></div>
+      <div><span style="color:var(--text-muted);font-size:12px">入居日</span><br><span id="tdm-start"></span></div>
+      <div><span style="color:var(--text-muted);font-size:12px">契約終了日</span><br><span id="tdm-end"></span></div>
+      <div><span style="color:var(--text-muted);font-size:12px">メール</span><br><span id="tdm-email"></span></div>
+      <div><span style="color:var(--text-muted);font-size:12px">電話番号</span><br><span id="tdm-phone"></span></div>
+      <div><span style="color:var(--text-muted);font-size:12px">備考</span><br><span id="tdm-memo" style="font-size:12px;color:var(--text-muted)"></span></div>
+    </div>
+    <div style="display:flex;gap:16px;margin-bottom:16px">
+      <div style="flex:1;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">累計入金額（全期間）</div>
+        <div id="tdm-total-paid" style="font-size:18px;font-weight:700;color:#4ade80"></div>
+      </div>
+      <div style="flex:1;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">直近12ヶ月の未入金/一部</div>
+        <div id="tdm-unpaid-count" style="font-size:18px;font-weight:700;color:#f87171"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:8px;font-size:12px;color:var(--text-muted)">過去12ヶ月の入金状況</div>
+    <div id="tdm-bars" style="display:flex;gap:4px;align-items:flex-end;background:rgba(0,0,0,0.2);border-radius:8px;padding:12px 8px"></div>
+    <div style="display:flex;gap:12px;margin-top:8px;font-size:10px">
+      <span style="color:#4ade80">■ 入金済</span><span style="color:#facc15">■ 一部入金</span><span style="color:#f87171">■ 未入金</span><span style="color:#374151">■ 未登録</span>
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-outline" onclick="closeModal('tenantDetailModal')">閉じる</button>
+      <button id="tdm-edit" class="btn btn-gold">編集</button>
+    </div>
+  </div>
+</div>
+
 <!-- 入金登録モーダル -->
 <div class="modal-overlay" id="rentModal" style="display:none;" onclick="closeModal('rentModal',event)">
   <div class="modal" onclick="event.stopPropagation()">
@@ -1024,6 +1060,7 @@ function renderTenants(){
           <td style="font-size:12px">${t.end||'—'}${expiryBadge}</td>
           <td><span class="badge ${STATUS_B[t.status]||''}">${STATUS_L[t.status]||t.status}</span></td>
           <td style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="showTenantDetail('${t.id}')">詳細</button>
             <button class="btn btn-outline btn-sm" onclick="editTenant('${t.id}')">編集</button>
             <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteTenant('${t.id}')">削除</button>
           </td>
@@ -1053,6 +1090,48 @@ function openTenantModal(id){
   setTimeout(()=>{ const f=document.getElementById('t_name'); if(f)f.focus(); },50);
 }
 function editTenant(id){openTenantModal(id);}
+function showTenantDetail(id){
+  const t=tenants.find(x=>x.id===id);if(!t)return;
+  const p=properties.find(x=>x.id===t.propertyId);
+  const now=new Date();
+  // 過去12ヶ月のリスト生成
+  const months=[];
+  for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+  const STATUS_COLOR={paid:'#4ade80',partial:'#facc15',unpaid:'#f87171',none:'#374151'};
+  const STATUS_LABEL={paid:'入金済',partial:'一部入金',unpaid:'未入金',none:'未登録'};
+  const bars=months.map(ym=>{
+    const r=rents.find(x=>x.tenantId===id&&x.month===ym);
+    const st=r?r.status:'none';
+    const pct=r&&r.charge>0?Math.min(100,Math.round((r.paid||0)/r.charge*100)):st==='paid'?100:0;
+    const label=ym.slice(5)+'月';
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0">
+      <div style="font-size:9px;color:var(--text-muted);white-space:nowrap">${label}</div>
+      <div style="width:100%;height:48px;background:#1a1a2e;border-radius:4px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden">
+        <div style="width:100%;height:${Math.max(4,pct*0.48)}px;background:${STATUS_COLOR[st]};border-radius:2px;transition:height 0.3s"></div>
+      </div>
+      <div style="font-size:9px;color:${STATUS_COLOR[st]};font-weight:700;white-space:nowrap">${STATUS_LABEL[st]}</div>
+    </div>`;
+  }).join('');
+  const totalPaid=rents.filter(r=>r.tenantId===id&&r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+  const unpaidCount=months.filter(ym=>{const r=rents.find(x=>x.tenantId===id&&x.month===ym);return r&&r.status!=='paid';}).length;
+  const modal=document.getElementById('tenantDetailModal');
+  document.getElementById('tdm-name').textContent=t.name;
+  document.getElementById('tdm-room').textContent=(p?p.name:'不明')+' / '+(t.room||'—');
+  document.getElementById('tdm-rent').textContent=t.rent?Number(t.rent).toLocaleString()+'円/月':'—';
+  document.getElementById('tdm-start').textContent=t.start||'—';
+  document.getElementById('tdm-end').textContent=t.end||'—';
+  document.getElementById('tdm-email').textContent=t.email||'—';
+  document.getElementById('tdm-phone').textContent=t.phone||'—';
+  document.getElementById('tdm-memo').textContent=t.memo||'なし';
+  document.getElementById('tdm-total-paid').textContent=totalPaid.toLocaleString()+'円';
+  document.getElementById('tdm-unpaid-count').textContent=unpaidCount+'ヶ月';
+  document.getElementById('tdm-bars').innerHTML=bars;
+  document.getElementById('tdm-edit').onclick=()=>{closeModal('tenantDetailModal');editTenant(id);};
+  modal.style.display='flex';
+}
 function deleteTenant(id){const t=tenants.find(x=>x.id===id);if(!confirm('「'+(t?t.name:'このテナント')+'」を削除しますか？\nこの操作は元に戻せません。'))return;tenants=tenants.filter(t=>t.id!==id);save('tenants');sbDeleteRow('tenants',id);renderTenants();}
 function saveTenant(){
   const nameEl=document.getElementById('t_name'); clearFieldError(nameEl);
@@ -1597,7 +1676,7 @@ function switchTab(t){
 // Escape key でモーダルを閉じる
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') {
-    ['propertyModal','tenantModal','rentModal','repairModal'].forEach(function(id){
+    ['propertyModal','tenantModal','tenantDetailModal','rentModal','repairModal'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.style.display='none';
     });
   }
