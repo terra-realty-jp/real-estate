@@ -478,6 +478,30 @@
       <!-- リフォームシナリオ比較 -->
       <div id="reform-scenario-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 譲渡所得税シミュレーター -->
+      <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div>
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得費（購入価格＋リフォーム費など・万円）</label>
+            <input type="number" id="ts_cost" placeholder="例: 2000" oninput="calcTaxSim()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+            <div style="font-size:10px;color:var(--text-muted);margin-top:3px">不明な場合は売却価格の5%が概算取得費として使われます</div>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">保有期間</label>
+            <select id="ts_hold" onchange="calcTaxSim()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+              <option value="short">5年以内（短期：税率39.63%）</option>
+              <option value="long" selected>5年超（長期：税率20.315%）</option>
+            </select>
+          </div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer">
+          <input type="checkbox" id="ts_3000" onchange="calcTaxSim()" style="accent-color:var(--gold);width:16px;height:16px">
+          <span>居住用財産の3,000万円特別控除を適用する（マイホームの売却・2年以上居住）</span>
+        </label>
+        <div id="tax-sim-result"></div>
+      </div>
+
       <!-- 国土交通省 実取引データ比較 -->
       <div id="mlit-panel" style="display:none;background:var(--dark3);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:20px;margin-top:16px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
@@ -816,6 +840,39 @@ function renderSellCostPanel(price) {
   ].join('');
 }
 
+function calcTaxSim() {
+  const el = document.getElementById('tax-sim-result'); if(!el) return;
+  const price = window._taxSimPrice || 0; if(!price) return;
+  const priceM = price / 10000;
+  const costInput = parseFloat(document.getElementById('ts_cost')?.value) || 0;
+  const cost = costInput > 0 ? costInput * 10000 : price * 0.05; // 不明なら5%概算
+  const isLong = (document.getElementById('ts_hold')?.value||'long') === 'long';
+  const has3000 = document.getElementById('ts_3000')?.checked||false;
+  const deduction = has3000 ? 30000000 : 0;
+  const sellCost = Math.ceil((price * 0.03 + 60000) * 1.1); // 仲介手数料
+  const transferIncome = price - cost - sellCost;
+  const taxableIncome = Math.max(0, transferIncome - deduction);
+  const taxRate = isLong ? 0.20315 : 0.3963;
+  const tax = Math.round(taxableIncome * taxRate);
+  const M = v => Math.round(v/10000).toLocaleString() + '万円';
+  el.innerHTML = `
+    <div style="display:grid;gap:8px;font-size:13px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between"><span>売却価格</span><span style="color:var(--gold);font-weight:700">${M(price)}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:#999">－ 取得費${costInput>0?'':' (概算5%)'}</span><span style="color:#f59e0b">${M(cost)}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:#999">－ 売却費用（仲介手数料等）</span><span style="color:#f59e0b">${M(sellCost)}</span></div>
+      ${has3000?`<div style="display:flex;justify-content:space-between"><span style="color:#4ade80">－ 3,000万円特別控除</span><span style="color:#4ade80">3,000万円</span></div>`:''}
+      <div style="height:1px;background:rgba(255,255,255,0.07)"></div>
+      <div style="display:flex;justify-content:space-between"><span>課税譲渡所得</span><span style="color:${taxableIncome>0?'#f59e0b':'#4ade80'};font-weight:700">${M(taxableIncome)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted)"><span>税率（${isLong?'長期':'短期'}・${isLong?'20.315%':'39.63%'}）</span><span></span></div>
+      <div style="height:1px;background:rgba(255,255,255,0.07)"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:700">概算税額</span><span style="font-size:18px;font-weight:900;color:${tax>0?'#f87171':'#4ade80'}">${M(tax)}</span></div>
+    </div>
+    ${taxableIncome<=0?`<div style="padding:10px 12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:6px;font-size:12px;color:#4ade80">✅ 取得費・控除が売却価格を上回るため、税金はかかりません（概算）。</div>`:
+    `<div style="padding:10px 12px;background:rgba(249,115,22,0.07);border:1px solid rgba(249,115,22,0.2);border-radius:6px;font-size:12px;color:var(--text-muted);line-height:1.7">⚠️ 実際の税額は取得費の証明書類・居住期間・ローン残高などで変わります。確定申告が必要な場合があります。<a href="mailto:terra.realty.iam@gmail.com" style="color:var(--gold);margin-left:4px">詳細をTERRA REALTYに相談→</a></div>`}
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.7">※本シミュレーターは概算です。税務申告は税理士または税務署にご確認ください。</div>
+  `;
+}
+
 // ===== バリデーション =====
 const FIELD_LABELS = {
   pref: '都道府県', propType: '物件種別', area: '面積', age: '築年数',
@@ -1018,6 +1075,16 @@ function calcAndShowResult() {
     panel.innerHTML = `<div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">🔧 リフォームシナリオ比較</div>
       <div style="display:flex;flex-direction:column;gap:8px">${rows}</div>
       <p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.7">※ リフォーム費用はマンション・一戸建ての面積目安。実際の費用は業者・工事内容により異なります。リフォームが手取りを上回るかどうかは総費用と所要期間で判断してください。</p>`;
+  })();
+
+  // 譲渡所得税シミュレーター表示
+  (function(){
+    const taxPanel = document.getElementById('tax-sim-panel');
+    if(taxPanel) {
+      taxPanel.style.display = 'block';
+      window._taxSimPrice = price;
+      calcTaxSim();
+    }
   })();
 
   // 算出根拠
