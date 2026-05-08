@@ -334,6 +334,12 @@
   <div id="cf-content">
     <div class="empty-state"><div class="empty-icon">💹</div><p>物件入力タブで分析を実行してください</p></div>
   </div>
+  <div id="cf-print-bar" style="display:none;margin-top:12px;display:none;justify-content:flex-end;gap:8px">
+    <button onclick="printCFReport()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);color:var(--text-muted);border:1px solid rgba(255,255,255,0.12);font-size:12px;font-weight:700;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+      CFレポートを印刷・PDF保存
+    </button>
+  </div>
   <div id="prepay-calc-card" style="display:none;margin-top:16px" class="card">
     <div class="card-title">⚡ 繰り上げ返済シミュレーター</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">毎月または一括で追加元本返済した場合の利息削減効果を試算します。</p>
@@ -1133,6 +1139,9 @@ function renderCashflow(inp, r) {
   `;
   // CSVダウンロード用にデータ保持
   window._cfExportData = {inp, years, noiData, loanData, cfData, cumData};
+  // 印刷バー表示
+  const cfPrintBar = document.getElementById('cf-print-bar');
+  if(cfPrintBar) cfPrintBar.style.display = 'flex';
   // 繰り上げ返済カード表示
   const ppCard = document.getElementById('prepay-calc-card');
   if(ppCard && inp.loan>0) ppCard.style.display='block';
@@ -1554,6 +1563,65 @@ function exportCFCsv() {
   a.href = URL.createObjectURL(new Blob(['﻿'+csv], {type:'text/csv'}));
   a.download = `CF_${name}_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
+}
+
+function printCFReport() {
+  var d = window._cfExportData;
+  if(!d) { showErrToast('先に分析を実行してください'); return; }
+  var inp = d.inp, years = d.years, noiData = d.noiData, loanData = d.loanData, cfData = d.cfData, cumData = d.cumData;
+  var now = new Date();
+  var dateStr = now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日';
+
+  var rows = years.map(function(y,i) {
+    var cfColor = cfData[i]>=0?'#16a34a':'#dc2626';
+    var cumColor = cumData[i]>=0?'#16a34a':'#dc2626';
+    return '<tr>'
+      +'<td>'+y+'年目</td>'
+      +'<td style="text-align:right">'+noiData[i].toLocaleString()+'</td>'
+      +'<td style="text-align:right">'+loanData[i].toLocaleString()+'</td>'
+      +'<td style="text-align:right;color:'+cfColor+';font-weight:700">'+(cfData[i]>=0?'+':'')+cfData[i].toLocaleString()+'</td>'
+      +'<td style="text-align:right;color:'+cumColor+';font-weight:700">'+(cumData[i]>=0?'+':'')+cumData[i].toLocaleString()+'</td>'
+    +'</tr>';
+  }).join('');
+
+  var summary = [
+    { label:'物件名', value: inp.name||'—' },
+    { label:'購入価格', value: (inp.price||0).toLocaleString()+'万円' },
+    { label:'表面利回り', value: (inp.rent*12/(inp.price*10000)*100).toFixed(2)+'%' },
+    { label:'借入額', value: (inp.loan||0).toLocaleString()+'万円' },
+    { label:'保有期間', value: inp.hold+'年' },
+    { label:'年間家賃（月額×12）', value: Math.round(inp.rent*12/10000)+'万円' },
+  ];
+
+  var html = '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">'
+    +'<title>CFレポート - '+(inp.name||'物件')+'</title>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Noto Sans JP",sans-serif;font-size:13px;color:#1a1a1a;padding:24px}'
+    +'h1{font-size:18px;margin-bottom:4px}h2{font-size:14px;margin:16px 0 8px;color:#374151}'
+    +'.meta{font-size:11px;color:#6b7280;margin-bottom:16px}'
+    +'.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}'
+    +'.sum-item{background:#f3f4f6;border-radius:6px;padding:8px 10px}'
+    +'.sum-label{font-size:10px;color:#6b7280;margin-bottom:3px}'
+    +'.sum-val{font-size:14px;font-weight:700}'
+    +'table{width:100%;border-collapse:collapse}th{background:#1a1a2e;color:#fff;padding:7px 10px;text-align:left;font-size:12px}'
+    +'th:not(:first-child){text-align:right}td{padding:6px 10px;border-bottom:1px solid #e5e7eb;font-size:12px}'
+    +'td:not(:first-child){text-align:right}tr:nth-child(even){background:#f9fafb}'
+    +'.note{font-size:10px;color:#9ca3af;margin-top:12px;line-height:1.6}'
+    +'@media print{button{display:none}}'
+    +'</style></head><body>'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'
+    +'<div><h1>不動産投資 キャッシュフローレポート</h1><p class="meta">出力日: '+dateStr+' &nbsp;|&nbsp; powered by TERRA REALTY</p></div>'
+    +'<button onclick="window.print()" style="padding:8px 16px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;flex-shrink:0">🖨 印刷する</button>'
+    +'</div>'
+    +'<h2>物件概要</h2>'
+    +'<div class="summary">'+summary.map(function(s){ return '<div class="sum-item"><div class="sum-label">'+s.label+'</div><div class="sum-val">'+s.value+'</div></div>'; }).join('')+'</div>'
+    +'<h2>年次キャッシュフロー（万円）</h2>'
+    +'<table><thead><tr><th>年</th><th>NOI</th><th>DS</th><th>年間CF</th><th>累積CF</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<p class="note">※ 最終年の累積CFには売却収益を含みます。DS=年間元利返済額。NOI=賃料収入－管理費・税金・保険・空室損失。</p>'
+    +'<script>window.onload=function(){window.print();}<\/script>'
+    +'</body></html>';
+
+  var w = window.open('', '_blank', 'width=900,height=700');
+  if(w){ w.document.write(html); w.document.close(); }
 }
 
 function exportHistory() {
