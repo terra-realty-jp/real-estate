@@ -316,6 +316,18 @@
   <p class="page-desc">修繕依頼・対応状況を管理。費用を記録して経費管理にも活用できます。</p>
   <div id="planned-repairs-section" style="margin-bottom:20px"></div>
   <div id="repair-summary-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px"></div>
+  <!-- 修繕費予算ウィジェット -->
+  <div id="repair-budget-card" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px;margin-bottom:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:700">📋 年間修繕費予算管理</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="font-size:12px;color:var(--text-muted)">年間予算（万円）</label>
+        <input type="number" id="repair-budget-input" min="0" placeholder="例: 50" oninput="saveRepairBudget();renderRepairBudget()"
+          style="width:80px;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:6px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;text-align:right">
+      </div>
+    </div>
+    <div id="repair-budget-content"></div>
+  </div>
   <div id="repair-category-card" style="display:none;margin-bottom:20px"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1728,6 +1740,7 @@ function renderRepairs(){
     repSumEl.style.display = 'none';
   }
   renderRepairCategoryBreakdown();
+  renderRepairBudget();
 
   el.innerHTML=`<table>
     <thead><tr><th>物件/部屋</th><th>内容</th><th>優先度</th><th>報告日</th><th>完了日</th><th>費用</th><th>業者</th><th>ステータス</th><th></th></tr></thead>
@@ -1751,6 +1764,50 @@ function renderRepairs(){
       }).join('')}
     </tbody>
   </table>`;
+}
+
+function saveRepairBudget() {
+  const v = document.getElementById('repair-budget-input')?.value || '';
+  if (v) localStorage.setItem('kanri_repair_budget', v);
+  else localStorage.removeItem('kanri_repair_budget');
+}
+
+function renderRepairBudget() {
+  const card = document.getElementById('repair-budget-card');
+  const el = document.getElementById('repair-budget-content');
+  const input = document.getElementById('repair-budget-input');
+  if (!card || !el || !input) return;
+  const stored = localStorage.getItem('kanri_repair_budget') || '';
+  if (stored && !input.value) input.value = stored;
+  const budget = parseFloat(input.value || stored) || 0;
+  const thisYear = new Date().getFullYear().toString();
+  const yearCost = repairs.filter(r => (r.done||r.date||'').startsWith(thisYear) && r.cost)
+    .reduce((s,r)=>s+(Number(r.cost)||0),0);
+  const yearCostMan = Math.round(yearCost/10000*10)/10;
+  card.style.display = 'block';
+  if (budget <= 0) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--text-muted)">${thisYear}年の修繕費 <strong style="color:var(--orange)">${yearCostMan}万円</strong>。予算を設定すると達成度が表示されます。</div>`;
+    return;
+  }
+  const used = Math.min(budget, yearCostMan);
+  const pct = Math.round(yearCostMan / budget * 100);
+  const remaining = Math.max(0, budget - yearCostMan);
+  const over = yearCostMan > budget;
+  const barColor = pct >= 90 ? 'var(--red)' : pct >= 70 ? 'var(--orange)' : 'var(--green)';
+  const barPct = Math.min(100, pct);
+  el.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:5px">
+      <span>使用済: <strong style="color:${barColor}">${yearCostMan}万円</strong> / ${budget}万円</span>
+      <span style="font-weight:700;color:${barColor}">${pct}% 消化</span>
+    </div>
+    <div style="height:10px;background:rgba(255,255,255,0.07);border-radius:5px;overflow:hidden;margin-bottom:8px">
+      <div style="width:${barPct}%;height:100%;background:${barColor};border-radius:5px;transition:width 0.5s ease;${pct>=100?'box-shadow:0 0 8px rgba(239,68,68,0.4)':''}"></div>
+    </div>
+    <div style="display:flex;gap:16px;font-size:12px">
+      ${over
+        ? `<span style="color:var(--red);font-weight:700">⚠️ 予算超過: ${Math.round(yearCostMan - budget)}万円オーバー</span>`
+        : `<span style="color:var(--green)">✅ 残り予算: <strong>${remaining}万円</strong></span>`}
+      <span style="color:var(--text-muted)">修繕${repairs.filter(r=>(r.done||r.date||'').startsWith(thisYear)&&r.cost).length}件分</span>
+    </div>`;
 }
 
 function renderRepairCategoryBreakdown(){
