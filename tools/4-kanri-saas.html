@@ -16,6 +16,8 @@
   <meta name="twitter:image" content="https://shinji-japaaaan.github.io/real-estate/ogp.svg">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" onerror="window._noChart=true"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="window._noSupabase=true"></script>
+  <script src="../supabase-client.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -124,12 +126,15 @@
   <span style="color:rgba(255,255,255,0.2)">|</span>
   <span class="nav-title">TOOL 04 — 賃貸物件かんたん管理</span>
 </nav>
+<!-- 認証バー -->
+<div id="sb-auth-bar" style="background:#0f1729;border-bottom:1px solid rgba(201,168,76,0.15);padding:9px 28px;display:flex;align-items:center;gap:8px;min-height:40px"></div>
+
 <div style="background:#1e3a8a;border-bottom:1px solid rgba(255,255,255,0.1);padding:14px 32px;display:flex;align-items:flex-start;gap:12px">
   <span style="font-size:20px;flex-shrink:0">🏢</span>
   <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.7">
     <strong style="color:#fde68a">このツールでできること：</strong>
     物件・入居者・家賃台帳・修繕をまとめて管理。月々の収支を一目で確認できます。<br>
-    <span style="color:rgba(255,255,255,0.6);font-size:12px">✅ データはすべてあなたのブラウザ内に保存されます。外部送信なし。CSVエクスポートでバックアップ可能。</span>
+    <span style="color:rgba(255,255,255,0.6);font-size:12px">☁ ログインするとデータがクラウドに保存され、スマホ・PCどこからでもアクセスできます。未ログイン時はこの端末のみに保存。</span>
   </div>
 </div>
 
@@ -424,11 +429,12 @@
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
 function showFieldError(el,msg){el.style.borderColor='var(--red)';let e=el.parentNode.querySelector('.field-error');if(!e){e=document.createElement('span');e.className='field-error';e.style.cssText='color:var(--red);font-size:11px;margin-top:2px;display:block;';el.parentNode.appendChild(e);}e.textContent=msg;}
 function clearFieldError(el){el.style.borderColor='';const e=el.parentNode.querySelector('.field-error');if(e)e.remove();}
-let properties = JSON.parse(localStorage.getItem('saas_properties') || '[]');
-let tenants    = JSON.parse(localStorage.getItem('saas_tenants')    || '[]');
-let rents      = JSON.parse(localStorage.getItem('saas_rents')      || '[]');
-let repairs    = JSON.parse(localStorage.getItem('saas_repairs')    || '[]');
-let plannedRepairs = JSON.parse(localStorage.getItem('saas_planned_repairs') || '[]');
+let properties    = [];
+let tenants       = [];
+let rents         = [];
+let repairs       = [];
+let plannedRepairs = [];
+let _usingCloud   = false;
 
 let editPropId=null, editTenantId=null, editRepairId=null;
 let revenueChart=null;
@@ -438,14 +444,27 @@ const REPAIR_PRI = {urgent:'緊急',high:'高',normal:'通常',low:'低'};
 const REPAIR_ST = {open:'受付済',progress:'対応中',done:'完了'};
 
 function save(key) {
-  const map = {properties,tenants,rents,repairs};
-  try {
-    localStorage.setItem('saas_'+key, JSON.stringify(map[key]));
-  } catch(e) {
-    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED') {
-      showErrorToast('保存容量の上限に達しました。古いデータを削除してからお試しください。');
+  const map = {properties, tenants, rents, repairs};
+  if (!_usingCloud) {
+    try {
+      localStorage.setItem('saas_'+key, JSON.stringify(map[key]));
+    } catch(e) {
+      if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED') {
+        showErrorToast('保存容量の上限に達しました。古いデータを削除してからお試しください。');
+      }
     }
   }
+}
+
+async function sbSaveRow(table, row) {
+  if (!_usingCloud) return;
+  const result = await sbUpsert(table, row);
+  if (!result) showErrorToast('クラウド保存に失敗しました。ネットワークを確認してください。');
+}
+
+async function sbDeleteRow(table, id) {
+  if (!_usingCloud) return;
+  await sbDelete(table, id);
 }
 
 function closeModal(id,e) {
@@ -704,7 +723,7 @@ function renderDashboard() {
             <td style="font-size:12px">${p?esc(p.name):'—'} / ${t.room||'—'}</td>
             <td style="font-size:12px">${t.end}</td>
             <td><span style="color:${urgentColor};font-weight:700;font-size:14px">あと${daysLeft}日</span></td>
-            <td><button class="btn btn-outline btn-sm" onclick="editTenant(${t.id});switchTab('tenants')">契約確認</button></td>
+            <td><button class="btn btn-outline btn-sm" onclick="editTenant('${t.id}');switchTab('tenants')">契約確認</button></td>
           </tr>`;
         }).join('')}</tbody>
       </table>`;
@@ -741,7 +760,7 @@ function renderDashboard() {
             <div style="display:flex;align-items:center;gap:10px">
               <span style="font-size:12px;color:var(--text-muted)">${t.end}</span>
               <span style="font-size:12px;font-weight:700;color:${urgColor}">あと${daysLeft}日</span>
-              <button class="btn btn-outline btn-sm" onclick="editTenant(${t.id});switchTab('tenants')">確認</button>
+              <button class="btn btn-outline btn-sm" onclick="editTenant('${t.id}');switchTab('tenants')">確認</button>
             </div>
           </div>`;
         }).join('');
@@ -800,8 +819,8 @@ function renderProperties() {
           <td>${p.rate||5}%</td>
           <td style="font-size:12px">${p.start||'—'}</td>
           <td style="display:flex;gap:6px">
-            <button class="btn btn-outline btn-sm" onclick="editProperty(${p.id})">編集</button>
-            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteProperty(${p.id})">削除</button>
+            <button class="btn btn-outline btn-sm" onclick="editProperty('${p.id}')">編集</button>
+            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteProperty('${p.id}')">削除</button>
           </td>
         </tr>`;
       }).join('')}
@@ -827,20 +846,22 @@ function openPropertyModal(id) {
   setTimeout(()=>{ const f=document.getElementById('p_name'); if(f)f.focus(); },50);
 }
 function editProperty(id){openPropertyModal(id);}
-function deleteProperty(id){const p=properties.find(x=>x.id===id);if(!confirm('「'+(p?p.name:'この物件')+'」を削除しますか？\nこの操作は元に戻せません。'))return;properties=properties.filter(p=>p.id!==id);save('properties');renderProperties();}
+function deleteProperty(id){const p=properties.find(x=>x.id===id);if(!confirm('「'+(p?p.name:'この物件')+'」を削除しますか？\nこの操作は元に戻せません。'))return;properties=properties.filter(p=>p.id!==id);save('properties');sbDeleteRow('properties',id);renderProperties();}
 
 function saveProperty(){
   const nameEl=document.getElementById('p_name'); clearFieldError(nameEl);
   if(!nameEl.value.trim()){showFieldError(nameEl,'物件名を入力してください');nameEl.focus();return;}
   const name=nameEl.value.trim();
   const obj={
-    id:editPropId||Date.now(),name,addr:document.getElementById('p_addr').value,
+    id:editPropId||crypto.randomUUID(),name,addr:document.getElementById('p_addr').value,
     type:document.getElementById('p_type').value,units:parseInt(document.getElementById('p_units').value)||1,
     rate:parseFloat(document.getElementById('p_rate').value)||5,
     start:document.getElementById('p_start').value,memo:document.getElementById('p_memo').value,
   };
   if(editPropId) properties=properties.map(p=>p.id===editPropId?obj:p); else properties.unshift(obj);
-  save('properties');closeModal('propertyModal');renderProperties();showToast('物件を保存しました ✓');
+  save('properties');
+  sbSaveRow('properties', obj);
+  closeModal('propertyModal');renderProperties();showToast('物件を保存しました ✓');
 }
 
 // ===== テナント =====
@@ -898,8 +919,8 @@ function renderTenants(){
           <td style="font-size:12px">${t.end||'—'}${expiryBadge}</td>
           <td><span class="badge ${STATUS_B[t.status]||''}">${STATUS_L[t.status]||t.status}</span></td>
           <td style="display:flex;gap:6px">
-            <button class="btn btn-outline btn-sm" onclick="editTenant(${t.id})">編集</button>
-            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteTenant(${t.id})">削除</button>
+            <button class="btn btn-outline btn-sm" onclick="editTenant('${t.id}')">編集</button>
+            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteTenant('${t.id}')">削除</button>
           </td>
         </tr>`;
       }).join('')}
@@ -927,22 +948,28 @@ function openTenantModal(id){
   setTimeout(()=>{ const f=document.getElementById('t_name'); if(f)f.focus(); },50);
 }
 function editTenant(id){openTenantModal(id);}
-function deleteTenant(id){const t=tenants.find(x=>x.id===id);if(!confirm('「'+(t?t.name:'このテナント')+'」を削除しますか？\nこの操作は元に戻せません。'))return;tenants=tenants.filter(t=>t.id!==id);save('tenants');renderTenants();}
+function deleteTenant(id){const t=tenants.find(x=>x.id===id);if(!confirm('「'+(t?t.name:'このテナント')+'」を削除しますか？\nこの操作は元に戻せません。'))return;tenants=tenants.filter(t=>t.id!==id);save('tenants');sbDeleteRow('tenants',id);renderTenants();}
 function saveTenant(){
   const nameEl=document.getElementById('t_name'); clearFieldError(nameEl);
   if(!nameEl.value.trim()){showFieldError(nameEl,'氏名を入力してください');nameEl.focus();return;}
   const name=nameEl.value.trim();
   const obj={
-    id:editTenantId||Date.now(),name,phone:document.getElementById('t_phone').value,
+    id:editTenantId||crypto.randomUUID(),name,phone:document.getElementById('t_phone').value,
     email:document.getElementById('t_email').value,
-    propertyId:parseInt(document.getElementById('t_property').value)||0,
+    propertyId:document.getElementById('t_property').value||'',
     room:document.getElementById('t_room').value,rent:parseInt(document.getElementById('t_rent').value)||0,
     deposit:parseInt(document.getElementById('t_deposit').value)||0,
     start:document.getElementById('t_start').value,end:document.getElementById('t_end').value,
     status:document.getElementById('t_status').value,memo:document.getElementById('t_memo').value,
   };
   if(editTenantId) tenants=tenants.map(t=>t.id===editTenantId?obj:t); else tenants.unshift(obj);
-  save('tenants');closeModal('tenantModal');renderTenants();showToast('テナント情報を保存しました ✓');
+  save('tenants');
+  sbSaveRow('tenants', {
+    id:obj.id, name:obj.name, phone:obj.phone, email:obj.email,
+    property_id:obj.propertyId, room:obj.room, rent:obj.rent, deposit:obj.deposit,
+    start:obj.start, end:obj.end, status:obj.status, memo:obj.memo,
+  });
+  closeModal('tenantModal');renderTenants();showToast('テナント情報を保存しました ✓');
 }
 
 // ===== 家賃台帳 =====
@@ -1049,22 +1076,24 @@ function quickRent(tenantId, month, rent){
 }
 
 function saveRent(){
-  const tenantId=parseInt(document.getElementById('r_tenant').value);
+  const tenantId=document.getElementById('r_tenant').value;
   const monthEl=document.getElementById('r_month'); clearFieldError(monthEl);
   if(!monthEl.value){showFieldError(monthEl,'対象月を入力してください');monthEl.focus();return;}
   const month=monthEl.value;
+  const existing=rents.find(r=>r.tenantId===tenantId&&r.month===month);
   const obj={
-    id:Date.now(),tenantId,month,
+    id:existing?existing.id:crypto.randomUUID(),tenantId,month,
     charge:parseInt(document.getElementById('r_charge').value)||0,
     paid:parseInt(document.getElementById('r_paid').value)||0,
     date:document.getElementById('r_date').value,
     status:document.getElementById('r_status').value,
     memo:document.getElementById('r_memo').value,
   };
-  // 同月・同テナントの既存を上書き
   rents=rents.filter(r=>!(r.tenantId===tenantId&&r.month===month));
   rents.push(obj);
-  save('rents');closeModal('rentModal');renderRentLedger();showToast('家賃入金を記録しました ✓');
+  save('rents');
+  sbSaveRow('rents', {id:obj.id, tenant_id:obj.tenantId, month:obj.month, charge:obj.charge, paid:obj.paid, date:obj.date, status:obj.status, memo:obj.memo});
+  closeModal('rentModal');renderRentLedger();showToast('家賃入金を記録しました ✓');
 }
 
 // ===== 修繕 =====
@@ -1120,7 +1149,7 @@ function renderPlannedRepairs() {
         + '<td style="padding:10px 12px;text-align:right;font-weight:700;color:var(--gold)">' + r.cost.toLocaleString() + '万円</td>'
         + '<td style="padding:10px 12px;text-align:right;color:var(--text-muted)">' + (r.isPast ? '-' : r.monthsLeft + 'ヶ月') + '</td>'
         + '<td style="padding:10px 12px;text-align:right;font-weight:700;color:' + mc + '">' + (r.isPast ? '-' : (Math.ceil(r.monthly * 10) / 10) + '万円/月') + '</td>'
-        + '<td style="padding:10px 12px;text-align:center"><button onclick="deletePlannedRepair(' + r.id + ')" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">削除</button></td>'
+        + '<td style="padding:10px 12px;text-align:center"><button onclick="deletePlannedRepair(\'' + r.id + '\')" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">削除</button></td>'
         + '</tr>';
     });
     listHTML += '</tbody></table></div>';
@@ -1146,10 +1175,14 @@ function savePlannedRepair() {
   var cost = parseFloat(document.getElementById('pr_cost').value);
   if(!name || !year || !cost) { showToast('工事名・計画年・費用を入力してください', true); return; }
   if(year < 2024 || year > 2060) { showToast('計画年は2024〜2060の範囲で入力してください', true); return; }
-  plannedRepairs.push({ id: Date.now(), name: name, year: year, cost: cost });
+  const pr = { id: crypto.randomUUID(), name: name, year: year, cost: cost };
+  plannedRepairs.push(pr);
   plannedRepairs.sort(function(a,b){ return a.year - b.year; });
-  try { localStorage.setItem('saas_planned_repairs', JSON.stringify(plannedRepairs)); }
-  catch(e) { showErrorToast('保存容量の上限に達しました'); return; }
+  if(!_usingCloud) {
+    try { localStorage.setItem('saas_planned_repairs', JSON.stringify(plannedRepairs)); }
+    catch(e) { showErrorToast('保存容量の上限に達しました'); return; }
+  }
+  sbSaveRow('planned_repairs', {id:pr.id, name:pr.name, year:pr.year, cost:pr.cost});
   document.getElementById('pr_name').value = '';
   document.getElementById('pr_year').value = '';
   document.getElementById('pr_cost').value = '';
@@ -1162,7 +1195,10 @@ function deletePlannedRepair(id) {
   if(!item) return;
   if(!confirm('「' + item.name + '」を削除しますか？')) return;
   plannedRepairs = plannedRepairs.filter(function(r){ return r.id !== id; });
-  try { localStorage.setItem('saas_planned_repairs', JSON.stringify(plannedRepairs)); } catch(e) {}
+  if(!_usingCloud) {
+    try { localStorage.setItem('saas_planned_repairs', JSON.stringify(plannedRepairs)); } catch(e) {}
+  }
+  sbDeleteRow('planned_repairs', id);
   renderPlannedRepairs();
   showToast('計画修繕を削除しました');
 }
@@ -1218,8 +1254,8 @@ function renderRepairs(){
           <td style="font-size:12px">${r.vendor||'—'}</td>
           <td><span class="badge ${ST_B[r.status]||''}">${REPAIR_ST[r.status]||r.status}</span></td>
           <td style="display:flex;gap:6px">
-            <button class="btn btn-outline btn-sm" onclick="editRepair(${r.id})">編集</button>
-            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteRepair(${r.id})">削除</button>
+            <button class="btn btn-outline btn-sm" onclick="editRepair('${r.id}')">編集</button>
+            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteRepair('${r.id}')">削除</button>
           </td>
         </tr>`;
       }).join('')}
@@ -1250,14 +1286,14 @@ function openRepairModal(id){
   setTimeout(()=>{ const f=document.getElementById('rp_content'); if(f)f.focus(); },50);
 }
 function editRepair(id){openRepairModal(id);}
-function deleteRepair(id){const r=repairs.find(x=>x.id===id);if(!confirm('「'+(r?r.content:'この修繕記録')+'」を削除しますか？\nこの操作は元に戻せません。'))return;repairs=repairs.filter(r=>r.id!==id);save('repairs');renderRepairs();}
+function deleteRepair(id){const r=repairs.find(x=>x.id===id);if(!confirm('「'+(r?r.content:'この修繕記録')+'」を削除しますか？\nこの操作は元に戻せません。'))return;repairs=repairs.filter(r=>r.id!==id);save('repairs');sbDeleteRow('repairs',id);renderRepairs();}
 function saveRepair(){
   const contentEl=document.getElementById('rp_content'); clearFieldError(contentEl);
   if(!contentEl.value.trim()){showFieldError(contentEl,'修繕内容を入力してください');contentEl.focus();return;}
   const content=contentEl.value.trim();
   const obj={
-    id:editRepairId||Date.now(),content,
-    propertyId:parseInt(document.getElementById('rp_property').value)||0,
+    id:editRepairId||crypto.randomUUID(),content,
+    propertyId:document.getElementById('rp_property').value||'',
     room:document.getElementById('rp_room').value,
     priority:document.getElementById('rp_priority').value,
     date:document.getElementById('rp_date').value,
@@ -1268,7 +1304,9 @@ function saveRepair(){
     memo:document.getElementById('rp_memo').value,
   };
   if(editRepairId) repairs=repairs.map(r=>r.id===editRepairId?obj:r); else repairs.unshift(obj);
-  save('repairs');closeModal('repairModal');renderRepairs();showToast('修繕記録を保存しました ✓');
+  save('repairs');
+  sbSaveRow('repairs', {id:obj.id, property_id:obj.propertyId, content:obj.content, room:obj.room, priority:obj.priority, date:obj.date, cost:obj.cost, vendor:obj.vendor, status:obj.status, done:obj.done, memo:obj.memo});
+  closeModal('repairModal');renderRepairs();showToast('修繕記録を保存しました ✓');
 }
 
 // ===== 月次収支レポート印刷 =====
@@ -1488,12 +1526,64 @@ function checkStorageWarning() {
   } catch(e){}
 }
 
-// 初期化
-checkStorageWarning();
-renderPlannedRepairs();
-showChartOfflineMsg('revenueChart');
-initRentMonthSelect();
-renderDashboard();
+// ─────────────────────────────────────────────
+// 初期化（Supabase → localStorage フォールバック）
+// ─────────────────────────────────────────────
+async function initApp() {
+  if (typeof sbInit === 'function') {
+    await sbInit();
+    sbRenderAuthBar('sb-auth-bar');
+    sbOnAuthChange(() => sbRenderAuthBar('sb-auth-bar'));
+
+    const user = sbCurrentUser();
+    if (sbIsConfigured() && user) {
+      _usingCloud = true;
+      showToast('☁ クラウドからデータを読み込み中…');
+      try {
+        const [_props, _tens, _rnts, _reps, _prs] = await Promise.all([
+          sbLoad('properties'),
+          sbLoad('tenants'),
+          sbLoad('rents'),
+          sbLoad('repairs'),
+          sbLoad('planned_repairs'),
+        ]);
+        properties     = _props.map(r => ({id:r.id, name:r.name, addr:r.addr, type:r.type, units:r.units, rate:r.rate, start:r.start, memo:r.memo}));
+        tenants        = _tens.map(r => ({id:r.id, name:r.name, phone:r.phone, email:r.email, propertyId:r.property_id, room:r.room, rent:r.rent, deposit:r.deposit, start:r.start, end:r.end, status:r.status, memo:r.memo}));
+        rents          = _rnts.map(r => ({id:r.id, tenantId:r.tenant_id, month:r.month, charge:r.charge, paid:r.paid, date:r.date, status:r.status, memo:r.memo}));
+        repairs        = _reps.map(r => ({id:r.id, propertyId:r.property_id, content:r.content, room:r.room, priority:r.priority, date:r.date, cost:r.cost, vendor:r.vendor, status:r.status, done:r.done, memo:r.memo}));
+        plannedRepairs = _prs.map(r => ({id:r.id, name:r.name, year:r.year, cost:r.cost}));
+        showToast('☁ クラウド同期完了 ✓');
+      } catch (e) {
+        console.error('クラウド読み込みエラー:', e);
+        _usingCloud = false;
+        _loadFromLocalStorage();
+      }
+    } else {
+      _loadFromLocalStorage();
+      if (sbIsConfigured() && !user) {
+        sbShowAuthModal({ required: false, onLogin: () => location.reload() });
+      }
+    }
+  } else {
+    _loadFromLocalStorage();
+  }
+
+  checkStorageWarning();
+  renderPlannedRepairs();
+  showChartOfflineMsg('revenueChart');
+  initRentMonthSelect();
+  renderDashboard();
+}
+
+function _loadFromLocalStorage() {
+  properties     = JSON.parse(localStorage.getItem('saas_properties')       || '[]');
+  tenants        = JSON.parse(localStorage.getItem('saas_tenants')          || '[]');
+  rents          = JSON.parse(localStorage.getItem('saas_rents')            || '[]');
+  repairs        = JSON.parse(localStorage.getItem('saas_repairs')          || '[]');
+  plannedRepairs = JSON.parse(localStorage.getItem('saas_planned_repairs')  || '[]');
+}
+
+initApp();
 </script>
 </body>
 </html>

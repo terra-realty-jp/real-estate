@@ -472,6 +472,28 @@
       <!-- 売却コスト試算 -->
       <div id="sell-cost-panel" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 国土交通省 実取引データ比較 -->
+      <div id="mlit-panel" style="display:none;background:var(--dark3);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:20px;margin-top:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span style="font-size:15px">🏛</span>
+          <span style="font-size:13px;font-weight:700;color:#4ade80">国土交通省 実取引データで検証</span>
+          <span style="font-size:10px;padding:2px 8px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);border-radius:100px;color:#4ade80;font-weight:700;margin-left:4px">実データ</span>
+        </div>
+        <div id="mlit-loading" style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px">
+          <span style="display:inline-block;animation:spin 1s linear infinite;margin-right:6px">⟳</span>国土交通省データベースに接続中…
+        </div>
+        <div id="mlit-content" style="display:none">
+          <div id="mlit-summary" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px"></div>
+          <div id="mlit-comparison" style="background:rgba(255,255,255,0.03);border-radius:8px;padding:14px;margin-bottom:12px"></div>
+          <p style="font-size:11px;color:var(--text-muted);line-height:1.6">
+            ※ データ出所：国土交通省「不動産取引価格情報」。直近4四半期の実際の売買取引から集計。
+            同一物件の査定値ではなく、同エリア・同種別での実取引の統計です。
+          </p>
+        </div>
+        <div id="mlit-error" style="display:none;text-align:center;padding:12px;color:var(--text-muted);font-size:12px"></div>
+      </div>
+      <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+
       <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:24px;margin-top:24px;text-align:left">
         <div style="font-size:14px;font-weight:700;color:#93c5fd;margin-bottom:16px">📌 この結果をどう使う？</div>
         <div style="display:grid;gap:12px;">
@@ -1083,6 +1105,150 @@ function calcAndShowResult() {
 
   setStep(4);
   renderLeads();
+
+  // 国土交通省 実取引データ取得
+  fetchMLITData(pref, propType, areaSqm, price);
+}
+
+// ===== 国土交通省 不動産取引価格データ API =====
+const MLIT_CITY = {
+  tokyo_central: '13101', tokyo_yamate: '13104', tokyo_23: '13116',
+  tokyo_city: '13201', kanagawa: '14104', kanagawa_other: '14208',
+  saitama: '11105', chiba: '12101',
+  osaka_central: '27102', osaka_other: '27202',
+  kyoto: '26101', hyogo: '28101', hyogo_other: '28201',
+  aichi: '23101', aichi_other: '23201',
+  fukuoka: '40131', fukuoka_other: '40202',
+  sendai: '04101', sapporo: '01101',
+  hiroshima: '34101', shizuoka: '22100',
+};
+const MLIT_TYPE = {
+  mansion: '中古マンション等',
+  kodate: '宅地(土地と建物)',
+  tochi: '土地',
+  mansion_rental: '中古マンション等',
+  apartment: '宅地(土地と建物)',
+};
+
+async function fetchMLITData(pref, propType, areaSqm, estimatedPrice) {
+  const panel = document.getElementById('mlit-panel');
+  const loadEl = document.getElementById('mlit-loading');
+  const contentEl = document.getElementById('mlit-content');
+  const errorEl = document.getElementById('mlit-error');
+  if (!panel) return;
+
+  const cityCode = MLIT_CITY[pref];
+  if (!cityCode) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'block';
+  loadEl.style.display = 'block';
+  contentEl.style.display = 'none';
+  errorEl.style.display = 'none';
+
+  const cacheKey = `mlit_${cityCode}_${propType}`;
+  const cached = sessionStorage.getItem(cacheKey);
+  let records;
+
+  try {
+    if (cached) {
+      records = JSON.parse(cached);
+    } else {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(
+        `https://www.land.mlit.go.jp/webland/api/TradeListSearch?from=20243&to=20244&city=${cityCode}`,
+        { signal: controller.signal }
+      );
+      clearTimeout(timer);
+      if (!res.ok) throw new Error('API error ' + res.status);
+      const json = await res.json();
+      records = json.data || [];
+      if (records.length > 0) sessionStorage.setItem(cacheKey, JSON.stringify(records));
+    }
+
+    const mlitType = MLIT_TYPE[propType];
+    const filtered = records.filter(r => {
+      if (mlitType && !r.Type?.includes(mlitType.split('(')[0])) return false;
+      const area = parseFloat(r.Area);
+      if (!area || area <= 0) return false;
+      const price = parseInt(r.TradePrice);
+      if (!price || price <= 0) return false;
+      return true;
+    });
+
+    if (filtered.length < 3) {
+      loadEl.style.display = 'none';
+      errorEl.style.display = 'block';
+      errorEl.textContent = `このエリア・物件種別の直近取引データが少ないため表示できません（${filtered.length}件）`;
+      return;
+    }
+
+    const prices = filtered.map(r => parseInt(r.TradePrice) / parseFloat(r.Area));
+    prices.sort((a, b) => a - b);
+    const q1 = prices[Math.floor(prices.length * 0.25)];
+    const median = prices[Math.floor(prices.length * 0.5)];
+    const q3 = prices[Math.floor(prices.length * 0.75)];
+    const avgUnit = prices.reduce((s, v) => s + v, 0) / prices.length;
+    const realEstPrice = Math.round(avgUnit * areaSqm / 10000) * 10000;
+    const diff = Math.round((estimatedPrice - realEstPrice) / realEstPrice * 100);
+    const diffSign = diff >= 0 ? '+' : '';
+    const diffColor = Math.abs(diff) <= 15 ? '#4ade80' : Math.abs(diff) <= 30 ? '#c9a84c' : '#f87171';
+
+    const fmtV = v => v >= 100000000 ? '約' + Math.round(v / 10000000) / 10 + '億円' : '約' + Math.round(v / 10000).toLocaleString() + '万円';
+    const fmtUnit = v => Math.round(v / 10000).toLocaleString() + '万円/㎡';
+
+    document.getElementById('mlit-summary').innerHTML = `
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">実取引 中央値単価</div>
+        <div style="font-size:16px;font-weight:700;color:#fff">${fmtUnit(median)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${filtered.length}件の実取引から</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">実取引ベース推定値</div>
+        <div style="font-size:16px;font-weight:700;color:#4ade80">${fmtV(realEstPrice)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">同面積換算</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">AI査定との乖離</div>
+        <div style="font-size:16px;font-weight:700;color:${diffColor}">${diffSign}${diff}%</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${Math.abs(diff) <= 15 ? '概ね一致' : Math.abs(diff) <= 30 ? 'やや差あり' : '要確認'}</div>
+      </div>
+    `;
+
+    const maxBar = Math.max(q1, median, q3, avgUnit);
+    document.getElementById('mlit-comparison').innerHTML = `
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">実取引の価格分布（同エリア・同種別）</div>
+      ${[
+        { label: '下位25%', val: q1, color: 'rgba(255,255,255,0.15)' },
+        { label: '中央値（50%）', val: median, color: '#4ade80' },
+        { label: '上位25%', val: q3, color: 'rgba(201,168,76,0.7)' },
+        { label: '平均', val: avgUnit, color: 'rgba(59,130,246,0.7)' },
+      ].map(({ label, val, color }) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="width:90px;font-size:11px;color:var(--text-muted);flex-shrink:0">${label}</div>
+          <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:3px;height:14px;overflow:hidden">
+            <div style="width:${Math.round(val/maxBar*100)}%;height:100%;background:${color};border-radius:3px"></div>
+          </div>
+          <div style="width:90px;font-size:11px;text-align:right;color:#fff;font-weight:600">${fmtUnit(val)}</div>
+        </div>
+      `).join('')}
+    `;
+
+    loadEl.style.display = 'none';
+    contentEl.style.display = 'block';
+
+  } catch (e) {
+    loadEl.style.display = 'none';
+    errorEl.style.display = 'block';
+    if (e.name === 'AbortError') {
+      errorEl.textContent = '国土交通省データベースへの接続がタイムアウトしました。しばらくしてから再試行してください。';
+    } else {
+      errorEl.textContent = '実取引データの取得に失敗しました（' + (e.message || 'ネットワークエラー') + '）';
+    }
+  }
 }
 
 // ===== タブ切替 =====
