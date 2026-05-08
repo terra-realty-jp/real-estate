@@ -968,6 +968,33 @@ function renderYTDSummary() {
       </div>
     </div>
     <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">年間想定収入 ${fmt(ytdExpected)} に対して ${fmt(ytdCollected)} 回収（${now.getMonth()+1}月末時点）</div>
+    <div style="margin-top:16px">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">月別家賃回収率</div>
+      <div style="display:flex;gap:3px;align-items:flex-end;height:56px">
+        ${months.map(ym=>{
+          const isFuture = ym > `${year}-${String(now.getMonth()+1).padStart(2,'0')}`;
+          const isThisMonth = ym === `${year}-${String(now.getMonth()+1).padStart(2,'0')}`;
+          const mExpected = monthlyRentTotal;
+          const mCollected = rents.filter(r=>r.month===ym&&r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+          const mRate = !isFuture && mExpected > 0 ? Math.round(mCollected/mExpected*100) : null;
+          const barH = mRate !== null ? Math.max(mRate, 4) : 4;
+          const barColor = mRate===null ? 'rgba(255,255,255,0.06)' : isThisMonth ? 'var(--gold)' : mRate>=90 ? 'var(--green)' : mRate>=70 ? 'var(--orange)' : 'var(--red)';
+          const mLabel = parseInt(ym.split('-')[1])+'月';
+          return `<div style="flex:1;text-align:center">
+            <div style="height:44px;display:flex;align-items:flex-end;justify-content:center">
+              <div title="${mLabel}: ${mRate!==null?mRate+'%':'未来'}" style="width:80%;border-radius:2px 2px 0 0;height:${isFuture?4:barH}%;background:${barColor};transition:height 0.4s;min-height:3px"></div>
+            </div>
+            <div style="font-size:8px;color:${isThisMonth?'var(--gold)':'var(--text-muted)'};margin-top:3px;font-weight:${isThisMonth?'700':'400'}">${mLabel}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;font-size:10px">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:var(--green);margin-right:3px"></span>90%以上</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:var(--orange);margin-right:3px"></span>70〜89%</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:var(--red);margin-right:3px"></span>70%未満</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:var(--gold);margin-right:3px"></span>当月</span>
+      </div>
+    </div>
   </div>`;
 }
 
