@@ -274,9 +274,10 @@
         <option value="expiring">更新まもなく</option>
       </select>
     </div>
-    <div style="display:flex;gap:8px;flex-shrink:0">
+    <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">
       <button class="btn btn-gold" onclick="openTenantModal()">＋ テナント登録</button>
       <button class="btn btn-outline btn-sm" onclick="exportData('tenants')">CSVエクスポート</button>
+      <button class="btn btn-outline btn-sm" onclick="printTenantList()" title="テナント一覧を印刷">🖨 印刷</button>
     </div>
   </div>
   <div id="tenant-filter-summary" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
@@ -2041,6 +2042,74 @@ function saveRepair(){
   save('repairs');
   sbSaveRow('repairs', {id:obj.id, property_id:obj.propertyId, content:obj.content, room:obj.room, priority:obj.priority, date:obj.date, cost:obj.cost, vendor:obj.vendor, status:obj.status, done:obj.done, memo:obj.memo});
   closeModal('repairModal');renderRepairs();showToast('修繕記録を保存しました ✓');
+}
+
+// ===== テナント一覧印刷 =====
+function printTenantList() {
+  var now = new Date();
+  var thisMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  var filterVal = (document.getElementById('tenant-filter')||{}).value || 'all';
+  var searchVal = ((document.getElementById('tenant-search')||{}).value||'').trim().toLowerCase();
+
+  var filtered = tenants.filter(function(t) {
+    if(filterVal === 'active' && t.status !== 'active') return false;
+    if(filterVal === 'unpaid') {
+      var r = rents.find(function(r){ return r.tenantId===t.id && r.month===thisMonth; });
+      if(r && r.status === 'paid') return false;
+      if(t.status !== 'active') return false;
+    }
+    if(filterVal === 'expiring') {
+      if(!t.end) return false;
+      var days = Math.round((new Date(t.end)-now)/(1000*60*60*24));
+      if(days > 90) return false;
+    }
+    if(searchVal) {
+      var name = (t.name||'').toLowerCase();
+      var room = (t.room||'').toLowerCase();
+      if(!name.includes(searchVal) && !room.includes(searchVal)) return false;
+    }
+    return true;
+  });
+
+  var rows = filtered.map(function(t) {
+    var prop = properties.find(function(p){ return p.id===t.propertyId; }) || {};
+    var r = rents.find(function(r){ return r.tenantId===t.id && r.month===thisMonth; });
+    var rentStatus = !r ? '未登録' : r.status==='paid' ? '入金済' : r.status==='partial' ? '一部入金' : '未入金';
+    var rentColor = !r ? '#888' : r.status==='paid' ? 'green' : r.status==='partial' ? 'orange' : 'red';
+    var daysToEnd = t.end ? Math.round((new Date(t.end)-now)/(1000*60*60*24)) : null;
+    var endAlert = daysToEnd !== null && daysToEnd <= 90 ? ' ⚠' : '';
+    return '<tr>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid #ddd">'+(prop.name||'—')+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid #ddd">'+(t.room||'—')+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid #ddd">'+(t.name||'—')+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid #ddd;text-align:right">'+(t.rent?(t.rent/10000).toFixed(1)+'万':'—')+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid #ddd">'+(t.end||'—')+endAlert+'</td>'
+      +'<td style="padding:6px 8px;border-bottom:1px solid #ddd;color:'+rentColor+';font-weight:700">'+rentStatus+'</td>'
+    +'</tr>';
+  }).join('');
+
+  var filterLabel = {'all':'全員','active':'入居中','unpaid':'未入金','expiring':'更新まもなく'}[filterVal]||'全員';
+  var html = '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">'
+    +'<title>テナント一覧</title>'
+    +'<style>body{font-family:"Noto Sans JP",sans-serif;font-size:13px;color:#1a1a1a;margin:20px}'
+    +'h2{font-size:16px;margin-bottom:4px}p.meta{font-size:11px;color:#666;margin-bottom:16px}'
+    +'table{width:100%;border-collapse:collapse}th{background:#f3f4f6;padding:7px 8px;text-align:left;border-bottom:2px solid #d1d5db;font-size:12px}'
+    +'tr:nth-child(even){background:#f9fafb}@media print{button{display:none}}'
+    +'</style></head><body>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+    +'<h2>テナント一覧（'+filterLabel+'）</h2>'
+    +'<button onclick="window.print()" style="padding:6px 14px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px">🖨 印刷する</button>'
+    +'</div>'
+    +'<p class="meta">出力日時: '+now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日 &nbsp;|&nbsp; 件数: '+filtered.length+'件</p>'
+    +'<table><thead><tr>'
+    +'<th>物件名</th><th>部屋</th><th>テナント名</th><th style="text-align:right">月額家賃</th><th>契約満了日</th><th>今月入金</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<p style="font-size:10px;color:#888;margin-top:14px">⚠ = 契約更新まで90日以内</p>'
+    +'<script>window.onload=function(){window.print();}<\/script>'
+    +'</body></html>';
+
+  var w = window.open('', '_blank', 'width=900,height=700');
+  if(w){ w.document.write(html); w.document.close(); }
 }
 
 // ===== 月次収支レポート印刷 =====
