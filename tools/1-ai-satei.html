@@ -615,6 +615,15 @@
         <p style="font-size:11px;color:var(--text-muted);margin-top:10px">※ 準備できていなくても相談は可能です。「まず聞いてみたい」でも大歓迎です。</p>
       </div>
 
+      <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;margin-bottom:20px">
+        <h4 style="font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          &#x1F4C5; 売却時期カレンダー
+          <span style="font-size:11px;font-weight:400;color:var(--text-muted)">売り出し月で成約率・価格が変わります</span>
+        </h4>
+        <div id="season-calendar"></div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:10px">※ 一般的な傾向です。成約希望月の2〜3ヶ月前に売り出すのがおすすめです。</p>
+      </div>
+
       <div class="cta-box">
         <p id="cta-text">この査定結果を持って、TERRA REALTYに無料でご相談いただけます。<br>「この結果について聞きたい」という気軽なご連絡から大歓迎です。</p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">
@@ -875,6 +884,46 @@ function updateChecklistProgress() {
   }
   if(barEl) barEl.style.width = Math.round(done/total*100) + '%';
   if(msgEl) msgEl.style.display = done === total ? 'block' : 'none';
+}
+
+function renderSeasonCalendar() {
+  var el = document.getElementById('season-calendar');
+  if (!el) return;
+  var months = [
+    {m:'1月', lvl:1, note:'冬期・需要低'},
+    {m:'2月', lvl:2, note:'春需要始まり'},
+    {m:'3月', lvl:3, note:'最繁忙期'},
+    {m:'4月', lvl:3, note:'春需要ピーク'},
+    {m:'5月', lvl:2, note:'GW後落ち着き'},
+    {m:'6月', lvl:2, note:'梅雨前'},
+    {m:'7月', lvl:1, note:'夏季・需要低'},
+    {m:'8月', lvl:1, note:'お盆休み'},
+    {m:'9月', lvl:2, note:'秋の活動再開'},
+    {m:'10月', lvl:3, note:'秋の繁忙期'},
+    {m:'11月', lvl:2, note:'やや落ち着き'},
+    {m:'12月', lvl:1, note:'年末・需要低'}
+  ];
+  var now = new Date().getMonth();
+  var bg = ['','rgba(239,68,68,0.12)','rgba(234,179,8,0.12)','rgba(34,197,94,0.12)'];
+  var bdr = ['','rgba(239,68,68,0.35)','rgba(234,179,8,0.35)','rgba(34,197,94,0.35)'];
+  var lbl = ['','低','中','高'];
+  var lc = ['','var(--red)','var(--orange)','var(--green)'];
+  var html = '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-bottom:10px">';
+  months.forEach(function(m, i) {
+    var ring = i === now ? 'box-shadow:0 0 0 2px var(--gold);' : '';
+    html += '<div style="background:' + bg[m.lvl] + ';border:1px solid ' + bdr[m.lvl] + ';border-radius:7px;padding:7px 3px;text-align:center;' + ring + '">';
+    html += '<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px">' + m.m + '</div>';
+    html += '<div style="font-size:10px;font-weight:800;color:' + lc[m.lvl] + '">' + lbl[m.lvl] + '</div>';
+    if (i === now) html += '<div style="font-size:9px;color:var(--gold);font-weight:700;margin-top:1px">▼今</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div style="display:flex;gap:14px;flex-wrap:wrap">';
+  html += '<span style="font-size:11px;color:var(--green);font-weight:700">● 高：3・4・10月</span>';
+  html += '<span style="font-size:11px;color:var(--orange);font-weight:700">● 中：2・5・6・9・11月</span>';
+  html += '<span style="font-size:11px;color:var(--red);font-weight:700">● 低：1・7・8・12月</span>';
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 function renderPropertyGrade(ageFac, stationFac, dirFac, floorFac, liquidity, pref) {
@@ -1390,6 +1439,9 @@ function calcAndShowResult() {
 
   // 物件グレード評価カード
   renderPropertyGrade(ageFac, stationFac, dirFac, floorFac, liquidity, pref);
+
+  // 売却時期カレンダー
+  renderSeasonCalendar();
 
   // 算出根拠
   const factors = [
