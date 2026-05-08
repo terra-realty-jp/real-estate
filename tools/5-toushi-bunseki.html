@@ -15,6 +15,8 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://shinji-japaaaan.github.io/real-estate/ogp.svg">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="window._noSupabase=true"></script>
+  <script src="../supabase-client.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" onerror="window._noChart=true"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -136,6 +138,7 @@
   </style>
 </head>
 <body>
+<div id="sb-auth-bar" style="background:#0f1729;border-bottom:1px solid rgba(201,168,76,0.12);padding:8px 28px;display:flex;align-items:center;gap:8px;min-height:38px;font-family:'Noto Sans JP',sans-serif"></div>
 
 <nav class="topnav">
   <a href="../index.html" class="back-link">
@@ -516,8 +519,9 @@ function analyze() {
   renderExit(inp, r);
 
   // 履歴保存
+  const _hid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
   history.unshift({
-    id: Date.now(), date: new Date().toLocaleDateString('ja-JP'),
+    id: _hid, date: new Date().toLocaleDateString('ja-JP'),
     name: inp.name, price: inp.price, rent: inp.rent,
     grossYield: r.grossYield, netYield: r.netYield,
     annualCF: r.annualCF, ccr: r.ccr, verdict: getVerdict(r).type,
@@ -525,6 +529,9 @@ function analyze() {
   });
   if(history.length > 50) history = history.slice(0,50);
   sendToGAS({ tool:'tool5_toushi', 日付:new Date().toLocaleDateString('ja-JP'), 物件名:inp.name, 物件価格_万円:inp.price, 表面利回り_pct:+r.grossYield.toFixed(2), 借入額_万円:inp.loan, NOI_万円:Math.round(r.noi/10000), CCR_pct:+r.ccr.toFixed(2), 投資判定:getVerdict(r).text });
+  if (typeof sbUpsert === 'function' && typeof sbCurrentUser === 'function' && sbCurrentUser()) {
+    sbUpsert('inv_history', { id: _hid, name: inp.name, data: { inp: inp, grossYield: r.grossYield, netYield: r.netYield, annualCF: r.annualCF, ccr: r.ccr, verdict: getVerdict(r).type } }).catch(() => {});
+  }
   try {
     localStorage.setItem('inv_history', JSON.stringify(history));
     showInvestToast('分析結果を履歴に保存しました ✓');
@@ -1363,6 +1370,15 @@ checkStorageWarning();
 showChartOfflineMsg('cfChart');
 showChartOfflineMsg('cumChart');
 renderHistory();
+
+// Supabase 認証バー
+(async () => {
+  if (typeof sbInit === 'function') {
+    await sbInit();
+    sbRenderAuthBar('sb-auth-bar');
+    sbOnAuthChange(() => sbRenderAuthBar('sb-auth-bar'));
+  }
+})();
 </script>
 </body>
 </html>

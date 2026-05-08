@@ -15,6 +15,8 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://shinji-japaaaan.github.io/real-estate/ogp.svg">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="window._noSupabase=true"></script>
+  <script src="../supabase-client.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -126,6 +128,7 @@
   </style>
 </head>
 <body>
+<div id="sb-auth-bar" style="background:#0f1729;border-bottom:1px solid rgba(201,168,76,0.12);padding:8px 28px;display:flex;align-items:center;gap:8px;min-height:38px;font-family:'Noto Sans JP',sans-serif"></div>
 
 <nav class="topnav">
   <a href="../index.html" class="back-link">
@@ -965,6 +968,14 @@ checkStorageWarning();
 renderSellers();
 renderBuyers();
 calcFee();
+
+(async () => {
+  if (typeof sbInit === 'function') {
+    await sbInit();
+    sbRenderAuthBar('sb-auth-bar');
+    sbOnAuthChange(() => sbRenderAuthBar('sb-auth-bar'));
+  }
+})();
 </script>
 </body>
 </html>
