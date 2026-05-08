@@ -238,7 +238,7 @@ function _sbEnsureModal() {
   overlay.id = '_sb_overlay';
   overlay.innerHTML = `
     <div id="_sb_box">
-      <div id="_sb_logo">🏠 石澤不動産</div>
+      <div id="_sb_logo">🏠 TERRA REALTY</div>
       <h2 id="_sb_title">ログイン</h2>
       <p id="_sb_desc">クラウドに保存してどの端末からでもデータにアクセスできます。</p>
       <div id="_sb_benefits">
