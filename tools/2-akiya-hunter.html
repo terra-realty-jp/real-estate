@@ -219,6 +219,16 @@
     </div>
   </div>
 
+  <!-- 全項目チェック完了バナー -->
+  <div id="all-checked-banner" style="display:none;background:rgba(34,197,94,0.08);border:2px solid rgba(34,197,94,0.35);border-radius:14px;padding:20px 24px;margin-bottom:16px;text-align:center">
+    <div style="font-size:28px;margin-bottom:8px">🎉</div>
+    <div style="font-size:15px;font-weight:700;color:#4ade80;margin-bottom:6px">全12項目の確認が完了しました！</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">診断結果と放置リスクの試算ができました。<br>次はTERRA REALTYに無料でご相談ください。専門家があなたの状況に合った選択肢をご提案します。</div>
+    <a href="mailto:terra.realty.iam@gmail.com?subject=空き家活用について相談したい（診断完了）&body=12項目の診断が完了しました。空き家の活用方法についてご相談させてください。" style="display:inline-flex;align-items:center;gap:8px;background:#4ade80;color:#000;font-weight:700;padding:11px 24px;border-radius:8px;text-decoration:none;font-size:14px">
+      TERRA REALTYに無料で相談する →
+    </a>
+  </div>
+
   <!-- 固定資産税の精密計算入力 -->
   <div id="taxInputCard" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px;margin-bottom:16px">
     <div style="font-size:13px;font-weight:700;margin-bottom:10px">🏛 より正確な固定資産税を試算する（任意）</div>
@@ -551,6 +561,8 @@ function updateScore() {
   document.getElementById('scoreBar').style.width = capped + '%';
   const badge = document.getElementById('check-count-badge');
   if(badge) { const n=checked.size, t=CHECKS.length; badge.textContent=`${n}/${t}チェック`; badge.style.background=n===t?'rgba(34,197,94,0.15)':n>0?'rgba(201,168,76,0.15)':'rgba(255,255,255,0.06)'; badge.style.color=n===t?'var(--green)':n>0?'var(--gold)':'var(--text-muted)'; badge.style.borderColor=n===t?'rgba(34,197,94,0.3)':n>0?'rgba(201,168,76,0.3)':'rgba(255,255,255,0.15)'; }
+  const allBanner=document.getElementById('all-checked-banner');
+  if(allBanner) allBanner.style.display=checked.size===CHECKS.length?'block':'none';
 
   let rank, comment;
   if(capped >= 70) { rank='S'; comment='緊急度が高い状態です。早急に不動産会社や専門家に相談することをお勧めします。'; }
