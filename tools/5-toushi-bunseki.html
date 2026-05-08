@@ -174,12 +174,16 @@
   <p class="page-desc">投資物件の情報を入力してください。入力後すぐに表面・実質利回り、ローン後CF、10年シミュレーションを算出します。</p>
 
   <!-- モード切り替え -->
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap">
     <div style="display:flex;background:var(--dark3);border-radius:9px;padding:3px;border:1px solid rgba(255,255,255,0.08)">
       <button id="mode-btn-simple" class="btn btn-sm" style="border-radius:7px;background:var(--gold);color:#000;border:none;padding:7px 18px" onclick="setMode('simple')">⚡ かんたん入力</button>
       <button id="mode-btn-detail" class="btn btn-sm" style="border-radius:7px;background:transparent;color:var(--text-muted);border:none;padding:7px 18px" onclick="setMode('detail')">🔧 詳細入力</button>
     </div>
     <span id="mode-hint" style="font-size:12px;color:var(--text-muted)">初めての方は「かんたん入力」がおすすめです</span>
+    <button id="reload-last-btn" onclick="reloadLastAnalysis()" style="display:none;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 14px;color:var(--text-muted);font-size:12px;font-family:inherit;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='var(--text-muted)'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+      <span id="reload-last-label">前回の分析を再読み込む</span>
+    </button>
   </div>
 
   <!-- かんたんモードカード -->
@@ -1315,6 +1319,12 @@ function loadHistory(id) {
   switchTab('input');
 }
 
+function reloadLastAnalysis() {
+  if(!history.length) return;
+  loadHistory(history[0].id);
+  setMode('detail');
+}
+
 function clearInputs() {
   ['i_name','i_price','i_rent','i_mgmt','i_tax','i_ins','i_loan'].forEach(id=>{ document.getElementById(id).value=''; });
   document.getElementById('i_mrate').value='5';
@@ -1829,6 +1839,16 @@ checkStorageWarning();
 showChartOfflineMsg('cfChart');
 showChartOfflineMsg('cumChart');
 renderHistory();
+// 「前回の分析を再読み込む」ボタン表示
+(function(){
+  const btn = document.getElementById('reload-last-btn');
+  const lbl = document.getElementById('reload-last-label');
+  if(btn && history.length > 0) {
+    const last = history[0];
+    if(lbl && last.name) lbl.textContent = last.name + ' を再読み込む';
+    btn.style.display = 'inline-flex';
+  }
+})();
 
 // Supabase 認証バー + 履歴クラウドロード
 (async () => {
