@@ -572,17 +572,45 @@
         </div>
       </div>
 
-      <!-- 相談前チェックリスト -->
+      <!-- 相談前チェックリスト（インタラクティブ版） -->
       <div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px;margin-top:20px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
-          <span>📝</span><span>相談前に確認しておくと話がスムーズになります</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px">
+            <span>📝</span><span>相談前チェックリスト</span>
+          </div>
+          <div id="checklist-progress" style="font-size:12px;font-weight:700;color:var(--text-muted)">0 / 6 準備済み</div>
         </div>
-        <div style="display:grid;gap:8px;font-size:12px;color:var(--text-muted)">
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);flex-shrink:0">✓</span><span>物件の登記簿謄本（法務局で取得可能）の準備</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);flex-shrink:0">✓</span><span>ローン残高の確認（銀行の残高証明書）</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);flex-shrink:0">✓</span><span>売却の希望時期のイメージ（すぐ・半年以内・1年後など）</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);flex-shrink:0">✓</span><span>売却の理由・背景（住み替え・相続・投資整理など）</span></div>
-          <div style="display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);flex-shrink:0">✓</span><span>希望売却価格の下限（これ以下では売らない最低ライン）</span></div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:6px;height:6px;margin-bottom:14px;overflow:hidden">
+          <div id="checklist-progress-bar" style="height:100%;width:0%;background:var(--gold);border-radius:6px;transition:width 0.4s"></div>
+        </div>
+        <div style="display:grid;gap:6px" id="consult-checklist">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background=''">
+            <input type="checkbox" class="consult-check" onchange="updateChecklistProgress()" style="accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;margin-top:1px">
+            <span style="font-size:12px;color:var(--text-muted);line-height:1.6"><strong style="color:var(--text)">登記簿謄本</strong>の準備（法務局または法務局ネットで取得可能）</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background=''">
+            <input type="checkbox" class="consult-check" onchange="updateChecklistProgress()" style="accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;margin-top:1px">
+            <span style="font-size:12px;color:var(--text-muted);line-height:1.6"><strong style="color:var(--text)">ローン残高</strong>の確認（銀行の残高証明書・直近返済明細）</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background=''">
+            <input type="checkbox" class="consult-check" onchange="updateChecklistProgress()" style="accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;margin-top:1px">
+            <span style="font-size:12px;color:var(--text-muted);line-height:1.6"><strong style="color:var(--text)">売却希望時期</strong>のイメージ（3ヶ月以内／半年以内／1年以内など）</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background=''">
+            <input type="checkbox" class="consult-check" onchange="updateChecklistProgress()" style="accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;margin-top:1px">
+            <span style="font-size:12px;color:var(--text-muted);line-height:1.6"><strong style="color:var(--text)">売却の理由・背景</strong>（住み替え・相続・投資整理・資金確保など）</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background=''">
+            <input type="checkbox" class="consult-check" onchange="updateChecklistProgress()" style="accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;margin-top:1px">
+            <span style="font-size:12px;color:var(--text-muted);line-height:1.6"><strong style="color:var(--text)">最低売却希望価格</strong>（これ以下では売らないボトムライン）</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background=''">
+            <input type="checkbox" class="consult-check" onchange="updateChecklistProgress()" style="accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;margin-top:1px">
+            <span style="font-size:12px;color:var(--text-muted);line-height:1.6"><strong style="color:var(--text)">住宅ローン控除・相続・税金</strong>に関して不明点があれば事前メモ</span>
+          </label>
+        </div>
+        <div id="checklist-complete-msg" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:8px;font-size:12px;color:var(--gold);font-weight:700;text-align:center">
+          ✅ 準備完了！TERRA REALTYへの相談をスムーズに進められます
         </div>
         <p style="font-size:11px;color:var(--text-muted);margin-top:10px">※ 準備できていなくても相談は可能です。「まず聞いてみたい」でも大歓迎です。</p>
       </div>
@@ -831,6 +859,22 @@ function updateAreaHint() {
   } else {
     banner.style.display = 'none';
   }
+}
+
+function updateChecklistProgress() {
+  var checks = document.querySelectorAll('.consult-check');
+  var total = checks.length;
+  var done = 0;
+  checks.forEach(function(c) { if(c.checked) done++; });
+  var progEl = document.getElementById('checklist-progress');
+  var barEl = document.getElementById('checklist-progress-bar');
+  var msgEl = document.getElementById('checklist-complete-msg');
+  if(progEl) {
+    progEl.textContent = done + ' / ' + total + ' 準備済み';
+    progEl.style.color = done === total ? 'var(--gold)' : done > 0 ? 'var(--green)' : 'var(--text-muted)';
+  }
+  if(barEl) barEl.style.width = Math.round(done/total*100) + '%';
+  if(msgEl) msgEl.style.display = done === total ? 'block' : 'none';
 }
 
 function renderPropertyGrade(ageFac, stationFac, dirFac, floorFac, liquidity, pref) {
