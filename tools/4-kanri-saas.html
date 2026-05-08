@@ -215,6 +215,10 @@
     </div>
     <div id="unpaid-tenant-list"></div>
   </div>
+  <div class="card" id="arrears-rank-card" style="display:none;margin-top:16px">
+    <div class="card-title">📊 直近6ヶ月 滞納履歴ランキング</div>
+    <div id="arrears-rank-content"></div>
+  </div>
   <div class="card" style="margin-top:16px">
     <div class="card-title" style="justify-content:space-between">
       <span>📅 契約更新まもなく（90日以内）</span>
@@ -759,6 +763,54 @@ function renderDashboard() {
       </table>`;
     }
   }
+
+  // 直近6ヶ月 滞納ランキング
+  (function(){
+    const card = document.getElementById('arrears-rank-card');
+    const el = document.getElementById('arrears-rank-content');
+    if (!card || !el) return;
+    const past6 = [];
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      past6.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+    }
+    const stats = activeTenants.map(t => {
+      let bad = 0, totalLoss = 0;
+      past6.forEach(ym => {
+        const r = rents.find(x => x.tenantId===t.id && x.month===ym);
+        if (!r || r.status==='unpaid') { bad++; totalLoss += (t.rent||0); }
+        else if (r.status==='partial') { bad += 0.5; totalLoss += Math.max(0, (t.rent||0) - (r.paid||0)); }
+      });
+      return { t, bad, totalLoss };
+    }).filter(x => x.bad > 0).sort((a,b) => b.bad - a.bad || b.totalLoss - a.totalLoss);
+    if (!stats.length) { card.style.display='none'; return; }
+    card.style.display = 'block';
+    el.innerHTML = stats.map(({t, bad, totalLoss}) => {
+      const p = properties.find(x=>x.id===t.propertyId);
+      const color = bad >= 3 ? 'var(--red)' : bad >= 2 ? 'var(--orange)' : 'var(--gold)';
+      const label = bad >= 3 ? '常習滞納' : bad >= 2 ? '複数月滞納' : '1ヶ月滞納';
+      const pct = Math.round(bad / 6 * 100);
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);flex-wrap:wrap">
+        <div style="flex:1;min-width:120px">
+          <div style="font-size:13px;font-weight:700">${esc(t.name)}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${p?esc(p.name):''}${t.room?' '+t.room+'号室':''}</div>
+        </div>
+        <div style="flex:2;min-width:140px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:3px">
+            <span>滞納月数: <strong style="color:${color}">${bad}ヶ月</strong> / 6ヶ月</span>
+            <span style="color:${color};font-weight:700">${label}</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:${color};border-radius:3px"></div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:13px;font-weight:700;color:var(--red)">−${Math.round(totalLoss/10000*10)/10}万円</div>
+          <div style="font-size:10px;color:var(--text-muted)">累積損失</div>
+        </div>
+      </div>`;
+    }).join('') + `<p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.6">※ 直近6ヶ月の家賃台帳記録をもとに集計。「一部入金」は0.5ヶ月として換算しています。</p>`;
+  })();
 
   // 契約更新まもなくテナント一覧
   const expiringTenants = getExpiringTenants().sort((a,b)=>new Date(a.end)-new Date(b.end));
