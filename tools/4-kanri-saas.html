@@ -435,6 +435,7 @@
     <div style="display:flex;gap:12px;margin-top:8px;font-size:10px">
       <span style="color:#4ade80">■ 入金済</span><span style="color:#facc15">■ 一部入金</span><span style="color:#f87171">■ 未入金</span><span style="color:#374151">■ 未登録</span>
     </div>
+    <div id="tdm-quality-score" style="margin-top:12px"></div>
     <div id="tdm-renewal-btn-wrap" style="margin-top:12px;display:none">
       <button id="tdm-renewal" class="btn btn-outline" style="width:100%;border-color:var(--gold);color:var(--gold)">✉ 契約更新のご案内メールを生成</button>
     </div>
@@ -1538,6 +1539,24 @@ function showTenantDetail(id){
   document.getElementById('tdm-unpaid-count').textContent=unpaidCount+'ヶ月';
   document.getElementById('tdm-bars').innerHTML=bars;
   document.getElementById('tdm-edit').onclick=()=>{closeModal('tenantDetailModal');editTenant(id);};
+  // テナント優良度スコア
+  const payScore = Math.max(0, 40 - unpaidCount * 8);
+  const stayYearsN = t.start ? Math.floor((now - new Date(t.start)) / (365.25*24*3600*1000)) : 0;
+  const stayScore = Math.min(30, stayYearsN * 6);
+  const infoScore = (t.email ? 10 : 0) + (t.phone ? 10 : 0);
+  const statusScore = t.status === 'active' ? 10 : 0;
+  const totalScore = payScore + stayScore + infoScore + statusScore;
+  const grade = totalScore >= 90 ? {l:'S',c:'#c9a84c'} : totalScore >= 70 ? {l:'A',c:'#22c55e'} : totalScore >= 50 ? {l:'B',c:'#3b82f6'} : {l:'C',c:'#f59e0b'};
+  const qEl = document.getElementById('tdm-quality-score');
+  if(qEl) qEl.innerHTML = '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:14px">'
+    + '<div style="text-align:center;flex-shrink:0"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">テナント優良度</div><div style="font-size:28px;font-weight:900;color:'+grade.c+';line-height:1">'+grade.l+'</div><div style="font-size:10px;color:var(--text-muted)">'+totalScore+'点</div></div>'
+    + '<div style="flex:1;display:grid;gap:4px">'
+    + '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-muted)">支払い実績（12ヶ月）</span><span style="color:'+grade.c+'">'+payScore+'/40点</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-muted)">在住年数（'+stayYearsN+'年）</span><span style="color:'+grade.c+'">'+stayScore+'/30点</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-muted)">連絡先情報</span><span style="color:'+grade.c+'">'+infoScore+'/20点</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-muted)">入居ステータス</span><span style="color:'+grade.c+'">'+statusScore+'/10点</span></div>'
+    + '</div>'
+    + '</div>';
   // 契約更新ボタン表示判定（90日以内に終了するアクティブテナント）
   const renewWrap=document.getElementById('tdm-renewal-btn-wrap');
   const renewBtn=document.getElementById('tdm-renewal');
