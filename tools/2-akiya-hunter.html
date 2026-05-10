@@ -269,6 +269,9 @@
   <!-- 修繕費用概算カード -->
   <div id="repair-cost-card" style="display:none;margin-bottom:16px"></div>
 
+  <!-- 建て替えvsリノベ収益比較カード -->
+  <div id="reno-vs-rebuild-card" style="display:none;margin-bottom:16px"></div>
+
   <!-- 放置リスク試算カード -->
   <div class="card" id="riskCalcCard" style="display:none;">
     <div class="card-title"><span class="icon">💴</span>このまま放置すると…（年間コスト試算）</div>
@@ -795,6 +798,8 @@ function updateScore() {
   renderMarketEval(capped, [...checked]);
   // 修繕費用概算カード
   renderRepairCostCard();
+  // 建て替えvsリノベ収益比較カード
+  renderRenoVsRebuildCard();
   // 補助金・支援制度カード
   renderSubsidyCard(capped, [...checked]);
   const demolishCard = document.getElementById('demolish-calc-card');
@@ -948,6 +953,70 @@ function renderRepairCostCard() {
     + '<div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px">&#x1F528; 修繕費用の概算<span style="font-size:10px;font-weight:400;color:var(--text-muted)">（参考値・実費は業者見積もりで確認）</span></div>'
     + '<div style="display:grid;gap:6px;margin-bottom:' + (ageTip ? '10px' : '0') + '">' + rowsHtml + '</div>'
     + (ageTip ? '<div style="margin-top:8px;padding:8px 10px;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:7px;font-size:11px;color:var(--text-muted)">' + ageTip + '</div>' : '')
+    + '</div>';
+}
+
+function renderRenoVsRebuildCard() {
+  var el = document.getElementById('reno-vs-rebuild-card');
+  if (!el) return;
+  var age    = parseInt(document.getElementById('akiya_age')?.value) || null;
+  var struct = document.getElementById('akiya_struct')?.value || '';
+  var sqm    = parseInt(document.getElementById('akiya_sqm')?.value) || 80;
+  if (!age || !struct) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+
+  var sqTsubo = Math.round(sqm / 3.3);
+  var structLabel = struct === 'rc' ? 'RC造' : struct === 'steel' ? '鉄骨造' : '木造';
+  // 費用（万円）
+  var renoCost  = struct === 'rc' ? 60 : struct === 'steel' ? 55 : 50;
+  var rebCost   = struct === 'rc' ? 90 : struct === 'steel' ? 85 : 80;
+  var renoTotal = Math.round(renoCost * sqTsubo);
+  var rebTotal  = Math.round(rebCost  * sqTsubo);
+
+  // 賃料試算（立地デフォルト：坪5,000円/月）
+  var monthlyRentPerTsubo = 5000;
+  var monthlyRent = Math.round(sqTsubo * monthlyRentPerTsubo / 10000) * 10000;
+  // リノベは築年数が古いほど賃料が低め（-1%/年、最大-20%）
+  var renoRentDiscount = Math.min(0.20, (age - 10) * 0.01);
+  var renoRent = Math.round(monthlyRent * (1 - Math.max(0, renoRentDiscount)) / 1000) * 1000;
+  var rebRent  = monthlyRent;
+
+  // 年収・回収年数
+  var renoAnnual = renoRent * 12;
+  var rebAnnual  = rebRent  * 12;
+  var renoBreak  = renoTotal > 0 ? Math.round(renoTotal / (renoAnnual / 10000) * 10) / 10 : 0;
+  var rebBreak   = rebTotal  > 0 ? Math.round(rebTotal  / (rebAnnual  / 10000) * 10) / 10 : 0;
+
+  var recommend = age >= 35 ? 'rebuild' : age >= 20 ? 'case' : 'reno';
+  var recommendHtml = recommend === 'rebuild'
+    ? '<span style="color:var(--gold);font-weight:700">築' + age + '年の場合、建て替えが経済合理性で有利なケースが多いです</span>'
+    : recommend === 'reno'
+    ? '<span style="color:var(--green);font-weight:700">築' + age + '年ならフルリノベが費用対効果◎</span>'
+    : '<span style="color:var(--text-muted)">築' + age + '年は建物状態・立地によって判断が分かれます。専門家の現地診断をお勧めします</span>';
+
+  var mkCol = function(label, cost, rent, annual, breakEven, color, highlight) {
+    return '<div style="flex:1;padding:14px;border-radius:10px;background:' + (highlight?'rgba(201,168,76,0.06)':'rgba(255,255,255,0.02)') + ';border:1px solid ' + (highlight?'rgba(201,168,76,0.25)':'rgba(255,255,255,0.06)') + '">'
+      + '<div style="font-size:12px;font-weight:700;color:' + color + ';margin-bottom:10px;text-align:center">' + label + (highlight?' ⭐':'') + '</div>'
+      + '<div style="display:grid;gap:6px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-muted)">工事費目安</span><span style="color:var(--text);font-weight:700">' + renoTotal.toLocaleString() + '万円</span></div>'.replace(renoTotal, cost)
+      + '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-muted)">想定月額賃料</span><span style="color:var(--green);font-weight:700">' + rent.toLocaleString() + '円/月</span></div>'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-muted)">年間賃料収入</span><span style="color:var(--green);font-weight:700">' + Math.round(annual/10000).toLocaleString() + '万円/年</span></div>'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06)"><span style="color:var(--text-muted)">投資回収年数</span><span style="color:' + color + ';font-weight:800;font-size:14px">' + breakEven + '年</span></div>'
+      + '</div>'
+      + '</div>';
+  };
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px">&#x1F3D7; 建て替え vs フルリノベ 収益比較<span style="font-size:10px;font-weight:400;color:var(--text-muted)">（' + sqTsubo + '坪・' + structLabel + '）</span></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">賃貸に出した場合の収益・回収年数の目安比較です</div>'
+    + '<div style="display:flex;gap:10px;margin-bottom:12px">'
+    + mkCol('フルリノベ', renoTotal, renoRent, renoAnnual, renoBreak, 'var(--blue)', recommend==='reno')
+    + mkCol('建て替え', rebTotal, rebRent, rebAnnual, rebBreak, 'var(--orange)', recommend==='rebuild')
+    + '</div>'
+    + '<div style="padding:8px 10px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:7px;font-size:11px;line-height:1.6">'
+    + '&#x1F4A1; ' + recommendHtml + '<br>'
+    + '<span style="color:var(--text-muted)">※ 坪単価・賃料は地域・仕様により大きく異なります。実際は複数業者の見積もりを取ることをお勧めします。</span>'
+    + '</div>'
     + '</div>';
 }
 
