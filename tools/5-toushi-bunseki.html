@@ -583,7 +583,8 @@ function analyze() {
     id: _hid, date: new Date().toLocaleDateString('ja-JP'),
     name: inp.name, price: inp.price, rent: inp.rent,
     grossYield: r.grossYield, netYield: r.netYield,
-    annualCF: r.annualCF, ccr: r.ccr, verdict: getVerdict(r).type,
+    annualCF: r.annualCF, ccr: r.ccr, dscr: r.dscr, irr: r.irr,
+    verdict: getVerdict(r).type,
     inp: JSON.parse(JSON.stringify(inp)),
   });
   if(history.length > 50) history = history.slice(0,50);
@@ -1623,11 +1624,14 @@ function renderCompareTable() {
     ['実質利回り',     h => `<span style="color:${h.netYield>=5?'var(--green)':h.netYield>=3?'var(--orange)':'var(--red)'};font-weight:700">${h.netYield.toFixed(2)}%</span>`],
     ['年間CF',         h => `<span style="color:${h.annualCF>=0?'var(--green)':'var(--red)'};font-weight:700">${h.annualCF>=0?'+':''}${fmt(h.annualCF)}円</span>`],
     ['CCR',            h => h.ccr.toFixed(2)+'%'],
+    ['DSCR',           h => h.dscr != null ? (h.dscr >= 999 ? '—' : `<span style="color:${h.dscr>=1.2?'var(--green)':h.dscr>=1.0?'var(--orange)':'var(--red)'};font-weight:700">${h.dscr.toFixed(2)}</span>`) : '—'],
+    ['IRR',            h => h.irr != null ? `<span style="color:${h.irr*100>=8?'var(--green)':h.irr*100>=5?'var(--orange)':'var(--red)'};font-weight:700">${(h.irr*100).toFixed(1)}%</span>` : '—'],
     ['投資判定',       h => verdIco[h.verdict]||'—'],
   ];
   const bestIdxs = {
     2: items.reduce((b,h,i)=>h.netYield>items[b].netYield?i:b,0),
     3: items.reduce((b,h,i)=>h.annualCF>items[b].annualCF?i:b,0),
+    4: items.reduce((b,h,i)=>(h.irr||0)>(items[b].irr||0)?i:b,0),
   };
   tableEl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr><th style="padding:8px;text-align:left;color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.08)">指標</th>
