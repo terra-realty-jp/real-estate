@@ -781,6 +781,11 @@ function renderBuyers() {
       <div class="listing-img">🙋
         <span class="listing-type-badge type-buy">買主</span>
         ${matchCount>0?`<span class="match-badge" style="background:rgba(34,197,94,0.85)">${matchCount}件候補</span>`:''}
+        ${(()=>{
+          const hot=b.timing==='asap'&&b.loan==='cash';
+          const high=b.timing==='asap'||b.loan==='cash';
+          return hot?`<span class="match-badge" style="top:${matchCount>0?'40px':'12px'};left:12px;right:auto;background:rgba(201,168,76,0.9);color:#000">⭐ 即決可能</span>`:high?`<span class="match-badge" style="top:${matchCount>0?'40px':'12px'};left:12px;right:auto;background:rgba(34,197,94,0.75);color:#fff">🔥 高確度</span>`:'';
+        })()}
       </div>
       <div class="listing-body">
         <div class="listing-price">予算 ${FMT(b.budget)}</div>
