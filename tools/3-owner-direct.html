@@ -190,6 +190,7 @@
     </div>
   </div>
   <div id="buyer-demand-card" style="display:none;margin-bottom:16px"></div>
+  <div id="nego-sim-card" style="display:none;margin-bottom:16px"></div>
   <div id="sellers-list"></div>
 </div>
 </div>
@@ -536,6 +537,7 @@ function renderSellers() {
   ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
 
   renderBuyerDemandCard();
+  renderNegoSimCard();
   if(!sellers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏠</div><p>売主がまだ登録されていません</p><p style="font-size:12px;margin-top:8px">「売主登録」ボタンから売却したい物件を登録してください</p></div>`; return; }
   const sellerQ = (document.getElementById('seller-search')||{}).value||'';
   const sellerSt = (document.getElementById('seller-status-filter')||{}).value||'all';
@@ -707,6 +709,52 @@ function saveSeller() {
   if(!editSelId) sendToGAS({ tool:'tool3_matching', 日付:obj.date, 種別:'売主', エリア:obj.area, 物件種別:TYPE_LABEL[obj.type]||obj.type, 希望価格_万円:obj.price, 連絡先:obj.phone||obj.email||'' });
   if (typeof sbCurrentUser === 'function' && sbCurrentUser()) sbUpsert('od_sellers', obj).catch(()=>{});
   save('sellers'); closeModal('sellerModal'); renderSellers(); showToast('売主情報を保存しました ✓');
+}
+
+function renderNegoSimCard() {
+  var el = document.getElementById('nego-sim-card');
+  if (!el) return;
+  var activeSellers = sellers.filter(function(s){ return s.status === 'active'; });
+  if (!activeSellers.length || !buyers.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  var FMT = function(v){ return Math.round(v).toLocaleString() + '万円'; };
+  var net = function(p){ return Math.round(p - Math.ceil((p * 10000 * 0.03 + 60000) * 1.1 / 10000)); };
+  var rows = activeSellers.slice(0, 4).map(function(s) {
+    var base = Number(s.price) || 0;
+    if (!base) return '';
+    var discounts = [0, -3, -5, -10];
+    var cols = discounts.map(function(pct) {
+      var newPrice = Math.round(base * (1 + pct / 100));
+      var netAmt = net(newPrice);
+      var matchCnt = buyers.filter(function(b){ return Number(b.budget) >= newPrice; }).length;
+      var isBase = pct === 0;
+      var priceColor = isBase ? 'var(--gold)' : '#aaa';
+      var matchColor = matchCnt >= 3 ? '#22c55e' : matchCnt >= 1 ? '#f59e0b' : '#ef4444';
+      return '<td style="padding:8px 10px;text-align:center;border-left:1px solid rgba(255,255,255,0.05)'
+        + (isBase ? ';background:rgba(201,168,76,0.04)' : '') + '">'
+        + '<div style="font-size:12px;font-weight:700;color:' + priceColor + '">' + newPrice.toLocaleString() + '万</div>'
+        + '<div style="font-size:10px;color:#666;margin-top:1px">手取 ' + netAmt.toLocaleString() + '万</div>'
+        + '<div style="font-size:10px;font-weight:700;color:' + matchColor + ';margin-top:3px">買主' + matchCnt + '人</div>'
+        + '</td>';
+    }).join('');
+    return '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)">'
+      + '<td style="padding:8px 10px;font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(s.name) + '</td>'
+      + cols + '</tr>';
+  }).join('');
+  if (!rows) { el.style.display = 'none'; return; }
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:4px">🤝 価格交渉シミュレーター</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">値引き交渉を受けた場合の手取り変化と、マッチする登録買主数の変化を確認できます。</div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+    + '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">'
+    + '<th style="padding:8px 10px;text-align:left;font-size:10px;color:#888">売主</th>'
+    + '<th style="padding:8px 10px;text-align:center;font-size:10px;color:var(--gold);border-left:1px solid rgba(255,255,255,0.05)">元値</th>'
+    + '<th style="padding:8px 10px;text-align:center;font-size:10px;color:#888;border-left:1px solid rgba(255,255,255,0.05)">▲3%</th>'
+    + '<th style="padding:8px 10px;text-align:center;font-size:10px;color:#888;border-left:1px solid rgba(255,255,255,0.05)">▲5%</th>'
+    + '<th style="padding:8px 10px;text-align:center;font-size:10px;color:#888;border-left:1px solid rgba(255,255,255,0.05)">▲10%</th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<div style="margin-top:10px;font-size:10px;color:#555;line-height:1.6">※手取りは仲介手数料（法定上限）を差し引いた概算です。</div>'
+    + '</div>';
 }
 
 // ===== 買主 =====
