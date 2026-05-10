@@ -311,6 +311,7 @@
       <button class="btn btn-outline btn-sm" onclick="exportData('rent')">CSVエクスポート</button>
     </div>
   </div>
+  <div id="rent-collection-bar" style="margin-bottom:12px"></div>
   <div id="rent-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px"></div>
   <div id="rent-trend-chart" style="display:none;margin-bottom:16px"></div>
   <div id="rent-increase-card" style="display:none;margin-bottom:16px"></div>
@@ -1727,8 +1728,45 @@ function initRentMonthSelect(){
   }
 }
 
+function renderRentCollectionBar() {
+  var el = document.getElementById('rent-collection-bar');
+  if (!el) return;
+  var selMonth = (document.getElementById('rent_month') || {}).value || '';
+  var active = tenants.filter(function(t){ return t.status === 'active'; });
+  if (!active.length) { el.innerHTML = ''; return; }
+  var monthRents = rents.filter(function(r){ return r.month === selMonth; });
+  var totalCharge = active.reduce(function(s,t){ return s + (t.rent||0); }, 0);
+  var paidAmt = monthRents.filter(function(r){ return r.status==='paid'; }).reduce(function(s,r){ return s+(r.paid||0); }, 0);
+  var paidCount = monthRents.filter(function(r){ return r.status==='paid'; }).length;
+  var partialCount = monthRents.filter(function(r){ return r.status==='partial'; }).length;
+  var rate = totalCharge > 0 ? Math.round(paidAmt / totalCharge * 100) : 0;
+  var paidPct = totalCharge > 0 ? Math.round(paidAmt / totalCharge * 100) : 0;
+  var remainAmt = totalCharge - paidAmt;
+  var color = rate >= 100 ? 'var(--green)' : rate >= 80 ? 'var(--gold)' : 'var(--red)';
+  var now = new Date();
+  var isThisMonth = selMonth === now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 16px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text)">'
+    + (isThisMonth ? '📅 今月の入金進捗' : '📅 ' + selMonth.replace('-','年') + '月の入金進捗') + '</div>'
+    + '<div style="font-size:11px;color:' + color + ';font-weight:700">' + paidCount + '/' + active.length + '名入金済'
+    + (partialCount > 0 ? '（一部入金' + partialCount + '名）' : '') + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.06);border-radius:6px;height:14px;overflow:hidden;position:relative;margin-bottom:6px">'
+    + '<div style="width:' + paidPct + '%;height:100%;background:' + color + ';border-radius:6px;transition:width 0.5s;position:relative">'
+    + (paidPct >= 20 ? '<span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#000">' + paidPct + '%</span>' : '')
+    + '</div>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:11px">'
+    + '<span style="color:' + color + ';font-weight:700">入金済 ' + Math.round(paidAmt/10000).toLocaleString() + '万円</span>'
+    + (remainAmt > 0 ? '<span style="color:var(--red)">未回収 ' + Math.round(remainAmt/10000).toLocaleString() + '万円</span>' : '<span style="color:var(--green)">✅ 全額回収済み</span>')
+    + '</div>'
+    + '</div>';
+}
+
 function renderRentLedger(){
   renderRentIncreaseCard();
+  renderRentCollectionBar();
   const month=document.getElementById('rent_month').value;
   const statusFilter=(document.getElementById('rent-status-filter')||{}).value||'all';
   const activeTenants=tenants.filter(t=>t.status==='active');
