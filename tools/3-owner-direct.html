@@ -228,6 +228,7 @@
       <button class="btn btn-outline btn-sm" onclick="exportCSV('buyers')">CSVエクスポート</button>
     </div>
   </div>
+  <div id="loan-estimate-card" style="display:none;margin-bottom:16px"></div>
   <div id="buyers-list"></div>
 </div>
 </div>
@@ -706,6 +707,41 @@ function saveSeller() {
 }
 
 // ===== 買主 =====
+function renderLoanEstimateCard() {
+  const el = document.getElementById('loan-estimate-card');
+  if (!el) return;
+  if (!buyers.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  // 登録買主の平均予算
+  const budgets = buyers.map(function(b){ return Number(b.budget)||0; }).filter(function(v){ return v>0; });
+  if (!budgets.length) { el.style.display = 'none'; return; }
+  const avgBudget = Math.round(budgets.reduce(function(s,v){return s+v;},0)/budgets.length);
+  // ローン試算（元利均等・25年・1.8%）
+  const downPct = 0.2;
+  const loanAmt = Math.round(avgBudget * (1 - downPct));
+  const r12 = 1.8/100/12;
+  const n12 = 25*12;
+  const monthly = Math.round(loanAmt * 10000 * r12 / (1 - Math.pow(1+r12,-n12)));
+  const rates = [0.5, 1.0, 1.5, 1.8, 2.0, 2.5, 3.0];
+  const rateRowsHtml = rates.map(function(rate) {
+    const r = rate/100/12;
+    const m = Math.round(loanAmt * 10000 * r / (1 - Math.pow(1+r,-n12)));
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:5px;background:' + (rate===1.8?'rgba(201,168,76,0.08)':'rgba(255,255,255,0.02)') + ';border:1px solid ' + (rate===1.8?'rgba(201,168,76,0.2)':'rgba(255,255,255,0.05)') + '">'
+      + '<span style="font-size:11px;color:' + (rate===1.8?'var(--gold)':'var(--text-muted)') + '">' + rate.toFixed(1) + '%' + (rate===1.8?' ◀現在の参考金利':'') + '</span>'
+      + '<span style="font-size:12px;font-weight:700;color:' + (rate===1.8?'var(--gold)':'var(--text)') + '">' + m.toLocaleString() + '円/月</span>'
+      + '</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px">&#x1F3E6; 登録買主の想定ローン試算'
+    + '<span style="font-size:10px;font-weight:400;color:var(--text-muted)">（平均予算 ' + avgBudget.toLocaleString() + '万円・頭金20%・25年）</span></div>'
+    + '<div style="display:grid;gap:5px">' + rateRowsHtml + '</div>'
+    + '<div style="margin-top:8px;padding:7px 10px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:11px;color:var(--text-muted)">'
+    + '&#x1F4A1; 月々の返済額が手取り月収の30%以内なら融資審査に通りやすいといわれています'
+    + '</div>'
+    + '</div>';
+}
+
 function renderBuyers() {
   const el = document.getElementById('buyers-list');
   const statsEl = document.getElementById('buyer-stats');
@@ -716,6 +752,7 @@ function renderBuyers() {
     {v:buyers.filter(b=>b.purpose==='invest').length+'件', l:'投資目的', c:'var(--blue)'},
   ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
 
+  renderLoanEstimateCard();
   if(!buyers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🙋</div><p>買主がまだ登録されていません</p><p style="font-size:12px;margin-top:8px">「買主登録」ボタンから購入希望条件を登録してください</p></div>`; return; }
   const buyerQ = (document.getElementById('buyer-search')||{}).value||'';
   const buyerPurpose = (document.getElementById('buyer-purpose-filter')||{}).value||'all';
