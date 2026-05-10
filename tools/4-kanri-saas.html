@@ -438,6 +438,7 @@
       <span style="color:#4ade80">■ 入金済</span><span style="color:#facc15">■ 一部入金</span><span style="color:#f87171">■ 未入金</span><span style="color:#374151">■ 未登録</span>
     </div>
     <div id="tdm-quality-score" style="margin-top:12px"></div>
+    <div id="tdm-vacancy-cost" style="margin-top:12px"></div>
     <div id="tdm-renewal-btn-wrap" style="margin-top:12px;display:none">
       <button id="tdm-renewal" class="btn btn-outline" style="width:100%;border-color:var(--gold);color:var(--gold)">✉ 契約更新のご案内メールを生成</button>
     </div>
@@ -1585,6 +1586,26 @@ function showTenantDetail(id){
     + '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text-muted)">入居ステータス</span><span style="color:'+grade.c+'">'+statusScore+'/10点</span></div>'
     + '</div>'
     + '</div>';
+  // 退去コスト試算
+  const vcEl = document.getElementById('tdm-vacancy-cost');
+  if(vcEl && t.rent) {
+    const rent = Number(t.rent);
+    const restoreEstimate = Math.round(rent * 0.8); // 原状回復: 家賃0.8ヶ月分目安
+    const vacancyMonths = 2; // 平均空室期間
+    const vacancyLoss = rent * vacancyMonths;
+    const adCost = Math.round(rent * 1.0); // 仲介手数料目安1ヶ月
+    const totalCost = restoreEstimate + vacancyLoss + adCost;
+    vcEl.innerHTML = '<div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.18);border-radius:8px;padding:10px 14px">'
+      + '<div style="font-size:11px;font-weight:700;color:#fb923c;margin-bottom:8px">🚪 退去時のコスト目安</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">'
+      + '<div style="display:flex;justify-content:space-between"><span style="color:#777">原状回復費（目安）</span><span style="font-weight:700">約' + restoreEstimate.toLocaleString() + '円</span></div>'
+      + '<div style="display:flex;justify-content:space-between"><span style="color:#777">空室損失（' + vacancyMonths + 'ヶ月）</span><span style="font-weight:700">約' + vacancyLoss.toLocaleString() + '円</span></div>'
+      + '<div style="display:flex;justify-content:space-between"><span style="color:#777">広告費・仲介手数料</span><span style="font-weight:700">約' + adCost.toLocaleString() + '円</span></div>'
+      + '<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.07);padding-top:6px;grid-column:1/-1"><span style="color:#fb923c;font-weight:700">退去コスト合計目安</span><span style="color:#fb923c;font-weight:900;font-size:13px">約' + totalCost.toLocaleString() + '円</span></div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:#555;margin-top:6px">※目安値です。実際の費用は物件・入居期間・損耗状況により異なります。</div>'
+      + '</div>';
+  } else if(vcEl) { vcEl.innerHTML = ''; }
   // 契約更新ボタン表示判定（90日以内に終了するアクティブテナント）
   const renewWrap=document.getElementById('tdm-renewal-btn-wrap');
   const renewBtn=document.getElementById('tdm-renewal');
