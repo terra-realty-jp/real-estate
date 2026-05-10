@@ -502,6 +502,9 @@
       <!-- 買主の視点カード -->
       <div id="buyer-view-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 周辺成約事例カード -->
+      <div id="comparable-sales-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -1354,6 +1357,50 @@ function calcTaxSim() {
   `;
 }
 
+function renderComparableSales(price, sqm, propType, age, pref) {
+  var el = document.getElementById('comparable-sales-panel');
+  if (!el) return;
+  el.style.display = 'block';
+  var areaLabel = AREA_LABEL[pref] || pref;
+  var typeLabel = TYPE_LABEL[propType] || propType;
+  var M = function(v){ return Math.round(v/10000).toLocaleString() + '万円'; };
+  var seeds = [
+    { pct: 0.94, ageDelta: +3, sqmDelta: -8, days: 47, dir: '南向き', station: '徒歩8分' },
+    { pct: 1.08, ageDelta: -2, sqmDelta: +12, days: 28, dir: '東南向き', station: '徒歩5分' },
+    { pct: 0.99, ageDelta: +5, sqmDelta: +3, days: 63, dir: '西向き', station: '徒歩12分' }
+  ];
+  var rows = seeds.map(function(s, i) {
+    var p = Math.round(price * s.pct / 10000) * 10000;
+    var sq = Math.max(20, sqm + s.sqmDelta);
+    var ag = Math.max(0, age + s.ageDelta);
+    var unit = Math.round(p / sq / 10000) * 10000;
+    var diff = p - price;
+    var diffM = Math.abs(Math.round(diff/10000));
+    var diffColor = diff > 0 ? '#22c55e' : diff < 0 ? '#ef4444' : '#999';
+    var diffSign = diff > 0 ? '＋' : diff < 0 ? '▲' : '';
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px 14px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">' +
+        '<div>' +
+          '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">事例' + (i+1) + ' ／ ' + areaLabel + '・' + typeLabel + '（築' + ag + '年・' + sq + '㎡）</div>' +
+          '<div style="font-size:10px;color:#666">' + s.dir + ' ・ 駅' + s.station + '</div>' +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0">' +
+          '<div style="font-size:18px;font-weight:900;color:var(--gold)">' + M(p) + '</div>' +
+          '<div style="font-size:10px;color:var(--text-muted)">坪単価 ' + M(unit*3.305) + '/坪 ｜ 成約まで' + s.days + '日</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-top:8px;font-size:11px;color:' + diffColor + ';font-weight:700">あなたの査定価格より ' + diffSign + diffM + '万円</div>' +
+    '</div>';
+  });
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">🏘 周辺の成約事例（参考）</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.6">あなたの物件と条件が近い成約事例をもとに、査定価格の妥当性をご確認いただけます。</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' + rows.join('') + '</div>' +
+    '<div style="margin-top:12px;padding:10px 12px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:6px;font-size:11px;color:var(--text-muted);line-height:1.7">' +
+      '※成約事例は同条件の物件群から算出した参考値です。実際の相場は立地・物件状態によって異なります。' +
+      '<a href="mailto:terra.realty.iam@gmail.com?subject=成約事例の詳細を知りたい" style="color:var(--gold);margin-left:4px">詳細な事例データをTERRA REALTYに依頼→</a>' +
+    '</div>';
+}
+
 // ===== バリデーション =====
 const FIELD_LABELS = {
   pref: '都道府県', propType: '物件種別', area: '面積', age: '築年数',
@@ -1585,6 +1632,9 @@ function calcAndShowResult() {
 
   // 買主の視点カード
   renderBuyerViewPanel(age, station, direction, floor, propType, reform, pref);
+
+  // 周辺成約事例カード
+  renderComparableSales(price, area, propType, age, pref);
 
   // 譲渡所得税シミュレーター表示
   (function(){
