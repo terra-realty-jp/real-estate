@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TERRA REALTY ツール 実装履歴</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif; background: #0e0e0e; color: #e8e4db; line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1a1a1a, #111); border-bottom: 1px solid rgba(201,168,76,0.3); padding: 32px 24px; text-align: center; }
+  .header h1 { font-size: 24px; font-weight: 900; color: #c9a84c; margin-bottom: 8px; }
+  .header p { font-size: 13px; color: #888; }
+  .stats-bar { display: flex; gap: 0; background: #111; border-bottom: 1px solid rgba(255,255,255,0.06); overflow-x: auto; }
+  .stat { flex: 1; min-width: 100px; padding: 14px 16px; text-align: center; border-right: 1px solid rgba(255,255,255,0.06); }
+  .stat-num { font-size: 22px; font-weight: 900; color: #c9a84c; }
+  .stat-label { font-size: 10px; color: #666; margin-top: 2px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+  .tool-section { margin-bottom: 32px; }
+  .tool-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 14px 18px; background: #111; border-radius: 12px; border-left: 3px solid #c9a84c; }
+  .tool-icon { font-size: 24px; }
+  .tool-name { font-size: 16px; font-weight: 700; color: #c9a84c; }
+  .tool-desc { font-size: 12px; color: #777; margin-top: 2px; }
+  .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+  .feature-card { background: #161616; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 16px; }
+  .feature-tag { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 10px; font-weight: 700; margin-bottom: 8px; }
+  .tag-ui { background: rgba(96,165,250,0.12); color: #60a5fa; }
+  .tag-calc { background: rgba(201,168,76,0.12); color: #c9a84c; }
+  .tag-info { background: rgba(167,139,250,0.12); color: #a78bfa; }
+  .tag-action { background: rgba(34,197,94,0.12); color: #22c55e; }
+  .feature-title { font-size: 13px; font-weight: 700; color: #e8e4db; margin-bottom: 4px; }
+  .feature-desc { font-size: 12px; color: #777; line-height: 1.6; }
+  .commit-line { font-size: 10px; color: #444; margin-top: 8px; font-family: monospace; }
+  .section-title { font-size: 13px; font-weight: 700; color: #c9a84c; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid rgba(201,168,76,0.15); }
+  .common-section { margin-bottom: 32px; }
+  .note { background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.2); border-radius: 10px; padding: 16px 18px; margin-top: 24px; font-size: 12px; color: #888; line-height: 1.8; }
+  @media(max-width:600px){ .feature-grid { grid-template-columns: 1fr; } .stats-bar { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏠 TERRA REALTY ツール 実装履歴</h1>
+  <p>不動産かんたんツール — これまでに実装した機能の全一覧</p>
+  <p style="color:#555;font-size:11px;margin-top:6px">最終更新: 2026-05-10</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num">5</div><div class="stat-label">対象ツール</div></div>
+  <div class="stat"><div class="stat-num">60+</div><div class="stat-label">実装機能数</div></div>
+  <div class="stat"><div class="stat-num">30+</div><div class="stat-label">コミット数</div></div>
+  <div class="stat"><div class="stat-num">HTML/JS</div><div class="stat-label">技術スタック</div></div>
+  <div class="stat"><div class="stat-num">Supabase</div><div class="stat-label">クラウドDB</div></div>
+</div>
+
+<div class="container">
+
+  <!-- Tool1 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <div class="tool-icon">🏷</div>
+      <div>
+        <div class="tool-name">Tool1 — AI物件査定</div>
+        <div class="tool-desc">tools/1-ai-satei.html ｜ 物件情報を入力すると売却概算価格を自動計算</div>
+      </div>
+    </div>
+    <p class="section-title">実装済み機能</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">売却コスト試算カード</div>
+        <div class="feature-desc">仲介手数料・印紙税・登記費用を自動計算。「手元に残る目安」を大きく表示して現実的な資金計画をサポート。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">手取り活用プラン（手取り後の投資シナリオ）</div>
+        <div class="feature-desc">売却後の純手取りを使った4シナリオ（定期預金・投信・不動産再投資・ローン繰り上げ）の年間リターン比較。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">売却プロセスタイムライン</div>
+        <div class="feature-desc">査定→媒介契約→広告→内覧→契約→引渡しまでの5ステップと期間目安を図で表示。初めての売却でも安心。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">譲渡所得税シミュレーター</div>
+        <div class="feature-desc">取得費・保有期間・3,000万円特別控除に対応。課税譲渡所得→税率→概算税額を一画面で確認。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">物件グレード評価カード（S/A/B/C/D）</div>
+        <div class="feature-desc">立地・築年数・階数・駅距離・方角の5軸100点スコアでグレードを自動評価。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">売却時期カレンダー</div>
+        <div class="feature-desc">月別の成約需要（春需要・秋需要）を色付きカレンダーで表示。最適な売り出し時期をひと目で確認。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">近隣エリアとの坪単価比較パネル</div>
+        <div class="feature-desc">ユーザーのエリアと周辺エリアの坪単価を棒グラフで比較。自分の物件価格の妥当性がわかる。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">買主の視点カード</div>
+        <div class="feature-desc">物件条件から「アピールポイント」「懸念点」「見込み買主層」を自動生成。売り主が見落としがちな買主目線の情報を提供。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">査定履歴のスパークライン（価格推移グラフ）</div>
+        <div class="feature-desc">直近10件の査定価格をSVGラインチャートで表示。前回比の騰落率を色分け表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">相談前確認チェックリスト（インタラクティブ）</div>
+        <div class="feature-desc">「権利書の確認」「ローン残高把握」など10項目をタップでチェック。進捗バー付き。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-action">CTA</span>
+        <div class="feature-title">SNSシェアボタン</div>
+        <div class="feature-desc">査定結果をネイティブシェア（iOS/Androidのnavigator.share）またはクリップボードコピーで共有。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">よくある質問FAQアコーディオン</div>
+        <div class="feature-desc">「本当にこの価格で売れる？」「ローンが残っている場合は？」など6問のQ&Aをタップで開閉。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報（新）</span>
+        <div class="feature-title">周辺の成約事例カード</div>
+        <div class="feature-desc">ユーザーの物件と条件が近い近隣3件の成約価格・坪単価・成約期間を表示。査定価格の妥当性を確認できる。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算（新）</span>
+        <div class="feature-title">売却タイミング比較カード</div>
+        <div class="feature-desc">「今」「3年後」「5年後」「10年後」に売った場合の想定価格・手取りを並べて比較。最適売却タイミングを診断。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool2 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <div class="tool-icon">🏚</div>
+      <div>
+        <div class="tool-name">Tool2 — 空き家活用診断</div>
+        <div class="tool-desc">tools/2-akiya-hunter.html ｜ 空き家の状態チェックと活用提案</div>
+      </div>
+    </div>
+    <p class="section-title">実装済み機能</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">放置リスク試算カード</div>
+        <div class="feature-desc">固定資産税・維持費・5年累計コスト・機会損失を自動計算。「放置するとどうなるか」を数字で提示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">売る・貸す・放置の5年比較</div>
+        <div class="feature-desc">固定資産税評価額から3択の5年間損益を試算。各選択肢のメリット・デメリット付き。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">建て替え vs フルリノベ 比較カード</div>
+        <div class="feature-desc">費用・月間賃料・年収・回収期間を並べて比較。どちらがお得か一目瞭然。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">修繕費用概算カード</div>
+        <div class="feature-desc">「軽微補修」「中規模リフォーム」「全面改装」「建て替え」の4段階費用目安を築年数別アドバイス付きで表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">補助金・支援制度カード</div>
+        <div class="feature-desc">解体補助・リノベ補助・空き家バンク奨励金など6種類の支援制度を診断結果に応じて自動絞り込み表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">空き家市場性評価カード（5軸スコア）</div>
+        <div class="feature-desc">築年数・立地・構造・権利関係・管理状態の5軸で「売りやすさ」を診断。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">チェックリスト進捗バッジ（n/12チェック）</div>
+        <div class="feature-desc">診断チェックリストのリアルタイム進捗カウントと「全選択/全解除」トグルボタン。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-action">CTA</span>
+        <div class="feature-title">印刷レポート生成</div>
+        <div class="feature-desc">診断スコア・チェックリスト・リスク試算・3択比較・次のステップを含む印刷用レポートを新規ウィンドウで生成。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">同じような空き家オーナーの解決事例4件</div>
+        <div class="feature-desc">「賃貸活用」「売却」「駐車場転用」「空き家バンク」のパターン別事例カード。「自分もできそう」という気づきを促進。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">解体費用かんたん試算</div>
+        <div class="feature-desc">木造・鉄骨・RC別、延床面積から解体費用の目安を試算。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool3 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <div class="tool-icon">🤝</div>
+      <div>
+        <div class="tool-name">Tool3 — 売主・買主マッチング</div>
+        <div class="tool-desc">tools/3-owner-direct.html ｜ 売主・買主を登録してAIスコアでマッチング</div>
+      </div>
+    </div>
+    <p class="section-title">実装済み機能</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">スコア</span>
+        <div class="feature-title">マッチングスコア算出（0-100点）</div>
+        <div class="feature-desc">価格・エリア・種別・面積・タイミングの5要素でスコアを計算。スコア別に色分け（緑/金/青）表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">売主カードに「マッチ人数バッジ」</div>
+        <div class="feature-desc">スコア30以上の買主が何人いるかをリアルタイム表示。「🎯 3人マッチ」のような視覚的バッジ。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">「今すぐ成約チャンス」バナー</div>
+        <div class="feature-desc">売主・買主ともにタイミングが「即決」の場合、マッチングカードに「🔥 今すぐ成約チャンス」バナーを表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">買主カードに「購入確度バッジ」</div>
+        <div class="feature-desc">即決×キャッシュは「⭐ 即決可能」、どちらかを満たすと「🔥 高確度」バッジを表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">ローン試算カード</div>
+        <div class="feature-desc">登録済み買主の平均予算 × 7金利パターンの月返済額を比較。30%ルール（月収の30%以下）のヒント付き。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">買主予算帯分布カード（バーチャート）</div>
+        <div class="feature-desc">売主の価格に対して、登録済み買主の予算がどう分布しているかをバーグラフで表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">マッチングヒートマップ（売主別）</div>
+        <div class="feature-desc">全売主の「最高スコア」と「マッチ件数」をカード形式でグリッド表示。どの物件が人気かひと目でわかる。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">要因別マッチング統計</div>
+        <div class="feature-desc">「価格一致」「エリア一致」などの要因ごとのマッチング割合をバーグラフで表示。改善ポイントを提示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-action">CTA</span>
+        <div class="feature-title">提案レター自動生成</div>
+        <div class="feature-desc">マッチングペアごとに買主向けの物件提案文を自動生成。メール送信またはクリップボードコピー対応。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-action">CTA</span>
+        <div class="feature-title">物件広告文の自動生成</div>
+        <div class="feature-desc">売主カードからSNS向け短文・掲載用詳細文を自動生成。クリップボードコピー対応。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">仲介手数料シミュレーター（刷新版）</div>
+        <div class="feature-desc">法定上限の自動計算に加え、諸費用総合計（印紙税・登記費用含む）を表示。価格帯別の目安表付き。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">スコア下限・エリアフィルター</div>
+        <div class="feature-desc">マッチングタブでスコア下限（30/50/70点）とエリアでフィルタリング可能。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool4 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <div class="tool-icon">🏢</div>
+      <div>
+        <div class="tool-name">Tool4 — 賃貸物件かんたん管理</div>
+        <div class="tool-desc">tools/4-kanri-saas.html ｜ テナント・家賃・修繕・収益を一元管理</div>
+      </div>
+    </div>
+    <p class="section-title">実装済み機能</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">ダッシュボード KPIカード</div>
+        <div class="feature-desc">今月の入金・修繕費・収支・回収率・前月比を4列カードでリアルタイム表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">満室収益ポテンシャルカード</div>
+        <div class="feature-desc">現在の収入と「もし空室が埋まったら」の最大収益を並べて表示。グラデーションの進捗バー付き。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">家賃台帳 入金進捗バー（新）</div>
+        <div class="feature-desc">選択した月の入金済み家賃合計・回収率・未回収額をリアルタイムの進捗バーで表示。色がステータス（緑/金/赤）で変化。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">テナント優良度スコアカード</div>
+        <div class="feature-desc">入金遵守・入居期間・情報完備・ステータスの4軸でS/A/B/Cをスコアリング。テナント詳細モーダルに表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">連絡先クイックアクセスカード</div>
+        <div class="feature-desc">テナントタブの先頭に全アクティブテナントの📞電話・✉️メールリンクをまとめて表示。すぐ連絡できる。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-action">CTA</span>
+        <div class="feature-title">未入金テナントへの督促メール生成</div>
+        <div class="feature-desc">未払いテナントの行に「督促メール」ボタン。メールアドレス登録済みならmailto:リンクで直接送信可能。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-action">CTA</span>
+        <div class="feature-title">契約更新メール自動生成</div>
+        <div class="feature-desc">更新期限90日以内のテナントの行に「更新メール」ボタン。テナント名・物件名・更新日・家賃を含む文章を自動生成。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">賃料値上げシミュレーター</div>
+        <div class="feature-desc">値上げ率スライダーで月次・年次増収額をテナント別にリアルタイム試算。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">確定申告ヘルパーカード</div>
+        <div class="feature-desc">年間収入・修繕費・課税所得概算・控除確認リスト・申告メモを自動生成。確定申告前の準備をサポート。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">物件別収益スタックバーグラフ</div>
+        <div class="feature-desc">2棟以上の物件がある場合に、月次収益を物件別の積み上げバーグラフで表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">修繕管理KPIカード（年間費・完了率）</div>
+        <div class="feature-desc">年間修繕費合計と完了率をKPIとして表示。長期修繕計画との連動。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">長期修繕計画（積立シミュレーター）</div>
+        <div class="feature-desc">今後の大規模修繕を登録して、月次積立目標額を自動計算。「毎月いくら積み立てるべきか」が一目でわかる。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool5 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <div class="tool-icon">📈</div>
+      <div>
+        <div class="tool-name">Tool5 — 不動産投資シミュレーター</div>
+        <div class="tool-desc">tools/5-toushi-bunseki.html ｜ 詳細な投資収益分析とリスク評価</div>
+      </div>
+    </div>
+    <p class="section-title">実装済み機能</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">専門用語ツールチップ（NOI・CCR・DSCR・IRR）</div>
+        <div class="feature-desc">「？」マークをタップすると専門用語の意味をポップアップ表示。初心者でも迷わない。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">初心者向け「かんたんモード」</div>
+        <div class="feature-desc">入力項目を5つに絞ったシンプルビュー。ローン月額・表面利回り・月次CF概算をリアルタイムプレビュー付き。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">計算</span>
+        <div class="feature-title">IRR（内部収益率）Newton-Raphson法</div>
+        <div class="feature-desc">真の内部収益率をNewton-Raphson反復法で精密計算。投資の真の収益性を正確に評価。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">金利上昇シミュレーションカード</div>
+        <div class="feature-desc">現在金利±2%の6パターンで月返済額と差分を比較。「金利が上がったらどうなる？」を事前確認。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">3シナリオ比較カード（ベスト/ベース/ワースト）</div>
+        <div class="feature-desc">感度分析タブで楽観・基準・悲観シナリオのCF・利回りを並べて比較。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">CF安全マージン分析（損益分岐点）</div>
+        <div class="feature-desc">「空室率があと何%上がるとCFゼロ？」「家賃があと何%下がると？」を自動計算。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">CSVダウンロードボタン（CFテーブル）</div>
+        <div class="feature-desc">年次キャッシュフロー詳細表をCSV形式でダウンロード。Excelで詳細分析可能。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">投資タイプ診断クイズ（7タイプ）</div>
+        <div class="feature-desc">5問クイズで「インカムゲイン型/キャピタル型/安全重視型」など7タイプを診断。自分に合った投資スタイルがわかる。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">物件比較テーブル（最大3件）</div>
+        <div class="feature-desc">履歴タブで過去分析した物件を最大3件並べてDSCR・IRR・CCRなどを比較。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-calc">試算</span>
+        <div class="feature-title">繰り上げ返済シミュレーター</div>
+        <div class="feature-desc">毎月または一括で追加元本返済した場合の利息削減効果・返済期間短縮を試算。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">CFレポート印刷・PDF保存</div>
+        <div class="feature-desc">かんたんモード・通常モード両方で印刷用レポート生成。PDFとして保存可能。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 全ツール共通 -->
+  <div class="common-section">
+    <div class="tool-header" style="border-left-color:#60a5fa">
+      <div class="tool-icon">🌐</div>
+      <div>
+        <div class="tool-name" style="color:#60a5fa">全ツール共通 / index.html</div>
+        <div class="tool-desc">全ツールに適用された共通改善・トップページ</div>
+      </div>
+    </div>
+    <p class="section-title">実装済み機能</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">削除確認ダイアログ（削除対象名表示）</div>
+        <div class="feature-desc">「本当に削除しますか？」のダイアログに削除対象の名前を表示。誤削除を防止。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">必須項目バリデーション（赤ボーダー）</div>
+        <div class="feature-desc">フォームの必須項目が未入力の場合に赤ボーダーとエラーメッセージを表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">localStorage容量超過時のエラー表示</div>
+        <div class="feature-desc">ブラウザの保存容量が満杯のとき、ユーザーフレンドリーなエラーメッセージを表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">モバイル対応（375px・640px）</div>
+        <div class="feature-desc">全ツールでスマートフォン（375px〜）での表示を最適化。ボタンサイズ・フォントサイズも調整。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-action">CTA</span>
+        <div class="feature-title">Supabaseクラウド保存（全ツール統合）</div>
+        <div class="feature-desc">ログイン時に全データをSupabaseクラウドDBに保存・同期。ログアウトしてもデータが消えない。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-action">CTA</span>
+        <div class="feature-title">GASバックエンド連携（全ツール）</div>
+        <div class="feature-desc">全ツールの利用データをGoogle Apps ScriptのスプレッドシートにリアルタイムでPOST送信。データ蓄積を自動化。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">index.html: 今日の不動産豆知識</div>
+        <div class="feature-desc">12種類の豆知識を日付によってローテーション表示。毎日違うコンテンツでリピーターを促進。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">index.html: ログイン後マイデータパネル</div>
+        <div class="feature-desc">ログイン後に全テーブルのデータ件数（物件・テナント・査定・投資・空き家・マッチング）をサマリー表示。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-ui">UI</span>
+        <div class="feature-title">index.html: 利用者の声セクション</div>
+        <div class="feature-desc">3件のユーザーレビューカードでサービスの信頼性を向上。</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-tag tag-info">情報</span>
+        <div class="feature-title">全ツール: OGP画像・JSON-LD構造化データ</div>
+        <div class="feature-desc">SNSシェア時のプレビュー画像設定。GoogleのWebサイト認識向上のための構造化データ追加。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    📌 <strong style="color:#c9a84c">このツールの目的</strong><br>
+    TERRA REALTYが「情報優位の立場」に立つために、一般ユーザーが繰り返し使いたくなるツールを作り続けています。<br>
+    ユーザーがツールを使うたびに査定データ・投資判断・物件情報が蓄積され、サービスの価値が高まる仕組みです。<br><br>
+    GitHub: <a href="https://github.com/shinji-japaaaan/real-estate" style="color:#c9a84c">github.com/shinji-japaaaan/real-estate</a><br>
+    公開URL: <a href="https://shinji-japaaaan.github.io/real-estate/" style="color:#c9a84c">shinji-japaaaan.github.io/real-estate/</a>
+  </div>
+
+</div>
+</body>
+</html>
