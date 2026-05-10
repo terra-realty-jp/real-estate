@@ -848,6 +848,7 @@ function renderResult(inp, r) {
 
     ${renderBenchmarkCard(inp, r)}
     ${renderDepreciationCard(inp)}
+    ${renderDownPayCompareCard(inp, r)}
     ${renderPurchaseChecklistCard(inp, r)}
     ${renderHoldPeriodOptimCard(inp)}
 
@@ -866,6 +867,51 @@ function renderResult(inp, r) {
     </div>
   `;
   renderPurchaseChecklist(inp, r);
+}
+
+function renderDownPayCompareCard(inp, r) {
+  if (!inp.price || inp.price <= 0) return '';
+  var fmt = function(v){ return Math.round(v/10000).toLocaleString() + '万円'; };
+  var patterns = [0, 10, 20, 30];
+  var rows = patterns.map(function(pct) {
+    var downMan = Math.round(inp.price * pct / 100);
+    var loanMan = inp.price - downMan;
+    var lr = calcLoanPayment(loanMan, inp.rate, inp.term, inp.repay);
+    var annCF = r.noi - lr.monthly * 12;
+    var equity = downMan * 10000;
+    var ccr = equity > 0 ? (annCF / equity * 100) : 0;
+    var isCurrent = Math.abs(downMan - (inp.price - inp.loan)) < 10;
+    var cfColor = annCF >= 0 ? '#22c55e' : '#ef4444';
+    var ccrColor = ccr >= 10 ? '#22c55e' : ccr >= 5 ? '#f59e0b' : '#ef4444';
+    return '<tr style="' + (isCurrent ? 'background:rgba(201,168,76,0.06);' : '') + 'border-bottom:1px solid rgba(255,255,255,0.05)">'
+      + '<td style="padding:10px 12px;font-size:12px;font-weight:700;color:' + (isCurrent ? 'var(--gold)' : 'var(--text)') + '">'
+      + pct + '%<br><span style="font-size:10px;color:#777;font-weight:400">' + downMan.toLocaleString() + '万円</span>'
+      + (isCurrent ? '<br><span style="font-size:9px;color:var(--gold)">← 設定中</span>' : '')
+      + '</td>'
+      + '<td style="padding:10px 12px;font-size:12px;text-align:right">' + loanMan.toLocaleString() + '万円</td>'
+      + '<td style="padding:10px 12px;font-size:12px;text-align:right">' + Math.round(lr.monthly).toLocaleString() + '円</td>'
+      + '<td style="padding:10px 12px;font-size:13px;font-weight:700;text-align:right;color:' + cfColor + '">'
+      + (annCF >= 0 ? '+' : '') + Math.round(annCF / 10000) + '万円</td>'
+      + '<td style="padding:10px 12px;font-size:13px;font-weight:700;text-align:right;color:' + ccrColor + '">'
+      + (loanMan > 0 ? ccr.toFixed(1) + '%' : '—') + '</td>'
+      + '</tr>';
+  });
+  return '<div class="card">'
+    + '<div class="card-title">💡 頭金パターン比較（自己資金 0〜30%）</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">同じ物件でも頭金の割合によって月返済額・年間CF・CCR（自己資本利回り）が大きく変わります。</p>'
+    + '<div style="overflow-x:auto">'
+    + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    + '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">'
+    + '<th style="padding:8px 12px;text-align:left;font-size:11px;color:#888;font-weight:700">頭金</th>'
+    + '<th style="padding:8px 12px;text-align:right;font-size:11px;color:#888;font-weight:700">借入</th>'
+    + '<th style="padding:8px 12px;text-align:right;font-size:11px;color:#888;font-weight:700">月返済</th>'
+    + '<th style="padding:8px 12px;text-align:right;font-size:11px;color:#888;font-weight:700">年間CF</th>'
+    + '<th style="padding:8px 12px;text-align:right;font-size:11px;color:#888;font-weight:700">CCR</th>'
+    + '</tr></thead><tbody>' + rows.join('') + '</tbody>'
+    + '</table></div>'
+    + '<div style="margin-top:12px;font-size:11px;color:#666;line-height:1.7">'
+    + '※ CCR（自己資本利回り）は自己資金に対する年間CFの割合。頭金を減らすとCCRが上がりレバレッジ効果が高まりますが、CF悪化リスクも増えます。'
+    + '</div></div>';
 }
 
 function renderPurchaseChecklist(inp, r) {
