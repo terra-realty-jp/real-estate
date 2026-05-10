@@ -320,6 +320,13 @@
     <div id="alt-use-content"></div>
   </div>
 
+  <!-- 相続空き家 3000万円特別控除チェックカード -->
+  <div class="card" id="inheritance-special-card" style="display:none;">
+    <div class="card-title"><span class="icon">💰</span>相続した空き家：3,000万円特別控除チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">相続した空き家を売却する場合、条件を満たせば譲渡所得から最大3,000万円が控除されます。</p>
+    <div id="inheritance-special-content"></div>
+  </div>
+
   <!-- 補助金・支援制度カード -->
   <div class="card" id="subsidy-card" style="display:none;">
     <div class="card-title"><span class="icon">🏛</span>利用できる補助金・支援制度（参考）</div>
@@ -809,6 +816,8 @@ function updateScore() {
   renderRenoVsRebuildCard();
   // 民泊・シェアハウス活用試算カード
   renderAltUseCard(capped);
+  // 相続空き家 3000万円特別控除チェック
+  renderInheritanceSpecialCard(capped, [...checked]);
   // 補助金・支援制度カード
   renderSubsidyCard(capped, [...checked]);
   const demolishCard = document.getElementById('demolish-calc-card');
@@ -1026,6 +1035,60 @@ function renderRenoVsRebuildCard() {
     + '&#x1F4A1; ' + recommendHtml + '<br>'
     + '<span style="color:var(--text-muted)">※ 坪単価・賃料は地域・仕様により大きく異なります。実際は複数業者の見積もりを取ることをお勧めします。</span>'
     + '</div>'
+    + '</div>';
+}
+
+function renderInheritanceSpecialCard(score, checkedArr) {
+  var card = document.getElementById('inheritance-special-card');
+  var content = document.getElementById('inheritance-special-content');
+  if (!card || !content) return;
+  var hasInheritance = checkedArr.indexOf('c6') >= 0;
+  if (!hasInheritance || score <= 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  var age = parseInt(document.getElementById('akiya_age')?.value) || 0;
+  var conditions = [
+    {
+      label: '被相続人が一人暮らしで居住していた',
+      ok: null, // ユーザーが確認
+      note: '複数人居住・施設入居前の空き家は原則対象外です'
+    },
+    {
+      label: '1981年5月31日以降に建てられた建物（耐震基準適合）または取り壊し後の更地',
+      ok: age > 0 ? age <= 44 : null,
+      note: age > 44 ? '⚠️ 旧耐震基準の可能性あり。取り壊して更地売却なら適用可能な場合があります' : '✅ 現行耐震基準の可能性が高い（要確認）'
+    },
+    {
+      label: '相続した日から3年後の12月31日までに売却する',
+      ok: null,
+      note: '期限内の売却が必須。2024年の改正で最大4年に延長（一部条件あり）'
+    },
+    {
+      label: '売却代金が1億円以下',
+      ok: null,
+      note: '1億円超の物件には適用不可です'
+    },
+    {
+      label: '売却後も引き続き空き家でないこと（譲渡後に取り壊しまたは耐震改修済み）',
+      ok: null,
+      note: '2024年改正で「買主が翌年2月15日までに耐震改修または取壊し」でも対象に'
+    },
+  ];
+  var rows = conditions.map(function(c) {
+    var icon = c.ok === true ? '✅' : c.ok === false ? '⚠️' : '□';
+    var color = c.ok === true ? '#4ade80' : c.ok === false ? '#f59e0b' : '#888';
+    return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+      + '<span style="font-size:14px;flex-shrink:0;line-height:1.4">' + icon + '</span>'
+      + '<div><div style="font-size:12px;color:#ddd;margin-bottom:2px">' + c.label + '</div>'
+      + '<div style="font-size:10px;color:' + color + ';line-height:1.5">' + c.note + '</div></div></div>';
+  }).join('');
+  content.innerHTML = rows
+    + '<div style="margin-top:14px;padding:12px 14px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:8px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:6px">💡 この特例を活用すると？</div>'
+    + '<div style="font-size:12px;color:#aaa;line-height:1.8">相続した空き家を例えば2,000万円で売却した場合、取得費用・諸経費を差し引いた譲渡所得から最大3,000万円が控除されるため、<strong style="color:var(--gold)">税金がゼロになる可能性があります</strong>。</div>'
+    + '</div>'
+    + '<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:11px;color:#888;line-height:1.7">'
+    + '⚠️ 本カードは概要の参考情報です。実際の適用可否は税理士または税務署にご確認ください。'
+    + '<br><a href="mailto:terra.realty.iam@gmail.com?subject=相続空き家の特別控除について相談したい" style="color:var(--gold)">TERRA REALTYに無料相談→</a>'
     + '</div>';
 }
 
