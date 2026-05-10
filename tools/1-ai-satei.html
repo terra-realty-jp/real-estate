@@ -505,6 +505,9 @@
       <!-- 周辺成約事例カード -->
       <div id="comparable-sales-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 売却タイミング比較カード -->
+      <div id="sale-timing-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -1357,6 +1360,50 @@ function calcTaxSim() {
   `;
 }
 
+function renderSaleTimingPanel(price, age, sqm, propType) {
+  var el = document.getElementById('sale-timing-panel');
+  if (!el) return;
+  el.style.display = 'block';
+  var M = function(v){ return Math.round(v/10000).toLocaleString() + '万円'; };
+  var net = function(p){ return Math.round((p - Math.ceil((p*0.03+60000)*1.1)) / 10000) * 10000; };
+  var scenarios = [
+    { label: '今すぐ売る', years: 0, ageFac: 1.0 },
+    { label: '3年後に売る', years: 3, ageFac: AGE_FACTOR(age+3) / AGE_FACTOR(age) },
+    { label: '5年後に売る', years: 5, ageFac: AGE_FACTOR(age+5) / AGE_FACTOR(age) },
+    { label: '10年後に売る', years: 10, ageFac: AGE_FACTOR(age+10) / AGE_FACTOR(age) },
+  ];
+  var cards = scenarios.map(function(s, i) {
+    var p = Math.round(price * s.ageFac / 10000) * 10000;
+    var n = net(p);
+    var diff = n - net(price);
+    var diffM = Math.abs(Math.round(diff/10000));
+    var isNow = i === 0;
+    var diffColor = diff > 0 ? '#22c55e' : diff < 0 ? '#ef4444' : '#999';
+    var borderStyle = isNow ? 'border:1px solid rgba(201,168,76,0.35)' : 'border:1px solid rgba(255,255,255,0.06)';
+    var pctChange = Math.round((s.ageFac - 1) * 100);
+    var pctStr = pctChange === 0 ? '±0%' : (pctChange > 0 ? '+' : '') + pctChange + '%';
+    return '<div style="background:rgba(255,255,255,0.03);' + borderStyle + ';border-radius:8px;padding:12px 14px;' + (isNow?'background:rgba(201,168,76,0.06)':'') + '">' +
+      '<div style="font-size:11px;color:' + (isNow?'var(--gold)':'var(--text-muted)') + ';font-weight:700;margin-bottom:6px">' + s.label + (isNow?' ← 現在':' (築'+(age+s.years)+'年)') + '</div>' +
+      '<div style="font-size:20px;font-weight:900;color:' + (isNow?'var(--gold)':'var(--text)') + '">' + M(p) + '</div>' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">手取り目安: ' + M(n) + '</div>' +
+      (isNow ? '' : '<div style="font-size:11px;font-weight:700;color:' + diffColor + ';margin-top:4px">' + (diff>=0?'＋':'▲') + diffM + '万円（今より）　価格変動: ' + pctStr + '</div>') +
+    '</div>';
+  });
+  var recommended = age <= 15 ? '今すぐ〜3年以内' : age <= 25 ? '今すぐ売ることを推奨' : '早期売却を強く推奨';
+  var recommendReason = age <= 15
+    ? '築年数が浅く価格維持力が高い時期です。市況が良い今のうちに検討を。'
+    : age <= 25 ? '築25年を過ぎると価格下落が加速します。今が売り時のピークです。'
+    : '旧耐震基準（1981年以前）の物件は買い手が絞られます。早めの売却をご検討ください。';
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:4px;color:var(--gold)">⏰ 売却タイミング比較</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">築年数の経過とともに査定価格は変動します。今売る場合と将来売る場合の手取りを比較できます。</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px">' + cards.join('') + '</div>' +
+    '<div style="padding:11px 14px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.22);border-radius:8px">' +
+      '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px">💡 診断: ' + recommended + '</div>' +
+      '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">' + recommendReason + '<a href="mailto:terra.realty.iam@gmail.com?subject=売却タイミングについて相談したい" style="color:var(--gold);margin-left:4px">TERRA REALTYに無料相談→</a></div>' +
+    '</div>' +
+    '<div style="font-size:10px;color:#555;margin-top:8px">※価格変動は築年数補正のみの概算です。市況・立地・リフォーム状況により実際の価格は変わります。</div>';
+}
+
 function renderComparableSales(price, sqm, propType, age, pref) {
   var el = document.getElementById('comparable-sales-panel');
   if (!el) return;
@@ -1635,6 +1682,9 @@ function calcAndShowResult() {
 
   // 周辺成約事例カード
   renderComparableSales(price, area, propType, age, pref);
+
+  // 売却タイミング比較カード
+  renderSaleTimingPanel(price, age, area, propType);
 
   // 譲渡所得税シミュレーター表示
   (function(){
