@@ -399,6 +399,9 @@
     <button class="btn btn-outline btn-sm" onclick="exportHistory()">CSVエクスポート</button>
     <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="clearHistory()">履歴削除</button>
   </div>
+  <!-- ポートフォリオ合計CF -->
+  <div id="portfolio-summary" style="display:none;margin-bottom:16px"></div>
+
   <!-- 物件比較パネル -->
   <div id="compare-panel" style="display:none;margin-bottom:24px">
     <div class="card" style="border-color:rgba(201,168,76,0.3)">
@@ -1693,7 +1696,43 @@ function renderCompareTable() {
   <p style="font-size:11px;color:var(--text-muted);margin-top:10px;text-align:center">※ ゴールドの背景はその指標でより優位な物件を示します</p>`;
 }
 
+function renderPortfolioSummary() {
+  var el = document.getElementById('portfolio-summary');
+  if (!el) return;
+  if (history.length < 2) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  var totalPrice = history.reduce(function(s, h){ return s + (h.price || 0); }, 0);
+  var totalRentMonth = history.reduce(function(s, h){ return s + (Number(h.rent) || 0); }, 0);
+  var totalCFYear = history.reduce(function(s, h){ return s + (h.annualCF || 0); }, 0);
+  var avgNetYield = history.reduce(function(s, h){ return s + (h.netYield || 0); }, 0) / history.length;
+  var buyCount = history.filter(function(h){ return h.verdict === 'buy'; }).length;
+  var cfColor = totalCFYear >= 0 ? '#22c55e' : '#ef4444';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.04));border:1px solid rgba(201,168,76,0.3);border-radius:12px;padding:16px 20px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:12px">📂 ポートフォリオ合計（登録 ' + history.length + ' 物件）</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">'
+    + '<div style="text-align:center;background:rgba(0,0,0,0.2);border-radius:8px;padding:10px 6px">'
+    + '<div style="font-size:10px;color:#777;margin-bottom:4px">物件取得総額</div>'
+    + '<div style="font-size:16px;font-weight:900;color:var(--gold)">' + totalPrice.toLocaleString() + '<span style="font-size:10px">万</span></div>'
+    + '</div>'
+    + '<div style="text-align:center;background:rgba(0,0,0,0.2);border-radius:8px;padding:10px 6px">'
+    + '<div style="font-size:10px;color:#777;margin-bottom:4px">月間家賃合計</div>'
+    + '<div style="font-size:16px;font-weight:900;color:var(--text)">' + Math.round(totalRentMonth / 10000).toLocaleString() + '<span style="font-size:10px">万</span></div>'
+    + '</div>'
+    + '<div style="text-align:center;background:rgba(0,0,0,0.2);border-radius:8px;padding:10px 6px">'
+    + '<div style="font-size:10px;color:#777;margin-bottom:4px">年間CF合計</div>'
+    + '<div style="font-size:16px;font-weight:900;color:' + cfColor + '">' + (totalCFYear >= 0 ? '+' : '') + Math.round(totalCFYear / 10000) + '<span style="font-size:10px">万</span></div>'
+    + '</div>'
+    + '<div style="text-align:center;background:rgba(0,0,0,0.2);border-radius:8px;padding:10px 6px">'
+    + '<div style="font-size:10px;color:#777;margin-bottom:4px">平均実質利回り</div>'
+    + '<div style="font-size:16px;font-weight:900;color:' + (avgNetYield >= 5 ? '#22c55e' : '#f59e0b') + '">' + avgNetYield.toFixed(1) + '<span style="font-size:10px">%</span></div>'
+    + '</div>'
+    + '</div>'
+    + (buyCount > 0 ? '<div style="margin-top:10px;font-size:11px;color:#888">うち「購入推奨」判定: <strong style="color:#22c55e">' + buyCount + '件</strong></div>' : '')
+    + '</div>';
+}
+
 function renderHistory() {
+  renderPortfolioSummary();
   const el = document.getElementById('history-list');
   if(!history.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🗂️</div><p>分析履歴がありません</p><p style="font-size:12px;margin-top:8px">「物件入力」タブで分析を実行すると、ここに履歴が保存されます</p><button class="btn btn-gold" style="margin-top:16px" onclick="switchTab('input')">物件入力タブへ →</button></div>`;
