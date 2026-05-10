@@ -1020,8 +1020,11 @@ function runMatching() {
   const reasonTagColor = {price:'#22c55e', 'price-near':'#f59e0b', area:'#60a5fa', type:'#a78bfa', sqm:'#94a3b8'};
   const filterNote = (areaFilter || minScore > 30) ? `（全${pairs.length}件中 ${filteredPairs.length}件を表示）` : '';
   el.innerHTML = `<div style="margin-bottom:16px;font-size:13px;color:var(--text-muted)">${filteredPairs.length}件のマッチング候補${filterNote}</div>` +
-  filteredPairs.map(p => `
-    <div class="match-pair">
+  filteredPairs.map(p => {
+    const hotDeal = p.s.timing==='asap' && p.b.timing==='asap';
+    return `
+    <div class="match-pair" style="${hotDeal?'border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.04)':''}">
+      ${hotDeal?'<div style="text-align:center;padding:4px 0 0;font-size:11px;font-weight:700;color:var(--green);letter-spacing:0.5px">🔥 今すぐ成約チャンス — 売主・買主ともに即決希望</div>':'' }
       <div class="match-side">
         <div class="match-side-label">SELLER — 売主</div>
         <div style="font-size:15px;font-weight:700;margin-bottom:4px">${esc(p.s.name)}</div>
@@ -1049,7 +1052,7 @@ function runMatching() {
         <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${p.b.area} | ${TYPE_LABEL[p.b.type]}</div>
       </div>
     </div>
-  `).join('') +
+  `;}).join('') +
   `<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:20px 24px;margin-top:20px;text-align:center">
     <div style="font-size:15px;font-weight:700;margin-bottom:6px">🎉 ${filteredPairs.length}件のマッチング候補が見つかりました！</div>
     <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">このマッチングを実際に進めるには、TERRA REALTYにご連絡ください。物件調査・売買契約・資金計画まで無料でサポートします。</div>

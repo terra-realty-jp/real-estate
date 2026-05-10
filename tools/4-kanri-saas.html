@@ -173,6 +173,7 @@
     </div>
   </div>
   <div class="kpi-grid" id="kpi-grid"></div>
+  <div id="vacancy-potential-card" style="margin-bottom:20px"></div>
   <div id="monthly-highlight-card" style="margin-bottom:20px"></div>
   <div class="card" style="margin-bottom:20px;padding:18px 24px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
@@ -926,9 +927,54 @@ function renderDashboard() {
       ctaCard.style.display = 'none';
     }
   }
+  renderVacancyPotentialCard();
   renderMonthlyHighlight();
   renderYTDSummary();
   renderTaxHelper();
+}
+
+function renderVacancyPotentialCard() {
+  var el = document.getElementById('vacancy-potential-card');
+  if (!el) return;
+  var activeTenants = tenants.filter(function(t){ return t.status==='active'; });
+  var totalUnits = properties.reduce(function(s,p){ return s+(p.units||0); }, 0);
+  var vacantUnits = totalUnits - activeTenants.length;
+  if (vacantUnits <= 0 || totalUnits <= 0) { el.innerHTML=''; return; }
+  var currentMonthly = activeTenants.reduce(function(s,t){ return s+(t.rent||0); }, 0);
+  var avgRent = activeTenants.length > 0 ? Math.round(currentMonthly / activeTenants.length) : 0;
+  if (!avgRent) { el.innerHTML=''; return; }
+  var potentialMonthly = avgRent * vacantUnits;
+  var potentialAnnual  = potentialMonthly * 12;
+  var fullMonthly      = currentMonthly + potentialMonthly;
+  var upPct            = currentMonthly > 0 ? Math.round(potentialMonthly / currentMonthly * 100) : 0;
+  var barWidth         = totalUnits > 0 ? Math.round(activeTenants.length / totalUnits * 100) : 0;
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(34,197,94,0.05));border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:16px 20px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--gold)">📈 満室達成時の収益ポテンシャル</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">現在 ' + activeTenants.length + '/' + totalUnits + '戸 入居中（空室' + vacantUnits + '戸）</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:7px;height:8px;margin-bottom:10px;overflow:hidden">'
+    + '<div style="width:' + barWidth + '%;height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:7px;transition:width 0.4s"></div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">'
+    + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">現在の月間収入</div>'
+    + '<div style="font-size:16px;font-weight:800;color:var(--text)">' + Math.round(currentMonthly/10000).toLocaleString() + '<span style="font-size:10px;font-weight:400">万円</span></div>'
+    + '</div>'
+    + '<div style="text-align:center;padding:10px;background:rgba(201,168,76,0.08);border-radius:8px;border:1px solid rgba(201,168,76,0.2)">'
+    + '<div style="font-size:10px;color:var(--gold);margin-bottom:4px">空室が埋まると+</div>'
+    + '<div style="font-size:16px;font-weight:800;color:var(--gold)">+' + Math.round(potentialMonthly/10000).toLocaleString() + '<span style="font-size:10px;font-weight:400">万円/月</span></div>'
+    + '</div>'
+    + '<div style="text-align:center;padding:10px;background:rgba(34,197,94,0.08);border-radius:8px;border:1px solid rgba(34,197,94,0.2)">'
+    + '<div style="font-size:10px;color:var(--green);margin-bottom:4px">年間増収ポテンシャル</div>'
+    + '<div style="font-size:16px;font-weight:800;color:var(--green)">+' + Math.round(potentialAnnual/10000).toLocaleString() + '<span style="font-size:10px;font-weight:400">万円/年</span></div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">'
+    + '💡 満室になれば月額 <strong style="color:var(--gold)">' + Math.round(fullMonthly/10000).toLocaleString() + '万円</strong>（+' + upPct + '%増）の収入になります。'
+    + '空室対策はテナント管理タブの「空室募集ヘルパー」をご利用ください。'
+    + '</div>'
+    + '</div>';
 }
 
 function renderYTDSummary() {
