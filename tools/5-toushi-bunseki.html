@@ -340,6 +340,7 @@
       CFレポートを印刷・PDF保存
     </button>
   </div>
+  <div id="rate-sensitivity-card" style="display:none;margin-top:16px"></div>
   <div id="prepay-calc-card" style="display:none;margin-top:16px" class="card">
     <div class="card-title">⚡ 繰り上げ返済シミュレーター</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">毎月または一括で追加元本返済した場合の利息削減効果を試算します。</p>
@@ -1208,6 +1209,8 @@ function renderCashflow(inp, r) {
   // 繰り上げ返済カード表示
   const ppCard = document.getElementById('prepay-calc-card');
   if(ppCard && inp.loan>0) ppCard.style.display='block';
+  // 金利上昇シミュレーション
+  renderRateSensitivity(inp);
 
   if(cfChart) cfChart.destroy();
   cfChart = new Chart(document.getElementById('cfChart').getContext('2d'), {
@@ -1244,6 +1247,48 @@ function renderCashflow(inp, r) {
       scales:{x:{ticks:{color:'#999'},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#999'},grid:{color:'rgba(255,255,255,0.06)'}}}
     }
   });
+}
+
+function renderRateSensitivity(inp) {
+  var el = document.getElementById('rate-sensitivity-card');
+  if (!el) return;
+  if (!inp.loan || inp.loan <= 0 || !inp.rate) { el.style.display='none'; return; }
+  el.style.display = 'block';
+  var baseRate = inp.rate;
+  var loanAmt  = inp.loan * 10000;
+  var term     = inp.loanTerm || 30;
+  var n        = term * 12;
+  var calcMonthly = function(annualRate) {
+    var r = annualRate / 100 / 12;
+    if (r === 0) return Math.round(loanAmt / n);
+    return Math.round(loanAmt * r / (1 - Math.pow(1 + r, -n)));
+  };
+  var baseMonthly = calcMonthly(baseRate);
+  var deltas = [-0.5, 0, 0.5, 1.0, 1.5, 2.0];
+  var rowsHtml = deltas.map(function(d) {
+    var rate = Math.max(0.1, baseRate + d);
+    var m    = calcMonthly(rate);
+    var diff = m - baseMonthly;
+    var isBase = d === 0;
+    var color = d > 0 ? 'var(--red)' : d < 0 ? 'var(--green)' : 'var(--gold)';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:'
+      + (isBase ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.02)')
+      + ';border:1px solid ' + (isBase ? 'rgba(201,168,76,0.25)' : 'rgba(255,255,255,0.05)') + '">'
+      + '<span style="font-size:11px;color:' + color + ';width:90px">' + rate.toFixed(1) + '%'
+      + (isBase ? ' ◀ 現在' : d > 0 ? ' (▲+' + d.toFixed(1) + '%)' : ' (▼' + d.toFixed(1) + '%)') + '</span>'
+      + '<span style="font-size:13px;font-weight:800;color:' + color + '">' + m.toLocaleString() + '円/月</span>'
+      + '<span style="font-size:11px;color:' + (diff > 0 ? 'var(--red)' : diff < 0 ? 'var(--green)' : 'var(--text-muted)') + ';width:90px;text-align:right">'
+      + (diff > 0 ? '+' + diff.toLocaleString() + '円' : diff < 0 ? diff.toLocaleString() + '円' : '基準値') + '</span>'
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div class="card">'
+    + '<div class="card-title">📊 金利上昇シミュレーション</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.7">変動金利が上昇した場合の月額返済額への影響を試算します。現在の金利 <strong style="color:var(--gold)">' + baseRate.toFixed(2) + '%</strong>（借入' + inp.loan.toLocaleString() + '万円・' + term + '年）</p>'
+    + '<div style="display:grid;gap:5px">' + rowsHtml + '</div>'
+    + '<div style="margin-top:10px;padding:8px 10px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:6px;font-size:11px;color:var(--text-muted);line-height:1.6">'
+    + '⚠️ 変動金利は市場動向により変化します。金利が1%上昇した場合でも月額CFがプラスを維持できるか確認しておきましょう。固定金利への借換えも選択肢の一つです。'
+    + '</div>'
+    + '</div>';
 }
 
 function renderSensitivity(inp) {
