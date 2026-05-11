@@ -207,6 +207,7 @@
   <div id="ytd-summary-card" style="margin-top:0"></div>
   <div id="next-month-forecast-card" style="margin-top:16px"></div>
   <div id="tax-helper-card" style="margin-top:16px"></div>
+  <div id="income-heatmap-card" style="margin-top:16px"></div>
   <div class="card" style="margin-top:0">
     <div class="card-title">今月のアクション必要リスト</div>
     <div id="action-list"></div>
@@ -989,6 +990,7 @@ function renderDashboard() {
   renderYTDSummary();
   renderNextMonthForecast();
   renderTaxHelper();
+  renderIncomeHeatmap();
 }
 
 function renderVacancyPotentialCard() {
@@ -1161,6 +1163,51 @@ function renderNextMonthForecast() {
       </div>
     </div>
     ${pendingRepairCount>0?`<div style="margin-top:10px;padding:8px 12px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:6px;font-size:12px;color:var(--orange)">⚠️ 未完了修繕${pendingRepairCount}件（推定${fmt(pendingRepairCost)}）があります。早期に対応することで来月の純収益を改善できます。</div>`:''}
+  </div>`;
+}
+
+function renderIncomeHeatmap() {
+  const el = document.getElementById('income-heatmap-card');
+  if (!el) return;
+  if (properties.length === 0 || tenants.filter(t=>t.status==='active').length === 0) { el.innerHTML=''; return; }
+  const now = new Date();
+  // 過去6ヶ月のリスト
+  const months6 = [];
+  for (let i=5; i>=0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months6.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+  const monthLabels = months6.map(ym => ym.slice(5)+'月');
+  // 各物件×各月の回収率を計算
+  const propRows = properties.map(p => {
+    const pts = tenants.filter(t=>t.propertyId===p.id&&t.status==='active');
+    if(!pts.length) return null;
+    const monthData = months6.map(ym => {
+      const expected = pts.reduce((s,t)=>s+(t.rent||0),0);
+      const paid = rents.filter(r=>r.month===ym&&pts.some(t=>t.id===r.tenantId)&&r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+      const rate = expected>0 ? Math.round(paid/expected*100) : null;
+      return rate;
+    });
+    return {p, monthData};
+  }).filter(Boolean);
+  if(!propRows.length) { el.innerHTML=''; return; }
+  const cellColor = rate => rate===null?'rgba(255,255,255,0.03)':rate>=100?'rgba(34,197,94,0.35)':rate>=80?'rgba(201,168,76,0.3)':rate>=50?'rgba(249,115,22,0.25)':'rgba(239,68,68,0.3)';
+  const headerHtml = `<div style="display:grid;grid-template-columns:80px repeat(6,1fr);gap:4px;margin-bottom:4px"><div></div>${monthLabels.map(m=>`<div style="text-align:center;font-size:10px;color:var(--text-muted);font-weight:700">${m}</div>`).join('')}</div>`;
+  const rowsHtml = propRows.map(({p, monthData})=>
+    `<div style="display:grid;grid-template-columns:80px repeat(6,1fr);gap:4px;margin-bottom:3px">`
+    +`<div style="font-size:10px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center" title="${esc(p.name)}">${esc(p.name.slice(0,8))}</div>`
+    +monthData.map(rate=>`<div style="text-align:center;background:${cellColor(rate)};border-radius:4px;padding:5px 2px;font-size:10px;font-weight:700;color:${rate===null?'rgba(255,255,255,0.2)':rate>=100?'#4ade80':rate>=80?'var(--gold)':rate>=50?'var(--orange)':'#f87171'}">${rate===null?'—':rate+'%'}</div>`).join('')
+    +`</div>`
+  ).join('');
+  el.innerHTML = `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px">🗓 物件別 家賃回収ヒートマップ（直近6ヶ月）</div>
+    ${headerHtml}${rowsHtml}
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:rgba(34,197,94,0.35)"></span>100%回収済</span>
+      <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:rgba(201,168,76,0.3)"></span>80〜99%</span>
+      <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:rgba(249,115,22,0.25)"></span>50〜79%</span>
+      <span style="font-size:10px;display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:rgba(239,68,68,0.3)"></span>50%未満</span>
+    </div>
   </div>`;
 }
 
