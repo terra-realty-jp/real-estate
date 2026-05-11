@@ -205,6 +205,7 @@
   </div>
   <div id="property-summary-card" style="display:none;margin-top:0"></div>
   <div id="ytd-summary-card" style="margin-top:0"></div>
+  <div id="next-month-forecast-card" style="margin-top:16px"></div>
   <div id="tax-helper-card" style="margin-top:16px"></div>
   <div class="card" style="margin-top:0">
     <div class="card-title">今月のアクション必要リスト</div>
@@ -934,6 +935,7 @@ function renderDashboard() {
   renderVacancyPotentialCard();
   renderMonthlyHighlight();
   renderYTDSummary();
+  renderNextMonthForecast();
   renderTaxHelper();
 }
 
@@ -1050,6 +1052,63 @@ function renderYTDSummary() {
         <span><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:var(--gold);margin-right:3px"></span>当月</span>
       </div>
     </div>
+  </div>`;
+}
+
+function renderNextMonthForecast() {
+  const el = document.getElementById('next-month-forecast-card');
+  if (!el || properties.length === 0) { if(el) el.innerHTML=''; return; }
+  const now = new Date();
+  const nextD = new Date(now.getFullYear(), now.getMonth()+1, 1);
+  const nextYM = `${nextD.getFullYear()}-${String(nextD.getMonth()+1).padStart(2,'0')}`;
+  const nextLabel = `${nextD.getFullYear()}年${nextD.getMonth()+1}月`;
+  const activeTenants = tenants.filter(t => t.status === 'active');
+  const expectedRent = activeTenants.reduce((s,t) => s+(t.rent||0), 0);
+
+  // 未完了修繕（進行中・未着手）のコスト合計を来月リスクとして表示
+  const pendingRepairCost = repairs.filter(r => r.status !== 'done').reduce((s,r) => s+(Number(r.cost)||0), 0);
+  const pendingRepairCount = repairs.filter(r => r.status !== 'done').length;
+
+  // 来月に更新期限が来るテナント
+  const renewalNext = activeTenants.filter(t => {
+    if (!t.end) return false;
+    const diff = (new Date(t.end) - nextD) / (1000*60*60*24);
+    return diff >= 0 && diff <= 31;
+  });
+
+  // 今月の実績（比較用）
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const thisCollected = rents.filter(r => r.month===thisMonth && r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+
+  const fmt = v => Math.round(v/10000).toLocaleString()+'万円';
+  const netForecast = expectedRent - pendingRepairCost;
+  const netColor = netForecast >= 0 ? 'var(--green)' : 'var(--red)';
+
+  el.innerHTML = `<div class="card" style="background:rgba(59,130,246,0.04);border-color:rgba(59,130,246,0.2)">
+    <div class="card-title">🔮 ${nextLabel}の収支予測</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:4px">
+      <div style="text-align:center;padding:12px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">予想家賃収入</div>
+        <div style="font-size:15px;font-weight:700;color:var(--gold)">${fmt(expectedRent)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px">${activeTenants.length}戸分</div>
+      </div>
+      <div style="text-align:center;padding:12px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">未対応修繕リスク</div>
+        <div style="font-size:15px;font-weight:700;color:${pendingRepairCost>0?'var(--orange)':'var(--text-muted)'}">${pendingRepairCost>0?fmt(pendingRepairCost):'なし'}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px">${pendingRepairCount>0?pendingRepairCount+'件未完了':'全件完了'}</div>
+      </div>
+      <div style="text-align:center;padding:12px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">予想純収益</div>
+        <div style="font-size:15px;font-weight:700;color:${netColor}">${netForecast>=0?'+':''}${fmt(netForecast)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px">${thisCollected>0?`今月比${fmt(expectedRent-thisCollected)}`:''}</div>
+      </div>
+      <div style="text-align:center;padding:12px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">更新対応予定</div>
+        <div style="font-size:15px;font-weight:700;color:${renewalNext.length>0?'var(--gold)':'var(--text-muted)'}">${renewalNext.length}件</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px">${renewalNext.length>0?renewalNext.map(t=>esc(t.name)).slice(0,2).join('・')+(renewalNext.length>2?'他':''):'なし'}</div>
+      </div>
+    </div>
+    ${pendingRepairCount>0?`<div style="margin-top:10px;padding:8px 12px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:6px;font-size:12px;color:var(--orange)">⚠️ 未完了修繕${pendingRepairCount}件（推定${fmt(pendingRepairCost)}）があります。早期に対応することで来月の純収益を改善できます。</div>`:''}
   </div>`;
 }
 
