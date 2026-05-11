@@ -621,8 +621,19 @@ function renderSellers() {
     return true;
   });
   if(!filteredSellers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><p>条件に合う売主がいません</p></div>`; return; }
+  // 同種別売主の平均価格計算
+  const samePrices = s => sellers.filter(x=>x.type===s.type&&x.price>0&&x.id!==s.id);
+  const avgPrice = s => { const arr=samePrices(s); return arr.length?arr.reduce((t,x)=>t+Number(x.price),0)/arr.length:0; };
   el.innerHTML = `<div class="listings-grid">${filteredSellers.map(s=>{
     const matchCnt = buyers.filter(b => calcMatchScore(s, b).score >= 30).length;
+    const avg = avgPrice(s);
+    const priceDiff = avg>0&&s.price>0 ? Math.round((s.price-avg)/avg*100) : null;
+    const priceBadge = priceDiff!==null ? (Math.abs(priceDiff)<=5
+      ? '<span style="display:inline-block;padding:2px 7px;border-radius:100px;background:rgba(255,255,255,0.07);color:var(--text-muted);font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,0.1);margin-top:4px">相場並み</span>'
+      : priceDiff>0
+        ? '<span style="display:inline-block;padding:2px 7px;border-radius:100px;background:rgba(239,68,68,0.1);color:#f87171;font-size:10px;font-weight:700;border:1px solid rgba(239,68,68,0.25);margin-top:4px">相場より+'+priceDiff+'%</span>'
+        : '<span style="display:inline-block;padding:2px 7px;border-radius:100px;background:rgba(34,197,94,0.1);color:#4ade80;font-size:10px;font-weight:700;border:1px solid rgba(34,197,94,0.25);margin-top:4px">相場より'+priceDiff+'%</span>'
+    ) : '';
     return `
     <div class="listing-card">
       <div class="listing-img">🏠
@@ -631,7 +642,7 @@ function renderSellers() {
         ${matchCnt>0?`<span class="match-badge" style="top:${s.status==='active'?'40px':'12px'};background:rgba(34,197,94,0.85);color:#fff;border-color:rgba(34,197,94,0.5)">🎯 ${matchCnt}人マッチ</span>`:''}
       </div>
       <div class="listing-body">
-        <div class="listing-price">${FMT(s.price)}</div>
+        <div class="listing-price">${FMT(s.price)}${priceBadge}</div>
         <div class="listing-name">${esc(s.name)}</div>
         <div class="listing-meta">
           ${s.area} | ${TYPE_LABEL[s.type]||s.type}<br>
