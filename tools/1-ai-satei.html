@@ -514,6 +514,9 @@
       <!-- 売却方法3択比較カード -->
       <div id="sell-method-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 物件魅力コピー自動生成カード -->
+      <div id="ad-copy-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -1523,6 +1526,52 @@ function renderComparableSales(price, sqm, propType, age, pref) {
     '</div>';
 }
 
+function renderAdCopyCard(price, age, station, dir, reform, propType, area, pref) {
+  var el = document.getElementById('ad-copy-panel');
+  if (!el || !price) return;
+  el.style.display = 'block';
+  var wan = Math.round(price / 10000);
+  var AREA_L = AREA_LABEL[pref] || pref || 'エリア';
+  var TYPE_L = TYPE_LABEL[propType] || propType || '物件';
+  // Line 1: 物件の最大の魅力
+  var line1 = '';
+  if (station === 'walk5') line1 = '駅徒歩5分以内の好立地';
+  else if (station === 'walk10') line1 = '駅徒歩10分の利便性高い立地';
+  else if (station === 'walk15') line1 = '駅徒歩15分・静かな住環境';
+  else line1 = '閑静な住宅地に位置';
+  if (reform === 'full') line1 += '、フルリフォーム済みで即入居可能';
+  else if (reform === 'partial') line1 += '、部分リフォーム済み';
+  else if (age <= 5) line1 += '、築浅（' + age + '年）で設備が新しい';
+  else if (age <= 15) line1 += '、築' + age + '年でバランスの良い状態';
+  line1 += 'な' + AREA_L + 'の' + TYPE_L + 'です。';
+  // Line 2: 日当たり・設備・使い勝手
+  var line2 = '';
+  if (dir === 'south') line2 = '南向きで日当たり・採光が良好';
+  else if (dir === 'east' || dir === 'southeast') line2 = '東（東南）向きで朝の日差しが心地よく';
+  else if (dir === 'west') line2 = '西向き・午後の明るさを活かした';
+  else line2 = '落ち着いた採光の';
+  if (reform === 'full') line2 += '、水回りを含む内装をリノベーション済み。';
+  else if (reform === 'partial') line2 += '、水回りをリフォームしており清潔感があります。';
+  else line2 += '、リフォームの余地があり自分好みにカスタマイズ可能です。';
+  // Line 3: アクション
+  var priceStr = wan.toLocaleString() + '万円';
+  var line3 = AREA_L + '相場を踏まえた ' + priceStr + 'での売り出しを検討中。ご興味のある方はぜひTERRA REALTYまでお気軽にお問い合わせください。';
+  var fullText = line1 + '\n' + line2 + '\n' + line3;
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">✍ 物件アピールコピー（自動生成）</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;line-height:1.6">入力した物件情報をもとに、不動産広告向けの3行コピーを自動生成しました。内容を確認・編集してご活用ください。</div>'
+    + '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;margin-bottom:12px">'
+    + '<div style="margin-bottom:10px;display:flex;align-items:flex-start;gap:8px"><span style="color:var(--gold);font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">①</span><div style="font-size:13px;line-height:1.7">' + line1 + '</div></div>'
+    + '<div style="margin-bottom:10px;display:flex;align-items:flex-start;gap:8px"><span style="color:var(--gold);font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">②</span><div style="font-size:13px;line-height:1.7">' + line2 + '</div></div>'
+    + '<div style="display:flex;align-items:flex-start;gap:8px"><span style="color:var(--gold);font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px">③</span><div style="font-size:13px;line-height:1.7">' + line3 + '</div></div>'
+    + '</div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    + '<button onclick="(function(){var t=document.getElementById(\'_adcopy_txt\');if(t){navigator.clipboard.writeText(t.value).then(function(){var b=document.getElementById(\'_adcopy_copy_btn\');if(b){b.textContent=\'✓ コピーしました\';setTimeout(function(){b.textContent=\'コピーする\';},2000);}});}})()" id="_adcopy_copy_btn" style="display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3);font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all 0.2s">コピーする</button>'
+    + '<a href="mailto:terra.realty.iam@gmail.com?subject=物件売却のご相談&body=' + encodeURIComponent(fullText) + '" style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);color:var(--green);border:1px solid rgba(34,197,94,0.25);font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none">→ このコピーでTERRA REALTYに相談</a>'
+    + '</div>'
+    + '<textarea id="_adcopy_txt" style="position:absolute;left:-9999px;top:0;opacity:0" readonly>' + fullText + '</textarea>'
+    + '<p style="font-size:10px;color:#555;margin-top:10px">※ 自動生成文は参考例です。実際の広告掲載時は不動産会社が詳細を確認・補完します。</p>';
+}
+
 function renderSellMethodCard(price) {
   var el = document.getElementById('sell-method-panel');
   if (!el || !price) return;
@@ -1843,6 +1892,9 @@ function calcAndShowResult() {
 
   // 売却方法3択比較カード
   renderSellMethodCard(price);
+
+  // 物件魅力コピー自動生成
+  renderAdCopyCard(price, age, station, direction, reform, propType, area, pref);
 
   // 譲渡所得税シミュレーター表示
   (function(){
