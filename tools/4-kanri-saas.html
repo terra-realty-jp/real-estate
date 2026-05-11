@@ -401,6 +401,9 @@
         <select id="t_status"><option value="active">入居中</option><option value="notice">退去予告</option><option value="vacant">退去済</option></select>
       </div>
       <div class="form-group full"><label>備考</label><textarea id="t_memo" rows="2"></textarea></div>
+      <div class="form-group" style="border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;margin-top:4px"><label>緊急連絡先 氏名</label><input id="t_emergency_name" placeholder="田中 花子（母）"></div>
+      <div class="form-group"><label>緊急連絡先 電話</label><input id="t_emergency_phone" placeholder="090-1111-2222"></div>
+      <div class="form-group full"><label>続柄</label><input id="t_emergency_rel" placeholder="例: 母・兄・配偶者"></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('tenantModal')">キャンセル</button>
@@ -423,6 +426,7 @@
       <div><span style="color:var(--text-muted);font-size:12px">電話番号</span><br><span id="tdm-phone"></span></div>
       <div><span style="color:var(--text-muted);font-size:12px">備考</span><br><span id="tdm-memo" style="font-size:12px;color:var(--text-muted)"></span></div>
     </div>
+    <div id="tdm-emergency"></div>
     <div style="display:flex;gap:16px;margin-bottom:16px">
       <div style="flex:1;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px 14px;text-align:center">
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">累計入金額（全期間）</div>
@@ -1621,12 +1625,12 @@ function openTenantModal(id){
   if(id){
     const t=tenants.find(x=>x.id===id);if(!t)return;
     document.getElementById('tenantModalTitle').textContent='テナント編集';
-    ['name','phone','email','room','rent','deposit','start','end','memo'].forEach(f=>{const el=document.getElementById('t_'+f);if(el)el.value=t[f]||'';});
+    ['name','phone','email','room','rent','deposit','start','end','memo','emergency_name','emergency_phone','emergency_rel'].forEach(f=>{const el=document.getElementById('t_'+f);if(el)el.value=t[f]||'';});
     document.getElementById('t_property').value=t.propertyId||'';
     document.getElementById('t_status').value=t.status||'active';
   } else {
     document.getElementById('tenantModalTitle').textContent='テナント登録';
-    ['name','phone','email','room','rent','deposit','start','end','memo'].forEach(f=>{const el=document.getElementById('t_'+f);if(el)el.value='';});
+    ['name','phone','email','room','rent','deposit','start','end','memo','emergency_name','emergency_phone','emergency_rel'].forEach(f=>{const el=document.getElementById('t_'+f);if(el)el.value='';});
     document.getElementById('t_status').value='active';
   }
   document.getElementById('tenantModal').style.display='flex';
@@ -1669,6 +1673,13 @@ function showTenantDetail(id){
   document.getElementById('tdm-email').textContent=t.email||'—';
   document.getElementById('tdm-phone').textContent=t.phone||'—';
   document.getElementById('tdm-memo').textContent=t.memo||'なし';
+  const ecEl=document.getElementById('tdm-emergency');
+  if(ecEl){
+    if(t.emergency_name||t.emergency_phone){
+      const rel=t.emergency_rel?`（${t.emergency_rel}）`:'';
+      ecEl.innerHTML=`<div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.18);border-radius:8px;padding:10px 14px;margin-top:4px"><div style="font-size:11px;font-weight:700;color:#fbbf24;margin-bottom:6px">🚨 緊急連絡先${rel}</div><div style="font-size:12px;color:var(--text)">${t.emergency_name||'—'}</div><div style="font-size:12px;color:var(--text-muted)">${t.emergency_phone?`<a href="tel:${t.emergency_phone}" style="color:var(--gold)">${t.emergency_phone}</a>`:'—'}</div></div>`;
+    } else { ecEl.innerHTML=''; }
+  }
   document.getElementById('tdm-total-paid').textContent=totalPaid.toLocaleString()+'円';
   document.getElementById('tdm-unpaid-count').textContent=unpaidCount+'ヶ月';
   document.getElementById('tdm-bars').innerHTML=bars;
@@ -1830,6 +1841,9 @@ function saveTenant(){
     deposit:parseInt(document.getElementById('t_deposit').value)||0,
     start:document.getElementById('t_start').value,end:document.getElementById('t_end').value,
     status:document.getElementById('t_status').value,memo:document.getElementById('t_memo').value,
+    emergency_name:document.getElementById('t_emergency_name').value,
+    emergency_phone:document.getElementById('t_emergency_phone').value,
+    emergency_rel:document.getElementById('t_emergency_rel').value,
   };
   if(editTenantId) tenants=tenants.map(t=>t.id===editTenantId?obj:t); else tenants.unshift(obj);
   save('tenants');
