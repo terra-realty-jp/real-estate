@@ -2335,7 +2335,8 @@ function renderRepairs(){
           <td>${r.cost?Number(r.cost).toLocaleString()+'円':'—'}</td>
           <td style="font-size:12px">${r.vendor||'—'}</td>
           <td><span class="badge ${ST_B[r.status]||''}">${REPAIR_ST[r.status]||r.status}</span></td>
-          <td style="display:flex;gap:6px">
+          <td style="display:flex;gap:6px;flex-wrap:wrap">
+            ${r.status!=='done'?`<button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="generateRepairEstimateEmail('${r.id}')">見積依頼</button>`:''}
             <button class="btn btn-outline btn-sm" onclick="editRepair('${r.id}')">編集</button>
             <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteRepair('${r.id}')">削除</button>
           </td>
@@ -2343,6 +2344,38 @@ function renderRepairs(){
       }).join('')}
     </tbody>
   </table>`;
+}
+
+function generateRepairEstimateEmail(id) {
+  const r = repairs.find(x => x.id === id);
+  if (!r) return;
+  const p = properties.find(x => x.id === r.propertyId);
+  const propName = p ? p.name : '管理物件';
+  const room = r.room ? r.room + '号室' : '共用部';
+  const priority = REPAIR_PRI[r.priority] || r.priority || '通常';
+  const urgencyNote = r.priority === 'urgent' ? '※【緊急対応】につき、最優先でご対応いただきますようお願いいたします。' : r.priority === 'high' ? '※できるだけ早急にご対応いただけますと幸いです。' : '';
+  const catNote = r.rp_category ? `【種別】${r.rp_category}\n` : '';
+  const subject = encodeURIComponent(`【修繕見積依頼】${propName} ${room} — ${r.content}`);
+  const body = encodeURIComponent([
+    `株式会社 / ご担当者 様`,
+    ``,
+    `いつもお世話になっております。`,
+    `下記物件の修繕について、お見積もりをお願いしたく、ご連絡いたしました。`,
+    ``,
+    `【物件名】${propName}`,
+    `【場所】${room}`,
+    catNote.trim() ? catNote.trim() : '',
+    `【修繕内容】${r.content}`,
+    `【優先度】${priority}`,
+    r.date ? `【報告日】${r.date}` : '',
+    urgencyNote,
+    ``,
+    `現地確認のご都合の良い日時をお知らせください。`,
+    `見積書をお送りいただければ、内容を確認の上、ご連絡いたします。`,
+    ``,
+    `どうぞよろしくお願いいたします。`,
+  ].filter(line => line !== null && line !== undefined).join('\n'));
+  window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
 }
 
 function saveRepairBudget() {
