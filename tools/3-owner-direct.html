@@ -192,6 +192,7 @@
   <div id="buyer-demand-card" style="display:none;margin-bottom:16px"></div>
   <div id="nego-sim-card" style="display:none;margin-bottom:16px"></div>
   <div id="sellers-list"></div>
+  <div id="seller-checklist-card" style="display:none;margin-top:20px"></div>
 </div>
 </div>
 
@@ -525,6 +526,78 @@ function renderBuyerDemandCard() {
     + '</div>';
 }
 
+// ===== 売却準備チェックリスト =====
+var SELL_CHECKLIST_KEY = 'od_sell_checklist';
+var SELL_CHECKLIST_ITEMS = [
+  { id: 'sc1', cat: '📄 書類の確認', label: '権利証（登記済証）または登記識別情報', detail: '紛失した場合は司法書士に相談' },
+  { id: 'sc2', cat: '📄 書類の確認', label: '固定資産税納税通知書（直近年）', detail: '課税明細書も一緒に準備' },
+  { id: 'sc3', cat: '📄 書類の確認', label: '購入時の売買契約書・重要事項説明書', detail: 'ない場合は法務局で登記簿謄本を取得' },
+  { id: 'sc4', cat: '📄 書類の確認', label: '建築確認済証・検査済証', detail: '一戸建て・再建築可否の確認に必要' },
+  { id: 'sc5', cat: '📄 書類の確認', label: '管理規約・使用細則・総会議事録（マンション）', detail: '直近3年分を準備' },
+  { id: 'sc6', cat: '📄 書類の確認', label: 'リフォーム工事記録・設備保証書', detail: '工事内容・費用の記録があれば価値向上に' },
+  { id: 'sc7', cat: '📄 書類の確認', label: 'ローン残高証明書（ローンがある場合）', detail: '金融機関から取り寄せ' },
+  { id: 'sc8', cat: '🏠 内見準備', label: '室内の清掃・不用品の処分', detail: '玄関・水回り・窓まわりは特に念入りに' },
+  { id: 'sc9', cat: '🏠 内見準備', label: '照明全灯・電気・水道・ガスの動作確認', detail: '明るく見せることで第一印象UP' },
+  { id: 'sc10', cat: '🏠 内見準備', label: '換気・消臭（水回り・タバコ・ペット）', detail: '最初の印象に直結。必要なら消臭スプレー' },
+  { id: 'sc11', cat: '🏠 内見準備', label: '昼間に物件写真を撮影（外観・各部屋）', detail: '自然光で明るい時間帯に撮影すると◎' },
+  { id: 'sc12', cat: '💰 価格の準備', label: '複数の不動産会社に査定依頼（3社以上推奨）', detail: 'AI査定ツールでも概算チェックできます' },
+  { id: 'sc13', cat: '💰 価格の準備', label: '希望売却価格と最低成立価格のラインを決める', detail: '「ここまでは下げられる」の準備が交渉力になる' },
+  { id: 'sc14', cat: '💰 価格の準備', label: '引き渡し可能な時期・条件を決める', detail: '引っ越し先・資金計画と合わせて整理' },
+];
+
+function renderSellerChecklist() {
+  var el = document.getElementById('seller-checklist-card');
+  if (!el) return;
+  if (!sellers.length) { el.style.display = 'none'; return; }
+  var checked = JSON.parse(localStorage.getItem(SELL_CHECKLIST_KEY) || '[]');
+  var doneCount = SELL_CHECKLIST_ITEMS.filter(function(i){ return checked.includes(i.id); }).length;
+  var pct = Math.round(doneCount / SELL_CHECKLIST_ITEMS.length * 100);
+  var cats = {};
+  SELL_CHECKLIST_ITEMS.forEach(function(item) {
+    if (!cats[item.cat]) cats[item.cat] = [];
+    cats[item.cat].push(item);
+  });
+  var catHtml = Object.keys(cats).map(function(cat) {
+    var items = cats[cat].map(function(item) {
+      var isDone = checked.includes(item.id);
+      return '<div onclick="toggleSellCheckItem(\'' + item.id + '\')" style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;background:' + (isDone ? 'rgba(34,197,94,0.05)' : 'rgba(255,255,255,0.02)') + ';border:1px solid ' + (isDone ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)') + ';transition:all 0.2s;user-select:none">'
+        + '<span style="font-size:14px;margin-top:1px;flex-shrink:0">' + (isDone ? '✅' : '☐') + '</span>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:12px;color:' + (isDone ? 'var(--text-muted)' : 'var(--text)') + ';' + (isDone ? 'text-decoration:line-through' : '') + '">' + item.label + '</div>'
+        + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + item.detail + '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+    return '<div style="margin-bottom:16px">'
+      + '<div style="font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:8px">' + cat + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:6px">' + items + '</div>'
+      + '</div>';
+  }).join('');
+
+  var barColor = pct >= 80 ? '#22c55e' : pct >= 50 ? '#c9a84c' : '#f97316';
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 20px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--gold)">📋 売却準備チェックリスト</div>'
+    + '<div style="font-size:12px;color:' + barColor + ';font-weight:700">' + doneCount + ' / ' + SELL_CHECKLIST_ITEMS.length + '件 完了</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.06);border-radius:100px;height:8px;margin-bottom:16px;overflow:hidden">'
+    + '<div style="width:' + pct + '%;height:100%;background:' + barColor + ';border-radius:100px;transition:width 0.4s"></div>'
+    + '</div>'
+    + catHtml
+    + (pct === 100 ? '<div style="padding:12px 14px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:8px;font-size:12px;color:#4ade80;text-align:center">🎉 準備完了！TERRA REALTYへの相談をスタートしましょう。<br><a href="mailto:terra.realty.iam@gmail.com?subject=売却準備が整いました" style="color:var(--gold);font-weight:700">→ メールで相談する</a></div>' : '')
+    + '<div style="margin-top:12px;font-size:11px;color:var(--text-muted)">✏️ 各項目をクリックでチェック。進捗はブラウザに保存されます。</div>'
+    + '</div>';
+}
+
+function toggleSellCheckItem(id) {
+  var checked = JSON.parse(localStorage.getItem(SELL_CHECKLIST_KEY) || '[]');
+  var idx = checked.indexOf(id);
+  if (idx >= 0) checked.splice(idx, 1); else checked.push(id);
+  localStorage.setItem(SELL_CHECKLIST_KEY, JSON.stringify(checked));
+  renderSellerChecklist();
+}
+
 // ===== 売主 =====
 function renderSellers() {
   const el = document.getElementById('sellers-list');
@@ -538,6 +611,7 @@ function renderSellers() {
 
   renderBuyerDemandCard();
   renderNegoSimCard();
+  renderSellerChecklist();
   if(!sellers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏠</div><p>売主がまだ登録されていません</p><p style="font-size:12px;margin-top:8px">「売主登録」ボタンから売却したい物件を登録してください</p></div>`; return; }
   const sellerQ = (document.getElementById('seller-search')||{}).value||'';
   const sellerSt = (document.getElementById('seller-status-filter')||{}).value||'all';
