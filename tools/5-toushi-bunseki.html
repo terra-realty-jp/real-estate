@@ -888,6 +888,7 @@ function renderResult(inp, r) {
     ${renderDownPayCompareCard(inp, r)}
     ${renderPurchaseChecklistCard(inp, r)}
     ${renderHoldPeriodOptimCard(inp)}
+    ${renderTaxChecklistCard(inp, r)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
@@ -1181,6 +1182,47 @@ function renderPurchaseChecklistCard(inp, r) {
     ${rows}
     <p style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.7">※ 全項目通過が購入判断の絶対条件ではありません。エリアの成長性・管理体制など数値で表れない要素も重要です。</p>
   </div>`;
+}
+
+function renderTaxChecklistCard(inp, r) {
+  if (!inp || !inp.price) return '';
+  var deprYears = inp.propType === 'mansion' ? 47 : inp.propType === 'tochi' ? null : 22;
+  var annualDepr = deprYears && inp.price ? Math.round(inp.price * 10000 * 0.9 / deprYears / 10000) : 0;
+  var hasLoan = inp.loan > 0;
+  var noi = r.noi;
+  var loanAnnual = hasLoan ? calcLoanPayment(inp.loan, inp.rate, inp.term, inp.repay).monthly * 12 : 0;
+  var cf = noi - loanAnnual;
+  var items = [
+    { icon:'📋', label:'青色申告の承認申請（税務署へ届出）', desc:'最大65万円の特別控除が受けられます', check: true },
+    { icon:'🏠', label:'建物の減価償却費を経費計上', desc: deprYears ? '年間約' + annualDepr.toLocaleString() + '万円の償却費（残存90%・' + deprYears + '年）' : '土地は減価償却なし', check: !!deprYears },
+    { icon:'💳', label:'ローン利子（金利部分）を経費計上', desc: hasLoan ? '元利均等返済の利子部分が経費に。元本返済分は経費外' : '借入なし', check: hasLoan },
+    { icon:'🔧', label:'修繕費・管理費・仲介手数料を経費計上', desc: '修繕費・管理会社費用・入居者募集費用など', check: true },
+    { icon:'🚗', label:'不動産管理のための交通費・通信費を経費計上', desc: '物件視察の交通費・電話代の事業割合部分', check: true },
+    { icon:'🧾', label:'固定資産税・火災保険料を経費計上', desc: '全額経費計上可能（日割り計算不要）', check: true },
+    { icon:'💰', label:'CF赤字時の損益通算で給与所得税を圧縮', desc: cf < 0 ? '現在CF赤字。給与所得との損益通算で節税効果あり（※要確認）' : 'CF黒字のため損益通算の効果は限定的', check: cf < 0 },
+    { icon:'🏡', label:'住宅ローン控除との混合・分離を確認', desc: '居住用と投資用が混在する場合は税理士に相談推奨', check: false },
+  ];
+  var rows = items.map(function(it) {
+    return '<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.04)">'
+      + '<span style="font-size:15px;flex-shrink:0;margin-top:1px">' + (it.check ? '✅' : '⬜') + '</span>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:12px;font-weight:700;color:' + (it.check?'var(--text)':'var(--text-muted)') + '">' + it.icon + ' ' + it.label + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + it.desc + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  var checked = items.filter(function(i){ return i.check; }).length;
+  return '<div class="card" style="border-color:rgba(34,197,94,0.2)">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">'
+    + '<div class="card-title" style="margin:0">💴 不動産投資の節税チェックリスト</div>'
+    + '<div style="text-align:center"><span style="font-size:22px;font-weight:900;color:var(--green)">' + checked + '</span><span style="font-size:12px;color:var(--text-muted)">/' + items.length + '適用可</span></div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:6px;height:5px;overflow:hidden;margin-bottom:14px"><div style="width:' + Math.round(checked/items.length*100) + '%;height:100%;background:var(--green);border-radius:6px"></div></div>'
+    + rows
+    + '<div style="padding:10px 12px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.8;margin-top:12px">'
+    + '💡 確定申告は物件購入翌年の2〜3月に行います。初年度は税理士への相談（費用5〜10万円）でミスを防ぎましょう。'
+    + '</div>'
+    + '</div>';
 }
 
 function renderCashflow(inp, r) {
