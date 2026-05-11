@@ -511,6 +511,9 @@
       <!-- 売却タイミング比較カード -->
       <div id="sale-timing-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 売却方法3択比較カード -->
+      <div id="sell-method-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -1520,6 +1523,83 @@ function renderComparableSales(price, sqm, propType, age, pref) {
     '</div>';
 }
 
+function renderSellMethodCard(price) {
+  var el = document.getElementById('sell-method-panel');
+  if (!el || !price) return;
+  var wan = Math.round(price / 10000);
+  var methods = [
+    {
+      icon: '🏪',
+      label: '仲介売却',
+      tag: '最高値を狙う',
+      tagColor: '#22c55e',
+      pctLo: 95, pctHi: 100,
+      period: '3〜6ヶ月',
+      pros: ['市場最高値で売れる可能性', '広告掲載で多数の買主候補'],
+      cons: ['成約まで時間がかかる', '内見・交渉の手間がある'],
+      recommended: true
+    },
+    {
+      icon: '💰',
+      label: '不動産買取',
+      tag: 'スピード重視',
+      tagColor: '#3b82f6',
+      pctLo: 70, pctHi: 80,
+      period: '1〜2週間',
+      pros: ['最短1〜2週間で現金化', '内見・交渉が不要'],
+      cons: ['市場価格より2〜3割安い', '買取業者によって価格差あり'],
+      recommended: false
+    },
+    {
+      icon: '🏡',
+      label: 'リースバック',
+      tag: '住み続けながら売る',
+      tagColor: '#a78bfa',
+      pctLo: 70, pctHi: 75,
+      period: '1〜2週間',
+      pros: ['売却後も賃貸で住み続けられる', '急ぎの資金調達に対応'],
+      cons: ['買取価格は市場価格の7割前後', '賃料が継続的に発生する'],
+      recommended: false
+    }
+  ];
+  var rows = methods.map(function(m) {
+    var loWan = Math.round(wan * m.pctLo / 100 / 10) * 10;
+    var hiWan = Math.round(wan * m.pctHi / 100 / 10) * 10;
+    var priceRange = loWan === hiWan ? loWan.toLocaleString() + '万円' : loWan.toLocaleString() + '〜' + hiWan.toLocaleString() + '万円';
+    var prosHtml = m.pros.map(function(p){ return '<li style="color:#4ade80">✓ ' + p + '</li>'; }).join('');
+    var consHtml = m.cons.map(function(c){ return '<li style="color:#f87171">✗ ' + c + '</li>'; }).join('');
+    var borderStyle = m.recommended ? 'border:1px solid rgba(34,197,94,0.35);background:rgba(34,197,94,0.04)' : 'border:1px solid rgba(255,255,255,0.06)';
+    return '<div style="' + borderStyle + ';border-radius:10px;padding:14px 16px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+          '<span style="font-size:20px">' + m.icon + '</span>' +
+          '<div>' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text)">' + m.label + (m.recommended ? ' <span style="font-size:10px;background:rgba(34,197,94,0.2);color:#4ade80;padding:1px 6px;border-radius:100px;border:1px solid rgba(34,197,94,0.4)">おすすめ</span>' : '') + '</div>' +
+            '<div style="font-size:10px;margin-top:2px;display:inline-block;padding:1px 8px;border-radius:100px;background:rgba(255,255,255,0.06);color:' + m.tagColor + '">' + m.tag + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0">' +
+          '<div style="font-size:15px;font-weight:900;color:var(--gold)">' + priceRange + '</div>' +
+          '<div style="font-size:10px;color:var(--text-muted)">目安期間 ' + m.period + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<ul style="margin:0;padding-left:0;list-style:none;font-size:11px;line-height:1.8;display:grid;grid-template-columns:1fr 1fr;gap:2px 8px">' +
+        prosHtml + consHtml +
+      '</ul>' +
+    '</div>';
+  }).join('');
+  el.style.display = 'block';
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">🔀 売却方法の比較（3つの選択肢）</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">あなたの査定価格 <strong style="color:var(--gold)">' + wan.toLocaleString() + '万円</strong> をもとに、3つの売却方法を比較しました。</div>' +
+    '<div style="display:flex;flex-direction:column;gap:10px">' + rows + '</div>' +
+    '<div style="margin-top:14px;padding:12px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.8">' +
+      '💡 <strong style="color:var(--text)">どれを選ぶべき？</strong><br>' +
+      '「少しでも高く売りたい」→ 仲介売却　「すぐに現金が必要」→ 買取・リースバック<br>' +
+      '<a href="mailto:terra.realty.iam@gmail.com?subject=売却方法について相談したい&body=査定価格：' + wan.toLocaleString() + '万円" style="color:var(--gold)">→ TERRA REALTYに無料相談する</a>' +
+    '</div>' +
+    '<p style="font-size:10px;color:#555;margin-top:8px">※価格レンジ・期間はあくまで目安です。物件状態・市況により変わります。</p>';
+}
+
 // ===== バリデーション =====
 const FIELD_LABELS = {
   pref: '都道府県', propType: '物件種別', area: '面積', age: '築年数',
@@ -1760,6 +1840,9 @@ function calcAndShowResult() {
 
   // 売却タイミング比較カード
   renderSaleTimingPanel(price, age, area, propType);
+
+  // 売却方法3択比較カード
+  renderSellMethodCard(price);
 
   // 譲渡所得税シミュレーター表示
   (function(){
