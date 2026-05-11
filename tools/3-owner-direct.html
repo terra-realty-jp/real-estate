@@ -1248,10 +1248,19 @@ function renderPipeline3() {
 
   if(!deals3.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><p>商談がありません</p><p style="font-size:12px;margin-top:8px">マッチング結果から商談を作成するか、「商談追加」ボタンから登録してください</p></div>`; return; }
   const badgeClass = {new:'b-new',matched:'b-matched',nego:'b-nego',closed:'b-closed'};
-  el.innerHTML = deals3.map(d => `
-    <div class="deal-row">
+  const now = Date.now();
+  el.innerHTML = deals3.map(d => {
+    const elapsedDays = Math.floor((now - d.id) / (1000*60*60*24));
+    const isStagnant = d.status !== 'closed' && elapsedDays >= 30;
+    const isWarning = d.status !== 'closed' && elapsedDays >= 14 && elapsedDays < 30;
+    const stagnantIcon = isStagnant ? '⚠️ ' : '';
+    const daysBadge = d.status !== 'closed'
+      ? `<span style="font-size:10px;padding:2px 7px;border-radius:100px;margin-left:6px;border:1px solid ${isStagnant?'rgba(239,68,68,0.4)':isWarning?'rgba(249,115,22,0.4)':'rgba(255,255,255,0.12)'};color:${isStagnant?'var(--red)':isWarning?'var(--orange)':'var(--text-muted)'};background:${isStagnant?'rgba(239,68,68,0.08)':isWarning?'rgba(249,115,22,0.08)':'transparent'}">${stagnantIcon}${elapsedDays}日経過</span>`
+      : '';
+    return `
+    <div class="deal-row" style="${isStagnant?'border-left:3px solid rgba(239,68,68,0.5);':''}">
       <div class="deal-info">
-        <div class="deal-title">${esc(d.title)}</div>
+        <div class="deal-title">${esc(d.title)}${daysBadge}</div>
         <div class="deal-sub">${d.seller} → ${d.buyer} | ${d.date}</div>
       </div>
       <span class="badge ${badgeClass[d.status]||'b-new'}">${D_STATUS_LABEL[d.status]||d.status}</span>
@@ -1261,7 +1270,7 @@ function renderPipeline3() {
       </div>
       <button class="btn btn-outline btn-sm" onclick="deleteDeal3(${d.id})">削除</button>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 function calcDealFee(d) {
