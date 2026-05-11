@@ -587,6 +587,51 @@
     </div>
   </section>
 
+  <!-- かんたんお問い合わせフォーム -->
+  <section style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);padding:64px 40px;" id="contact-section">
+    <div style="max-width:560px;margin:0 auto;text-align:center">
+      <div style="font-size:11px;letter-spacing:3px;color:#c9a84c;margin-bottom:10px;font-weight:700">FREE CONSULTATION</div>
+      <h2 style="font-size:24px;font-weight:900;color:#fff;margin-bottom:10px">無料でご相談ください</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:32px;line-height:1.7">「査定結果を聞きたい」「ツールの使い方がわからない」「具体的に動きたい」など、どんなご相談でも大歓迎です。</p>
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:28px;text-align:left" id="contact-form-wrap">
+        <div style="margin-bottom:14px">
+          <label style="font-size:12px;color:rgba(255,255,255,0.6);display:block;margin-bottom:5px">お名前（任意）</label>
+          <input id="cf_name" type="text" placeholder="例：田中 太郎" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:12px;color:rgba(255,255,255,0.6);display:block;margin-bottom:5px">ご相談内容 <span style="color:#f87171">*</span></label>
+          <textarea id="cf_message" rows="4" placeholder="例：AI査定で3,000万円という結果が出ました。この価格は妥当でしょうか？実際に売却を検討しています。" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;line-height:1.7"></textarea>
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="font-size:12px;color:rgba(255,255,255,0.6);display:block;margin-bottom:5px">連絡先（メール or 電話、任意）</label>
+          <input id="cf_contact" type="text" placeholder="例：sample@email.com または 090-xxxx-xxxx" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+        <button onclick="submitContactForm()" style="width:100%;background:linear-gradient(135deg,#c9a84c,#fef08a);color:#000;font-size:15px;font-weight:900;padding:14px;border:none;border-radius:10px;cursor:pointer;font-family:inherit;transition:opacity 0.2s" onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">
+          TERRA REALTYに送信する →
+        </button>
+        <p style="font-size:11px;color:rgba(255,255,255,0.4);text-align:center;margin-top:10px">しつこい営業は一切行いません。返信は通常1〜2営業日以内です。</p>
+      </div>
+      <div id="contact-success" style="display:none;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:28px;text-align:center">
+        <div style="font-size:36px;margin-bottom:12px">✅</div>
+        <div style="font-size:16px;font-weight:700;color:#4ade80;margin-bottom:8px">送信しました！</div>
+        <p style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7">TERRA REALTYより1〜2営業日以内にご返信します。<br>しばらくお待ちください。</p>
+      </div>
+    </div>
+  </section>
+  <script>
+  function submitContactForm() {
+    const msg = (document.getElementById('cf_message').value||'').trim();
+    if(!msg) { document.getElementById('cf_message').style.borderColor='#f87171'; return; }
+    document.getElementById('cf_message').style.borderColor='rgba(255,255,255,0.15)';
+    const name = document.getElementById('cf_name').value||'（未入力）';
+    const contact = document.getElementById('cf_contact').value||'（未入力）';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxLgo-Ghf31C6SyBxh4BiIVC3lz1CfVXplJIqIxoT1-7YDF8T54Uu5IjkcVvU3LQkBglQ/exec';
+    fetch(GAS_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ tool:'top_contact', 日付: new Date().toLocaleDateString('ja-JP'), 名前:name, 連絡先:contact, メッセージ:msg }) }).catch(()=>{});
+    document.getElementById('contact-form-wrap').style.display = 'none';
+    document.getElementById('contact-success').style.display = 'block';
+  }
+  </script>
+
   <!-- FAQ Section -->
   <section style="background: var(--white); padding: 64px 40px;">
     <div style="max-width: 760px; margin: 0 auto;">
