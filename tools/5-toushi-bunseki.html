@@ -352,6 +352,29 @@
     </button>
   </div>
   <div id="rate-sensitivity-card" style="display:none;margin-top:16px"></div>
+  <div id="refi-calc-card" style="display:none;margin-top:16px" class="card">
+    <div class="card-title">🔄 ローン借り換え効果シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">現在の金利と借り換え後の金利を比べて、月々の節約額と総節約額を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の金利（%）</label>
+        <input type="number" id="refi_cur_rate" placeholder="例: 2.5" step="0.1" min="0.1" max="10" oninput="calcRefi()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">借り換え後の金利（%）</label>
+        <input type="number" id="refi_new_rate" placeholder="例: 1.5" step="0.1" min="0.1" max="10" oninput="calcRefi()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">残ローン残高（万円）</label>
+        <input type="number" id="refi_balance" placeholder="例: 2000" step="100" min="0" oninput="calcRefi()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">残期間（年）</label>
+        <input type="number" id="refi_years" placeholder="例: 20" step="1" min="1" max="35" oninput="calcRefi()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="refi-result"></div>
+  </div>
   <div id="prepay-calc-card" style="display:none;margin-top:16px" class="card">
     <div class="card-title">⚡ 繰り上げ返済シミュレーター</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">毎月または一括で追加元本返済した場合の利息削減効果を試算します。</p>
@@ -1281,6 +1304,15 @@ function renderCashflow(inp, r) {
   // 繰り上げ返済カード表示
   const ppCard = document.getElementById('prepay-calc-card');
   if(ppCard && inp.loan>0) ppCard.style.display='block';
+  // 借り換えシミュレーターカード表示（ローンがある場合）
+  const refiCard = document.getElementById('refi-calc-card');
+  if(refiCard && inp.loan>0) {
+    refiCard.style.display='block';
+    const rb=document.getElementById('refi_balance');
+    const ry=document.getElementById('refi_years');
+    if(rb&&!rb.value) rb.value=inp.loan;
+    if(ry&&!ry.value) ry.value=inp.term;
+  }
   // 金利上昇シミュレーション
   renderRateSensitivity(inp);
 
@@ -2294,6 +2326,52 @@ function prefillAndSim(typeKey) {
     const btn = document.querySelector('#simple-mode-card .btn-gold');
     if(btn) btn.click();
   }, 100);
+}
+
+function calcRefi() {
+  const el = document.getElementById('refi-result'); if(!el) return;
+  const curRate = parseFloat(document.getElementById('refi_cur_rate').value);
+  const newRate = parseFloat(document.getElementById('refi_new_rate').value);
+  const balanceMan = parseFloat(document.getElementById('refi_balance').value);
+  const years = parseFloat(document.getElementById('refi_years').value);
+  if(!curRate || !newRate || !balanceMan || !years || curRate <= newRate) {
+    el.innerHTML = curRate && newRate && curRate <= newRate
+      ? '<div style="font-size:12px;color:var(--red);padding:8px 12px;background:rgba(239,68,68,0.08);border-radius:6px">借り換え後の金利は現在より低い数値を入力してください</div>'
+      : '';
+    return;
+  }
+  const balance = balanceMan * 10000;
+  const n = years * 12;
+  function monthly(r) {
+    const rm = r / 100 / 12;
+    return rm > 0 ? Math.round(balance * rm * Math.pow(1+rm,n) / (Math.pow(1+rm,n)-1)) : Math.round(balance/n);
+  }
+  const mCur = monthly(curRate);
+  const mNew = monthly(newRate);
+  const saveMon = mCur - mNew;
+  const saveTotal = saveMon * n;
+  const refiFee = Math.round(balance * 0.005); // 借り換え費用目安 0.5%
+  const netSave = saveTotal - refiFee;
+  const breakEvenMon = saveMon > 0 ? Math.ceil(refiFee / saveMon) : 0;
+  el.innerHTML = '<div style="display:grid;gap:8px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    + '<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:10px 14px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">月々の削減額</div>'
+    + '<div style="font-size:20px;font-weight:900;color:#4ade80">-' + saveMon.toLocaleString() + '<span style="font-size:11px">円/月</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">（' + mCur.toLocaleString() + '円 → ' + mNew.toLocaleString() + '円）</div>'
+    + '</div>'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 14px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">残期間での総節約額</div>'
+    + '<div style="font-size:20px;font-weight:900;color:var(--gold)">約' + Math.round(saveTotal/10000).toLocaleString() + '<span style="font-size:11px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">（費用差引後 約' + Math.round(netSave/10000).toLocaleString() + '万円）</div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:8px 12px;font-size:11px;display:grid;gap:4px">'
+    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">借り換え費用目安（残高×0.5%）</span><span>約' + Math.round(refiFee/10000).toLocaleString() + '万円</span></div>'
+    + '<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">費用回収まで（損益分岐）</span><span style="color:var(--gold);font-weight:700">' + breakEvenMon + 'ヶ月（約' + Math.ceil(breakEvenMon/12) + '年）</span></div>'
+    + '</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">※借り換え費用（登記費用・保証料・事務手数料）は目安です。実際はローン残高・金融機関により異なります。</div>'
+    + '</div>';
 }
 
 function calcPrepay() {
