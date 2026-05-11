@@ -1211,17 +1211,28 @@ function renderCashflow(inp, r) {
         <button onclick="exportCFCsv()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);color:var(--text-muted);border:1px solid rgba(255,255,255,0.12);font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:inherit">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>CSVダウンロード</button>
       </div>
-      <table>
+      ${(()=>{
+        const breakEvenIdx = cumData.findIndex((v,i) => v >= 0 && (i===0 || cumData[i-1] < 0));
+        const breakEvenYear = breakEvenIdx >= 0 ? years[breakEvenIdx] : null;
+        const hint = breakEvenYear
+          ? `<div style="margin-bottom:10px;padding:8px 14px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:7px;font-size:12px;color:var(--green)">💚 ${breakEvenYear}年目に投資回収完了（累積CF黒字転換）</div>`
+          : r.equity > 0 ? `<div style="margin-bottom:10px;padding:8px 14px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:7px;font-size:12px;color:var(--red)">⚠️ 保有期間${inp.hold}年以内では累積CF黒字転換なし（売却益で回収）</div>` : '';
+        const loanBalRow = (y) => { let b=inp.loan*10000; const r3=inp.rate/100/12; for(let m=0;m<y*12;m++){const int=b*r3;const pri=inp.repay==='equal'?r.loanMonthly-int:(inp.loan*10000/(inp.term*12));b=Math.max(0,b-pri);} return Math.round(b/10000); };
+        return hint + `<table>
         <thead><tr><th>年</th><th>年間NOI（万）</th><th>年間DS（万）</th><th>年間CF（万）</th><th>ローン残高（万）</th><th>累積CF（万）</th></tr></thead>
-        <tbody>${years.map((y,i)=>`<tr>
-          <td>${y}年目</td>
-          <td>${noiData[i].toLocaleString()}</td>
-          <td>${loanData[i].toLocaleString()}</td>
-          <td style="color:${cfData[i]>=0?'var(--green)':'var(--red)'};font-weight:700">${cfData[i]>=0?'+':''}${cfData[i].toLocaleString()}</td>
-          <td>${Math.round((() => { let b=inp.loan*10000; const r3=inp.rate/100/12; for(let m=0;m<y*12;m++){const int=b*r3;const pri=inp.repay==='equal'?r.loanMonthly-int:(inp.loan*10000/(inp.term*12));b=Math.max(0,b-pri);} return b; })()/10000).toLocaleString()}</td>
-          <td style="color:${cumData[i]>=0?'var(--green)':'var(--red)'};font-weight:700">${cumData[i]>=0?'+':''}${cumData[i].toLocaleString()}</td>
-        </tr>`).join('')}</tbody>
-      </table>
+        <tbody>${years.map((y,i)=>{
+          const isBreakEven = i === breakEvenIdx;
+          const rowBg = isBreakEven ? 'background:rgba(34,197,94,0.07);' : '';
+          return `<tr style="${rowBg}">
+            <td>${y}年目${isBreakEven?'<span style="margin-left:4px;font-size:10px;font-weight:700;color:var(--green);border:1px solid rgba(34,197,94,0.4);border-radius:4px;padding:1px 4px">回収完了</span>':''}</td>
+            <td>${noiData[i].toLocaleString()}</td>
+            <td>${loanData[i].toLocaleString()}</td>
+            <td style="color:${cfData[i]>=0?'var(--green)':'var(--red)'};font-weight:700">${cfData[i]>=0?'+':''}${cfData[i].toLocaleString()}</td>
+            <td>${loanBalRow(y).toLocaleString()}</td>
+            <td style="color:${cumData[i]>=0?'var(--green)':'var(--red)'};font-weight:${isBreakEven?'900':'700'}">${cumData[i]>=0?'+':''}${cumData[i].toLocaleString()}</td>
+          </tr>`;}).join('')}</tbody>
+        </table>`;
+      })()}
     </div>
     ${inp.loan > 0 ? (()=>{
       const loanAmt = inp.loan * 10000;
