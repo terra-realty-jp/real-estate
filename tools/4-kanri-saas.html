@@ -443,6 +443,7 @@
     <div style="display:flex;gap:12px;margin-top:8px;font-size:10px">
       <span style="color:#4ade80">■ 入金済</span><span style="color:#facc15">■ 一部入金</span><span style="color:#f87171">■ 未入金</span><span style="color:#374151">■ 未登録</span>
     </div>
+    <div id="tdm-payment-trend" style="margin-top:12px"></div>
     <div id="tdm-quality-score" style="margin-top:12px"></div>
     <div id="tdm-vacancy-cost" style="margin-top:12px"></div>
     <div id="tdm-renewal-btn-wrap" style="margin-top:12px;display:none">
@@ -1711,6 +1712,30 @@ function showTenantDetail(id){
   document.getElementById('tdm-unpaid-count').textContent=unpaidCount+'ヶ月';
   document.getElementById('tdm-bars').innerHTML=bars;
   document.getElementById('tdm-edit').onclick=()=>{closeModal('tenantDetailModal');editTenant(id);};
+  // 入金日傾向グラフ
+  const ptEl = document.getElementById('tdm-payment-trend');
+  if(ptEl) {
+    const paidRents = rents.filter(r=>r.tenantId===id&&r.status==='paid'&&r.date);
+    if(paidRents.length >= 3) {
+      // 入金日（日付の"日"部分）ごとの分布
+      const dayMap = {};
+      paidRents.forEach(r => {
+        const d = parseInt((r.date||'').split('-')[2])||0;
+        if(d>0) dayMap[d]=(dayMap[d]||0)+1;
+      });
+      const days = Object.entries(dayMap).sort((a,b)=>Number(a[0])-Number(b[0]));
+      const maxCnt = Math.max(...days.map(d=>d[1]));
+      const avgDay = Math.round(paidRents.reduce((s,r)=>{const d=parseInt((r.date||'').split('-')[2])||0;return s+d;},0)/paidRents.filter(r=>r.date).length);
+      const trendLabel = avgDay<=5?'早期入金者（5日以内）':avgDay<=10?'前半入金（10日以内）':avgDay<=20?'中旬入金':'月末支払い傾向';
+      const trendColor = avgDay<=5?'#4ade80':avgDay<=10?'#60a5fa':avgDay<=20?'var(--gold)':'#f87171';
+      const barsHtml = days.map(([d,cnt])=>`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:0"><div style="width:100%;background:${trendColor};border-radius:2px 2px 0 0;height:${Math.round(cnt/maxCnt*36)+4}px;transition:height 0.3s"></div><div style="font-size:8px;color:var(--text-muted)">${d}日</div></div>`).join('');
+      ptEl.innerHTML = '<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 12px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--text-muted)">📅 入金日パターン（' + paidRents.length + 'ヶ月分）</div>'
+        + '<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:' + trendColor + '22;color:' + trendColor + ';border:1px solid ' + trendColor + '44">' + trendLabel + '（平均' + avgDay + '日）</span></div>'
+        + '<div style="display:flex;align-items:flex-end;gap:2px;height:44px">' + barsHtml + '</div>'
+        + '</div>';
+    } else { ptEl.innerHTML = ''; }
+  }
   // テナント優良度スコア
   const payScore = Math.max(0, 40 - unpaidCount * 8);
   const stayYearsN = t.start ? Math.floor((now - new Date(t.start)) / (365.25*24*3600*1000)) : 0;
