@@ -340,6 +340,7 @@
     <div id="repair-budget-content"></div>
   </div>
   <div id="repair-category-card" style="display:none;margin-bottom:20px"></div>
+  <div id="repair-priority-matrix" style="display:none;margin-bottom:20px"></div>
   <div id="repair-monthly-chart" style="display:none;margin-bottom:20px"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -2360,6 +2361,7 @@ function renderRepairs(){
   renderRepairCategoryBreakdown();
   renderRepairMonthlyChart();
   renderRepairBudget();
+  renderRepairPriorityMatrix();
 
   el.innerHTML=`<table>
     <thead><tr><th>物件/部屋</th><th>内容</th><th>優先度</th><th>報告日</th><th>完了日</th><th>費用</th><th>業者</th><th>ステータス</th><th></th></tr></thead>
@@ -2460,6 +2462,46 @@ function renderRepairBudget() {
         : `<span style="color:var(--green)">✅ 残り予算: <strong>${remaining}万円</strong></span>`}
       <span style="color:var(--text-muted)">修繕${repairs.filter(r=>(r.done||r.date||'').startsWith(thisYear)&&r.cost).length}件分</span>
     </div>`;
+}
+
+function renderRepairPriorityMatrix() {
+  const el = document.getElementById('repair-priority-matrix');
+  if (!el) return;
+  const active = repairs.filter(r => r.status !== 'done');
+  if (active.length < 2) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  // 緊急度: urgent=2, high=1, low=0
+  // 費用: 5万超=高, それ以下=低
+  const COST_THRESH = 50000;
+  const urgencyLevel = r => r.priority === 'urgent' ? 2 : r.priority === 'high' ? 1 : 0;
+  const isHigh = r => urgencyLevel(r) >= 1;
+  const isCostHigh = r => (Number(r.cost) || 0) > COST_THRESH;
+  // 4象限
+  const quadrants = [
+    { key:'A', label:'今すぐ対応', sub:'緊急度高・費用低', bg:'rgba(239,68,68,0.1)', border:'rgba(239,68,68,0.3)', color:'#f87171', items: active.filter(r=> isHigh(r) && !isCostHigh(r)) },
+    { key:'B', label:'計画的に対応', sub:'緊急度高・費用高', bg:'rgba(249,115,22,0.1)', border:'rgba(249,115,22,0.3)', color:'#fb923c', items: active.filter(r=> isHigh(r) && isCostHigh(r)) },
+    { key:'C', label:'予算が取れたら', sub:'緊急度低・費用低', bg:'rgba(59,130,246,0.08)', border:'rgba(59,130,246,0.2)', color:'#60a5fa', items: active.filter(r=> !isHigh(r) && !isCostHigh(r)) },
+    { key:'D', label:'先送り検討', sub:'緊急度低・費用高', bg:'rgba(255,255,255,0.03)', border:'rgba(255,255,255,0.1)', color:'var(--text-muted)', items: active.filter(r=> !isHigh(r) && isCostHigh(r)) },
+  ];
+  const propName = r => { const p=properties.find(x=>x.id===r.propertyId); return (p?p.name.slice(0,8):'')+(r.room?' '+r.room+'号室':''); };
+  const quadHtml = quadrants.map(q =>
+    '<div style="background:' + q.bg + ';border:1px solid ' + q.border + ';border-radius:8px;padding:10px 12px">'
+    + '<div style="font-size:11px;font-weight:700;color:' + q.color + ';margin-bottom:2px">' + q.key + '.' + q.label + '</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">' + q.sub + '</div>'
+    + (q.items.length ? q.items.map(r =>
+      '<div style="font-size:11px;padding:3px 0;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;gap:6px">'
+      + '<span style="color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(r.content) + '">' + esc(r.content.slice(0,18)) + (r.content.length>18?'…':'') + '</span>'
+      + '<span style="color:var(--text-muted);flex-shrink:0;font-size:10px">' + (Number(r.cost)>0?Math.round(Number(r.cost)/10000)+'万':'未定') + '</span>'
+      + '</div>'
+    ).join('')
+    : '<div style="font-size:11px;color:var(--text-muted);font-style:italic">なし</div>')
+    + '</div>'
+  ).join('');
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:4px">🎯 修繕 優先度マトリックス</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">未完了 ' + active.length + '件 ／ 費用5万円を境界に高額区分</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' + quadHtml + '</div>'
+    + '</div>';
 }
 
 function renderRepairCategoryBreakdown(){
