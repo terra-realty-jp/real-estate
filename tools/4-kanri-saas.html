@@ -489,6 +489,25 @@
     <div class="form-grid">
       <div class="form-group"><label>物件</label><select id="rp_property"></select></div>
       <div class="form-group"><label>部屋番号</label><input id="rp_room" placeholder="101 / 共用部など"></div>
+      <div class="form-group"><label>修繕カテゴリー</label>
+        <select id="rp_category" onchange="onRepairCategoryChange()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;width:100%">
+          <option value="">選択（任意）</option>
+          <option value="kyuyu">給湯器・ボイラー</option>
+          <option value="aircon">エアコン</option>
+          <option value="wall">壁・クロス</option>
+          <option value="floor">床・フローリング</option>
+          <option value="roof">屋根・雨漏り</option>
+          <option value="water">水回り（排水・詰まり）</option>
+          <option value="toilet">トイレ・便器</option>
+          <option value="door">ドア・鍵・錠前</option>
+          <option value="electric">電気・ブレーカー</option>
+          <option value="gaikabe">外壁・塗装</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+      <div class="form-group full" id="repair-cost-hint-wrap" style="display:none">
+        <div id="repair-cost-hint" style="font-size:11px;color:var(--gold);background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:6px;padding:7px 12px;line-height:1.7"></div>
+      </div>
       <div class="form-group full"><label>内容*</label><input id="rp_content" placeholder="給湯器故障・壁の染み・エアコン不具合など"></div>
       <div class="form-group"><label>優先度</label>
         <select id="rp_priority"><option value="urgent">緊急</option><option value="high">高</option><option value="normal" selected>通常</option><option value="low">低</option></select>
@@ -511,6 +530,33 @@
 
 <script>
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+
+const REPAIR_HINTS = {
+  kyuyu:   { range:'5〜25万円', note:'本体代5〜15万＋工事費3〜8万。15年以上なら交換推奨。', placeholder:'給湯器故障（16号ガス給湯器）' },
+  aircon:  { range:'3〜15万円', note:'クリーニング1〜2万、室内機交換7〜12万、設置工事別途。', placeholder:'エアコン故障（冷房不良）' },
+  wall:    { range:'3〜12万円', note:'6畳クロス張替え3〜5万。下地補修が必要な場合は加算。', placeholder:'居室クロス汚れ・破損' },
+  floor:   { range:'5〜20万円', note:'6畳フローリング重ね貼り5〜10万、張替え10〜20万。', placeholder:'フローリング傷・剥がれ' },
+  roof:    { range:'5〜80万円', note:'コーキング補修5万〜、葺き替えは50〜80万。早期対応が重要。', placeholder:'屋根・スレート補修・雨漏り修理' },
+  water:   { range:'1〜8万円', note:'高圧洗浄1〜3万。排水管交換は3〜8万。定期清掃で予防可能。', placeholder:'排水詰まり・異臭（キッチン/浴室）' },
+  toilet:  { range:'2〜15万円', note:'ウォシュレット交換3〜5万、便器交換10〜15万。節水型への更新も検討。', placeholder:'トイレ水漏れ・ウォシュレット故障' },
+  door:    { range:'1〜8万円', note:'鍵交換1〜3万、ドア調整1万〜、ドア本体交換5〜8万。', placeholder:'玄関鍵交換・扉の建付け不良' },
+  electric:{ range:'1〜5万円', note:'ブレーカー交換2〜4万。漏電調査は1〜2万。安全のため早急対応推奨。', placeholder:'ブレーカー落ち・コンセント不良' },
+  gaikabe: { range:'15〜80万円', note:'塗装のみ15〜30万。ひび割れ補修込みは20〜40万。10年毎の定期施工が目安。', placeholder:'外壁ひび割れ・塗装劣化' },
+};
+function onRepairCategoryChange() {
+  const cat = document.getElementById('rp_category').value;
+  const hint = REPAIR_HINTS[cat];
+  const wrap = document.getElementById('repair-cost-hint-wrap');
+  const hintEl = document.getElementById('repair-cost-hint');
+  if(hint && wrap && hintEl) {
+    hintEl.innerHTML = `<strong>費用目安: ${hint.range}</strong> — ${hint.note}`;
+    wrap.style.display = 'block';
+    const content = document.getElementById('rp_content');
+    if(content && !content.value) content.placeholder = hint.placeholder;
+  } else if(wrap) {
+    wrap.style.display = 'none';
+  }
+}
 function showFieldError(el,msg){el.style.borderColor='var(--red)';let e=el.parentNode.querySelector('.field-error');if(!e){e=document.createElement('span');e.className='field-error';e.style.cssText='color:var(--red);font-size:11px;margin-top:2px;display:block;';el.parentNode.appendChild(e);}e.textContent=msg;}
 function clearFieldError(el){el.style.borderColor='';const e=el.parentNode.querySelector('.field-error');if(e)e.remove();}
 let properties    = [];
