@@ -2222,7 +2222,10 @@ function renderHistory() {
           <td>${l.age !== undefined ? l.age+'年' : '—'}</td>
           <td><strong style="color:var(--gold)">${fmtV(l.estimatePrice)}</strong></td>
           <td style="text-align:center">${diffLabel}</td>
-          <td><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteLead(${l.id})">削除</button></td>
+          <td style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="loadSateiCondition(${l.id})" title="この条件で再査定">再査定</button>
+            <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteLead(${l.id})">削除</button>
+          </td>
         </tr>`;
       }).join('')}
     </tbody>
@@ -2361,6 +2364,33 @@ function renderLeads() {
       </tr>`).join('')}
     </tbody>
   </table>`;
+}
+
+function loadSateiCondition(id) {
+  const l = leads.find(x => x.id === id);
+  if (!l) return;
+  // ラベル→コードの逆引きマップ
+  const areaRev = Object.fromEntries(Object.entries(AREA_LABEL).map(([k,v]) => [v, k]));
+  const typeRev = Object.fromEntries(Object.entries(TYPE_LABEL).map(([k,v]) => [v, k]));
+  const prefCode = areaRev[l.area] || '';
+  const typeCode = typeRev[l.propType] || '';
+  const prefEl = document.getElementById('pref');
+  const typeEl = document.getElementById('propType');
+  const areaEl = document.getElementById('area');
+  const ageEl = document.getElementById('age');
+  if (prefEl && prefCode) prefEl.value = prefCode;
+  if (typeEl && typeCode) typeEl.value = typeCode;
+  if (areaEl && l.sqm) areaEl.value = l.sqm;
+  if (ageEl && l.age !== undefined) ageEl.value = l.age;
+  // リマーク復元
+  const remarksEl = document.getElementById('remarks');
+  if (remarksEl && l.remarks) remarksEl.value = l.remarks;
+  // ステップ1を表示して査定タブへ
+  setStep(1);
+  switchTab('satei');
+  if (typeof updateAreaHint === 'function') updateAreaHint();
+  if (typeof previewCalc === 'function') previewCalc();
+  showHistoryToast('過去の条件を読み込みました。条件を確認して再査定してください ✓');
 }
 
 function deleteLead(id) {

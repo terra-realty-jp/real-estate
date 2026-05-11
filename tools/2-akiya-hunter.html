@@ -453,6 +453,10 @@
     <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">相談時に聞きたいことをメモしておきましょう。</p>
     <textarea id="consult_memo" rows="6" placeholder="例:&#10;・売るのと貸すのどちらが得か&#10;・売るとしたらいくらが相場か&#10;・いつまでに動く必要があるか&#10;・税金はどう変わるか" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;color:var(--text);font-size:14px;font-family:inherit;line-height:1.8;resize:vertical;outline:none;"></textarea>
     <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn btn-gold" onclick="insertDiagnosisToMemo()" title="診断タブの結果をこのメモ欄に自動挿入します">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        診断結果を挿入
+      </button>
       <button class="btn btn-outline" onclick="copyConsultMemo()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
         コピー
@@ -1562,6 +1566,33 @@ function copyConsultMemo() {
   const text = document.getElementById('consult_memo').value;
   if(!text.trim()) { showToast('メモを入力してからコピーしてください', true); return; }
   navigator.clipboard.writeText(text).then(() => showToast('クリップボードにコピーしました ✓'));
+}
+
+function insertDiagnosisToMemo() {
+  const score = parseInt(document.getElementById('scoreNum').textContent) || 0;
+  const rank = document.getElementById('scoreRank').textContent || '—';
+  const addr = document.getElementById('sc_addr')?.value || '（住所未入力）';
+  const checkedItems = CHECKS.filter(c => checked.has(c.id));
+  const uncheckedItems = CHECKS.filter(c => !checked.has(c.id));
+  if (checkedItems.length === 0 && score === 0) {
+    showToast('診断タブで診断を実行してからお試しください', true); return;
+  }
+  const lines = [
+    '【空き家相談メモ】',
+    `物件の住所・場所: ${addr}`,
+    `診断スコア: ${score}点（${rank}）`,
+    '',
+    '■ 当てはまる状況（診断チェック済み）',
+    ...checkedItems.map(c => `・${c.label}`),
+  ];
+  if (uncheckedItems.length > 0) {
+    lines.push('', '■ 当てはまらない項目', ...uncheckedItems.map(c => `・${c.label}`));
+  }
+  lines.push('', '■ 専門家への質問・確認事項（ここに追記）', '・');
+  const ta = document.getElementById('consult_memo');
+  ta.value = lines.join('\n');
+  ta.focus();
+  showToast('診断結果をメモに挿入しました ✓');
 }
 
 // ===== 案件管理 =====

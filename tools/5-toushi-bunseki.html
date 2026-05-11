@@ -186,6 +186,17 @@
     </button>
   </div>
 
+  <!-- 物件タイプ別テンプレート -->
+  <div style="margin-bottom:20px">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">💡 よくある物件タイプからすぐに始める：</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="applyTemplate('1r')" style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;transition:all 0.2s;white-space:nowrap" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='var(--text)'">🏙️ 都内ワンルーム</button>
+      <button onclick="applyTemplate('2ldk')" style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;transition:all 0.2s;white-space:nowrap" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='var(--text)'">🏠 郊外2LDK</button>
+      <button onclick="applyTemplate('apt')" style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;transition:all 0.2s;white-space:nowrap" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='var(--text)'">🏢 地方アパート1棟</button>
+      <button onclick="applyTemplate('osaka')" style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;transition:all 0.2s;white-space:nowrap" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='var(--text)'">🌆 大阪区分マンション</button>
+    </div>
+  </div>
+
   <!-- かんたんモードカード -->
   <div id="simple-mode-card">
     <div class="card" style="border-color:rgba(201,168,76,0.3)">
@@ -1788,6 +1799,25 @@ function reloadLastAnalysis() {
   if(!history.length) return;
   loadHistory(history[0].id);
   setMode('detail');
+}
+
+const TEMPLATES = {
+  '1r':    { name:'都内ワンルーム（例）',   price:2000, rent:75000,  downpay:200,  rate:1.5, term:25 },
+  '2ldk':  { name:'郊外2LDK（例）',        price:3500, rent:120000, downpay:350,  rate:1.5, term:30 },
+  'apt':   { name:'地方アパート1棟（例）',  price:4000, rent:220000, downpay:800,  rate:2.0, term:25 },
+  'osaka': { name:'大阪区分マンション（例）', price:1500, rent:60000, downpay:150, rate:1.5, term:25 },
+};
+function applyTemplate(key) {
+  const t = TEMPLATES[key]; if(!t) return;
+  setMode('simple');
+  document.getElementById('s_name').value = t.name;
+  document.getElementById('s_price').value = t.price;
+  document.getElementById('s_rent').value = t.rent;
+  document.getElementById('s_downpay').value = t.downpay;
+  document.getElementById('s_rate').value = t.rate;
+  document.getElementById('s_term').value = t.term;
+  if(typeof updateSimpleLoanPreview === 'function') updateSimpleLoanPreview();
+  showInvestToast('テンプレートを読み込みました。数値を調整してから「分析する」を押してください ✓');
 }
 
 function clearInputs() {
