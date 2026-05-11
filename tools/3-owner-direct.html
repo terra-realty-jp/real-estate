@@ -1331,6 +1331,35 @@ function renderPipeline3() {
     }
   }
 
+  // 期待収益カード（ステージ別成約確率×価格）
+  const pipEl = document.getElementById('pipeline-expected') || (() => {
+    const d=document.createElement('div');d.id='pipeline-expected';d.style.marginBottom='16px';
+    el.parentNode.insertBefore(d,el);return d;
+  })();
+  if(deals3.filter(d=>d.status!=='closed'&&d.price>0).length>0){
+    const PROB={new:0.15,matched:0.35,nego:0.65,closed:1.0};
+    const probRows = [{key:'new',label:'新規',prob:15},{key:'matched',label:'マッチング済',prob:35},{key:'nego',label:'交渉中',prob:65}];
+    const stageExpected = probRows.map(s=>{
+      const stagePrice=deals3.filter(d=>d.status===s.key&&d.price>0).reduce((t,d)=>t+d.price,0);
+      return {label:s.label,expected:Math.round(stagePrice*s.prob/100),count:deals3.filter(d=>d.status===s.key&&d.price>0).length,prob:s.prob};
+    }).filter(s=>s.count>0);
+    const totalExpected=stageExpected.reduce((t,s)=>t+s.expected,0);
+    if(totalExpected>0){
+      pipEl.innerHTML='<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px;margin-bottom:4px">'
+        +'<div style="font-size:13px;font-weight:700;margin-bottom:10px">💼 パイプライン期待収益</div>'
+        +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+        +stageExpected.map(s=>`<div style="flex:1;min-width:120px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:8px 12px;text-align:center"><div style="font-size:10px;color:var(--text-muted)">${s.label}（確率${s.prob}%）</div><div style="font-size:15px;font-weight:700;color:var(--gold)">${s.expected.toLocaleString()}万円</div><div style="font-size:10px;color:var(--text-muted)">${s.count}件</div></div>`).join('')
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 14px">'
+        +'<div style="font-size:12px;color:var(--text-muted)">パイプライン期待収益合計（加重平均）</div>'
+        +'<div style="font-size:20px;font-weight:900;color:var(--gold)">' + totalExpected.toLocaleString() + '万円</div>'
+        +'</div>'
+        +'<div style="font-size:10px;color:var(--text-muted);margin-top:6px">※ 各ステージの業界平均成約率を元にした参考値です。実際の成約率は案件によって異なります。</div>'
+        +'</div>';
+      pipEl.style.display='block';
+    } else { pipEl.style.display='none'; }
+  } else { pipEl.style.display='none'; }
+
   if(!deals3.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">📊</div><p>商談がありません</p><p style="font-size:12px;margin-top:8px">マッチング結果から商談を作成するか、「商談追加」ボタンから登録してください</p></div>`; return; }
   const badgeClass = {new:'b-new',matched:'b-matched',nego:'b-nego',closed:'b-closed'};
   const now = Date.now();
