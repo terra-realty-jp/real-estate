@@ -2345,13 +2345,17 @@ function renderLeads() {
   }
   const timingLabel = {asap:'3ヶ月以内',half:'半年以内',year:'1年以内',thinking:'検討中'};
   const fmtV = v => v >= 100000000 ? Math.round(v/1000000)/100+'億' : Math.round(v/10000).toLocaleString()+'万円';
+  const statusLabel = {new:'未対応', contacted:'連絡済', consulting:'相談中', closed:'成約', pass:'見送り'};
+  const statusColor = {new:'var(--text-muted)', contacted:'#60a5fa', consulting:'var(--gold)', closed:'var(--green)', pass:'rgba(255,255,255,0.25)'};
   wrap.innerHTML = `<table>
     <thead><tr>
       <th>登録日</th><th>氏名</th><th>電話番号</th><th>エリア</th>
-      <th>物件種別</th><th>面積</th><th>査定額</th><th>売却時期</th><th></th>
+      <th>物件種別</th><th>面積</th><th>査定額</th><th>売却時期</th><th>対応状況</th><th></th>
     </tr></thead>
     <tbody>
-      ${leads.map(l => `<tr>
+      ${leads.map(l => {
+        const st = l.followUp || 'new';
+        return `<tr>
         <td>${l.date}</td>
         <td><strong>${esc(l.name)}</strong></td>
         <td>${esc(l.phone)}</td>
@@ -2360,10 +2364,23 @@ function renderLeads() {
         <td>${l.sqm}㎡</td>
         <td style="color:var(--gold);font-weight:700">${fmtV(l.estimatePrice)}</td>
         <td style="font-size:12px">${timingLabel[l.timing]||l.timing}</td>
+        <td>
+          <select onchange="setLeadStatus(${l.id},this.value)" style="background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:4px 8px;color:${statusColor[st]||'var(--text-muted)'};font-size:12px;font-family:inherit;cursor:pointer;outline:none">
+            ${Object.entries(statusLabel).map(([k,v])=>`<option value="${k}"${k===st?' selected':''}>${v}</option>`).join('')}
+          </select>
+        </td>
         <td><button class="btn btn-outline btn-sm" onclick="deleteLead(${l.id})" style="color:var(--red);border-color:var(--red);">削除</button></td>
-      </tr>`).join('')}
+      </tr>`;}).join('')}
     </tbody>
   </table>`;
+}
+
+function setLeadStatus(id, status) {
+  const l = leads.find(x => x.id === id);
+  if (!l) return;
+  l.followUp = status;
+  try { localStorage.setItem('satei_leads', JSON.stringify(leads)); } catch(e) {}
+  renderLeads();
 }
 
 function loadSateiCondition(id) {
@@ -2418,10 +2435,12 @@ function exportCSV() {
   if(!leads.length) { const t=document.createElement('div');t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#ef4444;color:#fff;padding:13px 28px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.4)';t.textContent='エクスポートできるデータがありません';document.body.appendChild(t);setTimeout(()=>t.remove(),3000); return; }
   const timingLabel = {asap:'3ヶ月以内',half:'半年以内',year:'1年以内',thinking:'検討中'};
   const fmtV = v => v >= 100000000 ? Math.round(v/1000000)/100+'億' : Math.round(v/10000).toLocaleString()+'万円';
-  const header = ['登録日','氏名','電話番号','メール','エリア','物件種別','面積(㎡)','築年数','査定額','売却時期','備考'];
+  const statusLabel = {new:'未対応', contacted:'連絡済', consulting:'相談中', closed:'成約', pass:'見送り'};
+  const header = ['登録日','氏名','電話番号','メール','エリア','物件種別','面積(㎡)','築年数','査定額','売却時期','対応状況','備考'];
   const rows = leads.map(l => [
     l.date, l.name, l.phone, l.email||'', l.area, l.propType,
-    l.sqm, l.age, fmtV(l.estimatePrice), timingLabel[l.timing]||l.timing, l.remarks||''
+    l.sqm, l.age, fmtV(l.estimatePrice), timingLabel[l.timing]||l.timing,
+    statusLabel[l.followUp||'new']||'未対応', l.remarks||''
   ]);
   const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
