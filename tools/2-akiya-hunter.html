@@ -327,6 +327,13 @@
     <div id="inheritance-special-content"></div>
   </div>
 
+  <!-- 管理代行費用シミュレーターカード -->
+  <div class="card" id="mgmt-cost-card" style="display:none;">
+    <div class="card-title"><span class="icon">🏢</span>遠方管理コスト vs 管理代行費用の比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">遠方に住む方が空き家を自分で管理する際の「見えないコスト」と、管理会社に任せる場合の費用を比較します。</p>
+    <div id="mgmt-cost-content"></div>
+  </div>
+
   <!-- 補助金・支援制度カード -->
   <div class="card" id="subsidy-card" style="display:none;">
     <div class="card-title"><span class="icon">🏛</span>利用できる補助金・支援制度（参考）</div>
@@ -824,6 +831,8 @@ function updateScore() {
   renderInheritanceSpecialCard(capped, [...checked]);
   // 補助金・支援制度カード
   renderSubsidyCard(capped, [...checked]);
+  // 管理代行費用シミュレーターカード
+  renderMgmtCostCard(capped);
   const demolishCard = document.getElementById('demolish-calc-card');
   if(demolishCard) { demolishCard.style.display = capped > 0 ? 'block' : 'none'; if(capped>0) calcDemolish(); }
 
@@ -1039,6 +1048,46 @@ function renderRenoVsRebuildCard() {
     + '&#x1F4A1; ' + recommendHtml + '<br>'
     + '<span style="color:var(--text-muted)">※ 坪単価・賃料は地域・仕様により大きく異なります。実際は複数業者の見積もりを取ることをお勧めします。</span>'
     + '</div>'
+    + '</div>';
+}
+
+function renderMgmtCostCard(score) {
+  var card = document.getElementById('mgmt-cost-card');
+  var content = document.getElementById('mgmt-cost-content');
+  if (!card || !content || score < 20) { if(card) card.style.display='none'; return; }
+  card.style.display = 'block';
+  // 距離別交通費試算
+  var trips = [
+    { dist: '近隣（〜30分）', trainFare: 600, trips: 12, label: '月1回・年12回' },
+    { dist: '中距離（〜2時間）', trainFare: 4000, trips: 6, label: '隔月1回・年6回' },
+    { dist: '遠方（〜4時間）', trainFare: 12000, trips: 4, label: '年4回' },
+    { dist: '遠距離（新幹線・飛行機）', trainFare: 30000, trips: 2, label: '年2回' },
+  ];
+  var monthlyRent = 60000; // 賃貸に出した場合の月額想定（固定値）
+  var mgmtRate = 0.05; // 管理代行 5%
+  var mgmtMonthly = Math.round(monthlyRent * mgmtRate);
+  var mgmtYearly = mgmtMonthly * 12;
+  var rowsHtml = trips.map(function(t) {
+    var selfYearly = t.trainFare * t.trips * 2 + t.trips * 8000; // 交通費(往復)+日当（時間コスト換算）
+    var diff = selfYearly - mgmtYearly;
+    var better = diff > 0;
+    return '<div style="display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;padding:8px 10px;border-radius:7px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05)">'
+      + '<div><div style="font-size:12px;font-weight:700;color:var(--text)">' + t.dist + '</div><div style="font-size:10px;color:var(--text-muted)">' + t.label + '</div></div>'
+      + '<div style="text-align:right;min-width:80px"><div style="font-size:10px;color:var(--text-muted)">自己管理コスト</div><div style="font-size:12px;font-weight:700;color:' + (better?'#f87171':'#4ade80') + '">年' + Math.round(selfYearly/10000).toLocaleString() + '万円</div></div>'
+      + '<div style="text-align:right;min-width:70px;padding:4px 8px;border-radius:6px;background:' + (better?'rgba(34,197,94,0.1)':'rgba(239,68,68,0.1)') + ';border:1px solid ' + (better?'rgba(34,197,94,0.25)':'rgba(239,68,68,0.25)') + '">'
+      + '<div style="font-size:10px;color:var(--text-muted)">差額</div>'
+      + '<div style="font-size:11px;font-weight:700;color:' + (better?'#4ade80':'#f87171') + '">' + (better?'+':'-') + Math.round(Math.abs(diff)/10000).toLocaleString() + '万円</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  content.innerHTML = '<div style="display:grid;gap:8px">'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">'
+    + '<div><div style="font-size:11px;color:var(--text-muted)">管理代行費用の目安（家賃5%）</div><div style="font-size:18px;font-weight:900;color:var(--gold)">月' + mgmtMonthly.toLocaleString() + '円 <span style="font-size:12px;font-weight:400">/ 年' + Math.round(mgmtYearly/10000) + '万円</span></div></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);text-align:right">家賃6万円想定<br>（実際は物件次第）</div>'
+    + '</div>'
+    + '<div style="font-size:11px;font-weight:700;color:var(--text-muted);padding:4px 0">📍 居住地別 自己管理の年間コスト（交通費+時間コスト目安）との比較</div>'
+    + '<div style="display:grid;gap:6px">' + rowsHtml + '</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:6px 0">※管理代行は対応範囲（見回り・鍵管理・業者手配）によって費用が変わります。遠距離の方ほど「管理代行＝安上がり」になるケースが多くなります。<br><a href="mailto:terra.realty.iam@gmail.com?subject=空き家の管理代行について聞きたい" style="color:var(--gold)">→ TERRA REALTYに管理代行について無料相談</a></div>'
     + '</div>';
 }
 
