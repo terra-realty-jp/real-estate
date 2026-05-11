@@ -587,6 +587,46 @@
     </div>
   </section>
 
+  <!-- かんたん利回り計算ウィジェット -->
+  <section style="background:#fff;padding:56px 40px;border-top:1px solid var(--border)">
+    <div style="max-width:720px;margin:0 auto">
+      <div class="section-label">ワンクリック計算</div>
+      <h2 style="font-size:22px;font-weight:900;margin-bottom:8px;color:var(--text)">かんたん利回り計算</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px;line-height:1.8">購入価格と月額家賃を入れるだけで、表面・実質利回りを即座に計算します。</p>
+      <div style="background:#f8faff;border:1px solid #e2e8f0;border-radius:16px;padding:24px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div>
+            <label style="font-size:12px;color:#64748b;font-weight:600;display:block;margin-bottom:6px">購入価格（万円）</label>
+            <input type="number" id="idx_price" placeholder="例: 2500" min="100" step="100" oninput="calcIdxYield()" style="width:100%;border:2px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color 0.2s" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+          </div>
+          <div>
+            <label style="font-size:12px;color:#64748b;font-weight:600;display:block;margin-bottom:6px">月額家賃（円）</label>
+            <input type="number" id="idx_rent" placeholder="例: 80000" min="10000" step="1000" oninput="calcIdxYield()" style="width:100%;border:2px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color 0.2s" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+          </div>
+        </div>
+        <div id="idx-yield-result" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center">
+              <div style="font-size:11px;color:#64748b;margin-bottom:4px">表面利回り</div>
+              <div id="idx-gross-yield" style="font-size:28px;font-weight:900;color:#1a1a2e"></div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:2px">年間家賃 ÷ 購入価格</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center">
+              <div style="font-size:11px;color:#64748b;margin-bottom:4px">実質利回り（目安）</div>
+              <div id="idx-net-yield" style="font-size:28px;font-weight:900;color:#1a1a2e"></div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:2px">諸経費・空室損失を概算控除</div>
+            </div>
+          </div>
+          <div id="idx-yield-comment" style="padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;color:#1e40af;line-height:1.8"></div>
+          <div style="margin-top:12px;text-align:center">
+            <a href="tools/5-toushi-bunseki.html" style="display:inline-flex;align-items:center;gap:6px;background:#1a1a2e;color:#fde68a;font-size:13px;font-weight:700;padding:10px 22px;border-radius:8px;text-decoration:none">より詳しい投資分析はこちら →</a>
+          </div>
+        </div>
+        <div id="idx-yield-empty" style="text-align:center;color:#94a3b8;font-size:13px;padding:8px 0">購入価格と月額家賃を入力すると利回りが計算されます</div>
+      </div>
+    </div>
+  </section>
+
   <!-- かんたんお問い合わせフォーム -->
   <section style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);padding:64px 40px;" id="contact-section">
     <div style="max-width:560px;margin:0 auto;text-align:center">
@@ -619,6 +659,37 @@
     </div>
   </section>
   <script>
+  function calcIdxYield() {
+    var price = parseFloat(document.getElementById('idx_price').value) * 10000;
+    var rent = parseFloat(document.getElementById('idx_rent').value);
+    var resultEl = document.getElementById('idx-yield-result');
+    var emptyEl = document.getElementById('idx-yield-empty');
+    if (!price || !rent || price <= 0 || rent <= 0) {
+      resultEl.style.display = 'none';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    var grossYield = rent * 12 / price * 100;
+    // 実質: 管理費5%・空室10%・修繕積立1%・諸経費1%を控除
+    var netRent = rent * (1 - 0.05 - 0.10) * 12 - price * 0.01;
+    var netYield = netRent / price * 100;
+    var grossEl = document.getElementById('idx-gross-yield');
+    var netEl = document.getElementById('idx-net-yield');
+    var commentEl = document.getElementById('idx-yield-comment');
+    grossEl.textContent = grossYield.toFixed(2) + '%';
+    netEl.textContent = Math.max(0, netYield).toFixed(2) + '%';
+    grossEl.style.color = grossYield >= 8 ? '#166534' : grossYield >= 5 ? '#92400e' : '#991b1b';
+    netEl.style.color = netYield >= 5 ? '#166534' : netYield >= 3 ? '#92400e' : '#991b1b';
+    var comments = [];
+    if (grossYield >= 8) comments.push('表面利回り8%以上は高利回り水準です。エリアや建物状態を慎重に確認しましょう。');
+    else if (grossYield >= 5) comments.push('表面利回り5〜8%は標準的な投資物件の水準です。');
+    else comments.push('表面利回り5%未満は低利回りです。価格交渉の余地や将来の家賃上昇余地を検討してください。');
+    if (netYield < 3) comments.push('実質利回りが3%を下回ると、ローンの金利負担でCFがマイナスになるリスクがあります。');
+    commentEl.innerHTML = '💡 ' + comments.join('<br>💡 ');
+    resultEl.style.display = 'block';
+    emptyEl.style.display = 'none';
+  }
+
   function submitContactForm() {
     const msg = (document.getElementById('cf_message').value||'').trim();
     if(!msg) { document.getElementById('cf_message').style.borderColor='#f87171'; return; }
