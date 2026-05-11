@@ -1401,6 +1401,32 @@ function showPropertyDetail(id) {
       <div class="kpi" style="padding:12px"><div class="kpi-label">今年の修繕費</div><div class="kpi-value" style="font-size:20px;color:${repairCostYTD>0?'var(--orange)':'var(--text-muted)'}">${repairCostYTD>0?Math.round(repairCostYTD/10000)+'万円':'—'}</div><div class="kpi-sub">${now.getFullYear()}年累計</div></div>
     </div>
     ${soon.length>0?`<div style="padding:10px 12px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:8px;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:8px">⚠️ 90日以内に契約更新</div>${soon.map(t=>`<div style="font-size:12px;color:var(--text);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${esc(t.name)} — ${t.end} まで（残${Math.ceil((new Date(t.end)-now)/864e5)}日）</div>`).join('')}</div>`:''}
+    ${(()=>{
+      // 今年の月別収入推移
+      const months12=[];
+      for(let i=0;i<now.getMonth()+1;i++){
+        const ym=`${now.getFullYear()}-${String(i+1).padStart(2,'0')}`;
+        months12.push(ym);
+      }
+      const expectedAnnual = monthlyRent * 12;
+      const actualPaid = months12.reduce((s,ym)=>{
+        return s + propTenants.filter(t=>t.status==='active'||t.status==='ended').reduce((ts,t)=>{
+          const r=rents.find(x=>x.tenantId===t.id&&x.month===ym);
+          return ts+(r&&r.status==='paid'?Number(r.paid||t.rent||0):0);
+        },0);
+      },0);
+      const netProfit = actualPaid - repairCostYTD;
+      const collRate = expectedAnnual>0?Math.round(actualPaid/(monthlyRent*(now.getMonth()+1))*100):0;
+      return `<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px">📊 ${now.getFullYear()}年 収支サマリー（${now.getMonth()+1}ヶ月分）</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+          <div><div style="font-size:10px;color:var(--text-muted)">入金済合計</div><div style="font-size:15px;font-weight:700;color:#4ade80">${Math.round(actualPaid/10000).toLocaleString()}万円</div></div>
+          <div><div style="font-size:10px;color:var(--text-muted)">修繕費合計</div><div style="font-size:15px;font-weight:700;color:${repairCostYTD>0?'var(--orange)':'var(--text-muted)'}">${repairCostYTD>0?Math.round(repairCostYTD/10000)+'万円':'—'}</div></div>
+          <div><div style="font-size:10px;color:var(--text-muted)">純収益</div><div style="font-size:15px;font-weight:700;color:${netProfit>=0?'var(--gold)':'var(--red)'}">${Math.round(netProfit/10000).toLocaleString()}万円</div></div>
+        </div>
+        ${monthlyRent>0?`<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:3px"><span>家賃回収率</span><span>${collRate}%</span></div><div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden"><div style="width:${Math.min(100,collRate)}%;height:100%;background:${collRate>=95?'var(--green)':collRate>=80?'var(--gold)':'var(--orange)'};border-radius:3px;transition:width 0.4s"></div></div></div>`:''}
+      </div>`;
+    })()}
     <div style="font-size:13px;font-weight:700;margin-bottom:8px">入居テナント一覧 (${occ}件)</div>
     ${activeTenants.length?`<table style="width:100%;font-size:12px"><thead><tr><th>氏名</th><th>部屋</th><th>家賃</th><th>契約終了</th></tr></thead><tbody>${activeTenants.map(t=>`<tr><td>${esc(t.name)}</td><td>${t.room||'—'}</td><td>${(t.rent||0).toLocaleString()}円</td><td>${t.end||'—'}</td></tr>`).join('')}</tbody></table>`:`<div style="color:var(--text-muted);font-size:12px;padding:8px">入居中のテナントがありません</div>`}
   `;
