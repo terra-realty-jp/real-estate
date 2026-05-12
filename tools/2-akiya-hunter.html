@@ -383,6 +383,7 @@
   </div>
 
   <div id="nairan-prep-card" style="display:none;margin-bottom:16px"></div>
+  <div id="inspection-benefit-card" style="display:none;margin-bottom:16px"></div>
 
   <div class="card" id="scoreActionCard" style="display:none;">
     <div class="card-title"><span class="icon">🎯</span>推奨アクション</div>
@@ -897,6 +898,8 @@ function updateScore() {
   renderDelayCostCard(capped, [...checked]);
   // 内覧準備チェックリスト
   renderNairanPrepCard(capped);
+  // 住宅インスペクション・メリット診断
+  renderInspectionBenefitCard(capped);
   // 管理代行費用シミュレーターカード
   renderMgmtCostCard(capped);
   const demolishCard = document.getElementById('demolish-calc-card');
@@ -1842,6 +1845,59 @@ function renderNairanPrepCard(score) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cur));
     renderNairanPrepCard(score);
   };
+}
+
+function renderInspectionBenefitCard(score) {
+  var el = document.getElementById('inspection-benefit-card');
+  if (!el) return;
+  if (score < 25) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  var age = parseInt((document.getElementById('akiya_age') || {}).value) || 25;
+  var sellPrice = parseInt((document.getElementById('akiya_price') || {}).value) || 1000;
+  var inspCost = age >= 20 ? 8 : 6;
+  var priceUpEst = Math.round(sellPrice * 0.02);
+  var negoReduction = Math.round(sellPrice * 0.03);
+  var netBenefit = priceUpEst + negoReduction - inspCost;
+  var isRecommended = age >= 15 || sellPrice >= 500;
+  var benefitColor = netBenefit > 0 ? 'var(--green)' : 'var(--orange)';
+  var checks = [
+    { item: '基礎・外壁のひび割れ・劣化', icon: '&#x1F3D7;' },
+    { item: '屋根・雨漏りの有無', icon: '&#x1F327;' },
+    { item: '床下・小屋裏の結露・腐食', icon: '&#x1F4A7;' },
+    { item: '給排水管の漏水・錆び', icon: '&#x1F6B0;' },
+    { item: '電気設備の安全性', icon: '&#x26A1;' },
+    { item: '耐震性の目視確認', icon: '&#x1F4CF;' },
+  ];
+  var checkHtml = checks.map(function(c) {
+    return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.04)">'
+      + '<span>' + c.icon + '</span><span>' + c.item + '</span>'
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div class="card" style="margin-bottom:0">'
+    + '<div class="card-title">&#x1F50D; 住宅インスペクション メリット診断</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">第三者の建物調査（インスペクション）を受けると、買主の安心感が高まり成約率や価格交渉力が向上します。</p>'
+    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:' + (isRecommended?'rgba(74,222,128,0.08)':'rgba(255,255,255,0.03)') + ';border:1px solid ' + (isRecommended?'rgba(74,222,128,0.25)':'rgba(255,255,255,0.08)') + ';border-radius:10px">'
+    + '<span style="font-size:24px">' + (isRecommended?'&#x2705;':'&#x1F914;') + '</span>'
+    + '<div><div style="font-size:12px;font-weight:700;color:' + (isRecommended?'var(--green)':'var(--text-muted)') + '">' + (isRecommended?'インスペクション 推奨':'費用対効果を要検討') + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">築' + age + '年・売却想定価格' + sellPrice + '万円の場合</div>'
+    + '</div></div>'
+    + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px">'
+    + '<div style="text-align:center;padding:10px;background:rgba(0,0,0,0.15);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">検査費用目安</div>'
+    + '<div style="font-size:18px;font-weight:900;color:var(--red)">約' + inspCost + '万円</div>'
+    + '</div>'
+    + '<div style="text-align:center;padding:10px;background:rgba(74,222,128,0.07);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">期待効果（目安）</div>'
+    + '<div style="font-size:18px;font-weight:900;color:' + benefitColor + '">' + (netBenefit>=0?'+':'') + netBenefit + '万円</div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:6px;line-height:1.7">'
+    + '価格UP効果（+' + priceUpEst + '万）＋値引き抑制（+' + negoReduction + '万） ÷ 検査費（-' + inspCost + '万）= <strong style="color:' + benefitColor + '">差引' + (netBenefit>=0?'+':'') + netBenefit + '万円</strong>'
+    + '</div>'
+    + '<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">主な検査項目</div>'
+    + checkHtml
+    + '<div style="font-size:10px;color:#555;margin-top:8px;line-height:1.6">※費用・効果はあくまで目安。インスペクション会社・物件状態によって異なります。<a href="mailto:terra.realty.iam@gmail.com?subject=インスペクションについて相談したい" style="color:var(--gold);margin-left:4px">無料相談→</a></div>'
+    + '</div>';
 }
 
 function renderTimeline(score, ids) {
