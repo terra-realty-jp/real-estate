@@ -262,6 +262,15 @@
     </div>
   </div>
 
+  <div style="margin-bottom:16px">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">💡 よくある物件タイプで試してみる：</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="applySateiTemplate('osaka_ms')" style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;transition:all 0.2s;white-space:nowrap" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='var(--text)'">🌆 大阪 マンション</button>
+      <button onclick="applySateiTemplate('tokyo_ms')" style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;transition:all 0.2s;white-space:nowrap" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='var(--text)'">🏙️ 東京 マンション</button>
+      <button onclick="applySateiTemplate('local_house')" style="padding:7px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;transition:all 0.2s;white-space:nowrap" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='var(--text)'">🏠 地方 一戸建て</button>
+    </div>
+  </div>
+
   <div id="form-step-1" class="form-card">
     <div class="form-section-title">Step 1 — 物件の基本情報</div>
     <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:rgba(255,255,255,0.75);line-height:1.7">
@@ -945,6 +954,23 @@ function previewCalc() {
     hintEl.textContent = hint;
   }
   bar.style.display = 'block';
+}
+
+function applySateiTemplate(key) {
+  const tpl = {
+    osaka_ms: {pref:'osaka_city', propType:'mansion', area:'72', age:'15', floor:'6', station:'10', direction:'south', reform:'none'},
+    tokyo_ms: {pref:'tokyo_23',   propType:'mansion', area:'55', age:'10', floor:'6', station:'5',  direction:'south', reform:'partial'},
+    local_house:{pref:'other',    propType:'kodate',  area:'110',age:'30', floor:'1', station:'15', direction:'east',  reform:'partial'},
+  };
+  const t = tpl[key]; if(!t) return;
+  const set = (id,v) => { const el=document.getElementById(id); if(el) el.value=v; };
+  set('pref',t.pref); set('propType',t.propType); set('area',t.area); set('age',t.age);
+  set('floor',t.floor); set('station',t.station); set('direction',t.direction); set('reform',t.reform);
+  updateAreaHint(); previewCalc();
+  document.getElementById('form-step-1').scrollIntoView({behavior:'smooth',block:'nearest'});
+  const names = {osaka_ms:'大阪 マンション（例）',tokyo_ms:'東京 マンション（例）',local_house:'地方 一戸建て（例）'};
+  const nameEl = document.getElementById('leadName');
+  if(nameEl && !nameEl.value) nameEl.value = names[key]||'';
 }
 
 function updateAreaHint() {
