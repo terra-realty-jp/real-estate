@@ -502,6 +502,7 @@
   <div id="portfolio-summary" style="display:none;margin-bottom:16px"></div>
   <!-- ポートフォリオ分散チェック -->
   <div id="portfolio-diversity-card" style="display:none;margin-bottom:16px"></div>
+  <div id="yield-distrib-card" style="display:none;margin-bottom:16px"></div>
   <div id="property-score-ranking" style="display:none;margin-bottom:16px"></div>
 
   <!-- 物件比較パネル -->
@@ -2432,6 +2433,56 @@ function renderPortfolioDiversity() {
   </div>`;
 }
 
+function renderYieldDistribCard() {
+  var el = document.getElementById('yield-distrib-card');
+  if (!el || history.length < 2) { if (el) el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  var bands = [
+    { label: '10%以上', min: 10, max: 999, col: '#10b981' },
+    { label: '7〜10%', min: 7, max: 10, col: '#4ade80' },
+    { label: '5〜7%', min: 5, max: 7, col: '#a3e635' },
+    { label: '3〜5%', min: 3, max: 5, col: '#facc15' },
+    { label: '3%未満', min: 0, max: 3, col: '#f87171' },
+  ];
+  var bandCounts = bands.map(function(b) {
+    var items = history.filter(function(h){ return h.netYield >= b.min && h.netYield < b.max; });
+    return { label: b.label, count: items.length, col: b.col,
+      names: items.map(function(h){ return h.name || '物件'; }).slice(0, 3) };
+  });
+  var total = history.length;
+  var avgYield = history.reduce(function(s, h){ return s + (h.netYield || 0); }, 0) / total;
+  var maxCount = Math.max.apply(null, bandCounts.map(function(b){ return b.count; })) || 1;
+  var rows = bandCounts.map(function(b) {
+    if (!b.count) return '';
+    var barW = Math.round(b.count / maxCount * 100);
+    var pct = Math.round(b.count / total * 100);
+    return '<div style="display:grid;grid-template-columns:60px 1fr 30px 36px;gap:6px;align-items:center;margin-bottom:8px">'
+      + '<div style="font-size:11px;color:' + b.col + ';font-weight:700">' + b.label + '</div>'
+      + '<div><div style="height:10px;background:rgba(255,255,255,0.05);border-radius:5px;overflow:hidden">'
+      + '<div style="height:100%;width:' + barW + '%;background:' + b.col + ';border-radius:5px;transition:width 0.4s"></div>'
+      + '</div>'
+      + (b.names.length ? '<div style="font-size:9px;color:#555;margin-top:2px">' + b.names.join('、') + (b.count > 3 ? '他' : '') + '</div>' : '')
+      + '</div>'
+      + '<div style="font-size:11px;font-weight:700;color:var(--text);text-align:center">' + b.count + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);text-align:right">' + pct + '%</div>'
+      + '</div>';
+  }).join('');
+  var avgCol = avgYield >= 7 ? '#4ade80' : avgYield >= 5 ? '#facc15' : avgYield >= 3 ? '#fb923c' : '#f87171';
+  var benchmark = '全国平均（収益物件）: 7〜8%（表面）、4〜5%（実質）';
+  el.innerHTML = '<div class="card">'
+    + '<div class="card-title">&#x1F4CA; 分析物件 実質利回り分布（' + total + '件）</div>'
+    + '<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap">'
+    + '<div style="text-align:center;padding:10px 18px;background:rgba(255,255,255,0.04);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted)">平均実質利回り</div>'
+    + '<div style="font-size:24px;font-weight:900;color:' + avgCol + '">' + avgYield.toFixed(1) + '%</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#555;line-height:1.6">' + benchmark + '</div>'
+    + '</div>'
+    + rows
+    + '<div style="font-size:10px;color:#555;margin-top:8px;line-height:1.7">※ 実質利回り（管理費・空室率・税金・保険控除後）で分類。分析履歴の全件が対象です。</div>'
+    + '</div>';
+}
+
 function renderPropertyScoreRanking() {
   const el = document.getElementById('property-score-ranking');
   if (!el || history.length < 2) { if(el) el.style.display='none'; return; }
@@ -2491,6 +2542,7 @@ function renderHistory() {
   calcAssetGoal();
   renderPortfolioSummary();
   renderPortfolioDiversity();
+  renderYieldDistribCard();
   renderPropertyScoreRanking();
   const el = document.getElementById('history-list');
   if(!history.length) {
