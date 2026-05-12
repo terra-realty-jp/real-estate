@@ -334,6 +334,7 @@
   <div id="leasing-cost-card" style="display:none;margin-bottom:16px"></div>
   <div id="move-season-card" style="display:none;margin-bottom:16px"></div>
   <div id="tenure-analysis-card" style="display:none;margin-bottom:16px"></div>
+  <div id="tenant-anniversary-card" style="display:none;margin-bottom:16px"></div>
   <div id="tenants-list"></div>
 </div>
 </div>
@@ -2357,6 +2358,62 @@ function renderTenureAnalysisCard() {
   </div>`;
 }
 
+function renderTenantAnniversaryCard() {
+  var el = document.getElementById('tenant-anniversary-card');
+  if (!el) return;
+  var active = tenants.filter(function(t){ return t.status === 'active' && t.start; });
+  if (!active.length) { el.style.display = 'none'; return; }
+  var now = new Date();
+  var milestones = [1, 2, 3, 5, 10];
+  var upcoming = [];
+  active.forEach(function(t) {
+    var startDate = new Date(t.start);
+    milestones.forEach(function(y) {
+      var ann = new Date(startDate);
+      ann.setFullYear(startDate.getFullYear() + y);
+      var diffDays = Math.round((ann - now) / (1000 * 60 * 60 * 24));
+      if (diffDays >= 0 && diffDays <= 60) {
+        upcoming.push({ t: t, years: y, anniversary: ann, diffDays: diffDays });
+      }
+    });
+  });
+  upcoming.sort(function(a, b){ return a.diffDays - b.diffDays; });
+  if (!upcoming.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+
+  var rows = upcoming.map(function(u) {
+    var prop = properties.find(function(p){ return p.id === u.t.propertyId; });
+    var propName = prop ? prop.name : '—';
+    var urgency = u.diffDays <= 7 ? 'var(--red)' : u.diffDays <= 30 ? 'var(--gold)' : 'var(--text-muted)';
+    var badge = u.years >= 5 ? '🏆' : u.years >= 3 ? '🎖' : '🎉';
+    var timeStr = u.diffDays === 0 ? '今日' : u.diffDays === 1 ? '明日' : u.diffDays + '日後';
+    var mailSubj = encodeURIComponent('入居' + u.years + '周年のご挨拶');
+    var mailBody = encodeURIComponent('いつも大変お世話になっております。\n'
+      + u.t.name + '様が' + propName + 'にご入居いただいてから、本日で' + u.years + '年が経ちます。\n\n'
+      + '引き続き安心してお住まいいただけるよう、管理・メンテナンスに努めてまいります。\n'
+      + '何かお困りのことがございましたら、いつでもお気軽にご連絡ください。\n\n'
+      + '今後ともどうぞよろしくお願いいたします。');
+    var mailHref = u.t.email ? 'mailto:' + u.t.email + '?subject=' + mailSubj + '&body=' + mailBody : '';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);margin-bottom:6px;flex-wrap:wrap;gap:8px">'
+      + '<div style="display:flex;align-items:center;gap:10px">'
+      + '<span style="font-size:20px">' + badge + '</span>'
+      + '<div>'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text)">' + esc(u.t.name) + ' — <span style="color:var(--gold)">' + u.years + '周年</span></div>'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + esc(propName) + '　' + u.anniversary.toLocaleDateString('ja-JP') + '</div>'
+      + '</div></div>'
+      + '<div style="display:flex;align-items:center;gap:8px">'
+      + '<span style="font-size:12px;font-weight:700;color:' + urgency + '">' + timeStr + '</span>'
+      + (mailHref ? '<a href="' + mailHref + '" style="font-size:11px;padding:4px 10px;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);border-radius:6px;color:var(--gold);text-decoration:none;white-space:nowrap">✉ 感謝メール</a>' : '')
+      + '</div>'
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div class="card" style="margin-bottom:0">'
+    + '<div class="card-title">🎉 入居記念日アラート（60日以内）</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">長期入居テナントの節目を把握し、感謝の気持ちを伝えましょう。</div>'
+    + rows
+    + '</div>';
+}
+
 function renderContactQuickCard() {
   const el = document.getElementById('contact-quick-card');
   if (!el) return;
@@ -2388,6 +2445,7 @@ function renderTenants(){
   renderLeasingCostCard();
   renderMoveSeasonCard();
   renderTenureAnalysisCard();
+  renderTenantAnniversaryCard();
   const el=document.getElementById('tenants-list');
   if(!tenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><p>テナントが登録されていません</p><p style="font-size:12px;margin-top:8px">${properties.length?'右上の「＋ テナント追加」からはじめてください':'先に「物件管理」タブで物件を登録してください'}</p>${properties.length?'<button class="btn btn-gold" style="margin-top:16px" onclick="openTenantModal()">＋ テナントを追加する</button>':''}</div>`;return;}
   const now=new Date();
