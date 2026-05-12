@@ -387,6 +387,7 @@
     <div id="repair-budget-content"></div>
   </div>
   <div id="repair-rent-ratio-card" style="display:none;margin-bottom:20px;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px"></div>
+  <div id="repair-prop-rank-card" style="display:none;margin-bottom:20px"></div>
   <div id="repair-vendor-card" style="display:none;margin-bottom:20px"></div>
   <div id="repair-category-card" style="display:none;margin-bottom:20px"></div>
   <div id="repair-priority-matrix" style="display:none;margin-bottom:20px"></div>
@@ -3134,6 +3135,7 @@ function renderRepairs(){
     repSumEl.style.display = 'none';
   }
   renderRepairRentRatioCard();
+  renderRepairPropRankCard();
   renderRepairVendorCard();
   renderRepairCategoryBreakdown();
   renderRepairMonthlyChart();
@@ -3388,6 +3390,48 @@ function renderRepairCategoryBreakdown(){
     </div>
   </div>`;
   el.style.display = 'block';
+}
+
+function renderRepairPropRankCard() {
+  const el = document.getElementById('repair-prop-rank-card');
+  if (!el) return;
+  if (!properties.length || !repairs.length) { el.style.display = 'none'; return; }
+  const ranked = properties.map(function(p) {
+    const propRepairs = repairs.filter(function(r){ return r.propertyId === p.id && r.cost > 0; });
+    const totalCost = propRepairs.reduce(function(s, r){ return s + (r.cost || 0); }, 0);
+    const activeTens = tenants.filter(function(t){ return t.propertyId === p.id && t.status === 'active'; });
+    const annualRent = activeTens.reduce(function(s, t){ return s + (t.rent || 0); }, 0) * 12;
+    const ratio = annualRent > 0 ? Math.round(totalCost / annualRent * 100) : null;
+    return { p: p, totalCost: totalCost, annualRent: annualRent, ratio: ratio, count: propRepairs.length };
+  }).filter(function(x){ return x.totalCost > 0; })
+    .sort(function(a, b){ return b.totalCost - a.totalCost; });
+  if (!ranked.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const maxCost = ranked[0].totalCost || 1;
+  const rows = ranked.map(function(item) {
+    const barW = Math.round(item.totalCost / maxCost * 100);
+    const ratioCol = item.ratio === null ? 'var(--text-muted)'
+      : item.ratio <= 5 ? 'var(--green)'
+      : item.ratio <= 15 ? 'var(--gold)'
+      : 'var(--red)';
+    const ratioTxt = item.ratio !== null ? item.ratio + '% (' + (item.ratio <= 5 ? '優良' : item.ratio <= 15 ? '要注意' : '高負担') + ')' : '家賃データなし';
+    return '<div style="margin-bottom:10px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text)">' + esc(item.p.name) + ' <span style="font-size:10px;color:var(--text-muted)">(' + item.count + '件)</span></div>'
+      + '<div style="font-size:12px;font-weight:700;color:' + ratioCol + '">' + ratioTxt + '</div>'
+      + '</div>'
+      + '<div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin-bottom:3px">'
+      + '<div style="height:100%;width:' + barW + '%;background:' + ratioCol + ';border-radius:4px;transition:width 0.4s"></div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">累計修繕費: ' + item.totalCost.toLocaleString() + '円　|　年間家賃: ' + (item.annualRent > 0 ? item.annualRent.toLocaleString() + '円' : '—') + '</div>'
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:4px">&#x1F3C6; 物件別修繕費負担率ランキング</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px">累計修繕費 ÷ 年間家賃。5%以下が優良、15%超は老朽化リスクのサインです。</div>'
+    + rows
+    + '<div style="font-size:10px;color:#555;margin-top:8px;line-height:1.7">※ 累計修繕費は記録済みの全修繕費合計。年間家賃は現在の入居中テナントの合計家賃×12ヶ月。</div>'
+    + '</div>';
 }
 
 function renderRepairRentRatioCard() {
