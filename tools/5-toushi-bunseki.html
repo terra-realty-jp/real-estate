@@ -482,6 +482,14 @@
   <h1 class="page-title">投資<span>タイプ診断</span></h1>
   <p class="page-desc">5つの質問に答えるだけで、あなたに向いている不動産投資のスタイルがわかります。</p>
   <div id="quiz-body"></div>
+
+  <!-- REIT vs 直接投資比較カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📊 REIT vs 直接不動産投資 徹底比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産に投資する方法は「直接購入」だけではありません。J-REIT（不動産投資信託）と直接投資の違いを理解して、あなたに合った選択を見つけましょう。</p>
+    <div id="reit-compare-table"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3079,7 +3087,7 @@ function switchTab(t) {
   const activeBtn = document.querySelector('.tab-btn.active');
   if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   if(t==='history') renderHistory();
-  if(t==='quiz') renderQuiz();
+  if(t==='quiz') { renderQuiz(); renderReitCompare(); }
 }
 (function(){
   const wrap = document.getElementById('tabs-wrap');
@@ -3092,6 +3100,68 @@ function switchTab(t) {
   scr.addEventListener('scroll', check, {passive:true});
   check();
 })();
+
+
+// ===== REIT vs 直接投資比較 =====
+function renderReitCompare() {
+  var el = document.getElementById('reit-compare-table');
+  if (!el) return;
+
+  var items = [
+    {label:'最低投資額', direct:'数百万〜数千万円', reit:'100円〜（証券会社による）', winner:'reit'},
+    {label:'流動性（換金性）', direct:'売却に数ヶ月かかる', reit:'市場で即時売買可能', winner:'reit'},
+    {label:'管理の手間', direct:'入居者対応・修繕など必要', reit:'不要（プロが運用）', winner:'reit'},
+    {label:'レバレッジ効果', direct:'高い（融資で数倍の投資可）', reit:'低い（通常は現金投資）', winner:'direct'},
+    {label:'節税効果', direct:'高い（減価償却・経費計上可）', reit:'限定的', winner:'direct'},
+    {label:'実物資産の所有', direct:'あり（土地・建物を保有）', reit:'なし（受益証券の保有）', winner:'direct'},
+    {label:'分散投資', direct:'物件を選ぶ必要あり', reit:'複数物件に自動分散', winner:'reit'},
+    {label:'インフレ対策', direct:'強い（実物資産が上昇）', reit:'ある程度あり', winner:'direct'},
+    {label:'リターン目安', direct:'実質利回り3〜8%（物件次第）', reit:'分配金利回り3〜5%（時価変動あり）', winner:'both'},
+    {label:'リスク', direct:'空室・修繕・価格変動', reit:'価格変動・倒産リスク', winner:'both'},
+    {label:'融資活用', direct:'可能（不動産担保）', reit:'原則不可', winner:'direct'},
+    {label:'始めやすさ', direct:'物件選びや融資手続きが必要', reit:'証券口座があれば即日開始', winner:'reit'},
+  ];
+
+  var rows = items.map(function(item) {
+    var dColor = item.winner==='direct'?'var(--gold)':'var(--text)';
+    var rColor = item.winner==='reit'?'#60a5fa':'var(--text)';
+    var dBg = item.winner==='direct'?'rgba(201,168,76,0.06)':'transparent';
+    var rBg = item.winner==='reit'?'rgba(96,165,250,0.06)':'transparent';
+    return '<tr>'
+      + '<td style="padding:9px 10px;font-size:12px;font-weight:700;color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.05);white-space:nowrap">' + item.label + '</td>'
+      + '<td style="padding:9px 10px;font-size:12px;color:'+dColor+';background:'+dBg+';border-bottom:1px solid rgba(255,255,255,0.05)">' + item.direct + '</td>'
+      + '<td style="padding:9px 10px;font-size:12px;color:'+rColor+';background:'+rBg+';border-bottom:1px solid rgba(255,255,255,0.05)">' + item.reit + '</td>'
+      + '</tr>';
+  }).join('');
+
+  var scenarios = [
+    {icon:'&#x1F3E0;', title:'直接投資が向いている人', color:'var(--gold)', points:['まとまった資金（頭金）がある','融資を活用してレバレッジをかけたい','節税目的（減価償却・経費計上）がある','物件管理に時間をかけられる','実物資産として土地・建物を持ちたい']},
+    {icon:'&#x1F4C8;', title:'REITが向いている人', color:'#60a5fa', points:['少額から始めたい（100円〜）','管理の手間をかけたくない','すぐに換金できる流動性を重視','まず不動産投資を学びたい初心者','株式等との分散投資として活用したい']},
+  ];
+
+  var scenHtml = scenarios.map(function(s) {
+    var pts = s.points.map(function(p){ return '<li style="font-size:12px;color:var(--text-muted);margin-bottom:4px;line-height:1.6">&#10003; '+p+'</li>'; }).join('');
+    return '<div style="border:1px solid '+s.color+'33;border-radius:10px;padding:14px;background:'+s.color+'08">'
+      + '<div style="font-size:13px;font-weight:700;color:'+s.color+';margin-bottom:10px">'+s.icon+' '+s.title+'</div>'
+      + '<ul style="margin:0;padding-left:0;list-style:none">'+pts+'</ul>'
+      + '</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="overflow-x:auto;margin-bottom:16px">'
+    + '<table style="width:100%;border-collapse:collapse;min-width:480px">'
+    + '<thead><tr>'
+    + '<th style="padding:9px 10px;text-align:left;font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.03);border-bottom:2px solid rgba(255,255,255,0.1)">比較項目</th>'
+    + '<th style="padding:9px 10px;text-align:left;font-size:11px;color:var(--gold);background:rgba(201,168,76,0.06);border-bottom:2px solid rgba(201,168,76,0.2)">&#x1F3E0; 直接不動産投資</th>'
+    + '<th style="padding:9px 10px;text-align:left;font-size:11px;color:#60a5fa;background:rgba(96,165,250,0.06);border-bottom:2px solid rgba(96,165,250,0.2)">&#x1F4C8; J-REIT（不動産投資信託）</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'+scenHtml+'</div>'
+    + '<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">'
+    + '&#x1F4A1; <strong>両方を組み合わせる</strong>という選択肢もあります。少額のREITで市場感覚を養いながら、資金が貯まったら直接投資へ移行する人も多くいます。<br>'
+    + 'TERRA REALTYでは直接投資への移行サポートも行っています。'
+    + '</div>';
+}
 
 // ===== 投資タイプ診断 =====
 const QUIZ_QS = [
@@ -3577,6 +3647,7 @@ renderHistory();
           history = rows.map(r => ({ id: r.id, name: r.name, ...(r.data || {}) }));
           localStorage.setItem('inv_history', JSON.stringify(history));
           renderHistory();
+renderReitCompare();
         }
       }
     });
