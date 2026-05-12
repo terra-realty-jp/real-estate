@@ -548,6 +548,9 @@
       <!-- 買主の購買力シミュレーター -->
       <div id="buyer-afford-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 売却 vs 賃貸 比較カード -->
+      <div id="sell-vs-rent-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -1801,6 +1804,52 @@ function renderPresaleReformPanel(price, age, reform) {
     <div style="font-size:10px;color:#555;margin-top:8px">※ 価格UP効果・費用はエリア・物件状態によって異なります。実際のリフォーム見積はTERRA REALTYにご相談ください。</div>`;
 }
 
+function renderSellVsRentPanel(price) {
+  var el = document.getElementById('sell-vs-rent-panel');
+  if (!el || !price) return;
+  el.style.display = 'block';
+  var sellCost = Math.round(price * 0.07);
+  var netSale = price - sellCost;
+  var annualYield = 0.04;
+  var rentEstimate = Math.round(price * 0.005);
+  var annualRent = rentEstimate * 12;
+  var mgmtCost = Math.round(annualRent * 0.1);
+  var annualRentCF = annualRent - mgmtCost;
+  var years = [5, 10, 20];
+  var rows = years.map(function(y) {
+    var investGain = Math.round(netSale * (Math.pow(1 + annualYield, y) - 1));
+    var rentCum = Math.round(annualRentCF * y);
+    var winner = investGain >= rentCum ? 'sell' : 'rent';
+    var sellTotal = netSale + investGain;
+    var rentTotal = netSale + rentCum;
+    return '<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">' + y + '年後</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      + '<div style="text-align:center;padding:8px;background:' + (winner==='sell'?'rgba(74,222,128,0.1)':'rgba(255,255,255,0.02)') + ';border:1px solid ' + (winner==='sell'?'rgba(74,222,128,0.3)':'rgba(255,255,255,0.06)') + ';border-radius:8px">'
+      + (winner==='sell'?'<div style="font-size:9px;font-weight:700;color:var(--green);margin-bottom:2px">WINNER</div>':'')
+      + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">売却して運用</div>'
+      + '<div style="font-size:17px;font-weight:900;color:var(--green)">' + sellTotal.toLocaleString() + '万円</div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">手取り+運用益(4%想定)</div>'
+      + '</div>'
+      + '<div style="text-align:center;padding:8px;background:' + (winner==='rent'?'rgba(74,222,128,0.1)':'rgba(255,255,255,0.02)') + ';border:1px solid ' + (winner==='rent'?'rgba(74,222,128,0.3)':'rgba(255,255,255,0.06)') + ';border-radius:8px">'
+      + (winner==='rent'?'<div style="font-size:9px;font-weight:700;color:var(--green);margin-bottom:2px">WINNER</div>':'')
+      + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">賃貸で運用</div>'
+      + '<div style="font-size:17px;font-weight:900;color:var(--gold)">' + rentCum.toLocaleString() + '万円</div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">累計CF（管理費10%控除後）</div>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--gold)">&#x2696;&#xFE0F; 売却 vs 賃貸 どちらが得？</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">'
+    + '査定価格での<strong>売却（手取り' + netSale.toLocaleString() + '万円を年率4%運用）</strong>と、<strong>賃貸（月' + rentEstimate.toLocaleString() + '円・管理費10%控除後）</strong>の累計収入を比較します。'
+    + '</p>'
+    + rows
+    + '<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">'
+    + '&#x26A0;&#xFE0F; 賃貸は修繕・空室・管理のリスクが伴います。売却は確実に手取りが確定しますが、将来の値上がりは享受できません。物件の老朽化・立地・資金ニーズに応じて判断してください。'
+    + '</div>';
+}
+
 function renderBuyerAffordPanel(price) {
   var el = document.getElementById('buyer-afford-panel');
   if (!el || !price) return;
@@ -2341,6 +2390,9 @@ function calcAndShowResult() {
 
   // 買主の購買力シミュレーター
   renderBuyerAffordPanel(price);
+
+  // 売却 vs 賃貸 比較
+  renderSellVsRentPanel(price);
 
   // 動的CTAメッセージ・メールリンク更新
   setDynamicCTA(price, document.getElementById('leadTiming').value, liquidity, age, propType);
