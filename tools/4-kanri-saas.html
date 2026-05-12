@@ -256,6 +256,7 @@
     </div>
     <div id="unpaid-tenant-list"></div>
   </div>
+  <div id="consecutive-arrears-card" style="display:none;margin-top:16px"></div>
   <div class="card" id="arrears-rank-card" style="display:none;margin-top:16px">
     <div class="card-title">📊 直近6ヶ月 滞納履歴ランキング</div>
     <div id="arrears-rank-content"></div>
@@ -1065,12 +1066,75 @@ function renderDashboard() {
       ctaCard.style.display = 'none';
     }
   }
+  renderConsecutiveArrearsCard();
   renderVacancyPotentialCard();
   renderMonthlyHighlight();
   renderYTDSummary();
   renderNextMonthForecast();
   renderTaxHelper();
   renderIncomeHeatmap();
+}
+
+function renderConsecutiveArrearsCard() {
+  const el = document.getElementById('consecutive-arrears-card');
+  if (!el) return;
+  const activeTenants = tenants.filter(t => t.status === 'active');
+  if (!activeTenants.length) { el.style.display = 'none'; return; }
+
+  const now = new Date();
+  const months = [];
+  for (let i = 0; i < 4; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+
+  const alerts = [];
+  activeTenants.forEach(t => {
+    let streak = 0;
+    for (const ym of months) {
+      const r = rents.find(x => x.tenantId === t.id && x.month === ym);
+      if (!r || r.status === 'unpaid') streak++;
+      else break;
+    }
+    if (streak >= 2) {
+      const p = properties.find(x => x.id === t.propertyId);
+      alerts.push({ t, streak, p });
+    }
+  });
+
+  if (!alerts.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+
+  const rows = alerts.sort((a,b) => b.streak - a.streak).map(a => {
+    const risk = a.streak >= 3 ? { label:'高リスク', color:'var(--red)', bg:'rgba(239,68,68,0.1)' }
+               : { label:'注意', color:'var(--orange)', bg:'rgba(249,115,22,0.1)' };
+    const mailUrl = a.t.email ? (() => {
+      const subj = encodeURIComponent(`【重要】家賃滞納のご連絡（${a.streak}ヶ月連続）`);
+      const body = encodeURIComponent([
+        `${a.t.name} 様`,``,`いつもお世話になっております。`,``,
+        `${a.t.room||'お部屋'}の家賃が${a.streak}ヶ月連続で未入金となっております。`,
+        `大変恐れ入りますが、早急にご連絡・ご入金いただきますよう、お願い申し上げます。`,``,
+        `ご不明な点がございましたらお気軽にお申し付けください。`
+      ].join('\n'));
+      return `mailto:${a.t.email}?subject=${subj}&body=${body}`;
+    })() : null;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:${risk.bg};border:1px solid ${risk.color}33;border-radius:9px;gap:10px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${esc(a.t.name)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${a.p?esc(a.p.name):'—'} / ${a.t.room||'—'} &nbsp;・&nbsp; 月額 ${(a.t.rent||0).toLocaleString()}円</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:${risk.color};background:${risk.bg};border:1px solid ${risk.color}55;padding:3px 10px;border-radius:100px">${a.streak}ヶ月連続滞納 — ${risk.label}</span>
+        ${mailUrl ? `<a href="${mailUrl}" style="font-size:11px;padding:5px 12px;background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);border-radius:7px;text-decoration:none;font-weight:700">督促メール</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `<div style="background:var(--dark3);border:1.5px solid rgba(239,68,68,0.35);border-radius:12px;padding:16px 20px">
+    <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:12px">🚨 連続滞納アラート（2ヶ月以上未入金）</div>
+    <div style="display:flex;flex-direction:column;gap:8px">${rows}</div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text-muted);line-height:1.7">3ヶ月以上の連続滞納は法的措置の検討が必要な場合があります。早期に専門家へご相談ください。</div>
+  </div>`;
 }
 
 function renderVacancyPotentialCard() {
