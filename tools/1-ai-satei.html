@@ -523,6 +523,9 @@
       <!-- ローン残債完済チェックカード -->
       <div id="loan-payoff-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 内覧準備チェックリスト -->
+      <div id="nairan-checklist-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -1627,6 +1630,65 @@ function renderSumikaeriCard(price) {
     + '<p style="font-size:10px;color:#777;line-height:1.7;margin-top:10px">※ ローン残高がある場合は完済費用も必要です。不動産取得税・登記費用は物件・ローンの内容によって異なります。まずは専門家にご相談ください。</p>';
 }
 
+function renderNairanChecklist(reform) {
+  var el = document.getElementById('nairan-checklist-panel');
+  if (!el) return;
+  el.style.display = 'block';
+  var items = [
+    { cat:'清掃・印象', checks:[
+      { t:'玄関・廊下を掃除・整理整頓する', done: false },
+      { t:'水回り（キッチン・浴室・トイレ）をきれいにする', done: false },
+      { t:'窓ガラスを拭き、カーテンを開けて明るくする', done: false },
+      { t:'不要な荷物・家具を整理してスペースを広く見せる', done: false },
+    ]},
+    { cat:'設備・書類', checks:[
+      { t:'照明が切れていないか確認・交換する', done: false },
+      { t:'水漏れ・異音などの小さな不具合を修繕する', done: false },
+      { t:reform==='none'?'キッチン・浴室の軽クリーニングを検討する':'リフォーム工事記録を用意する（买主への説明に活用）', done: reform!=='none' },
+      { t:'登記簿謄本・固定資産税通知書を手元に準備する', done: false },
+    ]},
+    { cat:'内覧当日', checks:[
+      { t:'内覧30分前に換気して空気を入れ替える', done: false },
+      { t:'においが気になる場合は消臭スプレーなどを使用する', done: false },
+      { t:'管理費・修繕積立金・隣人情報など質問に答えられる準備をする', done: false },
+      { t:'内覧後24時間以内に不動産会社へ感想フィードバックを確認する', done: false },
+    ]},
+  ];
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">🏠 内覧準備チェックリスト</div>'
+    + items.map(function(cat) {
+      return '<div style="margin-bottom:14px">'
+        + '<div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.05em;margin-bottom:6px;text-transform:uppercase">' + cat.cat + '</div>'
+        + cat.checks.map(function(c,i) {
+          var id = 'nc_' + cat.cat.slice(0,2) + i;
+          return '<label style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;cursor:pointer;font-size:12px;color:var(--text);line-height:1.5">'
+            + '<input type="checkbox"' + (c.done?' checked':'') + ' id="' + id + '" onchange="updateNairanProgress()" style="margin-top:2px;flex-shrink:0;accent-color:var(--gold);width:14px;height:14px">'
+            + '<span>' + c.t + (c.done?' <span style="color:var(--gold);font-size:10px">✓推奨</span>':'') + '</span>'
+            + '</label>';
+        }).join('')
+        + '</div>';
+    }).join('')
+    + '<div id="nairan-progress-bar" style="margin-top:10px">'
+    + '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span style="color:var(--text-muted)">準備完了度</span><span id="nairan-pct" style="color:var(--gold);font-weight:700">0%</span></div>'
+    + '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px"><div id="nairan-bar" style="height:100%;background:var(--gold);border-radius:4px;width:0%;transition:width 0.4s"></div></div>'
+    + '</div>'
+    + '<p style="font-size:10px;color:#777;margin-top:10px;line-height:1.6">※ 内覧前の準備で成約率・成約価格が変わります。チェックを進めて100%を目指しましょう。</p>';
+  updateNairanProgress();
+}
+
+function updateNairanProgress() {
+  var boxes = document.querySelectorAll('#nairan-checklist-panel input[type=checkbox]');
+  if (!boxes.length) return;
+  var checked = Array.from(boxes).filter(function(b){ return b.checked; }).length;
+  var pct = Math.round(checked / boxes.length * 100);
+  var barEl = document.getElementById('nairan-bar');
+  var pctEl = document.getElementById('nairan-pct');
+  if (barEl) barEl.style.width = pct + '%';
+  if (pctEl) {
+    pctEl.textContent = pct + '%';
+    pctEl.style.color = pct >= 80 ? '#4ade80' : pct >= 50 ? 'var(--gold)' : 'var(--text-muted)';
+  }
+}
+
 function renderLoanPayoffCard(price) {
   var el = document.getElementById('loan-payoff-panel');
   if (!el || !price) return;
@@ -2015,6 +2077,9 @@ function calcAndShowResult() {
 
   // ローン残債完済チェック
   renderLoanPayoffCard(price);
+
+  // 内覧準備チェックリスト
+  renderNairanChecklist(reform);
 
   // 譲渡所得税シミュレーター表示
   (function(){
