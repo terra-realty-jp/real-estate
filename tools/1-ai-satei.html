@@ -536,6 +536,9 @@
       <!-- 内覧準備チェックリスト -->
       <div id="nairan-checklist-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 価格交渉シミュレーター -->
+      <div id="nego-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -1683,6 +1686,33 @@ function renderSumikaeriCard(price) {
     + '<p style="font-size:10px;color:#777;line-height:1.7;margin-top:10px">※ ローン残高がある場合は完済費用も必要です。不動産取得税・登記費用は物件・ローンの内容によって異なります。まずは専門家にご相談ください。</p>';
 }
 
+function renderNegoSimPanel(price, sellCostPct) {
+  var el = document.getElementById('nego-sim-panel');
+  if (!el) return;
+  el.style.display = 'block';
+  var costs = Math.round(price * (sellCostPct || 0.07));
+  var cuts = [0, 3, 5, 8, 10];
+  var rows = cuts.map(function(pct) {
+    var salePrice = Math.round(price * (1 - pct/100));
+    var net = salePrice - costs;
+    var delta = net - (price - costs);
+    var isBase = pct === 0;
+    var rowBg = isBase ? 'rgba(201,168,76,0.06)' : 'rgba(255,255,255,0.02)';
+    var rowBd = isBase ? '1px solid rgba(201,168,76,0.25)' : '1px solid rgba(255,255,255,0.05)';
+    return '<div style="display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:9px 12px;border-radius:8px;background:' + rowBg + ';border:' + rowBd + '">'
+      + '<div style="font-size:' + (isBase?'11':'10') + 'px;font-weight:700;color:' + (isBase?'var(--gold)':'var(--text-muted)') + ';white-space:nowrap">' + (isBase?'査定価格（基準）':'▼' + pct + '% 値引き') + '</div>'
+      + '<div style="font-size:12px;color:var(--text);font-weight:' + (isBase?'700':'400') + '">' + Math.round(salePrice/10000).toLocaleString() + '万円</div>'
+      + '<div style="text-align:right;font-size:11px;color:var(--text-muted)">手取: <span style="font-weight:700;color:' + (net>0?'#4ade80':'#f87171') + '">' + Math.round(net/10000).toLocaleString() + '万</span></div>'
+      + (isBase ? '<div></div>' : '<div style="font-size:11px;font-weight:700;color:#f87171;text-align:right">▲' + Math.round(Math.abs(delta)/10000).toLocaleString() + '万</div>')
+      + '</div>';
+  });
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">🤝 価格交渉シミュレーター</div>'
+    + '<p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.6">買主から値引き要求があった場合の手取り額の変化を確認できます。交渉前の下限ラインの把握に役立てください。</p>'
+    + '<div style="display:flex;flex-direction:column;gap:6px">' + rows.join('') + '</div>'
+    + '<div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">'
+    + '💡 <strong style="color:var(--text)">交渉のコツ:</strong> 値引き要求には「○万円なら応じられる」と具体的な数字で返すのが基本です。値引きに応じる代わりに「引渡日の柔軟化」「設備残置」などの条件を引き出す交渉も有効です。</div>';
+}
+
 function renderNairanChecklist(reform) {
   var el = document.getElementById('nairan-checklist-panel');
   if (!el) return;
@@ -2133,6 +2163,9 @@ function calcAndShowResult() {
 
   // 内覧準備チェックリスト
   renderNairanChecklist(reform);
+
+  // 価格交渉シミュレーター
+  renderNegoSimPanel(price, 0.07);
 
   // 動的CTAメッセージ・メールリンク更新
   setDynamicCTA(price, document.getElementById('leadTiming').value, liquidity, age, propType);
