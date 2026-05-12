@@ -298,6 +298,7 @@
     <button class="btn btn-outline btn-sm" onclick="exportData('properties')">CSVエクスポート</button>
   </div>
   <div id="property-ranking-card" style="margin-bottom:0"></div>
+  <div id="break-even-card" style="margin-bottom:16px;margin-top:16px"></div>
   <div id="properties-list"></div>
 </div>
 </div>
@@ -1606,6 +1607,7 @@ function renderProperties() {
   </table>
   <div style="font-size:11px;color:var(--text-muted);margin-top:8px;padding:6px 12px">健全性スコア: <span style="color:#4ade80;font-weight:700">A</span> 優良（85+）　<span style="color:#facc15;font-weight:700">B</span> 良好（70+）　<span style="color:#fb923c;font-weight:700">C</span> 要注意（50+）　<span style="color:#f87171;font-weight:700">D</span> 要対応（50未満）　※稼働率・入金率・未対応修繕から算出</div>`;
   renderPropertyRankingCard();
+  renderBreakEvenCard();
 }
 
 function renderPropertyRankingCard() {
@@ -1645,6 +1647,85 @@ function renderPropertyRankingCard() {
     </div>
     <div style="font-size:11px;color:var(--text-muted);margin-top:12px">月間家賃収入の多い順。健全性(A〜D)は稼働率・入金率・修繕状況から自動算出。</div>
   </div>`;
+}
+
+function renderBreakEvenCard() {
+  const el = document.getElementById('break-even-card');
+  if (!el) return;
+  if (!properties.length) { el.innerHTML = ''; return; }
+  const BEK = 'be_costs';
+  let costs = {};
+  try { costs = JSON.parse(localStorage.getItem(BEK) || '{}'); } catch(e) {}
+  const activeTenants = tenants.filter(t => t.status === 'active');
+  const rows = properties.map(p => {
+    const pts = activeTenants.filter(t => t.propertyId === p.id);
+    const monthlyRent = pts.reduce((s, t) => s + (t.rent || 0), 0);
+    const c = costs[p.id] || {};
+    const loan = c.loan || 0;
+    const tax = c.tax || 0;
+    const mgmtFee = Math.round(monthlyRent * (p.rate || 5) / 100);
+    const totalFixed = loan + tax + mgmtFee;
+    const margin = monthlyRent - totalFixed;
+    const mColor = margin > 0 ? 'var(--green)' : margin === 0 ? 'var(--gold)' : 'var(--red)';
+    const mLabel = margin > 0 ? '黒字' : margin === 0 ? '均衡' : '赤字';
+    const avgRentPerUnit = pts.length > 0 ? Math.round(monthlyRent / pts.length) : 0;
+    const beUnits = avgRentPerUnit > 0 && p.units > 0 ? Math.ceil(totalFixed / avgRentPerUnit) : null;
+    const beOccRate = beUnits !== null ? Math.round(beUnits / p.units * 100) : null;
+    return `<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px 16px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        <div>
+          <div style="font-size:13px;font-weight:700">${esc(p.name)}</div>
+          <div style="font-size:10px;color:var(--text-muted)">${p.units}戸 / ${PROP_TYPE[p.type]||p.type||''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px;font-weight:900;color:${mColor}">${margin >= 0 ? '+' : ''}${Math.round(margin/10000*10)/10}万円/月</span>
+          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;background:${mColor}22;border:1px solid ${mColor}44;color:${mColor}">${mLabel}</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;font-size:11px">
+        <div style="text-align:center;background:rgba(34,197,94,0.06);border-radius:6px;padding:7px 4px">
+          <div style="color:var(--text-muted);margin-bottom:2px">家賃収入</div>
+          <div style="font-weight:700;color:var(--green)">${Math.round(monthlyRent/10000*10)/10}万円</div>
+        </div>
+        <div style="text-align:center;background:rgba(239,68,68,0.06);border-radius:6px;padding:7px 4px">
+          <div style="color:var(--text-muted);margin-bottom:2px">固定費合計</div>
+          <div style="font-weight:700;color:var(--red)">${Math.round(totalFixed/10000*10)/10}万円</div>
+        </div>
+        <div style="text-align:center;background:rgba(201,168,76,0.06);border-radius:6px;padding:7px 4px">
+          <div style="color:var(--text-muted);margin-bottom:2px">損益分岐稼働率</div>
+          <div style="font-weight:700;color:var(--gold)">${beOccRate !== null ? beOccRate + '%' : '—'}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="form-group" style="margin:0">
+          <label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px">月額ローン返済（円）</label>
+          <input type="number" value="${loan||''}" placeholder="例: 80000" oninput="saveBECost('${p.id}','loan',this.value)"
+            style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:10px;color:var(--text-muted);display:block;margin-bottom:3px">固定資産税の月割（円）</label>
+          <input type="number" value="${tax||''}" placeholder="例: 10000" oninput="saveBECost('${p.id}','tax',this.value)"
+            style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none">
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:8px">管理委託費 ${Math.round(mgmtFee/10000*10)/10}万円（設定${p.rate||5}%）は自動算入</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="card">
+    <div class="card-title">📉 物件別 損益分岐点</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">ローン・固定資産税を入力すると、各物件の黒字/赤字と損益分岐稼働率を表示します。</p>
+    ${rows}
+  </div>`;
+}
+
+function saveBECost(propId, field, value) {
+  const BEK = 'be_costs';
+  let costs = {};
+  try { costs = JSON.parse(localStorage.getItem(BEK) || '{}'); } catch(e) {}
+  if (!costs[propId]) costs[propId] = {};
+  costs[propId][field] = parseFloat(value) || 0;
+  localStorage.setItem(BEK, JSON.stringify(costs));
+  renderBreakEvenCard();
 }
 
 function openPropertyModal(id) {
