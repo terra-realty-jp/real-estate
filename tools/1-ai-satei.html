@@ -536,6 +536,9 @@
       <!-- 内覧準備チェックリスト -->
       <div id="nairan-checklist-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 物件SWOT分析カード -->
+      <div id="swot-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 売却前リフォーム効果試算カード -->
       <div id="presale-reform-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
@@ -1689,6 +1692,55 @@ function renderSumikaeriCard(price) {
     + '<p style="font-size:10px;color:#777;line-height:1.7;margin-top:10px">※ ローン残高がある場合は完済費用も必要です。不動産取得税・登記費用は物件・ローンの内容によって異なります。まずは専門家にご相談ください。</p>';
 }
 
+function renderSWOTPanel(price, age, station, direction, reform, propType, pref, liquidity) {
+  const el = document.getElementById('swot-panel');
+  if (!el) return;
+  if (!price || price <= 0) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const strengths = [];
+  const weaknesses = [];
+  const opportunities = [];
+  const threats = [];
+  if (age !== null && age <= 5) strengths.push('築5年以内の築浅物件で、買主ローン審査に有利');
+  else if (age !== null && age <= 10) strengths.push('築10年以内で設備・内装の経年劣化が少ない');
+  if (station !== null && station <= 5) strengths.push('駅徒歩5分以内の好立地で流動性が高い');
+  else if (station !== null && station <= 10) strengths.push('駅徒歩10分以内で通勤・通学に便利');
+  if (reform === 'full' || reform === 'part') strengths.push('リフォーム済みで内覧時の印象が良く、買主が安心して購入できる');
+  if (direction === 'south') strengths.push('南向き・日当たり良好で居住性・資産価値が高い');
+  if (['mansion','apartment'].includes(propType)) strengths.push('管理組合による共用部の維持管理があり、資産価値が安定しやすい');
+  if (pref === 'tokyo_central' || pref === 'tokyo_yamate') strengths.push('首都圏主要エリアで需要が厚く、買主候補が多い');
+  if (age !== null && age >= 30) weaknesses.push('築30年以上で、耐震性・設備老朽化を懸念する買主もいる');
+  else if (age !== null && age >= 20) weaknesses.push('築20年以上のため、設備更新や大規模修繕の時期が近い');
+  if (age !== null && age >= 1981 - (new Date().getFullYear() - age) && age > 45) weaknesses.push('旧耐震基準（1981年以前）で買主ローン審査が制限される場合がある');
+  if (station !== null && station > 15) weaknesses.push('駅徒歩15分超で、徒歩圏外とみなされ購入候補から外れやすい');
+  if (reform === 'none' && age !== null && age >= 15) weaknesses.push('リフォーム未実施のため、内覧時の印象が弱く価格交渉されやすい');
+  if (direction === 'north') weaknesses.push('北向きは日照不足と捉えられやすく、評価額が下がる場合がある');
+  if (reform === 'none' && age !== null && age >= 10) opportunities.push('内装・水回りのプチリフォームで成約率・価格を改善できる余地がある');
+  if (station !== null && station > 10) opportunities.push('駐車場・自転車置き場の充実をアピールすれば郊外需要を取り込める');
+  if (liquidity < 40) opportunities.push('価格を5〜8%下げると市場回転率が上がり、早期成約の可能性がある');
+  if (['kodate','tochi'].includes(propType)) opportunities.push('更地渡し・古家付き土地として売却すれば投資家・建築業者需要を取り込める');
+  const basePrice = pref && ['sapporo','sendai','nagoya','osaka','fukuoka','other_major'].includes(pref) ? 'regional' : 'metro';
+  if (basePrice === 'regional') opportunities.push('地方移住需要・テレワーク需要による地方エリアへの注目が高まっている');
+  threats.push('金利上昇局面では買主の借入可能額が減少し、購入層が縮小するリスクがある');
+  if (age !== null && age >= 25) threats.push('同価格帯の築浅物件との競合で、価格か条件での優位性が必要');
+  if (['tochi','kodate'].includes(propType) && pref && !['tokyo_central','tokyo_yamate','tokyo_23','osaka_central'].includes(pref)) threats.push('地方・郊外の人口減少により、将来的な流動性低下リスクがある');
+  threats.push('類似物件の売出し増加（在庫増）時は価格下落圧力が高まる');
+  const QUAD = [
+    { title: '強み（Strength）', icon: '💪', items: strengths, bg: 'rgba(34,197,94,0.06)', border: 'rgba(34,197,94,0.2)', color: '#4ade80' },
+    { title: '弱み（Weakness）', icon: '⚠️', items: weaknesses, bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.2)', color: '#f87171' },
+    { title: '機会（Opportunity）', icon: '🚀', items: opportunities, bg: 'rgba(96,165,250,0.06)', border: 'rgba(96,165,250,0.2)', color: '#60a5fa' },
+    { title: '脅威（Threat）', icon: '⚡', items: threats, bg: 'rgba(249,115,22,0.06)', border: 'rgba(249,115,22,0.2)', color: '#fb923c' },
+  ];
+  el.innerHTML = `<div style="font-size:13px;font-weight:700;margin-bottom:14px">🔎 物件 SWOT分析</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${QUAD.map(q => `<div style="background:${q.bg};border:1px solid ${q.border};border-radius:10px;padding:12px 14px">
+        <div style="font-size:11px;font-weight:700;color:${q.color};margin-bottom:8px">${q.icon} ${q.title}</div>
+        ${q.items.length ? q.items.map(i=>`<div style="display:flex;gap:6px;font-size:11px;color:var(--text-muted);margin-bottom:5px;line-height:1.5"><span style="color:${q.color};flex-shrink:0;margin-top:1px">▸</span>${i}</div>`).join('') : '<div style="font-size:11px;color:#555">特になし</div>'}
+      </div>`).join('')}
+    </div>
+    <div style="font-size:10px;color:#555;margin-top:8px">※ 入力情報をもとに自動生成したSWOT分析です。実際の市場状況は地域・時期・物件状態によって異なります。</div>`;
+}
+
 function renderPresaleReformPanel(price, age, reform) {
   const el = document.getElementById('presale-reform-panel');
   if (!el) return;
@@ -2226,6 +2278,9 @@ function calcAndShowResult() {
 
   // 売却前リフォーム効果試算
   renderPresaleReformPanel(price, age, reform);
+
+  // 物件SWOT分析
+  renderSWOTPanel(price, age, station, direction, reform, propType, pref, liquidity);
 
   // 価格交渉シミュレーター
   renderNegoSimPanel(price, 0.07);
