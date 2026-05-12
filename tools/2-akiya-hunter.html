@@ -353,6 +353,9 @@
     <div id="inheritance-special-content"></div>
   </div>
 
+  <!-- 相続選択肢3パターン比較カード -->
+  <div id="inheritance-path-card" style="display:none;margin-bottom:16px"></div>
+
   <!-- 売却益・譲渡所得税シミュレーター -->
   <div class="card" id="sale-gain-sim-card" style="display:none;">
     <div class="card-title"><span class="icon">🧮</span>売却益・譲渡所得税シミュレーター</div>
@@ -891,6 +894,8 @@ function updateScore() {
   renderInheritanceRegistryCard([...checked]);
   // 相続空き家 3000万円特別控除チェック
   renderInheritanceSpecialCard(capped, [...checked]);
+  // 相続選択肢3パターン比較
+  renderInheritancePathCard([...checked]);
   // 売却益・譲渡所得税シミュレーター
   renderSaleGainSimCard(capped, [...checked]);
   // 補助金・支援制度カード
@@ -1363,6 +1368,106 @@ function renderInheritanceSpecialCard(score, checkedArr) {
     + '⚠️ 本カードは概要の参考情報です。実際の適用可否は税理士または税務署にご確認ください。'
     + '<br><a href="mailto:terra.realty.iam@gmail.com?subject=相続空き家の特別控除について相談したい" style="color:var(--gold)">TERRA REALTYに無料相談→</a>'
     + '</div>';
+}
+
+function renderInheritancePathCard(checkedArr) {
+  var el = document.getElementById('inheritance-path-card');
+  if (!el) return;
+  var checked = new Set(checkedArr || []);
+  var hasInheritance = checked.has('c6');
+  if (!hasInheritance) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+
+  var paths = [
+    {
+      icon: '🚫',
+      name: '相続放棄',
+      period: '3ヶ月以内（家庭裁判所）',
+      cost: '約2〜3万円（弁護士費用別）',
+      pros: [
+        '借金・管理義務を引き継がない',
+        '手続きが比較的シンプル',
+        '物件に価値がない場合に有効'
+      ],
+      cons: [
+        '全財産を放棄（プラス資産も手放す）',
+        '3ヶ月の期限あり（延長可）',
+        '管理義務は残る場合がある（新民法）',
+        '他の相続人に権利が移転する'
+      ],
+      color: '#f87171',
+      border: 'rgba(248,113,113,0.3)',
+      bg: 'rgba(248,113,113,0.05)',
+      recommended: false
+    },
+    {
+      icon: '💴',
+      name: '相続して売却',
+      period: '相続登記 → 媒介 → 3〜12ヶ月',
+      cost: '登記費用5〜15万 + 仲介3%',
+      pros: [
+        '現金化できる（他の投資・生活費に活用）',
+        '3,000万円特別控除の節税が使える場合がある',
+        '維持管理の手間から解放される',
+        '固定資産税の増税リスクを回避'
+      ],
+      cons: [
+        '相続登記が必要（2024年義務化）',
+        '売却時に譲渡所得税がかかる場合がある',
+        '共有者間の合意が必要'
+      ],
+      color: 'var(--gold)',
+      border: 'rgba(201,168,76,0.35)',
+      bg: 'rgba(201,168,76,0.06)',
+      recommended: true
+    },
+    {
+      icon: '🏠',
+      name: '相続して活用・賃貸',
+      period: '即時〜（賃借人探しに1〜3ヶ月）',
+      cost: 'リフォーム費 + 管理費（月賃料の5〜10%）',
+      pros: [
+        '毎月の家賃収入を得られる',
+        '固定資産税の住宅用地特例が継続',
+        '資産として残せる（相続対策にも）'
+      ],
+      cons: [
+        '入居者管理・修繕の手間がかかる',
+        '空室リスク・家賃下落リスクあり',
+        'リノベーション費用が必要な場合がある',
+        '遠方の場合は管理会社費用が発生'
+      ],
+      color: '#4ade80',
+      border: 'rgba(74,222,128,0.3)',
+      bg: 'rgba(74,222,128,0.05)',
+      recommended: false
+    }
+  ];
+
+  var cards = paths.map(function(p) {
+    var pros = p.pros.map(function(x){ return '<li style="color:var(--green);font-size:11px;line-height:1.6">✓ ' + x + '</li>'; }).join('');
+    var cons = p.cons.map(function(x){ return '<li style="color:var(--red);font-size:11px;line-height:1.6">✗ ' + x + '</li>'; }).join('');
+    return '<div style="border:1px solid ' + p.border + ';border-radius:12px;padding:14px 16px;background:' + p.bg + (p.recommended ? ';outline:2px solid ' + p.border + ';outline-offset:-1px' : '') + '">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:center;gap:8px">'
+      + '<span style="font-size:18px">' + p.icon + '</span>'
+      + '<div>'
+      + '<div style="font-size:13px;font-weight:700;color:' + p.color + '">' + p.name + (p.recommended ? ' <span style="font-size:10px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 6px;border-radius:100px;border:1px solid rgba(201,168,76,0.4)">最多選択</span>' : '') + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">期間: ' + p.period + '</div>'
+      + '</div></div>'
+      + '<div style="text-align:right;font-size:10px;color:var(--text-muted);white-space:nowrap;margin-top:2px">費用目安: ' + p.cost + '</div>'
+      + '</div>'
+      + '<ul style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:0 8px">' + pros + cons + '</ul>'
+      + '</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:18px 20px">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px">⚖️ 相続空き家の選択肢3パターン比較</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">相続した空き家の扱いには大きく3つの選択肢があります。物件価値・家族構成・財政状況をもとに判断しましょう。</div>'
+    + '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">' + cards + '</div>'
+    + '<div style="padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:7px;font-size:11px;color:var(--text-muted);line-height:1.7">'
+    + '💡 どのパスを選ぶかは固定資産税・修繕費・家族間合意など複合的な判断が必要です。<a href="mailto:terra.realty.iam@gmail.com?subject=相続空き家の対処法について相談" style="color:var(--gold);margin-left:4px">TERRA REALTYに無料相談 →</a>'
+    + '</div></div>';
 }
 
 function renderSaleGainSimCard(score, checkedArr) {
