@@ -204,6 +204,7 @@
   <div id="vacancy-potential-card" style="margin-bottom:20px"></div>
   <div id="monthly-highlight-card" style="margin-bottom:20px"></div>
   <div id="income-goal-card" style="margin-bottom:20px"></div>
+  <div id="repair-reserve-tracker" style="margin-bottom:20px"></div>
   <div class="card" style="margin-bottom:20px;padding:18px 24px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <div>
@@ -811,6 +812,59 @@ function renderIncomeGoalCard() {
   </div>`;
 }
 
+function renderRepairReserveTracker() {
+  var el = document.getElementById('repair-reserve-tracker');
+  if (!el) return;
+  var RESERVE_KEY = 'reserve_balance_man';
+  var MONTHLY_KEY = 'reserve_monthly_man';
+  var balance = parseInt(localStorage.getItem(RESERVE_KEY) || '0') || 0;
+  var monthly = parseInt(localStorage.getItem(MONTHLY_KEY) || '0') || 0;
+  var propValueEst = properties.reduce(function(s, p) { return s + (p.units || 1) * 500; }, 0);
+  var target = Math.round(propValueEst * 0.01);
+  var pct = target > 0 ? Math.min(100, Math.round(balance / target * 100)) : 0;
+  var barColor = pct >= 80 ? 'var(--green)' : pct >= 40 ? 'var(--gold)' : 'var(--orange)';
+  var monthsToTarget = (target > balance && monthly > 0) ? Math.ceil((target - balance) / monthly) : null;
+  el.innerHTML = '<div class="card">'
+    + '<div class="card-title" style="justify-content:space-between"><span>&#x1F6E0; 修繕積立金トラッカー</span></div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">大規模修繕に備えた積立金の残高を管理します。目標は物件推定価値の約1%/年が目安です。</p>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+    + '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の積立残高（万円）</label>'
+    + '<input type="number" id="reserve_bal" value="' + balance + '" min="0" oninput="window._rrtUpdate()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box"></div>'
+    + '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">毎月の積立額（万円）</label>'
+    + '<input type="number" id="reserve_mon" value="' + monthly + '" min="0" oninput="window._rrtUpdate()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box"></div>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+    + '<div style="font-size:11px;color:var(--text-muted)">目標残高: <strong id="rrt-target">' + target.toLocaleString() + '万円</strong></div>'
+    + '<div id="rrt-pct" style="font-size:12px;font-weight:700;color:' + barColor + '">' + pct + '%</div>'
+    + '</div>'
+    + '<div style="height:10px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden;margin-bottom:8px">'
+    + '<div id="rrt-bar" style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:5px;transition:width 0.5s"></div>'
+    + '</div>'
+    + '<div id="rrt-note" style="font-size:11px;color:var(--text-muted);">'
+    + (monthsToTarget ? '目標まで: あと<strong style="color:var(--gold)">' + monthsToTarget + 'ヶ月</strong>（月' + monthly + '万円積立の場合）' : (pct >= 100 ? '<span style="color:var(--green)">&#x2705; 目標達成済み！</span>' : '毎月の積立額を設定すると達成見込みを表示します'))
+    + '</div>'
+    + '</div>';
+
+  window._rrtUpdate = function() {
+    var b = parseInt((document.getElementById('reserve_bal') || {}).value) || 0;
+    var m = parseInt((document.getElementById('reserve_mon') || {}).value) || 0;
+    localStorage.setItem(RESERVE_KEY, b);
+    localStorage.setItem(MONTHLY_KEY, m);
+    var p = target > 0 ? Math.min(100, Math.round(b / target * 100)) : 0;
+    var bc = p >= 80 ? 'var(--green)' : p >= 40 ? 'var(--gold)' : 'var(--orange)';
+    var bar = document.getElementById('rrt-bar');
+    var pctEl = document.getElementById('rrt-pct');
+    var noteEl = document.getElementById('rrt-note');
+    if (bar) { bar.style.width = p + '%'; bar.style.background = bc; }
+    if (pctEl) { pctEl.textContent = p + '%'; pctEl.style.color = bc; }
+    if (noteEl) {
+      var mtt = (target > b && m > 0) ? Math.ceil((target - b) / m) : null;
+      noteEl.innerHTML = mtt ? '目標まで: あと<strong style="color:var(--gold)">' + mtt + 'ヶ月</strong>（月' + m + '万円積立の場合）'
+        : (p >= 100 ? '<span style="color:var(--green)">&#x2705; 目標達成済み！</span>' : '毎月の積立額を設定すると達成見込みを表示します');
+    }
+  };
+}
+
 // ===== ダッシュボード =====
 function renderDashboard() {
   // はじめての方向けガイド
@@ -1172,6 +1226,7 @@ function renderDashboard() {
     }
   }
   renderIncomeGoalCard();
+  renderRepairReserveTracker();
   renderConsecutiveArrearsCard();
   renderVacancyPotentialCard();
   renderMonthlyHighlight();
