@@ -317,6 +317,7 @@
   <div id="rent-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px"></div>
   <div id="rent-trend-chart" style="display:none;margin-bottom:16px"></div>
   <div id="rent-increase-card" style="display:none;margin-bottom:16px"></div>
+  <div id="tenant-annual-summary" style="display:none;margin-bottom:16px"></div>
   <div class="card" id="rent-list"></div>
 </div>
 </div>
@@ -2034,6 +2035,7 @@ function renderRentCollectionBar() {
 function renderRentLedger(){
   renderRentIncreaseCard();
   renderRentCollectionBar();
+  renderTenantAnnualSummary();
   const month=document.getElementById('rent_month').value;
   const statusFilter=(document.getElementById('rent-status-filter')||{}).value||'all';
   const activeTenants=tenants.filter(t=>t.status==='active');
@@ -2177,6 +2179,60 @@ function renderRentIncreaseCard() {
     + '<div style="margin-top:10px;padding:8px 12px;background:rgba(234,179,8,0.06);border:1px solid rgba(234,179,8,0.15);border-radius:7px;font-size:11px;color:var(--text-muted)">'
     + '&#x26A0;&#xFE0F; 賃料の値上げは契約更新時に通知が必要です。借地借家法に基づき、テナントの合意が必要な場合があります。'
     + '</div>'
+    + '</div>';
+}
+
+function renderTenantAnnualSummary() {
+  const el = document.getElementById('tenant-annual-summary');
+  if (!el) return;
+  const active = tenants.filter(t => t.status === 'active');
+  if (active.length === 0) { el.style.display = 'none'; return; }
+  const now = new Date();
+  const year = now.getFullYear();
+  const months12 = [];
+  for (let i = 0; i < 12; i++) {
+    months12.push(`${year}-${String(i + 1).padStart(2, '0')}`);
+  }
+  const rows = active.map(t => {
+    const expected12 = (t.rent || 0) * 12;
+    const paidRents = rents.filter(r => r.tenantId === t.id && months12.includes(r.month) && r.status === 'paid');
+    const paidTotal = paidRents.reduce((s, r) => s + (r.paid || 0), 0);
+    const unpaidMonths = months12.filter(m => {
+      const mr = rents.find(r => r.tenantId === t.id && r.month === m);
+      return new Date(m + '-01') <= now && (!mr || mr.status === 'unpaid' || mr.status === 'partial');
+    });
+    const rate = expected12 > 0 ? Math.round(paidTotal / expected12 * 100) : 100;
+    const rateColor = rate >= 100 ? '#4ade80' : rate >= 80 ? '#facc15' : '#f87171';
+    const p = properties.find(x => x.id === t.propertyId);
+    return { t, p, expected12, paidTotal, unpaidMonths: unpaidMonths.length, rate, rateColor };
+  }).sort((a, b) => a.rate - b.rate);
+  const totalExpected = rows.reduce((s, r) => s + r.expected12, 0);
+  const totalPaid = rows.reduce((s, r) => s + r.paidTotal, 0);
+  const totalRate = totalExpected > 0 ? Math.round(totalPaid / totalExpected * 100) : 100;
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:2px">📋 テナント別年間収支（' + year + '年）</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">年間回収率: <span style="color:' + (totalRate>=100?'#4ade80':totalRate>=80?'#facc15':'#f87171') + ';font-weight:700">' + totalRate + '%</span>　回収済 ' + Math.round(totalPaid/10000).toLocaleString() + '万 / 予定 ' + Math.round(totalExpected/10000).toLocaleString() + '万</div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+    + '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.08)">'
+    + '<th style="padding:6px 8px;text-align:left;color:var(--text-muted);font-size:10px">テナント</th>'
+    + '<th style="padding:6px 8px;text-align:right;color:var(--text-muted);font-size:10px">年間予定</th>'
+    + '<th style="padding:6px 8px;text-align:right;color:var(--text-muted);font-size:10px">回収済</th>'
+    + '<th style="padding:6px 8px;text-align:right;color:var(--text-muted);font-size:10px">未回収</th>'
+    + '<th style="padding:6px 8px;text-align:center;color:var(--text-muted);font-size:10px">回収率</th>'
+    + '</tr></thead><tbody>'
+    + rows.map(r => '<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">'
+      + '<td style="padding:7px 8px"><div style="font-weight:600">' + esc(r.t.name) + '</div><div style="font-size:10px;color:var(--text-muted)">' + (r.p ? esc(r.p.name) : '—') + ' / ' + (r.t.room || '—') + '</div></td>'
+      + '<td style="padding:7px 8px;text-align:right;color:var(--text-muted)">' + Math.round(r.expected12/10000).toLocaleString() + '万</td>'
+      + '<td style="padding:7px 8px;text-align:right;color:#4ade80;font-weight:700">' + Math.round(r.paidTotal/10000).toLocaleString() + '万</td>'
+      + '<td style="padding:7px 8px;text-align:right;color:' + (r.expected12 - r.paidTotal > 0 ? '#f87171' : '#4ade80') + ';font-weight:700">' + (r.expected12 - r.paidTotal > 0 ? '-' + Math.round((r.expected12 - r.paidTotal)/10000*10)/10 : '0') + '万</td>'
+      + '<td style="padding:7px 8px;text-align:center">'
+      + '<div style="display:inline-flex;align-items:center;gap:4px"><span style="font-size:13px;font-weight:900;color:' + r.rateColor + '">' + r.rate + '%</span>'
+      + (r.unpaidMonths > 0 ? '<span style="font-size:10px;color:#f87171">' + r.unpaidMonths + 'ヶ月未</span>' : '') + '</div></td>'
+      + '</tr>'
+    ).join('')
+    + '</tbody></table></div>'
+    + '<div style="font-size:10px;color:#555;margin-top:8px">' + year + '年1〜12月の入金記録をもとに集計。未登録月は未回収として計上。</div>'
     + '</div>';
 }
 
