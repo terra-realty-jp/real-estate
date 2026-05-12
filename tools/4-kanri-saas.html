@@ -303,6 +303,7 @@
   <div id="property-ranking-card" style="margin-bottom:0"></div>
   <div id="break-even-card" style="margin-bottom:16px;margin-top:16px"></div>
   <div id="property-pl-card" style="margin-bottom:16px"></div>
+  <div id="mgmt-fee-card" style="margin-bottom:16px"></div>
   <div id="properties-list"></div>
 </div>
 </div>
@@ -1805,6 +1806,7 @@ function renderProperties() {
   renderPropertyRankingCard();
   renderBreakEvenCard();
   renderPropertyPLCard();
+  renderMgmtFeeCard();
 }
 
 function renderPropertyRankingCard() {
@@ -1975,6 +1977,59 @@ function renderPropertyPLCard() {
     ${barRows.length ? barRows : '<div style="text-align:center;padding:20px;font-size:12px;color:var(--text-muted)">家賃・修繕を記録すると表示されます</div>'}
     <div style="font-size:10px;color:#555;margin-top:4px">※ ${year}年の入金記録・修繕費に基づく実績値。%は前年同期比。</div>
   </div>`;
+}
+
+function renderMgmtFeeCard() {
+  var el = document.getElementById('mgmt-fee-card');
+  if (!el) return;
+  if (!properties.length) { el.innerHTML = ''; return; }
+  var rows = properties.map(function(p) {
+    var activeTen = tenants.filter(function(t){ return t.propertyId === p.id && t.status === 'active'; });
+    var monthlyRent = activeTen.reduce(function(s,t){ return s + (t.rent||0); }, 0);
+    var rate = parseFloat(p.rate) || 5;
+    var monthlyFee = Math.round(monthlyRent * rate / 100);
+    var annualFee = monthlyFee * 12;
+    var grade, gradeColor, gradeNote;
+    if (rate <= 3) { grade = '最安'; gradeColor = '#4ade80'; gradeNote = '自主管理水準。コスト最小だが管理負担大'; }
+    else if (rate <= 5) { grade = '適正'; gradeColor = '#4ade80'; gradeNote = '業界標準。コスパ良好'; }
+    else if (rate <= 8) { grade = '普通'; gradeColor = '#facc15'; gradeNote = '問題なし。複数社見積もりで削減余地あり'; }
+    else if (rate <= 12) { grade = '割高'; gradeColor = '#fb923c'; gradeNote = '相場より高め。交渉または乗り換えを検討'; }
+    else { grade = '要見直'; gradeColor = '#f87171'; gradeNote = '管理費が高い。5%以下への交渉を推奨'; }
+    return { p: p, rate: rate, monthlyRent: monthlyRent, monthlyFee: monthlyFee, annualFee: annualFee, grade: grade, gradeColor: gradeColor, gradeNote: gradeNote };
+  });
+  var totalAnnual = rows.reduce(function(s,r){ return s + r.annualFee; }, 0);
+  var avgRate = rows.length ? (rows.reduce(function(s,r){ return s + r.rate; }, 0) / rows.length).toFixed(1) : 0;
+  var highCostRows = rows.filter(function(r){ return r.rate > 8; });
+  var potentialSave = rows.reduce(function(s,r){ return s + Math.max(0, Math.round(r.monthlyRent * (r.rate - 5) / 100) * 12); }, 0);
+  var items = rows.map(function(r) {
+    var barW = Math.round(r.rate / 15 * 100);
+    var feeStr = r.monthlyRent > 0 ? '月' + Math.round(r.monthlyFee/1000) + '千円（年' + Math.round(r.annualFee/10000) + '万円）' : '家賃未設定';
+    return '<div style="margin-bottom:12px">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">'
+      + '<span style="font-size:12px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(r.p.name) + '</span>'
+      + '<span style="font-size:11px;padding:2px 8px;border-radius:100px;background:' + r.gradeColor + '22;color:' + r.gradeColor + ';border:1px solid ' + r.gradeColor + '44;font-weight:700">' + r.grade + '</span>'
+      + '<span style="font-size:13px;font-weight:900;color:' + r.gradeColor + '">' + r.rate + '%</span>'
+      + '</div>'
+      + '<div style="height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;margin-bottom:4px">'
+      + '<div style="width:' + Math.min(barW,100) + '%;height:100%;background:' + r.gradeColor + ';border-radius:4px;opacity:0.7"></div>'
+      + '</div>'
+      + '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)">'
+      + '<span>' + feeStr + '</span><span style="font-style:italic">' + r.gradeNote + '</span>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 18px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:6px">'
+    + '<div style="font-size:13px;font-weight:700">💼 管理委託費率 診断</div>'
+    + '<div style="display:flex;gap:10px;font-size:11px">'
+    + '<span style="color:var(--text-muted)">平均 <strong style="color:var(--gold)">' + avgRate + '%</strong></span>'
+    + '<span style="color:var(--text-muted)">年間合計 <strong style="color:#fb923c">' + Math.round(totalAnnual/10000) + '万円</strong></span>'
+    + (potentialSave > 0 ? '<span style="color:#4ade80;font-weight:700">削減余地 +' + Math.round(potentialSave/10000) + '万円/年</span>' : '')
+    + '</div></div>'
+    + items
+    + (highCostRows.length ? '<div style="margin-top:8px;padding:10px 12px;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:8px;font-size:11px;color:var(--orange)">⚠️ <strong>' + highCostRows.map(function(r){ return esc(r.p.name); }).join('・') + '</strong> は管理費率が8%超。複数社に見積もりを依頼し、適正水準（5〜7%）への引き下げ交渉を推奨します。</div>' : '')
+    + '<div style="font-size:10px;color:#555;margin-top:8px">※ 管理委託費率は物件登録時の設定値。入居中テナント家賃合計から算出。</div>'
+    + '</div>';
 }
 
 function saveBECost(propId, field, value) {
