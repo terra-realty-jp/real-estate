@@ -357,6 +357,7 @@
   <div id="rent-trend-chart" style="display:none;margin-bottom:16px"></div>
   <div id="rent-increase-card" style="display:none;margin-bottom:16px"></div>
   <div id="tenant-annual-summary" style="display:none;margin-bottom:16px"></div>
+  <div id="payment-calendar-card" style="display:none;margin-bottom:16px"></div>
   <div class="card" id="rent-list"></div>
 </div>
 </div>
@@ -2256,6 +2257,7 @@ function renderRentLedger(){
   renderRentIncreaseCard();
   renderRentCollectionBar();
   renderTenantAnnualSummary();
+  renderPaymentCalendar();
   const month=document.getElementById('rent_month').value;
   const statusFilter=(document.getElementById('rent-status-filter')||{}).value||'all';
   const activeTenants=tenants.filter(t=>t.status==='active');
@@ -2454,6 +2456,68 @@ function renderTenantAnnualSummary() {
     + '</tbody></table></div>'
     + '<div style="font-size:10px;color:#555;margin-top:8px">' + year + '年1〜12月の入金記録をもとに集計。未登録月は未回収として計上。</div>'
     + '</div>';
+}
+
+function renderPaymentCalendar() {
+  const el = document.getElementById('payment-calendar-card');
+  if (!el) return;
+  const active = tenants.filter(t => t.status === 'active');
+  if (!active.length || !rents.length) { el.style.display = 'none'; return; }
+  const now = new Date();
+  const year = now.getFullYear();
+  const months12 = Array.from({length:12}, (_,i) => `${year}-${String(i+1).padStart(2,'0')}`);
+  const monthLabels = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const isFuture = m => new Date(m + '-01') > now;
+  const rows = active.map(t => {
+    const p = properties.find(x => x.id === t.propertyId);
+    const startYm = (t.start || '').slice(0,7);
+    const cells = months12.map((m, i) => {
+      if (startYm && m < startYm) return `<td title="${monthLabels[i]}: 入居前" style="width:28px;height:28px;border-radius:4px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04)"></td>`;
+      if (isFuture(m)) return `<td title="${monthLabels[i]}: 未来" style="width:28px;height:28px;border-radius:4px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04)"></td>`;
+      const r = rents.find(x => x.tenantId === t.id && x.month === m);
+      if (!r || r.status === 'unpaid') {
+        return `<td title="${monthLabels[i]}: 未入金" style="width:28px;height:28px;border-radius:4px;background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.4);cursor:pointer" onclick="openRentModal()">✗</td>`;
+      }
+      if (r.status === 'partial') {
+        return `<td title="${monthLabels[i]}: 一部入金" style="width:28px;height:28px;border-radius:4px;background:rgba(234,179,8,0.25);border:1px solid rgba(234,179,8,0.4);font-size:10px;color:#facc15;text-align:center;vertical-align:middle">△</td>`;
+      }
+      return `<td title="${monthLabels[i]}: 入金済" style="width:28px;height:28px;border-radius:4px;background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.35);font-size:11px;color:#4ade80;text-align:center;vertical-align:middle">✓</td>`;
+    }).join('');
+    const paidCount = months12.filter(m => {
+      const r = rents.find(x => x.tenantId === t.id && x.month === m);
+      return r && r.status === 'paid';
+    }).length;
+    const trackedCount = months12.filter(m => !isFuture(m) && (!t.start || m >= startYm)).length;
+    return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+      <td style="padding:5px 8px;min-width:100px;white-space:nowrap">
+        <div style="font-size:12px;font-weight:700;color:var(--text)">${esc(t.name)}</div>
+        <div style="font-size:10px;color:var(--text-muted)">${p ? esc(p.name.slice(0,8)) : ''}${t.room ? ' '+t.room : ''}</div>
+      </td>
+      ${cells}
+      <td style="padding:5px 8px;text-align:center;font-size:11px;font-weight:700;color:${paidCount===trackedCount?'#4ade80':paidCount/trackedCount>=0.8?'#facc15':'#f87171'}">${trackedCount>0?Math.round(paidCount/trackedCount*100):100}%</td>
+    </tr>`;
+  }).join('');
+  el.style.display = 'block';
+  el.innerHTML = `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:2px">📅 ${year}年 月別支払いカレンダー</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">テナント別の入金状況を一目で確認できます</div>
+    <div style="overflow-x:auto">
+      <table style="border-collapse:separate;border-spacing:2px 4px;font-size:11px">
+        <thead><tr>
+          <th style="padding:4px 8px;text-align:left;color:var(--text-muted);font-size:10px;font-weight:500;white-space:nowrap">テナント</th>
+          ${monthLabels.map(l=>`<th style="width:28px;text-align:center;color:var(--text-muted);font-size:10px;font-weight:500">${l}</th>`).join('')}
+          <th style="padding:4px 8px;text-align:center;color:var(--text-muted);font-size:10px;font-weight:500">回収率</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:12px;font-size:10px;color:var(--text-muted);flex-wrap:wrap">
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.35);margin-right:4px;vertical-align:middle"></span>入金済</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(234,179,8,0.25);border:1px solid rgba(234,179,8,0.4);margin-right:4px;vertical-align:middle"></span>一部入金</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.4);margin-right:4px;vertical-align:middle"></span>未入金</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04);margin-right:4px;vertical-align:middle"></span>対象外</span>
+    </div>
+  </div>`;
 }
 
 function renderRentTrendChart(){
