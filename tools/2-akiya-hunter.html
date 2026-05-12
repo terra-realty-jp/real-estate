@@ -347,6 +347,13 @@
     <div id="inheritance-special-content"></div>
   </div>
 
+  <!-- 売却益・譲渡所得税シミュレーター -->
+  <div class="card" id="sale-gain-sim-card" style="display:none;">
+    <div class="card-title"><span class="icon">🧮</span>売却益・譲渡所得税シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売却価格と取得費を入力すると、譲渡所得税と手取りの目安を試算します。3,000万円特別控除の節税効果も確認できます。</p>
+    <div id="sale-gain-sim-content"></div>
+  </div>
+
   <!-- 管理代行費用シミュレーターカード -->
   <div class="card" id="mgmt-cost-card" style="display:none;">
     <div class="card-title"><span class="icon">🏢</span>遠方管理コスト vs 管理代行費用の比較</div>
@@ -863,6 +870,8 @@ function updateScore() {
   renderInheritanceRegistryCard([...checked]);
   // 相続空き家 3000万円特別控除チェック
   renderInheritanceSpecialCard(capped, [...checked]);
+  // 売却益・譲渡所得税シミュレーター
+  renderSaleGainSimCard(capped, [...checked]);
   // 補助金・支援制度カード
   renderSubsidyCard(capped, [...checked]);
   // 管理代行費用シミュレーターカード
@@ -1275,6 +1284,73 @@ function renderInheritanceSpecialCard(score, checkedArr) {
     + '<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:11px;color:#888;line-height:1.7">'
     + '⚠️ 本カードは概要の参考情報です。実際の適用可否は税理士または税務署にご確認ください。'
     + '<br><a href="mailto:terra.realty.iam@gmail.com?subject=相続空き家の特別控除について相談したい" style="color:var(--gold)">TERRA REALTYに無料相談→</a>'
+    + '</div>';
+}
+
+function renderSaleGainSimCard(score, checkedArr) {
+  var card = document.getElementById('sale-gain-sim-card');
+  var content = document.getElementById('sale-gain-sim-content');
+  if (!card || !content) return;
+  if (score < 10) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  var hasInheritance = checkedArr.indexOf('c6') >= 0;
+  var age = parseInt(document.getElementById('akiya_age')?.value) || 30;
+  var defaultSell = 2000;
+  var defaultAcquire = Math.round(defaultSell * 0.45);
+  content.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">'
+    + '<div class="form-group"><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却予定価格（万円）</label>'
+    + '<input type="number" id="sgc_sell" value="'+defaultSell+'" min="100" step="100" oninput="calcSaleGain()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none"></div>'
+    + '<div class="form-group"><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得費＋譲渡費用（万円）</label>'
+    + '<input type="number" id="sgc_acquire" value="'+defaultAcquire+'" min="0" step="100" oninput="calcSaleGain()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none"></div>'
+    + '<div class="form-group"><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">保有期間（年）</label>'
+    + '<input type="number" id="sgc_years" value="'+age+'" min="1" max="60" oninput="calcSaleGain()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none"></div>'
+    + '<div class="form-group"><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">相続空き家（3,000万円控除対象）</label>'
+    + '<select id="sgc_special" onchange="calcSaleGain()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">'
+    + '<option value="yes"'+(hasInheritance?' selected':'')+'>適用する（相続空き家）</option>'
+    + '<option value="no"'+(!hasInheritance?' selected':'')+'>適用しない</option>'
+    + '</select></div>'
+    + '</div>'
+    + '<div id="sgc-result"></div>';
+  calcSaleGain();
+}
+
+function calcSaleGain() {
+  var el = document.getElementById('sgc-result'); if(!el) return;
+  var sell = (parseFloat(document.getElementById('sgc_sell')?.value)||0);
+  var acquire = (parseFloat(document.getElementById('sgc_acquire')?.value)||0);
+  var years = (parseFloat(document.getElementById('sgc_years')?.value)||1);
+  var special = (document.getElementById('sgc_special')?.value||'no')==='yes';
+  if(!sell) { el.innerHTML=''; return; }
+  var gain = Math.max(0, sell - acquire);
+  var isLong = years >= 6;
+  var taxRate = isLong ? 0.20315 : 0.39363;
+  var taxLabel = isLong ? '長期譲渡（約20.3%）' : '短期譲渡（約39.6%）';
+  // without special
+  var taxNoSpecial = Math.max(0, Math.round(gain * taxRate));
+  var netNoSpecial = Math.round(sell - taxNoSpecial);
+  // with special
+  var gainAfterSpecial = Math.max(0, gain - 3000);
+  var taxWithSpecial = special ? Math.max(0, Math.round(gainAfterSpecial * taxRate)) : taxNoSpecial;
+  var netWithSpecial = special ? Math.round(sell - taxWithSpecial) : netNoSpecial;
+  var saving = special ? taxNoSpecial - taxWithSpecial : 0;
+  var fM = function(v){ return Math.round(v).toLocaleString() + '万円'; };
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+    + '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">譲渡所得（課税対象）</div>'
+    + '<div style="font-size:20px;font-weight:900;color:var(--text)">' + fM(gain) + '</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:3px">' + taxLabel + '</div></div>'
+    + '<div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:12px 14px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">譲渡所得税（概算）</div>'
+    + '<div style="font-size:20px;font-weight:900;color:var(--red)">-' + fM(taxWithSpecial) + '</div>'
+    + (special && saving > 0 ? '<div style="font-size:10px;color:var(--green);margin-top:3px">特例で ' + fM(saving) + ' 節税</div>' : '') + '</div>'
+    + '<div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:12px 14px;grid-column:1/-1">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">売却手取り目安（税引後）</div>'
+    + '<div style="font-size:26px;font-weight:900;color:var(--green)">' + fM(netWithSpecial) + '</div>'
+    + (special && saving > 0 ? '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">控除なしの場合: ' + fM(netNoSpecial) + '（差額 <strong style="color:var(--green)">+'+fM(saving)+'</strong>）</div>' : '') + '</div>'
+    + '</div>'
+    + '<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:7px;font-size:11px;color:#888;line-height:1.7">'
+    + '※ 取得費が不明な場合、売却価格の5%（概算取得費）を適用することができます。<br>'
+    + '※ 実際の税額は取得費の証明・特別控除の適用可否・諸控除により異なります。税理士・税務署にご確認ください。'
     + '</div>';
 }
 
