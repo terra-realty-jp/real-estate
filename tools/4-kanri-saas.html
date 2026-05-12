@@ -299,6 +299,7 @@
   </div>
   <div id="property-ranking-card" style="margin-bottom:0"></div>
   <div id="break-even-card" style="margin-bottom:16px;margin-top:16px"></div>
+  <div id="property-pl-card" style="margin-bottom:16px"></div>
   <div id="properties-list"></div>
 </div>
 </div>
@@ -1609,6 +1610,7 @@ function renderProperties() {
   <div style="font-size:11px;color:var(--text-muted);margin-top:8px;padding:6px 12px">健全性スコア: <span style="color:#4ade80;font-weight:700">A</span> 優良（85+）　<span style="color:#facc15;font-weight:700">B</span> 良好（70+）　<span style="color:#fb923c;font-weight:700">C</span> 要注意（50+）　<span style="color:#f87171;font-weight:700">D</span> 要対応（50未満）　※稼働率・入金率・未対応修繕から算出</div>`;
   renderPropertyRankingCard();
   renderBreakEvenCard();
+  renderPropertyPLCard();
 }
 
 function renderPropertyRankingCard() {
@@ -1716,6 +1718,68 @@ function renderBreakEvenCard() {
     <div class="card-title">📉 物件別 損益分岐点</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">ローン・固定資産税を入力すると、各物件の黒字/赤字と損益分岐稼働率を表示します。</p>
     ${rows}
+  </div>`;
+}
+
+function renderPropertyPLCard() {
+  const el = document.getElementById('property-pl-card');
+  if (!el) return;
+  if (properties.length < 1 || (rents.length === 0 && repairs.length === 0)) { el.innerHTML = ''; return; }
+  const now = new Date();
+  const year = now.getFullYear();
+  const prevYear = year - 1;
+  const getIncome = (propId, y) => {
+    const pts = tenants.filter(t => t.propertyId === propId);
+    const ptIds = pts.map(t => t.id);
+    return rents.filter(r => (r.month||'').startsWith(y+'') && ptIds.includes(r.tenantId) && r.status === 'paid').reduce((s,r)=>s+(r.paid||0),0);
+  };
+  const getRepair = (propId, y) => repairs.filter(r => r.propertyId===propId && (r.done||r.date||'').startsWith(y+'')).reduce((s,r)=>s+(Number(r.cost)||0),0);
+  const rows = properties.map(p => {
+    const income = getIncome(p.id, year);
+    const repairCost = getRepair(p.id, year);
+    const net = income - repairCost;
+    const prevIncome = getIncome(p.id, prevYear);
+    const prevNet = prevIncome - getRepair(p.id, prevYear);
+    const netColor = net >= 0 ? '#4ade80' : '#f87171';
+    const change = prevIncome > 0 ? Math.round((income - prevIncome) / prevIncome * 100) : null;
+    return { p, income, repairCost, net, netColor, change, prevNet };
+  }).sort((a, b) => b.net - a.net);
+  const maxIncome = Math.max(...rows.map(r => r.income), 1);
+  const fmtW = v => (v/10000).toFixed(1) + '万';
+  const barRows = rows.map(({p, income, repairCost, net, netColor, change}) => {
+    const incPct = Math.round(income / maxIncome * 100);
+    const repPct = income > 0 ? Math.round(repairCost / income * 100) : 0;
+    const changeBadge = change !== null ? `<span style="font-size:9px;padding:1px 5px;border-radius:100px;background:rgba(${change>=0?'34,197,94':'239,68,68'},0.12);color:${change>=0?'#4ade80':'#f87171'};border:1px solid rgba(${change>=0?'34,197,94':'239,68,68'},0.3)">${change>=0?'+':''}${change}%</span>` : '';
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:700;flex-shrink:0;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span>
+        ${changeBadge}
+        <span style="margin-left:auto;font-size:12px;font-weight:700;color:${netColor}">純利益 ${net >= 0 ? '+' : ''}${fmtW(net)}</span>
+      </div>
+      <div style="position:relative;height:14px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;margin-bottom:2px">
+        <div style="width:${incPct}%;height:100%;background:rgba(74,222,128,0.4);border-radius:4px"></div>
+        ${repairCost > 0 ? `<div style="position:absolute;top:0;right:0;width:${Math.min(repPct,100)}%;height:100%;background:rgba(251,146,60,0.5);border-radius:0 4px 4px 0"></div>` : ''}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)">
+        <span><span style="color:#4ade80">●</span>収入 ${fmtW(income)}</span>
+        ${repairCost > 0 ? `<span><span style="color:#fb923c">●</span>修繕 ${fmtW(repairCost)}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  const totalIncome = rows.reduce((s,r)=>s+r.income,0);
+  const totalRepair = rows.reduce((s,r)=>s+r.repairCost,0);
+  const totalNet = totalIncome - totalRepair;
+  el.innerHTML = `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:6px">
+      <div style="font-size:13px;font-weight:700">📊 物件別 ${year}年 収支実績</div>
+      <div style="display:flex;gap:10px;font-size:11px">
+        <span style="color:#4ade80">収入 ${fmtW(totalIncome)}</span>
+        <span style="color:#fb923c">修繕 ${fmtW(totalRepair)}</span>
+        <span style="color:${totalNet>=0?'#4ade80':'#f87171'};font-weight:700">純利益 ${totalNet>=0?'+':''}${fmtW(totalNet)}</span>
+      </div>
+    </div>
+    ${barRows.length ? barRows : '<div style="text-align:center;padding:20px;font-size:12px;color:var(--text-muted)">家賃・修繕を記録すると表示されます</div>'}
+    <div style="font-size:10px;color:#555;margin-top:4px">※ ${year}年の入金記録・修繕費に基づく実績値。%は前年同期比。</div>
   </div>`;
 }
 
