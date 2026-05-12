@@ -433,6 +433,23 @@
     </div>
     <div id="loan-qualify-result"></div>
   </div>
+
+  <!-- 金融機関タイプ別ローン比較カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">🏛 金融機関タイプ別ローン比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産投資向け融資の金融機関タイプ別に、金利・融資割合・審査難易度・特徴を比較します。借入希望額を入力すると月返済額も試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">借入希望額（万円）</label>
+        <input type="number" id="bl_loan" placeholder="例: 2000" min="100" step="100" oninput="renderBankLoanCompare()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">返済期間（年）</label>
+        <input type="number" id="bl_term" value="25" min="5" max="35" step="1" oninput="renderBankLoanCompare()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="bank-loan-compare-result"></div>
+  </div>
 </div>
 </div>
 
@@ -3448,6 +3465,43 @@ function updateSimpleLoanPreview() {
   }
 
   preview.style.display = 'block';
+}
+
+
+// ===== 金融機関タイプ別ローン比較 =====
+function renderBankLoanCompare() {
+  var el = document.getElementById("bank-loan-compare-result");
+  if (!el) return;
+  var loanMan = parseFloat(document.getElementById("bl_loan").value) || 0;
+  var term = parseFloat(document.getElementById("bl_term").value) || 25;
+  var lenders = [
+    {name:"メガバンク・都市銀行",icon:"🏦",rateMin:1.5,rateMax:2.5,ltv:"70〜80%",difficulty:4,maxTerm:35,pros:["低金利","長期融資可","信頼性高い"],cons:["審査が厳しい","物件属性を選ぶ"],color:"#4ade80",note:"首都圏・築浅物件向き"},
+    {name:"地方銀行・第二地銀",icon:"🏛",rateMin:2.0,rateMax:3.5,ltv:"80〜90%",difficulty:3,maxTerm:30,pros:["地元物件に強い","柔軟な審査","積算評価あり"],cons:["エリア限定が多い","金利やや高め"],color:"#c9a84c",note:"地方物件・中古向き"},
+    {name:"信用金庫・信用組合",icon:"🤝",rateMin:2.5,rateMax:4.0,ltv:"80〜90%",difficulty:2,maxTerm:25,pros:["小口融資に対応","事業主・自営業向け","相談しやすい"],cons:["金利高め","融資エリアが狭い"],color:"#60a5fa",note:"自営業・小規模投資向き"},
+    {name:"ノンバンク・不動産専門",icon:"⚡",rateMin:3.5,rateMax:6.0,ltv:"90〜100%",difficulty:1,maxTerm:20,pros:["フルローン対応","審査スピード速い","築古・地方物件OK"],cons:["金利が高い","総返済額が大きい"],color:"#f87171",note:"築古・地方・スピード重視向き"}
+  ];
+  function calcM(m, r, n) {
+    if (!m||!n) return null;
+    var L=m*10000, rm=r/100/12, nm=n*12;
+    if(rm===0) return Math.round(L/nm);
+    return Math.round(L*rm*Math.pow(1+rm,nm)/(Math.pow(1+rm,nm)-1));
+  }
+  function diffBar(n) {
+    var s="", col=n>=4?"#f87171":n>=3?"#c9a84c":n>=2?"#60a5fa":"#4ade80";
+    for(var i=0;i<5;i++) s+=i<n?"●":"○";
+    return "<span style='letter-spacing:2px;color:"+col+"'>" + s + "</span>";
+  }
+  var html="<div style='display:flex;flex-direction:column;gap:12px;margin-bottom:12px'>";
+  for(var i=0;i<lenders.length;i++){
+    var l=lenders[i], at=Math.min(term,l.maxTerm);
+    var mL=calcM(loanMan,l.rateMin,at), mH=calcM(loanMan,l.rateMax,at);
+    var ph=""; for(var p=0;p<l.pros.length;p++) ph+="<span style='display:inline-block;background:rgba(255,255,255,0.06);border-radius:4px;padding:2px 7px;font-size:10px;margin:2px 2px 0 0'>&check; "+l.pros[p]+"</span>";
+    var ch=""; for(var c=0;c<l.cons.length;c++) ch+="<span style='display:inline-block;background:rgba(239,68,68,0.08);border-radius:4px;padding:2px 7px;font-size:10px;margin:2px 2px 0 0;color:#fca5a5'>&times; "+l.cons[c]+"</span>";
+    var mh=mL&&mH?"<div style='margin-bottom:8px;padding:8px 10px;background:"+l.color+"18;border:1px solid "+l.color+"40;border-radius:6px'><div style='font-size:10px;color:var(--text-muted);margin-bottom:2px'>月返済額の目安（借入"+loanMan.toLocaleString()+"万円・"+at+"年）</div><div style='font-size:16px;font-weight:900;color:"+l.color+"'>" + mL.toLocaleString() + "〜" + mH.toLocaleString() + "<span style='font-size:11px'>円/月</span></div></div>":"";
+    html+="<div style='border:1px solid "+l.color+"44;border-radius:10px;padding:14px;background:rgba(255,255,255,0.025)'><div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'><div style='font-weight:700;font-size:13px'>"+l.icon+" "+l.name+"</div><span style='font-size:10px;color:"+l.color+";background:"+l.color+"18;border-radius:4px;padding:2px 8px'>"+l.note+"</span></div><div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px'><div style='text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px'><div style='font-size:10px;color:var(--text-muted);margin-bottom:3px'>金利目安</div><div style='font-size:15px;font-weight:900;color:"+l.color+"'>" + l.rateMin + "〜" + l.rateMax + "%</div></div><div style='text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px'><div style='font-size:10px;color:var(--text-muted);margin-bottom:3px'>融資割合（LTV）</div><div style='font-size:13px;font-weight:700;color:var(--text)'>"+l.ltv+"</div></div><div style='text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px'><div style='font-size:10px;color:var(--text-muted);margin-bottom:3px'>審査難易度</div><div style='font-size:12px;margin-top:2px'>"+diffBar(l.difficulty)+"</div></div></div>"+mh+"<div style='margin-bottom:6px'>"+ph+"</div><div>"+ch+"</div></div>";
+  }
+  html+="</div><div style='font-size:11px;color:var(--text-muted);line-height:1.7;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px'>⚠️ 金利・LTV・審査基準は金融機関・物件・申込者の属性により大きく異なります。実際の融資条件は各金融機関にお問い合わせください。<br>💡 <strong>複数の金融機関に打診することで、より有利な条件を引き出せます。</strong>TERRA REALTYでは提携金融機関への紹介サポートも行っています。</div>";
+  el.innerHTML = html;
 }
 
 // Chart.js オフラインフォールバック
