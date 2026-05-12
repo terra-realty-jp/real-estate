@@ -711,6 +711,62 @@ function buildAlerts(inp, r) {
   return alerts;
 }
 
+function renderRepairReserveCard(inp) {
+  if (!inp || !inp.price || inp.price <= 0) return '';
+  const age = inp.age || 10;
+  const struct = inp.type || 'wood';
+  const ITEMS = [
+    { name: '外壁・屋根塗装',   cycle: 12, costPct: 0.005, urgency: age >= 10 ? 'high' : 'low' },
+    { name: 'バス・水回り交換', cycle: 20, costPct: 0.004, urgency: age >= 15 ? 'high' : 'mid' },
+    { name: 'キッチン交換',      cycle: 20, costPct: 0.003, urgency: age >= 15 ? 'high' : 'mid' },
+    { name: 'フローリング',      cycle: 25, costPct: 0.003, urgency: 'low' },
+    { name: '給排水管更新',      cycle: 30, costPct: 0.008, urgency: age >= 20 ? 'high' : 'low' },
+    { name: 'エレベーター定期',  cycle: 15, costPct: 0.003, urgency: 'mid' },
+    { name: 'その他維持補修',    cycle: 5,  costPct: 0.002, urgency: 'low' },
+  ];
+  const URGENCY_C = { high: '#f87171', mid: '#fb923c', low: '#94a3b8' };
+  const years = [5, 10, 20];
+  const pY = inp.price * 10000;
+  const monthly = Math.round(ITEMS.reduce((s, item) => {
+    return s + (pY * item.costPct / item.cycle / 12);
+  }, 0) / 10000 * 10) / 10;
+  const itemRows = ITEMS.map(item => {
+    const annualCost = Math.round(pY * item.costPct / item.cycle / 10000 * 10) / 10;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+      <div style="width:6px;height:6px;border-radius:50%;background:${URGENCY_C[item.urgency]};flex-shrink:0"></div>
+      <span style="flex:1;font-size:11px;color:var(--text-muted)">${item.name}</span>
+      <span style="font-size:10px;color:var(--text-muted)">${item.cycle}年周期</span>
+      <span style="font-size:11px;font-weight:700;color:var(--text);width:52px;text-align:right">${annualCost.toFixed(1)}万/年</span>
+    </div>`;
+  }).join('');
+  const cumulRows = years.map(y => {
+    const cum = Math.round(monthly * 12 * y * 10) / 10;
+    return `<div style="text-align:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 6px">
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">${y}年積立額</div>
+      <div style="font-size:16px;font-weight:900;color:var(--gold)">${cum.toLocaleString()}万円</div>
+    </div>`;
+  }).join('');
+  return `<div class="card" style="border-color:rgba(148,163,184,0.2);margin-top:16px">
+    <div class="card-title">🔧 将来修繕 月次積立シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">大規模修繕に備えた月次積立の目安を試算します。CF計算に「修繕積立」を含めることで実際の手取りを把握できます。</p>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 14px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:8px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">推奨 月次積立額（目安）</div>
+        <div style="font-size:24px;font-weight:900;color:var(--gold)">${monthly.toFixed(1)}<span style="font-size:13px">万円/月</span></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.7;flex:1;min-width:150px">物件価格${inp.price.toLocaleString()}万円・築${age}年・${struct==='wood'?'木造':struct==='steel'?'鉄骨':struct==='rc'?'RC':'その他'}に基づく概算。CFから毎月この金額を積み立てておくと大規模修繕時の費用ショックを軽減できます。</div>
+    </div>
+    <div style="margin-bottom:12px">${itemRows}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">${cumulRows}</div>
+    <div style="display:flex;gap:8px;font-size:10px;margin-top:4px">
+      <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f87171"></span>近く対応推奨</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#fb923c"></span>中期的に対応</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#94a3b8"></span>長期計画</span>
+    </div>
+    <div style="font-size:10px;color:#555;margin-top:6px">※ 物件価格に対するコスト比率による概算。実際の修繕費は物件規模・仕様・立地により大きく異なります。</div>
+  </div>`;
+}
+
 function renderDepreciationCard(inp) {
   if(!inp.price || !inp.age) return '';
   // 物件種別から法定耐用年数を推定 (inp.type: 'wood','steel','rc','other')
@@ -979,6 +1035,7 @@ function renderResult(inp, r) {
     ${renderTaxChecklistCard(inp, r)}
     ${renderCorporateVsIndCard(inp, r)}
     ${renderHoldingCostCard(inp, r)}
+    ${renderRepairReserveCard(inp)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
