@@ -452,6 +452,64 @@
     </div>
   </div>
 
+
+  <!-- 法定点検管理カード -->
+  <div class="card" style="margin-bottom:20px" id="legal-inspection-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div class="card-title" style="margin-bottom:0">📋 法定点検・定期調査 管理</div>
+      <button class="btn btn-gold btn-sm" onclick="openInspectionModal()">＋ 点検を登録</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.7">消防設備点検・エレベーター点検・建築物定期調査など、法律で義務付けられた定期点検の実施記録と次回予定を管理します。</p>
+    <div style="background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:var(--text-muted);line-height:1.7">
+      &#x1F4CC; <strong style="color:#60a5fa">主な法定点検の周期目安</strong>：消防設備点検（機器点検6ヶ月/総合点検1年）、建築物定期調査（3年）、エレベーター（1年）、貯水槽（1年）、浄化槽（4ヶ月）
+    </div>
+    <div id="inspection-alert-bar" style="display:none;margin-bottom:12px"></div>
+    <div id="inspection-list"></div>
+  </div>
+
+  <!-- 法定点検登録モーダル -->
+  <div class="modal-overlay" id="inspectionModal" style="display:none;" onclick="closeModal('inspectionModal',event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">法定点検登録</div>
+      <input type="hidden" id="insp_id">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>物件名*</label>
+          <select id="insp_propId" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none"></select>
+        </div>
+        <div class="form-group">
+          <label>点検種別*</label>
+          <select id="insp_type" onchange="autoFillInspCycle()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none">
+            <option value="fire_equip">消防設備点検（機器）</option>
+            <option value="fire_total">消防設備点検（総合）</option>
+            <option value="building">建築物定期調査</option>
+            <option value="elevator">エレベーター点検</option>
+            <option value="water_tank">貯水槽清掃・点検</option>
+            <option value="septic">浄化槽点検</option>
+            <option value="electrical">電気設備定期点検</option>
+            <option value="gas">ガス設備点検</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>点検会社・業者</label>
+          <input id="insp_company" placeholder="例: 株式会社〇〇防災">
+        </div>
+        <div class="form-group"><label>前回実施日</label><input type="date" id="insp_last"></div>
+        <div class="form-group"><label>次回予定日*</label><input type="date" id="insp_next"></div>
+        <div class="form-group">
+          <label>点検費用（円）</label>
+          <input type="number" id="insp_cost" placeholder="例: 30000" min="0">
+        </div>
+        <div class="form-group full"><label>備考・結果</label><textarea id="insp_memo" rows="2" placeholder="例: 指摘事項なし、次回は同業者に依頼予定"></textarea></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('inspectionModal')">キャンセル</button>
+        <button class="btn btn-gold" onclick="saveInspection()">登録</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 火災・地震保険管理カード -->
   <div class="card" style="margin-bottom:20px" id="insurance-mgmt-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
@@ -4242,13 +4300,13 @@ function switchTab(t){
   else if(t==='properties') renderProperties();
   else if(t==='tenants') renderTenants();
   else if(t==='rent') renderRentLedger();
-  else if(t==='repair') { renderRepairs(); renderInsurance(); }
+  else if(t==='repair') { renderRepairs(); renderInsurance(); renderInspection(); }
 }
 
 // Escape key でモーダルを閉じる
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') {
-    ['propertyModal','tenantModal','tenantDetailModal','propertyDetailModal','rentModal','repairModal','insuranceModal'].forEach(function(id){
+    ['propertyModal','tenantModal','tenantDetailModal','propertyDetailModal','rentModal','repairModal','insuranceModal','inspectionModal'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.style.display='none';
     });
   }
@@ -4266,6 +4324,136 @@ function showChartOfflineMsg(canvasId) {
   }
 }
 
+
+
+// ===== 法定点検管理 =====
+var INSP_KEY = 'saas_inspection';
+var INSP_CYCLES = {
+  fire_equip:6, fire_total:12, building:36, elevator:12,
+  water_tank:12, septic:4, electrical:12, gas:24, other:12
+};
+var INSP_LABELS = {
+  fire_equip:'消防設備点検（機器）', fire_total:'消防設備点検（総合）',
+  building:'建築物定期調査', elevator:'エレベーター点検',
+  water_tank:'貯水槽清掃・点検', septic:'浄化槽点検',
+  electrical:'電気設備定期点検', gas:'ガス設備点検', other:'その他'
+};
+function loadInspection() {
+  try { return JSON.parse(localStorage.getItem(INSP_KEY)) || []; } catch(e) { return []; }
+}
+function saveInspectionArr(arr) {
+  try { localStorage.setItem(INSP_KEY, JSON.stringify(arr)); } catch(e) { showErrToast('保存失敗: ストレージ容量を確認してください'); }
+}
+function autoFillInspCycle() {
+  var type = document.getElementById('insp_type').value;
+  var lastEl = document.getElementById('insp_last');
+  var nextEl = document.getElementById('insp_next');
+  if (!lastEl.value) return;
+  var months = INSP_CYCLES[type] || 12;
+  var d = new Date(lastEl.value);
+  d.setMonth(d.getMonth() + months);
+  nextEl.value = d.toISOString().slice(0,10);
+}
+function openInspectionModal(id) {
+  var props = loadProps();
+  var sel = document.getElementById('insp_propId');
+  sel.innerHTML = props.map(function(p){ return '<option value="'+p.id+'">'+esc(p.name)+'</option>'; }).join('');
+  if (!props.length) { alert('先に物件を登録してください'); return; }
+  ['insp_id','insp_company','insp_last','insp_next','insp_cost','insp_memo'].forEach(function(f){ document.getElementById(f).value=''; });
+  document.getElementById('insp_type').value = 'fire_equip';
+  if (id) {
+    var rec = loadInspection().find(function(r){ return r.id===id; });
+    if (rec) {
+      document.getElementById('insp_id').value = rec.id;
+      document.getElementById('insp_propId').value = rec.propId;
+      document.getElementById('insp_type').value = rec.type || 'fire_equip';
+      document.getElementById('insp_company').value = rec.company || '';
+      document.getElementById('insp_last').value = rec.last || '';
+      document.getElementById('insp_next').value = rec.next || '';
+      document.getElementById('insp_cost').value = rec.cost || '';
+      document.getElementById('insp_memo').value = rec.memo || '';
+    }
+  }
+  document.getElementById('inspectionModal').style.display = 'flex';
+}
+function saveInspection() {
+  var propId = document.getElementById('insp_propId').value;
+  var next = document.getElementById('insp_next').value;
+  if (!propId || !next) { alert('物件と次回予定日は必須です'); return; }
+  var arr = loadInspection();
+  var id = document.getElementById('insp_id').value;
+  var rec = {
+    id: id || 'insp_' + Date.now(),
+    propId: propId,
+    type: document.getElementById('insp_type').value,
+    company: document.getElementById('insp_company').value,
+    last: document.getElementById('insp_last').value,
+    next: next,
+    cost: parseFloat(document.getElementById('insp_cost').value) || 0,
+    memo: document.getElementById('insp_memo').value
+  };
+  if (id) { arr = arr.map(function(r){ return r.id===id ? rec : r; }); }
+  else { arr.unshift(rec); }
+  saveInspectionArr(arr);
+  closeModal('inspectionModal');
+  renderInspection();
+  showToast('点検情報を保存しました');
+}
+function deleteInspection(id, name) {
+  if (!confirm('「'+name+'」の点検記録を削除しますか？')) return;
+  var arr = loadInspection().filter(function(r){ return r.id!==id; });
+  saveInspectionArr(arr);
+  renderInspection();
+  showToast('削除しました');
+}
+function renderInspection() {
+  var el = document.getElementById('inspection-list');
+  var alertEl = document.getElementById('inspection-alert-bar');
+  if (!el) return;
+  var arr = loadInspection();
+  var props = loadProps();
+  function propName(id) { var p=props.find(function(p){return p.id===id;}); return p?p.name:id; }
+  var today = new Date();
+  function daysLeft(d) { return Math.ceil((new Date(d)-today)/(1000*60*60*24)); }
+  var overdue = arr.filter(function(r){ return r.next && daysLeft(r.next)<0; });
+  var soon = arr.filter(function(r){ return r.next && daysLeft(r.next)>=0 && daysLeft(r.next)<=60; });
+  if (overdue.length || soon.length) {
+    var html = '';
+    if (overdue.length) html += '<div style="padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:7px;margin-bottom:8px;font-size:12px;color:#fca5a5">&#x26A0;&#xFE0F; <strong>期限超過の点検 '+overdue.length+'件</strong>: '+overdue.map(function(r){ return esc(propName(r.propId))+'／'+(INSP_LABELS[r.type]||r.type); }).join('、')+' — 至急対応してください</div>';
+    if (soon.length) html += '<div style="padding:8px 12px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:7px;font-size:12px;color:#fdba74">&#x1F514; <strong>60日以内の点検予定 '+soon.length+'件</strong>: '+soon.map(function(r){ return esc(propName(r.propId))+'（残'+daysLeft(r.next)+'日）'; }).join('、')+'</div>';
+    alertEl.innerHTML = html;
+    alertEl.style.display = 'block';
+  } else {
+    alertEl.style.display = 'none';
+  }
+  if (!arr.length) {
+    el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px">点検情報がまだ登録されていません。<br>＋ 点検を登録 からはじめてください。</div>';
+    return;
+  }
+  var sorted = arr.slice().sort(function(a,b){ return (a.next||'').localeCompare(b.next||''); });
+  var rows = sorted.map(function(r) {
+    var dl = r.next ? daysLeft(r.next) : null;
+    var statusColor = dl===null?'var(--text-muted)':dl<0?'#f87171':dl<=30?'#f87171':dl<=60?'#fdba74':'#4ade80';
+    var statusText = dl===null?'—':dl<0?'期限超過（'+Math.abs(dl)+'日）':dl<=60?'残'+dl+'日':'残'+dl+'日';
+    return '<div style="border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:rgba(255,255,255,0.02)">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">'
+      + '<div><span style="font-weight:700;font-size:13px">'+esc(propName(r.propId))+'</span>'
+      + '<span style="margin-left:8px;font-size:11px;color:#60a5fa;background:rgba(96,165,250,0.1);border-radius:4px;padding:1px 7px">'+(INSP_LABELS[r.type]||r.type)+'</span></div>'
+      + '<div style="display:flex;gap:6px;align-items:center">'
+      + '<span style="font-size:11px;font-weight:700;color:'+statusColor+'">'+statusText+'</span>'
+      + '<button class="btn btn-sm btn-outline" style="font-size:11px;padding:4px 10px" data-ins-id="'+r.id+'" onclick="openInspectionModal(this.dataset.insId)">編集</button>'
+      + '<button class="btn btn-sm" style="font-size:11px;padding:4px 10px;background:transparent;border:1px solid rgba(239,68,68,0.4);color:#f87171" data-ins-id="'+r.id+'" data-ins-name="'+esc(propName(r.propId))+'" onclick="deleteInspection(this.dataset.insId,this.dataset.insName)">削除</button>'
+      + '</div></div>'
+      + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">'
+      + '<div style="font-size:11px;color:var(--text-muted)">前回実施日: <strong style="color:var(--text)">'+(r.last||'未記録')+'</strong></div>'
+      + '<div style="font-size:11px;color:var(--text-muted)">次回予定: <strong style="color:'+statusColor+'">'+r.next+'</strong></div>'
+      + '<div style="font-size:11px;color:var(--text-muted)">業者: <strong style="color:var(--text)">'+esc(r.company||'未入力')+'</strong></div>'
+      + '<div style="font-size:11px;color:var(--text-muted)">費用: <strong style="color:var(--gold)">'+(r.cost?r.cost.toLocaleString()+'円':'未入力')+'</strong></div>'
+      + (r.memo?'<div style="font-size:11px;color:var(--text-muted);grid-column:span 2">備考: '+esc(r.memo)+'</div>':'')
+      + '</div></div>';
+  }).join('');
+  el.innerHTML = rows;
+}
 
 // ===== 火災・地震保険管理 =====
 var INS_KEY = 'saas_insurance';
