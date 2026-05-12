@@ -545,6 +545,9 @@
       <!-- 価格交渉シミュレーター -->
       <div id="nego-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 買主の購買力シミュレーター -->
+      <div id="buyer-afford-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -1798,6 +1801,57 @@ function renderPresaleReformPanel(price, age, reform) {
     <div style="font-size:10px;color:#555;margin-top:8px">※ 価格UP効果・費用はエリア・物件状態によって異なります。実際のリフォーム見積はTERRA REALTYにご相談ください。</div>`;
 }
 
+function renderBuyerAffordPanel(price) {
+  var el = document.getElementById('buyer-afford-panel');
+  if (!el || !price) return;
+  el.style.display = 'block';
+  var loanAmt = Math.round(price * 0.9);
+  var term = 35;
+  var rates = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
+  var maxMonthly = 120000;
+  var rows = rates.map(function(r) {
+    var monthly = (function(p, rate, n) {
+      if (rate === 0) return p * 10000 / n;
+      var i = rate / 100 / 12;
+      return p * 10000 * i * Math.pow(1+i, n) / (Math.pow(1+i, n) - 1);
+    })(loanAmt, r, term * 12);
+    var reqIncome = Math.round(monthly * 12 / 0.25 / 10000);
+    var affordable = monthly <= maxMonthly;
+    var poolW = Math.round(Math.max(0, (maxMonthly - monthly) / maxMonthly * 100 + 30));
+    poolW = Math.min(100, poolW);
+    var col = r <= 1.0 ? 'var(--green)' : r <= 2.0 ? 'var(--gold)' : 'var(--orange)';
+    return '<div style="display:grid;grid-template-columns:40px 1fr 90px 70px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">'
+      + '<div style="font-size:11px;color:' + col + ';font-weight:700">' + r.toFixed(1) + '%</div>'
+      + '<div><div style="height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + poolW + '%;background:' + col + ';border-radius:4px;transition:width 0.4s"></div></div></div>'
+      + '<div style="font-size:11px;color:var(--text-muted);text-align:right">' + Math.round(monthly/1000) + '千円/月</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);text-align:right">年収' + reqIncome + '万〜</div>'
+      + '</div>';
+  }).join('');
+  var cheapRate = 1.0;
+  var cheapMonthly = (function(p, rate, n) {
+    var i = rate / 100 / 12;
+    return p * 10000 * i * Math.pow(1+i, n) / (Math.pow(1+i, n) - 1);
+  })(loanAmt, cheapRate, term * 12);
+  var expRate = 3.0;
+  var expMonthly = (function(p, rate, n) {
+    var i = rate / 100 / 12;
+    return p * 10000 * i * Math.pow(1+i, n) / (Math.pow(1+i, n) - 1);
+  })(loanAmt, expRate, term * 12);
+  var diff = Math.round((expMonthly - cheapMonthly) / 1000);
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--gold)">&#x1F4B0; 買主の購買力シミュレーター</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">同じ価格でも金利によって月返済額と購入できる層が大きく変わります。バーが長いほど購入できる買主が多い目安です（借入額: <strong style="color:var(--text)">' + loanAmt.toLocaleString() + '万円</strong>・' + term + '年ローン想定）。</p>'
+    + '<div style="display:grid;grid-template-columns:40px 1fr 90px 70px;gap:6px;margin-bottom:4px">'
+    + '<div style="font-size:10px;color:#555">金利</div>'
+    + '<div style="font-size:10px;color:#555">購入層の厚さ</div>'
+    + '<div style="font-size:10px;color:#555;text-align:right">月返済</div>'
+    + '<div style="font-size:10px;color:#555;text-align:right">必要年収</div>'
+    + '</div>'
+    + rows
+    + '<div style="margin-top:12px;padding:10px 12px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:8px;font-size:12px;color:var(--orange);line-height:1.7">'
+    + '&#x26A0;&#xFE0F; 金利1%→3%で月返済は約<strong>' + diff + '千円</strong>増加。買主の借入可能額が減少し、この物件を購入できる層が縮小します。<strong>金利動向を踏まえた売却タイミング</strong>が重要です。'
+    + '</div>';
+}
+
 function renderNegoSimPanel(price, sellCostPct) {
   var el = document.getElementById('nego-sim-panel');
   if (!el) return;
@@ -2284,6 +2338,9 @@ function calcAndShowResult() {
 
   // 価格交渉シミュレーター
   renderNegoSimPanel(price, 0.07);
+
+  // 買主の購買力シミュレーター
+  renderBuyerAffordPanel(price);
 
   // 動的CTAメッセージ・メールリンク更新
   setDynamicCTA(price, document.getElementById('leadTiming').value, liquidity, age, propType);
