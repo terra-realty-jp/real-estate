@@ -978,6 +978,7 @@ function renderResult(inp, r) {
     ${renderHoldPeriodOptimCard(inp)}
     ${renderTaxChecklistCard(inp, r)}
     ${renderCorporateVsIndCard(inp, r)}
+    ${renderHoldingCostCard(inp, r)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
@@ -1361,6 +1362,95 @@ function renderCorporateVsIndCard(inp, r) {
     </div>
     ${saving !== 0 ? `<div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;color:var(--text-muted);margin-bottom:12px;text-align:center">法人化で年間 <strong style="color:${savingWan>0?'#818cf8':'#f87171'}">${savingWan>0?'+':''}${savingWan.toLocaleString()}万円</strong> の税差（概算・法人維持費を除く）</div>` : ''}
     <div style="padding:10px 12px;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">${note}<br>法人設立費用：約20〜30万円 / 法人住民税（均等割）：年7万円〜</div>
+  </div>`;
+}
+
+function renderHoldingCostCard(inp, r) {
+  if (!inp || !inp.price || inp.price <= 0) return '';
+  const priceYen = inp.price * 10000;
+  // 購入時諸費用
+  const stampTax = inp.price >= 5000 ? 6 : inp.price >= 1000 ? 3 : 1;
+  const regFee = Math.round(inp.price * 0.008 + 20);
+  const brokerage = inp.price <= 200 ? Math.round(inp.price * 0.05 * 1.1) : inp.price <= 400 ? Math.round((inp.price * 0.04 + 2) * 1.1) : Math.round((inp.price * 0.03 + 6) * 1.1);
+  const acqTax = Math.round(inp.price * 0.03 * 0.7);
+  const initialTotal = stampTax + regFee + brokerage + acqTax;
+  const initialPct = Math.round(initialTotal / inp.price * 100 * 10) / 10;
+  // 年間保有コスト
+  const annualTax = inp.tax ? Math.round(inp.tax / 10000) : Math.round(inp.price * 0.015);
+  const annualIns = inp.ins ? Math.round(inp.ins / 10000) : Math.round(inp.price * 0.001);
+  const annualMgmt = inp.mgmt ? Math.round(inp.mgmt * 12 / 10000) : 0;
+  const loanInterestY = r.loanMonthly > 0 ? Math.round((r.loanTotal - inp.loan * 10000) / inp.term / 10000) : 0;
+  const annualFixed = annualTax + annualIns + annualMgmt;
+  const annualAll = annualFixed + loanInterestY;
+  const cost5y = initialTotal + annualAll * 5;
+  const cost10y = initialTotal + annualAll * 10;
+  const fmtW = v => v.toLocaleString() + '万円';
+  const items = [
+    { label: '印紙税', val: stampTax, color: '#94a3b8' },
+    { label: '登記・司法書士', val: regFee, color: '#60a5fa' },
+    { label: '仲介手数料', val: brokerage, color: '#a78bfa' },
+    { label: '不動産取得税', val: acqTax, color: '#fb923c' },
+  ];
+  const annualItems = [
+    { label: '固定資産税', val: annualTax, color: '#94a3b8' },
+    { label: '火災保険料', val: annualIns, color: '#60a5fa' },
+    annualMgmt > 0 ? { label: '管理費（年換算）', val: annualMgmt, color: '#a78bfa' } : null,
+    loanInterestY > 0 ? { label: 'ローン利息（年平均）', val: loanInterestY, color: '#f87171' } : null,
+  ].filter(Boolean);
+  const maxVal = Math.max(...items.map(x=>x.val), 1);
+  const maxAnnual = Math.max(...annualItems.map(x=>x.val), 1);
+  const barRows = items.map(x => {
+    const pct = Math.round(x.val / maxVal * 100);
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <span style="font-size:11px;color:var(--text-muted);width:88px;flex-shrink:0">${x.label}</span>
+      <div style="flex:1;height:14px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${x.color};border-radius:3px"></div>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:${x.color};width:56px;text-align:right">${fmtW(x.val)}</span>
+    </div>`;
+  }).join('');
+  const annualRows = annualItems.map(x => {
+    const pct = Math.round(x.val / maxAnnual * 100);
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <span style="font-size:11px;color:var(--text-muted);width:110px;flex-shrink:0">${x.label}</span>
+      <div style="flex:1;height:14px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${x.color};border-radius:3px"></div>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:${x.color};width:56px;text-align:right">${fmtW(x.val)}</span>
+    </div>`;
+  }).join('');
+  return `<div class="card" style="border-color:rgba(148,163,184,0.2);margin-top:16px">
+    <div class="card-title">💸 物件保有コスト内訳</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">購入時の諸費用と年間の固定コストをまとめました。実際のキャッシュアウトを把握しましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:10px">🏷️ 購入時諸費用（合計）</div>
+        ${barRows}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)">
+          <span style="font-size:11px;color:var(--text-muted)">小計</span>
+          <span style="font-size:15px;font-weight:900;color:var(--gold)">${fmtW(initialTotal)} <span style="font-size:10px;font-weight:400;color:var(--text-muted)">（物件価格の${initialPct}%）</span></span>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:10px">📅 年間保有コスト（固定）</div>
+        ${annualRows}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)">
+          <span style="font-size:11px;color:var(--text-muted)">小計</span>
+          <span style="font-size:15px;font-weight:900;color:#60a5fa">${fmtW(annualAll)}<span style="font-size:10px;font-weight:400;color:var(--text-muted)">/年</span></span>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">5年間コスト累計（諸費用含む）</div>
+        <div style="font-size:18px;font-weight:900;color:var(--gold)">${fmtW(cost5y)}</div>
+      </div>
+      <div style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px 14px;text-align:center">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">10年間コスト累計（諸費用含む）</div>
+        <div style="font-size:18px;font-weight:900;color:#f87171">${fmtW(cost10y)}</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#555;margin-top:8px">※ 概算値。不動産取得税は評価額×3%（軽減措置あり）、登記費用は司法書士報酬含む目安です。</div>
   </div>`;
 }
 
