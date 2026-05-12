@@ -735,6 +735,59 @@ function buildAlerts(inp, r) {
   return alerts;
 }
 
+function renderReturnSourceCard(inp, r) {
+  if (!inp || !inp.price || inp.price <= 0 || !r) return '';
+  var hold = inp.hold || 10;
+  var cumCF = Math.round(r.annualCF * hold / 10000);
+  var capGain = Math.round((r.exitNet - inp.price * 10000) / 10000);
+  var total = cumCF + capGain;
+  if (total === 0) return '';
+  var cfPct = Math.round(cumCF / Math.abs(total) * 100);
+  var cgPct = 100 - cfPct;
+  var cfCol = cumCF >= 0 ? 'var(--green)' : 'var(--red)';
+  var cgCol = capGain >= 0 ? 'var(--gold)' : 'var(--red)';
+  var cfW = total > 0 ? Math.round(Math.max(0, cumCF) / total * 100) : 0;
+  var cgW = total > 0 ? Math.round(Math.max(0, capGain) / total * 100) : 0;
+  var dominant = Math.abs(cumCF) >= Math.abs(capGain) ? 'インカムゲイン（賃料収入）主導型' : 'キャピタルゲイン（売却益）主導型';
+  var advice = Math.abs(cumCF) >= Math.abs(capGain)
+    ? '毎月のCFが収益の中心です。空室率・修繕費・管理コストの最小化が投資パフォーマンスに直結します。'
+    : '売却益が収益の中心です。売却タイミング・エリアの地価動向・出口利回りの見極めが重要です。';
+  return '<div class="card"><div class="card-title">&#x1F4B0; 収益の源泉 — インカムvsキャピタル</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">この投資の総収益（' + hold + '年保有）がキャッシュフローと売却益のどちらから来ているかを可視化します。</p>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
+    + '<div style="text-align:center;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:12px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">インカムゲイン（累積CF）</div>'
+    + '<div style="font-size:20px;font-weight:900;color:' + cfCol + '">' + (cumCF >= 0 ? '+' : '') + cumCF.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">' + hold + '年間賃料CF</div>'
+    + '</div>'
+    + '<div style="text-align:center;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:12px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">キャピタルゲイン（売却益）</div>'
+    + '<div style="font-size:20px;font-weight:900;color:' + cgCol + '">' + (capGain >= 0 ? '+' : '') + capGain.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">売却手取り−購入価格</div>'
+    + '</div>'
+    + '<div style="text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">合計収益</div>'
+    + '<div style="font-size:20px;font-weight:900;color:' + (total >= 0 ? 'var(--text)' : 'var(--red)') + '">' + (total >= 0 ? '+' : '') + total.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">CF+売却益</div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:5px">収益の構成比</div>'
+    + '<div style="height:14px;border-radius:6px;overflow:hidden;display:flex;margin-bottom:6px">'
+    + '<div style="width:' + cfW + '%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#000;min-width:' + (cfW>8?'0':'0') + 'px">' + (cfW > 12 ? cfPct + '%' : '') + '</div>'
+    + '<div style="width:' + cgW + '%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#000">' + (cgW > 12 ? cgPct + '%' : '') + '</div>'
+    + '<div style="flex:1;background:rgba(255,255,255,0.06)"></div>'
+    + '</div>'
+    + '<div style="display:flex;gap:12px;margin-bottom:14px;font-size:11px;color:var(--text-muted);flex-wrap:wrap">'
+    + '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--green);border-radius:2px;display:inline-block"></span>インカムゲイン</span>'
+    + '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--gold);border-radius:2px;display:inline-block"></span>キャピタルゲイン</span>'
+    + '</div>'
+    + '<div style="padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px;line-height:1.7">'
+    + '<strong style="color:var(--gold)">' + dominant + '</strong><br>'
+    + '<span style="color:var(--text-muted)">' + advice + '</span>'
+    + '</div>'
+    + '</div>';
+}
+
 function renderVsFinanceCard(inp, r) {
   if (!inp || !inp.price || inp.price <= 0 || !r) return '';
   const equity = r.equity || inp.equity * 10000 || inp.price * 10000 * 0.2;
@@ -1196,6 +1249,7 @@ function renderResult(inp, r) {
     ${renderHoldingCostCard(inp, r)}
     ${renderRepairReserveCard(inp)}
     ${renderVsFinanceCard(inp, r)}
+    ${renderReturnSourceCard(inp, r)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
