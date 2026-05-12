@@ -190,6 +190,7 @@
     </div>
   </div>
   <div id="buyer-demand-card" style="display:none;margin-bottom:16px"></div>
+  <div id="supply-demand-gap-card" style="display:none;margin-bottom:16px"></div>
   <div id="nego-sim-card" style="display:none;margin-bottom:16px"></div>
   <div id="sellers-list"></div>
   <div id="seller-checklist-card" style="display:none;margin-top:20px"></div>
@@ -485,6 +486,59 @@ const STATUS_LABEL = {active:'募集中', nego:'交渉中', sold:'成約済'};
 const D_STATUS_LABEL = {new:'新規', matched:'マッチング済', nego:'交渉中', closed:'成約'};
 const FMT = v => v >= 10000 ? Math.round(v/10000*10)/10 + '億' : (v||0).toLocaleString() + '万円';
 
+function renderSupplyDemandGap() {
+  var el = document.getElementById('supply-demand-gap-card');
+  if (!el) return;
+  var activeSellers = sellers.filter(function(s){ return s.status === 'active' && s.price > 0; });
+  if (!activeSellers.length || !buyers.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  var FMT = function(v){ return Math.round(v).toLocaleString() + '万円'; };
+  var avgSellerPrice = activeSellers.reduce(function(s,x){ return s + Number(x.price); }, 0) / activeSellers.length;
+  var avgBuyerBudget = buyers.filter(function(b){ return b.budget > 0; }).reduce(function(s,b){ return s + Number(b.budget); }, 0) / (buyers.filter(function(b){ return b.budget > 0; }).length || 1);
+  var gap = Math.round(avgSellerPrice - avgBuyerBudget);
+  var gapPct = Math.round(gap / avgBuyerBudget * 100);
+  var matchable = buyers.filter(function(b){ return activeSellers.some(function(s){ return Number(b.budget) >= Number(s.price) * 0.95; }); }).length;
+  var matchRate = Math.round(matchable / buyers.length * 100);
+  var marketLabel, marketColor, marketTip;
+  if (gapPct > 20) {
+    marketLabel = '売主優位市場'; marketColor = '#f59e0b';
+    marketTip = '売主の希望価格が買主の予算を大幅に上回っています。価格調整の余地を検討しましょう。';
+  } else if (gapPct < -10) {
+    marketLabel = '買主優位市場'; marketColor = '#60a5fa';
+    marketTip = '買主の予算が売主の希望価格を上回る傾向があります。強気な値段設定も可能です。';
+  } else {
+    marketLabel = 'バランス市場'; marketColor = '#4ade80';
+    marketTip = '売主価格と買主予算のバランスが取れています。成約に繋がりやすい状況です。';
+  }
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:10px">⚖️ 市場の需給バランス分析</div>'
+    + '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">'
+    + '<div style="flex:1;min-width:120px;text-align:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">売主平均希望価格</div>'
+    + '<div style="font-size:17px;font-weight:900;color:var(--gold)">' + FMT(avgSellerPrice) + '</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + activeSellers.length + '件</div>'
+    + '</div>'
+    + '<div style="flex:1;min-width:120px;text-align:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">買主平均予算</div>'
+    + '<div style="font-size:17px;font-weight:900;color:#60a5fa">' + FMT(avgBuyerBudget) + '</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + buyers.length + '名</div>'
+    + '</div>'
+    + '<div style="flex:1;min-width:120px;text-align:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">予算マッチング率</div>'
+    + '<div style="font-size:17px;font-weight:900;color:' + (matchRate>=50?'#4ade80':matchRate>=30?'#facc15':'#f87171') + '">' + matchRate + '%</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + matchable + '/' + buyers.length + '名</div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:' + marketColor + '15;border:1px solid ' + marketColor + '44;border-radius:8px">'
+    + '<div style="font-size:20px;font-weight:900;color:' + marketColor + ';flex-shrink:0">' + marketLabel + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">'
+    + (gap !== 0 ? '価格差 <strong style="color:' + marketColor + '">' + (gap > 0 ? '+' : '') + gap.toLocaleString() + '万円</strong>　' : '')
+    + marketTip + '</div>'
+    + '</div>'
+    + '<div style="font-size:10px;color:#555;margin-top:8px">※ 売主の希望価格と買主の最大予算に基づく参考値です。エリア・物件種別の違いにより実際の需給は異なります。</div>'
+    + '</div>';
+}
+
 function renderBuyerDemandCard() {
   const el = document.getElementById('buyer-demand-card');
   if (!el) return;
@@ -610,6 +664,7 @@ function renderSellers() {
   ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
 
   renderBuyerDemandCard();
+  renderSupplyDemandGap();
   renderNegoSimCard();
   renderSellerChecklist();
   if(!sellers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏠</div><p>売主がまだ登録されていません</p><p style="font-size:12px;margin-top:8px">「売主登録」ボタンから売却したい物件を登録してください</p></div>`; return; }
