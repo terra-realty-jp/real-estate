@@ -956,6 +956,32 @@ function previewCalc() {
   bar.style.display = 'block';
 }
 
+function setDynamicCTA(price, timing, liquidity, age, propType) {
+  const wan = Math.round(price/10000);
+  const timingMap = {asap:'3ヶ月以内',half:'半年以内',year:'1年以内',thinking:'検討中'};
+  let msg;
+  if(liquidity < 40) {
+    msg = `この物件は市場での流動性が低めです（スコア${liquidity}/100）。TERRA REALTYでは独自の買主ネットワークで早期成約をサポートします。`;
+  } else if(age >= 35 && propType !== 'tochi') {
+    msg = `築${age}年の物件は「買取」か「仲介」かの選択が成功のカギです。無料相談でお客様に最適な売却方法をご提案します。`;
+  } else if(wan >= 5000) {
+    msg = `${wan.toLocaleString()}万円クラスの物件は、プロの価格交渉と広報戦略が成否を分けます。TERRA REALTYにぜひご相談ください。`;
+  } else if(timing === 'asap') {
+    msg = '3ヶ月以内の売却をお急ぎの場合は、早めのご相談がおすすめです。TERRA REALTYでは最短での売却に向けたプランをご提案します。';
+  } else {
+    msg = 'この査定結果を持って、TERRA REALTYに無料でご相談いただけます。「相場確認のため」という気軽なご連絡から大歓迎です。';
+  }
+  const ctaEl = document.getElementById('cta-text');
+  if(ctaEl) ctaEl.innerHTML = msg;
+  const mailLink = document.querySelector('.cta-box a[href*="mailto"]');
+  if(mailLink) {
+    const timingStr = timingMap[timing]||timing||'未定';
+    const subj = encodeURIComponent(`AI査定結果の相談（${wan.toLocaleString()}万円・売却${timingStr}）`);
+    const body = encodeURIComponent(`AI査定ツールを使用しました。\n\n推定価格：約${wan.toLocaleString()}万円\n売却希望時期：${timingStr}\n\nご相談したい点：`);
+    mailLink.href = `mailto:terra.realty.iam@gmail.com?subject=${subj}&body=${body}`;
+  }
+}
+
 function applySateiTemplate(key) {
   const tpl = {
     osaka_ms: {pref:'osaka_city', propType:'mansion', area:'72', age:'15', floor:'6', station:'10', direction:'south', reform:'none'},
@@ -2106,6 +2132,9 @@ function calcAndShowResult() {
 
   // 内覧準備チェックリスト
   renderNairanChecklist(reform);
+
+  // 動的CTAメッセージ・メールリンク更新
+  setDynamicCTA(price, document.getElementById('leadTiming').value, liquidity, age, propType);
 
   // 譲渡所得税シミュレーター表示
   (function(){
