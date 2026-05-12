@@ -927,6 +927,67 @@ function renderCCRPaybackCard(inp, r) {
   </div>`;
 }
 
+function renderBreakEvenVacancyCard(inp, r) {
+  if (!inp || !inp.price || inp.price <= 0 || !r) return '';
+  const monthlyRent = inp.rent || 0;
+  if (!monthlyRent) return '';
+  const annualRent = monthlyRent * 12;
+  const loanDS = (r.loanMonthly || 0) * 12;
+  const annualFixed = (inp.tax || 0) + (inp.ins || 0) + (inp.mgmt || 0) * 12;
+  const totalAnnualCost = loanDS + annualFixed;
+  if (totalAnnualCost <= 0) return '';
+  // Break-even vacancy rate: at what vacancy does CF = 0?
+  // CF = annualRent*(1-v/100) - annualFixed - loanDS = 0
+  // v = (1 - (annualFixed+loanDS)/annualRent) * 100
+  const beVacancy = Math.round((1 - totalAnnualCost / annualRent) * 100 * 10) / 10;
+  const currentVacancy = inp.vacancy || 10;
+  const safetyMargin = Math.round((beVacancy - currentVacancy) * 10) / 10;
+  if (beVacancy <= 0) return '';
+  // National average vacancy rates by type
+  const natAvg = inp.type === 'rc' ? 10.5 : inp.type === 'steel' ? 11.0 : 16.0;
+  const beColor = beVacancy >= 30 ? '#4ade80' : beVacancy >= 20 ? '#facc15' : beVacancy >= 10 ? '#fb923c' : '#f87171';
+  const marginColor = safetyMargin >= 20 ? '#4ade80' : safetyMargin >= 10 ? '#facc15' : safetyMargin >= 5 ? '#fb923c' : '#f87171';
+  const riskLabel = beVacancy >= 30 ? '安全' : beVacancy >= 20 ? 'やや安全' : beVacancy >= 10 ? '要注意' : '危険';
+  const gauge = Math.min(100, Math.max(0, Math.round(beVacancy)));
+  const fmtW = v => v.toLocaleString() + '万円';
+  return `<div class="card" style="background:rgba(239,68,68,0.03);border-color:rgba(239,68,68,0.15)">
+    <div class="card-title">⚖️ CF損益分岐空室率チェック</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px">空室率が何%になるとCFがゼロになるかを計算します（現在の空室率: ${currentVacancy}%）</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      <div style="text-align:center;padding:12px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">CF=0の空室率</div>
+        <div style="font-size:22px;font-weight:900;color:${beColor}">${beVacancy}%</div>
+        <div style="font-size:10px;color:${beColor};font-weight:700;margin-top:2px">${riskLabel}</div>
+      </div>
+      <div style="text-align:center;padding:12px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">安全余裕（マージン）</div>
+        <div style="font-size:22px;font-weight:900;color:${marginColor}">${safetyMargin > 0 ? '+' : ''}${safetyMargin}%</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${safetyMargin > 0 ? '余裕あり' : '赤字圏'}</div>
+      </div>
+      <div style="text-align:center;padding:12px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">全国平均空室率目安</div>
+        <div style="font-size:22px;font-weight:900;color:var(--text-muted)">${natAvg}%</div>
+        <div style="font-size:10px;color:${beVacancy > natAvg ? '#4ade80' : '#f87171'};font-weight:700;margin-top:2px">${beVacancy > natAvg ? '平均以上に安全' : '平均より危険'}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <div style="font-size:11px;color:var(--text-muted)">CF安全ゲージ（損益分岐空室率）</div>
+        <div style="font-size:11px;font-weight:700;color:${beColor}">${beVacancy}%</div>
+      </div>
+      <div style="height:12px;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden;position:relative">
+        <div style="height:100%;width:${gauge}%;background:linear-gradient(to right,#f87171,#facc15,#4ade80);border-radius:6px;transition:width 0.5s"></div>
+        <div style="position:absolute;top:0;left:${Math.min(currentVacancy,98)}%;height:100%;width:3px;background:#3b82f6;border-radius:2px" title="現在の空室率 ${currentVacancy}%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:3px"><span>0% (満室)</span><span>50%</span><span>100% (全空室)</span></div>
+    </div>
+    <div style="padding:8px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.8">
+      年間固定コスト: <strong style="color:var(--text)">${fmtW(Math.round(annualFixed/10000))}</strong>  |  ローン返済: <strong style="color:var(--text)">${fmtW(Math.round(loanDS/10000))}</strong>  |  総コスト: <strong style="color:var(--gold)">${fmtW(Math.round(totalAnnualCost/10000))}</strong>
+    </div>
+    ${safetyMargin < 5 ? `<div style="margin-top:10px;padding:8px 12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:6px;font-size:12px;color:#f87171">⚠️ 損益分岐空室率が低く、少し空室が増えるだけでCFがマイナスになります。頭金を増やすか、ローン期間延長でDSを下げることを検討してください。</div>` : ''}
+  </div>`;
+}
+
 function renderBenchmarkCard(inp, r) {
   const BENCHMARKS = [
     {label:'区分マンション（首都圏）', gross:[5,7], net:[3,5], ccr:[4,8]},
@@ -1099,6 +1160,7 @@ function renderResult(inp, r) {
 
     ${(()=>{const alerts=buildAlerts(inp,r);if(!alerts.length)return '';const colorMap={danger:'rgba(239,68,68,0.1)',warn:'rgba(249,115,22,0.1)',ok:'rgba(34,197,94,0.1)'};const borderMap={danger:'rgba(239,68,68,0.3)',warn:'rgba(249,115,22,0.3)',ok:'rgba(34,197,94,0.3)'};const iconMap={danger:'⚠️',warn:'⚡',ok:'✅'};return `<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.05em;margin-bottom:8px">この分析結果のポイント</div>${alerts.map(a=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:${colorMap[a.type]};border:1px solid ${borderMap[a.type]};border-radius:8px;margin-bottom:6px;font-size:12px;line-height:1.6">${iconMap[a.type]} ${a.msg}</div>`).join('')}</div>`;})()}
 
+    ${renderBreakEvenVacancyCard(inp, r)}
     ${renderBenchmarkCard(inp, r)}
     ${renderCCRPaybackCard(inp, r)}
     ${renderDepreciationCard(inp)}
