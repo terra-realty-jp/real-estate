@@ -1108,6 +1108,64 @@ function renderBenchmarkCard(inp, r) {
   </div>`;
 }
 
+function renderNOIWaterfallCard(inp, r) {
+  if (!inp || !inp.price || !inp.rent) return '';
+  var grossRentAnnual = inp.rent * 12;
+  var vacancyLoss = Math.round(grossRentAnnual * inp.vacancy / 100);
+  var afterVacancy = grossRentAnnual - vacancyLoss;
+  var mgmtFee = Math.round(afterVacancy * inp.mgmt / 100);
+  var propTax = Math.round(inp.tax * 10000);
+  var ins = Math.round(inp.ins * 10000);
+  var maintReserve = Math.round(afterVacancy * inp.mrate / 100);
+  var noi = r.noi;
+  var ds = Math.round(r.loanMonthly * 12);
+  var cf = r.annualCF;
+  var grossMan = Math.round(grossRentAnnual / 10000);
+
+  var items = [
+    { label: '年間総家賃収入', val: grossRentAnnual, isBase: true, color: 'var(--gold)' },
+    { label: '空室損失（' + inp.vacancy + '%）', val: -vacancyLoss, color: 'var(--red)' },
+    { label: '管理費（' + inp.mgmt + '%）', val: -mgmtFee, color: 'var(--red)' },
+    { label: '固定資産税', val: -propTax, color: '#f97316' },
+    { label: '火災保険料', val: -ins, color: '#f97316' },
+    { label: '修繕積立（' + inp.mrate + '%）', val: -maintReserve, color: '#f97316' },
+    { label: 'NOI（純営業収益）', val: noi, isMid: true, color: '#60a5fa' },
+  ];
+  if (ds > 0) {
+    items.push({ label: '年間ローン返済', val: -ds, color: 'var(--red)' });
+  }
+  items.push({ label: 'CF after DS（年間）', val: cf, isEnd: true, color: cf >= 0 ? 'var(--green)' : 'var(--red)' });
+
+  var maxVal = grossRentAnnual;
+  var BAR_MAX_W = 100;
+  var rows = items.map(function(item) {
+    var pct = Math.min(Math.round(Math.abs(item.val) / maxVal * 100), 100);
+    var fmtVal = function(v){ return (v >= 0 ? '+' : '') + Math.round(v / 10000).toLocaleString() + '万'; };
+    if (item.isBase || item.isMid || item.isEnd) {
+      return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid rgba(255,255,255,0.08)">'
+        + '<span style="font-size:11px;font-weight:700;color:' + item.color + ';min-width:140px;flex-shrink:0">' + item.label + '</span>'
+        + '<div style="flex:1;height:12px;background:rgba(255,255,255,0.05);border-radius:6px;overflow:hidden">'
+        + '<div style="height:100%;width:' + pct + '%;background:' + item.color + ';border-radius:6px;opacity:0.85;transition:width 0.4s"></div>'
+        + '</div>'
+        + '<span style="font-size:12px;font-weight:900;color:' + item.color + ';min-width:72px;text-align:right">' + fmtVal(item.val) + '円</span>'
+        + '</div>';
+    }
+    return '<div style="display:flex;align-items:center;gap:10px;padding:4px 0">'
+      + '<span style="font-size:11px;color:var(--text-muted);min-width:140px;flex-shrink:0">' + item.label + '</span>'
+      + '<div style="flex:1;height:8px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden">'
+      + '<div style="height:100%;width:' + pct + '%;background:' + item.color + ';border-radius:4px;opacity:0.7;transition:width 0.4s"></div>'
+      + '</div>'
+      + '<span style="font-size:11px;font-weight:700;color:' + item.color + ';min-width:72px;text-align:right">' + fmtVal(item.val) + '円</span>'
+      + '</div>';
+  }).join('');
+  var noiyield = inp.price > 0 ? (noi / (inp.price * 10000) * 100).toFixed(1) : '—';
+  return '<div class="card" style="margin-top:16px">'
+    + '<div class="card-title">📉 収益フロー内訳（年間）</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.6">総家賃収入からNOI、CFまでのコスト控除フローを可視化します。<br>年間総家賃: <strong style="color:var(--gold)">' + grossMan + '万円</strong>　実質利回り: <strong style="color:var(--gold)">' + noiyield + '%</strong></div>'
+    + '<div style="display:flex;flex-direction:column;gap:0">' + rows + '</div>'
+    + '</div>';
+}
+
 function renderResult(inp, r) {
   const v = getVerdict(r);
   const g = getGrade(r);
@@ -1250,6 +1308,7 @@ function renderResult(inp, r) {
     ${renderRepairReserveCard(inp)}
     ${renderVsFinanceCard(inp, r)}
     ${renderReturnSourceCard(inp, r)}
+    ${renderNOIWaterfallCard(inp, r)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
