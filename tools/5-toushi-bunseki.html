@@ -475,6 +475,28 @@
     <button class="btn btn-outline btn-sm" onclick="exportHistory()">CSVエクスポート</button>
     <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="clearHistory()">履歴削除</button>
   </div>
+  <!-- 資産目標逆算シミュレーター -->
+  <div id="asset-goal-card" style="margin-bottom:16px">
+    <div class="card" style="background:rgba(139,92,246,0.04);border-color:rgba(139,92,246,0.2)">
+      <div class="card-title">🎯 資産目標 逆算シミュレーター</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">目標資産額・年数を入力すると、必要な物件規模・CF目標を逆算します。</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">目標資産額（万円）</label>
+          <input id="ag_target" type="number" value="10000" min="100" step="100" oninput="calcAssetGoal()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">目標年数（年）</label>
+          <input id="ag_years" type="number" value="20" min="1" max="40" step="1" oninput="calcAssetGoal()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定利回り（%）</label>
+          <input id="ag_yield" type="number" value="5" min="1" max="20" step="0.5" oninput="calcAssetGoal()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        </div>
+      </div>
+      <div id="asset-goal-result"></div>
+    </div>
+  </div>
   <!-- ポートフォリオ合計CF -->
   <div id="portfolio-summary" style="display:none;margin-bottom:16px"></div>
   <!-- ポートフォリオ分散チェック -->
@@ -2214,6 +2236,60 @@ function renderCompareTable() {
   <p style="font-size:11px;color:var(--text-muted);margin-top:10px;text-align:center">※ ゴールドの背景はその指標でより優位な物件を示します</p>`;
 }
 
+function calcAssetGoal() {
+  var el = document.getElementById('asset-goal-result');
+  if (!el) return;
+  var target = parseFloat(document.getElementById('ag_target')?.value) || 10000;
+  var years = parseFloat(document.getElementById('ag_years')?.value) || 20;
+  var yld = parseFloat(document.getElementById('ag_yield')?.value) || 5;
+  if (target <= 0 || years <= 0 || yld <= 0) { el.innerHTML=''; return; }
+  // 必要CF/年 = target / years（単純線形積立として最低CF）
+  var neededAnnualCF = Math.round(target / years);
+  // 必要な物件総額 = target / (yld/100) — 簡易（CF = price * yield）
+  var neededPortfolio = Math.round(target / (yld / 100));
+  var neededMonthCF = Math.round(neededAnnualCF * 10000 / 12);
+  // 自己資金20%を想定した実際の初期投資額
+  var downPay = Math.round(neededPortfolio * 0.2);
+  // ローン残: 返済でポートフォリオ値が増えていく想定 — CFだけから積算するシンプルモデル
+  // Scenario 1: 1棟物件で全て
+  var s1Price = neededPortfolio;
+  // Scenario 2: 小分け3棟
+  var s2Price = Math.round(neededPortfolio / 3);
+  // Scenario 3: 区分10室
+  var s3Price = Math.round(neededPortfolio / 10);
+  var fmtW = function(v) { return Math.round(v).toLocaleString() + '万円'; };
+  var milestones = [];
+  for (var y = 5; y <= Math.min(years, 30); y += 5) {
+    var cf5 = Math.round(neededAnnualCF * y);
+    var pct = Math.min(100, Math.round(cf5 / target * 100));
+    milestones.push({ y: y, cf5: cf5, pct: pct });
+  }
+  var barHtml = milestones.map(function(m) {
+    return '<div style="flex:1;min-width:60px;text-align:center">'
+      + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">' + m.y + '年後</div>'
+      + '<div style="height:60px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:3px">'
+      + '<div style="width:60%;background:' + (m.pct>=100?'var(--green)':'var(--gold)') + ';border-radius:4px 4px 0 0;height:' + m.pct + '%;min-height:4px;opacity:0.85"></div>'
+      + '</div>'
+      + '<div style="font-size:11px;font-weight:700;color:' + (m.pct>=100?'var(--green)':'var(--text)') + '">' + m.pct + '%</div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">' + fmtW(m.cf5) + '</div>'
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">'
+    + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">必要CF（年間）</div><div style="font-size:18px;font-weight:900;color:#a78bfa">' + fmtW(neededAnnualCF) + '</div><div style="font-size:10px;color:var(--text-muted)">月' + Math.round(neededMonthCF/10000) + '万円</div></div>'
+    + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">必要ポートフォリオ総額</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + fmtW(neededPortfolio) + '</div><div style="font-size:10px;color:var(--text-muted)">頭金 ' + fmtW(downPay) + '</div></div>'
+    + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">到達目安</div><div style="font-size:18px;font-weight:900;color:var(--green)">' + years + '年</div><div style="font-size:10px;color:var(--text-muted)">利回り' + yld + '%想定</div></div>'
+    + '</div>'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">選択肢別 物件規模</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">'
+    + '<div style="padding:10px 12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:8px;text-align:center"><div style="font-size:10px;color:#4ade80;margin-bottom:4px">大型1棟</div><div style="font-size:14px;font-weight:700;color:var(--text)">' + fmtW(s1Price) + '</div></div>'
+    + '<div style="padding:10px 12px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;text-align:center"><div style="font-size:10px;color:#60a5fa;margin-bottom:4px">中型3棟</div><div style="font-size:14px;font-weight:700;color:var(--text)">' + fmtW(s2Price) + '×3</div></div>'
+    + '<div style="padding:10px 12px;background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.2);border-radius:8px;text-align:center"><div style="font-size:10px;color:#a78bfa;margin-bottom:4px">区分10室</div><div style="font-size:14px;font-weight:700;color:var(--text)">' + fmtW(s3Price) + '×10</div></div>'
+    + '</div>'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">CF積み上げ進捗予測</div>'
+    + '<div style="display:flex;gap:6px;align-items:flex-end;margin-bottom:6px">' + barHtml + '</div>'
+    + '<div style="font-size:10px;color:#555;margin-top:8px">※ CF一定積み上げの単純計算。実際には売却益・再投資・空室リスクなどを考慮してください。</div>';
+}
+
 function renderPortfolioSummary() {
   var el = document.getElementById('portfolio-summary');
   if (!el) return;
@@ -2355,6 +2431,7 @@ function renderPropertyScoreRanking() {
 }
 
 function renderHistory() {
+  calcAssetGoal();
   renderPortfolioSummary();
   renderPortfolioDiversity();
   renderPropertyScoreRanking();
