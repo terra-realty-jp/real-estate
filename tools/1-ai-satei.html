@@ -520,6 +520,9 @@
       <!-- 住み替え費用計算カード -->
       <div id="sumikaeri-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- ローン残債完済チェックカード -->
+      <div id="loan-payoff-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -1624,6 +1627,65 @@ function renderSumikaeriCard(price) {
     + '<p style="font-size:10px;color:#777;line-height:1.7;margin-top:10px">※ ローン残高がある場合は完済費用も必要です。不動産取得税・登記費用は物件・ローンの内容によって異なります。まずは専門家にご相談ください。</p>';
 }
 
+function renderLoanPayoffCard(price) {
+  var el = document.getElementById('loan-payoff-panel');
+  if (!el || !price) return;
+  var wan = Math.round(price / 10000);
+  var commission = Math.round(wan * 0.036);
+  var stampDuty = wan >= 5000 ? 6 : wan >= 1000 ? 3 : 1;
+  var totalCost = commission + stampDuty + 20;
+  var netProceeds = wan - totalCost;
+  var storedBalance = parseInt(document.getElementById('lp_balance')?.value || '') || 0;
+  el.style.display = 'block';
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">🏦 ローン残債完済チェック</div>'
+    + '<div style="margin-bottom:14px">'
+    + '<label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在のローン残高（万円）</label>'
+    + '<div style="display:flex;gap:8px;align-items:center">'
+    + '<input type="number" id="lp_balance" placeholder="例: 1500" min="0" oninput="calcLoanPayoff(' + price + ')" style="width:100%;max-width:200px;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" value="' + (storedBalance || '') + '">'
+    + '<span style="font-size:12px;color:var(--text-muted)">万円</span>'
+    + '</div>'
+    + '</div>'
+    + '<div id="lp-result"></div>'
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;margin-top:12px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">売却手取り概算（税・費用差引後）</div>'
+    + '<div style="font-size:22px;font-weight:900;color:var(--gold)">' + netProceeds.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">仲介手数料 ' + commission + '万 ＋ 印紙・登記 ' + (stampDuty + 20) + '万 を差引</div>'
+    + '</div>'
+    + '<p style="font-size:10px;color:#777;line-height:1.7;margin-top:10px">※ ローン残高を入力すると、完済後の手残りを自動計算します。一括繰上返済手数料（数万円）は除いています。</p>';
+  if (storedBalance > 0) calcLoanPayoff(price);
+}
+
+function calcLoanPayoff(price) {
+  var el = document.getElementById('lp-result');
+  if (!el) return;
+  var balance = parseInt(document.getElementById('lp_balance')?.value) || 0;
+  if (!balance) { el.innerHTML = ''; return; }
+  var wan = Math.round(price / 10000);
+  var commission = Math.round(wan * 0.036);
+  var stampDuty = wan >= 5000 ? 6 : wan >= 1000 ? 3 : 1;
+  var totalCost = commission + stampDuty + 20;
+  var netProceeds = wan - totalCost;
+  var remaining = netProceeds - balance;
+  var canPay = remaining >= 0;
+  var color = canPay ? '#4ade80' : '#f87171';
+  var icon = canPay ? '✅' : '⚠️';
+  var msg = canPay
+    ? 'ローン完済後も <strong style="color:#4ade80">' + remaining.toLocaleString() + '万円</strong> 手元に残ります'
+    : 'ローン完済には <strong style="color:#f87171">' + Math.abs(remaining).toLocaleString() + '万円</strong> 不足します';
+  var tip = canPay
+    ? (remaining >= 500 ? '新居の頭金や老後資金として活用できます。' : '手残りが少ないため、引っ越し費用も含めた資金計画を立てましょう。')
+    : '売却価格の引き上げ交渉、または任意売却の専門家への相談をご検討ください。';
+  el.innerHTML = '<div style="padding:12px 14px;border-radius:8px;border:1px solid ' + color + '33;background:' + color + '0d;margin-top:12px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:6px">' + icon + ' ' + msg + '</div>'
+    + '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px">'
+    + '<div style="font-size:12px;color:var(--text-muted)">手取り <span style="color:var(--text)">' + netProceeds.toLocaleString() + '万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">ローン残債 <span style="color:var(--text)">' + balance.toLocaleString() + '万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">差引 <span style="color:' + color + ';font-weight:700">' + (remaining >= 0 ? '+' : '') + remaining.toLocaleString() + '万円</span></div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">' + tip + '</div>'
+    + '</div>';
+}
+
 function renderSellMethodCard(price) {
   var el = document.getElementById('sell-method-panel');
   if (!el || !price) return;
@@ -1950,6 +2012,9 @@ function calcAndShowResult() {
 
   // 住み替え費用計算
   renderSumikaeriCard(price);
+
+  // ローン残債完済チェック
+  renderLoanPayoffCard(price);
 
   // 譲渡所得税シミュレーター表示
   (function(){
