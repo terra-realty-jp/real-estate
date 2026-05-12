@@ -370,6 +370,7 @@
     </button>
   </div>
   <div id="rate-sensitivity-card" style="display:none;margin-top:16px"></div>
+  <div id="rent-growth-card" style="display:none;margin-top:16px"></div>
   <div id="refi-calc-card" style="display:none;margin-top:16px" class="card">
     <div class="card-title">🔄 ローン借り換え効果シミュレーター</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">現在の金利と借り換え後の金利を比べて、月々の節約額と総節約額を試算します。</p>
@@ -1801,6 +1802,7 @@ function renderCashflow(inp, r) {
   }
   // 金利上昇シミュレーション
   renderRateSensitivity(inp);
+  renderRentGrowthCard(inp);
 
   if(cfChart) cfChart.destroy();
   cfChart = new Chart(document.getElementById('cfChart').getContext('2d'), {
@@ -1837,6 +1839,61 @@ function renderCashflow(inp, r) {
       scales:{x:{ticks:{color:'#999'},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#999'},grid:{color:'rgba(255,255,255,0.06)'}}}
     }
   });
+}
+
+function renderRentGrowthCard(inp) {
+  var el = document.getElementById('rent-growth-card');
+  if (!el || !inp || !inp.rent) return;
+  el.style.display = 'block';
+  var hold = inp.hold || 10;
+  var baseAnnualRent = inp.rent * 12;
+  var ds = calcLoanPayment(inp.loan || 0, inp.rate || 0, inp.term || 35, inp.repay).monthly * 12;
+  var mgmtCost = Math.round(baseAnnualRent * ((inp.mgmt || 5) / 100));
+  var taxIns = ((inp.tax || 0) + (inp.ins || 0)) * 10000;
+  var vacCost = Math.round(baseAnnualRent * ((inp.vacancy || 5) / 100));
+  var otherCost = Math.round(baseAnnualRent * ((inp.mrate || 1) / 100));
+  var growthRates = [0, 1, 2, 3];
+  var scenarios = growthRates.map(function(g) {
+    var cumCF = 0;
+    for (var y = 1; y <= hold; y++) {
+      var factor = Math.pow(1 + g / 100, y - 1);
+      var annualRent = Math.round(baseAnnualRent * factor);
+      var noi = annualRent - Math.round(annualRent * (inp.mgmt || 5) / 100)
+        - taxIns - Math.round(annualRent * (inp.vacancy || 5) / 100)
+        - Math.round(annualRent * (inp.mrate || 1) / 100);
+      cumCF += Math.round((noi - ds) / 10000);
+    }
+    return { g: g, cumCF: cumCF };
+  });
+  var maxAbs = Math.max.apply(null, scenarios.map(function(s){ return Math.abs(s.cumCF); })) || 1;
+  var colors = ['var(--text-muted)', 'var(--gold)', '#22c55e', '#10b981'];
+  var rows = scenarios.map(function(s, i) {
+    var barW = Math.round(Math.abs(s.cumCF) / maxAbs * 90);
+    var col = colors[i];
+    var positive = s.cumCF >= 0;
+    return '<div style="display:grid;grid-template-columns:60px 1fr 80px;gap:8px;align-items:center;margin-bottom:8px">'
+      + '<div style="font-size:12px;color:' + col + ';font-weight:700">' + (s.g === 0 ? '成長なし' : '+' + s.g + '%/年') + '</div>'
+      + '<div><div style="height:10px;background:rgba(255,255,255,0.05);border-radius:5px;overflow:hidden">'
+      + '<div style="height:100%;width:' + barW + '%;background:' + col + ';border-radius:5px;transition:width 0.5s"></div>'
+      + '</div></div>'
+      + '<div style="font-size:12px;font-weight:900;color:' + (positive ? 'var(--green)' : 'var(--red)') + ';text-align:right">'
+      + (positive ? '+' : '') + s.cumCF.toLocaleString() + '万円</div>'
+      + '</div>';
+  }).join('');
+  var bestScenario = scenarios[scenarios.length - 1];
+  var baseScenario = scenarios[0];
+  var upside = bestScenario.cumCF - baseScenario.cumCF;
+  el.innerHTML = '<div class="card" style="margin-bottom:0">'
+    + '<div class="card-title">&#x1F4C8; 家賃上昇シナリオ別・累積CF比較</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">'
+    + '年間の家賃成長率が異なる場合、<strong>' + hold + '年間の累積CF</strong>がどう変わるかを比較。インフレや需給改善による家賃上昇の恩恵を可視化します。'
+    + '</p>'
+    + rows
+    + '<div style="margin-top:12px;padding:10px 12px;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '&#x2728; 家賃が毎年<strong style="color:var(--green)">3%上昇</strong>した場合、成長なしと比べて累積CFが<strong style="color:var(--green)">' + (upside > 0 ? '+' : '') + upside.toLocaleString() + '万円</strong>改善します。'
+    + (upside > 0 ? 'エリアの賃料相場・需給動向を定期的に確認しましょう。' : '')
+    + '</div>'
+    + '</div>';
 }
 
 function renderRateSensitivity(inp) {
