@@ -384,6 +384,43 @@
   <div id="repair-category-card" style="display:none;margin-bottom:20px"></div>
   <div id="repair-priority-matrix" style="display:none;margin-bottom:20px"></div>
   <div id="repair-monthly-chart" style="display:none;margin-bottom:20px"></div>
+
+  <!-- 修繕費用相場ガイド -->
+  <div class="card" style="margin-bottom:20px;border-color:rgba(255,255,255,0.07)" id="repair-cost-guide">
+    <div class="card-title" style="cursor:pointer;user-select:none" onclick="toggleRepairGuide()">
+      📋 修繕費用相場ガイド <span id="repair-guide-chevron" style="font-size:12px;color:var(--text-muted);transition:transform 0.2s;display:inline-block">▼</span>
+    </div>
+    <div id="repair-guide-body" style="display:none;margin-top:10px">
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.7">主要な修繕の費用相場（目安）です。業者・地域・状態により大きく変わります。相場を把握して見積もりに役立ててください。</p>
+      <div style="display:grid;gap:6px">
+        ${[
+          ['給湯器交換','10〜25万円','15〜20年が交換目安。機種グレードで変わる'],
+          ['エアコン交換','5〜15万円','工事費込み。隠蔽配管は+2〜5万円'],
+          ['トイレ交換','10〜25万円','ウォシュレット一体型は高め。内装工事別'],
+          ['ユニットバス交換','60〜120万円','サイズ・グレードにより差が大きい'],
+          ['キッチン交換','30〜100万円','システムキッチンで幅広。流し台のみなら10万程度'],
+          ['フローリング張替え（6畳）','8〜20万円','重ね張りなら安価、剥がし張りは高め'],
+          ['クロス貼替え（6畳）','3〜8万円','4方向+天井。汚れ・傷の度合いで変動'],
+          ['外壁塗装（一戸建て）','80〜150万円','足場代含む。シリコン系が一般的'],
+          ['屋根修繕・塗装','30〜80万円','状態により全葺き替え（150万〜）も'],
+          ['排水管高圧洗浄','2〜5万円','年1回の定期清掃が目安'],
+          ['鍵交換','1〜3万円','ディンプルキーやスマートロックは高め'],
+          ['水漏れ修理','1〜5万円','配管の状態次第で大幅に変動'],
+        ].map(([item,cost,note])=>`
+          <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:start;padding:8px 12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:7px">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text)">${item}</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.5">${note}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:12px;font-weight:700;color:var(--gold)">${cost}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--text-muted);line-height:1.7">※ 2024年時点の参考価格。地域・業者・物件状態により異なります。必ず複数社から見積もりを取ってください。</div>
+    </div>
+  </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <select id="repair-filter" onchange="renderRepairs()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
@@ -2764,6 +2801,15 @@ function saveRepairBudget() {
   const v = document.getElementById('repair-budget-input')?.value || '';
   if (v) localStorage.setItem('kanri_repair_budget', v);
   else localStorage.removeItem('kanri_repair_budget');
+}
+
+function toggleRepairGuide() {
+  const body = document.getElementById('repair-guide-body');
+  const chevron = document.getElementById('repair-guide-chevron');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
 }
 
 function renderRepairBudget() {
