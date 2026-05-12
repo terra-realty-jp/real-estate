@@ -332,6 +332,13 @@
     <div id="alt-use-content"></div>
   </div>
 
+  <!-- 相続登記・共有者同意チェックカード -->
+  <div class="card" id="inheritance-registry-card" style="display:none;border-color:rgba(249,115,22,0.3)">
+    <div class="card-title"><span class="icon">📋</span>相続登記・共有者同意チェックリスト</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">相続登記は2024年4月から義務化（3年以内の申請が必要）。共有名義の物件は全員の同意がなければ売却できません。</p>
+    <div id="inheritance-registry-content"></div>
+  </div>
+
   <!-- 相続空き家 3000万円特別控除チェックカード -->
   <div class="card" id="inheritance-special-card" style="display:none;">
     <div class="card-title"><span class="icon">💰</span>相続した空き家：3,000万円特別控除チェック</div>
@@ -851,6 +858,8 @@ function updateScore() {
   renderRenoVsRebuildCard();
   // 民泊・シェアハウス活用試算カード
   renderAltUseCard(capped);
+  // 相続登記・共有者同意チェックリスト
+  renderInheritanceRegistryCard([...checked]);
   // 相続空き家 3000万円特別控除チェック
   renderInheritanceSpecialCard(capped, [...checked]);
   // 補助金・支援制度カード
@@ -1179,6 +1188,39 @@ function renderMgmtCostCard(score) {
     + '<div style="display:grid;gap:6px">' + rowsHtml + '</div>'
     + '<div style="font-size:10px;color:var(--text-muted);line-height:1.6;padding:6px 0">※管理代行は対応範囲（見回り・鍵管理・業者手配）によって費用が変わります。遠距離の方ほど「管理代行＝安上がり」になるケースが多くなります。<br><a href="mailto:terra.realty.iam@gmail.com?subject=空き家の管理代行について聞きたい" style="color:var(--gold)">→ TERRA REALTYに管理代行について無料相談</a></div>'
     + '</div>';
+}
+
+function renderInheritanceRegistryCard(checkedArr) {
+  var card = document.getElementById('inheritance-registry-card');
+  var content = document.getElementById('inheritance-registry-content');
+  if(!card || !content) return;
+  var checked = new Set(checkedArr||[]);
+  var hasC6 = checked.has('c6');
+  if(!hasC6) { card.style.display='none'; return; }
+  card.style.display='block';
+  var items = [
+    {icon:'⏰', label:'相続登記の義務化期限（2024年4月施行）', desc:'相続を知った日から3年以内に登記申請が必要。未了の場合は10万円以下の過料の対象になります。', urgent:true},
+    {icon:'👥', label:'共有者（相続人）全員の意思確認', desc:'物件を売る・貸す・解体するには共有者全員の同意が必要。同意が得られない場合は「共有物分割請求」が必要になることも。', urgent:false},
+    {icon:'📄', label:'遺産分割協議書の作成', desc:'相続人が複数いる場合、誰がどの財産を取得するか書面で合意する必要があります（公証人役場での認証推奨）。', urgent:false},
+    {icon:'🔍', label:'固定資産評価証明書・登記事項証明書の取得', desc:'手続きに必要な書類を法務局・市区町村で取得。相続登記に必要な書類一式の収集が第一歩です。', urgent:false},
+    {icon:'💴', label:'司法書士への依頼費用の目安', desc:'相続登記代行：5〜15万円。遺産分割協議書作成：3〜8万円。弁護士相談（相続人間のもめ事）：1時間1〜3万円。', urgent:false},
+    {icon:'🏛', label:'法定相続情報証明制度の活用', desc:'法務局に一度申請すると「法定相続情報一覧図」が発行され、各機関への相続手続きが簡略化されます。', urgent:false},
+  ];
+  var html = '<div style="display:flex;flex-direction:column;gap:0">';
+  html += items.map(function(it) {
+    return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+      + '<span style="font-size:16px;flex-shrink:0;margin-top:1px">' + it.icon + '</span>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-size:12px;font-weight:700;color:' + (it.urgent?'#fb923c':'var(--text)') + '">' + it.label + (it.urgent?' <span style="font-size:10px;background:rgba(249,115,22,0.15);color:#fb923c;padding:1px 6px;border-radius:4px;margin-left:4px">要注意</span>':'') + '</div>'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.6">' + it.desc + '</div>'
+      + '</div></div>';
+  }).join('');
+  html += '</div>';
+  html += '<div style="margin-top:14px;padding:10px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">'
+    + '💡 相続登記・共有物の売却手続きは司法書士・弁護士に依頼するとスムーズです。TERRA REALTYでは信頼できる専門家のご紹介も行っています。'
+    + ' <a href="mailto:terra.realty.iam@gmail.com?subject=相続登記・共有物件の相談" style="color:var(--gold)">無料相談はこちら →</a>'
+    + '</div>';
+  content.innerHTML = html;
 }
 
 function renderInheritanceSpecialCard(score, checkedArr) {
