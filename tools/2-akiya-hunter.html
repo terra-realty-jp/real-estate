@@ -384,6 +384,7 @@
 
   <div id="nairan-prep-card" style="display:none;margin-bottom:16px"></div>
   <div id="inspection-benefit-card" style="display:none;margin-bottom:16px"></div>
+  <div id="akiya-bank-compare-card" style="display:none;margin-bottom:16px"></div>
 
   <div class="card" id="scoreActionCard" style="display:none;">
     <div class="card-title"><span class="icon">🎯</span>推奨アクション</div>
@@ -900,6 +901,8 @@ function updateScore() {
   renderNairanPrepCard(capped);
   // 住宅インスペクション・メリット診断
   renderInspectionBenefitCard(capped);
+  // 空き家バンクvs市場売却比較
+  renderAkiyaBankCompareCard(capped);
   // 管理代行費用シミュレーターカード
   renderMgmtCostCard(capped);
   const demolishCard = document.getElementById('demolish-calc-card');
@@ -1898,6 +1901,113 @@ function renderInspectionBenefitCard(score) {
     + checkHtml
     + '<div style="font-size:10px;color:#555;margin-top:8px;line-height:1.6">※費用・効果はあくまで目安。インスペクション会社・物件状態によって異なります。<a href="mailto:terra.realty.iam@gmail.com?subject=インスペクションについて相談したい" style="color:var(--gold);margin-left:4px">無料相談→</a></div>'
     + '</div>';
+}
+
+function renderAkiyaBankCompareCard(score) {
+  var el = document.getElementById('akiya-bank-compare-card');
+  if (!el) return;
+  if (score < 20) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+
+  var mktPriceRef = 1000; // 万円（参考ベース）
+  var methods = [
+    {
+      icon: '🏦',
+      name: '空き家バンク経由',
+      label: '移住・活用希望の買主とマッチング',
+      priceRate: 60,  // 市場価格の60〜80%
+      priceRateHi: 80,
+      period: '6ヶ月〜2年',
+      subsidy: '補助金対象になりやすい',
+      pros: [
+        '移住・農業・DIY目的の買主に届く',
+        '市区町村の空き家補助金と併用可',
+        '古屋・未修繕のまま登録できる',
+        '登録・成約手数料が無料〜低額'
+      ],
+      cons: [
+        '成約まで時間がかかることが多い',
+        '売却価格は市場の6〜8割が目安',
+        '都市部・人気エリアでは需要が少ない'
+      ],
+      color: '#3b82f6',
+      bgColor: 'rgba(59,130,246,0.08)',
+      border: 'rgba(59,130,246,0.3)',
+      badge: '補助金活用'
+    },
+    {
+      icon: '🏪',
+      name: '一般市場（仲介）売却',
+      label: '不動産会社経由で広く買主を探す',
+      priceRate: 85,
+      priceRateHi: 100,
+      period: '3〜6ヶ月',
+      subsidy: '補助金対象外が多い',
+      pros: [
+        '最高値を狙えるチャンスがある',
+        '買主層が広くスピード感が出せる',
+        '都市部・利便性の高い物件に強い'
+      ],
+      cons: [
+        '旧耐震・古屋は価格交渉で大幅値引きも',
+        '内見・修繕対応が必要な場合がある',
+        '仲介手数料（3%+6万円）が発生'
+      ],
+      color: 'var(--gold)',
+      bgColor: 'rgba(201,168,76,0.06)',
+      border: 'rgba(201,168,76,0.3)',
+      badge: '価格重視'
+    }
+  ];
+
+  var isRural = score >= 50; // 高スコア = 更に放置リスクが高い = 空き家バンク向きが多い
+  var recommend = isRural ? 0 : 1;
+
+  var cards = methods.map(function(m, idx) {
+    var pLo = Math.round(mktPriceRef * m.priceRate / 100);
+    var pHi = Math.round(mktPriceRef * m.priceRateHi / 100);
+    var isRec = idx === recommend;
+    var pros = m.pros.map(function(p){ return '<li style="color:var(--green);font-size:11px;line-height:1.6">✓ ' + p + '</li>'; }).join('');
+    var cons = m.cons.map(function(c){ return '<li style="color:var(--red);font-size:11px;line-height:1.6">✗ ' + c + '</li>'; }).join('');
+    return '<div style="border:1px solid ' + m.border + ';border-radius:12px;padding:14px 16px;background:' + m.bgColor + (isRec ? ';outline:2px solid ' + m.border + ';outline-offset:-1px' : '') + '">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      + '<div style="display:flex;align-items:center;gap:8px">'
+      + '<span style="font-size:18px">' + m.icon + '</span>'
+      + '<div>'
+      + '<div style="font-size:13px;font-weight:700;color:' + m.color + '">' + m.name + (isRec ? ' <span style="font-size:10px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 6px;border-radius:100px;border:1px solid rgba(201,168,76,0.4)">推奨</span>' : '') + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);margin-top:1px">' + m.label + '</div>'
+      + '</div></div>'
+      + '<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(255,255,255,0.06);color:' + m.color + ';border:1px solid ' + m.border + '">' + m.badge + '</span>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">'
+      + '<div style="background:rgba(0,0,0,0.2);border-radius:7px;padding:7px 8px;text-align:center">'
+      + '<div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">売却価格目安</div>'
+      + '<div style="font-size:11px;font-weight:700;color:' + m.color + '">' + m.priceRate + '〜' + m.priceRateHi + '%</div>'
+      + '</div>'
+      + '<div style="background:rgba(0,0,0,0.2);border-radius:7px;padding:7px 8px;text-align:center">'
+      + '<div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">成約期間目安</div>'
+      + '<div style="font-size:11px;font-weight:700;color:var(--text)">' + m.period + '</div>'
+      + '</div>'
+      + '<div style="background:rgba(0,0,0,0.2);border-radius:7px;padding:7px 8px;text-align:center">'
+      + '<div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">補助金</div>'
+      + '<div style="font-size:10px;font-weight:700;color:var(--text)">' + m.subsidy + '</div>'
+      + '</div>'
+      + '</div>'
+      + '<ul style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:0 8px">' + pros + cons + '</ul>'
+      + '</div>';
+  }).join('');
+
+  var tip = isRural
+    ? '診断スコアが高め（放置リスク大）の物件は、空き家バンク経由で移住希望者や活用目的の買主に届けることで、未修繕のままでも売却できるケースがあります。'
+    : '診断スコアが低い場合、一般市場でも十分な需要が見込めます。仲介を通じた積極的な販売活動が価格最大化につながります。';
+
+  el.innerHTML = '<div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:18px 20px">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px">🏘️ 空き家バンクvs一般市場売却 比較</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">' + tip + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">' + cards + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:7px;line-height:1.7">'
+    + '⚠️ 価格・期間はあくまで目安です。空き家バンクへの登録は市区町村の窓口または<a href="mailto:terra.realty.iam@gmail.com?subject=空き家バンク登録について相談したい" style="color:var(--gold)">無料相談</a>をご利用ください。'
+    + '</div></div>';
 }
 
 function renderTimeline(score, ids) {
