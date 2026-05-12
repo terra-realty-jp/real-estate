@@ -455,6 +455,7 @@
   <div id="portfolio-summary" style="display:none;margin-bottom:16px"></div>
   <!-- ポートフォリオ分散チェック -->
   <div id="portfolio-diversity-card" style="display:none;margin-bottom:16px"></div>
+  <div id="property-score-ranking" style="display:none;margin-bottom:16px"></div>
 
   <!-- 物件比較パネル -->
   <div id="compare-panel" style="display:none;margin-bottom:24px">
@@ -1991,9 +1992,65 @@ function renderPortfolioDiversity() {
   </div>`;
 }
 
+function renderPropertyScoreRanking() {
+  const el = document.getElementById('property-score-ranking');
+  if (!el || history.length < 2) { if(el) el.style.display='none'; return; }
+  el.style.display = 'block';
+
+  function score(h) {
+    let s = 0;
+    // Net yield (max 40pts): 7%+=40, 5%=30, 3%=15
+    s += h.netYield >= 7 ? 40 : h.netYield >= 5 ? 30 : h.netYield >= 3 ? 15 : 5;
+    // Annual CF (max 30pts): 100万+/yr=30, 50万=20, >0=10
+    const cfMan = Math.round(h.annualCF / 10000);
+    s += cfMan >= 100 ? 30 : cfMan >= 50 ? 20 : cfMan > 0 ? 10 : 0;
+    // CCR (max 20pts): 12%+=20, 8%=14, 5%=8
+    s += h.ccr >= 12 ? 20 : h.ccr >= 8 ? 14 : h.ccr >= 5 ? 8 : 2;
+    // IRR (max 10pts)
+    const irr = (h.irr || 0) * 100;
+    s += irr >= 10 ? 10 : irr >= 7 ? 7 : irr >= 5 ? 4 : 0;
+    return s;
+  }
+
+  const ranked = [...history].sort((a, b) => score(b) - score(a));
+  const maxScore = score(ranked[0]);
+  const medalColors = ['var(--gold)', '#9ca3af', '#cd7f32'];
+  const medals = ['🥇', '🥈', '🥉'];
+
+  const rows = ranked.map((h, i) => {
+    const s = score(h);
+    const pct = maxScore > 0 ? Math.round(s / maxScore * 100) : 0;
+    const medal = i < 3 ? medals[i] : '';
+    const grade = s >= 80 ? 'S' : s >= 60 ? 'A' : s >= 40 ? 'B' : s >= 20 ? 'C' : 'D';
+    const gradeColor = s >= 80 ? 'var(--gold)' : s >= 60 ? 'var(--green)' : s >= 40 ? '#60a5fa' : s >= 20 ? 'var(--orange)' : 'var(--red)';
+    const cfMan = Math.round(h.annualCF / 10000);
+    return `<div style="display:grid;grid-template-columns:24px 1fr auto auto auto;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:${i===0?'rgba(201,168,76,0.06)':'rgba(255,255,255,0.02)'};border:1px solid ${i===0?'rgba(201,168,76,0.2)':'rgba(255,255,255,0.05)'};margin-bottom:5px">
+      <div style="font-size:14px;text-align:center">${medal || '<span style="font-size:12px;color:var(--text-muted)">'+(i+1)+'</span>'}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${esc(h.name||'無名物件')}</div>
+        <div style="display:flex;gap:4px;margin-top:4px">
+          <div style="flex:1;height:4px;background:rgba(255,255,255,0.07);border-radius:2px"><div style="width:${pct}%;height:100%;background:${gradeColor};border-radius:2px;transition:width 0.4s"></div></div>
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">実質利回り ${h.netYield.toFixed(1)}% ／ 年間CF ${cfMan>=0?'+':''}${cfMan}万</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);text-align:right">${s}pt</div>
+      <div style="font-size:16px;font-weight:900;color:${gradeColor};width:24px;text-align:center">${grade}</div>
+      <button class="btn btn-outline btn-sm" onclick="loadHistory(${h.id});switchTab('result')" style="white-space:nowrap;font-size:11px">表示</button>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `<div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px 20px">
+    <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px">🏆 物件投資スコアランキング</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px">実質利回り・CF・CCR・IRRを総合評価（S/A/B/C/D）。分析済み物件${history.length}件を比較。</div>
+    ${rows}
+    <div style="margin-top:10px;font-size:10px;color:var(--text-muted);line-height:1.6">※ スコアは入力値をもとにした参考指標です。市場動向・リスクは別途考慮してください。</div>
+  </div>`;
+}
+
 function renderHistory() {
   renderPortfolioSummary();
   renderPortfolioDiversity();
+  renderPropertyScoreRanking();
   const el = document.getElementById('history-list');
   if(!history.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🗂️</div><p>分析履歴がありません</p><p style="font-size:12px;margin-top:8px">「物件入力」タブで分析を実行すると、ここに履歴が保存されます</p><button class="btn btn-gold" style="margin-top:16px" onclick="switchTab('input')">物件入力タブへ →</button></div>`;
