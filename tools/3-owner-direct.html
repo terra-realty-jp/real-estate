@@ -192,6 +192,7 @@
   </div>
   <div id="buyer-demand-card" style="display:none;margin-bottom:16px"></div>
   <div id="supply-demand-gap-card" style="display:none;margin-bottom:16px"></div>
+  <div id="cgt-calc-card" style="margin-bottom:16px"></div>
   <div id="nego-sim-card" style="display:none;margin-bottom:16px"></div>
   <div id="sale-docs-card" style="display:none;margin-bottom:16px"></div>
   <div id="sellers-list"></div>
@@ -675,6 +676,86 @@ var SELL_CHECKLIST_ITEMS = [
   { id: 'sc14', cat: '💰 価格の準備', label: '引き渡し可能な時期・条件を決める', detail: '引っ越し先・資金計画と合わせて整理' },
 ];
 
+function renderCGTCalcCard() {
+  var el = document.getElementById('cgt-calc-card');
+  if (!el) return;
+  var curYear = new Date().getFullYear();
+  el.innerHTML = '<div class="card" style="margin-bottom:0">'
+    + '<div class="card-title">&#x1F4B9; 譲渡所得税かんたん試算</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">購入・売却価格を入力すると、概算の税額と手取り額を自動計算します。保有5年超かどうかで税率が大きく変わります。</p>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    + '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">購入価格（万円）</label>'
+    + '<input type="number" id="cgt_buy" placeholder="例: 2500" min="0" oninput="calcCGT()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box"></div>'
+    + '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">購入年（西暦）</label>'
+    + '<input type="number" id="cgt_year" placeholder="例: 2018" min="1950" max="' + curYear + '" oninput="calcCGT()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box"></div>'
+    + '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リフォーム費用（万円）</label>'
+    + '<input type="number" id="cgt_reform" placeholder="例: 200" min="0" value="0" oninput="calcCGT()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box"></div>'
+    + '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却予定価格（万円）</label>'
+    + '<input type="number" id="cgt_sell" placeholder="例: 3000" min="0" oninput="calcCGT()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box"></div>'
+    + '</div>'
+    + '<label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer;font-size:12px;color:var(--text-muted)">'
+    + '<input type="checkbox" id="cgt_toku" onchange="calcCGT()" style="width:16px;height:16px;cursor:pointer">'
+    + '<span>3,000万円特別控除を適用する（マイホーム売却の場合）</span></label>'
+    + '<div id="cgt-result"></div>'
+    + '</div>';
+  calcCGT();
+}
+
+window.calcCGT = function() {
+  var el = document.getElementById('cgt-result');
+  if (!el) return;
+  var buyPrice = parseFloat((document.getElementById('cgt_buy') || {}).value) || 0;
+  var buyYear = parseInt((document.getElementById('cgt_year') || {}).value) || 0;
+  var reformCost = parseFloat((document.getElementById('cgt_reform') || {}).value) || 0;
+  var sellPrice = parseFloat((document.getElementById('cgt_sell') || {}).value) || 0;
+  var toku = (document.getElementById('cgt_toku') || {}).checked;
+  var curYear = new Date().getFullYear();
+  if (!buyPrice || !buyYear || !sellPrice) { el.innerHTML = '<p style="font-size:12px;color:var(--text-muted)">購入価格・購入年・売却予定価格を入力してください。</p>'; return; }
+  var holdYears = curYear - buyYear;
+  var isLongTerm = holdYears > 5;
+  var taxRate = isLongTerm ? 0.20315 : 0.3963;
+  var acquisition = buyPrice + reformCost;
+  var saleExpense = Math.round(sellPrice * 0.04);
+  var gain = sellPrice - acquisition - saleExpense;
+  if (toku) gain = gain - 3000;
+  var taxable = Math.max(0, gain);
+  var taxAmt = Math.round(taxable * taxRate);
+  var netProceeds = sellPrice - saleExpense - taxAmt;
+  var gainColor = gain > 0 ? 'var(--red)' : 'var(--green)';
+  var taxColor = taxAmt > 0 ? 'var(--red)' : 'var(--text-muted)';
+  var holdColor = isLongTerm ? 'var(--green)' : 'var(--orange)';
+  var waitYears = 5 - holdYears;
+  var waitNote = isLongTerm
+    ? '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--green);line-height:1.7">&#x2705; 保有5年超（長期譲渡）のため税率 <strong>20.315%</strong> が適用されます。短期より大幅に節税できています。</div>'
+    : '<div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--orange);line-height:1.7">&#x26A0;&#xFE0F; 保有' + holdYears + '年（短期譲渡）のため税率 <strong>39.63%</strong> が適用されます。あと<strong>' + waitYears + '年</strong>待つと税率が <strong>20.315%</strong> に下がり、約 <strong>' + Math.round(taxable*(0.3963-0.20315)).toLocaleString() + '万円</strong> の節税になります。</div>';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px">'
+    + '<div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">保有年数</div>'
+    + '<div style="font-size:20px;font-weight:900;color:' + holdColor + '">' + holdYears + '年</div>'
+    + '<div style="font-size:10px;color:' + holdColor + ';margin-top:2px">' + (isLongTerm ? '長期譲渡（20.3%）' : '短期譲渡（39.6%）') + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">譲渡所得</div>'
+    + '<div style="font-size:20px;font-weight:900;color:' + gainColor + '">' + (gain >= 0 ? '+' : '') + Math.round(gain).toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">売却益' + (toku ? '（3000万控除後）' : '') + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">概算税額</div>'
+    + '<div style="font-size:20px;font-weight:900;color:' + taxColor + '">' + taxAmt.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">所得税+住民税</div>'
+    + '</div>'
+    + '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.15);border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">税引き手取り</div>'
+    + '<div style="font-size:20px;font-weight:900;color:var(--green)">' + Math.round(netProceeds).toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">売却価格から諸費用・税引後</div>'
+    + '</div></div>'
+    + '<div style="margin-bottom:10px;font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 12px;line-height:1.8">'
+    + '取得費: ' + acquisition.toLocaleString() + '万円（購入' + buyPrice.toLocaleString() + '万＋リフォーム' + reformCost.toLocaleString() + '万）　|　'
+    + '譲渡費用: 約' + saleExpense.toLocaleString() + '万円（売却価格の4%）'
+    + '</div>'
+    + waitNote;
+};
+
 function renderSaleDocsCard() {
   var el = document.getElementById('sale-docs-card');
   if (!el) return;
@@ -816,6 +897,7 @@ function renderSellers() {
 
   renderBuyerDemandCard();
   renderSupplyDemandGap();
+  renderCGTCalcCard();
   renderNegoSimCard();
   renderSaleDocsCard();
   renderSellerChecklist();
