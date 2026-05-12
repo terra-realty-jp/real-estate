@@ -193,6 +193,7 @@
   <div id="buyer-demand-card" style="display:none;margin-bottom:16px"></div>
   <div id="supply-demand-gap-card" style="display:none;margin-bottom:16px"></div>
   <div id="cgt-calc-card" style="margin-bottom:16px"></div>
+  <div id="sale-timeline-card" style="margin-bottom:16px"></div>
   <div id="nego-sim-card" style="display:none;margin-bottom:16px"></div>
   <div id="sale-docs-card" style="display:none;margin-bottom:16px"></div>
   <div id="sellers-list"></div>
@@ -677,6 +678,51 @@ var SELL_CHECKLIST_ITEMS = [
   { id: 'sc14', cat: '💰 価格の準備', label: '引き渡し可能な時期・条件を決める', detail: '引っ越し先・資金計画と合わせて整理' },
 ];
 
+function renderSaleTimelineCard() {
+  var el = document.getElementById('sale-timeline-card');
+  if (!el) return;
+  var now = new Date();
+  var MONTHS_JP = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  var addMonths = function(d, m) { var r = new Date(d); r.setMonth(r.getMonth() + m); return r; };
+  var fmt = function(d) { return d.getFullYear() + '年' + MONTHS_JP[d.getMonth()]; };
+  var peakMonths = [1, 2]; // 2月・3月が繁忙期（0-indexed）
+  var stages = [
+    { label: '準備・査定依頼', duration: 0.5, color: '#6366f1', icon: '&#x1F50D;' },
+    { label: '媒介契約・広告開始', duration: 0.5, color: '#8b5cf6', icon: '&#x1F4CB;' },
+    { label: '内覧・交渉期間', duration: 2, color: '#f97316', icon: '&#x1F3E0;' },
+    { label: '売買契約', duration: 0.5, color: '#facc15', icon: '&#x1F91D;' },
+    { label: '決済・引き渡し', duration: 1, color: '#22c55e', icon: '&#x1F511;' },
+  ];
+  var cumMonths = 0;
+  var rows = stages.map(function(s) {
+    var startDate = addMonths(now, cumMonths);
+    var endDate = addMonths(now, cumMonths + s.duration);
+    cumMonths += s.duration;
+    var isPeak = peakMonths.indexOf(startDate.getMonth()) >= 0 || peakMonths.indexOf(endDate.getMonth()) >= 0;
+    return '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">'
+      + '<div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:' + s.color + '22;border:2px solid ' + s.color + ';display:flex;align-items:center;justify-content:center;font-size:13px">' + s.icon + '</div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text)">' + s.label
+      + (isPeak ? '<span style="font-size:9px;background:rgba(249,115,22,0.15);color:var(--orange);padding:1px 6px;border-radius:4px;margin-left:6px;font-weight:700">繁忙期</span>' : '')
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);margin-top:1px">' + fmt(startDate) + ' 〜 ' + fmt(endDate) + '（目安: ' + (s.duration < 1 ? '約2週間' : s.duration + 'ヶ月') + '）</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  var completionDate = addMonths(now, cumMonths);
+  var totalMonths = cumMonths;
+  var peakNote = (now.getMonth() >= 9 || now.getMonth() <= 2)
+    ? '<div style="margin-top:10px;padding:8px 12px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:8px;font-size:11px;color:var(--orange);line-height:1.7">&#x1F525; 2〜3月は不動産の繁忙期（引越しシーズン）です。今から動き始めると最適な需要期に内覧を設定できます。</div>'
+    : '<div style="margin-top:10px;padding:8px 12px;background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);border-radius:8px;font-size:11px;color:#93c5fd;line-height:1.7">&#x1F4A1; 年内に媒介契約を結ぶと、2〜3月の繁忙期に向けた広告・内覧活動が活発になります。</div>';
+  el.innerHTML = '<div class="card" style="margin-bottom:0">'
+    + '<div class="card-title">&#x1F5D3; 売却プロセス タイムライン</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">今日から始めた場合の売却プロセス目安スケジュールです。完了予定: <strong style="color:var(--gold)">' + fmt(completionDate) + '（約' + totalMonths + 'ヶ月後）</strong></p>'
+    + rows
+    + '<div style="margin-top:12px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:11px;color:var(--text-muted)">&#x26A0;&#xFE0F; 上記は業界平均目安です。物件の状態・エリア・価格帯によって大きく変わります。</div>'
+    + peakNote
+    + '</div>';
+}
+
 function renderCGTCalcCard() {
   var el = document.getElementById('cgt-calc-card');
   if (!el) return;
@@ -899,6 +945,7 @@ function renderSellers() {
   renderBuyerDemandCard();
   renderSupplyDemandGap();
   renderCGTCalcCard();
+  renderSaleTimelineCard();
   renderNegoSimCard();
   renderSaleDocsCard();
   renderSellerChecklist();
