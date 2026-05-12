@@ -329,6 +329,9 @@
     <div id="compareOptionsContent"></div>
   </div>
 
+  <!-- 省エネリフォームROIカード -->
+  <div id="eco-reform-card" style="display:none;margin-bottom:16px"></div>
+
   <!-- 民泊・シェアハウス活用試算カード -->
   <div class="card" id="alt-use-card" style="display:none;">
     <div class="card-title"><span class="icon">🏠</span>民泊・シェアハウス収益試算（参考）</div>
@@ -876,6 +879,8 @@ function updateScore() {
   renderSeismicCard();
   // 建て替えvsリノベ収益比較カード
   renderRenoVsRebuildCard();
+  // 省エネリフォームROIカード
+  renderEcoReformCard(capped);
   // 民泊・シェアハウス活用試算カード
   renderAltUseCard(capped);
   // 相続登記・共有者同意チェックリスト
@@ -1414,6 +1419,57 @@ function calcSaleGain() {
     + '<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:7px;font-size:11px;color:#888;line-height:1.7">'
     + '※ 取得費が不明な場合、売却価格の5%（概算取得費）を適用することができます。<br>'
     + '※ 実際の税額は取得費の証明・特別控除の適用可否・諸控除により異なります。税理士・税務署にご確認ください。'
+    + '</div>';
+}
+
+function renderEcoReformCard(score) {
+  var el = document.getElementById('eco-reform-card');
+  if (!el) return;
+  if (score < 20) { el.style.display = 'none'; return; }
+  var sqm = parseInt(document.getElementById('akiya_sqm')?.value) || 80;
+  var age = parseInt(document.getElementById('akiya_age')?.value) || 30;
+  var struct = document.getElementById('akiya_struct')?.value || 'wood';
+  var ITEMS = [
+    { name: 'LED照明 全室交換', cost: 5, annualSaving: 1.5, subsidy: 0, ageReq: 0, icon: '💡' },
+    { name: '断熱窓・内窓追加', cost: 25, annualSaving: 3, subsidy: 8, ageReq: 15, icon: '🪟' },
+    { name: '床・壁断熱改修', cost: 50, annualSaving: 5, subsidy: 15, ageReq: 20, icon: '🏠' },
+    { name: '高効率給湯器（エコキュート）', cost: 30, annualSaving: 4, subsidy: 5, ageReq: 0, icon: '🚿' },
+    { name: '太陽光パネル設置（3kW）', cost: 90, annualSaving: 12, subsidy: 20, ageReq: 0, icon: '☀️' },
+    { name: '節水型トイレ・水栓', cost: 8, annualSaving: 1, subsidy: 0, ageReq: 0, icon: '🚽' },
+  ];
+  var applicable = ITEMS.filter(function(it){ return age >= it.ageReq; });
+  var totalCost = applicable.reduce(function(s,it){ return s+it.cost; }, 0);
+  var totalSubsidy = applicable.reduce(function(s,it){ return s+it.subsidy; }, 0);
+  var totalSaving = applicable.reduce(function(s,it){ return s+it.annualSaving; }, 0);
+  var netCost = totalCost - totalSubsidy;
+  var payback = totalSaving > 0 ? Math.round(netCost / totalSaving * 10) / 10 : null;
+  el.style.display = 'block';
+  var rows = applicable.map(function(it) {
+    var net = it.cost - it.subsidy;
+    var roi = it.annualSaving > 0 ? Math.round(net / it.annualSaving * 10) / 10 : null;
+    var barW = Math.round(it.annualSaving / applicable.reduce(function(s,x){return Math.max(s,x.annualSaving);},1) * 100);
+    return '<div style="padding:8px 12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
+      + '<div style="font-size:12px;font-weight:600;color:var(--text)">' + it.icon + ' ' + it.name + '</div>'
+      + '<div style="text-align:right;flex-shrink:0"><div style="font-size:11px;color:#fb923c">約' + it.cost + '万円</div>'
+      + (it.subsidy > 0 ? '<div style="font-size:10px;color:#4ade80">補助-' + it.subsidy + '万円</div>' : '') + '</div>'
+      + '</div>'
+      + '<div style="height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-bottom:4px"><div style="height:100%;width:' + barW + '%;background:var(--green);border-radius:3px"></div></div>'
+      + '<div style="display:flex;gap:12px;font-size:10px;color:var(--text-muted)">'
+      + '<span>年間節約 <strong style="color:#4ade80">' + it.annualSaving + '万円</strong></span>'
+      + (roi ? '<span>回収期間 <strong style="color:var(--gold)">' + roi + '年</strong></span>' : '')
+      + '</div></div>';
+  }).join('');
+  el.innerHTML = '<div class="card" style="border-color:rgba(74,222,128,0.2)">'
+    + '<div class="card-title">🌱 省エネリフォーム ROI試算</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">'
+    + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">合計工事費</div><div style="font-size:16px;font-weight:700;color:#fb923c">約' + totalCost + '万円</div></div>'
+    + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">補助金活用後</div><div style="font-size:16px;font-weight:700;color:var(--gold)">約' + netCost + '万円</div></div>'
+    + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">年間削減効果</div><div style="font-size:16px;font-weight:700;color:#4ade80">約' + totalSaving + '万円</div>' + (payback?'<div style="font-size:10px;color:var(--text-muted)">回収' + payback + '年</div>':'') + '</div>'
+    + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">' + rows + '</div>'
+    + '<div style="padding:8px 12px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:7px;font-size:11px;color:var(--text-muted);line-height:1.7">💡 省エネ改修で光熱費を削減し、入居者への訴求力UPにもつながります。先進的窓リノベ（最大200万円）・給湯省エネ補助金など政府補助も活用しましょう。</div>'
+    + '<p style="font-size:10px;color:#555;margin-top:8px">※ 試算は参考値。補助金は年度・申請状況により変動。詳細は国土交通省・経産省の補助金情報を確認してください。</p>'
     + '</div>';
 }
 
