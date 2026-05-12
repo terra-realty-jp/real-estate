@@ -171,6 +171,10 @@
         <div style="font-size:12px;color:var(--text-muted);line-height:1.7">「家賃台帳」タブで入金があったら記録します。ダッシュボードに自動集計されます</div>
       </div>
     </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.6">まず機能を試したい方はサンプルデータを読み込めます。<br>実際のデータを入れるときはサンプルを削除してください。</div>
+      <button class="btn btn-outline" onclick="loadDemoData()" style="border-color:var(--gold);color:var(--gold);white-space:nowrap">▶ デモデータで試す</button>
+    </div>
   </div>
   <div class="kpi-grid" id="kpi-grid"></div>
   <div id="vacancy-potential-card" style="margin-bottom:20px"></div>
@@ -625,6 +629,46 @@ function showErrorToast(msg) {
   document.body.appendChild(t);
   setTimeout(()=>t.style.opacity='0',4000);
   setTimeout(()=>t.remove(),4300);
+}
+
+function loadDemoData() {
+  if(properties.length > 0 || tenants.length > 0) {
+    if(!confirm('既存のデータにサンプルデータを追加します。よろしいですか？')) return;
+  }
+  const now = new Date();
+  const y = now.getFullYear();
+  const mo = now.getMonth();
+  const ym  = `${y}-${String(mo+1).padStart(2,'0')}`;
+  const ym1 = mo===0  ? `${y-1}-12` : `${y}-${String(mo).padStart(2,'0')}`;
+  const ym2 = mo<=1   ? `${y-1}-${String(mo===0?11:mo).padStart(2,'0')}` : `${y}-${String(mo-1).padStart(2,'0')}`;
+  const uid = ()=>'demo-'+Math.random().toString(36).slice(2,9);
+  const p1=uid(), p2=uid();
+  const t1=uid(), t2=uid(), t3=uid(), t4=uid();
+  const exp1=new Date(y,mo+2,15), exp2=new Date(y+1,3,30);
+  const fmtD=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  properties = [...properties,
+    {id:p1,name:'サンプル 山田アパート',addr:'大阪府大阪市北区',type:'apartment',units:4,rate:5,start:'2018-04-01',memo:'築20年・駅徒歩7分'},
+    {id:p2,name:'サンプル 田中マンション',addr:'大阪府堺市堺区',type:'mansion',units:2,rate:5,start:'2022-01-01',memo:'築3年・オートロック'},
+  ];
+  tenants = [...tenants,
+    {id:t1,propertyId:p1,name:'山田 太郎',room:'101',rent:65000,status:'active',start:'2022-04-01',end:fmtD(exp1),memo:''},
+    {id:t2,propertyId:p1,name:'鈴木 花子',room:'102',rent:65000,status:'active',start:'2021-09-01',end:fmtD(exp2),memo:''},
+    {id:t3,propertyId:p1,name:'佐藤 健',  room:'103',rent:60000,status:'active',start:'2023-03-01',end:`${y+1}-03-31`,memo:''},
+    {id:t4,propertyId:p2,name:'田中 美咲',room:'201',rent:85000,status:'active',start:'2022-01-15',end:`${y+1}-01-31`,memo:''},
+  ];
+  const mkRent=(tenantId,month,amount,status)=>({id:uid(),tenantId,month,amount,paid:status==='paid'?amount:0,status,note:''});
+  rents = [...rents,
+    mkRent(t1,ym2,65000,'paid'),mkRent(t2,ym2,65000,'paid'),mkRent(t3,ym2,60000,'paid'), mkRent(t4,ym2,85000,'paid'),
+    mkRent(t1,ym1,65000,'paid'),mkRent(t2,ym1,65000,'paid'),mkRent(t3,ym1,60000,'unpaid'),mkRent(t4,ym1,85000,'paid'),
+    mkRent(t1,ym, 65000,'paid'),mkRent(t2,ym, 65000,'paid'),mkRent(t3,ym, 60000,'unpaid'),mkRent(t4,ym, 85000,'paid'),
+  ];
+  repairs = [...repairs,
+    {id:uid(),propertyId:p1,title:'給湯器交換',room:'103',category:'給湯器',priority:'urgent',status:'open',cost:150000,date:ym+'-01',note:'老朽化のため要交換'},
+    {id:uid(),propertyId:p2,title:'エントランス照明LED化',room:'共用',category:'電気',priority:'normal',status:'progress',cost:30000,date:ym1+'-15',note:''},
+  ];
+  save('properties');save('tenants');save('rents');save('repairs');
+  renderDashboard();
+  showToast('デモデータを読み込みました ✓ 各タブで動作を確認できます');
 }
 
 // ===== ダッシュボード =====
