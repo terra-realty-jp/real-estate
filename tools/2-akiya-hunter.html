@@ -311,6 +311,13 @@
     <div id="demolish-result"></div>
   </div>
 
+  <!-- 解体後の土地活用収益比較カード -->
+  <div class="card" id="land-use-card" style="display:none;">
+    <div class="card-title"><span class="icon">🌱</span>解体後の土地活用収益比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">建物を解体した後の土地をどう活用するか、収益と手間を比較します。</p>
+    <div id="land-use-content"></div>
+  </div>
+
   <!-- 3択比較カード -->
   <div class="card" id="compareOptionsCard" style="display:none;">
     <div class="card-title"><span class="icon">⚖️</span>売る・貸す・放置の5年比較</div>
@@ -852,6 +859,8 @@ function updateScore() {
   renderMgmtCostCard(capped);
   const demolishCard = document.getElementById('demolish-calc-card');
   if(demolishCard) { demolishCard.style.display = capped > 0 ? 'block' : 'none'; if(capped>0) calcDemolish(); }
+  // 解体後の土地活用収益比較カード
+  renderLandUseCard(capped);
 
   // メールCTAに診断結果を自動挿入
   const consultBtn = document.getElementById('akiya-consult-btn');
@@ -953,6 +962,70 @@ function renderMarketEval(score, checkedArr) {
     +'</div>'
     +(age===null||!loc||!struct?'<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:8px">※ 上の物件情報（築年数・立地・構造）を入力するとスコアの精度が上がります</div>':'')
   +'</div>';
+}
+
+function renderLandUseCard(score) {
+  var card = document.getElementById('land-use-card');
+  var content = document.getElementById('land-use-content');
+  if (!card || !content) return;
+  if (score <= 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  var tsubo = parseInt(document.getElementById('demo_tsubo')?.value) || 30;
+  var loc = document.getElementById('akiya_loc')?.value || 'local';
+  var locFac = loc === 'city' ? 1.6 : loc === 'suburb' ? 1.0 : 0.55;
+
+  // 月極駐車場（1台3〜6万円×台数）
+  var carSpots = Math.max(1, Math.floor(tsubo * 3.3 / 15));
+  var parkMonthly = Math.round(carSpots * (loc === 'city' ? 4.5 : loc === 'suburb' ? 2.5 : 1.5));
+  var parkAnnual = parkMonthly * 12;
+  var parkInitial = Math.round(carSpots * 15 + 30); // アスファルト+引き直し
+
+  // コインパーキング（都市部のみ推奨）
+  var coinMonthly = loc === 'city' ? Math.round(carSpots * 12 * locFac) : Math.round(carSpots * 5 * locFac);
+  var coinAnnual = coinMonthly * 12;
+  var coinInitial = Math.round(carSpots * 40 + 50); // 機器+舗装
+
+  // 土地売却
+  var landValue = Math.round(tsubo * locFac * (loc === 'city' ? 80 : loc === 'suburb' ? 30 : 12));
+
+  // 太陽光発電（地方・郊外向け）
+  var solarKw = Math.round(tsubo * 3.3 / 8); // 8㎡/kW
+  var solarAnnual = Math.round(solarKw * 16 * 17); // 16時間×17円/kWh目安
+  var solarInitial = solarKw * 15; // 万円
+
+  var mk = function(icon, label, color, monthly, annual, initial, note, highlight) {
+    return '<div style="padding:12px 14px;background:' + (highlight ? 'rgba(201,168,76,0.07)' : 'rgba(255,255,255,0.03)') + ';border:1px solid ' + (highlight ? 'rgba(201,168,76,0.3)' : color + '22') + ';border-radius:10px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+      + '<div style="font-size:12px;font-weight:700;color:' + color + '">' + icon + ' ' + label + (highlight ? ' <span style="font-size:10px;background:rgba(201,168,76,0.2);color:var(--gold);padding:1px 6px;border-radius:100px;margin-left:4px">おすすめ</span>' : '') + '</div>'
+      + '<div style="display:flex;gap:12px;flex-wrap:wrap">'
+      + (monthly > 0 ? '<div style="text-align:right"><div style="font-size:10px;color:#777">月収目安</div><div style="font-size:16px;font-weight:900;color:' + color + '">' + monthly + '万円</div></div>' : '')
+      + (annual > 0 ? '<div style="text-align:right"><div style="font-size:10px;color:#777">年収目安</div><div style="font-size:15px;font-weight:700;color:' + color + '">' + annual + '万円</div></div>' : '')
+      + (initial > 0 ? '<div style="text-align:right"><div style="font-size:10px;color:#777">初期費用</div><div style="font-size:13px;font-weight:700;color:#f59e0b">約' + initial + '万円</div></div>' : '')
+      + '</div></div>'
+      + '<div style="font-size:11px;color:#888;margin-top:6px;line-height:1.6">' + note + '</div>'
+      + '</div>';
+  };
+
+  // おすすめ判定
+  var bestAnnual = Math.max(parkAnnual, coinAnnual, solarAnnual);
+  content.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">'
+    + mk('🅿', '月極駐車場（' + carSpots + '台）', '#60a5fa', parkMonthly, parkAnnual, parkInitial,
+      '管理の手間が少なく安定収入。撤退しやすく柔軟性が高い。初期費用も比較的安価。',
+      parkAnnual >= bestAnnual * 0.9)
+    + mk('🚗', 'コインパーキング（' + carSpots + '台）', '#a78bfa', coinMonthly, coinAnnual, coinInitial,
+      '稼働率次第で高収益。機器メンテと現金回収が必要。都市部の立地が有利。',
+      coinAnnual >= bestAnnual * 0.9 && loc === 'city')
+    + (loc !== 'city' ? mk('☀️', '太陽光発電（' + solarKw + 'kW）', '#fbbf24', 0, solarAnnual, solarInitial,
+      '20年間の固定価格買取（FIT）制度を活用。地方・郊外向き。初期費用が高め。',
+      solarAnnual >= bestAnnual * 0.9) : '')
+    + '<div style="padding:12px 14px;border:1px solid rgba(34,197,94,0.2);border-radius:10px;background:rgba(34,197,94,0.04)">'
+    + '<div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:6px">💰 土地を売却する</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#4ade80">約' + landValue.toLocaleString() + '万円</div>'
+    + '<div style="font-size:11px;color:#888;margin-top:4px">まとまった資金を一括で確保。以後の管理・維持費が不要。相続対策にも有効。</div>'
+    + '</div>'
+    + '</div>'
+    + '<p style="font-size:10px;color:#555;line-height:1.6">※ 試算は参考値。実際の金額は立地・道路幅・形状・市場状況により大きく異なります。解体業者・不動産会社に見積りを依頼してください。</p>';
 }
 
 function renderRepairCostCard() {
