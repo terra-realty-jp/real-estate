@@ -355,6 +355,7 @@
     </div>
     <div id="repair-budget-content"></div>
   </div>
+  <div id="repair-rent-ratio-card" style="display:none;margin-bottom:20px;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px"></div>
   <div id="repair-category-card" style="display:none;margin-bottom:20px"></div>
   <div id="repair-priority-matrix" style="display:none;margin-bottom:20px"></div>
   <div id="repair-monthly-chart" style="display:none;margin-bottom:20px"></div>
@@ -2608,6 +2609,7 @@ function renderRepairs(){
   } else if(repSumEl) {
     repSumEl.style.display = 'none';
   }
+  renderRepairRentRatioCard();
   renderRepairCategoryBreakdown();
   renderRepairMonthlyChart();
   renderRepairBudget();
@@ -2805,6 +2807,46 @@ function renderRepairCategoryBreakdown(){
     </div>
   </div>`;
   el.style.display = 'block';
+}
+
+function renderRepairRentRatioCard() {
+  const el = document.getElementById('repair-rent-ratio-card');
+  if(!el) return;
+  const annualRent = tenants.filter(t=>t.status==='active').reduce((s,t)=>s+(t.rent||0),0) * 12;
+  if(annualRent <= 0 || repairs.length === 0) { el.style.display='none'; return; }
+  const now = new Date();
+  const curY = now.getFullYear();
+  const annualRepair = repairs.filter(r=>r.cost>0 && r.date && r.date.startsWith(String(curY))).reduce((s,r)=>s+Number(r.cost),0);
+  const ratio = annualRent > 0 ? Math.round(annualRepair / annualRent * 100) : 0;
+  const ratioColor = ratio <= 5 ? '#4ade80' : ratio <= 15 ? '#facc15' : '#f87171';
+  const ratioLabel = ratio <= 5 ? '良好（業界平均以下）' : ratio <= 15 ? '許容範囲（5〜15%）' : '高め（要注意・建物の老朽化を確認）';
+  const perProp = properties.map(p => {
+    const rent = tenants.filter(t=>t.propertyId===p.id&&t.status==='active').reduce((s,t)=>s+(t.rent||0),0)*12;
+    const rep  = repairs.filter(r=>r.propertyId===p.id&&r.cost>0&&r.date&&r.date.startsWith(String(curY))).reduce((s,r)=>s+Number(r.cost),0);
+    const r2 = rent > 0 ? Math.round(rep/rent*100) : null;
+    return {name:p.name, rent, rep, ratio:r2};
+  }).filter(p=>p.rent>0||p.rep>0);
+  el.style.display = 'block';
+  el.innerHTML = `<div class="card-title">📉 修繕費 対 家賃収入 比率（${curY}年）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">年間修繕費÷年間家賃収入。5%以下が優良、15%超は老朽化サインです。</p>
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="text-align:center">
+        <div style="font-size:42px;font-weight:900;color:${ratioColor};line-height:1">${ratio}%</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">全物件合計</div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:${ratioColor}">${ratioLabel}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px">年間家賃収入: ${Math.round(annualRent/10000).toLocaleString()}万円 / 修繕費: ${Math.round(annualRepair/10000).toLocaleString()}万円</div>
+      </div>
+    </div>
+    ${perProp.length > 1 ? `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+      ${perProp.map(p => {
+        const rc = p.ratio===null?'#6b7280':p.ratio<=5?'#4ade80':p.ratio<=15?'#facc15':'#f87171';
+        const rw = p.ratio===null?0:Math.min(100,p.ratio*4);
+        return `<div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="font-weight:700">${esc(p.name)}</span><span style="color:${rc};font-weight:700">${p.ratio===null?'—':p.ratio+'%'}</span></div><div style="height:5px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden"><div style="height:100%;width:${rw}%;background:${rc};border-radius:4px"></div></div></div>`;
+      }).join('')}
+    </div>` : ''}
+    <div style="font-size:11px;color:var(--text-muted)">業界目安: <span style="color:#4ade80">5%以下</span> 優良 / <span style="color:#facc15">5〜15%</span> 普通 / <span style="color:#f87171">15%超</span> 要注意（${curY}年のデータのみ集計）</div>`;
 }
 
 function renderRepairMonthlyChart() {
