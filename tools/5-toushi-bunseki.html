@@ -408,6 +408,30 @@
     </div>
     <div id="prepay-result"></div>
   </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">🏦 年収ベース 融資可能額チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">年収と希望物件価格を入力すると、主要銀行の融資審査基準（返済比率30〜35%）をもとに融資可能額の目安を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年収（万円）</label>
+        <input type="number" id="lq_income" placeholder="例: 600" min="100" step="50" oninput="calcLoanQualify()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">希望返済期間（年）</label>
+        <input type="number" id="lq_term" value="30" min="5" max="50" step="1" oninput="calcLoanQualify()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">適用金利（%）</label>
+        <input type="number" id="lq_rate" value="1.5" min="0.1" max="10" step="0.1" oninput="calcLoanQualify()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">検討物件価格（万円）</label>
+        <input type="number" id="lq_target" placeholder="例: 3000" min="100" step="100" oninput="calcLoanQualify()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="loan-qualify-result"></div>
+  </div>
 </div>
 </div>
 
@@ -2704,6 +2728,46 @@ function calcPrepay() {
     </div>
     ${savedInterest>0?`<div style="padding:10px 12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:6px;font-size:12px;color:var(--text-muted)">✅ 繰り上げ返済で約${savedInterest.toLocaleString()}万円の利息を削減できます。投資収益を安定させるためにも有効です。</div>`:''}
   `;
+}
+
+function calcLoanQualify() {
+  const el = document.getElementById('loan-qualify-result'); if(!el) return;
+  const income = parseFloat(document.getElementById('lq_income').value) || 0;
+  const term = parseFloat(document.getElementById('lq_term').value) || 30;
+  const rate = parseFloat(document.getElementById('lq_rate').value) || 1.5;
+  const target = parseFloat(document.getElementById('lq_target').value) || 0;
+  if (!income) { el.innerHTML = ''; return; }
+  const rm = rate / 100 / 12;
+  const n = term * 12;
+  const monthlyMax30 = Math.round(income * 10000 / 12 * 0.30);
+  const monthlyMax35 = Math.round(income * 10000 / 12 * 0.35);
+  function loanFromMonthly(m) {
+    if (rm === 0) return m * n;
+    return Math.round(m * (1 - Math.pow(1+rm, -n)) / rm);
+  }
+  const maxLoan30 = Math.round(loanFromMonthly(monthlyMax30) / 10000);
+  const maxLoan35 = Math.round(loanFromMonthly(monthlyMax35) / 10000);
+  const canAfford30 = target > 0 && maxLoan30 >= target;
+  const canAfford35 = target > 0 && maxLoan35 >= target;
+  const targetMonthly = target > 0 && rm > 0 ? Math.round(target * 10000 * rm * Math.pow(1+rm,n) / (Math.pow(1+rm,n)-1)) : 0;
+  const targetRatio = income > 0 && targetMonthly > 0 ? Math.round(targetMonthly / (income * 10000 / 12) * 100) : 0;
+  const statusColor = canAfford30 ? 'var(--green)' : canAfford35 ? 'var(--gold)' : target > 0 ? 'var(--red)' : 'var(--text-muted)';
+  const statusLabel = canAfford30 ? '融資基準クリア（返済比率30%以内）' : canAfford35 ? '条件付きクリア（30〜35%）' : target > 0 ? '融資困難（返済比率超過）' : '—';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    + '<div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">融資可能額目安（返済比率30%）</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#4ade80">' + maxLoan30.toLocaleString() + '<span style="font-size:12px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">月返済上限 ' + monthlyMax30.toLocaleString() + '円</div></div>'
+    + '<div style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">融資可能額目安（返済比率35%）</div>'
+    + '<div style="font-size:22px;font-weight:900;color:var(--gold)">' + maxLoan35.toLocaleString() + '<span style="font-size:12px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">月返済上限 ' + monthlyMax35.toLocaleString() + '円</div></div>'
+    + '</div>'
+    + (target > 0 ? '<div style="padding:12px 14px;background:' + statusColor + '15;border:1px solid ' + statusColor + '44;border-radius:8px;margin-bottom:10px">'
+    + '<div style="font-size:12px;font-weight:700;color:' + statusColor + ';margin-bottom:4px">' + statusLabel + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">物件価格 ' + target.toLocaleString() + '万円 → 月返済 約' + targetMonthly.toLocaleString() + '円（返済比率 <strong style="color:' + statusColor + '">' + targetRatio + '%</strong>）</div>'
+    + '</div>' : '')
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">※ 年収・返済比率は目安です。実際の審査では自己資金・勤続年数・他のローン・物件担保価値など多数の要因が評価されます。<br>返済比率＝月返済額÷月収。30%以内が一般的な基準、35%が上限目安（金融機関によって異なります）。</div>';
 }
 
 function updateSimpleLoanPreview() {
