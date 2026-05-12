@@ -551,6 +551,9 @@
       <!-- 売却 vs 賃貸 比較カード -->
       <div id="sell-vs-rent-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
 
+      <!-- 仲介手数料節約シミュレーター -->
+      <div id="commission-save-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px"></div>
+
       <!-- 譲渡所得税シミュレーター -->
       <div id="tax-sim-panel" style="display:none;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-top:16px">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">📊 譲渡所得税シミュレーター（概算）</div>
@@ -1901,6 +1904,69 @@ function renderBuyerAffordPanel(price) {
     + '</div>';
 }
 
+function renderCommissionSavePanel(price) {
+  var el = document.getElementById('commission-save-panel');
+  if (!el || !price) return;
+  el.style.display = 'block';
+  var wan = Math.round(price / 10000);
+  var legalMax = Math.ceil((price * 0.03 + 60000) * 1.1);
+  var patterns = [
+    {
+      label: '大手仲介（法定上限）',
+      rate: '3%+6万（税込）',
+      commission: legalMax,
+      pros: '広告力・ブランド力・集客力が高い',
+      cons: '手数料が最大。値引き交渉は難しい',
+      color: 'var(--text-muted)',
+      border: 'rgba(255,255,255,0.08)'
+    },
+    {
+      label: '手数料割引系仲介',
+      rate: '1.5%+6万（税込）前後',
+      commission: Math.ceil((price * 0.015 + 60000) * 1.1),
+      pros: '手数料が約半額。競争が増えてきている',
+      cons: '広告・サービス内容が会社により差がある',
+      color: '#60a5fa',
+      border: 'rgba(59,130,246,0.25)'
+    },
+    {
+      label: '売主・買主直接取引',
+      rate: '0円（手数料なし）',
+      commission: 0,
+      pros: '手数料ゼロで最大限手取りが増える',
+      cons: '買主探し・交渉・書類作成を自分で行う必要あり',
+      color: 'var(--green)',
+      border: 'rgba(34,197,94,0.25)'
+    }
+  ];
+  var baseCommission = legalMax;
+  var rows = patterns.map(function(p) {
+    var saving = baseCommission - p.commission;
+    var netPrice = price - p.commission;
+    var savingColor = saving > 0 ? 'var(--green)' : 'var(--text-muted)';
+    return '<div style="border:1px solid ' + p.border + ';border-radius:10px;padding:12px 14px;background:rgba(255,255,255,0.02)">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap;gap:4px">'
+      + '<div><div style="font-size:12px;font-weight:700;color:' + p.color + '">' + p.label + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + p.rate + '</div></div>'
+      + '<div style="text-align:right;flex-shrink:0">'
+      + '<div style="font-size:15px;font-weight:900;color:' + p.color + '">' + Math.round(p.commission/10000).toLocaleString() + '万円</div>'
+      + (saving > 0 ? '<div style="font-size:10px;color:' + savingColor + ';font-weight:700">節約 +' + Math.round(saving/10000).toLocaleString() + '万円</div>' : '')
+      + '</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:12px;font-size:11px;line-height:1.6;flex-wrap:wrap">'
+      + '<span style="color:var(--green)">✓ ' + p.pros + '</span>'
+      + '<span style="color:var(--red)">✗ ' + p.cons + '</span>'
+      + '</div>'
+      + '</div>';
+  });
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:4px;color:var(--gold)">💡 仲介手数料節約シミュレーター</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">売却価格 <strong style="color:var(--gold)">' + wan.toLocaleString() + '万円</strong> の場合の手数料を3パターンで比較。最大 <strong style="color:var(--green)">' + Math.round(legalMax/10000) + '万円</strong> の差が出る場合があります。</div>'
+    + '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">' + rows.join('') + '</div>'
+    + '<div style="padding:10px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">'
+    + '⚠️ 仲介手数料の割引は任意交渉です。大手でも交渉次第で減額できる場合があります。ただし、手数料が安い=サービスが悪いわけではなく、会社の方針・物件条件次第です。複数社に見積もりを取ることをおすすめします。'
+    + '</div>';
+}
+
 function renderNegoSimPanel(price, sellCostPct) {
   var el = document.getElementById('nego-sim-panel');
   if (!el) return;
@@ -2393,6 +2459,9 @@ function calcAndShowResult() {
 
   // 売却 vs 賃貸 比較
   renderSellVsRentPanel(price);
+
+  // 仲介手数料節約シミュレーター
+  renderCommissionSavePanel(price);
 
   // 動的CTAメッセージ・メールリンク更新
   setDynamicCTA(price, document.getElementById('leadTiming').value, liquidity, age, propType);
