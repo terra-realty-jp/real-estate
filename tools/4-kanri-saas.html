@@ -328,6 +328,7 @@
   <div id="tenant-filter-summary" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
   <div id="contact-quick-card" style="margin-bottom:12px"></div>
   <div id="vacancy-tracker" style="display:none;margin-bottom:16px"></div>
+  <div id="tenure-analysis-card" style="display:none;margin-bottom:16px"></div>
   <div id="tenants-list"></div>
 </div>
 </div>
@@ -1994,6 +1995,76 @@ function generateVacancyListingEmail() {
   el.style.display = 'block';
 }
 
+function renderTenureAnalysisCard() {
+  const el = document.getElementById('tenure-analysis-card');
+  if (!el) return;
+  const active = tenants.filter(t => t.status === 'active' && t.start);
+  if (active.length < 2) { el.style.display = 'none'; return; }
+  const now = new Date();
+  const tenures = active.map(t => {
+    const months = Math.floor((now - new Date(t.start)) / (1000 * 60 * 60 * 24 * 30.44));
+    return { t, months };
+  });
+  const avgMonths = Math.round(tenures.reduce((s, x) => s + x.months, 0) / tenures.length);
+  const avgYears = (avgMonths / 12).toFixed(1);
+  // 区分け: 1年未満, 1-3年, 3-5年, 5年以上
+  const bands = [
+    { label: '1年未満', min: 0, max: 12, color: '#f87171' },
+    { label: '1〜3年', min: 12, max: 36, color: '#fb923c' },
+    { label: '3〜5年', min: 36, max: 60, color: '#4ade80' },
+    { label: '5年以上', min: 60, max: Infinity, color: '#c9a84c' },
+  ];
+  const counts = bands.map(b => ({ ...b, n: tenures.filter(x => x.months >= b.min && x.months < b.max).length }));
+  const maxN = Math.max(...counts.map(c => c.n), 1);
+  // 安定性スコア（長期入居テナントほど高点）
+  const stableScore = Math.min(100, Math.round(
+    tenures.reduce((s, x) => s + Math.min(x.months / 60 * 100, 100), 0) / tenures.length
+  ));
+  const scoreColor = stableScore >= 70 ? '#4ade80' : stableScore >= 40 ? '#facc15' : '#f87171';
+  const scoreLabel = stableScore >= 70 ? '安定' : stableScore >= 40 ? '普通' : '流動的';
+  // 最長・最短テナント
+  const sorted = [...tenures].sort((a, b) => b.months - a.months);
+  const longest = sorted[0];
+  const shortest = sorted[sorted.length - 1];
+  const fmtTenure = m => m >= 12 ? `${Math.floor(m/12)}年${m%12?m%12+'ヶ月':''}` : `${m}ヶ月`;
+  el.style.display = 'block';
+  el.innerHTML = `<div class="card" style="background:rgba(201,168,76,0.04);border-color:rgba(201,168,76,0.15)">
+    <div class="card-title">📊 テナント在籍年数分析</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      <div style="text-align:center;padding:12px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">平均在籍期間</div>
+        <div style="font-size:20px;font-weight:900;color:var(--gold)">${avgYears}年</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${active.length}名平均</div>
+      </div>
+      <div style="text-align:center;padding:12px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">安定性スコア</div>
+        <div style="font-size:20px;font-weight:900;color:${scoreColor}">${stableScore}</div>
+        <div style="font-size:10px;color:${scoreColor};margin-top:2px;font-weight:700">${scoreLabel}</div>
+      </div>
+      <div style="text-align:center;padding:12px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">最長在籍</div>
+        <div style="font-size:20px;font-weight:900;color:var(--gold)">${fmtTenure(longest.months)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(longest.t.name)}</div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">在籍期間 分布</div>
+    <div style="display:flex;gap:6px;align-items:flex-end;height:60px;margin-bottom:6px">
+      ${counts.map(c => {
+        const h = Math.max(Math.round(c.n / maxN * 100), c.n > 0 ? 8 : 0);
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="font-size:10px;color:${c.color};font-weight:700">${c.n}名</div>
+          <div style="width:100%;background:${c.color}${c.n>0?'cc':'22'};border-radius:4px 4px 0 0;height:${h}%;min-height:${c.n>0?'6px':'0'};transition:height 0.4s"></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:6px">
+      ${counts.map(c => `<div style="flex:1;text-align:center;font-size:10px;color:${c.color}">${c.label}</div>`).join('')}
+    </div>
+    ${stableScore < 40 ? `<div style="margin-top:10px;padding:8px 12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:6px;font-size:12px;color:#f87171">⚠️ 短期入居テナントが多い物件はチャーンリスクがあります。礼金・更新料の見直しや入居審査の強化で長期入居を促進しましょう。</div>` : ''}
+    ${stableScore >= 70 ? `<div style="margin-top:10px;padding:8px 12px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:6px;font-size:12px;color:#4ade80">✅ 長期入居テナントが多く、収入安定性が高い状態です。</div>` : ''}
+  </div>`;
+}
+
 function renderContactQuickCard() {
   const el = document.getElementById('contact-quick-card');
   if (!el) return;
@@ -2022,6 +2093,7 @@ function renderContactQuickCard() {
 function renderTenants(){
   renderContactQuickCard();
   renderVacancyTracker();
+  renderTenureAnalysisCard();
   const el=document.getElementById('tenants-list');
   if(!tenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><p>テナントが登録されていません</p><p style="font-size:12px;margin-top:8px">${properties.length?'右上の「＋ テナント追加」からはじめてください':'先に「物件管理」タブで物件を登録してください'}</p>${properties.length?'<button class="btn btn-gold" style="margin-top:16px" onclick="openTenantModal()">＋ テナントを追加する</button>':''}</div>`;return;}
   const now=new Date();
