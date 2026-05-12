@@ -1369,23 +1369,50 @@ function getExpiringTenants() {
   return tenants.filter(t=>t.status==='active'&&t.end&&new Date(t.end)<=limit&&new Date(t.end)>=now);
 }
 
+// 物件健全性スコア計算（0-100）
+function calcPropertyHealth(p) {
+  const pts = tenants.filter(t=>t.propertyId===p.id&&t.status==='active');
+  const units = p.units||1;
+  const occ = pts.length;
+  // 稼働率スコア（40点）
+  const occScore = Math.round(occ/units*40);
+  // 入金率スコア（40点）: 直近3ヶ月の入金率
+  const now = new Date();
+  let payScore = 40;
+  if(pts.length > 0) {
+    const months3 = [];
+    for(let i=0;i<3;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months3.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);}
+    const expected = pts.reduce((s,t)=>s+(t.rent||0),0)*3;
+    const paid = rents.filter(r=>months3.includes(r.month)&&pts.some(t=>t.id===r.tenantId)&&r.status==='paid').reduce((s,r)=>s+(r.paid||0),0);
+    payScore = expected>0 ? Math.round(paid/expected*40) : 40;
+  }
+  // 修繕スコア（20点）: 未対応修繕が少ないほど高い
+  const propRepairs = repairs.filter(r=>r.propertyId===p.id&&(r.status==='open'||r.status==='progress'));
+  const repairScore = Math.max(0, 20 - propRepairs.length*5);
+  const total = occScore + payScore + repairScore;
+  const grade = total>=85?{l:'A',c:'#4ade80'}:total>=70?{l:'B',c:'#facc15'}:total>=50?{l:'C',c:'#fb923c'}:{l:'D',c:'#f87171'};
+  return {...grade, score:total};
+}
+
 // ===== 物件 =====
 function renderProperties() {
   const el = document.getElementById('properties-list');
   if(!properties.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🏢</div><p>物件が登録されていません</p><p style="font-size:12px;margin-top:8px">右上の「＋ 物件追加」ボタンからはじめてください</p><button class="btn btn-gold" style="margin-top:16px" onclick="openPropertyModal()">＋ 物件を追加する</button></div>`; return; }
   el.innerHTML = `<table>
-    <thead><tr><th>物件名</th><th>所在地</th><th>種別</th><th>戸数</th><th>入居中</th><th>委託費率</th><th>管理開始</th><th></th></tr></thead>
+    <thead><tr><th>物件名</th><th>所在地</th><th>種別</th><th>戸数</th><th>入居中</th><th>健全性</th><th>委託費率</th><th></th></tr></thead>
     <tbody>
       ${properties.map(p=>{
         const occ = tenants.filter(t=>t.propertyId===p.id&&t.status==='active').length;
+        const h = calcPropertyHealth(p);
+        const healthBadge = `<span title="健全性スコア ${h.score}点（稼働率・入金率・修繕状況）" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${h.c}22;border:2px solid ${h.c};color:${h.c};font-size:13px;font-weight:900;cursor:default">${h.l}</span>`;
         return `<tr>
           <td><strong>${esc(p.name)}</strong></td>
           <td style="font-size:12px">${p.addr||'—'}</td>
           <td>${PROP_TYPE[p.type]||p.type}</td>
           <td>${p.units}戸</td>
           <td><span class="badge ${occ>0?'b-occupied':'b-vacant'}">${occ}/${p.units}戸</span></td>
+          <td style="text-align:center">${healthBadge}</td>
           <td>${p.rate||5}%</td>
-          <td style="font-size:12px">${p.start||'—'}</td>
           <td style="display:flex;gap:6px">
             <button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="showPropertyDetail('${p.id}')">詳細</button>
             <button class="btn btn-outline btn-sm" onclick="editProperty('${p.id}')">編集</button>
@@ -1394,7 +1421,8 @@ function renderProperties() {
         </tr>`;
       }).join('')}
     </tbody>
-  </table>`;
+  </table>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;padding:6px 12px">健全性スコア: <span style="color:#4ade80;font-weight:700">A</span> 優良（85+）　<span style="color:#facc15;font-weight:700">B</span> 良好（70+）　<span style="color:#fb923c;font-weight:700">C</span> 要注意（50+）　<span style="color:#f87171;font-weight:700">D</span> 要対応（50未満）　※稼働率・入金率・未対応修繕から算出</div>`;
 }
 
 function openPropertyModal(id) {
