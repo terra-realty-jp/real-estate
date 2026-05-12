@@ -386,6 +386,7 @@
   <div id="repair-category-card" style="display:none;margin-bottom:20px"></div>
   <div id="repair-priority-matrix" style="display:none;margin-bottom:20px"></div>
   <div id="repair-monthly-chart" style="display:none;margin-bottom:20px"></div>
+  <div id="repair-timeline-card" style="display:none;margin-bottom:20px"></div>
 
   <!-- 修繕費用相場ガイド -->
   <div class="card" style="margin-bottom:20px;border-color:rgba(255,255,255,0.07)" id="repair-cost-guide">
@@ -2882,6 +2883,7 @@ function renderRepairs(){
   renderRepairRentRatioCard();
   renderRepairCategoryBreakdown();
   renderRepairMonthlyChart();
+  renderRepairTimeline();
   renderRepairBudget();
   renderRepairPriorityMatrix();
 
@@ -3215,6 +3217,61 @@ function saveRepair(){
   save('repairs');
   sbSaveRow('repairs', {id:obj.id, property_id:obj.propertyId, content:obj.content, room:obj.room, priority:obj.priority, date:obj.date, cost:obj.cost, vendor:obj.vendor, status:obj.status, done:obj.done, memo:obj.memo});
   closeModal('repairModal');renderRepairs();showToast('修繕記録を保存しました ✓');
+}
+
+function renderRepairTimeline() {
+  const el = document.getElementById('repair-timeline-card');
+  if (!el) return;
+  const datedRepairs = repairs.filter(r => r.date && r.cost > 0).sort((a,b) => a.date.localeCompare(b.date));
+  if (datedRepairs.length < 2) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const now = new Date();
+  const curY = now.getFullYear();
+  // Group by year
+  const byYear = {};
+  datedRepairs.forEach(r => {
+    const y = r.date.slice(0,4);
+    if (!byYear[y]) byYear[y] = [];
+    byYear[y].push(r);
+  });
+  const years = Object.keys(byYear).sort();
+  const minY = parseInt(years[0]);
+  const maxY = Math.max(parseInt(years[years.length-1]), curY);
+  const COLORS = ['#c9a84c','#4ade80','#93c5fd','#fb923c','#a78bfa','#f472b6'];
+  const propColors = {};
+  properties.forEach((p,i) => { propColors[p.id] = COLORS[i % COLORS.length]; });
+  const yearBlocks = years.map(y => {
+    const rs = byYear[y];
+    const totalCost = rs.reduce((s,r) => s + Number(r.cost), 0);
+    const items = rs.map(r => {
+      const p = properties.find(x => x.id === r.propertyId);
+      const pColor = propColors[r.propertyId] || 'var(--gold)';
+      return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0">
+        <span style="width:8px;height:8px;border-radius:50%;background:${pColor};flex-shrink:0"></span>
+        <span style="font-size:11px;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p?esc(p.name.slice(0,6)):'—'} ${esc(r.content||'').slice(0,12)}</span>
+        <span style="font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0">${Number(r.cost).toLocaleString()}万</span>
+      </div>`;
+    }).join('');
+    const isCur = parseInt(y) === curY;
+    return `<div style="flex:1;min-width:80px;position:relative">
+      <div style="height:6px;border-radius:3px;background:${isCur?'var(--gold)':'rgba(255,255,255,0.12)'};margin-bottom:8px"></div>
+      <div style="font-size:11px;font-weight:700;color:${isCur?'var(--gold)':'var(--text-muted)'};margin-bottom:4px">${y}年<span style="font-size:10px;font-weight:400;margin-left:4px;color:var(--red)">${totalCost.toLocaleString()}万</span></div>
+      ${items}
+    </div>`;
+  }).join('<div style="width:2px;background:rgba(255,255,255,0.08);flex-shrink:0;margin:0 4px;border-radius:1px;min-height:60px"></div>');
+  const totalAll = datedRepairs.reduce((s,r) => s + Number(r.cost), 0);
+  const legend = properties.filter(p => repairs.some(r=>r.propertyId===p.id)).map(p => {
+    const pColor = propColors[p.id] || 'var(--gold)';
+    return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted)"><span style="width:8px;height:8px;border-radius:50%;background:${pColor}"></span>${esc(p.name.slice(0,8))}</span>`;
+  }).join('');
+  el.innerHTML = `<div class="card">
+    <div class="card-title" style="justify-content:space-between">
+      <span>📅 修繕履歴タイムライン</span>
+      <span style="font-size:11px;color:var(--red);font-weight:700">累計 ${totalAll.toLocaleString()}万円</span>
+    </div>
+    <div style="display:flex;gap:0;overflow-x:auto;padding-bottom:8px;min-width:0">${yearBlocks}</div>
+    ${legend ? '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">' + legend + '</div>' : ''}
+  </div>`;
 }
 
 // ===== テナント一覧印刷 =====
