@@ -275,6 +275,9 @@
   <!-- 修繕費用概算カード -->
   <div id="repair-cost-card" style="display:none;margin-bottom:16px"></div>
 
+  <!-- 耐震性能診断カード -->
+  <div id="seismic-card" style="display:none;margin-bottom:16px"></div>
+
   <!-- 建て替えvsリノベ収益比較カード -->
   <div id="reno-vs-rebuild-card" style="display:none;margin-bottom:16px"></div>
 
@@ -869,6 +872,8 @@ function updateScore() {
   renderMarketEval(capped, [...checked]);
   // 修繕費用概算カード
   renderRepairCostCard();
+  // 耐震性能診断カード
+  renderSeismicCard();
   // 建て替えvsリノベ収益比較カード
   renderRenoVsRebuildCard();
   // 民泊・シェアハウス活用試算カード
@@ -1102,6 +1107,55 @@ function renderRepairCostCard() {
     + '<div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px">&#x1F528; 修繕費用の概算<span style="font-size:10px;font-weight:400;color:var(--text-muted)">（参考値・実費は業者見積もりで確認）</span></div>'
     + '<div style="display:grid;gap:6px;margin-bottom:' + (ageTip ? '10px' : '0') + '">' + rowsHtml + '</div>'
     + (ageTip ? '<div style="margin-top:8px;padding:8px 10px;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-radius:7px;font-size:11px;color:var(--text-muted)">' + ageTip + '</div>' : '')
+    + '</div>';
+}
+
+function renderSeismicCard() {
+  var el = document.getElementById('seismic-card');
+  if (!el) return;
+  var age = parseInt(document.getElementById('akiya_age')?.value) || null;
+  var struct = document.getElementById('akiya_struct')?.value || '';
+  var sqm = parseInt(document.getElementById('akiya_sqm')?.value) || 80;
+  if (!age || !struct) { el.style.display = 'none'; return; }
+  var builtYear = new Date().getFullYear() - age;
+  var level, levelColor, levelLabel, risk, retrofitCost, retrofitNote, loanImpact;
+  if (builtYear < 1981) {
+    level = 'old'; levelColor = '#f87171'; levelLabel = '旧耐震基準';
+    risk = '倒壊リスクが高く、売却時にローン審査で不利になる場合があります。耐震補強または建替えを検討してください。';
+    retrofitCost = struct === 'wood' ? {low:80, high:150} : struct === 'steel' ? {low:120, high:200} : {low:200, high:400};
+    loanImpact = '住宅ローンの利用が制限される場合があり、買い手が限られます';
+  } else if (builtYear < 2000) {
+    level = 'mid'; levelColor = '#facc15'; levelLabel = '新耐震基準（第一世代）';
+    risk = '1995年阪神大震災で問題が発覚した「接合部の弱さ」が残る可能性があります。簡易診断を推奨します。';
+    retrofitCost = struct === 'wood' ? {low:30, high:80} : struct === 'steel' ? {low:50, high:100} : {low:80, high:150};
+    loanImpact = '一部金融機関でフラット35などの利用に制限あり';
+  } else {
+    level = 'new'; levelColor = '#4ade80'; levelLabel = '現行耐震基準（2000年基準）';
+    risk = '現行の耐震基準を満たしている可能性が高いです。大規模改修がなければ追加の耐震工事は不要なケースが多いです。';
+    retrofitCost = null;
+    loanImpact = 'ローン審査上の制限なし（通常と同条件）';
+  }
+  var subsidyText = level !== 'new' ? '国や自治体の耐震改修補助金（最大100万円程度）が利用できる場合があります。' : '';
+  var saleImpact = level === 'old' ? '耐震補強後は売却価格が500万〜1,000万円程度改善することがあります（立地・規模による）' : level === 'mid' ? '耐震診断書の添付で売却価格・スピードが改善することがあります' : '耐震性能は売却の強みになります';
+  el.style.display = 'block';
+  el.innerHTML = '<div class="card" style="border-color:' + levelColor + '44">'
+    + '<div class="card-title">🏗 耐震性能診断（築' + age + '年 / ' + builtYear + '年建築）</div>'
+    + '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:' + levelColor + '11;border:1px solid ' + levelColor + '33;border-radius:10px;margin-bottom:14px">'
+    + '<div style="font-size:28px;font-weight:900;color:' + levelColor + ';flex-shrink:0">' + (level==='new'?'✅':level==='mid'?'⚠️':'❌') + '</div>'
+    + '<div><div style="font-size:14px;font-weight:700;color:' + levelColor + '">' + levelLabel + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.6">' + risk + '</div></div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+    + (retrofitCost ? '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">耐震補強工事費（目安）</div><div style="font-size:15px;font-weight:700;color:#fb923c">約' + retrofitCost.low + '〜' + retrofitCost.high + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:3px">' + (struct==='wood'?'木造':struct==='steel'?'鉄骨':'RC') + ' / 延床' + sqm + '㎡目安</div></div>'
+    : '<div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">耐震工事</div><div style="font-size:14px;font-weight:700;color:#4ade80">不要（基準適合）</div></div>')
+    + '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">ローン・売却への影響</div><div style="font-size:12px;color:' + levelColor + ';font-weight:600;line-height:1.5">' + loanImpact + '</div></div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;padding:8px 12px;background:rgba(255,255,255,0.02);border-radius:6px">'
+    + '💡 <strong style="color:var(--text)">売却への影響：</strong>' + saleImpact
+    + (subsidyText ? '<br>🏛 <strong style="color:var(--text)">補助金：</strong>' + subsidyText : '')
+    + (retrofitCost ? '<br>⚠️ 耐震診断（目安: 5〜20万円）を受けてから補強計画を立てることをお勧めします。' : '')
+    + '</div>'
     + '</div>';
 }
 
