@@ -711,6 +711,79 @@ function buildAlerts(inp, r) {
   return alerts;
 }
 
+function renderVsFinanceCard(inp, r) {
+  if (!inp || !inp.price || inp.price <= 0 || !r) return '';
+  const equity = r.equity || inp.equity * 10000 || inp.price * 10000 * 0.2;
+  if (equity <= 0) return '';
+  const equityMan = Math.round(equity / 10000);
+  const hold = inp.hold || 10;
+  // 不動産リターン: 累計CF + 自己資本増加(ローン返済分) + 売却益概算
+  const totalCF = r.annualCF * hold;
+  const loanRepaid = inp.loan > 0 ? Math.min(inp.loan * 10000, r.loanMonthly * 12 * hold * 0.5) : 0;
+  const appreciation = inp.price * 10000 * 0.005 * hold; // 年0.5%値上がり想定
+  const reTotal = totalCF + loanRepaid + appreciation;
+  const reROI = Math.round(reTotal / equity * 100 * 10) / 10;
+  const reAnnual = Math.round(reROI / hold * 10) / 10;
+  // 金融投資リターン（3シナリオ）
+  const scenarios = [
+    { label: '保守（3%/年）', rate: 0.03, color: '#60a5fa' },
+    { label: '標準（5%/年）', rate: 0.05, color: '#a78bfa' },
+    { label: '積極（7%/年）', rate: 0.07, color: '#f97316' },
+  ];
+  const finRows = scenarios.map(s => {
+    const fv = equity * Math.pow(1 + s.rate, hold);
+    const gain = fv - equity;
+    const roi = Math.round(gain / equity * 100 * 10) / 10;
+    const better = reTotal > gain;
+    return { ...s, gain: Math.round(gain / 10000), roi, better };
+  });
+  const reGainMan = Math.round(reTotal / 10000);
+  const bestFin = finRows.reduce((a, b) => a.roi > b.roi ? a : b);
+  const winner = reGainMan >= bestFin.gain ? 'real' : 'fin';
+  const fmtW = v => v.toLocaleString() + '万円';
+  const barMax = Math.max(reGainMan, ...finRows.map(s => s.gain), 1);
+  const reBar = Math.round(reGainMan / barMax * 100);
+  const finBars = finRows.map(s => Math.round(s.gain / barMax * 100));
+  return `<div class="card" style="background:rgba(139,92,246,0.04);border-color:rgba(139,92,246,0.2)">
+    <div class="card-title">🆚 不動産 vs 金融投資 比較（${hold}年間）</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px">自己資金 <strong style="color:var(--gold)">${fmtW(equityMan)}</strong> を${hold}年間運用した場合の試算比較</div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">📊 ${hold}年後 想定リターン比較</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:12px;font-weight:700;color:var(--gold)">🏠 不動産投資（この物件）</div>
+            <div style="font-size:14px;font-weight:900;color:${winner==='real'?'var(--green)':'var(--gold)'}">+${fmtW(reGainMan)}</div>
+          </div>
+          <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${reBar}%;background:var(--gold);border-radius:4px;transition:width 0.5s"></div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:6px;font-size:10px;color:var(--text-muted)">
+            <span>CF合計: +${fmtW(Math.round(totalCF/10000))}</span>
+            <span>ローン返済: +${fmtW(Math.round(loanRepaid/10000))}</span>
+            <span>値上がり想定: +${fmtW(Math.round(appreciation/10000))}</span>
+          </div>
+          <div style="margin-top:4px;font-size:10px;color:var(--text-muted)">年換算 <strong style="color:var(--gold)">${reAnnual}%/年</strong>（総合リターン）${winner==='real'?'　<span style="color:var(--green);font-weight:700">◀ 有利</span>':''}</div>
+        </div>
+        ${finRows.map((s, i) => `
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:12px;font-weight:700;color:${s.color}">📈 インデックス投資（${s.label}）</div>
+            <div style="font-size:14px;font-weight:900;color:${!s.better&&winner!=='real'?'var(--green)':s.color}">+${fmtW(s.gain)}</div>
+          </div>
+          <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${finBars[i]}%;background:${s.color};border-radius:4px;transition:width 0.5s"></div>
+          </div>
+          <div style="margin-top:4px;font-size:10px;color:var(--text-muted)">年換算 <strong style="color:${s.color}">${s.rate*100}%/年</strong>（複利）　ROI: ${s.roi}%${!s.better&&i===2?'　<span style="color:var(--green);font-weight:700">◀ 有利</span>':''}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div style="padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.8">
+      ⚠️ 不動産はレバレッジ効果（ローン活用）で自己資金を超えたリターンが狙えますが、空室・修繕・金利上昇リスクがあります。金融投資はリスク分散が容易ですが元本保証なし。両者を組み合わせた資産形成が有効です。
+    </div>
+  </div>`;
+}
+
 function renderRepairReserveCard(inp) {
   if (!inp || !inp.price || inp.price <= 0) return '';
   const age = inp.age || 10;
@@ -1036,6 +1109,7 @@ function renderResult(inp, r) {
     ${renderCorporateVsIndCard(inp, r)}
     ${renderHoldingCostCard(inp, r)}
     ${renderRepairReserveCard(inp)}
+    ${renderVsFinanceCard(inp, r)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
