@@ -276,6 +276,7 @@
   <p class="page-desc">マッチングから成約までの進捗と手数料収入を管理します。</p>
 
   <div id="pipeline-stats" class="stats-grid"></div>
+  <div id="deal-perform-card" style="margin-bottom:16px"></div>
   <div id="pipeline-funnel" style="margin-bottom:20px"></div>
 
   <div style="display:flex;justify-content:flex-end;margin-bottom:20px;gap:10px">
@@ -1634,11 +1635,60 @@ function createDealFromMatch(seller, buyer, price) {
   document.getElementById('dealRegModal').style.display = 'flex';
 }
 
+function renderDealPerformCard() {
+  var el = document.getElementById('deal-perform-card');
+  if (!el) return;
+  if (!deals3.length) { el.innerHTML = ''; return; }
+  var now = new Date();
+  var closed = deals3.filter(function(d){ return d.status === 'closed'; });
+  var active = deals3.filter(function(d){ return d.status !== 'closed'; });
+  var convRate = deals3.length > 0 ? Math.round(closed.length / deals3.length * 100) : 0;
+  var avgPrice = closed.length > 0 ? Math.round(closed.reduce(function(s,d){ return s+(d.price||0); },0) / closed.length) : 0;
+  var stagnant = active.filter(function(d){
+    if (!d.date) return false;
+    var diff = Math.floor((now - new Date(d.date)) / 86400000);
+    return diff >= 14;
+  });
+  var STAGE_PROB = {new:0.15, matched:0.35, nego:0.65};
+  var pipelineValue = active.reduce(function(s,d){
+    return s + Math.round((d.price||0) * (STAGE_PROB[d.status]||0));
+  }, 0);
+  var kpis = [
+    {l:'成約率', v: deals3.length > 0 ? convRate + '%' : '—', c: convRate >= 30 ? 'var(--green)' : convRate >= 15 ? 'var(--gold)' : 'var(--red)'},
+    {l:'成約平均価格', v: avgPrice > 0 ? avgPrice.toLocaleString() + '万円' : '—', c: 'var(--gold)'},
+    {l:'停滞商談', v: stagnant.length + '件', c: stagnant.length > 0 ? 'var(--orange)' : 'var(--green)'},
+    {l:'期待パイプライン', v: pipelineValue > 0 ? pipelineValue.toLocaleString() + '万円' : '—', c: 'var(--text-muted)'},
+  ];
+  var kpiHtml = kpis.map(function(k){
+    return '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px">'
+      + '<div style="font-size:18px;font-weight:900;color:' + k.c + '">' + k.v + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);margin-top:3px">' + k.l + '</div>'
+      + '</div>';
+  }).join('');
+  var convBarW = Math.min(100, convRate);
+  var stagnantAlert = stagnant.length > 0
+    ? '<div style="margin-top:10px;padding:8px 12px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:8px;font-size:12px;color:var(--orange)">&#x26A0;&#xFE0F; 停滞中（14日以上更新なし）: '
+      + stagnant.map(function(d){ return '<strong>' + (d.title || '商談') + '</strong>'; }).join('、')
+      + ' — 今すぐフォローアップしましょう</div>'
+    : '';
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:12px">&#x1F4CA; 商談パフォーマンスサマリー</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">' + kpiHtml + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">成約率 ' + convRate + '%</div>'
+    + '<div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin-bottom:6px">'
+    + '<div style="height:100%;width:' + convBarW + '%;background:' + (convRate>=30?'var(--green)':convRate>=15?'var(--gold)':'var(--red)') + ';border-radius:4px;transition:width 0.5s"></div>'
+    + '</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">期待パイプライン価値 = 進行中商談価格 × 各ステージ成約確率（新規15%・マッチング済35%・交渉中65%）の合計</div>'
+    + stagnantAlert
+    + '</div>';
+}
+
 // ===== 商談 =====
 function renderPipeline3() {
   const el = document.getElementById('pipeline-list');
   const statsEl = document.getElementById('pipeline-stats');
   const funnelEl = document.getElementById('pipeline-funnel');
+  renderDealPerformCard();
   const closed = deals3.filter(d=>d.status==='closed');
   const totalPrice = closed.reduce((s,d) => s + (d.price||0), 0);
   const totalFee = closed.reduce((s,d)=>{
