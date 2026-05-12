@@ -435,6 +435,8 @@
   </div>
   <!-- ポートフォリオ合計CF -->
   <div id="portfolio-summary" style="display:none;margin-bottom:16px"></div>
+  <!-- ポートフォリオ分散チェック -->
+  <div id="portfolio-diversity-card" style="display:none;margin-bottom:16px"></div>
 
   <!-- 物件比較パネル -->
   <div id="compare-panel" style="display:none;margin-bottom:24px">
@@ -1921,8 +1923,59 @@ function renderPortfolioSummary() {
     + '</div>';
 }
 
+function renderPortfolioDiversity() {
+  var el = document.getElementById('portfolio-diversity-card');
+  if(!el || history.length < 3) { if(el) el.style.display='none'; return; }
+  el.style.display = 'block';
+  const typeMap = {mansion:'マンション', kodate:'一戸建て', tochi:'土地', apartment:'アパート1棟', other:'その他'};
+  const typeCounts = {};
+  history.forEach(h => { const t = typeMap[h.propType]||'その他'; typeCounts[t]=(typeCounts[t]||0)+1; });
+  const cfPositive = history.filter(h=>h.annualCF>0).length;
+  const cfRatio = Math.round(cfPositive/history.length*100);
+  const cfColor = cfRatio>=80?'#4ade80':cfRatio>=60?'#facc15':'#f87171';
+  const maxType = Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]);
+  const topType = maxType[0];
+  const topRatio = Math.round(topType[1]/history.length*100);
+  const concentrated = topRatio >= 80;
+  const loansAll = history.every(h=>h.loan&&h.loan>0);
+  const avgLtvArr = history.filter(h=>h.price>0&&h.loan>0).map(h=>h.loan/h.price*100);
+  const avgLtv = avgLtvArr.length>0 ? Math.round(avgLtvArr.reduce((s,v)=>s+v,0)/avgLtvArr.length) : 0;
+  const ltvColor = avgLtv<=60?'#4ade80':avgLtv<=80?'#facc15':'#f87171';
+  const typeBarItems = maxType.map(([t,n])=>{
+    const pct=Math.round(n/history.length*100);
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font-size:12px;width:90px;color:var(--text-muted)">${t}</span><div style="flex:1;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--gold);border-radius:3px"></div></div><span style="font-size:11px;font-weight:700;color:var(--gold);width:32px;text-align:right">${pct}%</span></div>`;
+  }).join('');
+  const warnings = [];
+  if(concentrated) warnings.push({t:'⚠️ 物件種別の集中',d:`${topType[0]}が${topRatio}%と偏っています。種別を分散すると市場リスクが下がります。`});
+  if(cfRatio < 60) warnings.push({t:'⚠️ CFマイナス物件が多い',d:`${100-cfRatio}%の物件がCFマイナスです。キャッシュフロー改善を検討してください。`});
+  if(avgLtv > 80) warnings.push({t:'⚠️ 借入比率が高め',d:`平均LTV ${avgLtv}%は金利上昇リスクに敏感です。繰り上げ返済や低LTV物件の追加を検討してください。`});
+  el.innerHTML = `<div class="card" style="border-color:rgba(99,102,241,0.25)">
+    <div class="card-title">🔀 ポートフォリオ分散チェック（${history.length}件）</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 8px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">CFプラス率</div>
+        <div style="font-size:24px;font-weight:900;color:${cfColor}">${cfRatio}%</div>
+        <div style="font-size:10px;color:var(--text-muted)">${cfPositive}/${history.length}件</div>
+      </div>
+      <div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 8px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">平均LTV</div>
+        <div style="font-size:24px;font-weight:900;color:${ltvColor}">${avgLtv}%</div>
+        <div style="font-size:10px;color:var(--text-muted)">借入比率</div>
+      </div>
+      <div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 8px">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">種別集中度</div>
+        <div style="font-size:24px;font-weight:900;color:${concentrated?'#f87171':'#4ade80'}">${topRatio}%</div>
+        <div style="font-size:10px;color:var(--text-muted)">${topType[0]}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">${typeBarItems}</div>
+    ${warnings.length ? `<div style="display:flex;flex-direction:column;gap:8px">${warnings.map(w=>`<div style="padding:9px 12px;background:rgba(249,115,22,0.07);border:1px solid rgba(249,115,22,0.2);border-radius:8px;font-size:12px;line-height:1.6"><strong style="color:#fb923c">${w.t}</strong><br><span style="color:var(--text-muted)">${w.d}</span></div>`).join('')}</div>` : '<div style="padding:9px 12px;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:8px;font-size:12px;color:#4ade80">✅ ポートフォリオの分散状態は良好です</div>'}
+  </div>`;
+}
+
 function renderHistory() {
   renderPortfolioSummary();
+  renderPortfolioDiversity();
   const el = document.getElementById('history-list');
   if(!history.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🗂️</div><p>分析履歴がありません</p><p style="font-size:12px;margin-top:8px">「物件入力」タブで分析を実行すると、ここに履歴が保存されます</p><button class="btn btn-gold" style="margin-top:16px" onclick="switchTab('input')">物件入力タブへ →</button></div>`;
