@@ -194,6 +194,15 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
           年次収益レポートCSV
         </button>
+        <button class="btn btn-outline" onclick="exportAllDataJSON()" title="全データをJSONファイルに保存してバックアップできます" style="border-color:rgba(34,197,94,0.4);color:#4ade80">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          全データをバックアップ
+        </button>
+        <label class="btn btn-outline" title="JSONバックアップファイルからデータを復元します" style="cursor:pointer;border-color:rgba(59,130,246,0.4);color:#93c5fd">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5-5 5 5M12 4v11"/></svg>
+          バックアップから復元
+          <input type="file" accept=".json" style="display:none" onchange="importFromJSON(this)">
+        </label>
       </div>
     </div>
   </div>
@@ -3121,6 +3130,51 @@ function exportData(type){
   const csv=[headers,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));
   a.download=`${type}_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+function exportAllDataJSON() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    properties, tenants, rents, repairs,
+  };
+  try {
+    const planned = JSON.parse(localStorage.getItem('saas_planned_repairs')||'[]');
+    payload.plannedRepairs = planned;
+  } catch(e){}
+  const json = JSON.stringify(payload, null, 2);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([json], {type:'application/json'}));
+  a.download = `kanri_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast('バックアップファイルを保存しました ✓');
+  try { localStorage.setItem('kanri_last_backup', new Date().toISOString()); } catch(e){}
+}
+
+function importFromJSON(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.version || !Array.isArray(data.properties)) { showErrorToast('バックアップファイルの形式が正しくありません'); return; }
+      if(!confirm(`バックアップから復元します。\n物件 ${data.properties.length}件・テナント ${(data.tenants||[]).length}件・家賃記録 ${(data.rents||[]).length}件\n\n現在のデータは上書きされます。よろしいですか？`)) return;
+      properties = data.properties||[];
+      tenants    = data.tenants||[];
+      rents      = data.rents||[];
+      repairs    = data.repairs||[];
+      save('properties'); save('tenants'); save('rents'); save('repairs');
+      if(data.plannedRepairs) {
+        try { localStorage.setItem('saas_planned_repairs', JSON.stringify(data.plannedRepairs)); } catch(ee){}
+      }
+      renderDashboard();
+      showToast(`復元完了 ✓ 物件${properties.length}件・テナント${tenants.length}件を読み込みました`);
+    } catch(err) {
+      showErrorToast('ファイルの読み込みに失敗しました: ' + err.message);
+    }
+    input.value='';
+  };
+  reader.readAsText(file);
 }
 
 // ===== タブ =====
