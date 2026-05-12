@@ -1804,7 +1804,7 @@ function renderTenants(){
   const STATUS_L={active:'入居中',notice:'退去予告',vacant:'退去済'};
   const STATUS_B={active:'b-occupied',notice:'b-partial',vacant:'b-vacant'};
   if(!filtered.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><p>条件に一致するテナントがいません</p><p style="font-size:12px;margin-top:8px;color:var(--text-muted)">検索条件やフィルターを変更してみてください</p></div>`;return;}
-  el.innerHTML=`<table>
+  el.innerHTML=`<table class="mobile-card-table">
     <thead><tr><th>氏名</th><th>物件/部屋</th><th>月額家賃</th><th>今月入金</th><th>入居日</th><th>契約終了</th><th>ステータス</th><th></th></tr></thead>
     <tbody>
       ${filtered.map(t=>{
@@ -1822,12 +1822,12 @@ function renderTenants(){
         const stayBadge = stayYears>=5 ? `<span style="display:inline-block;padding:1px 6px;border-radius:100px;background:rgba(201,168,76,0.15);color:var(--gold);font-size:10px;font-weight:700;border:1px solid rgba(201,168,76,0.3);margin-left:4px" title="入居${stayYears}年目">長期${stayYears}年</span>` : stayYears>=2 ? `<span style="display:inline-block;padding:1px 6px;border-radius:100px;background:rgba(34,197,94,0.12);color:#4ade80;font-size:10px;font-weight:700;border:1px solid rgba(34,197,94,0.25);margin-left:4px">${stayYears}年入居</span>` : stayYears>=1 ? `<span style="display:inline-block;padding:1px 6px;border-radius:100px;background:rgba(59,130,246,0.12);color:#60a5fa;font-size:10px;font-weight:700;border:1px solid rgba(59,130,246,0.25);margin-left:4px">${stayYears}年目</span>` : '';
         return `<tr${rowBg?' style="'+rowBg+'"':''}>
           <td><strong>${esc(t.name)}</strong>${stayBadge}<br>${t.phone?`<a href="tel:${t.phone.replace(/[^\d\-+() ]/g,'')}" style="font-size:11px;color:#60a5fa;text-decoration:none">${esc(t.phone)}</a>`:''} ${memoText?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px" title="${esc(t.memo||'')}">📝 ${memoText}</div>`:''}</td>
-          <td>${p?esc(p.name):'不明'} / ${t.room||'—'}</td>
-          <td style="color:var(--gold);font-weight:700">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
-          <td>${rentBadge}</td>
-          <td style="font-size:12px">${t.start||'—'}</td>
-          <td style="font-size:12px">${t.end||'—'}${expiryBadge}</td>
-          <td><span class="badge ${STATUS_B[t.status]||''}">${STATUS_L[t.status]||t.status}</span></td>
+          <td data-label="物件/部屋">${p?esc(p.name):'不明'} / ${t.room||'—'}</td>
+          <td data-label="月額家賃" style="color:var(--gold);font-weight:700">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
+          <td data-label="今月入金">${rentBadge}</td>
+          <td data-label="入居日" style="font-size:12px">${t.start||'—'}</td>
+          <td data-label="契約終了" style="font-size:12px">${t.end||'—'}${expiryBadge}</td>
+          <td data-label="ステータス"><span class="badge ${STATUS_B[t.status]||''}">${STATUS_L[t.status]||t.status}</span></td>
           <td style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-outline btn-sm" onclick="showTenantDetail('${t.id}')">詳細</button>
             ${expiring?`<button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="generateRenewalEmail('${t.id}')">更新メール</button>`:''}
@@ -2196,7 +2196,7 @@ function renderRentLedger(){
     return;
   }
 
-  el.innerHTML=filterInfo+`<table>
+  el.innerHTML=filterInfo+`<table class="mobile-card-table">
     <thead><tr><th>テナント名</th><th>物件/部屋</th><th>請求額</th><th>入金額</th><th>入金日</th><th>ステータス</th><th></th></tr></thead>
     <tbody>
       ${filteredTenants.map(t=>{
@@ -2207,11 +2207,11 @@ function renderRentLedger(){
         const rowBg=r&&r.status==='paid'?'':'background:rgba(239,68,68,0.04)';
         return `<tr style="${rowBg}">
           <td><strong>${esc(t.name)}</strong></td>
-          <td>${p?p.name:'—'} / ${t.room||'—'}</td>
-          <td>${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
-          <td>${r&&r.paid?Number(r.paid).toLocaleString()+'円':'—'}</td>
-          <td style="font-size:12px">${r&&r.date?r.date:'—'}</td>
-          <td><span class="badge ${bClass}">${bLabel}</span></td>
+          <td data-label="物件/部屋">${p?p.name:'—'} / ${t.room||'—'}</td>
+          <td data-label="請求額">${t.rent?Number(t.rent).toLocaleString()+'円':'—'}</td>
+          <td data-label="入金額">${r&&r.paid?Number(r.paid).toLocaleString()+'円':'—'}</td>
+          <td data-label="入金日" style="font-size:12px">${r&&r.date?r.date:'—'}</td>
+          <td data-label="ステータス"><span class="badge ${bClass}">${bLabel}</span></td>
           <td style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-outline btn-sm" onclick="quickRent(${t.id},'${month}',${t.rent||0})">${r&&r.status==='paid'?'修正':'入金登録'}</button>
             ${r&&r.status==='paid'?`<button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="generateReceipt('${t.id}','${month}')">領収書</button>`:''}
@@ -2639,20 +2639,20 @@ function renderRepairs(){
   renderRepairBudget();
   renderRepairPriorityMatrix();
 
-  el.innerHTML=`<table>
+  el.innerHTML=`<table class="mobile-card-table">
     <thead><tr><th>物件/部屋</th><th>内容</th><th>優先度</th><th>報告日</th><th>完了日</th><th>費用</th><th>業者</th><th>ステータス</th><th></th></tr></thead>
     <tbody>
       ${filtered.map(r=>{
         const p=properties.find(x=>x.id===r.propertyId);
         return `<tr>
-          <td>${p?p.name:'—'} / ${r.room||'—'}</td>
-          <td><strong>${esc(r.content)}</strong></td>
-          <td style="color:${PCOLOR[r.priority]};font-weight:700">${REPAIR_PRI[r.priority]}</td>
-          <td style="font-size:12px">${r.date||'—'}</td>
-          <td style="font-size:12px;color:${r.done?'var(--green)':'var(--text-muted)'}">${r.done||'—'}</td>
-          <td>${r.cost?Number(r.cost).toLocaleString()+'円':'—'}</td>
-          <td style="font-size:12px">${r.vendor||'—'}</td>
-          <td><span class="badge ${ST_B[r.status]||''}">${REPAIR_ST[r.status]||r.status}</span></td>
+          <td><strong>${p?p.name:'—'}</strong> / ${r.room||'—'}</td>
+          <td data-label="内容"><strong>${esc(r.content)}</strong></td>
+          <td data-label="優先度" style="color:${PCOLOR[r.priority]};font-weight:700">${REPAIR_PRI[r.priority]}</td>
+          <td data-label="報告日" style="font-size:12px">${r.date||'—'}</td>
+          <td data-label="完了日" style="font-size:12px;color:${r.done?'var(--green)':'var(--text-muted)'}">${r.done||'—'}</td>
+          <td data-label="費用">${r.cost?Number(r.cost).toLocaleString()+'円':'—'}</td>
+          <td data-label="業者" style="font-size:12px">${r.vendor||'—'}</td>
+          <td data-label="ステータス"><span class="badge ${ST_B[r.status]||''}">${REPAIR_ST[r.status]||r.status}</span></td>
           <td style="display:flex;gap:6px;flex-wrap:wrap">
             ${r.status!=='done'?`<button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="generateRepairEstimateEmail('${r.id}')">見積依頼</button>`:''}
             <button class="btn btn-outline btn-sm" onclick="editRepair('${r.id}')">編集</button>
