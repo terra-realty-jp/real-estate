@@ -233,6 +233,7 @@
     </div>
   </div>
   <div id="loan-estimate-card" style="display:none;margin-bottom:16px"></div>
+  <div id="buyer-priority-card" style="display:none;margin-bottom:16px"></div>
   <div id="buyers-list"></div>
 </div>
 </div>
@@ -982,6 +983,58 @@ function renderNegoSimCard() {
 }
 
 // ===== 買主 =====
+function renderBuyerPriorityCard() {
+  const el = document.getElementById('buyer-priority-card');
+  if (!el) return;
+  if (buyers.length < 2) { el.style.display = 'none'; return; }
+  const activeSellers = sellers.filter(s => s.status === 'active');
+  const scored = buyers.map(b => {
+    let score = 0;
+    const timingScore = {asap:40, half:20, year:10, think:5};
+    score += timingScore[b.timing] || 10;
+    const loanScore = {cash:30, yes:15, tbd:5};
+    score += loanScore[b.loan] || 10;
+    const matchCount = activeSellers.filter(s => calcMatchScore(s, b).score >= 50).length;
+    score += Math.min(matchCount * 10, 30);
+    const budget = Number(b.budget) || 0;
+    if (budget > 0) {
+      const affordable = activeSellers.filter(s => budget >= (s.price||0) * 0.9).length;
+      if (affordable > 0) score += 10;
+    }
+    return { b, score, matchCount };
+  }).sort((a, z) => z.score - a.score);
+  const maxScore = scored[0].score || 1;
+  const TIMING_L = {asap:'即決希望', half:'半年以内', year:'1年以内', think:'柔軟'};
+  const LOAN_L = {cash:'現金', yes:'ローン', tbd:'未定'};
+  const rows = scored.map(({b, score, matchCount}, i) => {
+    const pct = Math.round(score / maxScore * 100);
+    const col = score >= 70 ? '#22c55e' : score >= 50 ? '#c9a84c' : score >= 30 ? '#60a5fa' : '#94a3b8';
+    const rank = ['🥇','🥈','🥉'][i] || `${i+1}.`;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="font-size:15px;width:24px;flex-shrink:0;text-align:center">${rank}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(b.name)}</span>
+          ${b.timing?`<span style="font-size:10px;padding:1px 6px;border-radius:100px;background:rgba(255,255,255,0.06);color:var(--text-muted)">${TIMING_L[b.timing]||b.timing}</span>`:''}
+          ${b.loan?`<span style="font-size:10px;padding:1px 6px;border-radius:100px;background:rgba(201,168,76,0.1);color:var(--gold)">${LOAN_L[b.loan]||b.loan}</span>`:''}
+          ${matchCount>0?`<span style="font-size:10px;padding:1px 6px;border-radius:100px;background:rgba(34,197,94,0.1);color:#4ade80">候補${matchCount}件</span>`:''}
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${col};border-radius:3px;transition:width .4s"></div>
+        </div>
+      </div>
+      <div style="font-size:16px;font-weight:900;color:${col};flex-shrink:0;width:36px;text-align:right">${score}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:4px">🎯 買主 購入優先度スコアランキング</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">タイミング緊急度・資金力・マッチング数を総合スコア化（最高100点）</div>
+    ${rows}
+    <div style="font-size:10px;color:#555;margin-top:10px">※ タイミング（40点）＋資金力（30点）＋マッチング件数（30点）の合計。スコアが高いほど成約につながりやすい可能性があります。</div>
+  </div>`;
+  el.style.display = 'block';
+}
+
 function renderLoanEstimateCard() {
   const el = document.getElementById('loan-estimate-card');
   if (!el) return;
@@ -1028,6 +1081,7 @@ function renderBuyers() {
   ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
 
   renderLoanEstimateCard();
+  renderBuyerPriorityCard();
   if(!buyers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🙋</div><p>買主がまだ登録されていません</p><p style="font-size:12px;margin-top:8px">「買主登録」ボタンから購入希望条件を登録してください</p></div>`; return; }
   const buyerQ = (document.getElementById('buyer-search')||{}).value||'';
   const buyerPurpose = (document.getElementById('buyer-purpose-filter')||{}).value||'all';
