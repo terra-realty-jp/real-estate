@@ -192,6 +192,7 @@
   </div>
   <div id="buyer-demand-card" style="display:none;margin-bottom:16px"></div>
   <div id="supply-demand-gap-card" style="display:none;margin-bottom:16px"></div>
+  <div id="agency-contract-card" style="margin-bottom:16px"></div>
   <div id="cgt-calc-card" style="margin-bottom:16px"></div>
   <div id="sale-timeline-card" style="margin-bottom:16px"></div>
   <div id="nego-sim-card" style="display:none;margin-bottom:16px"></div>
@@ -723,6 +724,85 @@ function renderSaleTimelineCard() {
     + '</div>';
 }
 
+function renderAgencyContractCard() {
+  var el = document.getElementById('agency-contract-card');
+  if (!el) return;
+  var types = [
+    {
+      name: '専属専任媒介',
+      reins: '5日以内',
+      report: '週1回以上',
+      selfFind: false,
+      period: '最長3ヶ月',
+      pros: ['最も手厚いサービス期待', '業者が最優先で動く', '進捗報告が週1以上'],
+      cons: ['売主自身は買主を見つけられない', '1社のみへの依頼で競争なし'],
+      color: 'var(--gold)',
+      badge: 'おすすめ',
+      bgBadge: 'rgba(201,168,76,0.15)',
+      border: 'rgba(201,168,76,0.35)'
+    },
+    {
+      name: '専任媒介',
+      reins: '7日以内',
+      report: '2週に1回以上',
+      selfFind: true,
+      period: '最長3ヶ月',
+      pros: ['売主が自分で買主を探せる', '1社集中で対応が期待できる', '報告義務あり'],
+      cons: ['専属より業者の優先度が下がる場合も', '複数社競争がない'],
+      color: '#3b82f6',
+      badge: '柔軟',
+      bgBadge: 'rgba(59,130,246,0.15)',
+      border: 'rgba(59,130,246,0.3)'
+    },
+    {
+      name: '一般媒介',
+      reins: '任意',
+      report: '義務なし',
+      selfFind: true,
+      period: '制限なし',
+      pros: ['複数社に同時依頼OK', '競争原理で幅広く告知可能', '売主自身も買主開拓できる'],
+      cons: ['各社の力が分散しやすい', 'レインズ登録・報告義務なし', '業者が積極的でない場合も'],
+      color: '#a78bfa',
+      badge: '競争',
+      bgBadge: 'rgba(167,139,250,0.15)',
+      border: 'rgba(167,139,250,0.3)'
+    }
+  ];
+  var cards = types.map(function(t) {
+    var pros = t.pros.map(function(p){ return '<li style="color:var(--green);font-size:11px;line-height:1.6">✓ ' + p + '</li>'; }).join('');
+    var cons = t.cons.map(function(c){ return '<li style="color:var(--red);font-size:11px;line-height:1.6">✗ ' + c + '</li>'; }).join('');
+    return '<div style="border:1px solid ' + t.border + ';border-radius:12px;padding:14px 16px;background:rgba(255,255,255,0.02)">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+      + '<span style="font-size:14px;font-weight:700;color:' + t.color + '">' + t.name + '</span>'
+      + '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:' + t.bgBadge + ';color:' + t.color + ';border:1px solid ' + t.border + '">' + t.badge + '</span>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">'
+      + '<div style="background:rgba(0,0,0,0.2);border-radius:7px;padding:7px 8px;text-align:center">'
+      + '<div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">レインズ登録</div>'
+      + '<div style="font-size:11px;font-weight:700;color:var(--text)">' + t.reins + '</div>'
+      + '</div>'
+      + '<div style="background:rgba(0,0,0,0.2);border-radius:7px;padding:7px 8px;text-align:center">'
+      + '<div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">売主への報告</div>'
+      + '<div style="font-size:11px;font-weight:700;color:var(--text)">' + t.report + '</div>'
+      + '</div>'
+      + '<div style="background:rgba(0,0,0,0.2);border-radius:7px;padding:7px 8px;text-align:center">'
+      + '<div style="font-size:9px;color:var(--text-muted);margin-bottom:2px">自己発見取引</div>'
+      + '<div style="font-size:11px;font-weight:700;color:' + (t.selfFind ? 'var(--green)' : 'var(--red)') + '">' + (t.selfFind ? '◯ 可能' : '✕ 不可') + '</div>'
+      + '</div>'
+      + '</div>'
+      + '<ul style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:0 8px">' + pros + cons + '</ul>'
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div class="card" style="margin-bottom:0">'
+    + '<div class="card-title">📝 媒介契約タイプ比較</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">不動産会社との媒介契約には3種類あります。売却条件・急ぎ度・希望に合わせて選びましょう。</div>'
+    + '<div style="display:flex;flex-direction:column;gap:10px">' + cards + '</div>'
+    + '<div style="margin-top:12px;padding:10px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">'
+    + '⚠️ 契約期間は最長3ヶ月（一般媒介は制限なし）。更新は可能ですが、業者との相性や活動内容をチェックした上で判断しましょう。'
+    + '</div>'
+    + '</div>';
+}
+
 function renderCGTCalcCard() {
   var el = document.getElementById('cgt-calc-card');
   if (!el) return;
@@ -944,6 +1024,7 @@ function renderSellers() {
 
   renderBuyerDemandCard();
   renderSupplyDemandGap();
+  renderAgencyContractCard();
   renderCGTCalcCard();
   renderSaleTimelineCard();
   renderNegoSimCard();
