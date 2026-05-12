@@ -382,6 +382,8 @@
     <div id="delay-cost-content"></div>
   </div>
 
+  <div id="nairan-prep-card" style="display:none;margin-bottom:16px"></div>
+
   <div class="card" id="scoreActionCard" style="display:none;">
     <div class="card-title"><span class="icon">🎯</span>推奨アクション</div>
     <div id="scoreActions"></div>
@@ -893,6 +895,8 @@ function updateScore() {
   renderSubsidyCard(capped, [...checked]);
   // 修繕先送りコスト増加シミュレーター
   renderDelayCostCard(capped, [...checked]);
+  // 内覧準備チェックリスト
+  renderNairanPrepCard(capped);
   // 管理代行費用シミュレーターカード
   renderMgmtCostCard(capped);
   const demolishCard = document.getElementById('demolish-calc-card');
@@ -1771,6 +1775,73 @@ function renderDelayCostCard(score, checkedArr) {
     ⚠️ <strong style="color:#f87171">修繕費は放置年数が長いほど複利的に増加します。</strong>雨漏り・腐食が進むと構造部への影響が出て費用が跳ね上がります。売却価格も毎年低下する傾向があります。
     </div>
     <div style="font-size:10px;color:#555;margin-top:8px">※ 築年数・構造・延床面積をもとにした概算試算です。実際の費用は物件の状態によって大きく異なります。</div>`;
+}
+
+function renderNairanPrepCard(score) {
+  var el = document.getElementById('nairan-prep-card');
+  if (!el) return;
+  if (score < 20) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  var STORAGE_KEY = 'nairan_prep_checked';
+  var checked = (function() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) { return []; }
+  })();
+  var items = [
+    { id:'np1', cat:'清掃', label:'玄関・廊下の清掃・掃き掃除' },
+    { id:'np2', cat:'清掃', label:'水回り（台所・浴室・トイレ）の清掃' },
+    { id:'np3', cat:'清掃', label:'換気扇・レンジフードの汚れ除去' },
+    { id:'np4', cat:'整理', label:'不用品・家具の撤去または整理' },
+    { id:'np5', cat:'整理', label:'押入れ・収納スペースを空にする' },
+    { id:'np6', cat:'臭気', label:'室内の換気（窓を開けて空気を入れ替え）' },
+    { id:'np7', cat:'臭気', label:'消臭・芳香剤の設置' },
+    { id:'np8', cat:'設備', label:'電球の交換・照明の動作確認' },
+    { id:'np9', cat:'設備', label:'水道・ガス・電気の通電確認' },
+    { id:'np10', cat:'設備', label:'ドア・鍵・雨戸の動作確認' },
+    { id:'np11', cat:'外回り', label:'玄関前・アプローチの清掃' },
+    { id:'np12', cat:'外回り', label:'庭・草木の刈り込み・落ち葉の除去' },
+    { id:'np13', cat:'書類', label:'登記簿謄本・固定資産税通知書の準備' },
+    { id:'np14', cat:'書類', label:'建物図面・間取り図の準備' },
+  ];
+  var doneCount = items.filter(function(it){ return checked.indexOf(it.id) >= 0; }).length;
+  var pct = Math.round(doneCount / items.length * 100);
+  var barColor = pct >= 80 ? 'var(--green)' : pct >= 40 ? 'var(--gold)' : 'var(--orange)';
+  var cats = ['清掃', '整理', '臭気', '設備', '外回り', '書類'];
+  var itemsHtml = cats.map(function(cat) {
+    var catItems = items.filter(function(it){ return it.cat === cat; });
+    var rows = catItems.map(function(it) {
+      var done = checked.indexOf(it.id) >= 0;
+      return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:12px;color:' + (done?'var(--text-muted)':'var(--text)') + '">'
+        + '<input type="checkbox" ' + (done?'checked':'') + ' onchange="window._nairanToggle(\'' + it.id + '\')" style="width:14px;height:14px;flex-shrink:0;cursor:pointer">'
+        + '<span style="' + (done?'text-decoration:line-through;':'') + '">' + it.label + '</span>'
+        + '</label>';
+    }).join('');
+    return '<div style="margin-bottom:10px">'
+      + '<div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:4px;letter-spacing:0.5px">' + cat + '</div>'
+      + rows
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div class="card" style="margin-bottom:0">'
+    + '<div class="card-title">&#x1F3E0; 内覧前チェックリスト</div>'
+    + '<p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">内覧前に確認すべき準備項目です。チェックを入れて進捗を管理しましょう。</p>'
+    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
+    + '<div style="flex:1;height:10px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden">'
+    + '<div id="nairan-progress-bar" style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:5px;transition:width 0.4s"></div>'
+    + '</div>'
+    + '<div id="nairan-progress-text" style="font-size:12px;font-weight:700;color:' + barColor + ';white-space:nowrap">' + doneCount + '/' + items.length + ' 完了（' + pct + '%）</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px">' + itemsHtml + '</div>'
+    + (pct === 100 ? '<div style="margin-top:12px;padding:10px 12px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);border-radius:8px;font-size:12px;color:var(--green)">&#x2728; 全項目チェック完了！内覧の準備が整いました。</div>' : '')
+    + '</div>';
+
+  window._nairanToggle = function(id) {
+    var cur = (function() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) { return []; }
+    })();
+    var idx = cur.indexOf(id);
+    if (idx >= 0) cur.splice(idx, 1); else cur.push(id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cur));
+    renderNairanPrepCard(score);
+  };
 }
 
 function renderTimeline(score, ids) {
