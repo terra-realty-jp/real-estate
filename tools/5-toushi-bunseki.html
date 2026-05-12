@@ -932,6 +932,7 @@ function renderResult(inp, r) {
     ${renderPurchaseChecklistCard(inp, r)}
     ${renderHoldPeriodOptimCard(inp)}
     ${renderTaxChecklistCard(inp, r)}
+    ${renderCorporateVsIndCard(inp, r)}
 
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin-top:16px;text-align:center">
       <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">この物件、実際に購入を検討していますか？</div>
@@ -1266,6 +1267,56 @@ function renderTaxChecklistCard(inp, r) {
     + '💡 確定申告は物件購入翌年の2〜3月に行います。初年度は税理士への相談（費用5〜10万円）でミスを防ぎましょう。'
     + '</div>'
     + '</div>';
+}
+
+function renderCorporateVsIndCard(inp, r) {
+  if(!inp || !r || r.annualCF <= 0) return '';
+  const cf = Math.round(r.annualCF / 10000);
+  const cfYen = r.annualCF;
+  // 個人所得税（不動産所得として総合課税、簡略化）
+  function indTax(income) {
+    const brackets = [[1950000,0.05,0],[3300000,0.10,97500],[6950000,0.20,427500],[9000000,0.23,636000],[18000000,0.33,1536000],[40000000,0.40,2796000],[Infinity,0.45,4796000]];
+    const b = brackets.find(x=>income<=x[0]);
+    return b ? Math.round(income*b[1]-b[2]) : Math.round(income*0.45-4796000);
+  }
+  // 法人税（中小法人800万以下15%、超過23.2%）
+  function corpTax(income) {
+    const t = income <= 8000000 ? income*0.15 : 8000000*0.15+(income-8000000)*0.232;
+    return Math.round(t * 1.1); // 法人住民税含む概算
+  }
+  const itax = indTax(cfYen);
+  const ctax = corpTax(cfYen);
+  const indNet = cfYen - itax;
+  const corpNet = cfYen - ctax;
+  const saving = corpNet - indNet;
+  const savingWan = Math.round(saving/10000);
+  const favorable = saving > 0 ? 'corp' : 'ind';
+  const breakeven = cf <= 500 ? 500 : cf >= 3000 ? '3000万以上' : null;
+  const rateInd = Math.round(itax/cfYen*100);
+  const rateCorp = Math.round(ctax/cfYen*100);
+  const note = cf < 330 ? '年間CFがこの水準だと個人の方が有利な場合が多いです（法人設立・維持コストを考慮）。' :
+               cf < 800 ? 'この水準では個人・法人でほぼ同等か法人がやや有利です。他の収入との合算も考慮してください。' :
+               '年間CFが800万円超の水準では法人化による税メリットが大きくなります。税理士への相談を推奨します。';
+  return `<div class="card" style="border-color:rgba(99,102,241,0.3);margin-top:16px">
+    <div class="card-title">🏢 個人 vs 法人購入 — 税負担比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">年間CF ${cf.toLocaleString()}万円に対する概算税負担を比較します。実際は給与所得や他の控除により異なります。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:${favorable==='ind'?'rgba(34,197,94,0.08)':'rgba(255,255,255,0.03)'};border:1px solid ${favorable==='ind'?'rgba(34,197,94,0.4)':'rgba(255,255,255,0.08)'};border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">👤 個人購入</div>
+        <div style="font-size:20px;font-weight:900;color:${favorable==='ind'?'#4ade80':'var(--text)'}">${Math.round(indNet/10000).toLocaleString()}万円</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">税引後CF（税率約${rateInd}%）</div>
+        ${favorable==='ind'?'<div style="font-size:10px;font-weight:700;color:#4ade80;margin-top:4px">◀ こちらが有利</div>':''}
+      </div>
+      <div style="background:${favorable==='corp'?'rgba(99,102,241,0.08)':'rgba(255,255,255,0.03)'};border:1px solid ${favorable==='corp'?'rgba(99,102,241,0.4)':'rgba(255,255,255,0.08)'};border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">🏢 法人購入</div>
+        <div style="font-size:20px;font-weight:900;color:${favorable==='corp'?'#818cf8':'var(--text)'}">${Math.round(corpNet/10000).toLocaleString()}万円</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">税引後CF（税率約${rateCorp}%）</div>
+        ${favorable==='corp'?'<div style="font-size:10px;font-weight:700;color:#818cf8;margin-top:4px">◀ こちらが有利</div>':''}
+      </div>
+    </div>
+    ${saving !== 0 ? `<div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:12px;color:var(--text-muted);margin-bottom:12px;text-align:center">法人化で年間 <strong style="color:${savingWan>0?'#818cf8':'#f87171'}">${savingWan>0?'+':''}${savingWan.toLocaleString()}万円</strong> の税差（概算・法人維持費を除く）</div>` : ''}
+    <div style="padding:10px 12px;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">${note}<br>法人設立費用：約20〜30万円 / 法人住民税（均等割）：年7万円〜</div>
+  </div>`;
 }
 
 function renderCashflow(inp, r) {
