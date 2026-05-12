@@ -385,6 +385,7 @@
     <div id="repair-budget-content"></div>
   </div>
   <div id="repair-rent-ratio-card" style="display:none;margin-bottom:20px;background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px"></div>
+  <div id="repair-vendor-card" style="display:none;margin-bottom:20px"></div>
   <div id="repair-category-card" style="display:none;margin-bottom:20px"></div>
   <div id="repair-priority-matrix" style="display:none;margin-bottom:20px"></div>
   <div id="repair-monthly-chart" style="display:none;margin-bottom:20px"></div>
@@ -3017,6 +3018,7 @@ function renderRepairs(){
     repSumEl.style.display = 'none';
   }
   renderRepairRentRatioCard();
+  renderRepairVendorCard();
   renderRepairCategoryBreakdown();
   renderRepairMonthlyChart();
   renderRepairTimeline();
@@ -3171,6 +3173,52 @@ function renderRepairPriorityMatrix() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">未完了 ' + active.length + '件 ／ 費用5万円を境界に高額区分</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' + quadHtml + '</div>'
     + '</div>';
+}
+
+function renderRepairVendorCard() {
+  const el = document.getElementById('repair-vendor-card');
+  if (!el) return;
+  const doneRepairs = repairs.filter(r => r.vendor && r.cost > 0);
+  if (doneRepairs.length < 2) { el.style.display = 'none'; return; }
+  const vendorMap = {};
+  doneRepairs.forEach(r => {
+    const v = r.vendor.trim();
+    if (!vendorMap[v]) vendorMap[v] = { name: v, total: 0, count: 0 };
+    vendorMap[v].total += Number(r.cost) || 0;
+    vendorMap[v].count++;
+  });
+  const vendors = Object.values(vendorMap).sort((a, b) => b.total - a.total);
+  if (!vendors.length) { el.style.display = 'none'; return; }
+  const maxTotal = vendors[0].total;
+  const grandTotal = vendors.reduce((s, v) => s + v.total, 0);
+  el.style.display = 'block';
+  const rows = vendors.map((v, i) => {
+    const avg = Math.round(v.total / v.count);
+    const pct = Math.round(v.total / maxTotal * 100);
+    const sharePct = Math.round(v.total / grandTotal * 100);
+    const colors = ['var(--gold)', '#60a5fa', '#4ade80', '#a78bfa', '#f97316', '#ec4899'];
+    const color = colors[i % colors.length];
+    return `<div style="padding:10px 12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:12px;font-weight:700;color:${color}">${esc(v.name)}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text)">${Math.round(v.total/10000).toLocaleString()}万円</div>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:5px">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.4s"></div>
+      </div>
+      <div style="display:flex;gap:12px;font-size:10px;color:var(--text-muted)">
+        <span>${v.count}件</span>
+        <span>平均 ${avg.toLocaleString()}円/件</span>
+        <span>比率 ${sharePct}%</span>
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px">
+    <div class="card-title">🔧 修繕業者別コスト実績</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">登録業者 ${vendors.length}社・合計 ${Math.round(grandTotal/10000).toLocaleString()}万円</div>
+    ${rows}
+    <div style="margin-top:10px;font-size:11px;color:var(--text-muted);line-height:1.7">💡 同じ工事でも業者によって費用が2〜3倍変わることがあります。定期的に複数社で見積比較を。</div>
+  </div>`;
 }
 
 function renderRepairCategoryBreakdown(){
