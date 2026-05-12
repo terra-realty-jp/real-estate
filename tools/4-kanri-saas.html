@@ -329,6 +329,7 @@
   <div id="tenant-filter-summary" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
   <div id="contact-quick-card" style="margin-bottom:12px"></div>
   <div id="vacancy-tracker" style="display:none;margin-bottom:16px"></div>
+  <div id="move-season-card" style="display:none;margin-bottom:16px"></div>
   <div id="tenure-analysis-card" style="display:none;margin-bottom:16px"></div>
   <div id="tenants-list"></div>
 </div>
@@ -2057,6 +2058,59 @@ function generateVacancyListingEmail() {
   el.style.display = 'block';
 }
 
+function renderMoveSeasonCard() {
+  const el = document.getElementById('move-season-card');
+  if (!el) return;
+  const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const inCount = Array(12).fill(0);
+  const outCount = Array(12).fill(0);
+  tenants.forEach(function(t) {
+    if (t.start) {
+      const m = parseInt((t.start.split('-')[1] || '1'), 10) - 1;
+      if (m >= 0 && m < 12) inCount[m]++;
+    }
+    if (t.end && t.status !== 'active') {
+      const m = parseInt((t.end.split('-')[1] || '1'), 10) - 1;
+      if (m >= 0 && m < 12) outCount[m]++;
+    }
+  });
+  const totalIn = inCount.reduce(function(s, v){ return s + v; }, 0);
+  const totalOut = outCount.reduce(function(s, v){ return s + v; }, 0);
+  if (totalIn + totalOut < 2) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const maxIn = Math.max.apply(null, inCount) || 1;
+  const maxOut = Math.max.apply(null, outCount) || 1;
+  const combined = inCount.map(function(v, i){ return v + outCount[i]; });
+  const maxCombined = Math.max.apply(null, combined) || 1;
+  const peakInMonth = inCount.indexOf(Math.max.apply(null, inCount));
+  const peakOutMonth = outCount.indexOf(Math.max.apply(null, outCount));
+  const rows = MONTHS.map(function(label, i) {
+    const inW = Math.round((inCount[i] / maxIn) * 100);
+    const outW = Math.round((outCount[i] / maxOut) * 100);
+    const isBusyIn = inCount[i] === Math.max.apply(null, inCount) && inCount[i] > 0;
+    const isBusyOut = outCount[i] === Math.max.apply(null, outCount) && outCount[i] > 0;
+    return '<div style="display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:6px;align-items:center;margin-bottom:5px">'
+      + '<div style="font-size:10px;color:' + (isBusyIn || isBusyOut ? 'var(--gold)' : 'var(--text-muted)') + ';font-weight:' + (isBusyIn || isBusyOut ? '700' : '400') + '">' + label + '</div>'
+      + '<div><div style="height:8px;border-radius:4px;background:rgba(74,222,128,0.15);overflow:hidden"><div style="height:100%;width:' + inW + '%;background:var(--green);border-radius:4px;transition:width 0.4s"></div></div></div>'
+      + '<div><div style="height:8px;border-radius:4px;background:rgba(239,68,68,0.15);overflow:hidden"><div style="height:100%;width:' + outW + '%;background:var(--red);border-radius:4px;transition:width 0.4s"></div></div></div>'
+      + '<div style="font-size:10px;color:var(--text-muted);text-align:right">' + inCount[i] + '/' + outCount[i] + '</div>'
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:4px">&#x1F4C6; 月別入退去傾向</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">入居と退去が多い月を可視化。募集・更新準備のタイミング参考に。</div>'
+    + '<div style="display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:6px;margin-bottom:6px">'
+    + '<div></div>'
+    + '<div style="font-size:10px;color:var(--green);font-weight:700">入居 (' + totalIn + '件)</div>'
+    + '<div style="font-size:10px;color:var(--red);font-weight:700">退去 (' + totalOut + '件)</div>'
+    + '<div></div></div>'
+    + rows
+    + '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)">'
+    + (totalIn > 0 ? '<div style="font-size:11px;color:var(--green)">&#x1F4CD; 入居ピーク: <strong>' + MONTHS[peakInMonth] + '</strong> (' + inCount[peakInMonth] + '件)</div>' : '')
+    + (totalOut > 0 ? '<div style="font-size:11px;color:var(--red)">&#x1F4CD; 退去ピーク: <strong>' + MONTHS[peakOutMonth] + '</strong> (' + outCount[peakOutMonth] + '件)</div>' : '')
+    + '</div></div>';
+}
+
 function renderTenureAnalysisCard() {
   const el = document.getElementById('tenure-analysis-card');
   if (!el) return;
@@ -2155,6 +2209,7 @@ function renderContactQuickCard() {
 function renderTenants(){
   renderContactQuickCard();
   renderVacancyTracker();
+  renderMoveSeasonCard();
   renderTenureAnalysisCard();
   const el=document.getElementById('tenants-list');
   if(!tenants.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><p>テナントが登録されていません</p><p style="font-size:12px;margin-top:8px">${properties.length?'右上の「＋ テナント追加」からはじめてください':'先に「物件管理」タブで物件を登録してください'}</p>${properties.length?'<button class="btn btn-gold" style="margin-top:16px" onclick="openTenantModal()">＋ テナントを追加する</button>':''}</div>`;return;}
