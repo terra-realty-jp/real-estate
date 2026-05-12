@@ -203,6 +203,7 @@
   <div class="kpi-grid" id="kpi-grid"></div>
   <div id="vacancy-potential-card" style="margin-bottom:20px"></div>
   <div id="monthly-highlight-card" style="margin-bottom:20px"></div>
+  <div id="income-goal-card" style="margin-bottom:20px"></div>
   <div class="card" style="margin-bottom:20px;padding:18px 24px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <div>
@@ -749,6 +750,65 @@ function loadDemoData() {
   showToast('デモデータを読み込みました ✓ 各タブで動作を確認できます');
 }
 
+function renderIncomeGoalCard() {
+  const el = document.getElementById('income-goal-card');
+  if (!el || properties.length === 0) { if(el) el.innerHTML=''; return; }
+  const GOAL_KEY = 'income_goal_man';
+  let goalMan = parseInt(localStorage.getItem(GOAL_KEY) || '0');
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const activeTenants = tenants.filter(t => t.status === 'active');
+  const expectedMonthly = Math.round(activeTenants.reduce((s,t) => s+(t.rent||0), 0) / 10000);
+  const collected = Math.round(rents.filter(r => r.month===thisMonth&&r.status==='paid').reduce((s,r)=>s+(r.paid||0),0)/10000);
+  if (!goalMan) {
+    el.innerHTML = `<div class="card" style="background:rgba(201,168,76,0.04);border-color:rgba(201,168,76,0.15)">
+      <div class="card-title">🎯 月間収入目標を設定しよう</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <input id="goal-input" type="number" min="1" placeholder="目標額（万円）" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:7px;padding:8px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none;width:140px">
+        <button onclick="(function(){const v=parseInt(document.getElementById('goal-input').value);if(v>0){localStorage.setItem('${GOAL_KEY}',v);renderIncomeGoalCard();}else{alert('1万円以上を入力してください')}})()" class="btn btn-gold">設定する</button>
+        <div style="font-size:11px;color:var(--text-muted)">現在の月間予定収入: ${expectedMonthly}万円</div>
+      </div>
+    </div>`;
+    return;
+  }
+  const pctCollected = goalMan > 0 ? Math.round(collected / goalMan * 100) : 0;
+  const pctExpected = goalMan > 0 ? Math.round(expectedMonthly / goalMan * 100) : 0;
+  const goalColor = pctExpected >= 100 ? '#4ade80' : pctExpected >= 80 ? '#facc15' : '#f87171';
+  const barW = Math.min(100, pctCollected);
+  const milestone = pctExpected >= 100 ? '🎉 目標達成中！' : pctExpected >= 80 ? '⬆️ あと少し！物件追加で達成可能' : '📈 目標に向けて物件を増やしましょう';
+  el.innerHTML = `<div class="card" style="background:rgba(201,168,76,0.04);border-color:rgba(201,168,76,0.15)">
+    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span>🎯 月間収入目標トラッカー</span>
+      <button onclick="localStorage.removeItem('${GOAL_KEY}');renderIncomeGoalCard()" style="font-size:10px;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:inherit">目標をリセット</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">目標額</div>
+        <div style="font-size:18px;font-weight:900;color:var(--gold)">${goalMan}万円<span style="font-size:10px">/月</span></div>
+      </div>
+      <div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">予定収入</div>
+        <div style="font-size:18px;font-weight:900;color:${goalColor}">${expectedMonthly}万円</div>
+        <div style="font-size:10px;color:${goalColor};font-weight:700">${pctExpected}%</div>
+      </div>
+      <div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">今月回収済</div>
+        <div style="font-size:18px;font-weight:900;color:var(--green)">${collected}万円</div>
+        <div style="font-size:10px;color:var(--text-muted)">${pctCollected}%</div>
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:4px">
+        <span>今月の回収進捗</span><span>${collected}/${goalMan}万円</span>
+      </div>
+      <div style="height:10px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden">
+        <div style="height:100%;width:${barW}%;background:${pctCollected>=100?'#4ade80':'var(--gold)'};border-radius:5px;transition:width 0.5s"></div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:${goalColor};font-weight:700">${milestone}</div>
+  </div>`;
+}
+
 // ===== ダッシュボード =====
 function renderDashboard() {
   // はじめての方向けガイド
@@ -1109,6 +1169,7 @@ function renderDashboard() {
       ctaCard.style.display = 'none';
     }
   }
+  renderIncomeGoalCard();
   renderConsecutiveArrearsCard();
   renderVacancyPotentialCard();
   renderMonthlyHighlight();
