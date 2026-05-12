@@ -205,6 +205,7 @@
   <div id="monthly-highlight-card" style="margin-bottom:20px"></div>
   <div id="income-goal-card" style="margin-bottom:20px"></div>
   <div id="repair-reserve-tracker" style="margin-bottom:20px"></div>
+  <div id="portfolio-health-card" style="margin-bottom:20px"></div>
   <div class="card" style="margin-bottom:20px;padding:18px 24px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <div>
@@ -1228,6 +1229,7 @@ function renderDashboard() {
   }
   renderIncomeGoalCard();
   renderRepairReserveTracker();
+  renderPortfolioHealthCard();
   renderConsecutiveArrearsCard();
   renderVacancyPotentialCard();
   renderMonthlyHighlight();
@@ -1235,6 +1237,76 @@ function renderDashboard() {
   renderNextMonthForecast();
   renderTaxHelper();
   renderIncomeHeatmap();
+}
+
+function renderPortfolioHealthCard() {
+  const el = document.getElementById('portfolio-health-card');
+  if (!el || !properties.length) { if(el) el.innerHTML=''; return; }
+  const activeTenants = tenants.filter(function(t){ return t.status === 'active'; });
+  const totalUnits = properties.reduce(function(s,p){ return s + (p.units||1); }, 0);
+  const monthlyCharge = activeTenants.reduce(function(s,t){ return s + (t.rent||0); }, 0);
+  const now = new Date();
+  const thisMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+
+  // 入居率スコア (30pt max)
+  const occupancy = totalUnits > 0 ? activeTenants.length / totalUnits : 0;
+  const occupancyScore = occupancy >= 0.95 ? 30 : occupancy >= 0.85 ? 24 : occupancy >= 0.70 ? 15 : occupancy >= 0.50 ? 8 : 0;
+
+  // 家賃回収率スコア (30pt max)
+  const paidAmt = rents.filter(function(r){ return r.month === thisMonth && r.status === 'paid'; })
+    .reduce(function(s,r){ return s + (r.paid||0); }, 0);
+  const collectRate = monthlyCharge > 0 ? paidAmt / monthlyCharge : 1;
+  const collectScore = collectRate >= 1 ? 30 : collectRate >= 0.95 ? 25 : collectRate >= 0.80 ? 15 : collectRate >= 0.60 ? 8 : 0;
+
+  // 修繕費比率スコア (20pt max): 年間修繕費 / 年間家賃収入
+  const annualRepair = repairs.reduce(function(s,r){ return s + (Number(r.cost)||0); }, 0);
+  const annualRent = monthlyCharge * 12;
+  const repairRatio = annualRent > 0 ? annualRepair / annualRent : 0;
+  const repairScore = repairRatio <= 0.05 ? 20 : repairRatio <= 0.10 ? 16 : repairRatio <= 0.15 ? 10 : repairRatio <= 0.25 ? 5 : 0;
+
+  // 修繕積立スコア (20pt max)
+  const reserveBal = parseFloat(localStorage.getItem('reserve_balance_man') || '0');
+  const reserveTarget = properties.reduce(function(s,p){ return s + (p.units||1); }, 0) * 500 * 0.01;
+  const reserveRate = reserveTarget > 0 ? reserveBal / reserveTarget : 0;
+  const reserveScore = reserveRate >= 1 ? 20 : reserveRate >= 0.75 ? 16 : reserveRate >= 0.50 ? 10 : reserveRate >= 0.25 ? 5 : 0;
+
+  const total = occupancyScore + collectScore + repairScore + reserveScore;
+  const grade = total >= 85 ? 'S' : total >= 70 ? 'A' : total >= 50 ? 'B' : total >= 30 ? 'C' : 'D';
+  const gradeColor = total >= 85 ? 'var(--gold)' : total >= 70 ? 'var(--green)' : total >= 50 ? '#60a5fa' : total >= 30 ? 'var(--orange)' : 'var(--red)';
+  const comment = total >= 85 ? '優秀な経営状態です。このまま維持を心がけましょう。'
+    : total >= 70 ? 'おおむね良好です。低スコア項目を重点改善しましょう。'
+    : total >= 50 ? 'いくつか改善点があります。入居率と回収率を優先対応してください。'
+    : '複数の課題があります。専門家への相談も検討しましょう。';
+
+  var items = [
+    { label: '入居率', score: occupancyScore, max: 30, value: Math.round(occupancy*100)+'%', color: occupancyScore >= 24 ? 'var(--green)' : occupancyScore >= 15 ? 'var(--gold)' : 'var(--red)' },
+    { label: '家賃回収率', score: collectScore, max: 30, value: Math.round(collectRate*100)+'%', color: collectScore >= 25 ? 'var(--green)' : collectScore >= 15 ? 'var(--gold)' : 'var(--red)' },
+    { label: '修繕費比率', score: repairScore, max: 20, value: Math.round(repairRatio*100)+'%', color: repairScore >= 16 ? 'var(--green)' : repairScore >= 10 ? 'var(--gold)' : 'var(--red)' },
+    { label: '修繕積立達成率', score: reserveScore, max: 20, value: Math.round(Math.min(reserveRate,1)*100)+'%', color: reserveScore >= 16 ? 'var(--green)' : reserveScore >= 10 ? 'var(--gold)' : 'var(--red)' },
+  ];
+  var bars = items.map(function(it) {
+    var pct = it.max > 0 ? Math.round(it.score / it.max * 100) : 0;
+    return '<div style="margin-bottom:8px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
+      + '<span style="font-size:11px;color:var(--text-muted)">' + it.label + '</span>'
+      + '<span style="font-size:11px;font-weight:700;color:' + it.color + '">' + it.value + '　' + it.score + '/' + it.max + 'pt</span>'
+      + '</div>'
+      + '<div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px">'
+      + '<div style="width:' + pct + '%;height:100%;background:' + it.color + ';border-radius:3px;transition:width 0.5s"></div>'
+      + '</div></div>';
+  }).join('');
+  el.innerHTML = '<div class="card" style="margin-bottom:0">'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px">'
+    + '<div><div class="card-title" style="margin-bottom:2px">🏥 ポートフォリオ健全性スコア</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">入居率・回収率・修繕費・積立の4軸で評価</div></div>'
+    + '<div style="text-align:center;background:rgba(0,0,0,0.2);border-radius:12px;padding:12px 20px">'
+    + '<div style="font-size:40px;font-weight:900;color:' + gradeColor + ';line-height:1">' + grade + '</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + gradeColor + '">' + total + '<span style="font-size:11px;color:var(--text-muted)">/100pt</span></div>'
+    + '</div></div>'
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 14px;margin-bottom:12px">' + bars + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:7px">'
+    + comment + '</div>'
+    + '</div>';
 }
 
 function renderConsecutiveArrearsCard() {
