@@ -259,6 +259,7 @@
     <button class="btn btn-gold" onclick="openPropertyModal()">＋ 物件登録</button>
     <button class="btn btn-outline btn-sm" onclick="exportData('properties')">CSVエクスポート</button>
   </div>
+  <div id="property-ranking-card" style="margin-bottom:0"></div>
   <div id="properties-list"></div>
 </div>
 </div>
@@ -1424,6 +1425,46 @@ function renderProperties() {
     </tbody>
   </table>
   <div style="font-size:11px;color:var(--text-muted);margin-top:8px;padding:6px 12px">健全性スコア: <span style="color:#4ade80;font-weight:700">A</span> 優良（85+）　<span style="color:#facc15;font-weight:700">B</span> 良好（70+）　<span style="color:#fb923c;font-weight:700">C</span> 要注意（50+）　<span style="color:#f87171;font-weight:700">D</span> 要対応（50未満）　※稼働率・入金率・未対応修繕から算出</div>`;
+  renderPropertyRankingCard();
+}
+
+function renderPropertyRankingCard() {
+  const el = document.getElementById('property-ranking-card');
+  if(!el || properties.length < 2) { if(el) el.innerHTML=''; return; }
+  const data = properties.map(p => {
+    const pts = tenants.filter(t => t.propertyId===p.id && t.status==='active');
+    const monthlyRent = pts.reduce((s,t) => s+(t.rent||0), 0);
+    const occ = pts.length;
+    const occRate = p.units > 0 ? Math.round(occ/p.units*100) : 0;
+    const health = calcPropertyHealth(p);
+    return {p, monthlyRent, occ, occRate, health};
+  }).sort((a,b) => b.monthlyRent - a.monthlyRent);
+  const maxRent = Math.max(data[0].monthlyRent, 1);
+  const medals = ['🥇','🥈','🥉'];
+  el.innerHTML = `<div class="card" style="margin-bottom:16px">
+    <div class="card-title">🏆 物件収益ランキング</div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-top:4px">
+      ${data.map((d,i) => {
+        const barW = Math.round(d.monthlyRent/maxRent*100);
+        const rank = i < 3 ? medals[i] : `${i+1}位`;
+        const rentStr = d.monthlyRent > 0 ? `月${(d.monthlyRent/10000).toFixed(1)}万円` : '—';
+        const oc = d.occRate>=80?'#4ade80':d.occRate>=50?'#facc15':'#f87171';
+        return `<div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">
+            <span style="font-size:15px;min-width:28px">${rank}</span>
+            <span style="font-size:13px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.p.name)}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--gold)">${rentStr}</span>
+            <span style="font-size:11px;padding:2px 8px;border-radius:100px;background:${oc}22;color:${oc};border:1px solid ${oc}44">${d.occRate}%稼働</span>
+            <span style="font-size:13px;font-weight:900;color:${d.health.c}">${d.health.l}</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${barW}%;background:linear-gradient(90deg,var(--gold),#b8860b);border-radius:4px"></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:12px">月間家賃収入の多い順。健全性(A〜D)は稼働率・入金率・修繕状況から自動算出。</div>
+  </div>`;
 }
 
 function openPropertyModal(id) {
