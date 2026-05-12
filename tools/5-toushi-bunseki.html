@@ -130,6 +130,17 @@
     .tip-wrap:hover .tip-popup, .tip-wrap.open .tip-popup { display: block; }
 
     @media(max-width:700px) { .result-kpi,.two-col,.three-col,.loan-compare { grid-template-columns:1fr; } .main { padding:20px 14px; } .card { overflow-x:auto; } table { min-width:480px; } .tip-popup { left: 0; transform: none; } }
+    @media(max-width:600px) {
+      .mobile-card-table { min-width: unset !important; }
+      .mobile-card-table thead { display: none; }
+      .mobile-card-table tbody tr { display: block; background: var(--dark3); border-radius: 10px; margin-bottom: 10px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.07); }
+      .mobile-card-table tbody td { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 13px; border: none; }
+      .mobile-card-table tbody td::before { content: attr(data-label); font-size: 11px; color: var(--text-muted); font-weight: 500; flex-shrink: 0; margin-right: 12px; }
+      .mobile-card-table tbody td:first-child { font-size: 14px; font-weight: 700; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 4px; }
+      .mobile-card-table tbody td:first-child::before { display: none; }
+      .mobile-card-table tbody td:last-child { justify-content: flex-end; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 4px; gap: 8px; }
+      .mobile-card-table tbody td:last-child::before { display: none; }
+    }
     @media(max-width:375px) { .topnav { padding:12px 14px; } .rkpi-val { font-size:18px; } .loan-payment { font-size:18px; } .verdict-text { font-size:14px; } .tip-popup { max-width:calc(100vw - 40px); } .btn { min-height:44px; } input,select { min-height:44px; } }
     @media print {
       .topnav,.tabs,.btn { display:none!important; }
@@ -1990,18 +2001,17 @@ function renderHistory() {
   }
   const bClass = {buy:'b-buy', hold:'b-hold', pass:'b-pass'};
   const bLabel = {buy:'購入推奨', hold:'要精査', pass:'見送り'};
-  el.innerHTML = `<table>
+  el.innerHTML = `<table class="mobile-card-table">
     <thead><tr><th>日付</th><th>物件名</th><th>購入価格</th><th>家賃</th><th>表面利回り</th><th>実質利回り</th><th>年間CF</th><th>判定</th><th></th></tr></thead>
     <tbody>
       ${history.map(h=>`<tr>
-        <td>${h.date}</td>
-        <td><strong>${esc(h.name)}</strong></td>
-        <td>${h.price.toLocaleString()}万円</td>
-        <td>${Number(h.rent).toLocaleString()}円</td>
-        <td style="color:var(--gold)">${h.grossYield.toFixed(2)}%</td>
-        <td style="color:${h.netYield>=5?'var(--green)':h.netYield>=3?'var(--orange)':'var(--red)'}; font-weight:700">${h.netYield.toFixed(2)}%</td>
-        <td style="color:${h.annualCF>=0?'var(--green)':'var(--red)'}; font-weight:700">${h.annualCF>=0?'+':''}${Math.round(h.annualCF/10000)}万</td>
-        <td><span class="badge ${bClass[h.verdict]||'b-hold'}">${bLabel[h.verdict]||h.verdict}</span></td>
+        <td><strong>${esc(h.name)}</strong><br><span style="font-size:11px;color:var(--text-muted)">${h.date}</span></td>
+        <td data-label="購入価格">${h.price.toLocaleString()}万円</td>
+        <td data-label="月間家賃">${Number(h.rent).toLocaleString()}円</td>
+        <td data-label="表面利回り" style="color:var(--gold)">${h.grossYield.toFixed(2)}%</td>
+        <td data-label="実質利回り" style="color:${h.netYield>=5?'var(--green)':h.netYield>=3?'var(--orange)':'var(--red)'}; font-weight:700">${h.netYield.toFixed(2)}%</td>
+        <td data-label="年間CF" style="color:${h.annualCF>=0?'var(--green)':'var(--red)'}; font-weight:700">${h.annualCF>=0?'+':''}${Math.round(h.annualCF/10000)}万</td>
+        <td data-label="判定"><span class="badge ${bClass[h.verdict]||'b-hold'}">${bLabel[h.verdict]||h.verdict}</span></td>
         <td style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="loadHistory(${h.id})">再読込</button><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteHistoryItem(${h.id})">削除</button></td>
       </tr>`).join('')}
     </tbody>
