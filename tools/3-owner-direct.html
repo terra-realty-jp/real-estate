@@ -236,6 +236,7 @@
       <button class="btn btn-outline btn-sm" onclick="exportCSV('buyers')">CSVエクスポート</button>
     </div>
   </div>
+  <div id="purchase-cost-sim-card" style="margin-bottom:16px"></div>
   <div id="loan-estimate-card" style="display:none;margin-bottom:16px"></div>
   <div id="buyer-priority-card" style="display:none;margin-bottom:16px"></div>
   <div id="buyers-list"></div>
@@ -404,6 +405,18 @@
         <strong style="color:var(--text)">人気エリアの物件</strong>なら一般媒介で競争させるのも戦略です。
         <br>いずれにせよ、担当者の熱量・実績・エリア知識が最終的に売却結果を左右します。
       </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px;border-color:rgba(16,185,129,0.25)" id="satei-compare-card">
+    <div class="card-title">📝 複数社査定 比較メモ帳</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:18px;line-height:1.7">最大3社の査定結果を記録して比較できます。手数料込みの実質手取り額も自動計算します。</p>
+    <div id="satei-compare-rows" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px"></div>
+    <button class="btn btn-outline btn-sm" onclick="addSateiRow()" style="margin-bottom:16px">＋ 会社を追加（最大3社）</button>
+    <div id="satei-compare-result"></div>
+    <div style="margin-top:16px;padding:12px 14px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.7">
+      💬 TERRA REALTYでも無料査定を承っています。比較のための1社として、ぜひご利用ください。<br>
+      <a href="mailto:terra.realty.iam@gmail.com?subject=査定を依頼したい" style="color:#6ee7b7">→ TERRA REALTYに査定を依頼する</a>
     </div>
   </div>
 </div>
@@ -1368,6 +1381,7 @@ function renderBuyers() {
     {v:buyers.filter(b=>b.purpose==='invest').length+'件', l:'投資目的', c:'var(--blue)'},
   ].map(s=>`<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
 
+  renderPurchaseCostSimCard();
   renderLoanEstimateCard();
   renderBuyerPriorityCard();
   if(!buyers.length) { el.innerHTML=`<div class="empty-state"><div class="empty-icon">🙋</div><p>買主がまだ登録されていません</p><p style="font-size:12px;margin-top:8px">「買主登録」ボタンから購入希望条件を登録してください</p></div>`; return; }
@@ -1941,6 +1955,124 @@ function saveDeal3() {
   deals3.unshift(deal); save('deals3'); closeModal('dealRegModal'); renderPipeline3(); showToast('商談を登録しました ✓');
 }
 
+// ===== 複数社査定比較メモ =====
+var SATEI_MEMO_KEY = 'od_satei_memo';
+var sateiRows = [];
+
+function loadSateiMemo() {
+  try { sateiRows = JSON.parse(localStorage.getItem(SATEI_MEMO_KEY)) || []; } catch(e) { sateiRows = []; }
+  if (!sateiRows.length) sateiRows = [{ name: '', price: '', rate: '', notes: '' }];
+  renderSateiRows();
+  renderSateiCompare();
+}
+
+function saveSateiMemo() {
+  localStorage.setItem(SATEI_MEMO_KEY, JSON.stringify(sateiRows));
+}
+
+function addSateiRow() {
+  if (sateiRows.length >= 3) { alert('最大3社まで登録できます。'); return; }
+  sateiRows.push({ name: '', price: '', rate: '', notes: '' });
+  saveSateiMemo();
+  renderSateiRows();
+  renderSateiCompare();
+}
+
+function removeSateiRow(idx) {
+  sateiRows.splice(idx, 1);
+  if (!sateiRows.length) sateiRows = [{ name: '', price: '', rate: '', notes: '' }];
+  saveSateiMemo();
+  renderSateiRows();
+  renderSateiCompare();
+}
+
+function updateSateiField(idx, field, val) {
+  if (!sateiRows[idx]) return;
+  sateiRows[idx][field] = val;
+  saveSateiMemo();
+  renderSateiCompare();
+}
+
+function renderSateiRows() {
+  var cont = document.getElementById('satei-compare-rows');
+  if (!cont) return;
+  var inp = 'width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;color:var(--text);font-size:13px;font-family:inherit;box-sizing:border-box;margin-top:4px';
+  cont.innerHTML = sateiRows.map(function(r, i) {
+    var delBtn = sateiRows.length > 1
+      ? '<button data-ridx="' + i + '" onclick="removeSateiRow(+this.dataset.ridx)" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:5px;padding:2px 8px;font-size:11px;color:#f87171;cursor:pointer;font-family:inherit">削除</button>'
+      : '';
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text)">会社 ' + (i+1) + '</div>' + delBtn
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      + '<div><label style="font-size:11px;color:var(--text-muted)">会社名</label>'
+      + '<input data-ridx="' + i + '" data-rfield="name" value="' + esc(r.name) + '" oninput="updateSateiField(+this.dataset.ridx,this.dataset.rfield,this.value)" placeholder="○○不動産" style="' + inp + '"></div>'
+      + '<div><label style="font-size:11px;color:var(--text-muted)">査定価格（万円）</label>'
+      + '<input type="number" data-ridx="' + i + '" data-rfield="price" value="' + esc(r.price) + '" oninput="updateSateiField(+this.dataset.ridx,this.dataset.rfield,this.value)" placeholder="3000" style="' + inp + '"></div>'
+      + '<div><label style="font-size:11px;color:var(--text-muted)">手数料率（%）</label>'
+      + '<input type="number" step="0.1" data-ridx="' + i + '" data-rfield="rate" value="' + esc(r.rate) + '" oninput="updateSateiField(+this.dataset.ridx,this.dataset.rfield,this.value)" placeholder="3.3" style="' + inp + '"></div>'
+      + '<div><label style="font-size:11px;color:var(--text-muted)">メモ</label>'
+      + '<input data-ridx="' + i + '" data-rfield="notes" value="' + esc(r.notes) + '" oninput="updateSateiField(+this.dataset.ridx,this.dataset.rfield,this.value)" placeholder="担当者の印象など" style="' + inp + '"></div>'
+      + '</div></div>';
+  }).join('');
+}
+
+function renderSateiCompare() {
+  var cont = document.getElementById('satei-compare-result');
+  if (!cont) return;
+  var valid = sateiRows.filter(function(r) { return r.name && r.price; });
+  if (valid.length < 1) { cont.innerHTML = ''; return; }
+
+  var maxPrice = Math.max.apply(null, valid.map(function(r) { return parseFloat(r.price) || 0; }));
+  var minFee = null;
+
+  var rows = valid.map(function(r) {
+    var p = parseFloat(r.price) || 0;
+    var rate = parseFloat(r.rate) || (p <= 200 ? 5 : p <= 400 ? (p*0.04+2)/p*100 : (p*0.03+6)/p*100);
+    var fee = Math.round(p * rate / 100 * 10) / 10;
+    var net = Math.round((p - fee) * 10) / 10;
+    if (minFee === null || fee < minFee) minFee = fee;
+    return { name: r.name, price: p, rate: rate, fee: fee, net: net, notes: r.notes };
+  });
+
+  var bestNet = Math.max.apply(null, rows.map(function(r) { return r.net; }));
+
+  var html = '<div style="margin-bottom:12px;font-size:13px;font-weight:700;color:var(--text)">比較結果</div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+    + '<thead><tr>'
+    + ['会社名','査定額','手数料率','手数料','実質手取り','メモ'].map(function(h) {
+        return '<th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--text-muted);font-weight:600;border-bottom:1px solid rgba(255,255,255,0.07);white-space:nowrap">' + h + '</th>';
+      }).join('')
+    + '</tr></thead><tbody>'
+    + rows.map(function(r) {
+        var isBest = r.net === bestNet;
+        var bg = isBest ? 'rgba(201,168,76,0.06)' : 'rgba(255,255,255,0.01)';
+        var border = isBest ? '1px solid rgba(201,168,76,0.2)' : '1px solid transparent';
+        var nameCell = esc(r.name) + (isBest ? ' <span style="background:var(--gold);color:#0d0d0d;font-size:10px;font-weight:700;padding:1px 6px;border-radius:100px;margin-left:4px">最高手取り</span>' : '');
+        return '<tr style="background:' + bg + ';border:' + border + '">'
+          + '<td style="padding:10px 10px;font-weight:700;color:' + (isBest ? 'var(--gold)' : 'var(--text)') + ';border-bottom:1px solid rgba(255,255,255,0.05)">' + nameCell + '</td>'
+          + '<td style="padding:10px 10px;border-bottom:1px solid rgba(255,255,255,0.05)">' + (r.price ? r.price.toLocaleString() + '万' : '—') + '</td>'
+          + '<td style="padding:10px 10px;border-bottom:1px solid rgba(255,255,255,0.05)">' + r.rate.toFixed(1) + '%</td>'
+          + '<td style="padding:10px 10px;color:#f87171;border-bottom:1px solid rgba(255,255,255,0.05)">▲' + r.fee.toLocaleString() + '万</td>'
+          + '<td style="padding:10px 10px;font-weight:700;color:' + (isBest ? '#6ee7b7' : 'var(--text)') + ';border-bottom:1px solid rgba(255,255,255,0.05)">' + r.net.toLocaleString() + '万</td>'
+          + '<td style="padding:10px 10px;color:var(--text-muted);font-size:11px;border-bottom:1px solid rgba(255,255,255,0.05)">' + esc(r.notes) + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table></div>';
+
+  if (rows.length >= 2) {
+    var sorted = rows.slice().sort(function(a, b) { return b.net - a.net; });
+    var diff = sorted[0].net - sorted[1].net;
+    html += '<div style="margin-top:12px;padding:10px 14px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;font-size:12px;color:var(--text-muted)">'
+      + '💡 <strong style="color:var(--gold)">' + esc(sorted[0].name) + '</strong> の手取りが最も高く、'
+      + '<strong style="color:var(--gold)">' + sorted[1].name + '</strong> と比べて <strong style="color:#6ee7b7">' + diff.toFixed(1) + '万円</strong> 多く手元に残ります。'
+      + '</div>';
+  }
+
+  cont.innerHTML = html;
+}
+
 // ===== 手数料シミュ =====
 function sendFeeResultByMail(p, type) {
   const fee = p<=200 ? p*0.05 : p<=400 ? p*0.04+2 : p*0.03+6;
@@ -2128,7 +2260,7 @@ function switchTab(t) {
   else if(t==='buyers') renderBuyers();
   else if(t==='matching') runMatching();
   else if(t==='pipeline') renderPipeline3();
-  else if(t==='fee') calcFee();
+  else if(t==='fee') { calcFee(); loadSateiMemo(); }
 }
 
 // Escape key でモーダルを閉じる
