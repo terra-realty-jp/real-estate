@@ -330,6 +330,7 @@
   <div id="tenant-filter-summary" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
   <div id="contact-quick-card" style="margin-bottom:12px"></div>
   <div id="vacancy-tracker" style="display:none;margin-bottom:16px"></div>
+  <div id="leasing-cost-card" style="display:none;margin-bottom:16px"></div>
   <div id="move-season-card" style="display:none;margin-bottom:16px"></div>
   <div id="tenure-analysis-card" style="display:none;margin-bottom:16px"></div>
   <div id="tenants-list"></div>
@@ -2114,6 +2115,53 @@ function generateVacancyListingEmail() {
   el.style.display = 'block';
 }
 
+function renderLeasingCostCard() {
+  const el = document.getElementById('leasing-cost-card');
+  if (!el) return;
+  const vacantUnits = properties.reduce(function(s, p) {
+    const occ = tenants.filter(function(t){ return t.propertyId === p.id && t.status === 'active'; }).length;
+    return s + Math.max(0, (p.units || 1) - occ);
+  }, 0);
+  if (!vacantUnits || !tenants.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const activeTenants = tenants.filter(function(t){ return t.status === 'active'; });
+  const avgRent = activeTenants.length > 0
+    ? Math.round(activeTenants.reduce(function(s, t){ return s + (t.rent || 0); }, 0) / activeTenants.length)
+    : 60000;
+  const items = [
+    { label: '仲介手数料（家賃1ヶ月）', cost: avgRent, note: '+ 消費税' },
+    { label: '広告費（AD: 家賃1ヶ月）', cost: avgRent, note: '不動産会社への報酬' },
+    { label: '入居前クリーニング', cost: 40000, note: '1R〜2DK目安' },
+    { label: '鍵交換費用', cost: 18000, note: 'ディンプルキー目安' },
+    { label: '現状回復・小補修', cost: 30000, note: '軽微補修含む' },
+    { label: '空室期間の機会損失（1ヶ月）', cost: avgRent, note: '平均空室期間: 約1ヶ月' },
+  ];
+  const totalPerUnit = items.reduce(function(s, i){ return s + i.cost; }, 0);
+  const totalAll = totalPerUnit * vacantUnits;
+  const maxCost = Math.max.apply(null, items.map(function(i){ return i.cost; })) || 1;
+  const rows = items.map(function(item) {
+    const barW = Math.round(item.cost / maxCost * 80);
+    return '<div style="display:grid;grid-template-columns:1fr 90px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">'
+      + '<div>'
+      + '<div style="font-size:12px;color:var(--text)">' + item.label + '</div>'
+      + '<div style="height:4px;background:rgba(255,255,255,0.05);border-radius:2px;margin-top:3px;overflow:hidden"><div style="height:100%;width:' + barW + '%;background:var(--gold);border-radius:2px"></div></div>'
+      + '</div>'
+      + '<div style="text-align:right;font-size:12px;font-weight:700;color:var(--gold)">' + item.cost.toLocaleString() + '円</div>'
+      + '</div>';
+  }).join('');
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px 16px">'
+    + '<div style="font-size:13px;font-weight:700;margin-bottom:4px">&#x1F4B8; 退去後の募集コスト試算</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">現在の空室（' + vacantUnits + '戸）の募集にかかる費用目安。平均家賃 ' + avgRent.toLocaleString() + '円/月 で試算。</div>'
+    + rows
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">'
+    + '<div style="font-size:12px;color:var(--text-muted)">1戸あたり合計</div>'
+    + '<div style="font-size:20px;font-weight:900;color:var(--red)">' + totalPerUnit.toLocaleString() + '円</div>'
+    + '</div>'
+    + (vacantUnits > 1 ? '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right">' + vacantUnits + '戸合計: 約' + Math.round(totalAll/10000).toLocaleString() + '万円</div>' : '')
+    + '<div style="font-size:10px;color:#555;margin-top:8px;line-height:1.6">※ 目安価格です。築年数・物件規模・エリアにより異なります。</div>'
+    + '</div>';
+}
+
 function renderMoveSeasonCard() {
   const el = document.getElementById('move-season-card');
   if (!el) return;
@@ -2265,6 +2313,7 @@ function renderContactQuickCard() {
 function renderTenants(){
   renderContactQuickCard();
   renderVacancyTracker();
+  renderLeasingCostCard();
   renderMoveSeasonCard();
   renderTenureAnalysisCard();
   const el=document.getElementById('tenants-list');
