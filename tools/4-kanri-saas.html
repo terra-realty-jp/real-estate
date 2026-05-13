@@ -554,6 +554,58 @@
     </div>
   </div>
 
+  <!-- 原状回復費用見積もりカード -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">🏠 原状回復費用 かんたん見積もり</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">国土交通省「原状回復をめぐるトラブルとガイドライン」に基づき、退去時の費用負担を項目別に試算します。<strong style="color:var(--gold)">借主負担</strong>（故意・過失・善管注意義務違反）と<strong style="color:#4ade80">貸主負担</strong>（通常損耗・経年劣化）の区別の目安として活用してください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">居住面積（㎡）</label>
+        <input type="number" id="rc_area" placeholder="例: 30" min="5" step="1" oninput="calcRestoreCost()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">入居期間（年）</label>
+        <input type="number" id="rc_years" placeholder="例: 3" min="0" step="0.5" oninput="calcRestoreCost()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text)">損傷・汚損の状況を選択</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px" id="rc-items">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="rc_wall" onchange="calcRestoreCost()" style="width:16px;height:16px;accent-color:var(--gold)">
+        壁・天井クロスの傷・汚れ（借主負担）
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="rc_floor_scratch" onchange="calcRestoreCost()" style="width:16px;height:16px;accent-color:var(--gold)">
+        フローリング・床材の傷・変色（借主負担）
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="rc_tatami" onchange="calcRestoreCost()" style="width:16px;height:16px;accent-color:var(--gold)">
+        畳の表替え・裏返し（借主負担）
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="rc_door" onchange="calcRestoreCost()" style="width:16px;height:16px;accent-color:var(--gold)">
+        建具・ドアの破損（借主負担）
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="rc_bath" onchange="calcRestoreCost()" style="width:16px;height:16px;accent-color:var(--gold)">
+        浴室・洗面台のカビ・汚れ（借主の手入れ不足）
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="rc_key" onchange="calcRestoreCost()" style="width:16px;height:16px;accent-color:var(--gold)">
+        鍵の紛失・交換（借主負担）
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="rc_clean" onchange="calcRestoreCost()" style="width:16px;height:16px;accent-color:var(--gold)">
+        ハウスクリーニング（特約で借主負担の場合）
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="rc_smoke" onchange="calcRestoreCost()" style="width:16px;height:16px;accent-color:var(--gold)">
+        タバコのヤニ・臭い（借主負担・全室対応が必要な場合）
+      </label>
+    </div>
+    <div id="rc-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -4325,6 +4377,82 @@ function showChartOfflineMsg(canvasId) {
 }
 
 
+
+// ===== 原状回復費用見積もり =====
+function calcRestoreCost() {
+  var el = document.getElementById('rc-result');
+  if (!el) return;
+  var area  = parseFloat(document.getElementById('rc_area').value)  || 0;
+  var years = parseFloat(document.getElementById('rc_years').value) || 0;
+  if (!area) { el.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">居住面積と入居期間を入力してください</p>'; return; }
+  var durRatio = Math.max(0.1, Math.min(1, 1 - years / 6)); // 壁6年で残存1割
+  var floorRatio = Math.max(0.1, Math.min(1, 1 - years / 10)); // 床10年
+  var items = [];
+  if (document.getElementById('rc_wall').checked) {
+    var unit = area <= 20 ? 3000 : area <= 40 ? 2800 : 2600;
+    var gross = Math.round(area * unit * 1.5);
+    var tenant = Math.round(gross * durRatio);
+    items.push({name:'壁・天井クロス張替え', gross:gross, tenant:tenant, landlord:gross-tenant, note:'入居' + years + '年→借主負担' + Math.round(durRatio*100) + '%（残存価値分）'});
+  }
+  if (document.getElementById('rc_floor_scratch').checked) {
+    var unit2 = area <= 20 ? 4500 : 4000;
+    var gross2 = Math.round(area * unit2);
+    var tenant2 = Math.round(gross2 * floorRatio);
+    items.push({name:'フローリング補修・部分張替え', gross:gross2, tenant:tenant2, landlord:gross2-tenant2, note:'傷・変色の箇所のみ対応が原則'});
+  }
+  if (document.getElementById('rc_tatami').checked) {
+    var cnt = Math.max(1, Math.round(area / 12));
+    var t3 = cnt * 6000;
+    items.push({name:'畳の表替え（' + cnt + '畳）', gross:t3, tenant:t3, landlord:0, note:'タバコ・ペット以外は1畳単位'});
+  }
+  if (document.getElementById('rc_door').checked) {
+    items.push({name:'建具・ドア修理', gross:30000, tenant:30000, landlord:0, note:'破損箇所に応じて変動'});
+  }
+  if (document.getElementById('rc_bath').checked) {
+    items.push({name:'浴室・洗面台クリーニング', gross:15000, tenant:15000, landlord:0, note:'通常清掃を怠った場合の借主負担'});
+  }
+  if (document.getElementById('rc_key').checked) {
+    items.push({name:'鍵交換', gross:20000, tenant:20000, landlord:0, note:'紛失の場合は全額借主負担'});
+  }
+  if (document.getElementById('rc_clean').checked) {
+    var cleanAmt = Math.round(area * 700);
+    items.push({name:'ハウスクリーニング（' + area + '㎡）', gross:cleanAmt, tenant:cleanAmt, landlord:0, note:'特約がある場合は借主負担（特約明記が必要）'});
+  }
+  if (document.getElementById('rc_smoke').checked) {
+    var smokeAmt = Math.round(area * 1500);
+    items.push({name:'ヤニ・臭い対策（クロス全室）', gross:smokeAmt, tenant:smokeAmt, landlord:0, note:'タバコは借主全額負担・経年考慮なし'});
+  }
+  if (items.length === 0) { el.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">損傷・汚損の状況を1つ以上選択してください</p>'; return; }
+  var totalGross = items.reduce(function(a,i){return a+i.gross;}, 0);
+  var totalTenant = items.reduce(function(a,i){return a+i.tenant;}, 0);
+  var totalLandlord = totalGross - totalTenant;
+  var tableRows = items.map(function(item) {
+    return '<tr>'
+      + '<td style="padding:6px 8px;font-size:11px;color:var(--text)">' + esc(item.name) + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + esc(item.note) + '</div></td>'
+      + '<td style="padding:6px 8px;font-size:11px;text-align:right;color:var(--text)">' + item.gross.toLocaleString() + '円</td>'
+      + '<td style="padding:6px 8px;font-size:11px;text-align:right;color:var(--gold);font-weight:700">' + item.tenant.toLocaleString() + '円</td>'
+      + '<td style="padding:6px 8px;font-size:11px;text-align:right;color:#4ade80">' + item.landlord.toLocaleString() + '円</td>'
+      + '</tr>';
+  }).join('');
+  el.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:400px;margin-bottom:12px">'
+    + '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">'
+    + '<th style="padding:6px 8px;font-size:10px;color:var(--text-muted);text-align:left">項目</th>'
+    + '<th style="padding:6px 8px;font-size:10px;color:var(--text-muted);text-align:right">費用概算</th>'
+    + '<th style="padding:6px 8px;font-size:10px;color:var(--gold);text-align:right">借主負担</th>'
+    + '<th style="padding:6px 8px;font-size:10px;color:#4ade80;text-align:right">貸主負担</th></tr></thead>'
+    + '<tbody>' + tableRows + '</tbody></table></div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">'
+    + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">修繕費総額</div>'
+    + '<div style="font-size:16px;font-weight:900;color:var(--text)">' + totalGross.toLocaleString() + '円</div></div>'
+    + '<div style="text-align:center;padding:10px;background:rgba(201,168,76,0.1);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">借主請求目安</div>'
+    + '<div style="font-size:16px;font-weight:900;color:var(--gold)">' + totalTenant.toLocaleString() + '円</div></div>'
+    + '<div style="text-align:center;padding:10px;background:rgba(74,222,128,0.08);border-radius:8px">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">貸主負担目安</div>'
+    + '<div style="font-size:16px;font-weight:900;color:#4ade80">' + totalLandlord.toLocaleString() + '円</div></div></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">&#8251; 国土交通省ガイドライン基準の概算です。実際の請求額は専門業者の見積もりや入居時の写真・契約内容によります。特約がない場合、通常損耗は貸主負担が原則です。</div>';
+}
 
 // ===== 法定点検管理 =====
 var INSP_KEY = 'saas_inspection';
