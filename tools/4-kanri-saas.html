@@ -506,6 +506,35 @@
       </div>
     </div>
   </div>
+
+  <!-- 家賃値上げ 通知文テンプレートカード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📝 家賃値上げ 通知文テンプレート生成</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">値上げ交渉は法律上の手順を守ることが重要です。入居者名・金額を入力すると礼儀正しい通知文のひな形を生成します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">入居者名（敬称なし）</label>
+        <input type="text" id="ri_name" placeholder="例: 山田太郎" oninput="genRentIncreaseTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件・部屋番号</label>
+        <input type="text" id="ri_room" placeholder="例: 〇〇荘 201号室" oninput="genRentIncreaseTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の家賃（円）</label>
+        <input type="number" id="ri_cur" placeholder="例: 60000" min="0" step="1000" oninput="genRentIncreaseTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">値上げ後の家賃（円）</label>
+        <input type="number" id="ri_new" placeholder="例: 65000" min="0" step="1000" oninput="genRentIncreaseTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">適用開始月（例: 2026年9月）</label>
+        <input type="text" id="ri_start" placeholder="例: 2026年9月" oninput="genRentIncreaseTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rent-increase-template-result"></div>
+  </div>
 </div>
 </div>
 
@@ -4815,6 +4844,38 @@ function calcRenoROI() {
     + '<div style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.04);font-size:12px;font-weight:700;color:' + verdictColor + '">' + verdict + '</div>'
     + '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.6">&#8251; 家賃増額・空室改善効果は物件・地域・施工品質により大きく変わります。実際は業者の見積もりと賃貸需要の調査をあわせて判断してください。</div>';
 }
+
+// ===== 家賃値上げ通知文テンプレート =====
+function genRentIncreaseTemplate() {
+  var el = document.getElementById('rent-increase-template-result');
+  if (!el) return;
+  var name  = document.getElementById('ri_name').value.trim();
+  var room  = document.getElementById('ri_room').value.trim();
+  var cur   = parseInt(document.getElementById('ri_cur').value, 10) || 0;
+  var newR  = parseInt(document.getElementById('ri_new').value, 10) || 0;
+  var start = document.getElementById('ri_start').value.trim();
+  if (!name || !cur || !newR || !start) { el.innerHTML = ''; return; }
+  var diff = newR - cur;
+  var pct  = (diff / cur * 100).toFixed(1);
+  var today = new Date();
+  var dateStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日';
+  var text = dateStr + '\n\n' + (name || '○○') + ' 様\n\n賃料改定のご通知\n\n拝啓　時下ますますご清栄のこととお慶び申し上げます。\n\nこの度、ご入居いただいております' + (room || '○○') + 'につきまして、近隣の賃貸相場の上昇および維持管理費の増加を踏まえ、下記のとおり賃料を改定させていただきたく、ご通知申し上げます。\n\n【改定内容】\n  現行賃料：' + cur.toLocaleString() + '円／月\n  改定後  ：' + newR.toLocaleString() + '円／月（＋' + diff.toLocaleString() + '円、約' + pct + '%）\n  適用開始：' + (start || '○年○月') + '分より\n\n本件につきましては、借地借家法第32条に基づく賃料増額請求となります。ご不明な点やご事情がございましたら、恐れ入りますが○○月○○日までにご連絡いただけますと幸いです。\n\nなお、ご合意いただけない場合は、引き続き協議の機会を設けさせていただきたく存じます。\n\n今後ともどうぞよろしくお願い申し上げます。\n\n敬具\n\n賃貸人：________________';
+
+  var html = '<div style="margin-top:12px">'
+    + '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px;margin-bottom:10px">'
+    + '<pre style="font-size:12px;line-height:1.9;white-space:pre-wrap;word-break:break-word;font-family:inherit;color:var(--text)">' + text + '</pre></div>'
+    + '<div style="display:flex;gap:8px">'
+    + '<button onclick="copyRentIncreaseTemplate()" style="flex:1;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:12px;font-weight:700;padding:8px;border-radius:8px;cursor:pointer;font-family:inherit">📋 コピー</button>'
+    + '</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 賃料増額は借地借家法32条に基づく手続きが必要です。合意が得られない場合は調停・裁判となる場合があります。法的判断が必要な場合は弁護士にご相談ください。</div></div>';
+  el.innerHTML = html;
+  el.dataset.text = text;
+}
+window.copyRentIncreaseTemplate = function() {
+  var el = document.getElementById('rent-increase-template-result');
+  if (!el || !el.dataset.text) return;
+  navigator.clipboard.writeText(el.dataset.text).then(function() { showToast('通知文をコピーしました ✓'); }).catch(function() { showErrorToast('コピーに失敗しました'); });
+};
 
 // ===== 入居者募集条件 最適化チェック =====
 function calcRecruitOpt() {
