@@ -612,6 +612,36 @@
     </div>
     <div id="buyvssell-result"></div>
   </div>
+
+  <!-- 住宅ローン返済プラン比較カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">🏦 住宅ローン返済プラン比較</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">借入額・返済期間・金利を入力して、変動・固定・全期固定の月額返済と総返済額・総支払利息を比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">借入額（万円）</label>
+        <input type="number" id="lp_loan" value="3000" min="100" max="50000" step="100" oninput="calcLoanPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">返済期間（年）</label>
+        <input type="number" id="lp_term" value="35" min="5" max="50" step="1" oninput="calcLoanPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">変動金利（%）</label>
+        <input type="number" id="lp_var" value="0.5" min="0.1" max="10" step="0.1" oninput="calcLoanPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">固定10年金利（%）</label>
+        <input type="number" id="lp_fix10" value="1.5" min="0.1" max="10" step="0.1" oninput="calcLoanPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">全期固定金利（%）</label>
+        <input type="number" id="lp_fullfix" value="2.0" min="0.1" max="10" step="0.1" oninput="calcLoanPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="loan-plan-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -2717,6 +2747,53 @@ function calcBuyVsSell() {
     + '</div>';
 }
 (function(){ calcBuyVsSell(); })();
+
+// ===== 住宅ローン返済プラン比較 =====
+function calcLoanPlan() {
+  var el = document.getElementById('loan-plan-result');
+  if(!el) return;
+  var loanMan = parseFloat(document.getElementById('lp_loan').value)||0;
+  var term    = parseFloat(document.getElementById('lp_term').value)||35;
+  var varR    = parseFloat(document.getElementById('lp_var').value)||0.5;
+  var fix10R  = parseFloat(document.getElementById('lp_fix10').value)||1.5;
+  var fullR   = parseFloat(document.getElementById('lp_fullfix').value)||2.0;
+  if(!loanMan){ el.innerHTML=''; return; }
+  var loan = loanMan * 10000;
+  var n = term * 12;
+  function monthly(p, annualRate, months) {
+    var r = annualRate/100/12;
+    if(r===0) return p/months;
+    return p*r*Math.pow(1+r,months)/(Math.pow(1+r,months)-1);
+  }
+  var plans = [
+    {name:'変動金利',rate:varR,color:'#60a5fa',note:'金利上昇リスクあり（5年ルール・1.25倍ルール）'},
+    {name:'固定10年',rate:fix10R,color:'#facc15',note:'10年後に変動 or 再固定。当初は安定'},
+    {name:'全期固定',rate:fullR,color:'var(--green)',note:'返済額が完全に確定。安心だが総利息高め'}
+  ];
+  var cheapest = null, cheapestTotal = Infinity;
+  plans.forEach(function(p){
+    p.monthly = monthly(loan, p.rate, n);
+    p.total   = p.monthly * n;
+    p.interest = p.total - loan;
+    if(p.total < cheapestTotal){ cheapestTotal = p.total; cheapest = p; }
+  });
+  var cards = plans.map(function(p){
+    var isBest = p===cheapest;
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid '+(isBest?p.color:'rgba(255,255,255,0.06)')+';border-radius:10px;padding:14px;position:relative">'
+      +(isBest?'<div style="position:absolute;top:-8px;left:12px;background:'+p.color+';color:#000;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px">最安</div>':'')
+      +'<div style="font-size:13px;font-weight:700;margin-bottom:8px;color:'+p.color+'">'+p.name+' '+p.rate+'%</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">'
+      +'<div style="text-align:center"><div style="font-size:19px;font-weight:900;color:'+p.color+'">'+Math.round(p.monthly/10000).toFixed(1)+'万/月</div><div style="font-size:10px;color:var(--text-muted)">月々の返済</div></div>'
+      +'<div style="text-align:center"><div style="font-size:19px;font-weight:900;color:var(--text)">'+Math.round(p.interest/10000).toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">総支払利息</div></div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--text-muted)">総返済: <strong style="color:var(--text)">'+Math.round(p.total/10000).toFixed(0)+'万円</strong></div>'
+      +'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">'+p.note+'</div>'
+      +'</div>';
+  }).join('');
+  el.innerHTML = '<div style="display:grid;gap:10px;margin-bottom:10px">'+cards+'</div>'
+    +'<p style="font-size:10px;color:var(--text-muted)">※ 元利均等返済で計算。固定10年は11年目以降も同金利で試算。実際の返済額は金融機関にご確認ください。</p>';
+}
+(function(){ calcLoanPlan(); })();
 
 // ===== 共通 =====
 function save(key) {
