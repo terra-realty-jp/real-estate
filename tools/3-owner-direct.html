@@ -522,6 +522,35 @@
     </div>
     <div id="nego-result"></div>
   </div>
+
+  <!-- 買取 vs 仲介売却 比較カード -->
+  <div class="card" style="margin-top:24px">
+    <div class="card-title">⚡ 不動産買取 vs 仲介売却 比較シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「買取」は不動産会社が直接購入するため手数料ゼロ・短期完結ですが価格は低め。「仲介」は市場価格で売れますが期間・手数料がかかります。手取り額で比較しましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">市場想定価格（万円）</label>
+        <input type="number" id="bv_price" value="3000" min="100" max="50000" step="100" oninput="calcBuyVsSell()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">買取価格率（%）</label>
+        <input type="number" id="bv_buyrate" value="75" min="50" max="95" step="1" oninput="calcBuyVsSell()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">ローン残債（万円）</label>
+        <input type="number" id="bv_loan" value="0" min="0" max="50000" step="100" oninput="calcBuyVsSell()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">仲介手数料率（%）</label>
+        <select id="bv_commtype" onchange="calcBuyVsSell()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="standard">標準（3%+6万×1.1）</option>
+          <option value="half">半額（1.5%+3万×1.1）</option>
+          <option value="zero">手数料無料</option>
+        </select>
+      </div>
+    </div>
+    <div id="buyvssell-result"></div>
+  </div>
 </div>
 </div>
 
@@ -2500,6 +2529,45 @@ function calcNego() {
     + '<div style="font-size:10px;color:var(--text-muted);margin-top:6px;line-height:1.6">※ 仲介手数料は法定上限額（税込）の概算。譲渡所得税・登記費用は含みません。</div></div>';
   el.innerHTML = html;
 }
+
+// ===== 買取 vs 仲介売却 比較 =====
+function calcBuyVsSell() {
+  var el = document.getElementById('buyvssell-result');
+  if(!el) return;
+  var price    = parseFloat(document.getElementById('bv_price').value)||3000;
+  var buyRate  = parseFloat(document.getElementById('bv_buyrate').value)||75;
+  var loan     = parseFloat(document.getElementById('bv_loan').value)||0;
+  var commType = document.getElementById('bv_commtype').value;
+  var buyPrice = Math.round(price * buyRate / 100);
+  var commission = commType === 'standard' ? Math.round((price*0.03+6)*1.1*10)/10
+    : commType === 'half' ? Math.round((price*0.015+3)*1.1*10)/10 : 0;
+  var agentNet = price - commission - loan;
+  var buyNet   = buyPrice - loan;
+  var diff = agentNet - buyNet;
+  var agentColor = agentNet > buyNet ? 'var(--green)' : 'var(--text)';
+  var buyColor   = buyNet > agentNet ? 'var(--green)' : 'var(--text)';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'
+    + '<div style="padding:14px;background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.25);border-radius:10px">'
+    + '<div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:8px;letter-spacing:0.5px">📋 仲介売却</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">売却価格</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">' + price.toLocaleString() + '<span style="font-size:11px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">手数料</div><div style="font-size:12px;color:var(--red);margin-bottom:8px">−' + commission.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">手取り</div><div style="font-size:18px;font-weight:900;color:' + agentColor + '">' + agentNet.toLocaleString() + '<span style="font-size:11px">万円</span></div>'
+    + '<div style="margin-top:8px;padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:10px;color:var(--text-muted)">⏱ 目安期間：3〜6ヶ月</div>'
+    + '</div>'
+    + '<div style="padding:14px;background:rgba(251,146,60,0.07);border:1px solid rgba(251,146,60,0.25);border-radius:10px">'
+    + '<div style="font-size:11px;font-weight:700;color:#fb923c;margin-bottom:8px;letter-spacing:0.5px">⚡ 不動産買取</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">買取価格（' + buyRate + '%）</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">' + buyPrice.toLocaleString() + '<span style="font-size:11px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">手数料</div><div style="font-size:12px;color:var(--green);margin-bottom:8px">ゼロ</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">手取り</div><div style="font-size:18px;font-weight:900;color:' + buyColor + '">' + buyNet.toLocaleString() + '<span style="font-size:11px">万円</span></div>'
+    + '<div style="margin-top:8px;padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:10px;color:var(--text-muted)">⏱ 目安期間：2〜4週間</div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px">'
+    + '仲介売却の方が <strong style="color:' + (diff>0?'var(--green)':'var(--red)') + '">' + (diff>=0?'+':'')+diff.toLocaleString() + '万円</strong> ' + (diff>0?'多く手元に残ります':'少ない（ローン額に注意）') + '。'
+    + (diff < 50 ? '差額が小さい場合は<strong style="color:var(--gold)">買取の確実性・スピード</strong>もメリットになります。' : '')
+    + '</div>';
+}
+(function(){ calcBuyVsSell(); })();
 
 // ===== 共通 =====
 function save(key) {
