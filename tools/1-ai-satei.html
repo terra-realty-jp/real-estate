@@ -1020,6 +1020,35 @@
     <div id="prop-tax-result"></div>
   </div>
 
+  <!-- 路線価・公示地価 から土地市場価格を逆算カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;margin-top:20px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🗺 路線価・公示地価 から土地市場価格を逆算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">国税庁の路線価（路線価図）や国土交通省の公示地価から、土地の市場取引価格（実勢価格）の目安を逆算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">路線価（千円/㎡）</label>
+        <input type="number" id="lp_rosen" placeholder="例: 250" min="0" step="10" oninput="calcLandPrice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">公示地価（千円/㎡）※任意</label>
+        <input type="number" id="lp_koji" placeholder="例: 320" min="0" step="10" oninput="calcLandPrice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">土地面積（㎡）</label>
+        <input type="number" id="lp_area" placeholder="例: 150" min="10" step="5" oninput="calcLandPrice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">土地形状</label>
+        <select id="lp_shape" onchange="calcLandPrice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="rect">整形地（長方形・正方形）</option>
+          <option value="flag">旗竿地・路地状敷地</option>
+          <option value="irreg">不整形地（三角・斜め等）</option>
+        </select>
+      </div>
+    </div>
+    <div id="land-price-result"></div>
+  </div>
+
   <!-- 不動産売却 譲渡税シミュレーター -->
   <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
     <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">💸 不動産売却 譲渡税シミュレーター</h3>
@@ -3903,6 +3932,50 @@ function calcQuickTable() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 譲渡税：所有'+years+'年（'+( years>5?'長期':'短期' )+'・'+( taxRate*100 ).toFixed(3)+'%）。3000万円特別控除は考慮していません。</div>';
 }
 (function(){ calcQuickTable(); })();
+
+// ===== 路線価・公示地価 から土地市場価格を逆算 =====
+function calcLandPrice() {
+  var el = document.getElementById('land-price-result');
+  if (!el) return;
+  var rosen = parseFloat(document.getElementById('lp_rosen').value) || 0;
+  var koji  = parseFloat(document.getElementById('lp_koji').value)  || 0;
+  var area  = parseFloat(document.getElementById('lp_area').value)  || 0;
+  var shape = document.getElementById('lp_shape').value;
+  if ((!rosen && !koji) || !area) { el.innerHTML = ''; return; }
+
+  // 形状補正
+  var shapeFactor = { rect:1.0, flag:0.8, irreg:0.85 }[shape];
+  var shapeName   = { rect:'整形地（補正なし）', flag:'旗竿地（▲20%）', irreg:'不整形地（▲15%）' }[shape];
+
+  // 路線価 → 公示地価の約80%なので、実勢価格 = 路線価 ÷ 0.8（約1.25倍）
+  var estimates = [];
+  if (rosen > 0) {
+    var rosenBase = rosen * 1000 * area * shapeFactor;
+    estimates.push({ label:'路線価から逆算（÷0.8換算）', low:Math.round(rosenBase/10000), high:Math.round(rosenBase*1.2/10000), color:'var(--gold)' });
+  }
+  if (koji > 0) {
+    var kojiBase = koji * 1000 * area * shapeFactor;
+    estimates.push({ label:'公示地価から逆算（×1.1換算）', low:Math.round(kojiBase*0.9/10000), high:Math.round(kojiBase*1.1/10000), color:'var(--green)' });
+  }
+
+  var estHtml = estimates.map(function(e) {
+    return '<div style="background:rgba(255,255,255,0.03);border-left:3px solid '+e.color+';border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px">'+e.label+'</div>'
+      + '<div style="font-size:20px;font-weight:900;color:'+e.color+'">'+e.low.toLocaleString()+'〜'+e.high.toLocaleString()+'万円</div>'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">㎡単価: '+Math.round((e.low+e.high)/2/area)+'万円/㎡（'+shapeName+'）</div></div>';
+  }).join('');
+
+  el.innerHTML = '<div style="margin-top:4px">' + estHtml
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 12px;margin-top:4px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px">📌 価格指標の関係</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11px;text-align:center">'
+    + '<div style="background:rgba(255,255,255,0.04);padding:6px;border-radius:6px"><div style="color:var(--text-muted)">路線価</div><div style="color:var(--text);font-weight:700">約80%水準</div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);padding:6px;border-radius:6px"><div style="color:var(--text-muted)">公示地価</div><div style="color:var(--text);font-weight:700">約100%水準</div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);padding:6px;border-radius:6px"><div style="color:var(--text-muted)">実勢価格</div><div style="color:var(--text);font-weight:700">90〜120%変動</div></div>'
+    + '</div></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 実勢価格は市場環境・個別事情により大きく変動します。専門家による査定を必ずご確認ください。</div></div>';
+}
+(function(){ calcLandPrice(); })();
 
 // ===== 内覧前 準備チェックリスト スコア =====
 function calcInternalCheck() {
