@@ -628,6 +628,32 @@
         </div>
       </div>
 
+      <!-- 更地 vs 建物あり売却比較カード -->
+      <div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px;margin-top:20px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏗 更地 vs 建物あり どちらが手取りが多い？</div>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">古家付き土地として売るか、解体して更地で売るか。解体費用と売却価格の変化を比べて手取りを試算します。</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div>
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の物件価格（万円）</label>
+            <input type="number" id="dv_current" placeholder="例: 1500" min="100" step="50" oninput="calcDemoVsKeep()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">更地後の価格上昇（万円）</label>
+            <input type="number" id="dv_uplift" placeholder="例: 200" min="0" step="50" oninput="calcDemoVsKeep()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">解体費用（万円）</label>
+            <input type="number" id="dv_demo_cost" placeholder="例: 150" min="0" step="10" oninput="calcDemoVsKeep()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px">木造30坪：100〜150万円目安</div>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">仲介手数料率（%）</label>
+            <input type="number" id="dv_comm" value="3" min="1" max="5" step="0.1" oninput="calcDemoVsKeep()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          </div>
+        </div>
+        <div id="dv-result"></div>
+      </div>
+
       <!-- 相談前チェックリスト（インタラクティブ版） -->
       <div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px;margin-top:20px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
@@ -3072,6 +3098,45 @@ function updateDisclosureSummary() {
     : '<div style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:8px;padding:12px;font-size:12px;color:#fb923c;font-weight:700">&#x1F4A1; ' + checkedCount + '項目が該当しています。必ず不動産会社に伝えてください。告知漏れは後のトラブルになります。</div>';
   msg += '<div style="margin-top:10px;text-align:center"><a href="mailto:shinji.japaaan1@gmail.com?subject=告知事項について相談したい&body=告知が必要な事項について相談したいです。%0A該当件数: ' + checkedCount + '件" style="display:inline-block;background:var(--gold);color:#000;font-size:12px;font-weight:700;padding:8px 20px;border-radius:8px;text-decoration:none">TERRA REALTYに相談する →</a></div>';
   el.innerHTML = msg;
+}
+
+// ===== 更地 vs 建物あり比較 =====
+function calcDemoVsKeep() {
+  var el = document.getElementById('dv-result');
+  if (!el) return;
+  var current   = parseFloat(document.getElementById('dv_current').value)   || 0;
+  var uplift    = parseFloat(document.getElementById('dv_uplift').value)     || 0;
+  var demoCost  = parseFloat(document.getElementById('dv_demo_cost').value) || 0;
+  var commRate  = (parseFloat(document.getElementById('dv_comm').value)      || 3) / 100;
+  if (!current) { el.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">現在の物件価格を入力してください</p>'; return; }
+  var commFixed = 6 * 10000; // 6万円
+  var calcComm = function(price) { return Math.round(price * 10000 * commRate + commFixed) * 1.1; };
+  var keepPrice   = current;
+  var keepComm    = calcComm(keepPrice);
+  var keepNet     = Math.round(current * 10000 - keepComm);
+  var afterPrice  = current + uplift;
+  var afterComm   = calcComm(afterPrice);
+  var demoYen     = demoCost * 10000;
+  var afterNet    = Math.round(afterPrice * 10000 - afterComm - demoYen);
+  var diff        = afterNet - keepNet;
+  var winner      = diff > 0 ? 'demolish' : diff < 0 ? 'keep' : 'tie';
+  var winnerLabel = winner === 'demolish' ? '更地にした方が' + Math.round(diff / 10000) + '万円多く手取れます' : winner === 'keep' ? '建物ありの方が' + Math.round(-diff / 10000) + '万円多く手取れます' : '両方の手取りは同じです';
+  var winnerColor = winner === 'demolish' ? '#4ade80' : winner === 'keep' ? 'var(--gold)' : 'var(--text-muted)';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'
+    + '<div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid ' + (winner==='keep'?'rgba(201,168,76,0.4)':'rgba(255,255,255,0.08)') + '">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏠 建物ありのまま売却</div>'
+    + '<div style="font-size:14px;font-weight:900;color:' + (winner==='keep'?'var(--gold)':'var(--text)') + '">' + Math.round(keepNet/10000).toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">売却 ' + keepPrice + '万 − 手数料 ' + Math.round(keepComm/10000) + '万</div>'
+    + (winner==='keep'?'<div style="font-size:10px;font-weight:700;color:var(--gold);margin-top:4px">✓ WINNER</div>':'')
+    + '</div>'
+    + '<div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid ' + (winner==='demolish'?'rgba(74,222,128,0.4)':'rgba(255,255,255,0.08)') + '">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏗 解体して更地で売却</div>'
+    + '<div style="font-size:14px;font-weight:900;color:' + (winner==='demolish'?'#4ade80':'var(--text)') + '">' + Math.round(afterNet/10000).toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">売却 ' + afterPrice + '万 − 手数料 ' + Math.round(afterComm/10000) + '万 − 解体 ' + demoCost + '万</div>'
+    + (winner==='demolish'?'<div style="font-size:10px;font-weight:700;color:#4ade80;margin-top:4px">✓ WINNER</div>':'')
+    + '</div></div>'
+    + '<div style="padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:8px;text-align:center;font-size:13px;font-weight:700;color:' + winnerColor + '">' + winnerLabel + '</div>'
+    + '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.7">&#8251; 仲介手数料は（売却価格×' + Math.round(commRate*100) + '%＋6万円）×1.1で計算。解体費は見積もりにより変動します。アスベスト含有の場合は追加費用が発生します。</div>';
 }
 
 // ===== リード管理 =====
