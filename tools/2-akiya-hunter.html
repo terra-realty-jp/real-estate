@@ -1021,6 +1021,40 @@
     <div id="akiya-bep-result"></div>
   </div>
 
+  <!-- 相続税評価額 簡易試算カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏛️ 相続税評価額 簡易試算</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">路線価方式（土地）＋建物固定資産税評価額の概算。小規模宅地特例も確認</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">路線価（千円/㎡）</div>
+        <input type="number" id="sht_rosenka" value="150" min="1" max="10000" step="10" oninput="calcSozokuHyouka()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">土地面積（㎡）</div>
+        <input type="number" id="sht_area" value="100" min="10" max="5000" step="5" oninput="calcSozokuHyouka()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建物 固定資産税評価額（万円）</div>
+        <input type="number" id="sht_bldg" value="500" min="0" max="50000" step="50" oninput="calcSozokuHyouka()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">地積規模（小規模宅地特例）</div>
+        <select id="sht_tokurei" onchange="calcSozokuHyouka()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="none">特例なし</option>
+          <option value="resident">特定居住用宅地（80%減）</option>
+          <option value="business">特定事業用宅地（80%減）</option>
+          <option value="rental">貸付事業用宅地（50%減）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">持分割合（%）</div>
+        <input type="number" id="sht_share" value="100" min="1" max="100" step="1" oninput="calcSozokuHyouka()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="sozoku-hyouka-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3968,6 +4002,53 @@ function calcSubsidyCheck() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 実際の補助金は予算状況・自治体・工事内容により異なります。事前に自治体窓口または補助事業者へご確認ください。</div></div>';
 }
 (function(){ calcSubsidyCheck(); })();
+
+// ===== 相続税評価額 簡易試算 =====
+function calcSozokuHyouka() {
+  var el = document.getElementById('sozoku-hyouka-result');
+  if (!el) return;
+  var rosenka = parseFloat(document.getElementById('sht_rosenka').value) || 0;
+  var area = parseFloat(document.getElementById('sht_area').value) || 0;
+  var bldg = parseFloat(document.getElementById('sht_bldg').value) || 0;
+  var tokurei = document.getElementById('sht_tokurei').value;
+  var share = parseFloat(document.getElementById('sht_share').value) || 100;
+  if (rosenka <= 0 || area <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">路線価と土地面積を入力してください</div>'; return; }
+  var landVal = rosenka * area / 10;
+  var tokureiPct = { none: 0, resident: 0.8, business: 0.8, rental: 0.5 }[tokurei];
+  var tokureiLimit = { none: 0, resident: 330, business: 400, rental: 200 }[tokurei];
+  var appliedArea = Math.min(area, tokureiLimit || area);
+  var deduction = tokureiPct > 0 ? rosenka * appliedArea / 10 * tokureiPct : 0;
+  var landAfter = landVal - deduction;
+  var totalVal = landAfter + bldg;
+  var myShare = totalVal * share / 100;
+  var tokureiLabel = { none: '特例なし', resident: '特定居住用（80%減・330㎡限度）', business: '特定事業用（80%減・400㎡限度）', rental: '貸付事業用（50%減・200㎡限度）' }[tokurei];
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">土地評価額（特例前）</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:var(--gold)">' + Math.round(landVal).toLocaleString() + '<span style="font-size:11px">万円</span></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">小規模宅地特例 減額</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:var(--green)">▲' + Math.round(deduction).toLocaleString() + '<span style="font-size:11px">万円</span></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">相続税評価額 合計</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:var(--text)">' + Math.round(totalVal).toLocaleString() + '<span style="font-size:11px">万円</span></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(201,168,76,0.12);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">持分(' + share + '%)相当評価額</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:var(--gold)">' + Math.round(myShare).toLocaleString() + '<span style="font-size:11px">万円</span></div>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;font-size:11px;color:var(--text-muted);line-height:1.7">';
+  html += '📐 路線価方式: ' + rosenka + '千円/㎡ × ' + area + '㎡ = ' + Math.round(landVal).toLocaleString() + '万円　建物: ' + bldg + '万円（固定資産税評価額）<br>';
+  html += '📌 小規模宅地特例: ' + tokureiLabel + '　適用面積: ' + appliedArea.toFixed(0) + '㎡';
+  html += '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSozokuHyouka(); })();
 
 // 初期化
 checkStorageWarning();
