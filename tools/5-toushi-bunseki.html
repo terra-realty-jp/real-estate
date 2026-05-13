@@ -488,6 +488,31 @@
     <button onclick="dcFillFromAnalysis()" style="width:100%;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:12px;font-weight:700;padding:8px;border-radius:8px;cursor:pointer;margin-bottom:14px;font-family:inherit">📥 分析タブの入力値を自動入力</button>
     <div id="dc-result"></div>
   </div>
+
+  <!-- サブリース vs 自己管理 比較カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">⚖️ サブリース vs 自己管理 10年収益比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">家賃保証（サブリース）と自己管理、どちらが長期的に有利かを試算します。リスクとリターンのバランスを把握できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">満室想定月額賃料（万円）</label>
+        <input type="number" id="sl_rent" placeholder="例: 10" min="1" step="0.5" oninput="calcSublease()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">サブリース保証率（%）</label>
+        <input type="number" id="sl_rate" placeholder="例: 85" min="70" max="95" step="1" value="85" oninput="calcSublease()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">自己管理 空室率（%）</label>
+        <input type="number" id="sl_vacancy" placeholder="例: 10" min="0" max="50" step="5" value="10" oninput="calcSublease()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">自己管理 管理費率（%）</label>
+        <input type="number" id="sl_mgmt" placeholder="例: 5" min="0" max="20" step="1" value="5" oninput="calcSublease()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="sublease-result"></div>
+  </div>
 </div>
 </div>
 
@@ -3738,6 +3763,59 @@ function calcAreaScore() {
     + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; 自己評価に基づくスコアです。人口統計・空室率・開発計画は市区町村・国土交通省のデータで確認することをお勧めします。</div>';
 }
 (function(){ calcAreaScore(); })();
+
+// ===== サブリース vs 自己管理 比較 =====
+function calcSublease() {
+  var el = document.getElementById('sublease-result');
+  if (!el) return;
+  var rent    = parseFloat(document.getElementById('sl_rent').value)    || 0;
+  var slRate  = parseFloat(document.getElementById('sl_rate').value)    || 85;
+  var vacancy = parseFloat(document.getElementById('sl_vacancy').value) || 10;
+  var mgmt    = parseFloat(document.getElementById('sl_mgmt').value)    || 5;
+  if (!rent) { el.innerHTML = ''; return; }
+  var rentYen  = rent * 10000;
+  var slAnnual = rentYen * 12 * (slRate / 100);
+  var selfAnnual = rentYen * 12 * (1 - vacancy / 100) * (1 - mgmt / 100);
+  var diff10 = (selfAnnual - slAnnual) * 10;
+  var selfBetter = selfAnnual > slAnnual;
+  var winLabel = selfBetter ? '自己管理が有利' : 'サブリースが有利';
+  var winColor = selfBetter ? 'var(--green)' : '#4fc3f7';
+
+  var html = '<div style="margin-top:10px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.2);border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:11px;color:#4fc3f7;margin-bottom:4px;font-weight:700">サブリース（保証' + slRate + '%）</div>'
+    + '<div style="font-size:18px;font-weight:700;color:#4fc3f7">' + Math.round(slAnnual/10000).toLocaleString() + '<span style="font-size:11px">万円/年</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">空室リスクなし・管理不要</div></div>'
+    + '<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--green);margin-bottom:4px;font-weight:700">自己管理（空室' + vacancy + '%・管理' + mgmt + '%）</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--green)">' + Math.round(selfAnnual/10000).toLocaleString() + '<span style="font-size:11px">万円/年</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">手間はかかるが収入最大化</div></div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 14px;margin-bottom:10px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="font-size:12px">年間差額</span>'
+    + '<span style="font-size:14px;font-weight:700;color:' + (selfBetter ? 'var(--green)' : '#4fc3f7') + '">'
+    + (selfBetter ? '自己管理が +' : 'サブリースが +') + Math.round(Math.abs(selfAnnual - slAnnual)/10000).toLocaleString() + '万円/年 有利</span></div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">'
+    + '<span style="font-size:12px">10年間の累積差額</span>'
+    + '<span style="font-size:14px;font-weight:700;color:' + winColor + '">' + (selfBetter ? '+' : '-') + Math.round(Math.abs(diff10)/10000).toLocaleString() + '万円</span></div></div>'
+    + '<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">比較ポイント</div>'
+    + '<div style="display:flex;flex-direction:column;gap:4px">'
+    + renderSlRow('収入の安定性', 'サブリース ◎', '自己管理 △（空室時ゼロ）')
+    + renderSlRow('管理の手間', 'サブリース ◎ 不要', '自己管理 △ 対応必要')
+    + renderSlRow('長期的な収入', 'サブリース △', '自己管理 ◎ 高い')
+    + renderSlRow('契約の柔軟性', 'サブリース △ 解約難', '自己管理 ◎ いつでも売却可')
+    + renderSlRow('リスク', 'サブリース △ 業者倒産リスク', '自己管理 △ 空室・トラブル')
+    + '</div>'
+    + '<div style="margin-top:10px;font-size:10px;color:var(--text-muted);line-height:1.6">※ サブリースは業者により保証率・免責期間・解約条件が異なります。契約書を必ず確認してください。</div></div>';
+  el.innerHTML = html;
+}
+function renderSlRow(label, sl, self) {
+  return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:5px 8px;background:rgba(255,255,255,0.02);border-radius:5px;font-size:11px">'
+    + '<span style="color:var(--text-muted)">' + label + '</span>'
+    + '<span>' + sl + '</span>'
+    + '<span>' + self + '</span></div>';
+}
 
 // ===== デッドクロス到来時期チェック =====
 function dcFillFromAnalysis() {
