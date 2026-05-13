@@ -447,6 +447,31 @@
     <div id="prepay-result"></div>
   </div>
 
+  <!-- 繰り上げ返済 vs 追加投資 比較カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">⚖️ 繰り上げ返済 vs 追加投資 比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">手元の余剰資金を「ローン繰り上げ返済」に充てるか「新規物件追加投資」に充てるかの損得を比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">手元余剰資金（万円）</label>
+        <input type="number" id="pi_cash" value="500" min="10" max="10000" step="50" oninput="calcPrepayVsInvest()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在のローン金利（%）</label>
+        <input type="number" id="pi_loan_rate" value="2.0" min="0.1" max="10" step="0.1" oninput="calcPrepayVsInvest()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">追加投資の実質利回り（%）</label>
+        <input type="number" id="pi_yield" value="6.0" min="0.1" max="30" step="0.1" oninput="calcPrepayVsInvest()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">比較期間（年）</label>
+        <input type="number" id="pi_years" value="10" min="1" max="30" step="1" oninput="calcPrepayVsInvest()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="prepay-vs-invest-result"></div>
+  </div>
+
   <div class="card" style="margin-top:16px">
     <div class="card-title">🏦 年収ベース 融資可能額チェック</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">年収と希望物件価格を入力すると、主要銀行の融資審査基準（返済比率30〜35%）をもとに融資可能額の目安を試算します。</p>
@@ -3848,6 +3873,37 @@ function calcPrepay() {
     ${savedInterest>0?`<div style="padding:10px 12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:6px;font-size:12px;color:var(--text-muted)">✅ 繰り上げ返済で約${savedInterest.toLocaleString()}万円の利息を削減できます。投資収益を安定させるためにも有効です。</div>`:''}
   `;
 }
+
+// ===== 繰り上げ返済 vs 追加投資 比較 =====
+function calcPrepayVsInvest() {
+  var el = document.getElementById('prepay-vs-invest-result');
+  if(!el) return;
+  var cash      = parseFloat(document.getElementById('pi_cash').value)||500;
+  var loanRate  = parseFloat(document.getElementById('pi_loan_rate').value)||2.0;
+  var invYield  = parseFloat(document.getElementById('pi_yield').value)||6.0;
+  var years     = parseFloat(document.getElementById('pi_years').value)||10;
+  var prepayBenefit = cash * loanRate/100 * years;
+  var investBenefit = cash * invYield/100 * years;
+  var diff = investBenefit - prepayBenefit;
+  var winner = diff > 0 ? '追加投資' : '繰り上げ返済';
+  var winnerColor = diff > 0 ? 'var(--green)' : 'var(--gold)';
+  var kpiS = 'border-radius:10px;padding:12px;text-align:center';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+    +'<div style="'+kpiS+';background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.25)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">繰り上げ返済の効果</div><div style="font-size:22px;font-weight:900;color:#facc15">'+prepayBenefit.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">利息削減（'+years+'年）</div></div>'
+    +'<div style="'+kpiS+';background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">追加投資の収益（概算）</div><div style="font-size:22px;font-weight:900;color:var(--green)">'+investBenefit.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">不動産収入（'+years+'年）</div></div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.04);border:2px solid '+winnerColor+';border-radius:10px;padding:14px;text-align:center;margin-bottom:12px">'
+    +'<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">'+years+'年後の試算では</div>'
+    +'<div style="font-size:20px;font-weight:900;color:'+winnerColor+'">'+winner+'が有利</div>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-top:4px">差額 '+Math.abs(diff).toFixed(0)+'万円</div></div>'
+    +'<div style="font-size:12px;color:var(--text-muted);line-height:1.7">'
+    +(diff > 0
+      ? '📈 利回り（'+invYield+'%）がローン金利（'+loanRate+'%）を上回っているため、追加投資のほうが経済的効率が高い計算です。ただし投資にはリスクがあります。'
+      : '🔒 ローン金利（'+loanRate+'%）に対して利回り（'+invYield+'%）が低いため、繰り上げ返済のほうが確実に利益を得られます。リスクフリーな選択肢です。')
+    +'</div>'
+    +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 追加投資収益は税引き前・単純利回りで試算。実際は空室・修繕・税金コストが発生します。</p>';
+}
+(function(){ calcPrepayVsInvest(); })();
 
 function calcLoanQualify() {
   const el = document.getElementById('loan-qualify-result'); if(!el) return;
