@@ -661,6 +661,35 @@
     <div id="building-check-result"></div>
   </div>
 
+  <!-- 空き家活用 収益シミュレーター -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">💴 空き家活用 収益シミュレーター</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家の活用方法（賃貸/民泊/貸し倉庫）別に想定収益・初期費用・回収期間を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物延床面積（㎡）</label>
+        <input type="number" id="au_area" value="80" min="10" max="500" step="5" oninput="calcAkiyaUse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件のある地域</label>
+        <select id="au_region" onchange="calcAkiyaUse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="urban">都市部（駅徒歩15分以内）</option>
+          <option value="sub">郊外（車移動圏）</option>
+          <option value="rural" selected>地方・農村部</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リフォーム予算（万円）</label>
+        <input type="number" id="au_reform" value="300" min="0" max="5000" step="50" oninput="calcAkiyaUse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間維持費（管理・税など、万円）</label>
+        <input type="number" id="au_maint" value="20" min="0" max="200" step="5" oninput="calcAkiyaUse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="akiya-use-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3018,6 +3047,63 @@ function calcBuildingCheck() {
     +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 費用は目安です。現地調査・業者見積を必ず取得してください。</p>';
 }
 (function(){ calcBuildingCheck(); })();
+
+// ===== 空き家活用 収益シミュレーター =====
+function calcAkiyaUse() {
+  var el = document.getElementById('akiya-use-result');
+  if(!el) return;
+  var area    = parseFloat(document.getElementById('au_area').value)||80;
+  var region  = document.getElementById('au_region').value;
+  var reform  = parseFloat(document.getElementById('au_reform').value)||0;
+  var maint   = parseFloat(document.getElementById('au_maint').value)||0;
+  var factor = {urban:{rent:1.4,airbnb:1.8,storage:1.2},sub:{rent:1.0,airbnb:1.2,storage:1.0},rural:{rent:0.6,airbnb:0.8,storage:0.7}}[region];
+  var uses = [
+    {
+      icon:'🏠', name:'普通賃貸', color:'#60a5fa',
+      initCost: Math.round(area*20*factor.rent/10)*10,
+      annualRev: Math.round(area*0.6*factor.rent*12/10)*10,
+      vacancyRate:0.10, mgmtRate:0.05,
+      note:'安定収入だが家賃相場に依存。需要は地域格差が大きい'
+    },
+    {
+      icon:'🛌', name:'民泊・宿泊施設', color:'var(--gold)',
+      initCost: Math.round(area*30*factor.airbnb/10)*10,
+      annualRev: Math.round(area*1.2*factor.airbnb*12/10)*10,
+      vacancyRate:0.40, mgmtRate:0.20,
+      note:'高収益の可能性があるが、運営手間・許認可が必要'
+    },
+    {
+      icon:'📦', name:'貸し倉庫・トランクルーム', color:'#4ade80',
+      initCost: Math.round(area*8*factor.storage/10)*10,
+      annualRev: Math.round(area*0.25*factor.storage*12/10)*10,
+      vacancyRate:0.15, mgmtRate:0.02,
+      note:'管理が楽で安定。単価は低いが初期投資も少ない'
+    }
+  ];
+  var best = null, bestNOI = -Infinity;
+  uses.forEach(function(u){
+    u.noi = u.annualRev*(1-u.vacancyRate) - u.annualRev*u.mgmtRate - maint;
+    u.totalCost = u.initCost + reform;
+    u.payback = u.noi>0 ? (u.totalCost/u.noi).toFixed(1) : '∞';
+    if(u.noi>bestNOI){ bestNOI=u.noi; best=u; }
+  });
+  var cards = uses.map(function(u){
+    var isBest = u===best;
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid '+(isBest?u.color:'rgba(255,255,255,0.06)')+';border-radius:10px;padding:14px;position:relative">'
+      +(isBest?'<div style="position:absolute;top:-8px;left:14px;background:'+u.color+';color:#000;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px">最高収益</div>':'')
+      +'<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:'+u.color+'">'+u.icon+' '+u.name+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">'
+      +'<div style="text-align:center"><div style="font-size:18px;font-weight:900;color:'+u.color+'">'+u.noi.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">年間収益(NOI)</div></div>'
+      +'<div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--text)">'+u.payback+'年</div><div style="font-size:10px;color:var(--text-muted)">回収期間</div></div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--text-muted)">初期費用: <span style="color:var(--text)">'+u.totalCost.toFixed(0)+'万</span>（改修+リフォーム）</div>'
+      +'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">'+u.note+'</div>'
+      +'</div>';
+  }).join('');
+  el.innerHTML = '<div style="display:grid;gap:10px;margin-bottom:10px">'+cards+'</div>'
+    +'<p style="font-size:10px;color:var(--text-muted)">※ 収益は地域・物件状態により大きく変動します。改修費用は床面積×単価で試算。実際の見積もりを取得してください。</p>';
+}
+(function(){ calcAkiyaUse(); })();
 
 // ===== 専門家 相談ルート診断 =====
 function calcExpertRoute() {
