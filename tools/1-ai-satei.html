@@ -1212,6 +1212,25 @@
     <div id="price-schedule-result"></div>
   </div>
 
+  <!-- 物件魅力度スコアカード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">⭐ 物件魅力度スコア診断</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">売却時の広告訴求力を10項目でチェックし、スコアと改善ポイントを提示します</div>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ma_c0" onchange="calcMagnetScore()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>築20年以内または大規模リノベ済み</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ma_c1" onchange="calcMagnetScore()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>最寄り駅から徒歩10分以内</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ma_c2" onchange="calcMagnetScore()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>南向きまたは角部屋（採光良好）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ma_c3" onchange="calcMagnetScore()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>駐車場あり（1台以上）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ma_c4" onchange="calcMagnetScore()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>周辺エリアの成約実績・相場が好調</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ma_c5" onchange="calcMagnetScore()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>水回り（キッチン・浴室）が新しいor交換済み</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ma_c6" onchange="calcMagnetScore()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>土地形状が整形（旗竿地・変形地でない）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ma_c7" onchange="calcMagnetScore()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>学区が人気（子育て世帯向け）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ma_c8" onchange="calcMagnetScore()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>建築基準法上の問題なし（接道・容積率等）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ma_c9" onchange="calcMagnetScore()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>ハザードマップ上のリスク（洪水・土砂等）が低い</span></label>
+    </div>
+    <div id="magnet-score-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4125,6 +4144,57 @@ function calcPriceSchedule() {
   el.innerHTML = html;
 }
 (function(){ calcPriceSchedule(); })();
+
+// ===== 物件魅力度スコア診断 =====
+function calcMagnetScore() {
+  var el = document.getElementById('magnet-score-result');
+  if (!el) return;
+  var items = [
+    { id:'ma_c0', label:'築年・リノベ', weight:15 },
+    { id:'ma_c1', label:'駅距離', weight:15 },
+    { id:'ma_c2', label:'採光・向き', weight:10 },
+    { id:'ma_c3', label:'駐車場', weight:8 },
+    { id:'ma_c4', label:'エリア相場', weight:10 },
+    { id:'ma_c5', label:'水回り', weight:12 },
+    { id:'ma_c6', label:'土地形状', weight:8 },
+    { id:'ma_c7', label:'学区', weight:7 },
+    { id:'ma_c8', label:'法令適合', weight:10 },
+    { id:'ma_c9', label:'ハザード', weight:5 },
+  ];
+  var score = 0, maxScore = 0;
+  var unchecked = [];
+  items.forEach(function(it) {
+    maxScore += it.weight;
+    var c = document.getElementById(it.id);
+    if (c && c.checked) score += it.weight;
+    else unchecked.push(it);
+  });
+  var pct = Math.round(score / maxScore * 100);
+  var grade, gColor, gMsg;
+  if (pct >= 80) { grade = 'S'; gColor = '#4ade80'; gMsg = '市場での訴求力は非常に高い'; }
+  else if (pct >= 60) { grade = 'A'; gColor = 'var(--gold)'; gMsg = '訴求力は良好・適正価格なら3ヶ月以内に成約が見込める'; }
+  else if (pct >= 40) { grade = 'B'; gColor = '#fb923c'; gMsg = '競合物件が多い価格帯・改善で成約率を上げられる'; }
+  else { grade = 'C'; gColor = 'var(--red)'; gMsg = '課題が多い・価格設定とリフォームの両面から対策を検討'; }
+  var barW = Math.round(pct);
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:80px 1fr;gap:12px;align-items:center;background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px">';
+  html += '<div style="text-align:center"><div style="font-size:48px;font-weight:900;color:' + gColor + ';line-height:1">' + grade + '</div><div style="font-size:10px;color:var(--text-muted)">訴求力</div></div>';
+  html += '<div><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">' + pct + '点 / 100点</div>';
+  html += '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:8px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:' + barW + '%;background:' + gColor + ';border-radius:4px;transition:width .4s"></div></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">' + gMsg + '</div></div>';
+  html += '</div>';
+  if (unchecked.length > 0) {
+    html += '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">📌 改善効果が高い項目（チェックされていない）</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    unchecked.slice(0,5).forEach(function(it) {
+      html += '<span style="background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text-muted)">' + it.label + '（' + it.weight + 'pt）</span>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMagnetScore(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
