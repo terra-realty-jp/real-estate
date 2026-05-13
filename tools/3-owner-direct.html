@@ -660,11 +660,11 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div>
         <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">希望引渡し日</label>
-        <input type="date" id="ss_target" oninput="calcSaleSchedule()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        <input type="date" id="ssc_target" oninput="calcSaleSchedule()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
         <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却方法</label>
-        <select id="ss_type" onchange="calcSaleSchedule()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <select id="ssc_type" onchange="calcSaleSchedule()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
           <option value="agency">仲介売却（3〜6ヶ月）</option>
           <option value="buy">買取（1〜2ヶ月）</option>
         </select>
@@ -800,6 +800,32 @@
       </div>
     </div>
     <div id="hl-tax-result"></div>
+  </div>
+
+  <!-- 仲介会社評価スコアカード -->
+  <div class="card" style="margin-top:24px">
+    <div class="card-title">🏆 仲介会社 評価スコアカード</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">媒介契約先を選ぶ際に、複数の仲介会社を5軸で採点して比較します。査定後の業者選びの判断材料にしてください。</p>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:380px">
+        <thead>
+          <tr style="background:rgba(255,255,255,0.06)">
+            <th style="padding:8px;text-align:left;color:var(--text-muted)">評価項目</th>
+            <th style="padding:8px;text-align:center;color:var(--gold)">A社</th>
+            <th style="padding:8px;text-align:center;color:var(--gold)">B社</th>
+            <th style="padding:8px;text-align:center;color:var(--gold)">C社</th>
+          </tr>
+        </thead>
+        <tbody id="agency-score-tbody">
+          <tr style="border-top:1px solid rgba(255,255,255,0.06)"><td style="padding:6px 8px;color:var(--text-muted)">査定価格の根拠説明（1〜5）</td><td style="padding:4px"><input type="number" id="ag_pa1" value="3" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="ag_pb1" value="4" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="ag_pc1" value="2" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td></tr>
+          <tr style="border-top:1px solid rgba(255,255,255,0.06)"><td style="padding:6px 8px;color:var(--text-muted)">担当者の対応・熱意（1〜5）</td><td style="padding:4px"><input type="number" id="ag_pa2" value="4" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="ag_pb2" value="3" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="ag_pc2" value="5" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td></tr>
+          <tr style="border-top:1px solid rgba(255,255,255,0.06)"><td style="padding:6px 8px;color:var(--text-muted)">広告・集客力（1〜5）</td><td style="padding:4px"><input type="number" id="ag_pa3" value="3" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="ag_pb3" value="5" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="ag_pc3" value="3" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td></tr>
+          <tr style="border-top:1px solid rgba(255,255,255,0.06)"><td style="padding:6px 8px;color:var(--text-muted)">査定価格の妥当性（1〜5）</td><td style="padding:4px"><input type="number" id="ag_pa4" value="4" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="ag_pb4" value="4" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="ag_pc4" value="3" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td></tr>
+          <tr style="border-top:1px solid rgba(255,255,255,0.06)"><td style="padding:6px 8px;color:var(--text-muted)">報告頻度・透明性（1〜5）</td><td style="padding:4px"><input type="number" id="ag_pa5" value="4" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="ag_pb5" value="3" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="ag_pc5" value="4" min="1" max="5" step="1" oninput="calcAgencyScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:5px;color:var(--text);font-size:12px;outline:none;text-align:center"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="agency-score-result" style="margin-top:12px"></div>
   </div>
 
 </div>
@@ -3185,8 +3211,8 @@ function calcPreSaleReform() {
 function calcSaleSchedule() {
   var el = document.getElementById('sale-schedule-result');
   if (!el) return;
-  var targetVal = document.getElementById('ss_target').value;
-  var stype = document.getElementById('ss_type').value;
+  var targetVal = document.getElementById('ssc_target').value;
+  var stype = document.getElementById('ssc_type').value;
   if (!targetVal) {
     el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">希望引渡し日を選択してください</div>';
     return;
@@ -3251,7 +3277,7 @@ function calcSaleSchedule() {
   var d = new Date(2026, 4, 14);
   d.setMonth(d.getMonth() + 6);
   var yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
-  var inp = document.getElementById('ss_target');
+  var inp = document.getElementById('ssc_target');
   if (inp) { inp.value = yyyy + '-' + mm + '-' + dd; calcSaleSchedule(); }
 })();
 
@@ -3373,6 +3399,38 @@ function calcHLTax() {
   el.innerHTML = html;
 }
 (function(){ calcHLTax(); })();
+
+// ===== 仲介会社 評価スコアカード =====
+function calcAgencyScore() {
+  var el = document.getElementById('agency-score-result');
+  if (!el) return;
+  var cols = ['a','b','c'];
+  var scores = cols.map(function(c) {
+    var total = 0;
+    for (var i = 1; i <= 5; i++) {
+      var inp = document.getElementById('ag_p' + c + i);
+      total += inp ? (parseInt(inp.value) || 0) : 0;
+    }
+    return { col: c.toUpperCase() + '社', total: total };
+  });
+  var maxScore = Math.max.apply(null, scores.map(function(s){ return s.total; }));
+  var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">';
+  scores.forEach(function(s) {
+    var isBest = s.total === maxScore;
+    var pct = Math.round(s.total / 25 * 100);
+    var color = isBest ? 'var(--gold)' : 'var(--text-muted)';
+    html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
+    html += '<div style="font-size:12px;font-weight:700;color:' + color + ';margin-bottom:4px">' + s.col + (isBest ? ' 👑' : '') + '</div>';
+    html += '<div style="font-size:22px;font-weight:900;color:' + color + '">' + s.total + '/25</div>';
+    html += '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:5px;overflow:hidden;margin-top:6px"><div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:4px"></div></div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  var best = scores.reduce(function(a,b){ return a.total >= b.total ? a : b; });
+  html += '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px">💡 総合評価1位: <strong style="color:var(--gold)">' + best.col + '</strong>（' + best.total + '点）— 担当者との相性と価格の根拠説明を最終判断の軸にしてください。</div>';
+  el.innerHTML = html;
+}
+(function(){ calcAgencyScore(); })();
 
 // 初期化
 checkStorageWarning();
