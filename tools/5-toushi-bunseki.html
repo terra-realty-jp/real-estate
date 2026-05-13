@@ -985,6 +985,35 @@
     <div id="portfolio-scale-result"></div>
   </div>
 
+  <!-- 次の1棟へ向けた 自己資金蓄積計画カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">🎯 次の1棟へ向けた 自己資金蓄積計画カード</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">次に購入する物件の頭金を、現在の保有物件CFと毎月の積立から何ヶ月で確保できるかをシミュレーションします。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">次に狙う物件価格（万円）</label>
+        <input type="number" id="nxt_price" placeholder="例: 5000" min="100" step="100" value="5000" oninput="calcNextTarget()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">必要頭金比率（%）</label>
+        <input type="number" id="nxt_down" placeholder="例: 30" min="0" max="100" step="5" value="30" oninput="calcNextTarget()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の貯蓄・現金（万円）</label>
+        <input type="number" id="nxt_savings" placeholder="例: 500" min="0" step="50" value="500" oninput="calcNextTarget()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">既存物件の月間CF（万円）</label>
+        <input type="number" id="nxt_cf" placeholder="例: 5" min="0" step="1" value="5" oninput="calcNextTarget()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">給与からの月間積立（万円）</label>
+        <input type="number" id="nxt_salary" placeholder="例: 10" min="0" step="1" value="10" oninput="calcNextTarget()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="next-target-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4871,6 +4900,65 @@ function showErrToast(msg) {
   setTimeout(()=>t.style.opacity='0',4000);
   setTimeout(()=>t.remove(),4300);
 }
+// ===== 次の1棟 自己資金蓄積計画 =====
+function calcNextTarget() {
+  var el = document.getElementById('next-target-result');
+  if (!el) return;
+  var price   = parseFloat(document.getElementById('nxt_price').value)   || 0;
+  var down    = parseFloat(document.getElementById('nxt_down').value)    || 30;
+  var savings = parseFloat(document.getElementById('nxt_savings').value) || 0;
+  var cf      = parseFloat(document.getElementById('nxt_cf').value)      || 0;
+  var salary  = parseFloat(document.getElementById('nxt_salary').value)  || 0;
+  if (!price) { el.innerHTML = ''; return; }
+
+  var required = Math.round(price * down / 100);
+  var monthlyAdd = cf + salary;
+  var shortfall = Math.max(0, required - savings);
+  var months = monthlyAdd > 0 ? Math.ceil(shortfall / monthlyAdd) : null;
+
+  // Milestone dates
+  var today = new Date(2026, 4, 14); // 2026-05-14
+  var targetDate = null;
+  if (months !== null) {
+    targetDate = new Date(today.getFullYear(), today.getMonth() + months, 1);
+  }
+
+  var statusColor = shortfall === 0 ? 'var(--green)' : months !== null && months <= 24 ? 'var(--gold)' : 'var(--red)';
+  var statusMsg = shortfall === 0 ? '✅ 既に頭金を確保できています！すぐに物件探しに動けます。'
+    : months !== null ? '📅 '+ months +'ヶ月後（'+targetDate.getFullYear()+'年'+(targetDate.getMonth()+1)+'月）頃に購入準備が整います。'
+    : '⚠ 現在のCFと積立がゼロのため、試算できません。';
+
+  var milestones = months !== null ? [0.25, 0.5, 0.75, 1.0].map(function(r) {
+    var m = Math.ceil(shortfall * r / monthlyAdd);
+    var d = new Date(today.getFullYear(), today.getMonth() + m, 1);
+    return { pct: Math.round(r*100), months: m, date: d.getFullYear()+'年'+(d.getMonth()+1)+'月', amt: Math.min(savings + monthlyAdd * m, required) };
+  }) : [];
+
+  var milHtml = milestones.length > 0 ?
+    '<div style="margin-top:10px;margin-bottom:6px;font-size:12px;font-weight:700;color:var(--text)">積立マイルストーン</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">'
+    + milestones.map(function(m) {
+      return '<div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 4px">'
+        + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">'+m.pct+'%達成</div>'
+        + '<div style="font-size:10px;font-weight:700;color:var(--gold)">'+m.date+'</div>'
+        + '<div style="font-size:10px;color:var(--text-muted)">'+Math.round(m.amt)+'万円</div></div>';
+    }).join('') + '</div>' : '';
+
+  el.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;margin-bottom:10px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:10px">'
+    + '<div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">必要頭金</div><div style="font-size:16px;font-weight:900;color:var(--text)">'+required.toLocaleString()+'万円</div></div>'
+    + '<div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">現在の蓄積</div><div style="font-size:16px;font-weight:900;color:var(--gold)">'+savings.toLocaleString()+'万円</div></div>'
+    + '<div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">月間積立合計</div><div style="font-size:16px;font-weight:900;color:var(--green)">'+(cf+salary)+'万円</div></div>'
+    + '</div>'
+    + '<div style="font-size:13px;font-weight:700;color:'+statusColor+'">'+statusMsg+'</div>'
+    + milHtml + '</div>'
+    + (shortfall > 0 && monthlyAdd > 0 ? '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 12px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px">💡 期間短縮のヒント</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">月間積立を1万円増やすと <strong style="color:var(--gold)">約'+Math.ceil(shortfall/(monthlyAdd+1)-(shortfall/monthlyAdd))+'ヶ月短縮</strong>できます。（'+Math.ceil(shortfall/(monthlyAdd+1))+'ヶ月まで短縮）</div></div>' : '')
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; ローンの審査基準・金融機関の融資方針によって必要な自己資金比率は変動します。事前相談を推奨します。</div>';
+}
+(function(){ calcNextTarget(); })();
+
 // ===== 保有物件数別 資産規模シミュレーター =====
 function calcPortfolioScale() {
   var el = document.getElementById('portfolio-scale-result');
