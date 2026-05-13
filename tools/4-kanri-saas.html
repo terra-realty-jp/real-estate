@@ -791,6 +791,39 @@
     <div id="mgmt-vs-self-result"></div>
   </div>
 
+  <!-- 賃料改定シミュレーターカード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">📈 賃料改定シミュレーター</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">段階的な賃料改定による収入増加・回収年数・5年後の累計効果を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月額家賃（円）</label>
+        <input type="number" id="rr_current" value="60000" min="1000" max="1000000" step="1000" oninput="calcRentRevision()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">戸数</label>
+        <input type="number" id="rr_units" value="6" min="1" max="500" step="1" oninput="calcRentRevision()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">1回あたり値上げ率（%）</label>
+        <input type="number" id="rr_step" value="3" min="0.5" max="30" step="0.5" oninput="calcRentRevision()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">値上げ間隔（年）</label>
+        <input type="number" id="rr_interval" value="2" min="1" max="10" step="1" oninput="calcRentRevision()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">退去率（値上げ時の空室増加 %）</label>
+        <input type="number" id="rr_churn" value="10" min="0" max="100" step="1" oninput="calcRentRevision()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">シミュレーション期間（年）</label>
+        <input type="number" id="rr_years" value="10" min="1" max="30" step="1" oninput="calcRentRevision()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rent-revision-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5930,6 +5963,57 @@ function calcMgmtVsSelf() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 時間コストは時給2,000円で換算。実際の委託内容・条件は管理会社によって異なります。</div>';
 }
 (function(){ calcMgmtVsSelf(); })();
+
+// ===== 賃料改定シミュレーター =====
+function calcRentRevision() {
+  var el = document.getElementById('rent-revision-result');
+  if (!el) return;
+  var currentRent = parseFloat(document.getElementById('rr_current').value) || 0;
+  var units = parseInt(document.getElementById('rr_units').value) || 1;
+  var stepPct = parseFloat(document.getElementById('rr_step').value) || 3;
+  var intervalYrs = parseInt(document.getElementById('rr_interval').value) || 2;
+  var churnPct = parseFloat(document.getElementById('rr_churn').value) || 0;
+  var totalYears = parseInt(document.getElementById('rr_years').value) || 10;
+  if (currentRent <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">家賃を入力してください</div>'; return; }
+  var rows = [];
+  var rent = currentRent;
+  var occupancy = 1.0;
+  var baseAnnual = currentRent * 12 * units;
+  for (var y = 0; y <= totalYears; y++) {
+    var isRevision = (y > 0 && y % intervalYrs === 0);
+    if (isRevision) {
+      rent = Math.round(rent * (1 + stepPct / 100) / 100) * 100;
+      occupancy = Math.max(0.5, occupancy * (1 - churnPct / 100));
+    }
+    var annual = rent * 12 * units * occupancy;
+    rows.push({ year: y, rent: rent, occupancy: occupancy, annual: annual, isRevision: isRevision });
+  }
+  var finalAnnual = rows[rows.length - 1].annual;
+  var cumulative = rows.reduce(function(s, r) { return s + r.annual; }, 0);
+  var gain = cumulative - baseAnnual * (totalYears + 1);
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">' + totalYears + '年後の月額家賃</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + rows[rows.length-1].rent.toLocaleString() + '円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">' + totalYears + '年後の年間収入</div><div style="font-size:18px;font-weight:900;color:var(--green)">' + Math.round(finalAnnual/10000).toLocaleString() + '万円/年</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">累計増収効果</div><div style="font-size:18px;font-weight:900;color:' + (gain >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (gain >= 0 ? '+' : '') + Math.round(gain/10000).toLocaleString() + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<thead><tr style="background:rgba(255,255,255,0.06)"><th style="padding:6px 8px;text-align:left;color:var(--text-muted)">年目</th><th style="padding:6px 8px;text-align:right;color:var(--text-muted)">月額家賃</th><th style="padding:6px 8px;text-align:right;color:var(--text-muted)">入居率</th><th style="padding:6px 8px;text-align:right;color:var(--text-muted)">年間収入</th><th style="padding:6px 8px;text-align:center;color:var(--text-muted)">イベント</th></tr></thead><tbody>';
+  rows.forEach(function(r) {
+    html += '<tr style="border-top:1px solid rgba(255,255,255,0.05)">';
+    html += '<td style="padding:6px 8px;color:var(--text-muted)">' + r.year + '年目</td>';
+    html += '<td style="padding:6px 8px;text-align:right;font-weight:700;color:' + (r.isRevision ? 'var(--gold)' : 'var(--text)') + '">' + r.rent.toLocaleString() + '円</td>';
+    html += '<td style="padding:6px 8px;text-align:right;color:var(--text)">' + Math.round(r.occupancy*100) + '%</td>';
+    html += '<td style="padding:6px 8px;text-align:right;color:var(--text)">' + Math.round(r.annual/10000).toLocaleString() + '万円</td>';
+    html += '<td style="padding:6px 8px;text-align:center">' + (r.isRevision ? '<span style="color:var(--gold);font-size:10px">▲値上げ</span>' : '') + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 賃料値上げには借地借家法の正当事由が必要です。実施前に弁護士・専門家にご相談ください。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcRentRevision(); })();
 
 // ===== 入居審査 スコア =====
 function calcScreeningScore() {
