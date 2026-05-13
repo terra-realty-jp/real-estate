@@ -1179,6 +1179,39 @@
     <div id="internal-check-result"></div>
   </div>
 
+  <!-- 売出価格自動改定シミュレーター -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">売出価格自動改定シミュレーター</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">売れない期間が続いた場合の段階的値下げ計画を自動作成します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売出価格（万円）</div>
+        <input type="number" id="psc_ask" value="3500" min="100" max="200000" step="100" oninput="calcPriceSchedule()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">最低許容価格（万円）</div>
+        <input type="number" id="psc_floor" value="2800" min="100" max="200000" step="100" oninput="calcPriceSchedule()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">値下げ開始（何週目から）</div>
+        <input type="number" id="psc_start" value="4" min="1" max="52" step="1" oninput="calcPriceSchedule()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">値下げ間隔（週）</div>
+        <input type="number" id="psc_interval" value="4" min="1" max="26" step="1" oninput="calcPriceSchedule()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">1回あたり値下げ幅（%）</div>
+        <input type="number" id="psc_step" value="3" min="0.5" max="20" step="0.5" oninput="calcPriceSchedule()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">月間維持費（万円）</div>
+        <input type="number" id="psc_maint" value="3" min="0" max="100" step="0.5" oninput="calcPriceSchedule()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="price-schedule-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4025,6 +4058,73 @@ function calcInternalCheck() {
     + todoHtml + '</div>';
 }
 (function(){ calcInternalCheck(); })();
+
+// ===== 売出価格自動改定シミュレーター =====
+function calcPriceSchedule() {
+  var el = document.getElementById('price-schedule-result');
+  if (!el) return;
+  var ask = parseFloat(document.getElementById('psc_ask').value) || 0;
+  var floor = parseFloat(document.getElementById('psc_floor').value) || 0;
+  var startW = parseInt(document.getElementById('psc_start').value) || 4;
+  var interval = parseInt(document.getElementById('psc_interval').value) || 4;
+  var stepPct = parseFloat(document.getElementById('psc_step').value) || 3;
+  var maint = parseFloat(document.getElementById('psc_maint').value) || 0;
+  if (ask <= 0 || floor <= 0 || floor >= ask) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">売出価格・最低許容価格を正しく入力してください</div>';
+    return;
+  }
+  var rows = [];
+  var price = ask;
+  var week = 1;
+  var maxWeeks = 52;
+  rows.push({ week: week, price: price, note: '売出開始', reduction: 0 });
+  while (price > floor && week <= maxWeeks) {
+    var nextW;
+    if (rows.length === 1) {
+      nextW = startW;
+    } else {
+      nextW = rows[rows.length - 1].week + interval;
+    }
+    if (nextW > maxWeeks) break;
+    var newPrice = Math.round(price * (1 - stepPct / 100) / 10) * 10;
+    if (newPrice < floor) newPrice = floor;
+    var reduction = price - newPrice;
+    rows.push({ week: nextW, price: newPrice, note: (newPrice <= floor ? '⛔ 最低価格' : '値下げ'), reduction: reduction });
+    price = newPrice;
+    if (price <= floor) break;
+  }
+  var totalReduction = ask - price;
+  var totalPct = (totalReduction / ask * 100).toFixed(1);
+  var totalMaintCost = (rows[rows.length - 1].week / 4.33 * maint).toFixed(1);
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">段階値下げ回数</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + (rows.length - 1) + '回</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">累計値下げ幅</div><div style="font-size:20px;font-weight:900;color:var(--red)">▼' + totalPct + '%</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">期間維持費合計</div><div style="font-size:20px;font-weight:900;color:var(--text-muted)">' + totalMaintCost + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<thead><tr style="background:rgba(255,255,255,0.06)">';
+  html += '<th style="padding:6px 8px;text-align:left;color:var(--text-muted)">経過週</th>';
+  html += '<th style="padding:6px 8px;text-align:right;color:var(--text-muted)">掲載価格</th>';
+  html += '<th style="padding:6px 8px;text-align:right;color:var(--text-muted)">値下げ幅</th>';
+  html += '<th style="padding:6px 8px;text-align:left;color:var(--text-muted)">状態</th>';
+  html += '</tr></thead><tbody>';
+  rows.forEach(function(r) {
+    var isFloor = r.price <= floor;
+    var color = isFloor ? 'var(--red)' : (r.reduction > 0 ? 'var(--gold)' : 'var(--text)');
+    html += '<tr style="border-top:1px solid rgba(255,255,255,0.05)">';
+    html += '<td style="padding:6px 8px;color:var(--text-muted)">第' + r.week + '週</td>';
+    html += '<td style="padding:6px 8px;text-align:right;font-weight:700;color:' + color + '">' + r.price.toLocaleString() + '万円</td>';
+    html += '<td style="padding:6px 8px;text-align:right;color:var(--red)">' + (r.reduction > 0 ? '▼' + r.reduction.toLocaleString() + '万' : '—') + '</td>';
+    html += '<td style="padding:6px 8px;color:var(--text-muted)">' + r.note + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 市場反応を見ながら柔軟に計画を修正することが重要です。最終価格が最低許容価格に達した場合は専門家への相談をご検討ください。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcPriceSchedule(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
