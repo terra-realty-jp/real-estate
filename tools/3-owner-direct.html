@@ -236,7 +236,36 @@
       <button class="btn btn-outline btn-sm" onclick="exportCSV('buyers')">CSVエクスポート</button>
     </div>
   </div>
-  <div id="purchase-cost-sim-card" style="margin-bottom:16px"></div>
+  <!-- 購入諸費用かんたん試算カード -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">🏦 購入諸費用 かんたん試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">物件価格以外にかかる「諸費用」の目安を自動計算します。現金購入 or ローン利用でコストが変わります。</p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>物件価格（万円）</label>
+        <input type="number" id="pc_price" placeholder="例: 3500" min="100" step="100" oninput="calcPurchaseCost()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div class="form-group">
+        <label>購入方法</label>
+        <select id="pc_method" onchange="calcPurchaseCost()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="loan">住宅ローン利用</option>
+          <option value="cash">現金購入</option>
+        </select>
+      </div>
+      <div class="form-group" id="pc_loan_wrap">
+        <label>借入額（万円）</label>
+        <input type="number" id="pc_loan" placeholder="例: 3000" min="0" step="100" oninput="calcPurchaseCost()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div class="form-group" id="pc_loanfee_wrap">
+        <label>ローン手数料タイプ</label>
+        <select id="pc_loanfee" onchange="calcPurchaseCost()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="rate">定率型（借入の2.2%）</option>
+          <option value="flat">定額型（約3.3万円）</option>
+        </select>
+      </div>
+    </div>
+    <div id="pc-result"></div>
+  </div>
   <div id="loan-estimate-card" style="display:none;margin-bottom:16px"></div>
   <div id="buyer-priority-card" style="display:none;margin-bottom:16px"></div>
   <div id="buyers-list"></div>
@@ -2301,6 +2330,85 @@ function calcFee() {
       }).join('')}
     </tbody>
   </table>`;
+}
+
+// ===== 購入諸費用試算 =====
+function calcPurchaseCost() {
+  var el = document.getElementById('pc-result');
+  if (!el) return;
+  var price  = parseFloat(document.getElementById('pc_price').value)  || 0;
+  var method = document.getElementById('pc_method').value;
+  var loan   = parseFloat(document.getElementById('pc_loan').value)   || 0;
+  var feeType= document.getElementById('pc_loanfee').value;
+  var lw = document.getElementById('pc_loan_wrap');
+  var lfw = document.getElementById('pc_loanfee_wrap');
+  if (lw)  lw.style.display  = method === 'loan' ? '' : 'none';
+  if (lfw) lfw.style.display = method === 'loan' ? '' : 'none';
+  if (!price) { el.innerHTML = ''; return; }
+  var pYen = price * 10000;
+  var lYen = loan  * 10000;
+  // 印紙税（売買契約書）
+  var inshi = price <= 500 ? 1000 : price <= 1000 ? 5000 : price <= 5000 ? 10000 : price <= 10000 ? 30000 : 60000;
+  // 仲介手数料（上限）
+  var chukai = Math.floor((pYen * 0.03 + 60000) * 1.1);
+  // 所有権移転登録免許税（住宅用軽減0.3%、通常2%。中古居住用で0.3%）
+  var iten = Math.floor(pYen * 0.003);
+  // 抵当権設定登録免許税（借入額×0.1%、軽減措置後）
+  var teito = method === 'loan' ? Math.floor(lYen * 0.001) : 0;
+  // 司法書士費用
+  var shiho = method === 'loan' ? 120000 : 80000;
+  // ローン手数料
+  var loanFee = 0;
+  if (method === 'loan') {
+    loanFee = feeType === 'rate' ? Math.floor(lYen * 0.022) : 33000;
+  }
+  // ローン印紙税
+  var loanInshi = 0;
+  if (method === 'loan') {
+    loanInshi = lYen <= 10000000 ? 10000 : lYen <= 50000000 ? 20000 : 60000;
+  }
+  // 火災保険（10年一括目安）
+  var kasai = 200000;
+  // 不動産取得税（居住用：評価額=価格×70%×1/2×3%、目安）
+  var shutoku = Math.floor(pYen * 0.70 * 0.5 * 0.03);
+  // 固定資産税日割り精算（目安：年税額=価格×70%×1.4%÷2）
+  var kotei = Math.floor(pYen * 0.70 * 0.014 / 2);
+
+  var items = [
+    { label: '仲介手数料（上限・税込）', val: chukai, note: '売買価格×3%+6万×1.1' },
+    { label: '印紙税（売買契約書）', val: inshi, note: '価格帯に応じた軽減税率' },
+    { label: '所有権移転登録免許税', val: iten, note: '居住用軽減措置0.3%' },
+  ];
+  if (method === 'loan') {
+    items.push({ label: '抵当権設定登録免許税', val: teito, note: '借入額×0.1%（軽減）' });
+    items.push({ label: 'ローン手数料', val: loanFee, note: feeType === 'rate' ? '借入額×2.2%（定率型）' : '定額型（約3.3万）' });
+    items.push({ label: '印紙税（ローン契約書）', val: loanInshi, note: '借入額帯別' });
+  }
+  items.push({ label: '司法書士費用（目安）', val: shiho, note: method === 'loan' ? '所有権移転＋抵当権設定' : '所有権移転のみ' });
+  items.push({ label: '火災保険（10年目安）', val: kasai, note: '構造・補償内容で変動' });
+  items.push({ label: '固定資産税日割り精算（目安）', val: kotei, note: '引き渡し日以降分' });
+  items.push({ label: '不動産取得税（目安）', val: shutoku, note: '取得後3〜6ヶ月で別途請求' });
+
+  var total = items.reduce(function(s, x){ return s + x.val; }, 0);
+  var ratio = price > 0 ? (total / pYen * 100).toFixed(1) : 0;
+
+  var html = '<div style="margin-top:14px">'
+    + '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">'
+    + '<div><div style="font-size:11px;color:var(--text-muted)">諸費用合計（目安）</div>'
+    + '<div style="font-size:22px;font-weight:700;color:var(--gold)">' + Math.round(total/10000).toLocaleString() + '<span style="font-size:13px">万円</span></div></div>'
+    + '<div style="text-align:right"><div style="font-size:11px;color:var(--text-muted)">物件価格比</div>'
+    + '<div style="font-size:18px;font-weight:700;color:#4fc3f7">約 ' + ratio + '%</div></div></div>';
+
+  html += '<div style="display:flex;flex-direction:column;gap:4px">';
+  items.forEach(function(item) {
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px">'
+      + '<div><div style="font-size:12px">' + item.label + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">' + item.note + '</div></div>'
+      + '<div style="font-size:12px;font-weight:700;white-space:nowrap;padding-left:8px">' + Math.round(item.val/10000*10)/10 + '万円</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="margin-top:10px;font-size:10px;color:var(--text-muted);line-height:1.6">※ 目安額です。物件の種類・築年数・ローン条件・保険内容などにより実際の金額は異なります。購入前に必ず専門家にご確認ください。</div></div>';
+  el.innerHTML = html;
 }
 
 // ===== 共通 =====
