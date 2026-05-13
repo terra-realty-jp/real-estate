@@ -471,6 +471,43 @@
 <div class="main">
   <h1 class="page-title"><span>修繕</span>管理</h1>
   <p class="page-desc">修繕依頼・対応状況を管理。費用を記録して経費管理にも活用できます。</p>
+  <!-- リノベーション費用対効果カード -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">🔨 リノベーション 費用対効果シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">リフォーム・リノベーションにかかる費用と、家賃増額・空室改善による収益増加を比較し、投資回収年数を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リノベーション費用（万円）</label>
+        <input type="number" id="reno_cost" placeholder="例: 150" min="0" step="10" oninput="calcRenoROI()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月額家賃（円）</label>
+        <input type="number" id="reno_current_rent" placeholder="例: 60000" min="0" step="1000" oninput="calcRenoROI()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">期待できる家賃増額（円/月）</label>
+        <input type="number" id="reno_rent_uplift" placeholder="例: 5000" min="0" step="500" oninput="calcRenoROI()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">空室期間の短縮（ヶ月/年）</label>
+        <input type="number" id="reno_vacancy_reduce" placeholder="例: 1" min="0" max="12" step="0.5" oninput="calcRenoROI()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リノベの種類（目安の効果）</label>
+        <select id="reno_type" onchange="renoFillPreset()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="">選択してください（自動入力）</option>
+          <option value="kitchen">キッチン交換（50〜100万円・家賃+3,000〜5,000円）</option>
+          <option value="bath">ユニットバス交換（80〜150万円・家賃+3,000〜8,000円）</option>
+          <option value="full_interior">室内フルリノベ（150〜300万円・家賃+10,000〜20,000円）</option>
+          <option value="exterior">外壁・屋根塗装（100〜200万円・入居率改善）</option>
+          <option value="floor_wall">床・壁クロス張替（30〜60万円・家賃+1,000〜3,000円）</option>
+          <option value="ac">エアコン新設（15〜25万円・家賃+1,000〜2,000円）</option>
+        </select>
+      </div>
+    </div>
+    <div id="reno-roi-result"></div>
+  </div>
+
   <div id="planned-repairs-section" style="margin-bottom:20px"></div>
   <div id="repair-summary-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px"></div>
   <!-- 修繕費予算ウィジェット -->
@@ -4546,6 +4583,58 @@ function calcRestoreCost() {
     + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">貸主負担目安</div>'
     + '<div style="font-size:16px;font-weight:900;color:#4ade80">' + totalLandlord.toLocaleString() + '円</div></div></div>'
     + '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">&#8251; 国土交通省ガイドライン基準の概算です。実際の請求額は専門業者の見積もりや入居時の写真・契約内容によります。特約がない場合、通常損耗は貸主負担が原則です。</div>';
+}
+
+// ===== リノベーション費用対効果 =====
+function renoFillPreset() {
+  var type = document.getElementById('reno_type').value;
+  var presets = {
+    kitchen:      {cost:75, uplift:4000, vacancy:0.5},
+    bath:         {cost:115, uplift:5500, vacancy:1},
+    full_interior:{cost:225, uplift:15000, vacancy:2},
+    exterior:     {cost:150, uplift:0, vacancy:1.5},
+    floor_wall:   {cost:45, uplift:2000, vacancy:0.5},
+    ac:           {cost:20, uplift:1500, vacancy:0.5},
+  };
+  if (!type || !presets[type]) return;
+  var p = presets[type];
+  document.getElementById('reno_cost').value = p.cost;
+  document.getElementById('reno_rent_uplift').value = p.uplift;
+  document.getElementById('reno_vacancy_reduce').value = p.vacancy;
+  calcRenoROI();
+}
+function calcRenoROI() {
+  var el = document.getElementById('reno-roi-result');
+  if (!el) return;
+  var cost          = parseFloat(document.getElementById('reno_cost').value)         || 0;
+  var currentRent   = parseFloat(document.getElementById('reno_current_rent').value) || 0;
+  var uplift        = parseFloat(document.getElementById('reno_rent_uplift').value)  || 0;
+  var vacancyReduce = parseFloat(document.getElementById('reno_vacancy_reduce').value) || 0;
+  if (!cost) { el.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">リノベーション費用を入力してください</p>'; return; }
+  var annualUplift     = uplift * 12;
+  var vacancySavingAnn = currentRent > 0 ? currentRent * vacancyReduce : 0;
+  var totalAnnualGain  = annualUplift + vacancySavingAnn;
+  var paybackYears     = totalAnnualGain > 0 ? cost * 10000 / totalAnnualGain : null;
+  var roi10y           = totalAnnualGain > 0 ? (totalAnnualGain * 10 - cost * 10000) / (cost * 10000) * 100 : null;
+  var verdict, verdictColor;
+  if (paybackYears === null) { verdict = '収益増加の試算が0円です。入力を確認してください'; verdictColor = 'var(--text-muted)'; }
+  else if (paybackYears <= 5)  { verdict = '投資効果が高い。優先的に実施を推奨'; verdictColor = '#4ade80'; }
+  else if (paybackYears <= 8)  { verdict = '一般的な水準。実施を検討できる'; verdictColor = 'var(--gold)'; }
+  else if (paybackYears <= 12) { verdict = '投資回収に時間がかかる。費用圧縮を検討'; verdictColor = '#fb923c'; }
+  else                          { verdict = '投資回収が難しい水準。規模縮小または見送りを検討'; verdictColor = '#f87171'; }
+  var kpiHtml = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">'
+    + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">年間収益増加</div><div style="font-size:16px;font-weight:900;color:#4ade80">+' + Math.round(totalAnnualGain/10000).toLocaleString() + '万円</div></div>'
+    + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">投資回収期間</div><div style="font-size:16px;font-weight:900;color:' + verdictColor + '">' + (paybackYears !== null ? Math.round(paybackYears * 10) / 10 + '年' : '—') + '</div></div>'
+    + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">10年後ROI</div><div style="font-size:16px;font-weight:900;color:' + (roi10y !== null && roi10y > 0 ? '#4ade80' : '#f87171') + '">' + (roi10y !== null ? (roi10y > 0 ? '+' : '') + roi10y.toFixed(0) + '%' : '—') + '</div></div>'
+    + '</div>';
+  var breakdownHtml = '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">'
+    + (uplift > 0 ? '<div>・家賃増額効果: <strong style="color:var(--text)">月+' + uplift.toLocaleString() + '円 = 年+' + Math.round(annualUplift/10000) + '万円</strong></div>' : '')
+    + (vacancySavingAnn > 0 ? '<div>・空室短縮効果: <strong style="color:var(--text)">年' + vacancyReduce + 'ヶ月分 = +' + Math.round(vacancySavingAnn/10000) + '万円</strong></div>' : '')
+    + '</div>';
+  el.innerHTML = kpiHtml
+    + breakdownHtml
+    + '<div style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.04);font-size:12px;font-weight:700;color:' + verdictColor + '">' + verdict + '</div>'
+    + '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.6">&#8251; 家賃増額・空室改善効果は物件・地域・施工品質により大きく変わります。実際は業者の見積もりと賃貸需要の調査をあわせて判断してください。</div>';
 }
 
 // ===== 賃料相場チェッカー =====
