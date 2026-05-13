@@ -624,6 +624,31 @@
     </div>
   </div>
 
+  <!-- 活用3択 シナリオ比較カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title"><span class="icon">⚖️</span>売る・貸す・このまま 5年シナリオ比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">3つの選択肢を数字で比べてみましょう。相談前に自分なりの答えを持つことが重要です。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定売却価格（万円）</label>
+        <input type="number" id="sc3_sell" placeholder="例: 1500" min="0" step="100" oninput="calcScenario3()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定月額賃料（万円）</label>
+        <input type="number" id="sc3_rent" placeholder="例: 5" min="0" step="0.5" oninput="calcScenario3()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間維持費（万円）</label>
+        <input type="number" id="sc3_maint" placeholder="例: 30" min="0" step="5" value="30" oninput="calcScenario3()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リフォーム費用（万円）</label>
+        <input type="number" id="sc3_reform" placeholder="例: 100" min="0" step="10" value="0" oninput="calcScenario3()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="scenario3-result"></div>
+  </div>
+
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.04));border:1px solid rgba(201,168,76,0.25);border-radius:14px;padding:24px;text-align:center;margin-top:8px">
     <div style="font-size:15px;font-weight:700;margin-bottom:8px">準備ができたら、専門家に相談してみましょう</div>
     <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px;line-height:1.7">「どんな選択肢があるか聞きたい」だけでも大丈夫です。TERRA REALTYでは空き家の売却・賃貸・活用について無料でご相談を受け付けています。</p>
@@ -2733,6 +2758,63 @@ function calcEstateClear() {
     + '② 売れるものはフリマアプリ・リサイクルショップで処分すると費用が回収できる<br>'
     + '③ 遺品整理士認定業者なら遺骨・大切な品物の取り扱いも丁寧（認定証を確認）</div></div>'
     + '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">&#8251; 費用は地域・業者・実際の荷物量によって大きく変わります。複数社の見積もりを取って比較することをお勧めします。</div>';
+}
+
+// ===== 活用3択 シナリオ比較 =====
+function calcScenario3() {
+  var el = document.getElementById('scenario3-result');
+  if (!el) return;
+  var sell   = parseFloat(document.getElementById('sc3_sell').value)   || 0;
+  var rent   = parseFloat(document.getElementById('sc3_rent').value)   || 0;
+  var maint  = parseFloat(document.getElementById('sc3_maint').value)  || 30;
+  var reform = parseFloat(document.getElementById('sc3_reform').value) || 0;
+  if (!sell && !rent) { el.innerHTML = ''; return; }
+  var commYen   = sell > 0 ? Math.floor((sell * 0.03 + 6) * 1.1 * 10000) : 0;
+  var sellNet   = sell > 0 ? sell - Math.round(commYen / 10000) : null;
+  var rentYear  = rent * 12 * 0.9 * (1 - 0.05);
+  var keepCost5 = maint * 5;
+  var rent5     = rentYear * 5 - reform;
+  var keep5     = -keepCost5;
+
+  function col(v, best) {
+    return v === best ? 'var(--green)' : (v < 0 ? 'var(--red)' : 'var(--text)');
+  }
+  var vals = [];
+  if (sellNet !== null) vals.push(sellNet);
+  vals.push(rent5);
+  vals.push(keep5);
+  var best = Math.max.apply(null, vals);
+
+  var html = '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">';
+
+  if (sellNet !== null) {
+    var isB = sellNet === best;
+    html += '<div style="background:rgba(255,255,255,0.03);border:' + (isB ? '1px solid var(--green)' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:10px;padding:12px 14px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+      + '<div><div style="font-size:13px;font-weight:700">' + (isB ? '★ ' : '') + '🏡 売却する</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">仲介手数料 ▲' + Math.round(commYen/10000).toLocaleString() + '万円を差引き</div></div>'
+      + '<div style="text-align:right"><div style="font-size:18px;font-weight:700;color:' + col(sellNet, best) + '">' + sellNet.toLocaleString() + '<span style="font-size:11px">万円</span></div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">即時手取り</div></div></div></div>';
+  }
+
+  var isRentBest = rent5 === best;
+  html += '<div style="background:rgba(255,255,255,0.03);border:' + (isRentBest ? '1px solid var(--green)' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:10px;padding:12px 14px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<div><div style="font-size:13px;font-weight:700">' + (isRentBest ? '★ ' : '') + '🔑 賃貸に出す</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">リフォーム費 ▲' + reform + '万 / 管理・空室控除後</div></div>'
+    + '<div style="text-align:right"><div style="font-size:18px;font-weight:700;color:' + col(rent5, best) + '">' + (rent5 >= 0 ? '+' : '') + Math.round(rent5).toLocaleString() + '<span style="font-size:11px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">5年間累積手取り</div></div></div></div>';
+
+  var isKeepBest = keep5 === best;
+  html += '<div style="background:rgba(255,255,255,0.03);border:' + (isKeepBest ? '1px solid var(--green)' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:10px;padding:12px 14px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<div><div style="font-size:13px;font-weight:700">🏚 このまま維持</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">年間維持費 ' + maint + '万円 × 5年</div></div>'
+    + '<div style="text-align:right"><div style="font-size:18px;font-weight:700;color:var(--red)">▲' + keepCost5.toLocaleString() + '<span style="font-size:11px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">5年間累積コスト</div></div></div></div>';
+
+  html += '<div style="font-size:10px;color:var(--text-muted);line-height:1.6;margin-top:4px">※ 賃貸は年間収入×空室率10%・管理費5%で試算。税金・ローン残債は含みません。</div></div>';
+  el.innerHTML = html;
 }
 
 // ===== 賃貸転用 リフォーム損益分岐点計算 =====
