@@ -63,6 +63,9 @@
     .btn-gold:hover { background: var(--gold-light); transform: translateY(-1px); }
     .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--text); }
     .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .area-radio { display:inline-flex;align-items:center;gap:5px;cursor:pointer;padding:5px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);font-size:11px;color:var(--text-muted);transition:all 0.15s }
+    .area-radio:has(input:checked) { border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.1) }
+    .area-radio input { accent-color:var(--gold);width:13px;height:13px }
     .btn-sm { padding: 6px 14px; font-size: 12px; }
 
     /* 結果KPI */
@@ -495,6 +498,60 @@
   <p class="page-desc">空室率と利回りの変化に対するNOI・実質利回りの変化を表形式で確認します。</p>
   <div id="sensitivity-content">
     <div class="empty-state"><div class="empty-icon">🎯</div><p>物件入力タブで分析を実行してください</p></div>
+  </div>
+
+  <!-- エリア選定スコアカード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">🗺 投資エリア選定スコアチェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">物件のエリアの投資適性を5つの観点でチェックします。スコアが低い軸はリスクを意味します。物件購入前の参考指標としてご活用ください。</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text);display:block;margin-bottom:4px">1. 人口動態 <span style="font-size:10px;color:var(--text-muted)">（そのエリアの人口は増えているか）</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="area-radio"><input type="radio" name="pop" value="3" onchange="calcAreaScore()"> <span>人口増加中</span></label>
+          <label class="area-radio"><input type="radio" name="pop" value="2" checked onchange="calcAreaScore()"> <span>横ばい</span></label>
+          <label class="area-radio"><input type="radio" name="pop" value="1" onchange="calcAreaScore()"> <span>緩やかな減少</span></label>
+          <label class="area-radio"><input type="radio" name="pop" value="0" onchange="calcAreaScore()"> <span>急速な人口減少</span></label>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text);display:block;margin-bottom:4px">2. 賃貸需要 <span style="font-size:10px;color:var(--text-muted)">（賃貸物件の需要・競合状況）</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="area-radio"><input type="radio" name="demand" value="3" onchange="calcAreaScore()"> <span>需要旺盛・空室少ない</span></label>
+          <label class="area-radio"><input type="radio" name="demand" value="2" checked onchange="calcAreaScore()"> <span>普通</span></label>
+          <label class="area-radio"><input type="radio" name="demand" value="1" onchange="calcAreaScore()"> <span>競合多・空室目立つ</span></label>
+          <label class="area-radio"><input type="radio" name="demand" value="0" onchange="calcAreaScore()"> <span>需要低迷</span></label>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text);display:block;margin-bottom:4px">3. 交通アクセス <span style="font-size:10px;color:var(--text-muted)">（最寄り駅までの距離・路線の利便性）</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="area-radio"><input type="radio" name="transit" value="3" onchange="calcAreaScore()"> <span>徒歩5分以内・主要路線</span></label>
+          <label class="area-radio"><input type="radio" name="transit" value="2" checked onchange="calcAreaScore()"> <span>徒歩10分以内</span></label>
+          <label class="area-radio"><input type="radio" name="transit" value="1" onchange="calcAreaScore()"> <span>徒歩15〜20分</span></label>
+          <label class="area-radio"><input type="radio" name="transit" value="0" onchange="calcAreaScore()"> <span>バス便のみ・駅遠</span></label>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text);display:block;margin-bottom:4px">4. 周辺環境・生活インフラ <span style="font-size:10px;color:var(--text-muted)">（スーパー・学校・病院などの充実度）</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="area-radio"><input type="radio" name="infra" value="3" onchange="calcAreaScore()"> <span>充実している</span></label>
+          <label class="area-radio"><input type="radio" name="infra" value="2" checked onchange="calcAreaScore()"> <span>一通り揃っている</span></label>
+          <label class="area-radio"><input type="radio" name="infra" value="1" onchange="calcAreaScore()"> <span>やや不便</span></label>
+          <label class="area-radio"><input type="radio" name="infra" value="0" onchange="calcAreaScore()"> <span>不便・過疎化</span></label>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:var(--text);display:block;margin-bottom:4px">5. 開発・再開発ポテンシャル <span style="font-size:10px;color:var(--text-muted)">（今後の地価上昇期待）</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="area-radio"><input type="radio" name="develop" value="3" onchange="calcAreaScore()"> <span>駅前再開発・新線開業予定</span></label>
+          <label class="area-radio"><input type="radio" name="develop" value="2" checked onchange="calcAreaScore()"> <span>安定・変化なし</span></label>
+          <label class="area-radio"><input type="radio" name="develop" value="1" onchange="calcAreaScore()"> <span>人口流出傾向</span></label>
+          <label class="area-radio"><input type="radio" name="develop" value="0" onchange="calcAreaScore()"> <span>廃線・施設撤退が続く</span></label>
+        </div>
+      </div>
+    </div>
+    <div id="area-score-result"></div>
   </div>
 </div>
 </div>
@@ -3635,6 +3692,52 @@ function updateSimpleLoanPreview() {
   preview.style.display = 'block';
 }
 
+
+// ===== エリア選定スコアチェック =====
+function calcAreaScore() {
+  var el = document.getElementById('area-score-result');
+  if (!el) return;
+  var getVal = function(name) {
+    var r = document.querySelector('input[name="' + name + '"]:checked');
+    return r ? parseInt(r.value) : 2;
+  };
+  var pop     = getVal('pop');
+  var demand  = getVal('demand');
+  var transit = getVal('transit');
+  var infra   = getVal('infra');
+  var develop = getVal('develop');
+  var axes = [
+    {name:'人口動態', score:pop, max:3, weight:1.2},
+    {name:'賃貸需要', score:demand, max:3, weight:1.2},
+    {name:'交通アクセス', score:transit, max:3, weight:1.0},
+    {name:'生活インフラ', score:infra, max:3, weight:0.8},
+    {name:'開発ポテンシャル', score:develop, max:3, weight:0.8},
+  ];
+  var totalWeight = axes.reduce(function(a,x){return a+x.weight;},0);
+  var weightedScore = axes.reduce(function(a,x){return a + (x.score / x.max) * x.weight;},0) / totalWeight;
+  var pct = Math.round(weightedScore * 100);
+  var grade, gradeColor, advice;
+  if (pct >= 75) { grade='A'; gradeColor='#4ade80'; advice='投資適性の高いエリアです。長期保有で安定した収益が期待できます。'; }
+  else if (pct >= 55) { grade='B'; gradeColor='var(--gold)'; advice='平均的な投資適性。物件の個別条件（価格・利回り）が重要になります。'; }
+  else if (pct >= 35) { grade='C'; gradeColor='#fb923c'; advice='リスクのある要因があります。価格が相応に安くないと投資効率が出にくいです。'; }
+  else { grade='D'; gradeColor='#f87171'; advice='投資リスクが高いエリアです。長期空室・地価下落リスクを十分に検討してください。'; }
+  var weakAxes = axes.filter(function(a){ return a.score <= 1; }).map(function(a){ return a.name; });
+  var weakMsg = weakAxes.length > 0 ? '<div style="font-size:11px;color:#fb923c;margin-top:6px">⚠ 要注意: ' + weakAxes.join('・') + 'のスコアが低い</div>' : '';
+  var barsHtml = axes.map(function(a) {
+    var bw = Math.round(a.score / a.max * 100);
+    var bc = bw >= 67 ? '#4ade80' : bw >= 33 ? 'var(--gold)' : '#f87171';
+    return '<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span style="color:var(--text-muted)">' + a.name + '</span><span style="color:var(--text)">' + a.score + '/' + a.max + '</span></div>'
+      + '<div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + bw + '%;background:' + bc + ';border-radius:3px"></div></div></div>';
+  }).join('');
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:16px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:12px">'
+    + '<div style="text-align:center;min-width:56px"><div style="font-size:36px;font-weight:900;color:' + gradeColor + ';line-height:1">' + grade + '</div><div style="font-size:10px;color:var(--text-muted);margin-top:3px">エリアスコア</div></div>'
+    + '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:' + gradeColor + ';margin-bottom:4px">' + pct + '点 — ' + advice + '</div>'
+    + weakMsg
+    + '<div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin-top:8px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + gradeColor + ';border-radius:3px"></div></div></div></div>'
+    + barsHtml
+    + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; 自己評価に基づくスコアです。人口統計・空室率・開発計画は市区町村・国土交通省のデータで確認することをお勧めします。</div>';
+}
+(function(){ calcAreaScore(); })();
 
 // ===== デッドクロス到来時期チェック =====
 function dcFillFromAnalysis() {
