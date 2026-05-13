@@ -450,6 +450,41 @@
     </div>
     <div id="bank-loan-compare-result"></div>
   </div>
+
+  <!-- デッドクロス到来時期カード -->
+  <div class="card" style="margin-top:16px;border-color:rgba(239,68,68,0.25)">
+    <div class="card-title">⚠️ デッドクロス到来時期チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「デッドクロス」とは、ローンの元金返済額が減価償却費を上回り始める年のことです。この時点からは、手元の現金が減っているのに税金だけが増えるという苦しい状態になります。事前に把握しておくことで出口戦略を立てやすくなります。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">借入額（万円）</label>
+        <input type="number" id="dc_loan" placeholder="例: 2000" min="100" step="100" oninput="calcDeadCross()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">返済期間（年）</label>
+        <input type="number" id="dc_term" placeholder="例: 25" min="5" max="35" step="1" oninput="calcDeadCross()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">金利（年率%）</label>
+        <input type="number" id="dc_rate" placeholder="例: 2.0" min="0.1" max="10" step="0.1" oninput="calcDeadCross()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物価格（万円）</label>
+        <input type="number" id="dc_building" placeholder="例: 1400" min="100" step="100" oninput="calcDeadCross()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物構造（耐用年数）</label>
+        <select id="dc_struct" onchange="calcDeadCross()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="22">木造（22年）</option>
+          <option value="19">軽量鉄骨（19年）</option>
+          <option value="34">重量鉄骨（34年）</option>
+          <option value="47" selected>RC造（47年）</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="dcFillFromAnalysis()" style="width:100%;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:12px;font-weight:700;padding:8px;border-radius:8px;cursor:pointer;margin-bottom:14px;font-family:inherit">📥 分析タブの入力値を自動入力</button>
+    <div id="dc-result"></div>
+  </div>
 </div>
 </div>
 
@@ -3537,6 +3572,85 @@ function updateSimpleLoanPreview() {
   preview.style.display = 'block';
 }
 
+
+// ===== デッドクロス到来時期チェック =====
+function dcFillFromAnalysis() {
+  var inp = getInputs();
+  if (inp.loan > 0) { var el = document.getElementById('dc_loan'); if(el) el.value = inp.loan; }
+  if (inp.term > 0) { var el = document.getElementById('dc_term'); if(el) el.value = inp.term; }
+  if (inp.rate > 0) { var el = document.getElementById('dc_rate'); if(el) el.value = inp.rate; }
+  if (inp.price > 0) { var el = document.getElementById('dc_building'); if(el) el.value = Math.round(inp.price * 0.7); }
+  var structMap = {wood:'22', steel:'34', rc:'47', other:'34'};
+  var sv = structMap[inp.type] || '47';
+  var sel = document.getElementById('dc_struct'); if(sel) sel.value = sv;
+  calcDeadCross();
+}
+function calcDeadCross() {
+  var el = document.getElementById('dc-result');
+  if (!el) return;
+  var loanMan = parseFloat(document.getElementById('dc_loan').value) || 0;
+  var term    = parseInt(document.getElementById('dc_term').value)  || 0;
+  var rate    = parseFloat(document.getElementById('dc_rate').value) || 0;
+  var bldgMan = parseFloat(document.getElementById('dc_building').value) || 0;
+  var life    = parseInt(document.getElementById('dc_struct').value) || 47;
+  if (!loanMan || !term || !rate || !bldgMan) { el.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:12px">上の項目をすべて入力してください</p>'; return; }
+  var loan = loanMan * 10000;
+  var annualDepr = Math.round(bldgMan * 10000 / life);
+  var rMo = rate / 100 / 12;
+  var payment = rMo > 0 ? loan * rMo / (1 - Math.pow(1 + rMo, -term * 12)) : loan / (term * 12);
+  var balance = loan;
+  var dcYear = null;
+  var rows = [];
+  for (var y = 1; y <= Math.min(term, 50); y++) {
+    var principalYear = 0, interestYear = 0;
+    for (var m = 0; m < 12; m++) {
+      var interest = balance * rMo;
+      var principal = payment - interest;
+      principalYear += principal;
+      interestYear  += interest;
+      balance -= principal;
+      if (balance < 0) balance = 0;
+    }
+    var deprLeft = y <= life ? annualDepr : 0;
+    var surplus  = principalYear - deprLeft;
+    if (dcYear === null && surplus > 0) dcYear = y;
+    rows.push({ y: y, principal: Math.round(principalYear), depr: deprLeft, surplus: Math.round(surplus), dc: dcYear === y });
+    if (balance <= 0) break;
+  }
+  var annualDeprMan = Math.round(annualDepr / 10000);
+  var headerHtml = '';
+  if (dcYear !== null) {
+    headerHtml = '<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
+      + '<div style="font-size:28px;font-weight:900;color:#f87171;min-width:56px;text-align:center">' + dcYear + '年目</div>'
+      + '<div><div style="font-size:13px;font-weight:700;color:#f87171;margin-bottom:3px">⚠ デッドクロス発生</div>'
+      + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">' + dcYear + '年目から元金返済額（約' + Math.round(rows[dcYear-1].principal/10000) + '万円/年）が<br>減価償却費（' + annualDeprMan + '万円/年）を上回ります。<br>帳簿上の利益が現金CFを超えて税負担が増加します。</div></div></div>';
+  } else {
+    headerHtml = '<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center">'
+      + '<div style="font-size:13px;font-weight:700;color:#4ade80">✓ 返済期間中はデッドクロスが発生しません</div>'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">年間減価償却費（' + annualDeprMan + '万円）が元金返済額を上回り続けます</div></div>';
+  }
+  var tableRows = rows.slice(0, 15).map(function(r) {
+    var bg = r.dc ? 'background:rgba(239,68,68,0.15);' : '';
+    var dcBadge = r.dc ? '<span style="background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:4px">DC</span>' : '';
+    var deprColor = r.depr > 0 ? '#4ade80' : 'var(--text-muted)';
+    var surplusColor = r.surplus > 0 ? '#f87171' : '#4ade80';
+    return '<tr style="' + bg + '">'
+      + '<td style="padding:5px 8px;font-size:11px;color:var(--text-muted)">' + r.y + '年目' + dcBadge + '</td>'
+      + '<td style="padding:5px 8px;font-size:11px;text-align:right;color:var(--text)">' + Math.round(r.principal/10000) + '万円</td>'
+      + '<td style="padding:5px 8px;font-size:11px;text-align:right;color:' + deprColor + '">' + (r.depr > 0 ? Math.round(r.depr/10000) + '万円' : '—') + '</td>'
+      + '<td style="padding:5px 8px;font-size:11px;text-align:right;color:' + surplusColor + '">' + (r.surplus > 0 ? '+' : '') + Math.round(r.surplus/10000) + '万円</td>'
+      + '</tr>';
+  }).join('');
+  el.innerHTML = headerHtml
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:300px">'
+    + '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">'
+    + '<th style="padding:6px 8px;font-size:10px;color:var(--text-muted);text-align:left">年次</th>'
+    + '<th style="padding:6px 8px;font-size:10px;color:var(--text-muted);text-align:right">元金返済</th>'
+    + '<th style="padding:6px 8px;font-size:10px;color:#4ade80;text-align:right">減価償却費</th>'
+    + '<th style="padding:6px 8px;font-size:10px;color:var(--text-muted);text-align:right">差額</th></tr></thead>'
+    + '<tbody>' + tableRows + '</tbody></table></div>'
+    + '<div style="margin-top:10px;font-size:11px;color:var(--text-muted);line-height:1.7">※元利均等返済・定額法で概算。実際は築年数・中古物件の残存耐用年数・取得費により異なります。税理士にご確認ください。</div>';
+}
 
 // ===== 金融機関タイプ別ローン比較 =====
 function renderBankLoanCompare() {
