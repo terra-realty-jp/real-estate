@@ -832,6 +832,24 @@
     </div>
     <div id="expert-route-result"></div>
   </div>
+
+  <!-- 相続登記 未了チェックカード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,165,0,0.3);border-radius:14px;padding:20px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">📜 相続登記 未了チェックリスト</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:4px;line-height:1.7">2024年4月1日より<strong style="color:#fb923c">相続登記が義務化</strong>されました（3年以内・違反は10万円以下の過料）。未了になっていないか確認しましょう。</p>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:14px">以下に該当する項目にチェックしてください</p>
+    <div style="display:grid;gap:6px;margin-bottom:12px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" id="sr_c0" onchange="calcSokkiCheck()" style="accent-color:var(--red);flex-shrink:0;margin-top:2px"><span>不動産を相続したが、まだ相続登記（名義変更）をしていない</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" id="sr_c1" onchange="calcSokkiCheck()" style="accent-color:var(--red);flex-shrink:0;margin-top:2px"><span>相続から3年以上経過しているが登記していない</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" id="sr_c2" onchange="calcSokkiCheck()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>遺産分割協議がまだ完了していない（相続人全員の合意が取れていない）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" id="sr_c3" onchange="calcSokkiCheck()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>相続人の中に連絡が取れない人・行方不明者がいる</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" id="sr_c4" onchange="calcSokkiCheck()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span>登記簿に記載されている名前が祖父母・曾祖父母世代のまま（数次相続）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" id="sr_c5" onchange="calcSokkiCheck()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span>相続した不動産が農地・山林・遠方の土地など（相続土地国庫帰属制度が使える可能性）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" id="sr_c6" onchange="calcSokkiCheck()" style="accent-color:#4ade80;flex-shrink:0;margin-top:2px"><span>相続登記は完了しているが、固定資産税の納付書が故人宛のまま</span></label>
+    </div>
+    <div id="sokki-check-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3224,6 +3242,40 @@ function calcExpertRoute() {
     + '</div>'
     + '<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">あわせて相談すると良い専門家</div>'
     + '<div style="display:flex;flex-direction:column;gap:6px">' + secHTML + '</div>';
+}
+
+// ===== 相続登記 未了チェック =====
+function calcSokkiCheck() {
+  var el = document.getElementById('sokki-check-result');
+  if(!el) return;
+  var c = [0,1,2,3,4,5,6].map(function(i){
+    var cb = document.getElementById('sr_c'+i);
+    return cb ? cb.checked : false;
+  });
+  var checkedAny = c.some(Boolean);
+  if(!checkedAny){ el.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;padding:8px 0">該当する項目にチェックしてください</p>'; return; }
+  var urgents = [], actions = [];
+  if(c[0]) urgents.push({icon:'🚨',t:'相続登記が未完了',note:'法務局への相続登記申請が必要です（申請書・戸籍謄本等を準備）'});
+  if(c[1]) urgents.push({icon:'⛔',t:'3年超過 — 過料リスクあり',note:'2024年4月以降の相続分は3年以内に申請義務。速やかに司法書士に相談を'});
+  if(c[2]) actions.push({icon:'⚠️',t:'遺産分割協議が未完了',note:'相続人全員の実印・印鑑証明が必要。弁護士・司法書士に依頼推奨'});
+  if(c[3]) actions.push({icon:'🔍',t:'行方不明の相続人あり',note:'家庭裁判所での「不在者財産管理人」選任または失踪宣告の手続きが必要'});
+  if(c[4]) actions.push({icon:'📋',t:'数次相続（祖父母世代）',note:'複数世代分の相続登記が必要。司法書士への依頼が現実的'});
+  if(c[5]) actions.push({icon:'🌱',t:'相続土地国庫帰属制度の検討',note:'一定の基準を満たす土地は国庫に帰属させることができます（令和5年4月施行）'});
+  if(c[6]) actions.push({icon:'📄',t:'固定資産税の納付義務者変更',note:'市区町村税務課への「相続人代表者指定届」の提出が必要'});
+  var urgentHTML = urgents.map(function(u){
+    return '<div style="background:rgba(255,80,80,0.1);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:6px">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--red)">'+u.icon+' '+u.t+'</div>'
+      +'<div style="font-size:12px;color:var(--text-muted);margin-top:4px">'+u.note+'</div></div>';
+  }).join('');
+  var actionHTML = actions.map(function(a){
+    return '<div style="background:rgba(251,146,60,0.08);border-left:3px solid #fb923c;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:6px">'
+      +'<div style="font-size:13px;font-weight:700;color:#fb923c">'+a.icon+' '+a.t+'</div>'
+      +'<div style="font-size:12px;color:var(--text-muted);margin-top:4px">'+a.note+'</div></div>';
+  }).join('');
+  el.innerHTML = (urgentHTML?'<p style="font-size:11px;color:var(--red);margin-bottom:6px;font-weight:700">🔴 緊急対応が必要</p>'+urgentHTML:'')
+    +(actionHTML?'<p style="font-size:11px;color:#fb923c;margin:10px 0 6px;font-weight:700">🟠 対応が必要</p>'+actionHTML:'')
+    +(c[0]||c[1]?'<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px">💡 <strong>相続登記の費用目安:</strong> 司法書士報酬5〜15万円 + 登録免許税（固定資産税評価額×0.4%）</div>':'')
+    +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 2024年4月から相続登記が義務化されています。司法書士へのご相談をお勧めします。</p>';
 }
 
 // ===== 活用3択 シナリオ比較 =====
