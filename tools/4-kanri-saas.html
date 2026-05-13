@@ -379,6 +379,44 @@
     </div>
   </div>
 
+  <!-- 契約更新案内文テンプレートカード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📬 契約更新 案内文テンプレート生成</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">契約満了の2〜3ヶ月前に送付する更新案内文を自動生成します。賃料の変更がない場合もご利用いただけます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">入居者名</label>
+        <input type="text" id="rn_name" placeholder="山田 太郎" oninput="genRenewalTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">部屋番号</label>
+        <input type="text" id="rn_room" placeholder="101号室" oninput="genRenewalTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">契約満了日</label>
+        <input type="text" id="rn_expire" placeholder="例: 2026年7月31日" oninput="genRenewalTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">更新後月額賃料（円）</label>
+        <input type="number" id="rn_rent" placeholder="例: 65000" min="0" step="500" oninput="genRenewalTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">更新料（ヶ月分）</label>
+        <select id="rn_fee" onchange="genRenewalTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="0">更新料なし</option>
+          <option value="0.5">0.5ヶ月分</option>
+          <option value="1" selected>1ヶ月分</option>
+          <option value="2">2ヶ月分</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">返答期限</label>
+        <input type="text" id="rn_deadline" placeholder="例: 2026年6月30日" oninput="genRenewalTemplate()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="renewal-template-result"></div>
+  </div>
+
   <div id="tenants-list"></div>
 </div>
 </div>
@@ -4953,6 +4991,31 @@ window.copyRentIncreaseTemplate = function() {
   var el = document.getElementById('rent-increase-template-result');
   if (!el || !el.dataset.text) return;
   navigator.clipboard.writeText(el.dataset.text).then(function() { showToast('通知文をコピーしました ✓'); }).catch(function() { showErrorToast('コピーに失敗しました'); });
+};
+
+// ===== 契約更新 案内文テンプレート生成 =====
+function genRenewalTemplate() {
+  var el = document.getElementById('renewal-template-result');
+  if(!el) return;
+  var name     = document.getElementById('rn_name').value.trim();
+  var room     = document.getElementById('rn_room').value.trim();
+  var expire   = document.getElementById('rn_expire').value.trim();
+  var rent     = parseInt(document.getElementById('rn_rent').value,10)||0;
+  var feeMonth = parseFloat(document.getElementById('rn_fee').value)||0;
+  var deadline = document.getElementById('rn_deadline').value.trim();
+  if(!name && !expire && !rent) { el.innerHTML = ''; return; }
+  var feeYen = feeMonth > 0 ? Math.round(rent * feeMonth).toLocaleString() + '円（賃料' + feeMonth + 'ヶ月分）' : 'なし';
+  var today = new Date();
+  var dateStr = today.getFullYear()+'年'+(today.getMonth()+1)+'月'+today.getDate()+'日';
+  var text = dateStr + '\n\n' + (name||'○○') + ' 様\n\n賃貸借契約更新のご案内\n\n拝啓　平素は格別のご愛顧を賜り、厚くお礼申し上げます。\n\nさて、お客様がご入居中の' + (room||'○○号室') + 'の賃貸借契約につきまして、下記のとおり更新の時期を迎えることとなりました。\n\n引き続きご入居いただける場合は、お手数ですが下記期日までにご意向をお知らせいただけますよう、お願い申し上げます。\n\n【更新内容】\n  契約満了日  ：' + (expire||'○年○月○日') + '\n  更新後月額賃料：' + (rent ? rent.toLocaleString()+'円' : '現行賃料のまま') + '\n  更新料      ：' + feeYen + '\n\n【お返事期限】\n  ' + (deadline||'○年○月○日') + 'までにお知らせください。\n\nご不明な点やご事情がございましたら、お気軽にお問い合わせください。\nお返事のない場合は、一度ご連絡させていただく場合がございます。\n\n敬具\n\n賃貸人：________________';
+  el.innerHTML = '<textarea id="renewal-template-text" rows="18" readonly style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:14px;color:var(--text);font-size:12px;font-family:monospace;line-height:1.7;resize:vertical;outline:none;box-sizing:border-box">' + esc(text) + '</textarea>'
+    + '<button onclick="copyRenewalTemplate()" style="margin-top:10px;display:flex;align-items:center;gap:6px;background:var(--gold);color:#0d0d0d;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 テンプレートをコピー</button>';
+  el.dataset.text = text;
+}
+window.copyRenewalTemplate = function() {
+  var el = document.getElementById('renewal-template-result');
+  if(!el) return;
+  navigator.clipboard.writeText(el.dataset.text).then(function(){ showToast('更新案内文をコピーしました ✓'); }).catch(function(){ showErrorToast('コピーに失敗しました'); });
 };
 
 // ===== 入居者募集条件 最適化チェック =====
