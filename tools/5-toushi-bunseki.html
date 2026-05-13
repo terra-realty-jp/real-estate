@@ -902,6 +902,14 @@
     <div id="exit-strategy-result"></div>
   </div>
 
+  <!-- 投資タイプ別 収益特性比較カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">🏘 投資タイプ別 収益特性比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">区分マンション・一棟アパート・戸建て・商業施設の4タイプの収益特性を「利回り・管理手間・流動性・リスク・融資性」の5軸で比較します。</p>
+    <div style="display:grid;gap:10px" id="invest-type-cards"></div>
+    <p style="font-size:10px;color:var(--text-muted);margin-top:10px">※ 一般的な傾向です。実際は物件・立地・時期により大きく異なります。</p>
+  </div>
+
 </div>
 </div>
 
@@ -4395,6 +4403,72 @@ function calcExitStrategy() {
     +'<p style="font-size:10px;color:var(--text-muted);margin-top:10px">※ 売却手数料=(価格×3%+6万)×1.1で計算。税額は取得費用を差し引いた譲渡益に対する概算です。</p>';
 }
 (function(){ calcExitStrategy(); })();
+
+// ===== 投資タイプ別 収益特性比較 =====
+(function renderInvestTypeCards(){
+  var el = document.getElementById('invest-type-cards');
+  if(!el) return;
+  var types = [
+    {
+      icon:'🏢', name:'区分マンション', color:'#60a5fa',
+      yield:{min:3,max:6,label:'3〜6%'},
+      mgmt:{score:1,label:'少'},
+      liquid:{score:4,label:'高'},
+      risk:{score:2,label:'低〜中'},
+      loan:{score:3,label:'取りやすい'},
+      pros:['管理組合が共用部を管理','小額から始められる','流動性が高く出口が取りやすい'],
+      cons:['利回りが低め・価格が高い','管理費・修繕積立金のコスト','1室空室で収入ゼロ']
+    },
+    {
+      icon:'🏠', name:'一棟アパート', color:'var(--gold)',
+      yield:{min:6,max:12,label:'6〜12%'},
+      mgmt:{score:3,label:'普通'},
+      liquid:{score:2,label:'中'},
+      risk:{score:3,label:'中'},
+      loan:{score:3,label:'比較的取りやすい'},
+      pros:['複数戸で分散リスク','高利回りを狙いやすい','土地資産が残る'],
+      cons:['初期投資が大きい','満室管理の手間','築古は修繕費増大リスク']
+    },
+    {
+      icon:'🏡', name:'戸建て投資', color:'#4ade80',
+      yield:{min:7,max:15,label:'7〜15%'},
+      mgmt:{score:4,label:'多め'},
+      liquid:{score:2,label:'中〜低'},
+      risk:{score:3,label:'中'},
+      loan:{score:2,label:'難しい場合あり'},
+      pros:['高利回りが期待できる','地方の安価物件を狙える','DIYリフォームで価値向上'],
+      cons:['融資が付きにくい','空室=収入ゼロ','修繕は自己負担']
+    },
+    {
+      icon:'🏪', name:'商業・店舗', color:'#c084fc',
+      yield:{min:5,max:10,label:'5〜10%'},
+      mgmt:{score:2,label:'少〜普通'},
+      liquid:{score:1,label:'低'},
+      risk:{score:4,label:'高'},
+      loan:{score:2,label:'審査厳しめ'},
+      pros:['長期テナントで安定','家賃が高め','賃貸借契約の自由度高い'],
+      cons:['景気に左右される','テナント退去後の原状回復コスト大','立地選定が難しい']
+    }
+  ];
+  function bar(score,color){
+    var w = score*20;
+    return '<div style="background:rgba(255,255,255,0.07);border-radius:3px;height:6px;flex:1;overflow:hidden"><div style="width:'+w+'%;height:100%;background:'+color+';border-radius:3px"></div></div>';
+  }
+  el.innerHTML = types.map(function(t){
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px">'
+      +'<div style="font-size:14px;font-weight:700;color:'+t.color+';margin-bottom:10px">'+t.icon+' '+t.name+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;gap:6px;font-size:11px"><span style="width:60px;color:var(--text-muted)">利回り</span>'+bar(3,t.color)+'<span style="color:'+t.color+'">'+t.yield.label+'</span></div>'
+      +'<div style="display:flex;align-items:center;gap:6px;font-size:11px"><span style="width:60px;color:var(--text-muted)">管理手間</span>'+bar(t.mgmt.score,'#fb923c')+'<span>'+t.mgmt.label+'</span></div>'
+      +'<div style="display:flex;align-items:center;gap:6px;font-size:11px"><span style="width:60px;color:var(--text-muted)">流動性</span>'+bar(t.liquid.score,'#60a5fa')+'<span>'+t.liquid.label+'</span></div>'
+      +'<div style="display:flex;align-items:center;gap:6px;font-size:11px"><span style="width:60px;color:var(--text-muted)">融資性</span>'+bar(t.loan.score,'#4ade80')+'<span>'+t.loan.label+'</span></div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div><p style="font-size:10px;color:var(--green);margin-bottom:3px">メリット</p>'+t.pros.map(function(p){return '<div style="font-size:10px;color:var(--text-muted)">✅ '+p+'</div>';}).join('')+'</div>'
+      +'<div><p style="font-size:10px;color:var(--red);margin-bottom:3px">デメリット</p>'+t.cons.map(function(c){return '<div style="font-size:10px;color:var(--text-muted)">⚠️ '+c+'</div>';}).join('')+'</div>'
+      +'</div></div>';
+  }).join('');
+})();
 
 // ===== 売却タイミング 短期vs長期 譲渡税 =====
 function calcExitTax() {
