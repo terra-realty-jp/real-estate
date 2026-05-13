@@ -1130,6 +1130,51 @@
     <div id="tax-saving-result"></div>
   </div>
 
+  <!-- CF安定性スコアカード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🛡️ CF安定性スコア診断</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">物件のキャッシュフロー安定度を8項目で診断。投資継続・売却判断の参考に</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の空室率（%）</div>
+        <input type="number" id="cfs_vacancy" value="10" min="0" max="100" step="1" oninput="calcCFStability()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">平均入居年数（年）</div>
+        <input type="number" id="cfs_tenure" value="3" min="0.5" max="30" step="0.5" oninput="calcCFStability()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">DSCR（返済余裕率）</div>
+        <input type="number" id="cfs_dscr" value="1.3" min="0.5" max="5" step="0.1" oninput="calcCFStability()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">LTV（借入比率・%）</div>
+        <input type="number" id="cfs_ltv" value="70" min="0" max="120" step="5" oninput="calcCFStability()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">修繕積立充足率（%）</div>
+        <input type="number" id="cfs_repair" value="60" min="0" max="100" step="5" oninput="calcCFStability()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">入居者分散度（テナント数）</div>
+        <input type="number" id="cfs_tenants" value="4" min="1" max="100" step="1" oninput="calcCFStability()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ローン金利種別</div>
+        <select id="cfs_ratetype" onchange="calcCFStability()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="fixed">全期間固定</option>
+          <option value="mixed">当初固定（5〜10年）</option>
+          <option value="variable">変動金利</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">エリア需要（駅徒歩分）</div>
+        <input type="number" id="cfs_walk" value="8" min="1" max="30" step="1" oninput="calcCFStability()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="cf-stability-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5458,6 +5503,66 @@ function calcIRR() {
   el.innerHTML = html;
 }
 (function(){ calcIRR(); })();
+
+// ===== CF安定性スコア診断 =====
+function calcCFStability() {
+  var el = document.getElementById('cf-stability-result');
+  if (!el) return;
+  var vacancy = parseFloat(document.getElementById('cfs_vacancy').value) || 0;
+  var tenure = parseFloat(document.getElementById('cfs_tenure').value) || 0;
+  var dscr = parseFloat(document.getElementById('cfs_dscr').value) || 0;
+  var ltv = parseFloat(document.getElementById('cfs_ltv').value) || 0;
+  var repair = parseFloat(document.getElementById('cfs_repair').value) || 0;
+  var tenants = parseInt(document.getElementById('cfs_tenants').value) || 1;
+  var ratetype = document.getElementById('cfs_ratetype').value;
+  var walk = parseInt(document.getElementById('cfs_walk').value) || 15;
+  var scores = [];
+  var s1 = vacancy <= 5 ? 20 : vacancy <= 10 ? 15 : vacancy <= 20 ? 8 : vacancy <= 30 ? 3 : 0;
+  scores.push({ label: '空室率', score: s1, max: 20, note: vacancy + '%' });
+  var s2 = tenure >= 5 ? 15 : tenure >= 3 ? 12 : tenure >= 2 ? 8 : tenure >= 1 ? 4 : 0;
+  scores.push({ label: '平均入居年数', score: s2, max: 15, note: tenure + '年' });
+  var s3 = dscr >= 1.5 ? 20 : dscr >= 1.3 ? 15 : dscr >= 1.1 ? 8 : dscr >= 1.0 ? 3 : 0;
+  scores.push({ label: 'DSCR', score: s3, max: 20, note: dscr.toFixed(1) + 'x' });
+  var s4 = ltv <= 50 ? 10 : ltv <= 65 ? 8 : ltv <= 75 ? 5 : ltv <= 85 ? 2 : 0;
+  scores.push({ label: 'LTV', score: s4, max: 10, note: ltv + '%' });
+  var s5 = repair >= 80 ? 15 : repair >= 60 ? 11 : repair >= 40 ? 6 : repair >= 20 ? 3 : 0;
+  scores.push({ label: '修繕積立充足率', score: s5, max: 15, note: repair + '%' });
+  var s6 = tenants >= 10 ? 10 : tenants >= 5 ? 8 : tenants >= 3 ? 5 : tenants >= 2 ? 3 : 0;
+  scores.push({ label: '入居者分散度', score: s6, max: 10, note: tenants + '戸' });
+  var s7 = ratetype === 'fixed' ? 5 : ratetype === 'mixed' ? 3 : 1;
+  scores.push({ label: 'ローン金利種別', score: s7, max: 5, note: { fixed: '全期間固定', mixed: '当初固定', variable: '変動' }[ratetype] });
+  var s8 = walk <= 5 ? 5 : walk <= 10 ? 4 : walk <= 15 ? 2 : 1;
+  scores.push({ label: '駅徒歩', score: s8, max: 5, note: walk + '分' });
+  var total = scores.reduce(function(a,b){ return a + b.score; }, 0);
+  var maxTotal = scores.reduce(function(a,b){ return a + b.max; }, 0);
+  var pct = Math.round(total / maxTotal * 100);
+  var grade = pct >= 80 ? { label: 'S', color: 'var(--gold)', msg: '非常に安定。長期ホールド推奨。' }
+            : pct >= 65 ? { label: 'A', color: 'var(--green)', msg: '安定。現状維持で問題なし。' }
+            : pct >= 50 ? { label: 'B', color: '#f59e0b', msg: 'やや不安定。空室率・DSCR改善を検討。' }
+            : pct >= 35 ? { label: 'C', color: 'var(--red)', msg: '不安定。収益改善または売却検討を推奨。' }
+            : { label: 'D', color: '#dc2626', msg: '危険水域。出口戦略を早急に検討してください。' };
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px">';
+  html += '<div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:' + grade.color + ';flex-shrink:0">' + grade.label + '</div>';
+  html += '<div><div style="font-size:22px;font-weight:900;color:' + grade.color + '">' + total + '<span style="font-size:13px;color:var(--text-muted)">/' + maxTotal + '点</span></div>';
+  html += '<div style="font-size:11px;margin-top:2px">' + grade.msg + '</div></div>';
+  html += '<div style="margin-left:auto;text-align:right"><div style="font-size:10px;color:var(--text-muted)">安定度</div><div style="font-size:20px;font-weight:900;color:' + grade.color + '">' + pct + '%</div></div>';
+  html += '</div>';
+  html += '<div style="display:grid;gap:5px">';
+  scores.forEach(function(s) {
+    var barPct = Math.round(s.score / s.max * 100);
+    var barColor = barPct >= 75 ? 'var(--green)' : barPct >= 50 ? '#f59e0b' : 'var(--red)';
+    html += '<div style="display:grid;grid-template-columns:100px 1fr 50px;align-items:center;gap:8px;font-size:11px">';
+    html += '<span style="color:var(--text-muted)">' + s.label + '</span>';
+    html += '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px;overflow:hidden"><div style="height:100%;width:' + barPct + '%;background:' + barColor + ';border-radius:4px;transition:width 0.3s"></div></div>';
+    html += '<span style="text-align:right;color:' + barColor + '">' + s.score + '/' + s.max + '(' + s.note + ')</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcCFStability(); })();
 
 function checkStorageWarning() {
   try {
