@@ -1195,6 +1195,39 @@
     <div id="major-repair-result"></div>
   </div>
 
+  <!-- 退去時 原状回復費用試算カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">🔧 退去時 原状回復費用 試算カード</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">部屋の広さ・在籍年数・損傷状況から退去時の原状回復費用（入居者負担分・オーナー負担分）を概算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">専有面積（㎡）</label>
+        <input type="number" id="or_area" value="50" min="10" max="300" step="1" oninput="calcOriginalRestore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">入居年数（年）</label>
+        <input type="number" id="or_years" value="3" min="0.5" max="30" step="0.5" oninput="calcOriginalRestore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">損傷レベル</label>
+        <select id="or_damage" onchange="calcOriginalRestore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="none">損傷なし（通常使用のみ）</option>
+          <option value="mild" selected>軽微（壁ヤニ・軽い傷）</option>
+          <option value="medium">中程度（ペット・深い傷）</option>
+          <option value="heavy">重度（タバコ・広範囲汚損）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件種別</label>
+        <select id="or_kind" onchange="calcOriginalRestore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="apt">マンション・アパート</option>
+          <option value="house">一戸建て</option>
+        </select>
+      </div>
+    </div>
+    <div id="original-restore-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -6131,6 +6164,54 @@ function calcMajorRepair() {
     + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; 修繕費用は建物の構造・劣化状態により大きく変動します。事前に専門家による建物診断をおすすめします。</div>';
 }
 (function(){ calcMajorRepair(); })();
+
+// ===== 退去時 原状回復費用 試算 =====
+function calcOriginalRestore() {
+  var el = document.getElementById('original-restore-result');
+  if (!el) return;
+  var area   = parseFloat(document.getElementById('or_area').value) || 0;
+  var years  = parseFloat(document.getElementById('or_years').value) || 0;
+  var damage = document.getElementById('or_damage').value;
+  var kind   = document.getElementById('or_kind').value;
+  if (area <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">面積を入力してください</div>'; return; }
+  // クロス全張替基準単価
+  var wallPricePerSqm = kind === 'house' ? 1200 : 1000;
+  // 張替面積概算（床面積×壁倍率）
+  var wallArea = area * 3.2;
+  var wallTotal = wallArea * wallPricePerSqm;
+  // 経年劣化による入居者負担率（ガイドライン準拠）
+  var tenantRatio;
+  if (years <= 1) tenantRatio = 0.9;
+  else if (years <= 3) tenantRatio = 0.7;
+  else if (years <= 6) tenantRatio = 0.4;
+  else if (years <= 10) tenantRatio = 0.2;
+  else tenantRatio = 0.05;
+  // 損傷による追加費用
+  var damageCost = { none: 0, mild: area * 300, medium: area * 600, heavy: area * 1200 };
+  var addCost = damageCost[damage] || 0;
+  var tenantWall = Math.round(wallTotal * tenantRatio / 1000) * 1000;
+  var ownerWall  = Math.round(wallTotal * (1 - tenantRatio) / 1000) * 1000;
+  var tenantDamage = damage === 'none' ? 0 : Math.round(addCost / 1000) * 1000;
+  var floorClean = Math.round(area * 500 / 1000) * 1000;
+  var tenantTotal = tenantWall + tenantDamage;
+  var ownerTotal  = ownerWall + floorClean;
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">入居者負担（目安）</div><div style="font-size:22px;font-weight:900;color:var(--red)">' + Math.round(tenantTotal/10000*10)/10 + '万円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">オーナー負担（目安）</div><div style="font-size:22px;font-weight:900;color:var(--gold)">' + Math.round(ownerTotal/10000*10)/10 + '万円</div></div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">';
+  html += '<thead><tr style="background:rgba(255,255,255,0.06)"><th style="padding:6px 8px;text-align:left;color:var(--text-muted)">項目</th><th style="padding:6px 8px;text-align:right;color:var(--text-muted)">入居者</th><th style="padding:6px 8px;text-align:right;color:var(--text-muted)">オーナー</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr style="border-top:1px solid rgba(255,255,255,0.05)"><td style="padding:6px 8px;color:var(--text-muted)">壁クロス（経年劣化分）</td><td style="padding:6px 8px;text-align:right;color:var(--red)">' + Math.round(tenantWall/10000*10)/10 + '万円</td><td style="padding:6px 8px;text-align:right;color:var(--gold)">' + Math.round(ownerWall/10000*10)/10 + '万円</td></tr>';
+  html += '<tr style="border-top:1px solid rgba(255,255,255,0.05)"><td style="padding:6px 8px;color:var(--text-muted)">損傷による追加修繕</td><td style="padding:6px 8px;text-align:right;color:var(--red)">' + Math.round(tenantDamage/10000*10)/10 + '万円</td><td style="padding:6px 8px;text-align:right;color:var(--text-muted)">—</td></tr>';
+  html += '<tr style="border-top:1px solid rgba(255,255,255,0.05)"><td style="padding:6px 8px;color:var(--text-muted)">床・ハウスクリーニング</td><td style="padding:6px 8px;text-align:right;color:var(--text-muted)">—</td><td style="padding:6px 8px;text-align:right;color:var(--gold)">' + Math.round(floorClean/10000*10)/10 + '万円</td></tr>';
+  html += '</tbody></table>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;font-size:11px;color:var(--text-muted);line-height:1.7">&#128204; 入居者負担率 <strong style="color:var(--text)">' + Math.round(tenantRatio*100) + '%</strong>（在籍' + years + '年・国交省ガイドライン準拠）&#x3000;損傷レベル: ' + { none:'損傷なし', mild:'軽微', medium:'中程度', heavy:'重度' }[damage] + '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcOriginalRestore(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
