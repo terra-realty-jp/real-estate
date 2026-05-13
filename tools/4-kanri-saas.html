@@ -362,6 +362,54 @@
       <button class="btn btn-outline btn-sm" onclick="exportData('rent')">CSVエクスポート</button>
     </div>
   </div>
+  <!-- 賃料相場チェッカー -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">📊 賃料相場チェッカー</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">エリア・築年数・間取り・面積から賃料の相場目安を試算します。現在の家賃と比べて「値上げ余地があるか」「安すぎないか」の確認にご活用ください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">エリア</label>
+        <select id="rm_area" onchange="calcRentMarket()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="tokyo_center">東京23区中心部（渋谷・新宿・港など）</option>
+          <option value="tokyo_sub">東京23区その他</option>
+          <option value="tokyo_out">東京都下（多摩・八王子など）</option>
+          <option value="saitama_city">さいたま・川越・大宮エリア</option>
+          <option value="kanagawa_city">横浜・川崎・相模原エリア</option>
+          <option value="chiba_city">千葉市・船橋・市川エリア</option>
+          <option value="osaka_center">大阪市内中心部</option>
+          <option value="osaka_sub">大阪府その他・神戸・京都市内</option>
+          <option value="nagoya">名古屋市内</option>
+          <option value="sapporo">札幌市内</option>
+          <option value="fukuoka">福岡市内</option>
+          <option value="other_city">政令指定都市（上記以外）</option>
+          <option value="other_local">地方都市・郡部</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">間取り</label>
+        <select id="rm_layout" onchange="calcRentMarket()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1r">1R・1K</option>
+          <option value="1dk">1DK・1LDK</option>
+          <option value="2dk">2DK・2LDK</option>
+          <option value="3ldk">3LDK以上</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">専有面積（㎡）</label>
+        <input type="number" id="rm_area_sqm" placeholder="例: 25" min="10" max="200" step="1" oninput="calcRentMarket()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">築年数（年）</label>
+        <input type="number" id="rm_age" placeholder="例: 15" min="0" max="60" step="1" oninput="calcRentMarket()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の家賃（円）—比較したい場合に入力</label>
+        <input type="number" id="rm_current" placeholder="例: 70000" min="0" step="1000" oninput="calcRentMarket()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rent-market-result"></div>
+  </div>
+
   <div id="rent-collection-bar" style="margin-bottom:12px"></div>
   <div id="rent-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px"></div>
   <div id="rent-trend-chart" style="display:none;margin-bottom:16px"></div>
@@ -4452,6 +4500,52 @@ function calcRestoreCost() {
     + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">貸主負担目安</div>'
     + '<div style="font-size:16px;font-weight:900;color:#4ade80">' + totalLandlord.toLocaleString() + '円</div></div></div>'
     + '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">&#8251; 国土交通省ガイドライン基準の概算です。実際の請求額は専門業者の見積もりや入居時の写真・契約内容によります。特約がない場合、通常損耗は貸主負担が原則です。</div>';
+}
+
+// ===== 賃料相場チェッカー =====
+function calcRentMarket() {
+  var el = document.getElementById('rent-market-result');
+  if (!el) return;
+  var areaSqm   = parseFloat(document.getElementById('rm_area_sqm').value) || 0;
+  var age       = parseFloat(document.getElementById('rm_age').value)       || 0;
+  var areaKey   = document.getElementById('rm_area').value;
+  var layout    = document.getElementById('rm_layout').value;
+  var current   = parseFloat(document.getElementById('rm_current').value)   || 0;
+  if (!areaSqm) { el.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">面積を入力してください</p>'; return; }
+  // 基準坪単価（円/㎡）
+  var baseMap = { tokyo_center:5800, tokyo_sub:4200, tokyo_out:3000, saitama_city:2600, kanagawa_city:3200, chiba_city:2500, osaka_center:3400, osaka_sub:2400, nagoya:2500, sapporo:1900, fukuoka:2600, other_city:2000, other_local:1300 };
+  var layoutMul = { '1r':1.0, '1dk':1.1, '2dk':1.25, '3ldk':1.4 };
+  var ageFactor = age <= 5 ? 1.0 : age <= 10 ? 0.95 : age <= 20 ? 0.88 : age <= 30 ? 0.82 : 0.75;
+  var base = (baseMap[areaKey] || 2000) * (layoutMul[layout] || 1.0) * ageFactor;
+  var mid  = Math.round(base * areaSqm / 1000) * 1000;
+  var low  = Math.round(mid * 0.88 / 1000) * 1000;
+  var high = Math.round(mid * 1.12 / 1000) * 1000;
+  var barPct = function(v) { return Math.min(100, Math.max(5, Math.round((v - low) / (high - low) * 100))); };
+  var compHtml = '';
+  if (current > 0) {
+    var diff = current - mid;
+    var diffPct = Math.round((diff / mid) * 100);
+    var status, statusColor, advice;
+    if (diffPct >= 10) { status='相場より高め'; statusColor='#fb923c'; advice='相場上限に近い水準。次回更新時の交渉で家賃引き下げを求められる可能性があります。'; }
+    else if (diffPct >= -5) { status='相場並み'; statusColor='#4ade80'; advice='適正水準です。現在の家賃設定を継続しましょう。'; }
+    else if (diffPct >= -15) { status='相場より少し低め'; statusColor='#facc15'; advice='相場比' + Math.abs(diffPct) + '%安い水準です。値上げ交渉の余地があります（月額' + Math.round(Math.abs(diff) / 1000) + '千円）。'; }
+    else { status='相場より大幅に低め'; statusColor='var(--red)'; advice='相場より' + Math.abs(diffPct) + '%安い設定です。次回更新時に段階的な値上げを検討してください（月額' + Math.round(Math.abs(diff) / 1000) + '千円の値上げ余地）。'; }
+    var barPos = barPct(current);
+    compHtml = '<div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:8px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      + '<span style="font-size:12px;color:var(--text-muted)">現在の家賃 <strong style="color:var(--text)">' + current.toLocaleString() + '円</strong></span>'
+      + '<span style="font-size:12px;font-weight:700;color:' + statusColor + '">' + status + '</span></div>'
+      + '<div style="position:relative;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;margin-bottom:8px">'
+      + '<div style="position:absolute;left:0;top:0;height:100%;width:100%;background:linear-gradient(90deg,rgba(74,222,128,0.2) 0%,rgba(201,168,76,0.3) 50%,rgba(239,68,68,0.2) 100%);border-radius:4px"></div>'
+      + '<div style="position:absolute;top:-2px;left:' + barPos + '%;transform:translateX(-50%);width:12px;height:12px;background:' + statusColor + ';border-radius:50%;border:2px solid var(--dark2)"></div></div>'
+      + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">' + advice + '</div></div>';
+  }
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:' + (compHtml?'0':'10px') + '">'
+    + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">下限目安</div><div style="font-size:16px;font-weight:900;color:var(--text)">' + low.toLocaleString() + '</div><div style="font-size:10px;color:var(--text-muted)">円/月</div></div>'
+    + '<div style="text-align:center;padding:10px;background:rgba(201,168,76,0.1);border-radius:8px;border:1px solid rgba(201,168,76,0.25)"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">相場中央値</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + mid.toLocaleString() + '</div><div style="font-size:10px;color:var(--text-muted)">円/月</div></div>'
+    + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">上限目安</div><div style="font-size:16px;font-weight:900;color:var(--text)">' + high.toLocaleString() + '</div><div style="font-size:10px;color:var(--text-muted)">円/月</div></div></div>'
+    + compHtml
+    + '<div style="margin-top:10px;font-size:10px;color:var(--text-muted);line-height:1.6">&#8251; 賃料相場は国土交通省・各種不動産データを元にしたモデルによる概算です。実際の賃料は物件の状態・設備・駅距離・競合物件数によって異なります。詳細は不動産会社にご確認ください。</div>';
 }
 
 // ===== 法定点検管理 =====
