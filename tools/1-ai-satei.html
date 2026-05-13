@@ -938,6 +938,35 @@
     </div>
   </div>
 
+  <!-- 住み替え費用 概算カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;margin-top:20px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔄 住み替え費用 概算シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">今の家を売って新居へ住み替える場合、売却収入と購入費用の差し引きで手元資金がどう変わるかを試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の家の売却予想額（万円）</label>
+        <input type="number" id="sr_sell" placeholder="例: 3000" min="0" step="100" oninput="calcSwitchResident()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在のローン残債（万円）</label>
+        <input type="number" id="sr_loan" value="0" min="0" step="100" oninput="calcSwitchResident()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">新居の購入価格（万円）</label>
+        <input type="number" id="sr_buy" placeholder="例: 4000" min="0" step="100" oninput="calcSwitchResident()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">新居のローン頭金率（%）</label>
+        <input type="number" id="sr_down" value="10" min="0" max="100" step="5" oninput="calcSwitchResident()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">手元の現金・貯蓄（万円）</label>
+        <input type="number" id="sr_cash" value="200" min="0" step="50" oninput="calcSwitchResident()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="switch-resident-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3216,6 +3245,51 @@ function calcSaleSeason() {
 (function(){ calcSaleSeason(); })();
 
 // ===== 媒介契約3種比較 =====
+// ===== 住み替え費用 概算 =====
+function calcSwitchResident() {
+  var el = document.getElementById('switch-resident-result');
+  if(!el) return;
+  var sell = parseFloat(document.getElementById('sr_sell').value)||0;
+  var loan = parseFloat(document.getElementById('sr_loan').value)||0;
+  var buy  = parseFloat(document.getElementById('sr_buy').value)||0;
+  var down = parseFloat(document.getElementById('sr_down').value)||10;
+  var cash = parseFloat(document.getElementById('sr_cash').value)||200;
+  if(!sell && !buy) { el.innerHTML = ''; return; }
+  var sellComm = sell > 0 ? Math.round((sell*0.03+6)*1.1*10)/10 : 0;
+  var sellNet  = sell - sellComm - loan;
+  var buyPurchaseCost = buy > 0 ? Math.round(buy * 0.07) : 0;
+  var downPayment = buy > 0 ? Math.round(buy * down / 100) : 0;
+  var totalBuyCash = downPayment + buyPurchaseCost;
+  var totalIn  = sellNet + cash;
+  var balance  = totalIn - totalBuyCash;
+  var balColor = balance >= 0 ? 'var(--green)' : 'var(--red)';
+  var balLabel = balance >= 0 ? '✅ 資金に余裕があります' : '⚠️ 資金不足 — 追加融資や売却前後の調整が必要です';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    + '<div style="padding:12px;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:8px">'
+    + '<div style="font-size:11px;color:#4ade80;font-weight:700;margin-bottom:6px">💰 売却側（収入）</div>'
+    + row2('売却予想額', sell.toLocaleString()+'万円')
+    + row2('仲介手数料', '−'+sellComm.toLocaleString()+'万円')
+    + row2('ローン返済', '−'+loan.toLocaleString()+'万円')
+    + '<div style="border-top:1px solid rgba(255,255,255,0.1);margin-top:6px;padding-top:6px;font-size:13px;font-weight:700;color:#4ade80">売却手取り：'+(sellNet>=0?sellNet.toLocaleString():'<span style="color:var(--red)">'+sellNet.toLocaleString()+'</span>')+'万円</div>'
+    + '</div>'
+    + '<div style="padding:12px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:8px">'
+    + '<div style="font-size:11px;color:#f87171;font-weight:700;margin-bottom:6px">🏠 購入側（支出）</div>'
+    + row2('頭金（'+down+'%）', downPayment.toLocaleString()+'万円')
+    + row2('購入諸費用（約7%）', buyPurchaseCost.toLocaleString()+'万円')
+    + '<div style="border-top:1px solid rgba(255,255,255,0.1);margin-top:6px;padding-top:6px;font-size:13px;font-weight:700;color:#f87171">必要現金：'+totalBuyCash.toLocaleString()+'万円</div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:8px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">手元資金合計（売却手取り＋現金貯蓄） − 購入必要額</div>'
+    + '<div style="font-size:20px;font-weight:900;color:' + balColor + '">' + (balance>=0?'+':'')+balance.toLocaleString() + '万円</div>'
+    + '<div style="font-size:12px;color:' + balColor + ';margin-top:4px">' + balLabel + '</div>'
+    + '</div>'
+    + '<p style="font-size:10px;color:var(--text-muted);line-height:1.6">※ 購入諸費用は物件価格の7%で概算。引越し費・仮住まい費・税金は別途必要です。</p>';
+}
+function row2(label, val) {
+  return '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:2px"><span>'+label+'</span><span style="color:var(--text)">'+val+'</span></div>';
+}
+
 function calcMediationType() {
   var el = document.getElementById('mediation-result');
   if(!el) return;
