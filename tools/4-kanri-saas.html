@@ -330,6 +330,32 @@
     </div>
   </div>
   <div id="tenant-filter-summary" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
+  <!-- 入居者募集条件 最適化診断 -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">🔑 入居者募集条件 最適化チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空室が長引いている場合、募集条件の見直しで入居率が改善する場合があります。現在の条件を入力して改善ポイントを確認してください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">空室期間（ヶ月）</label>
+        <input type="number" id="rc2_months" placeholder="例: 3" min="0" max="36" step="1" oninput="calcRecruitOpt()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額家賃（円）</label>
+        <input type="number" id="rc2_rent" placeholder="例: 65000" min="0" step="1000" oninput="calcRecruitOpt()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text)">現在の募集条件</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px"><input type="checkbox" id="rc2_pet" onchange="calcRecruitOpt()" style="accent-color:var(--gold);width:15px;height:15px"> ペット可</label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px"><input type="checkbox" id="rc2_twoname" onchange="calcRecruitOpt()" style="accent-color:var(--gold);width:15px;height:15px"> 二人入居可</label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px"><input type="checkbox" id="rc2_foreign" onchange="calcRecruitOpt()" style="accent-color:var(--gold);width:15px;height:15px"> 外国籍の方歓迎</label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px"><input type="checkbox" id="rc2_noguarantor" onchange="calcRecruitOpt()" style="accent-color:var(--gold);width:15px;height:15px"> 保証会社のみ（連帯保証人不要）</label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px"><input type="checkbox" id="rc2_freeloan" onchange="calcRecruitOpt()" style="accent-color:var(--gold);width:15px;height:15px"> フリーローン・フリーランス可</label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px"><input type="checkbox" id="rc2_freenori" onchange="calcRecruitOpt()" style="accent-color:var(--gold);width:15px;height:15px"> 礼金なし</label>
+    </div>
+    <div id="recruit-opt-result"></div>
+  </div>
+
   <div id="contact-quick-card" style="margin-bottom:12px"></div>
   <div id="vacancy-tracker" style="display:none;margin-bottom:16px"></div>
   <div id="leasing-cost-card" style="display:none;margin-bottom:16px"></div>
@@ -4635,6 +4661,68 @@ function calcRenoROI() {
     + breakdownHtml
     + '<div style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.04);font-size:12px;font-weight:700;color:' + verdictColor + '">' + verdict + '</div>'
     + '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.6">&#8251; 家賃増額・空室改善効果は物件・地域・施工品質により大きく変わります。実際は業者の見積もりと賃貸需要の調査をあわせて判断してください。</div>';
+}
+
+// ===== 入居者募集条件 最適化チェック =====
+function calcRecruitOpt() {
+  var el = document.getElementById('recruit-opt-result');
+  if (!el) return;
+  var months = parseFloat(document.getElementById('rc2_months').value) || 0;
+  var rent   = parseFloat(document.getElementById('rc2_rent').value)   || 0;
+  var pet       = document.getElementById('rc2_pet').checked;
+  var twoname   = document.getElementById('rc2_twoname').checked;
+  var foreign   = document.getElementById('rc2_foreign').checked;
+  var noguarant = document.getElementById('rc2_noguarantor').checked;
+  var freeloan  = document.getElementById('rc2_freeloan').checked;
+  var freenori  = document.getElementById('rc2_freenori').checked;
+
+  var conditions = [
+    { id: 'rc2_pet',         label: 'ペット可',              boost: 18, risk: '傷・臭気リスクあり。敷金1ヶ月追加が一般的' },
+    { id: 'rc2_twoname',     label: '二人入居可',            boost: 12, risk: '水道・光熱費コスト増に注意' },
+    { id: 'rc2_foreign',     label: '外国籍の方歓迎',        boost: 10, risk: '言語サポート体制を事前に整備' },
+    { id: 'rc2_noguarantor', label: '保証会社のみ',          boost:  9, risk: '保証会社審査で補完できる' },
+    { id: 'rc2_freeloan',    label: 'フリーランス可',        boost:  8, risk: '収入証明書類の確認を強化' },
+    { id: 'rc2_freenori',    label: '礼金なし',              boost: 15, risk: '初期費用減で問合わせ数が増加しやすい' },
+  ];
+  var checkMap = { rc2_pet: pet, rc2_twoname: twoname, rc2_foreign: foreign, rc2_noguarantor: noguarant, rc2_freeloan: freeloan, rc2_freenori: freenori };
+  var enabledBoost = 0, missingList = [];
+  conditions.forEach(function(c) {
+    if (checkMap[c.id]) { enabledBoost += c.boost; }
+    else { missingList.push(c); }
+  });
+
+  var vacancyLoss = months * rent;
+  var poolLabel = enabledBoost >= 60 ? '非常に広い' : enabledBoost >= 35 ? '広い' : enabledBoost >= 15 ? '普通' : '狭め';
+  var poolColor = enabledBoost >= 60 ? 'var(--green)' : enabledBoost >= 35 ? '#4fc3f7' : enabledBoost >= 15 ? 'var(--gold)' : 'var(--red)';
+
+  var html = '<div style="margin-top:14px">';
+  if (vacancyLoss > 0) {
+    html += '<div style="background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.25);border-radius:8px;padding:10px 14px;margin-bottom:10px">'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">現在の空室損失（概算）</div>'
+      + '<div style="font-size:20px;font-weight:700;color:var(--red)">▲' + vacancyLoss.toLocaleString() + '円</div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">' + months + 'ヶ月 × ' + rent.toLocaleString() + '円</div></div>';
+  }
+  html += '<div style="display:flex;gap:10px;margin-bottom:12px">'
+    + '<div style="flex:1;background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted)">入居者プール</div>'
+    + '<div style="font-size:16px;font-weight:700;color:' + poolColor + '">' + poolLabel + '</div></div>'
+    + '<div style="flex:1;background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted)">条件開放スコア</div>'
+    + '<div style="font-size:16px;font-weight:700;color:' + poolColor + '">+' + enabledBoost + '%</div></div></div>';
+
+  if (missingList.length > 0) {
+    html += '<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">▼ 追加で検討できる条件（優先度順）</div>';
+    missingList.sort(function(a,b){ return b.boost - a.boost; }).forEach(function(c, i) {
+      html += '<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:6px;margin-bottom:4px">'
+        + '<span style="background:var(--gold);color:#000;font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px;min-width:20px;text-align:center;margin-top:1px">' + (i+1) + '</span>'
+        + '<div><div style="font-size:12px;font-weight:700">' + c.label + ' <span style="color:var(--green);font-size:11px">+' + c.boost + '%</span></div>'
+        + '<div style="font-size:10px;color:var(--text-muted)">' + c.risk + '</div></div></div>';
+    });
+  } else {
+    html += '<div style="background:rgba(0,200,100,0.1);border:1px solid rgba(0,200,100,0.25);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--green)">✅ 全条件を開放中。募集面での改善余地は限られています。</div>';
+  }
+  html += '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.6">※ プール増加率は目安です。物件立地・築年数・価格帯により効果は異なります。</div></div>';
+  el.innerHTML = html;
 }
 
 // ===== 賃料相場チェッカー =====
