@@ -1010,6 +1010,39 @@
     <div id="exit-strategy-result"></div>
   </div>
 
+  <!-- 物件ホールドvs売却 判断カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">🔍 物件ホールド vs 売却 判断カード</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">現在保有中の物件について、ホールド継続か売却かを定量的に判断します。今後の年間CF・売却手取り・機会費用を比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の市場価格（万円）</label>
+        <input type="number" id="hvs_price" value="3000" min="100" max="200000" step="100" oninput="calcHoldVsSell()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">ローン残債（万円）</label>
+        <input type="number" id="hvs_loan" value="1500" min="0" max="200000" step="100" oninput="calcHoldVsSell()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間CF（万円）</label>
+        <input type="number" id="hvs_cf" value="80" min="-500" max="5000" step="10" oninput="calcHoldVsSell()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間価格下落率（%）</label>
+        <input type="number" id="hvs_decline" value="1" min="-10" max="20" step="0.5" oninput="calcHoldVsSell()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">分析年数（年）</label>
+        <input type="number" id="hvs_years" value="5" min="1" max="30" step="1" oninput="calcHoldVsSell()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">再投資利回り（%/年）</label>
+        <input type="number" id="hvs_reinvest" value="4" min="0" max="20" step="0.5" oninput="calcHoldVsSell()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="hold-vs-sell-result"></div>
+  </div>
+
   <!-- 投資タイプ別 収益特性比較カード -->
   <div class="card" style="margin-top:16px">
     <div class="card-title">🏘 投資タイプ別 収益特性比較</div>
@@ -4590,6 +4623,50 @@ function calcExitStrategy() {
     +'<p style="font-size:10px;color:var(--text-muted);margin-top:10px">※ 売却手数料=(価格×3%+6万)×1.1で計算。税額は取得費用を差し引いた譲渡益に対する概算です。</p>';
 }
 (function(){ calcExitStrategy(); })();
+
+// ===== 物件ホールドvs売却 判断 =====
+function calcHoldVsSell() {
+  var el = document.getElementById('hold-vs-sell-result');
+  if (!el) return;
+  var price    = parseFloat(document.getElementById('hvs_price').value) || 0;
+  var loan     = parseFloat(document.getElementById('hvs_loan').value) || 0;
+  var cf       = parseFloat(document.getElementById('hvs_cf').value) || 0;
+  var decline  = parseFloat(document.getElementById('hvs_decline').value) || 0;
+  var years    = parseInt(document.getElementById('hvs_years').value) || 5;
+  var reinvest = parseFloat(document.getElementById('hvs_reinvest').value) || 4;
+  if (price <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">価格を入力してください</div>'; return; }
+  var commission = function(p) { return (p * 0.03 + 6) * 1.1; };
+  var currentNet = price - loan - commission(price) - 30;
+  var holdCFTotal = cf * years;
+  var futurePrice = price * Math.pow(1 - decline / 100, years);
+  var futureNet = futurePrice - loan * 0.7 - commission(futurePrice) - 30;
+  var holdTotal = holdCFTotal + futureNet;
+  var sellNow = currentNet;
+  var sellGrow = sellNow > 0 ? sellNow * Math.pow(1 + reinvest / 100, years) : sellNow;
+  var holdWins = holdTotal > sellGrow;
+  var diff = Math.abs(holdTotal - sellGrow);
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center;border:1px solid ' + (holdWins ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.08)') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ホールド継続（' + years + '年後）</div>';
+  html += '<div style="font-size:20px;font-weight:900;color:' + (holdWins ? 'var(--green)' : 'var(--text)') + '">' + (holdTotal >= 0 ? '+' : '') + Math.round(holdTotal).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">CF累計' + Math.round(holdCFTotal) + '万 + 将来売却手取' + Math.round(futureNet) + '万</div>';
+  if (holdWins) html += '<div style="font-size:11px;color:var(--green);margin-top:4px;font-weight:700">✓ 有利</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center;border:1px solid ' + (!holdWins ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.08)') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">今すぐ売却（再投資後）</div>';
+  html += '<div style="font-size:20px;font-weight:900;color:' + (!holdWins ? 'var(--green)' : 'var(--text)') + '">' + (sellGrow >= 0 ? '+' : '') + Math.round(sellGrow).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">売却手取' + Math.round(sellNow) + '万 × 年利' + reinvest + '%で運用</div>';
+  if (!holdWins) html += '<div style="font-size:11px;color:var(--green);margin-top:4px;font-weight:700">✓ 有利</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted)">';
+  html += '<strong style="color:var(--gold)">' + (holdWins ? 'ホールド継続' : '今すぐ売却') + '</strong>の方が' + years + '年後に約<strong style="color:var(--text)">' + Math.round(diff).toLocaleString() + '万円</strong>有利な試算です。価格下落率・CF・再投資利回りの前提を変えて複数シナリオで確認してください。';
+  html += '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcHoldVsSell(); })();
 
 // ===== 投資タイプ別 収益特性比較 =====
 (function renderInvestTypeCards(){
