@@ -298,6 +298,13 @@
   <div id="matching-factor-stats" style="display:none;margin-bottom:20px"></div>
   <div id="unmatched-alert-panel" style="display:none;margin-bottom:20px"></div>
   <div id="matching-result"></div>
+
+  <!-- マッチング精度向上 ヒント診断カード -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">💡 マッチング精度向上 5つのヒント</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売主・買主の情報を充実させるほど、マッチング精度が高まります。以下の項目を確認してください。</p>
+    <div style="display:flex;flex-direction:column;gap:8px" id="match-hint-list"></div>
+  </div>
 </div>
 </div>
 
@@ -2427,6 +2434,28 @@ function calcPurchaseCost() {
   html += '<div style="margin-top:10px;font-size:10px;color:var(--text-muted);line-height:1.6">※ 目安額です。物件の種類・築年数・ローン条件・保険内容などにより実際の金額は異なります。購入前に必ず専門家にご確認ください。</div></div>';
   el.innerHTML = html;
 }
+
+// ===== マッチング精度向上ヒント =====
+(function initMatchHints() {
+  var el = document.getElementById('match-hint-list');
+  if (!el) return;
+  var hints = [
+    { icon: '📍', title: 'エリアをできるだけ具体的に入力する', desc: '「東京都」だけより「〇〇区〇〇町」の方が買主の絞り込み精度が大幅に向上します。', action: '売主・買主ともエリア欄を詳しく入力してください' },
+    { icon: '💰', title: '価格幅を広めに設定する', desc: '売主は「多少交渉可」な価格を希望価格として入力し、買主は上限に余裕を持たせると成立確率が上がります。', action: '売主は希望価格+5〜10%、買主は上限に余裕を' },
+    { icon: '📋', title: '物件種別・用途を選択する', desc: '「投資目的」「自己居住」「どちらでも可」を正しく設定すると、ニーズが合わないマッチングを除外できます。', action: '売主のメモ欄・買主の目的欄を必ず入力' },
+    { icon: '⏰', title: '売却・購入の希望時期を入力する', desc: '「急いでいる売主」×「急いでいる買主」のマッチングは成立スピードが格段に速くなります。', action: '「3ヶ月以内に動きたい」など時期を明確に' },
+    { icon: '📞', title: '連絡先を最新の状態に保つ', desc: 'マッチングが成立した際にすぐ連絡できるよう、メール・電話番号を正確に入力してください。', action: '登録情報を定期的に確認・更新してください' },
+  ];
+  var html = '';
+  hints.forEach(function(h, i) {
+    html += '<div style="display:flex;gap:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;align-items:flex-start">'
+      + '<span style="font-size:18px;flex-shrink:0">' + h.icon + '</span>'
+      + '<div><div style="font-size:12px;font-weight:700;margin-bottom:2px">' + h.title + '</div>'
+      + '<div style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-bottom:3px">' + h.desc + '</div>'
+      + '<div style="font-size:11px;color:var(--gold)">→ ' + h.action + '</div></div></div>';
+  });
+  el.innerHTML = html;
+})();
 
 // ===== 値引き交渉シミュレーター =====
 function calcNego() {
