@@ -1131,6 +1131,25 @@
     <div id="quick-table-result"></div>
   </div>
 
+  <!-- 内覧前チェックリスト スコアカード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;margin-top:20px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏠 内覧前 準備チェックリスト・スコアカード</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">内覧の印象は成約率に直結します。準備できている項目にチェックを入れて「内覧準備スコア」を確認してください。</p>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ic_c0" onchange="calcInternalCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>玄関・廊下が清潔に掃除されている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ic_c1" onchange="calcInternalCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>水回り（キッチン・浴室・トイレ）が清潔な状態</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ic_c2" onchange="calcInternalCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>部屋の採光が最大限になるよう窓を確認・カーテンを整えた</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ic_c3" onchange="calcInternalCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>押し入れ・収納の中身を整理し、容量の余裕を見せている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ic_c4" onchange="calcInternalCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>庭・ベランダ・外構が手入れされている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ic_c5" onchange="calcInternalCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>不用品・過剰な家具を整理してスペースを広く見せている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ic_c6" onchange="calcInternalCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>小さな修繕（ドア・建具・クロスの破れ等）が完了している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ic_c7" onchange="calcInternalCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>物件の長所（眺望・日当たり・収納量など）を案内の言葉で準備した</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ic_c8" onchange="calcInternalCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>近隣の商業施設・学校・バス停など利便施設の情報を整理した</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="ic_c9" onchange="calcInternalCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>設備の動作確認（給湯器・エアコン・シャッター等）を完了した</span></label>
+    </div>
+    <div id="internal-check-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3884,6 +3903,55 @@ function calcQuickTable() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 譲渡税：所有'+years+'年（'+( years>5?'長期':'短期' )+'・'+( taxRate*100 ).toFixed(3)+'%）。3000万円特別控除は考慮していません。</div>';
 }
 (function(){ calcQuickTable(); })();
+
+// ===== 内覧前 準備チェックリスト スコア =====
+function calcInternalCheck() {
+  var el = document.getElementById('internal-check-result');
+  if (!el) return;
+  var items = [
+    { id:'ic_c0', label:'玄関・廊下の清潔さ', weight:2 },
+    { id:'ic_c1', label:'水回りの清潔さ', weight:3 },
+    { id:'ic_c2', label:'採光・明るさの演出', weight:2 },
+    { id:'ic_c3', label:'収納の整理', weight:2 },
+    { id:'ic_c4', label:'外構・庭の手入れ', weight:1 },
+    { id:'ic_c5', label:'不用品整理・空間演出', weight:2 },
+    { id:'ic_c6', label:'小修繕の完了', weight:2 },
+    { id:'ic_c7', label:'セールスポイント準備', weight:2 },
+    { id:'ic_c8', label:'周辺情報の整理', weight:1 },
+    { id:'ic_c9', label:'設備動作確認', weight:1 },
+  ];
+  var checked = 0, total = 0;
+  var unchecked = [];
+  items.forEach(function(it) {
+    var c = document.getElementById(it.id);
+    var chk = c && c.checked;
+    if (chk) checked += it.weight;
+    else unchecked.push(it.label);
+    total += it.weight;
+  });
+  var score = Math.round(checked / total * 100);
+  var grade = score >= 90 ? { label:'S 完璧な準備', color:'var(--gold)', msg:'内覧の準備は万全です。自信を持って案内しましょう。' }
+    : score >= 70 ? { label:'A 良い準備', color:'var(--green)', msg:'あと少しの準備で印象がさらに上がります。' }
+    : score >= 50 ? { label:'B 基本は整っている', color:'#60a5fa', msg:'重要度の高い項目を優先的に対応しましょう。' }
+    : { label:'C 要改善', color:'var(--red)', msg:'内覧前に以下の項目を対応することで成約率が大きく上がります。' };
+
+  var pct = score;
+  var barHtml = '<div style="height:10px;background:rgba(255,255,255,0.1);border-radius:5px;overflow:hidden;margin:8px 0">'
+    + '<div style="height:100%;width:'+pct+'%;background:'+grade.color+';border-radius:5px;transition:width 0.4s"></div></div>';
+
+  var todoHtml = unchecked.length > 0
+    ? '<div style="margin-top:10px"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">📋 まだ未完了の項目</div>'
+    + unchecked.map(function(u){ return '<div style="font-size:12px;color:var(--text-muted);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)">▷ '+u+'</div>'; }).join('')
+    + '</div>' : '';
+
+  el.innerHTML = '<div style="text-align:center;padding:12px 0">'
+    + '<div style="font-size:32px;font-weight:900;color:'+grade.color+'">'+score+'点</div>'
+    + '<div style="font-size:14px;font-weight:700;color:'+grade.color+';margin-top:2px">'+grade.label+'</div>'
+    + barHtml
+    + '<div style="font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.6">'+grade.msg+'</div>'
+    + todoHtml + '</div>';
+}
+(function(){ calcInternalCheck(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
