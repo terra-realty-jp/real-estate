@@ -720,6 +720,31 @@
     <div id="health-check-result"></div>
   </div>
 
+  <!-- 管理委託 vs 自主管理 コスト比較カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">⚖️ 管理委託 vs 自主管理 コスト比較</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">管理会社に委託した場合と自分で管理した場合の年間コストを比較します。時間コストも含めて判断してください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月間家賃収入合計（万円）</label>
+        <input type="number" id="mv_rent" placeholder="例: 30" min="0" step="1" value="30" oninput="calcMgmtVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">管理委託料率（%）</label>
+        <input type="number" id="mv_rate" placeholder="例: 5" min="1" max="20" step="0.5" value="5" oninput="calcMgmtVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件数・戸数</label>
+        <input type="number" id="mv_units" placeholder="例: 8" min="1" max="100" step="1" value="8" oninput="calcMgmtVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">自主管理の月間作業時間（時間）</label>
+        <input type="number" id="mv_hours" placeholder="例: 10" min="0" max="200" step="1" value="10" oninput="calcMgmtVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="mgmt-vs-self-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5776,6 +5801,64 @@ function renderInsurance() {
   }).join('');
   el.innerHTML = rows;
 }
+
+// ===== 管理委託 vs 自主管理 コスト比較 =====
+function calcMgmtVsSelf() {
+  var el = document.getElementById('mgmt-vs-self-result');
+  if (!el) return;
+  var rent  = parseFloat(document.getElementById('mv_rent').value) || 0;
+  var rate  = parseFloat(document.getElementById('mv_rate').value) || 5;
+  var units = parseFloat(document.getElementById('mv_units').value) || 1;
+  var hours = parseFloat(document.getElementById('mv_hours').value) || 0;
+  if (!rent) { el.innerHTML = ''; return; }
+
+  var annualRent = rent * 12;
+  // 委託コスト
+  var mgmtFee = annualRent * rate / 100;
+  var leaseupFee = rent * 1; // 入居付け手数料（年1回想定・1ヶ月分）
+  var totalDelegate = mgmtFee + leaseupFee;
+
+  // 自主管理コスト（時間コスト換算 2000円/時）
+  var hourlyRate = 2000;
+  var timeValue = hours * 12 * hourlyRate / 10000;
+  var selfAdmin = units * 0.5; // 自主管理の雑費（万円/年）
+  var totalSelf = timeValue + selfAdmin;
+
+  var diff = totalDelegate - totalSelf;
+  var winner = diff > 0 ? 'self' : 'delegate';
+
+  var items = [
+    { label:'管理委託料（'+rate+'%）', delegate: Math.round(mgmtFee*10)/10, self: 0 },
+    { label:'入居付け手数料（年1回想定）', delegate: Math.round(leaseupFee*10)/10, self: 0 },
+    { label:'自主管理 時間コスト（'+hours+'時間/月×2,000円）', delegate: 0, self: Math.round(timeValue*10)/10 },
+    { label:'雑費・交通費・通信費', delegate: 0, self: Math.round(selfAdmin*10)/10 },
+  ];
+
+  var rowHtml = items.map(function(it) {
+    return '<div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+      + '<div style="font-size:12px;color:var(--text-muted)">'+it.label+'</div>'
+      + '<div style="text-align:right;font-size:13px;color:'+(it.delegate>0?'var(--red)':'var(--text-muted)')+'">'+( it.delegate>0 ? '▲'+it.delegate+'万' : '—' )+'</div>'
+      + '<div style="text-align:right;font-size:13px;color:'+(it.self>0?'var(--red)':'var(--text-muted)')+'">'+( it.self>0 ? '▲'+it.self+'万' : '—' )+'</div></div>';
+  }).join('');
+
+  el.innerHTML = '<div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;padding:6px 0;margin-bottom:4px">'
+    + '<div></div>'
+    + '<div style="text-align:right;font-size:11px;font-weight:700;color:var(--text-muted)">管理委託</div>'
+    + '<div style="text-align:right;font-size:11px;font-weight:700;color:var(--text-muted)">自主管理</div></div>'
+    + rowHtml
+    + '<div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;padding:10px 0;margin-top:4px">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--text)">年間合計コスト</div>'
+    + '<div style="text-align:right;font-size:16px;font-weight:900;color:'+(winner==='delegate'?'var(--green)':'var(--red)')+'">'+Math.round(totalDelegate*10)/10+'万円</div>'
+    + '<div style="text-align:right;font-size:16px;font-weight:900;color:'+(winner==='self'?'var(--green)':'var(--red)')+'">'+Math.round(totalSelf*10)/10+'万円</div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px;margin-top:6px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px">'
+    + (winner==='delegate' ? '📊 自主管理の方が年間'+Math.round(Math.abs(diff)*10)/10+'万円コスト低減' : '✅ 委託の方が年間'+Math.round(Math.abs(diff)*10)/10+'万円コスト低減')+'</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);line-height:1.6">'
+    + (winner==='delegate' ? '時間コストを含めると自主管理が有利。ただし入居者対応・トラブル対応の負担も考慮してください。' : '戸数・家賃を考えると管理委託の方がコスト効率が良い可能性があります。専門家への委託でトラブル対応も安心。')
+    + '</div></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 時間コストは時給2,000円で換算。実際の委託内容・条件は管理会社によって異なります。</div>';
+}
+(function(){ calcMgmtVsSelf(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
