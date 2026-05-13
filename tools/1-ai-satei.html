@@ -856,6 +856,41 @@
     </div>
   </div>
 
+  <!-- 売却時期おすすめシーズン診断カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;margin-top:20px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📅 売却時期おすすめシーズン診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産の売却需要は季節によって変わります。あなたの物件種別と希望時期から、売却に有利なシーズンをアドバイスします。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件種別</label>
+        <select id="ss_type" onchange="calcSaleSeason()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="mansion">マンション（区分）</option>
+          <option value="kodate">戸建て</option>
+          <option value="tochi">土地・更地</option>
+          <option value="invest">投資用不動産</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">いつ頃売りたいですか？</label>
+        <select id="ss_month" onchange="calcSaleSeason()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1">1月</option>
+          <option value="2">2月</option>
+          <option value="3">3月</option>
+          <option value="4">4月</option>
+          <option value="5" selected>5月</option>
+          <option value="6">6月</option>
+          <option value="7">7月</option>
+          <option value="8">8月</option>
+          <option value="9">9月</option>
+          <option value="10">10月</option>
+          <option value="11">11月</option>
+          <option value="12">12月</option>
+        </select>
+      </div>
+    </div>
+    <div id="sale-season-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3078,6 +3113,60 @@ function copyResultText() {
     ta.remove();
   }
 }
+
+// ===== 売却時期おすすめシーズン診断 =====
+function calcSaleSeason() {
+  var el = document.getElementById('sale-season-result');
+  if (!el) return;
+  var type  = document.getElementById('ss_type').value;
+  var month = parseInt(document.getElementById('ss_month').value, 10);
+
+  // 需要スコア (1-5) by month for each type
+  var scores = {
+    mansion: [3,4,5,4,3,3,2,2,3,4,4,3],
+    kodate:  [3,4,5,4,3,3,2,2,3,4,4,3],
+    tochi:   [3,4,4,4,3,3,3,3,3,4,4,3],
+    invest:  [4,4,4,4,4,3,3,3,4,4,4,4],
+  };
+  var labels = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  var typeLabel = {mansion:'マンション',kodate:'戸建て',tochi:'土地',invest:'投資用'};
+  var sc = scores[type] || scores.mansion;
+  var cur = sc[month - 1];
+  var peakMonths = sc.reduce(function(arr,v,i){ if(v === Math.max.apply(null,sc)) arr.push(i+1); return arr; }, []);
+  var grade = cur >= 5 ? { label:'最繁忙期', color:'var(--green)', note:'この時期は買い手が最も多く、成約スピードと価格の両面で有利です。' }
+            : cur >= 4 ? { label:'繁忙期', color:'#4fc3f7', note:'需要が高く、成約しやすい時期です。強気の価格設定が可能です。' }
+            : cur >= 3 ? { label:'標準期', color:'var(--gold)', note:'需要は平均的。適正価格での売却は問題ありませんが、早期決断が有利です。' }
+            : { label:'閑散期', color:'var(--red)', note:'購入検討者が少なく、成約まで時間がかかりやすい時期です。価格設定に注意が必要です。' };
+
+  var html = '<div style="margin-top:12px">'
+    + '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 14px;flex:1;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted)">' + month + '月の需要レベル</div>'
+    + '<div style="font-size:20px;font-weight:700;color:' + grade.color + '">' + grade.label + '</div>'
+    + '<div style="display:flex;justify-content:center;gap:3px;margin-top:4px">'
+    + [1,2,3,4,5].map(function(i){ return '<span style="font-size:14px;color:' + (i <= cur ? grade.color : 'rgba(255,255,255,0.12)') + '">★</span>'; }).join('')
+    + '</div></div></div>';
+
+  // Monthly bar chart
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px;margin-bottom:10px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">月別需要レベル（' + typeLabel[type] + '）</div>'
+    + '<div style="display:flex;align-items:flex-end;gap:3px;height:50px">';
+  for (var i = 0; i < 12; i++) {
+    var h = (sc[i] / 5 * 44).toFixed(0);
+    var isNow = (i + 1 === month);
+    html += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">'
+      + '<div style="width:100%;height:' + h + 'px;background:' + (isNow ? grade.color : 'rgba(255,255,255,0.18)') + ';border-radius:3px 3px 0 0"></div>'
+      + '<div style="font-size:8px;color:' + (isNow ? grade.color : 'var(--text-muted)') + ';font-weight:' + (isNow ? '700' : '400') + '">' + (i+1) + '</div></div>';
+  }
+  html += '</div></div>';
+
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.7;margin-bottom:8px">'
+    + '📌 ' + grade.note + '<br><span style="color:var(--text-muted)">◎ ベストシーズン: ' + peakMonths.map(function(m){ return m + '月'; }).join('・') + '（需要ピーク）</span></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">'
+    + '💡 一般的に<strong style="color:var(--text)">1〜3月</strong>は引越しシーズンで居住用の需要が最高潮。<strong style="color:var(--text)">10〜11月</strong>は秋の第2繁忙期。<strong style="color:var(--text)">7〜8月</strong>はお盆・暑さで閑散傾向。</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcSaleSeason(); })();
 
 // ===== 相続税評価額 簡易試算 =====
 function calcInhTax() {
