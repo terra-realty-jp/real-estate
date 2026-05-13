@@ -654,6 +654,39 @@
     <div id="real-yield-result"></div>
   </div>
 
+  <!-- IRR（内部収益率）簡易計算カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📐 IRR（内部収益率）簡易計算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">投資額・年間CF・保有年数・売却価格からIRRを試算します。IRRがローン金利より高ければ投資効率は良好です。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">購入価格（万円）</label>
+        <input type="number" id="irr_price" value="3000" min="100" max="200000" step="100" oninput="calcIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">自己資金（万円）</label>
+        <input type="number" id="irr_equity" value="600" min="0" max="200000" step="100" oninput="calcIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間CF（万円）</label>
+        <input type="number" id="irr_cf" value="120" min="-1000" max="10000" step="10" oninput="calcIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">保有年数（年）</label>
+        <input type="number" id="irr_years" value="10" min="1" max="40" step="1" oninput="calcIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却予想価格（万円）</label>
+        <input type="number" id="irr_exit" value="2500" min="0" max="200000" step="100" oninput="calcIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">比較ローン金利（%）</label>
+        <input type="number" id="irr_loanrate" value="2.5" min="0" max="20" step="0.1" oninput="calcIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="irr-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5092,6 +5125,72 @@ function calcRealYield() {
     + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; Fisher方程式に基づく近似計算。実際の不動産投資では物件価格のインフレ連動・家賃上昇も複合的に影響します。</div></div>';
 }
 (function(){ calcRealYield(); })();
+
+// ===== IRR（内部収益率）簡易計算 =====
+function calcIRR() {
+  var el = document.getElementById('irr-result');
+  if (!el) return;
+  var price     = parseFloat(document.getElementById('irr_price').value) || 0;
+  var equity    = parseFloat(document.getElementById('irr_equity').value) || 0;
+  var cf        = parseFloat(document.getElementById('irr_cf').value) || 0;
+  var years     = parseInt(document.getElementById('irr_years').value) || 10;
+  var exitPrice = parseFloat(document.getElementById('irr_exit').value) || 0;
+  var loanRate  = parseFloat(document.getElementById('irr_loanrate').value) || 2.5;
+  if (price <= 0 || equity <= 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">購入価格・自己資金を入力してください</div>';
+    return;
+  }
+  // IRR calculation using Newton-Raphson on equity-based cashflows
+  // CF0 = -equity, CF1..n = cf/year, CFn += (exitPrice - loanBalance)
+  var loan = price - equity;
+  var loanMonthlyRate = (loanRate / 100) / 12;
+  var loanMonths = 360;
+  var monthlyPayment = loanMonthlyRate > 0
+    ? loan * 10000 * loanMonthlyRate / (1 - Math.pow(1 + loanMonthlyRate, -loanMonths))
+    : loan * 10000 / loanMonths;
+  var annualPayment = monthlyPayment * 12;
+  var cashflows = [-equity * 10000];
+  var loanBalance = loan * 10000;
+  for (var y = 1; y <= years; y++) {
+    var interest = loanBalance * (loanRate / 100);
+    var principal = annualPayment - interest;
+    loanBalance = Math.max(0, loanBalance - principal);
+    var yearCF = cf * 10000;
+    if (y === years) yearCF += (exitPrice * 10000 - loanBalance);
+    cashflows.push(yearCF);
+  }
+  // Newton-Raphson IRR
+  function npv(rate, cfs) {
+    return cfs.reduce(function(s, c, i) { return s + c / Math.pow(1 + rate, i); }, 0);
+  }
+  var irr = 0.1;
+  for (var iter = 0; iter < 200; iter++) {
+    var n = npv(irr, cashflows);
+    var dn = cashflows.reduce(function(s, c, i) { return s - i * c / Math.pow(1 + irr, i + 1); }, 0);
+    if (Math.abs(dn) < 1e-10) break;
+    var next = irr - n / dn;
+    if (Math.abs(next - irr) < 1e-8) { irr = next; break; }
+    irr = next;
+  }
+  var irrPct = (irr * 100).toFixed(2);
+  var totalCF = cashflows.slice(1).reduce(function(s, c) { return s + c; }, 0);
+  var netGain = (totalCF + cashflows[0]) / 10000;
+  var isGood = irr * 100 > loanRate;
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">IRR（内部収益率）</div><div style="font-size:22px;font-weight:900;color:' + (isGood ? 'var(--green)' : 'var(--red)') + '">' + irrPct + '%</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">ローン金利</div><div style="font-size:22px;font-weight:900;color:var(--text-muted)">' + loanRate.toFixed(1) + '%</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">' + years + '年間純利益</div><div style="font-size:18px;font-weight:900;color:' + (netGain >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (netGain >= 0 ? '+' : '') + Math.round(netGain).toLocaleString() + '万円</div></div>';
+  html += '</div>';
+  var verdict = isGood
+    ? '<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px;font-size:12px;color:var(--green)">✅ <strong>IRR &gt; ローン金利</strong> — 投資効率は良好です。レバレッジが収益に貢献しています。</div>'
+    : '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px;font-size:12px;color:var(--red)">⚠️ <strong>IRR &lt; ローン金利</strong> — 投資効率がローン金利を下回っています。CF・売却価格の見直しを検討してください。</div>';
+  html += verdict;
+  html += '<div style="margin-top:10px;font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; IRRは自己資金ベースの実質収益率です。年間CFがローン返済後の手取りと一致しているか確認してください。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcIRR(); })();
 
 function checkStorageWarning() {
   try {
