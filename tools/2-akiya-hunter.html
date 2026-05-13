@@ -583,6 +583,32 @@
     <div id="rent-breakeven-result"></div>
   </div>
 
+  <!-- 売却準備コスト 概算カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+      💸 売却準備にかかる費用 概算チェック
+    </h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家を売却するには、売り出し前に諸費用がかかります。物件の状態を選ぶと必要なコストの目安を表示します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件の現状</label>
+        <select id="sp_cond" onchange="calcSalePrepCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="clean">比較的きれい（定期清掃済）</option>
+          <option value="dirty" selected>荷物あり・清掃が必要</option>
+          <option value="bad">かなり傷んでいる（雨漏りなど）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物の扱い</label>
+        <select id="sp_plan" onchange="calcSalePrepCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="keep">建物あり（現状渡し）</option>
+          <option value="demo">解体して更地で売る</option>
+        </select>
+      </div>
+    </div>
+    <div id="sale-prep-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -2759,6 +2785,51 @@ function calcEstateClear() {
     + '③ 遺品整理士認定業者なら遺骨・大切な品物の取り扱いも丁寧（認定証を確認）</div></div>'
     + '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">&#8251; 費用は地域・業者・実際の荷物量によって大きく変わります。複数社の見積もりを取って比較することをお勧めします。</div>';
 }
+
+// ===== 売却準備コスト概算 =====
+function calcSalePrepCost() {
+  var el = document.getElementById('sale-prep-result');
+  if (!el) return;
+  var cond = document.getElementById('sp_cond').value;
+  var plan = document.getElementById('sp_plan').value;
+  var items = [];
+  if (cond === 'dirty') {
+    items.push({ label: '遺品整理・廃棄物処分', lo: 15, hi: 50, note: '量・間取りによる' });
+    items.push({ label: 'ハウスクリーニング', lo: 5, hi: 20, note: '戸建て全室' });
+  } else if (cond === 'bad') {
+    items.push({ label: '遺品整理・廃棄物処分', lo: 15, hi: 50, note: '量・間取りによる' });
+    items.push({ label: 'ハウスクリーニング', lo: 5, hi: 20, note: '戸建て全室' });
+    items.push({ label: '応急修繕（雨漏り等）', lo: 20, hi: 80, note: '放置すると売却困難' });
+    items.push({ label: '草刈り・外構清掃', lo: 3, hi: 15, note: '近隣への配慮' });
+  } else {
+    items.push({ label: '簡易清掃・消臭', lo: 2, hi: 8, note: '内覧前の最終仕上げ' });
+  }
+  items.push({ label: '登記調査・境界確認', lo: 5, hi: 15, note: '司法書士・測量士費用' });
+  items.push({ label: 'インスペクション（任意）', lo: 4, hi: 8, note: '買主の安心感向上' });
+  if (plan === 'demo') {
+    items.push({ label: '解体費用', lo: 120, hi: 300, note: '構造・規模による（木造目安）' });
+    items.push({ label: '土地の確定測量', lo: 30, hi: 80, note: '境界確定が必要な場合' });
+  } else {
+    items.push({ label: '最低限のリフォーム（任意）', lo: 0, hi: 100, note: '価格アップ目的で実施する場合' });
+  }
+  var totalLo = items.reduce(function(s, x) { return s + x.lo; }, 0);
+  var totalHi = items.reduce(function(s, x) { return s + x.hi; }, 0);
+
+  var html = '<div style="margin-top:10px">'
+    + '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">'
+    + '<div style="font-size:11px;color:var(--text-muted)">準備費用合計（目安）</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--gold)">' + totalLo + '〜' + totalHi + '<span style="font-size:11px">万円</span></div></div>'
+    + '<div style="display:flex;flex-direction:column;gap:4px">';
+  items.forEach(function(item) {
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px">'
+      + '<div><div style="font-size:12px">' + item.label + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">' + item.note + '</div></div>'
+      + '<div style="font-size:12px;font-weight:700;white-space:nowrap;padding-left:8px">' + item.lo + '〜' + item.hi + '万円</div></div>';
+  });
+  html += '</div><div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.6">※ 目安金額です。業者・地域・物件規模により大きく異なります。複数の業者から見積りを取ることをお勧めします。</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcSalePrepCost(); })();
 
 // ===== 活用3択 シナリオ比較 =====
 function calcScenario3() {
