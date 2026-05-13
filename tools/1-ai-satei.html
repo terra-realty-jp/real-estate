@@ -1106,6 +1106,31 @@
     <div id="tsubo-comp-result"></div>
   </div>
 
+  <!-- 売却後 手取り早見表カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;margin-top:20px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💰 売却後 手取り早見表（5段階価格帯）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売却価格がいくつかの水準になった場合の手取り額を一覧比較します。仲介手数料・ローン返済・譲渡税を含めた実質手取りを確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定売却価格・中心値（万円）</label>
+        <input type="number" id="qt_center" placeholder="例: 3000" min="100" step="100" oninput="calcQuickTable()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">ローン残債（万円）</label>
+        <input type="number" id="qt_loan" placeholder="例: 1500" min="0" step="100" value="0" oninput="calcQuickTable()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得費（購入価格など・万円）</label>
+        <input type="number" id="qt_cost" placeholder="例: 2500" min="0" step="100" oninput="calcQuickTable()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">所有年数（5年超で長期）</label>
+        <input type="number" id="qt_years" placeholder="例: 7" min="0" max="50" step="1" value="7" oninput="calcQuickTable()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="quick-table-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3809,6 +3834,56 @@ function calcTsuboComp() {
     +(data.length>1?'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 1坪=3.3057㎡で換算。㎡単価が低い物件が広さあたりの単価が安い計算です。</p>':'');
 }
 (function(){ calcTsuboComp(); })();
+
+// ===== 売却後 手取り早見表 =====
+function calcQuickTable() {
+  var el = document.getElementById('quick-table-result');
+  if (!el) return;
+  var center = parseFloat(document.getElementById('qt_center').value) || 0;
+  var loan   = parseFloat(document.getElementById('qt_loan').value)   || 0;
+  var cost   = parseFloat(document.getElementById('qt_cost').value)   || 0;
+  var years  = parseFloat(document.getElementById('qt_years').value)  || 0;
+  if (!center) { el.innerHTML = ''; return; }
+
+  var taxRate = years > 5 ? 0.20315 : 0.39363;
+  var offsets = [-0.10, -0.05, 0, 0.05, 0.10];
+  var labels  = ['-10%', '-5%', '中心値', '+5%', '+10%'];
+
+  function netCalc(price) {
+    var comm = Math.round((price * 0.03 + 6) * 1.1);
+    var afterComm = price - comm;
+    var afterLoan = afterComm - loan;
+    var gain = price - cost - comm;
+    var tax = gain > 0 ? Math.round(gain * taxRate) : 0;
+    var net = afterLoan - tax;
+    return { price: price, comm: comm, loan: loan, tax: tax, net: net };
+  }
+
+  var rows = offsets.map(function(o, i) {
+    var price = Math.round(center * (1 + o));
+    var r = netCalc(price);
+    var isCenter = o === 0;
+    var netColor = r.net < 0 ? 'var(--red)' : r.net > 0 ? 'var(--green)' : 'var(--text)';
+    return '<tr style="background:'+(isCenter?'rgba(201,168,76,0.08)':'rgba(255,255,255,'+(i%2?'0.02':'0'))+')">'
+      + '<td style="padding:8px 10px;border:1px solid rgba(255,255,255,0.06);font-size:12px;color:'+(isCenter?'var(--gold)':'var(--text-muted)')+'">'+labels[i]+'</td>'
+      + '<td style="padding:8px 10px;border:1px solid rgba(255,255,255,0.06);text-align:right;font-size:13px;font-weight:700;color:var(--text)">'+price.toLocaleString()+'万</td>'
+      + '<td style="padding:8px 10px;border:1px solid rgba(255,255,255,0.06);text-align:right;font-size:12px;color:var(--text-muted)">▲'+r.comm.toLocaleString()+'万</td>'
+      + '<td style="padding:8px 10px;border:1px solid rgba(255,255,255,0.06);text-align:right;font-size:12px;color:'+(r.tax>0?'#f87171':'var(--text-muted)')+'">▲'+r.tax.toLocaleString()+'万</td>'
+      + '<td style="padding:8px 10px;border:1px solid rgba(255,255,255,0.06);text-align:right;font-size:14px;font-weight:900;color:'+netColor+'">'+r.net.toLocaleString()+'万</td></tr>';
+  }).join('');
+
+  el.innerHTML = '<div style="overflow-x:auto;margin-top:4px">'
+    + '<table style="width:100%;border-collapse:collapse;font-size:11px">'
+    + '<thead><tr style="background:var(--dark3)">'
+    + '<th style="padding:7px 10px;text-align:left;color:var(--text-muted);border:1px solid rgba(255,255,255,0.06)">価格帯</th>'
+    + '<th style="padding:7px 10px;text-align:right;color:var(--text-muted);border:1px solid rgba(255,255,255,0.06)">売却価格</th>'
+    + '<th style="padding:7px 10px;text-align:right;color:var(--text-muted);border:1px solid rgba(255,255,255,0.06)">仲介手数料</th>'
+    + '<th style="padding:7px 10px;text-align:right;color:var(--text-muted);border:1px solid rgba(255,255,255,0.06)">譲渡税（目安）</th>'
+    + '<th style="padding:7px 10px;text-align:right;color:var(--gold);border:1px solid rgba(255,255,255,0.06)">実質手取り</th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 譲渡税：所有'+years+'年（'+( years>5?'長期':'短期' )+'・'+( taxRate*100 ).toFixed(3)+'%）。3000万円特別控除は考慮していません。</div>';
+}
+(function(){ calcQuickTable(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
