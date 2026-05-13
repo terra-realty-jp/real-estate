@@ -996,6 +996,31 @@
     <div id="sozoku-prep-result"></div>
   </div>
 
+  <!-- 空き家 売却損益分岐点計算カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">⚖️ 売却損益分岐点計算カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">いくらで売れば取得費・残債・諸費用を回収できるか、損益分岐点価格を計算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">取得時の購入価格（万円）</div>
+        <input type="number" id="bep_cost" value="2000" min="0" max="50000" step="100" oninput="calcAkiyaBEP()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ローン残債（万円）</div>
+        <input type="number" id="bep_loan" value="500" min="0" max="50000" step="100" oninput="calcAkiyaBEP()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">取得後の累計リフォーム費（万円）</div>
+        <input type="number" id="bep_reform" value="100" min="0" max="5000" step="10" oninput="calcAkiyaBEP()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の希望売出価格（万円）</div>
+        <input type="number" id="bep_ask" value="1800" min="0" max="50000" step="100" oninput="calcAkiyaBEP()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="akiya-bep-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3815,6 +3840,46 @@ function calcSozokuPrep() {
   el.innerHTML = html;
 }
 (function(){ calcSozokuPrep(); })();
+
+// ===== 空き家 売却損益分岐点計算 =====
+function calcAkiyaBEP() {
+  var el = document.getElementById('akiya-bep-result');
+  if (!el) return;
+  var cost   = parseFloat(document.getElementById('bep_cost').value) || 0;
+  var loan   = parseFloat(document.getElementById('bep_loan').value) || 0;
+  var reform = parseFloat(document.getElementById('bep_reform').value) || 0;
+  var ask    = parseFloat(document.getElementById('bep_ask').value) || 0;
+  if (cost <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">取得価格を入力してください</div>'; return; }
+  function commission(p) { return Math.ceil((p * 0.03 + 6) * 1.1 * 10) / 10; }
+  // BEP: ローン完済基準（売却価格 - 手数料 - 登記 >= 残債）
+  var bepLoan = loan > 0 ? Math.ceil((loan + commission(loan) + 30) / 10) * 10 : 0;
+  // BEP: 取得費回収基準
+  var totalCost = cost + reform;
+  var bepCostRecovery = Math.ceil((totalCost + commission(totalCost) + 30) / 10) * 10;
+  // BEP: 総合（残債または取得費の高い方）
+  var bepTotal = Math.max(bepLoan, bepCostRecovery);
+  // 現在の希望売出価格との差
+  var netAtAsk = ask > 0 ? ask - commission(ask) - loan - 30 : null;
+  var gainLoss = ask > 0 ? ask - bepCostRecovery : null;
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">ローン完済BEP</div><div style="font-size:18px;font-weight:900;color:' + (loan > 0 ? 'var(--gold)' : 'var(--text-muted)') + '">' + (loan > 0 ? bepLoan.toLocaleString() + '万円' : '残債なし') + '</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">取得費回収BEP</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + bepCostRecovery.toLocaleString() + '万円</div></div>';
+  if (ask > 0) {
+    var isProfit = gainLoss >= 0;
+    html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">希望価格での手取り</div><div style="font-size:18px;font-weight:900;color:' + (netAtAsk >= 0 ? 'var(--green)' : 'var(--red)') + '">' + Math.round(netAtAsk).toLocaleString() + '万円</div></div>';
+    html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">取得費に対する損益</div><div style="font-size:18px;font-weight:900;color:' + (isProfit ? 'var(--green)' : 'var(--red)') + '">' + (isProfit ? '+' : '') + Math.round(gainLoss).toLocaleString() + '万円</div></div>';
+  }
+  html += '</div>';
+  if (ask > 0 && ask < bepTotal) {
+    html += '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px;font-size:12px;color:var(--red)">⚠️ 希望売出価格が損益分岐点（' + bepTotal.toLocaleString() + '万円）を下回っています。価格見直しまたはローン残債の確認をしてください。</div>';
+  } else if (ask > 0) {
+    html += '<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px;font-size:12px;color:var(--green)">✅ 希望売出価格は損益分岐点を上回っています（余裕: +' + Math.round(ask - bepTotal).toLocaleString() + '万円）。値引き交渉の余地があります。</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaBEP(); })();
 
 // ===== 解体費用 概算計算 =====
 function calcDemoCost() {
