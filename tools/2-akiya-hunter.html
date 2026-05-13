@@ -690,6 +690,39 @@
     <div id="akiya-use-result"></div>
   </div>
 
+  <!-- リフォーム費用 回収期間計算カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">🔨 リフォーム費用 回収期間計算</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">リフォームにかけた費用が何年で回収できるか試算します。家賃増加・空室期間短縮・売却価値向上の3つの効果から総合的に判断できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リフォーム費用（万円）</label>
+        <input type="number" id="rf_cost" value="200" min="10" max="5000" step="10" oninput="calcReformPayback()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額家賃増加（円/月）</label>
+        <input type="number" id="rf_rent_up" value="5000" min="0" max="100000" step="1000" oninput="calcReformPayback()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">空室短縮効果（月/回）</label>
+        <input type="number" id="rf_vacancy" value="2" min="0" max="12" step="0.5" oninput="calcReformPayback()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月額家賃（円）</label>
+        <input type="number" id="rf_rent_base" value="60000" min="0" max="500000" step="1000" oninput="calcReformPayback()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却価格上昇予測（万円）</label>
+        <input type="number" id="rf_value_up" value="100" min="0" max="5000" step="50" oninput="calcReformPayback()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">平均入居期間（年）</label>
+        <input type="number" id="rf_stay" value="3" min="1" max="10" step="1" oninput="calcReformPayback()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="reform-payback-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3104,6 +3137,45 @@ function calcAkiyaUse() {
     +'<p style="font-size:10px;color:var(--text-muted)">※ 収益は地域・物件状態により大きく変動します。改修費用は床面積×単価で試算。実際の見積もりを取得してください。</p>';
 }
 (function(){ calcAkiyaUse(); })();
+
+// ===== リフォーム費用 回収期間計算 =====
+function calcReformPayback() {
+  var el = document.getElementById('reform-payback-result');
+  if(!el) return;
+  var cost      = parseFloat(document.getElementById('rf_cost').value)||0;
+  var rentUp    = parseFloat(document.getElementById('rf_rent_up').value)||0;
+  var vacancy   = parseFloat(document.getElementById('rf_vacancy').value)||0;
+  var rentBase  = parseFloat(document.getElementById('rf_rent_base').value)||0;
+  var valueUp   = parseFloat(document.getElementById('rf_value_up').value)||0;
+  var stay      = parseFloat(document.getElementById('rf_stay').value)||3;
+  if(!cost){ el.innerHTML=''; return; }
+  var annualRentUp = rentUp * 12 / 10000;
+  var vacancyGainPerTenancy = vacancy * rentBase / 10000;
+  var annualVacancyGain = vacancyGainPerTenancy / stay;
+  var annualBenefit = annualRentUp + annualVacancyGain;
+  var totalWithoutSale = annualBenefit > 0 ? cost / annualBenefit : Infinity;
+  var totalWithSale    = annualBenefit > 0 ? Math.max(0, cost - valueUp) / annualBenefit : (cost - valueUp > 0 ? Infinity : 0);
+  var yr = totalWithSale;
+  var paybackLabel = yr <= 0 ? '売却価値向上で即回収' : yr > 30 ? '30年超（費用対効果低）' : yr.toFixed(1)+'年';
+  var paybackColor = yr <= 5 ? 'var(--green)' : yr <= 10 ? '#facc15' : yr <= 20 ? '#fb923c' : 'var(--red)';
+  var kpiS = 'background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+    +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:'+paybackColor+'">'+paybackLabel+'</div><div style="font-size:10px;color:var(--text-muted)">回収期間（売却効果込）</div></div>'
+    +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:var(--gold)">'+(annualBenefit>0?totalWithoutSale.toFixed(1)+'年':'−')+'</div><div style="font-size:10px;color:var(--text-muted)">回収期間（賃貸収益のみ）</div></div>'
+    +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:var(--text)">'+annualBenefit.toFixed(1)+'万/年</div><div style="font-size:10px;color:var(--text-muted)">年間収益増加</div></div>'
+    +'</div>'
+    +'<div style="overflow-x:auto;margin-bottom:10px"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:rgba(255,255,255,0.05)"><th style="padding:7px 8px;font-size:11px;text-align:left">効果の内訳</th><th style="padding:7px 8px;font-size:11px;text-align:right">年間効果</th></tr></thead>'
+    +'<tbody>'
+    +'<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:7px 8px;font-size:12px">家賃増加効果</td><td style="padding:7px 8px;font-size:12px;text-align:right;color:var(--green)">+'+annualRentUp.toFixed(1)+'万</td></tr>'
+    +'<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:7px 8px;font-size:12px">空室短縮効果（年均）</td><td style="padding:7px 8px;font-size:12px;text-align:right;color:var(--green)">+'+annualVacancyGain.toFixed(1)+'万</td></tr>'
+    +'<tr><td style="padding:7px 8px;font-size:12px">売却価値向上（一時）</td><td style="padding:7px 8px;font-size:12px;text-align:right;color:#facc15">+'+valueUp.toFixed(0)+'万</td></tr>'
+    +'</tbody></table></div>'
+    +(yr>0&&yr<=30 ? '<div style="padding:10px 12px;background:rgba(74,222,128,0.08);border-left:3px solid '+(yr<=10?'var(--green)':'#fb923c')+';border-radius:0 6px 6px 0;font-size:12px">'
+    +(yr<=5?'💡 回収期間が5年以内 — 費用対効果の高いリフォームです。':yr<=10?'✅ 10年以内に回収できる見込みです。':'⚠️ 回収に'+yr.toFixed(1)+'年かかります。慎重に検討してください。')+'</div>' : '')
+    +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ リフォーム効果は仮定値です。実際の入居率・家賃相場に応じて変わります。</p>';
+}
+(function(){ calcReformPayback(); })();
 
 // ===== 専門家 相談ルート診断 =====
 function calcExpertRoute() {
