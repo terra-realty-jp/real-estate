@@ -417,6 +417,69 @@
     <div id="renewal-template-result"></div>
   </div>
 
+  <!-- テナント退去リスクスコア診断 -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">⚠️ テナント退去リスクスコア診断</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">入居者の状況を入力して、退去リスクのスコアリングを行います。スコアが高いほど短期間での退去可能性が高まります。</p>
+    <div style="display:grid;gap:8px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px">
+        <span style="font-size:12px;min-width:140px">入居期間</span>
+        <select id="tr_tenure" onchange="calcTenantRisk()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none">
+          <option value="0">3年以上</option>
+          <option value="1">1〜3年</option>
+          <option value="2" selected>6ヶ月〜1年</option>
+          <option value="3">6ヶ月未満（新規）</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px">
+        <span style="font-size:12px;min-width:140px">契約更新まで</span>
+        <select id="tr_renew" onchange="calcTenantRisk()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none">
+          <option value="0">1年以上先</option>
+          <option value="1">6〜12ヶ月後</option>
+          <option value="2">3〜6ヶ月後</option>
+          <option value="3" selected>3ヶ月以内（近い）</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px">
+        <span style="font-size:12px;min-width:140px">家賃市場比較</span>
+        <select id="tr_market" onchange="calcTenantRisk()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none">
+          <option value="0">相場より安い（5%以上）</option>
+          <option value="1" selected>相場と同水準</option>
+          <option value="2">相場より高い（5〜10%）</option>
+          <option value="3">相場より大幅に高い（10%超）</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px">
+        <span style="font-size:12px;min-width:140px">最近の滞納状況</span>
+        <select id="tr_payment" onchange="calcTenantRisk()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none">
+          <option value="0" selected>滞納なし</option>
+          <option value="1">1度滞納あり</option>
+          <option value="2">2〜3度滞納あり</option>
+          <option value="3">常習的に遅延</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px">
+        <span style="font-size:12px;min-width:140px">クレーム・問合わせ頻度</span>
+        <select id="tr_complaint" onchange="calcTenantRisk()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none">
+          <option value="0" selected>ほぼなし</option>
+          <option value="1">数ヶ月に1回程度</option>
+          <option value="2">月1〜2回程度</option>
+          <option value="3">週1回以上・多い</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px">
+        <span style="font-size:12px;min-width:140px">入居者の生活変化</span>
+        <select id="tr_lifecycle" onchange="calcTenantRisk()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none">
+          <option value="0" selected>変化なし</option>
+          <option value="1">転職・収入変化あり</option>
+          <option value="2">結婚・出産など家族変化</option>
+          <option value="3">退職・離婚・転勤の可能性</option>
+        </select>
+      </div>
+    </div>
+    <div id="tenant-risk-result"></div>
+  </div>
+
   <div id="tenants-list"></div>
 </div>
 </div>
@@ -4905,6 +4968,43 @@ function calcBusinessScale() {
     + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--dark3)"><th style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);text-align:left;color:var(--text-muted)">税務上のメリット</th><th style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);color:var(--gold)">事業的規模</th><th style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);color:var(--text-muted)">それ以外</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
 }
 (function(){ calcBusinessScale(); })();
+
+// ===== テナント退去リスクスコア診断 =====
+function calcTenantRisk() {
+  var el = document.getElementById('tenant-risk-result');
+  if(!el) return;
+  var tenure    = parseInt(document.getElementById('tr_tenure').value)||0;
+  var renew     = parseInt(document.getElementById('tr_renew').value)||0;
+  var market    = parseInt(document.getElementById('tr_market').value)||0;
+  var payment   = parseInt(document.getElementById('tr_payment').value)||0;
+  var complaint = parseInt(document.getElementById('tr_complaint').value)||0;
+  var lifecycle = parseInt(document.getElementById('tr_lifecycle').value)||0;
+  var score = tenure + renew + market + payment*1.5 + complaint + lifecycle*1.5;
+  var maxScore = 15;
+  var pct = Math.round(score/maxScore*100);
+  var grade, gradeColor, verdict;
+  if(score <= 3){ grade='低'; gradeColor='var(--green)'; verdict='退去リスク低 — 安定した入居者です。'; }
+  else if(score <= 7){ grade='中'; gradeColor='#facc15'; verdict='中程度のリスク — 更新時期に注意が必要です。'; }
+  else if(score <= 11){ grade='高'; gradeColor='#fb923c'; verdict='退去リスク高 — 早めのフォローアップを推奨します。'; }
+  else { grade='非常に高'; gradeColor='var(--red)'; verdict='退去リスク非常に高 — 退去準備と次の入居者募集の検討を。'; }
+  var actions = [];
+  if(renew >= 2) actions.push('📅 更新が近いため、早めに更新意向を確認する');
+  if(market >= 2) actions.push('💰 家賃が市場より高い — 相場確認・交渉準備を');
+  if(payment >= 2) actions.push('⚠️ 滞納歴あり — 督促と保証会社への連絡確認');
+  if(complaint >= 2) actions.push('🔔 問合わせ多い — 設備・環境改善で満足度を上げる');
+  if(lifecycle >= 2) actions.push('🏠 生活変化あり — 次の住まいへの転居意向をさりげなく確認');
+  if(tenure >= 2) actions.push('🔄 入居歴短い — 馴染みが浅い段階。環境整備で定着を促す');
+  var barPct = Math.min(100, pct);
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
+    +'<div style="text-align:center;min-width:70px"><div style="font-size:28px;font-weight:900;color:'+gradeColor+'">'+grade+'</div><div style="font-size:10px;color:var(--text-muted)">リスクレベル</div></div>'
+    +'<div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text-muted)">リスクスコア</span><span style="font-size:13px;font-weight:700;color:'+gradeColor+'">'+score.toFixed(1)+' / '+maxScore+'</span></div>'
+    +'<div style="background:rgba(255,255,255,0.07);border-radius:4px;height:12px;overflow:hidden;margin-bottom:6px"><div style="width:'+barPct+'%;height:100%;background:'+gradeColor+';border-radius:4px;transition:width 0.4s"></div></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+verdict+'</div></div></div>'
+    +(actions.length ? '<p style="font-size:11px;color:var(--text-muted);margin-bottom:6px">推奨アクション</p>'
+      +actions.map(function(a){return '<div style="font-size:12px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;margin-bottom:4px">'+a+'</div>';}).join(''):'')
+    +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 参考目安です。実際の退去は複合的要因で決まります。</p>';
+}
+(function(){ calcTenantRisk(); })();
 
 // ===== 空室期間別 損失計算 =====
 function calcVacancyLoss() {
