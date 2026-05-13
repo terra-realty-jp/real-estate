@@ -556,6 +556,33 @@
     <div id="estate-clear-result"></div>
   </div>
 
+  <!-- 賃貸転用 リフォーム損益分岐点計算カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+      🔨 賃貸転用 リフォーム費用 損益分岐点
+    </h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家を賃貸として活用する際のリフォーム費用が、何年で回収できるかを試算します。賃貸転用の判断材料にご活用ください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リフォーム費用（万円）</label>
+        <input type="number" id="rb_cost" placeholder="例: 200" min="0" step="10" oninput="calcRentBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定月額賃料（万円）</label>
+        <input type="number" id="rb_rent" placeholder="例: 6" min="0" step="0.5" oninput="calcRentBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">管理費率（%）</label>
+        <input type="number" id="rb_mgmt" placeholder="例: 5" min="0" max="30" step="1" value="5" oninput="calcRentBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定空室率（%）</label>
+        <input type="number" id="rb_vacancy" placeholder="例: 10" min="0" max="50" step="5" value="10" oninput="calcRentBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rent-breakeven-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -2706,6 +2733,53 @@ function calcEstateClear() {
     + '② 売れるものはフリマアプリ・リサイクルショップで処分すると費用が回収できる<br>'
     + '③ 遺品整理士認定業者なら遺骨・大切な品物の取り扱いも丁寧（認定証を確認）</div></div>'
     + '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">&#8251; 費用は地域・業者・実際の荷物量によって大きく変わります。複数社の見積もりを取って比較することをお勧めします。</div>';
+}
+
+// ===== 賃貸転用 リフォーム損益分岐点計算 =====
+function calcRentBreakeven() {
+  var el = document.getElementById('rent-breakeven-result');
+  if (!el) return;
+  var cost    = parseFloat(document.getElementById('rb_cost').value)    || 0;
+  var rent    = parseFloat(document.getElementById('rb_rent').value)    || 0;
+  var mgmt    = parseFloat(document.getElementById('rb_mgmt').value)    || 0;
+  var vacancy = parseFloat(document.getElementById('rb_vacancy').value) || 0;
+  if (!cost || !rent) { el.innerHTML = ''; return; }
+  var rentYen = rent * 10000;
+  var costYen = cost * 10000;
+  var effectiveRent = rentYen * 12 * (1 - vacancy / 100) * (1 - mgmt / 100);
+  if (effectiveRent <= 0) { el.innerHTML = '<div style="color:var(--red);font-size:12px;padding:8px">管理費率・空室率の設定を見直してください。</div>'; return; }
+  var breakYears = costYen / effectiveRent;
+  var yieldRate  = (effectiveRent / costYen * 100).toFixed(1);
+  var yr10net    = effectiveRent * 10 - costYen;
+  var yr20net    = effectiveRent * 20 - costYen;
+  var grade = breakYears <= 5 ? { label: '優良', color: 'var(--green)', note: 'リフォーム費用の回収が早く、賃貸転用は有力な選択肢です。' }
+            : breakYears <= 10 ? { label: '良好', color: '#4fc3f7', note: '10年以内に回収可能。長期保有前提なら合理的です。' }
+            : breakYears <= 15 ? { label: '要検討', color: 'var(--gold)', note: '回収に時間がかかります。売却との比較もご検討ください。' }
+            : { label: '非推奨', color: 'var(--red)', note: '回収期間が長すぎます。リフォーム費の圧縮か売却を優先してください。' };
+
+  var html = '<div style="margin-top:10px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted)">損益分岐点</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + grade.color + '">' + breakYears.toFixed(1) + '<span style="font-size:11px">年</span></div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted)">実質利回り</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--gold)">' + yieldRate + '<span style="font-size:11px">%</span></div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted)">判定</div>'
+    + '<div style="font-size:16px;font-weight:700;color:' + grade.color + '">' + grade.label + '</div></div></div>'
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;margin-bottom:10px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">累積収支シミュレーション</div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+    + '<span>年間実効収入</span><span style="font-weight:700;color:var(--green)">+' + Math.round(effectiveRent/10000).toLocaleString() + '万円/年</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+    + '<span>10年後の累積収支</span><span style="font-weight:700;color:' + (yr10net >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (yr10net >= 0 ? '+' : '') + Math.round(yr10net/10000).toLocaleString() + '万円</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0">'
+    + '<span>20年後の累積収支</span><span style="font-weight:700;color:var(--green)">+' + Math.round(yr20net/10000).toLocaleString() + '万円</span></div></div>'
+    + '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.7;color:' + grade.color + '">'
+    + grade.note + '</div>'
+    + '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.6">※ 固定資産税・修繕費・減価償却は含みません。実際は専門家にご相談ください。</div></div>';
+  el.innerHTML = html;
 }
 
 // ===== 特定空き家リスク診断 =====
