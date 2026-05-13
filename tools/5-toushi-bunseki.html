@@ -572,6 +572,38 @@
     </div>
     <div id="leverage-result"></div>
   </div>
+
+  <!-- 減価償却スケジュール計算カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📉 減価償却スケジュール計算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">建物価格・構造・築年数を入力すると残存耐用年数・年間減価償却費と5年間の累計節税効果を試算します（定額法）。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物価格（万円）</label>
+        <input type="number" id="dep_bldg" value="2000" min="100" max="50000" step="100" oninput="calcDepreciation()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">構造</label>
+        <select id="dep_struct" onchange="calcDepreciation()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="wood">木造（22年）</option>
+          <option value="steel">軽量鉄骨（27年）</option>
+          <option value="heavysteel">重量鉄骨（34年）</option>
+          <option value="rc" selected>RC造（47年）</option>
+          <option value="src">SRC造（47年）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得時の築年数</label>
+        <input type="number" id="dep_age" value="10" min="0" max="80" step="1" oninput="calcDepreciation()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">課税所得税率（%）</label>
+        <input type="number" id="dep_taxrate" value="33" min="5" max="55" step="1" oninput="calcDepreciation()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="depreciation-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4224,6 +4256,55 @@ function calcLeverage() {
       : '<div style="padding:10px 12px;background:rgba(239,68,68,0.1);border-radius:6px;border-left:3px solid var(--red);font-size:12px">⚠️ 金利（' + rate + '%）がROA（' + roa.toFixed(2) + '%）を上回っています。<strong>逆レバレッジ</strong>により借入が多いほど損失が拡大します。利回り改善・金利交渉・繰り上げ返済を検討してください。</div>');
 }
 (function(){ calcLeverage(); })();
+
+// ===== 減価償却スケジュール計算 =====
+function calcDepreciation() {
+  var el = document.getElementById('depreciation-result');
+  if(!el) return;
+  var bldg    = parseFloat(document.getElementById('dep_bldg').value)||2000;
+  var struct  = document.getElementById('dep_struct').value;
+  var age     = parseFloat(document.getElementById('dep_age').value)||0;
+  var taxRate = parseFloat(document.getElementById('dep_taxrate').value)||33;
+  var usefulLife = {wood:22,steel:27,heavysteel:34,rc:47,src:47}[struct]||47;
+  var remaining;
+  if(age >= usefulLife) {
+    remaining = Math.floor(usefulLife * 0.2);
+    if(remaining < 2) remaining = 2;
+  } else {
+    remaining = Math.floor((usefulLife - age) + age * 0.2);
+  }
+  if(remaining < 1) remaining = 1;
+  var annual = bldg / remaining;
+  var taxSave = annual * taxRate / 100;
+  var years5 = Math.min(5, remaining);
+  var kpiStyle = 'background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;text-align:center';
+  var rows = '';
+  var cumDep = 0, cumTax = 0;
+  for(var y=1;y<=Math.min(10,remaining);y++){
+    cumDep += annual;
+    cumTax += taxSave;
+    var bookVal = Math.max(0, bldg - cumDep);
+    rows += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)">'
+      +'<td style="padding:6px 8px;font-size:12px;text-align:center">'+(y)+'年目</td>'
+      +'<td style="padding:6px 8px;font-size:12px;text-align:right">'+annual.toFixed(0)+'万</td>'
+      +'<td style="padding:6px 8px;font-size:12px;text-align:right">'+cumDep.toFixed(0)+'万</td>'
+      +'<td style="padding:6px 8px;font-size:12px;text-align:right;color:var(--green)">'+taxSave.toFixed(0)+'万</td>'
+      +'<td style="padding:6px 8px;font-size:12px;text-align:right;color:#facc15">'+bookVal.toFixed(0)+'万</td>'
+      +'</tr>';
+  }
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+    +'<div style="'+kpiStyle+'"><div style="font-size:22px;font-weight:900;color:var(--gold)">'+remaining+'年</div><div style="font-size:10px;color:var(--text-muted)">残存耐用年数</div></div>'
+    +'<div style="'+kpiStyle+'"><div style="font-size:22px;font-weight:900;color:var(--text)">'+annual.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">年間償却費</div></div>'
+    +'<div style="'+kpiStyle+'"><div style="font-size:22px;font-weight:900;color:var(--green)">'+taxSave.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">年間節税効果</div></div>'
+    +'</div>'
+    +'<div style="padding:10px 12px;background:rgba(250,204,21,0.08);border-left:3px solid #facc15;border-radius:0 6px 6px 0;font-size:12px;margin-bottom:12px">'
+    +'5年間累計節税効果 <strong style="color:#facc15">'+(taxSave*years5).toFixed(0)+'万円</strong>（税率'+taxRate+'%・全期間合計 <strong>'+(taxSave*remaining).toFixed(0)+'万円</strong>）</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:rgba(255,255,255,0.05)"><th style="padding:6px 8px;font-size:11px;text-align:center">年度</th><th style="padding:6px 8px;font-size:11px;text-align:right">年間償却費</th><th style="padding:6px 8px;font-size:11px;text-align:right">累計償却費</th><th style="padding:6px 8px;font-size:11px;text-align:right">年間節税</th><th style="padding:6px 8px;font-size:11px;text-align:right">簿価残高</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table></div>'
+    +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 定額法・取得時築'+age+'年・'+{wood:'木造',steel:'軽量鉄骨',heavysteel:'重量鉄骨',rc:'RC造',src:'SRC造'}[struct]+'（法定耐用年数'+usefulLife+'年）。最大10年分を表示。</p>';
+}
+(function(){ calcDepreciation(); })();
 
 // ===== サブリース vs 自己管理 比較 =====
 function calcSublease() {
