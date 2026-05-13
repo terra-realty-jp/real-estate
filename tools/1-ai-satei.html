@@ -1231,6 +1231,25 @@
     <div id="magnet-score-result"></div>
   </div>
 
+  <!-- 査定依頼前 準備チェックリスト -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">📝 査定依頼前 準備チェックリスト</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">業者への査定依頼をスムーズに進めるための準備状況を確認します</div>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sq_c0" onchange="calcSateiReady()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>権利証（登記識別情報）または謄本を確認済み</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sq_c1" onchange="calcSateiReady()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>固定資産税納税通知書（直近）を手元に用意している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sq_c2" onchange="calcSateiReady()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>間取り図・測量図（あれば）を準備している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sq_c3" onchange="calcSateiReady()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>ローン残高証明書またはローン残債の目安を把握している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sq_c4" onchange="calcSateiReady()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>取得時の売買契約書・重要事項説明書を確認済み</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sq_c5" onchange="calcSateiReady()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>リフォーム・修繕履歴（時期・費用・業者）をまとめている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sq_c6" onchange="calcSateiReady()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>周辺の成約事例・売出情報を自分で調べた</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sq_c7" onchange="calcSateiReady()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>売却の希望時期と理由を整理している（急ぎかどうか）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sq_c8" onchange="calcSateiReady()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>売却後の資金の使い道（住み替え・投資・返済等）を考えている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sq_c9" onchange="calcSateiReady()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>共有者がいる場合、全員の同意を得る見込みがある</span></label>
+    </div>
+    <div id="satei-ready-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4195,6 +4214,35 @@ function calcMagnetScore() {
   el.innerHTML = html;
 }
 (function(){ calcMagnetScore(); })();
+
+// ===== 査定依頼前 準備チェックリスト =====
+function calcSateiReady() {
+  var el = document.getElementById('satei-ready-result');
+  if (!el) return;
+  var items = ['sq_c0','sq_c1','sq_c2','sq_c3','sq_c4','sq_c5','sq_c6','sq_c7','sq_c8','sq_c9'];
+  var checked = 0;
+  items.forEach(function(id) {
+    var c = document.getElementById(id);
+    if (c && c.checked) checked++;
+  });
+  var pct = Math.round(checked / items.length * 100);
+  var stage, sColor, sMsg, nextStep;
+  if (pct === 100) { stage = '準備完了'; sColor = 'var(--green)'; sMsg = '今すぐ複数社への査定依頼ができます！'; nextStep = '→ 2〜3社に同時に査定依頼し、価格と担当者の対応を比較しましょう'; }
+  else if (pct >= 70) { stage = 'ほぼ準備OK'; sColor = 'var(--gold)'; sMsg = '残り数項目の確認で査定依頼に進めます'; nextStep = '→ チェックされていない項目を1週間以内に完了しましょう'; }
+  else if (pct >= 40) { stage = '準備中'; sColor = '#fb923c'; sMsg = '主要書類の準備が必要です'; nextStep = '→ 登記・固定資産税通知書・ローン残高の確認から始めましょう'; }
+  else { stage = '準備が必要'; sColor = 'var(--red)'; sMsg = '査定依頼前に基本的な書類確認を行いましょう'; nextStep = '→ まず固定資産税通知書と権利証（登記識別情報）の場所を確認してください'; }
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px">';
+  html += '<div style="text-align:center;min-width:70px"><div style="font-size:28px;font-weight:900;color:' + sColor + '">' + checked + '/10</div><div style="font-size:10px;color:var(--text-muted)">完了</div></div>';
+  html += '<div><div style="font-size:13px;font-weight:700;color:' + sColor + ';margin-bottom:4px">' + stage + '</div>';
+  html += '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:8px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:' + pct + '%;background:' + sColor + ';border-radius:4px;transition:width .4s"></div></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">' + sMsg + '</div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted)">' + nextStep + '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSateiReady(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
