@@ -869,6 +869,31 @@
     </div>
     <div id="exit-tax-result"></div>
   </div>
+
+  <!-- 物件スペック比較マトリックスカード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📊 物件スペック比較マトリックス（最大3件）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">複数の候補物件を並べて主要指標を比較します。各列に物件情報を入力すると自動で集計・最有利物件をハイライトします。</p>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:400px" id="matrix-table">
+        <thead>
+          <tr style="background:rgba(255,255,255,0.06)">
+            <th style="padding:8px;text-align:left;color:var(--text-muted);white-space:nowrap">指標</th>
+            <th style="padding:8px;text-align:center;color:var(--gold)">物件A</th>
+            <th style="padding:8px;text-align:center;color:var(--gold)">物件B</th>
+            <th style="padding:8px;text-align:center;color:var(--gold)">物件C</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-top:1px solid rgba(255,255,255,0.06)"><td style="padding:6px 8px;color:var(--text-muted)">価格（万円）</td><td style="padding:4px"><input type="number" id="mx_pa" value="2000" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="mx_pb" value="3500" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="mx_pc" value="1200" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td></tr>
+          <tr style="border-top:1px solid rgba(255,255,255,0.06)"><td style="padding:6px 8px;color:var(--text-muted)">年間家賃収入（万円）</td><td style="padding:4px"><input type="number" id="mx_ra" value="180" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="mx_rb" value="280" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="mx_rc" value="120" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td></tr>
+          <tr style="border-top:1px solid rgba(255,255,255,0.06)"><td style="padding:6px 8px;color:var(--text-muted)">築年数（年）</td><td style="padding:4px"><input type="number" id="mx_ya" value="15" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="mx_yb" value="5" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="mx_yc" value="30" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td></tr>
+          <tr style="border-top:1px solid rgba(255,255,255,0.06)"><td style="padding:6px 8px;color:var(--text-muted)">ローン金利（%）</td><td style="padding:4px"><input type="number" id="mx_la" value="2.5" step="0.1" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="mx_lb" value="1.8" step="0.1" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td><td style="padding:4px"><input type="number" id="mx_lc" value="3.0" step="0.1" oninput="calcMatrix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;text-align:center"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="matrix-result" style="margin-top:12px"></div>
+  </div>
 </div>
 </div>
 
@@ -4658,6 +4683,76 @@ function calcExitTax() {
     + '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">※ 1月1日時点の所有年数が判定基準。居住用3,000万円控除・特定居住用財産の買換え特例は別途。実際の税額は税理士にご確認ください。</div></div>';
   el.innerHTML = html;
 }
+
+// ===== 物件比較マトリックス =====
+function calcMatrix() {
+  var el = document.getElementById('matrix-result');
+  if (!el) return;
+  var ids = ['a','b','c'];
+  var props = ids.map(function(id) {
+    return {
+      id: id,
+      price: parseFloat(document.getElementById('mx_p'+id).value) || 0,
+      rent:  parseFloat(document.getElementById('mx_r'+id).value) || 0,
+      age:   parseFloat(document.getElementById('mx_y'+id).value) || 0,
+      lrate: parseFloat(document.getElementById('mx_l'+id).value) || 2.5,
+    };
+  }).filter(function(p) { return p.price > 0 && p.rent > 0; });
+  if (props.length < 2) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">2件以上の物件を入力してください</div>'; return; }
+  props.forEach(function(p) {
+    p.grossYield = (p.rent / p.price * 100).toFixed(2);
+    var opex = 0.25;
+    p.noi = p.rent * (1 - opex);
+    p.netYield = (p.noi / p.price * 100).toFixed(2);
+    var loan = p.price * 0.8;
+    var r = (p.lrate / 100) / 12;
+    var n = 360;
+    p.monthlyPayment = r > 0 ? loan * 10000 * r / (1 - Math.pow(1+r,-n)) / 10000 : loan / n;
+    p.annualLoanPayment = p.monthlyPayment * 12;
+    p.annualCF = p.noi - p.annualLoanPayment;
+    p.dscr = (p.noi / p.annualLoanPayment).toFixed(2);
+    p.ageScore = p.age <= 10 ? 3 : p.age <= 20 ? 2 : 1;
+    var grossScore = parseFloat(p.grossYield) >= 9 ? 3 : parseFloat(p.grossYield) >= 7 ? 2 : 1;
+    var cfScore = p.annualCF >= 50 ? 3 : p.annualCF >= 0 ? 2 : 1;
+    var dscrScore = parseFloat(p.dscr) >= 1.3 ? 3 : parseFloat(p.dscr) >= 1.1 ? 2 : 1;
+    p.totalScore = p.ageScore + grossScore + cfScore + dscrScore;
+  });
+  var maxScore = Math.max.apply(null, props.map(function(p) { return p.totalScore; }));
+  var maxGross = Math.max.apply(null, props.map(function(p) { return parseFloat(p.grossYield); }));
+  var maxCF    = Math.max.apply(null, props.map(function(p) { return p.annualCF; }));
+  function best(val, mx) { return val === mx ? 'color:var(--gold);font-weight:900' : 'color:var(--text)'; }
+  var colNames = ['A', 'B', 'C'];
+  var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<thead><tr style="background:rgba(255,255,255,0.06)">';
+  html += '<th style="padding:6px 8px;text-align:left;color:var(--text-muted)">指標</th>';
+  props.forEach(function(p, i) {
+    var isBest = p.totalScore === maxScore;
+    html += '<th style="padding:6px 8px;text-align:center;color:' + (isBest ? 'var(--gold)' : 'var(--text)') + '">物件' + colNames[ids.indexOf(p.id)] + (isBest ? ' 👑' : '') + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  var rows = [
+    { label: '表面利回り', key: function(p) { return p.grossYield + '%'; }, bestKey: function(p) { return parseFloat(p.grossYield); }, higherBetter: true },
+    { label: '実質利回り', key: function(p) { return p.netYield + '%'; }, bestKey: function(p) { return parseFloat(p.netYield); }, higherBetter: true },
+    { label: '年間CF（万円）', key: function(p) { return Math.round(p.annualCF).toLocaleString(); }, bestKey: function(p) { return p.annualCF; }, higherBetter: true },
+    { label: 'DSCR', key: function(p) { return p.dscr; }, bestKey: function(p) { return parseFloat(p.dscr); }, higherBetter: true },
+    { label: '築年数', key: function(p) { return p.age + '年'; }, bestKey: function(p) { return -p.age; }, higherBetter: true },
+    { label: '総合スコア', key: function(p) { return p.totalScore + '/12'; }, bestKey: function(p) { return p.totalScore; }, higherBetter: true },
+  ];
+  rows.forEach(function(row) {
+    var bests = Math.max.apply(null, props.map(row.bestKey));
+    html += '<tr style="border-top:1px solid rgba(255,255,255,0.05)">';
+    html += '<td style="padding:6px 8px;color:var(--text-muted)">' + row.label + '</td>';
+    props.forEach(function(p) {
+      var isRowBest = row.bestKey(p) === bests;
+      html += '<td style="padding:6px 8px;text-align:center;' + (isRowBest ? 'color:var(--gold);font-weight:900' : 'color:var(--text)') + '">' + row.key(p) + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; DSCR=NOI/年間返済額。1.2以上が融資審査の目安。CF・利回りは概算（経費率25%・LTV80%・30年ローン）。</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMatrix(); })();
 
 // ===== ROE vs ROA レバレッジ効果 =====
 function calcLeverage() {
