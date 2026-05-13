@@ -358,6 +358,38 @@
     <div id="mgmt-check-result"></div>
   </div>
 
+  <!-- 不動産取得税・登録免許税 計算カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title"><span class="icon">🧾</span>不動産取得税・登録免許税 かんたん計算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">購入時に課税される不動産取得税と登録免許税を試算します。固定資産税評価額が不明な場合は購入価格の約70%を目安にしてください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">固定資産税評価額（万円）</label>
+        <input type="number" id="at_eval" placeholder="例: 2100" min="0" step="100" oninput="calcAcqTax()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">購入価格（万円）</label>
+        <input type="number" id="at_price" placeholder="例: 3000" min="0" step="100" oninput="calcAcqTax()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得目的</label>
+        <select id="at_use" onchange="calcAcqTax()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="live">自己居住用</option>
+          <option value="invest">投資・賃貸用</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件種別</label>
+        <select id="at_kind" onchange="calcAcqTax()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="new">新築住宅</option>
+          <option value="used">中古住宅</option>
+          <option value="land">土地のみ</option>
+        </select>
+      </div>
+    </div>
+    <div id="acq-tax-result"></div>
+  </div>
+
   <div id="buyers-list"></div>
 </div>
 </div>
@@ -2955,6 +2987,58 @@ function checkStorageWarning() {
     }
   } catch(e){}
 }
+
+// ===== 不動産取得税・登録免許税 計算 =====
+function calcAcqTax() {
+  var el = document.getElementById('acq-tax-result');
+  if (!el) return;
+  var evalV = parseFloat(document.getElementById('at_eval').value) || 0;
+  var price = parseFloat(document.getElementById('at_price').value) || 0;
+  var use   = document.getElementById('at_use').value;
+  var kind  = document.getElementById('at_kind').value;
+  if (!evalV && !price) { el.innerHTML = ''; return; }
+  if (!evalV && price) evalV = Math.round(price * 0.7);
+
+  // 不動産取得税
+  var acqRate = 0.03; // 2026年現在 軽減税率3%
+  var acqBase = evalV;
+  var acqDeduct = 0;
+  if (kind === 'new' && use === 'live') acqDeduct = 1200; // 新築住宅控除1200万
+  else if (kind === 'used' && use === 'live') acqDeduct = 700; // 中古住宅控除（築年不明のため標準）
+  var acqTax = Math.max(0, (acqBase - acqDeduct) * acqRate);
+  // 土地は評価額の1/2で課税
+  var landBase = kind === 'land' ? evalV * 0.5 : evalV * 0.5;
+  var landTax = kind !== 'land' ? 0 : Math.max(0, landBase * acqRate);
+  var totalAcq = acqTax + landTax;
+
+  // 登録免許税
+  var regRates = { new: { own: 0.0015, inv: 0.002 }, used: { own: 0.003, inv: 0.002 }, land: { own: 0.015, inv: 0.02 } };
+  var regKey = use === 'live' ? 'own' : 'inv';
+  var regRate = regRates[kind][regKey];
+  var regTax = evalV * regRate;
+
+  // 合計
+  var total = totalAcq + regTax;
+  var rows = [
+    { label:'不動産取得税（建物）', val: acqTax, note: '評価額'+evalV+'万円 × 3%' + (acqDeduct>0?'（控除'+acqDeduct+'万）':'') },
+    { label:'登録免許税', val: regTax, note: '評価額'+evalV+'万円 × '+(regRate*100).toFixed(2)+'%' },
+  ];
+  if (kind === 'land') rows[0] = { label:'不動産取得税（土地）', val: landTax, note: '評価額の1/2 × 3%' };
+
+  var rowHtml = rows.map(function(r) {
+    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+      + '<div><div style="font-size:13px;color:var(--text)">'+r.label+'</div><div style="font-size:11px;color:var(--text-muted)">'+r.note+'</div></div>'
+      + '<div style="font-size:14px;font-weight:700;color:var(--gold);white-space:nowrap">約'+Math.round(r.val)+'万円</div></div>';
+  }).join('');
+
+  el.innerHTML = '<div style="margin-top:4px">' + rowHtml
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px 12px;background:rgba(201,168,76,0.1);border-radius:8px;border:1px solid rgba(201,168,76,0.3)">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--text)">取得時税金 合計（目安）</div>'
+    + '<div style="font-size:18px;font-weight:900;color:var(--gold)">約'+Math.round(total)+'万円</div></div>'
+    + (price>0?'<div style="margin-top:8px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">購入価格に対する税負担率</div><div style="font-size:14px;font-weight:700;color:var(--text)">'+(total/price*100).toFixed(2)+'%（約'+Math.round(price+total)+'万円でのトータル取得コスト）</div></div>':'')
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 取得税は取得後3〜6ヶ月後に都道府県より通知。軽減措置の適用には申告が必要な場合があります。</div></div>';
+}
+(function(){ calcAcqTax(); })();
 
 // 初期化
 checkStorageWarning();
