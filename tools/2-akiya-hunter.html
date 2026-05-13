@@ -977,6 +977,25 @@
     <div id="akiya-method-result"></div>
   </div>
 
+  <!-- 相続発生前 生前対策チェックリスト -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">📋 相続発生前 生前対策チェックリスト</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">相続トラブルを防ぐために今すぐできる準備の完了度を確認します</div>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sp_c0" onchange="calcSozokuPrep()" style="accent-color:var(--red);flex-shrink:0;margin-top:2px"><span><strong>遺言書を作成済み</strong>（公正証書遺言推奨）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sp_c1" onchange="calcSozokuPrep()" style="accent-color:var(--red);flex-shrink:0;margin-top:2px"><span><strong>不動産の登記名義が本人名義で最新状態</strong>になっている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sp_c2" onchange="calcSozokuPrep()" style="accent-color:var(--red);flex-shrink:0;margin-top:2px"><span><strong>相続人が誰かを全員で確認済み</strong>（法定相続人の特定）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sp_c3" onchange="calcSozokuPrep()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span><strong>財産目録を作成済み</strong>（不動産・預貯金・株式等のリスト化）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sp_c4" onchange="calcSozokuPrep()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span><strong>不動産の固定資産税評価証明書</strong>を直近で取得している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sp_c5" onchange="calcSozokuPrep()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span><strong>生命保険の受取人指定が最新</strong>（離婚・死亡による変更が必要でない）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sp_c6" onchange="calcSozokuPrep()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span><strong>相続税の概算額を試算済み</strong>（税理士または試算ツールで確認）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sp_c7" onchange="calcSozokuPrep()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span><strong>相続人全員が連絡を取れる状態</strong>（疎遠な親族の連絡先を把握）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sp_c8" onchange="calcSozokuPrep()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span><strong>空き家・不動産の活用方針を家族で話し合い済み</strong></span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sp_c9" onchange="calcSozokuPrep()" style="accent-color:#4ade80;flex-shrink:0;margin-top:2px"><span><strong>信頼できる弁護士・司法書士・税理士の連絡先</strong>を確保済み</span></label>
+    </div>
+    <div id="sozoku-prep-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3745,6 +3764,57 @@ function calcAkiyaMethod() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaMethod(); })();
+
+// ===== 相続発生前 生前対策チェックリスト =====
+function calcSozokuPrep() {
+  var el = document.getElementById('sozoku-prep-result');
+  if (!el) return;
+  var items = [
+    { id:'sp_c0', label:'遺言書作成', weight:20 },
+    { id:'sp_c1', label:'登記名義最新化', weight:15 },
+    { id:'sp_c2', label:'相続人の確認', weight:15 },
+    { id:'sp_c3', label:'財産目録作成', weight:10 },
+    { id:'sp_c4', label:'固定資産税評価証明取得', weight:8 },
+    { id:'sp_c5', label:'生命保険受取人確認', weight:8 },
+    { id:'sp_c6', label:'相続税試算', weight:8 },
+    { id:'sp_c7', label:'相続人全員と連絡可能', weight:6 },
+    { id:'sp_c8', label:'活用方針の家族合意', weight:6 },
+    { id:'sp_c9', label:'専門家の確保', weight:4 },
+  ];
+  var score = 0, maxScore = 0;
+  var unchecked = [];
+  items.forEach(function(it) {
+    maxScore += it.weight;
+    var c = document.getElementById(it.id);
+    if (c && c.checked) score += it.weight;
+    else unchecked.push(it);
+  });
+  var pct = Math.round(score / maxScore * 100);
+  var level, lColor, lMsg;
+  if (pct >= 80) { level = '対策十分'; lColor = 'var(--green)'; lMsg = '相続トラブルのリスクが低い状態です'; }
+  else if (pct >= 55) { level = '一部対策'; lColor = '#facc15'; lMsg = 'あと数項目の整備でリスクを大幅に下げられます'; }
+  else if (pct >= 30) { level = '要対策'; lColor = '#fb923c'; lMsg = '未対策の項目が多く、相続発生後にトラブルが起きやすい状態です'; }
+  else { level = '危険'; lColor = 'var(--red)'; lMsg = '今すぐ専門家に相談して対策を始めてください'; }
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:80px 1fr;gap:12px;align-items:center;background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px">';
+  html += '<div style="text-align:center"><div style="font-size:32px;font-weight:900;color:' + lColor + '">' + pct + '%</div><div style="font-size:10px;color:var(--text-muted)">準備完了</div></div>';
+  html += '<div><div style="font-size:13px;font-weight:700;color:' + lColor + ';margin-bottom:4px">' + level + '</div>';
+  html += '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:8px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:' + pct + '%;background:' + lColor + ';border-radius:4px"></div></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">' + lMsg + '</div></div>';
+  html += '</div>';
+  if (unchecked.length > 0) {
+    html += '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">⚠️ 未完了の重要項目（重み順）</div>';
+    var sorted = unchecked.sort(function(a,b){ return b.weight - a.weight; });
+    html += '<div style="display:flex;flex-direction:column;gap:4px">';
+    sorted.slice(0, 5).forEach(function(it) {
+      html += '<div style="font-size:12px;color:var(--text-muted);padding:5px 10px;background:rgba(255,255,255,0.03);border-radius:6px;display:flex;justify-content:space-between"><span>' + it.label + '</span><span style="color:var(--red)">+' + it.weight + 'pt</span></div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSozokuPrep(); })();
 
 // ===== 解体費用 概算計算 =====
 function calcDemoCost() {
