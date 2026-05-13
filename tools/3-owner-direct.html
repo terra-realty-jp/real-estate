@@ -773,6 +773,35 @@
     <div id="neg-limit-result"></div>
   </div>
 
+  <!-- 住宅ローン減税残高シミュレーターカード -->
+  <div class="card" style="margin-top:24px">
+    <div class="card-title">🏦 住宅ローン減税（控除）残高シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">買主向け：住宅ローン減税の控除可能額を年次で試算します。2024年以降の新築・中古の最新制度に対応しています。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">借入額（万円）</label>
+        <input type="number" id="hlt_loan" value="3000" min="100" max="100000" step="100" oninput="calcHLTax()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">金利（%）</label>
+        <input type="number" id="hlt_rate" value="1.5" min="0.1" max="10" step="0.1" oninput="calcHLTax()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件タイプ</label>
+        <select id="hlt_type" onchange="calcHLTax()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="new">新築（長期優良・ZEH）</option>
+          <option value="new_std" selected>新築（一般）</option>
+          <option value="used">中古（適合）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年収（万円）</label>
+        <input type="number" id="hlt_income" value="600" min="100" max="10000" step="100" oninput="calcHLTax()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="hl-tax-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3285,6 +3314,65 @@ function calcNegLimit() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; あくまで試算です。譲渡税・修繕費・引越し費用等の追加費用も考慮してください。</div></div>';
 }
 (function(){ calcNegLimit(); })();
+
+// ===== 住宅ローン減税 残高シミュレーター =====
+function calcHLTax() {
+  var el = document.getElementById('hl-tax-result');
+  if (!el) return;
+  var loan   = parseFloat(document.getElementById('hlt_loan').value) || 0;
+  var rate   = parseFloat(document.getElementById('hlt_rate').value) || 1.5;
+  var type   = document.getElementById('hlt_type').value;
+  var income = parseFloat(document.getElementById('hlt_income').value) || 0;
+  if (loan <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">借入額を入力してください</div>'; return; }
+  // 控除率・控除期間・上限借入額（2024年制度）
+  var config = {
+    new:     { rate: 0.007, years: 13, maxLoan: 5000, label: '新築（長期優良・ZEH）' },
+    new_std: { rate: 0.007, years: 13, maxLoan: 3000, label: '新築（一般）' },
+    used:    { rate: 0.007, years: 10, maxLoan: 2000, label: '中古（適合）' },
+  };
+  var cfg = config[type] || config['new_std'];
+  var effectiveLoan = Math.min(loan, cfg.maxLoan);
+  // ローン残高計算（等額返済）
+  var monthlyRate = (rate / 100) / 12;
+  var totalMonths = 360;
+  var monthlyPayment = monthlyRate > 0
+    ? effectiveLoan * 10000 * monthlyRate / (1 - Math.pow(1 + monthlyRate, -totalMonths))
+    : effectiveLoan * 10000 / totalMonths;
+  // 所得税・住民税の推定（簡易）
+  var salaryDeduct = income <= 162.5 ? 55 : income <= 360 ? income * 0.3 + 8 : income <= 660 ? income * 0.2 + 44 : income * 0.1 + 110;
+  var taxableIncome = income - salaryDeduct - 48;
+  var incomeTax = taxableIncome <= 0 ? 0 : taxableIncome <= 195 ? taxableIncome * 0.05 : taxableIncome <= 330 ? taxableIncome * 0.1 - 9.75 : taxableIncome <= 695 ? taxableIncome * 0.2 - 42.75 : taxableIncome <= 900 ? taxableIncome * 0.23 - 63.6 : taxableIncome * 0.33 - 153.6;
+  var maxAnnualDeduct = Math.min(effectiveLoan * cfg.rate, incomeTax + taxableIncome * 0.05);
+  var rows = [];
+  var balance = effectiveLoan * 10000;
+  var totalDeduct = 0;
+  for (var y = 1; y <= cfg.years; y++) {
+    for (var mo = 0; mo < 12; mo++) {
+      var interest = balance * monthlyRate;
+      var principal = monthlyPayment - interest;
+      balance = Math.max(0, balance - principal);
+    }
+    var yearlyDeduct = Math.min(balance / 10000 * cfg.rate, maxAnnualDeduct);
+    totalDeduct += yearlyDeduct;
+    rows.push({ year: y, balance: Math.round(balance / 10000), deduct: yearlyDeduct.toFixed(1) });
+  }
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">控除期間</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + cfg.years + '年</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">控除対象借入上限</div><div style="font-size:20px;font-weight:900;color:var(--text)">' + cfg.maxLoan.toLocaleString() + '万円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">累計控除見込み</div><div style="font-size:18px;font-weight:900;color:var(--green)">' + totalDeduct.toFixed(0) + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<thead><tr style="background:rgba(255,255,255,0.06)"><th style="padding:6px 8px;text-align:left;color:var(--text-muted)">年目</th><th style="padding:6px 8px;text-align:right;color:var(--text-muted)">残高（万円）</th><th style="padding:6px 8px;text-align:right;color:var(--text-muted)">控除額（万円）</th></tr></thead><tbody>';
+  rows.forEach(function(r) {
+    html += '<tr style="border-top:1px solid rgba(255,255,255,0.05)"><td style="padding:5px 8px;color:var(--text-muted)">' + r.year + '年目</td><td style="padding:5px 8px;text-align:right;color:var(--text)">' + r.balance.toLocaleString() + '</td><td style="padding:5px 8px;text-align:right;color:var(--green)">▲' + r.deduct + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 控除率0.7%・控除期間' + cfg.years + '年（' + cfg.label + '）。実際の控除額は年末ローン残高・所得税等により変動します。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcHLTax(); })();
 
 // 初期化
 checkStorageWarning();
