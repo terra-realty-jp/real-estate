@@ -810,6 +810,47 @@
     <div id="cf-goal-result"></div>
   </div>
 
+  <!-- 出口戦略（売り時）診断カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">🚪 出口戦略（売り時）診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">物件の保有状況・残ローン・デッドクロス・市場環境を入力して、今が「売り時」か「保有継続」かを判定します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の物件価値（万円）</label>
+        <input type="number" id="ex_value" value="3000" min="100" max="100000" step="100" oninput="calcExitStrategy()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得価格（万円）</label>
+        <input type="number" id="ex_cost" value="2500" min="100" max="100000" step="100" oninput="calcExitStrategy()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">残ローン残高（万円）</label>
+        <input type="number" id="ex_loan" value="1800" min="0" max="100000" step="100" oninput="calcExitStrategy()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間CF（税引後、万円）</label>
+        <input type="number" id="ex_cf" value="80" min="-500" max="2000" step="10" oninput="calcExitStrategy()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">保有年数（年）</label>
+        <input type="number" id="ex_years" value="8" min="1" max="50" step="1" oninput="calcExitStrategy()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">今後5年の価格見通し</label>
+        <select id="ex_trend" onchange="calcExitStrategy()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="up">上昇傾向</option>
+          <option value="flat" selected>横ばい</option>
+          <option value="down">下落傾向</option>
+        </select>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:12px">
+      <input type="checkbox" id="ex_deadcross" onchange="calcExitStrategy()" style="accent-color:var(--red)">
+      ⚠️ デッドクロス（元金返済＞減価償却）が既に到来している
+    </label>
+    <div id="exit-strategy-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4168,6 +4209,61 @@ function kpi(label, val, color) {
     + '</div>';
 }
 (function(){ calcCFGoal(); })();
+
+// ===== 出口戦略（売り時）診断 =====
+function calcExitStrategy() {
+  var el = document.getElementById('exit-strategy-result');
+  if(!el) return;
+  var value   = parseFloat(document.getElementById('ex_value').value)||3000;
+  var cost    = parseFloat(document.getElementById('ex_cost').value)||2500;
+  var loan    = parseFloat(document.getElementById('ex_loan').value)||0;
+  var cf      = parseFloat(document.getElementById('ex_cf').value)||0;
+  var years   = parseFloat(document.getElementById('ex_years').value)||1;
+  var trend   = document.getElementById('ex_trend').value;
+  var deadcross = document.getElementById('ex_deadcross').checked;
+  var commission = (value*0.03+6)*1.1;
+  var sellNet = value - commission - loan;
+  var isLong  = years > 5;
+  var gainBase = value - cost - commission;
+  var taxRate = isLong ? 0.20315 : 0.39363;
+  var tax     = Math.max(0, gainBase * taxRate);
+  var netAfterTax = sellNet - tax;
+  var totalCF = cf * years;
+  var totalROI = (netAfterTax + totalCF - (cost*(1-loan/value>=0?1-loan/value:0))) / (cost*(1-loan/value>=0?1-loan/value:0.3)) * 100;
+  var score = 0;
+  var points = [];
+  if(cf < 0){ score -= 2; points.push({neg:true,t:'年間CFがマイナス — 保有するほど損失が拡大'}); }
+  else if(cf < 30){ score += 0; points.push({neg:false,t:'CF少額（'+cf+'万/年）— 保有メリットが限定的'}); }
+  else { score += 2; points.push({neg:false,t:'CF良好（'+cf+'万/年）— 保有継続でキャッシュが積み上がる'}); }
+  if(deadcross){ score -= 2; points.push({neg:true,t:'デッドクロス到来 — 実質税金負担が増大中'}); }
+  if(trend==='down'){ score -= 2; points.push({neg:true,t:'価格下落トレンド — 早期売却で損失を最小化'}); }
+  else if(trend==='up'){ score += 2; points.push({neg:false,t:'価格上昇トレンド — 保有で売却益拡大の可能性'}); }
+  if(sellNet < 0){ score -= 3; points.push({neg:true,t:'オーバーローン（残債>売却後手取り）— 売却に追加資金が必要'}); }
+  else if(sellNet > 500){ score += 1; points.push({neg:false,t:'売却手取り'+sellNet.toFixed(0)+'万円 — 売却益を次の投資に活用可能'}); }
+  if(!isLong){ score -= 1; points.push({neg:true,t:'短期保有（5年以内）— 売却益への課税率が高い（約39%）'}); }
+  else { score += 1; points.push({neg:false,t:'長期保有（5年超）— 売却益への課税率が優遇（約20%）'}); }
+  var verdict, verdictColor, verdictBg, verdictIcon;
+  if(score >= 2){ verdict='保有継続を推奨'; verdictColor='var(--green)'; verdictBg='rgba(74,222,128,0.1)'; verdictIcon='🏠'; }
+  else if(score >= 0){ verdict='状況次第 — 追加検討を'; verdictColor='#facc15'; verdictBg='rgba(250,204,21,0.1)'; verdictIcon='⚖️'; }
+  else { verdict='売却を検討すべき'; verdictColor='var(--red)'; verdictBg='rgba(239,68,68,0.1)'; verdictIcon='📤'; }
+  var ptRows = points.map(function(p){
+    return '<div style="display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">'
+      +'<span style="color:'+(p.neg?'var(--red)':'var(--green)')+';flex-shrink:0">'+(p.neg?'▼':'▲')+'</span>'
+      +'<span>'+p.t+'</span></div>';
+  }).join('');
+  el.innerHTML = '<div style="background:'+verdictBg+';border-left:4px solid '+verdictColor+';border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
+    +'<div style="font-size:36px">'+verdictIcon+'</div>'
+    +'<div><div style="font-size:18px;font-weight:900;color:'+verdictColor+'">'+verdict+'</div>'
+    +'<div style="font-size:11px;color:var(--text-muted);margin-top:2px">判定スコア: '+score+' 点</div></div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:'+(sellNet>=0?'var(--gold)':'var(--red)')+'">'+sellNet.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">売却手取り（税前）</div></div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:'+(netAfterTax>=0?'var(--green)':'var(--red)')+'">'+netAfterTax.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">売却手取り（税後）</div></div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:var(--text)">'+totalCF.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">累計CF（'+years+'年）</div></div>'
+    +'</div>'
+    +'<div>'+ptRows+'</div>'
+    +'<p style="font-size:10px;color:var(--text-muted);margin-top:10px">※ 売却手数料=(価格×3%+6万)×1.1で計算。税額は取得費用を差し引いた譲渡益に対する概算です。</p>';
+}
+(function(){ calcExitStrategy(); })();
 
 // ===== 売却タイミング 短期vs長期 譲渡税 =====
 function calcExitTax() {
