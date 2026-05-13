@@ -573,6 +573,31 @@
     </div>
     <div id="rent-increase-template-result"></div>
   </div>
+
+  <!-- 確定申告・事業的規模 判定カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📝 確定申告 事業的規模 判定カード</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産賃貸が「事業的規模」と認められると、青色申告65万円控除・赤字の繰越・家族への給与など有利な税務処理ができます。まず規模を確認しましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">アパート・マンション（室数）</label>
+        <input type="number" id="bs_apt" value="0" min="0" max="1000" step="1" oninput="calcBusinessScale()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">一戸建て（棟数）</label>
+        <input type="number" id="bs_house" value="0" min="0" max="100" step="1" oninput="calcBusinessScale()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">駐車場（台数）</label>
+        <input type="number" id="bs_parking" value="0" min="0" max="1000" step="1" oninput="calcBusinessScale()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">事務所・店舗（室数）</label>
+        <input type="number" id="bs_office" value="0" min="0" max="100" step="1" oninput="calcBusinessScale()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="business-scale-result"></div>
+  </div>
 </div>
 </div>
 
@@ -4787,6 +4812,40 @@ function showChartOfflineMsg(canvasId) {
     sumEl.innerHTML = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 12px;font-size:12px">' + msg + '<span style="color:var(--text-muted);margin-left:8px">計画的な交換・予算確保をご検討ください。</span></div>';
   };
 })();
+
+// ===== 確定申告・事業的規模 判定 =====
+function calcBusinessScale() {
+  var el = document.getElementById('business-scale-result');
+  if(!el) return;
+  var apt     = parseInt(document.getElementById('bs_apt').value)||0;
+  var house   = parseInt(document.getElementById('bs_house').value)||0;
+  var parking = parseInt(document.getElementById('bs_parking').value)||0;
+  var office  = parseInt(document.getElementById('bs_office').value)||0;
+  var score = apt + house * 2 + Math.floor(parking / 5) + office * 2;
+  var isScale = score >= 10;
+  var pct = Math.min(100, Math.round(score / 10 * 100));
+  var barColor = isScale ? 'var(--green)' : score >= 7 ? 'var(--gold)' : 'var(--red)';
+  var verdict = isScale
+    ? '<div style="padding:12px 14px;background:rgba(74,222,128,0.1);border:1px solid var(--green);border-radius:8px;margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:4px">✅ 事業的規模に該当します</div><div style="font-size:12px;color:var(--text);line-height:1.6">青色申告（最大65万円控除）・家族従業員への給与・赤字の3年間繰り越し などの有利な税務処理が可能です。税理士への相談をおすすめします。</div></div>'
+    : '<div style="padding:12px 14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:4px">⚠️ 事業的規模に未達</div><div style="font-size:12px;color:var(--text);line-height:1.6">現在のスコア：<strong>' + score + '/10点</strong>。アパート・マンションを増やすか一戸建てを追加することで事業的規模に達します。青色申告の10万円控除は適用可能です。</div></div>';
+  var benefits = [
+    {label:'青色申告特別控除',new:'最大65万円',norm:'最大10万円',ok:isScale},
+    {label:'家族への給与（青色事業専従者）',new:'経費計上可',norm:'不可',ok:isScale},
+    {label:'赤字の繰り越し',new:'3年間繰越可',norm:'不可',ok:isScale},
+    {label:'貸倒引当金',new:'設定可',norm:'不可',ok:isScale},
+    {label:'修繕費・維持費の経費計上',new:'可（全額）',norm:'可（全額）',ok:true}
+  ];
+  var tableRows = benefits.map(function(b){
+    return '<tr><td style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);font-size:12px;color:var(--text-muted)">'+b.label+'</td>'
+      + '<td style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);text-align:center;font-size:12px;color:'+(b.ok?'var(--green)':'var(--red)')+'">'+b.new+'</td>'
+      + '<td style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);text-align:center;font-size:12px;color:var(--text-muted)">'+b.norm+'</td>'
+      + '</tr>';
+  }).join('');
+  el.innerHTML = '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px"><span>事業的規模スコア</span><span style="font-weight:700;color:'+barColor+'">'+ score +'/10点</span></div><div style="height:10px;background:rgba(255,255,255,0.08);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:5px;transition:width 0.4s"></div></div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">スコアの計算式：アパート・マンション1室=1点、一戸建て1棟=2点、駐車場5台=1点、事務所1室=2点</div></div>'
+    + verdict
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--dark3)"><th style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);text-align:left;color:var(--text-muted)">税務上のメリット</th><th style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);color:var(--gold)">事業的規模</th><th style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);color:var(--text-muted)">それ以外</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+}
+(function(){ calcBusinessScale(); })();
 
 // ===== 修繕積立 必要額シミュレーター =====
 function calcRepairSavings() {
