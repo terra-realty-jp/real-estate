@@ -362,6 +362,23 @@
   <div id="move-season-card" style="display:none;margin-bottom:16px"></div>
   <div id="tenure-analysis-card" style="display:none;margin-bottom:16px"></div>
   <div id="tenant-anniversary-card" style="display:none;margin-bottom:16px"></div>
+
+  <!-- 退去時 手続きチェックリストカード -->
+  <div class="card" style="margin-top:16px;border-color:rgba(201,168,76,0.2)">
+    <div class="card-title">📦 退去時 手続きチェックリスト</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">テナント退去時に必要な作業を網羅したチェックリストです。抜け漏れなく進めるために活用してください。</p>
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:8px">退去通知受領〜解約日まで</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px" id="move-out-list-a"></div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:8px">解約日・明け渡し時</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px" id="move-out-list-b"></div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:8px">明け渡し後〜敷金精算</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px" id="move-out-list-c"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+      <div id="move-out-progress" style="font-size:12px;color:var(--text-muted)">0 / 0 完了</div>
+      <button onclick="resetMoveOutChecklist()" style="font-size:11px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:4px 10px;cursor:pointer;color:var(--text-muted);font-family:inherit">リセット</button>
+    </div>
+  </div>
+
   <div id="tenants-list"></div>
 </div>
 </div>
@@ -4544,6 +4561,71 @@ function showChartOfflineMsg(canvasId) {
 }
 
 
+
+// ===== 退去時チェックリスト =====
+(function initMoveOutChecklist() {
+  var lists = {
+    a: [
+      { text: '退去届（書面）を受領・日付確認' },
+      { text: '解約予告期間（1〜2ヶ月）の確認' },
+      { text: '次回の入居募集開始の判断' },
+      { text: '電気・ガス・水道の解約予告を案内' },
+      { text: '管理会社へ退去スケジュールを連絡' },
+    ],
+    b: [
+      { text: '室内の現状確認（入居前写真と比較）' },
+      { text: '鍵・駐車場キー・宅配ボックスキーの回収' },
+      { text: '残置物がないか最終確認' },
+      { text: 'ガス・電気の閉栓立会い（必要な場合）' },
+      { text: '退去確認書へのサイン取得' },
+    ],
+    c: [
+      { text: '原状回復の範囲を確認（ガイドライン参照）' },
+      { text: 'リフォーム・クリーニング業者に見積り依頼' },
+      { text: '敷金精算書の作成（退去後1ヶ月以内が目安）' },
+      { text: '精算書をテナントに送付・合意取得' },
+      { text: '修繕費の支払い・敷金の返金処理' },
+      { text: '次の入居者募集・内覧準備を開始' },
+    ],
+  };
+  function buildList(elId, items, prefix) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    var html = '';
+    items.forEach(function(item, i) {
+      var key = 'mo_' + prefix + '_' + i;
+      var checked = localStorage.getItem(key) === '1';
+      html += '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:5px;font-size:12px">'
+        + '<input type="checkbox" ' + (checked ? 'checked' : '') + ' style="accent-color:var(--gold);width:15px;height:15px;flex-shrink:0" onchange="saveMoCheck(\'' + key + '\',this.checked)">'
+        + '<span style="' + (checked ? 'text-decoration:line-through;color:var(--text-muted)' : '') + '">' + item.text + '</span></label>';
+    });
+    el.innerHTML = html;
+  }
+  buildList('move-out-list-a', lists.a, 'a');
+  buildList('move-out-list-b', lists.b, 'b');
+  buildList('move-out-list-c', lists.c, 'c');
+  updateMoveOutProgress();
+
+  window.saveMoCheck = function(key, val) {
+    localStorage.setItem(key, val ? '1' : '0');
+    var lbl = event.target.closest('label');
+    if (lbl) { var span = lbl.querySelector('span'); if (span) span.style.cssText = val ? 'text-decoration:line-through;color:var(--text-muted)' : ''; }
+    updateMoveOutProgress();
+  };
+  window.updateMoveOutProgress = function() {
+    var total = 0, done = 0;
+    ['a','b','c'].forEach(function(p) { [0,1,2,3,4,5].forEach(function(i) { var v = localStorage.getItem('mo_' + p + '_' + i); if (v !== null) { total++; if (v === '1') done++; } }); });
+    var el = document.getElementById('move-out-progress');
+    if (el) el.textContent = done + ' / ' + total + ' 完了' + (done === total && total > 0 ? ' ✅' : '');
+  };
+  window.resetMoveOutChecklist = function() {
+    ['a','b','c'].forEach(function(p) { [0,1,2,3,4,5].forEach(function(i) { localStorage.removeItem('mo_' + p + '_' + i); }); });
+    buildList('move-out-list-a', lists.a, 'a');
+    buildList('move-out-list-b', lists.b, 'b');
+    buildList('move-out-list-c', lists.c, 'c');
+    updateMoveOutProgress();
+  };
+})();
 
 // ===== 設備寿命チェック =====
 (function initEquipCheck() {
