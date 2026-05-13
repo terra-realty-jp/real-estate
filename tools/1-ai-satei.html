@@ -995,6 +995,35 @@
     <div id="prop-tax-result"></div>
   </div>
 
+  <!-- 不動産売却 譲渡税シミュレーター -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">💸 不動産売却 譲渡税シミュレーター</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売却価格・取得費・保有期間を入力して、短期・長期保有の譲渡所得税・住民税を試算します。3000万円特別控除（居住用）の適用有無も比較できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却価格（万円）</label>
+        <input type="number" id="tt_sell" value="5000" min="100" max="200000" step="100" oninput="calcTransferTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得費合計（万円）</label>
+        <input type="number" id="tt_cost" value="3000" min="0" max="200000" step="100" oninput="calcTransferTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">譲渡費用（仲介手数料等、万円）</label>
+        <input type="number" id="tt_expense" value="150" min="0" max="5000" step="10" oninput="calcTransferTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">保有年数</label>
+        <input type="number" id="tt_years" value="6" min="1" max="50" step="1" oninput="calcTransferTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:12px">
+      <input type="checkbox" id="tt_special" onchange="calcTransferTax()" style="accent-color:var(--gold)">
+      🏠 居住用財産3000万円特別控除を適用する
+    </label>
+    <div id="transfer-tax-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3522,6 +3551,46 @@ function calcDemoVsKeep() {
     + '<div style="padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:8px;text-align:center;font-size:13px;font-weight:700;color:' + winnerColor + '">' + winnerLabel + '</div>'
     + '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.7">&#8251; 仲介手数料は（売却価格×' + Math.round(commRate*100) + '%＋6万円）×1.1で計算。解体費は見積もりにより変動します。アスベスト含有の場合は追加費用が発生します。</div>';
 }
+
+// ===== 譲渡税シミュレーター =====
+function calcTransferTax() {
+  var el = document.getElementById('transfer-tax-result');
+  if(!el) return;
+  var sell    = parseFloat(document.getElementById('tt_sell').value)||0;
+  var cost    = parseFloat(document.getElementById('tt_cost').value)||0;
+  var expense = parseFloat(document.getElementById('tt_expense').value)||0;
+  var years   = parseFloat(document.getElementById('tt_years').value)||1;
+  var special = document.getElementById('tt_special').checked;
+  if(!sell){ el.innerHTML=''; return; }
+  var gain = sell - cost - expense;
+  var isLong = years > 5;
+  var taxRate = isLong ? 0.20315 : 0.39363;
+  var incomeRate = isLong ? 0.15 : 0.30;
+  var residRate = isLong ? 0.05 : 0.09;
+  var exemptionLabel = isLong ? '長期（5年超）' : '短期（5年以内）';
+  var taxableBase = special ? Math.max(0, gain - 3000) : Math.max(0, gain);
+  var tax = Math.max(0, taxableBase * taxRate);
+  var taxNoSpecial = Math.max(0, gain * taxRate);
+  var netProceeds = sell - expense - tax;
+  var kpiS = 'background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;text-align:center';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
+    +'<div style="'+kpiS+'"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">譲渡益</div><div style="font-size:20px;font-weight:900;color:'+(gain>=0?'var(--gold)':'var(--red)')+'">'+gain.toFixed(0)+'万</div></div>'
+    +'<div style="'+kpiS+'"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">保有区分</div><div style="font-size:15px;font-weight:700;color:'+(isLong?'var(--green)':'var(--red)')+'">'+exemptionLabel+'</div><div style="font-size:11px;color:var(--text-muted)">実効税率 '+(taxRate*100).toFixed(3)+'%</div></div>'
+    +'</div>'
+    +(gain<=0 ? '<div style="padding:10px 12px;background:rgba(74,222,128,0.1);border-radius:6px;font-size:12px;color:var(--green)">✅ 譲渡益なし — 譲渡税は発生しません</div>' :
+    '<div style="overflow-x:auto;margin-bottom:12px"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:rgba(255,255,255,0.05)"><th style="padding:8px;font-size:11px;text-align:left">項目</th><th style="padding:8px;font-size:11px;text-align:right">特控なし</th><th style="padding:8px;font-size:11px;text-align:right">3000万特控あり</th></tr></thead>'
+    +'<tbody>'
+    +'<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:7px 8px;font-size:12px">課税譲渡益</td><td style="padding:7px 8px;font-size:12px;text-align:right">'+Math.max(0,gain).toFixed(0)+'万</td><td style="padding:7px 8px;font-size:12px;text-align:right">'+Math.max(0,gain-3000).toFixed(0)+'万</td></tr>'
+    +'<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:7px 8px;font-size:12px">所得税（'+Math.round(incomeRate*100)+'%）</td><td style="padding:7px 8px;font-size:12px;text-align:right;color:var(--red)">'+Math.max(0,gain*incomeRate).toFixed(0)+'万</td><td style="padding:7px 8px;font-size:12px;text-align:right;color:var(--red)">'+Math.max(0,(gain-3000)*incomeRate).toFixed(0)+'万</td></tr>'
+    +'<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:7px 8px;font-size:12px">住民税（'+Math.round(residRate*100)+'%）</td><td style="padding:7px 8px;font-size:12px;text-align:right;color:var(--red)">'+Math.max(0,gain*residRate).toFixed(0)+'万</td><td style="padding:7px 8px;font-size:12px;text-align:right;color:var(--red)">'+Math.max(0,(gain-3000)*residRate).toFixed(0)+'万</td></tr>'
+    +'<tr style="background:rgba(255,255,255,0.03)"><td style="padding:7px 8px;font-size:12px;font-weight:700">税金合計</td><td style="padding:7px 8px;font-size:13px;font-weight:900;text-align:right;color:var(--red)">'+taxNoSpecial.toFixed(0)+'万</td><td style="padding:7px 8px;font-size:13px;font-weight:900;text-align:right;color:var(--green)">'+tax.toFixed(0)+'万 <span style="font-size:10px;font-weight:400">(▲'+(taxNoSpecial-tax).toFixed(0)+'万)</span></td></tr>'
+    +'</tbody></table></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="background:rgba(74,222,128,0.08);border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">手取り（特控あり）</div><div style="font-size:22px;font-weight:900;color:var(--green)">'+(sell-expense-tax).toFixed(0)+'万</div></div>'
+    +'<div style="background:rgba(255,80,80,0.08);border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">手取り（特控なし）</div><div style="font-size:22px;font-weight:900;color:var(--red)">'+(sell-expense-taxNoSpecial).toFixed(0)+'万</div></div></div>')
+    +'<p style="font-size:10px;color:var(--text-muted);margin-top:10px">※ 復興特別所得税(2.1%)含む実効税率。居住用3000万特控は売却年度居住・過去2年未適用など要件あり。実際は税理士への相談を推奨します。</p>';
+}
+(function(){ calcTransferTax(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
