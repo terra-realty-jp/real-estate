@@ -703,6 +703,31 @@
     <div id="loan-plan-result"></div>
   </div>
 
+  <!-- 値下げ許容ライン計算カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">📉 値下げ許容ライン計算カード</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「いくらまで値引きできるか」の底値ラインを試算します。ローン完済・諸費用回収・目標手取り額の3つの観点で許容下限価格を計算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売出し希望価格（万円）</label>
+        <input type="number" id="nl_ask" placeholder="例: 3500" min="0" step="100" oninput="calcNegLimit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">ローン残債（万円）</label>
+        <input type="number" id="nl_loan" placeholder="例: 1500" min="0" step="100" value="0" oninput="calcNegLimit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得価格（万円）</label>
+        <input type="number" id="nl_cost" placeholder="例: 2800" min="0" step="100" oninput="calcNegLimit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">手元に残したい最低額（万円）</label>
+        <input type="number" id="nl_target" placeholder="例: 500" min="0" step="50" value="300" oninput="calcNegLimit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="neg-limit-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3039,6 +3064,66 @@ function calcAcqTax() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 取得税は取得後3〜6ヶ月後に都道府県より通知。軽減措置の適用には申告が必要な場合があります。</div></div>';
 }
 (function(){ calcAcqTax(); })();
+
+// ===== 値下げ許容ライン計算 =====
+function calcNegLimit() {
+  var el = document.getElementById('neg-limit-result');
+  if (!el) return;
+  var ask    = parseFloat(document.getElementById('nl_ask').value)    || 0;
+  var loan   = parseFloat(document.getElementById('nl_loan').value)   || 0;
+  var cost   = parseFloat(document.getElementById('nl_cost').value)   || 0;
+  var target = parseFloat(document.getElementById('nl_target').value) || 0;
+  if (!ask) { el.innerHTML = ''; return; }
+
+  function commission(p) { return Math.round((p * 0.03 + 6) * 1.1); }
+
+  // 3つの下限価格
+  var limits = [];
+
+  // 1. ローン完済ライン（この価格以下では手元に残らない）
+  if (loan > 0) {
+    var loanLimit = loan + commission(loan); // 最低でもローン+手数料
+    limits.push({ label:'ローン完済ライン（手元ゼロ）', price: Math.round(loan + commission(ask) * (loan / ask + 1)), warning:'この価格以下では手元に残りません', color:'var(--red)' });
+  }
+
+  // 2. 取得費回収ライン
+  if (cost > 0) {
+    var costLimit = cost;
+    limits.push({ label:'取得費トントンライン', price: costLimit, warning:'この価格以下では損失が出ます', color:'#fb923c' });
+  }
+
+  // 3. 目標手取りライン
+  var commAtAsk = commission(ask);
+  // 逆算: ask_price - commission - loan = target → ask_price = target + loan + commission
+  var targetPrice = Math.round(target + loan + commAtAsk);
+  limits.push({ label:'目標手取り '+target+'万円 確保ライン', price: targetPrice, warning:'この価格以下では目標手取りを下回ります', color:'var(--gold)' });
+
+  // 現在の希望価格からの値下げ幅
+  var safeLimit = Math.max.apply(null, limits.map(function(l){ return l.price; }));
+  var maxDiscount = ask - safeLimit;
+  var discountPct = ask > 0 ? (maxDiscount / ask * 100).toFixed(1) : 0;
+
+  var limitHtml = limits.map(function(lim) {
+    var disc = ask - lim.price;
+    return '<div style="background:rgba(255,255,255,0.03);border-left:3px solid '+lim.color+';border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+      + '<div><div style="font-size:12px;font-weight:700;color:var(--text)">'+lim.label+'</div>'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">'+lim.warning+'</div></div>'
+      + '<div style="text-align:right;white-space:nowrap">'
+      + '<div style="font-size:16px;font-weight:900;color:'+lim.color+'">'+lim.price.toLocaleString()+'万円</div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">値引き '+Math.max(0,disc)+'万円</div></div></div></div>';
+  }).join('');
+
+  el.innerHTML = '<div style="margin-top:4px">'
+    + limitHtml
+    + '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:10px 12px;margin-top:6px">'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">売出し価格'+ask+'万円に対する最大許容値引き幅</div>'
+    + '<div style="display:flex;align-items:baseline;gap:8px">'
+    + '<div style="font-size:20px;font-weight:900;color:var(--gold)">▲'+Math.max(0,maxDiscount).toLocaleString()+'万円</div>'
+    + '<div style="font-size:14px;color:var(--text-muted)">（'+discountPct+'%引きまで）</div></div></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; あくまで試算です。譲渡税・修繕費・引越し費用等の追加費用も考慮してください。</div></div>';
+}
+(function(){ calcNegLimit(); })();
 
 // 初期化
 checkStorageWarning();
