@@ -915,6 +915,35 @@
     <div id="repair-savings-result"></div>
   </div>
 
+  <!-- 原状回復費用・敷金精算チェックカード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">🔑 原状回復費用・敷金精算 チェック</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">国土交通省「原状回復をめぐるトラブルとガイドライン」に基づき、退去時の費用負担区分と敷金精算額を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">敷金（万円）</label>
+        <input type="number" id="rc_deposit" value="10" min="0" max="500" step="1" oninput="calcRestoreCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">居住年数</label>
+        <input type="number" id="rc_years" value="3" min="1" max="30" step="1" oninput="calcRestoreCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:6px">損傷・汚損の該当項目をチェック（入居者負担の可能性あり）</p>
+    <div style="display:grid;gap:6px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="rc_c0" onchange="calcRestoreCheck()" style="accent-color:var(--red)">🚬 タバコのヤニ・臭いによる壁紙汚損（故意過失）</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="rc_c1" onchange="calcRestoreCheck()" style="accent-color:var(--red)">🕳 壁への釘穴・ネジ穴（下地ボード損傷）</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="rc_c2" onchange="calcRestoreCheck()" style="accent-color:var(--red)">💦 結露による壁・床の腐食（手入れ不足）</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="rc_c3" onchange="calcRestoreCheck()" style="accent-color:#fb923c">🐾 ペットによるキズ・臭いが残っている</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="rc_c4" onchange="calcRestoreCheck()" style="accent-color:#fb923c">🪟 窓ガラス破損（入居者過失）</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="rc_c5" onchange="calcRestoreCheck()" style="accent-color:#facc15">🪑 フローリングに深い傷・汚れ（転居時に明らか）</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="rc_c6" onchange="calcRestoreCheck()" style="accent-color:#facc15">🛁 浴室・キッチンの著しいカビ汚れ（手入れ不足）</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="rc_c7" onchange="calcRestoreCheck()" style="accent-color:#4ade80">🖼 日焼け・通常使用による壁紙の変色のみ</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="rc_c8" onchange="calcRestoreCheck()" style="accent-color:#4ade80">🔩 家具設置によるフローリング凹み（通常使用）</label>
+    </div>
+    <div id="restore-check-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -4891,6 +4920,56 @@ function calcRepairSavings() {
     + '<p style="font-size:10px;color:var(--text-muted);line-height:1.6">※ 修繕費目安は延床面積×構造別単価×築年数補正で試算。実際は物件状態・工事内容により大幅に変わります。専門家への診断を推奨します。</p>';
 }
 (function(){ calcRepairSavings(); })();
+
+// ===== 原状回復費用・敷金精算チェック =====
+function calcRestoreCheck() {
+  var el = document.getElementById('restore-check-result');
+  if(!el) return;
+  var deposit = parseFloat(document.getElementById('rc_deposit').value)||0;
+  var years   = parseFloat(document.getElementById('rc_years').value)||1;
+  var items = [
+    {id:'rc_c0',label:'タバコヤニ汚損',tenant:true, baseCost:8, depYears:6},
+    {id:'rc_c1',label:'釘穴（下地損傷）',tenant:true, baseCost:3, depYears:0},
+    {id:'rc_c2',label:'結露による腐食（手入不足）',tenant:true, baseCost:10, depYears:6},
+    {id:'rc_c3',label:'ペット傷・臭い',tenant:true, baseCost:12, depYears:6},
+    {id:'rc_c4',label:'窓ガラス破損',tenant:true, baseCost:5, depYears:0},
+    {id:'rc_c5',label:'フローリング深い傷',tenant:true, baseCost:8, depYears:12},
+    {id:'rc_c6',label:'浴室・キッチンカビ（手入不足）',tenant:true, baseCost:6, depYears:0},
+    {id:'rc_c7',label:'日焼け・通常変色',tenant:false, baseCost:5, depYears:6},
+    {id:'rc_c8',label:'家具設置凹み（通常使用）',tenant:false, baseCost:3, depYears:12}
+  ];
+  var tenantTotal = 0, landlordTotal = 0;
+  var tenantRows = '', landlordRows = '';
+  var checkedAny = false;
+  items.forEach(function(it){
+    var chk = document.getElementById(it.id);
+    if(!chk||!chk.checked) return;
+    checkedAny = true;
+    var residualRate = it.depYears>0 ? Math.max(0.1, 1 - years/it.depYears) : 1;
+    var tenantShare = it.tenant ? it.baseCost * residualRate : 0;
+    var landlordShare = it.baseCost - tenantShare;
+    if(it.tenant){
+      tenantTotal += tenantShare;
+      tenantRows += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:5px 8px;font-size:12px">'+it.label+'</td><td style="padding:5px 8px;font-size:12px;text-align:right;color:var(--red)">'+tenantShare.toFixed(1)+'万</td><td style="padding:5px 8px;font-size:11px;color:var(--text-muted);text-align:right">'+(it.depYears>0?'残存率'+Math.round(residualRate*100)+'%':'全額')+'</td></tr>';
+    } else {
+      landlordTotal += it.baseCost;
+      landlordRows += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:5px 8px;font-size:12px">'+it.label+'</td><td style="padding:5px 8px;font-size:12px;text-align:right;color:var(--text-muted)">'+it.baseCost.toFixed(1)+'万</td><td style="padding:5px 8px;font-size:11px;color:var(--text-muted);text-align:right">貸主負担</td></tr>';
+    }
+  });
+  if(!checkedAny){ el.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;padding:10px 0">該当項目にチェックを入れてください</p>'; return; }
+  var refund = deposit - tenantTotal;
+  var refundColor = refund>=0 ? 'var(--green)' : 'var(--red)';
+  var refundLabel = refund>=0 ? '返金額' : '追加請求';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+    +'<div style="background:rgba(255,80,80,0.1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:900;color:var(--red)">'+tenantTotal.toFixed(1)+'万</div><div style="font-size:10px;color:var(--text-muted)">入居者負担</div></div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:900;color:var(--text-muted)">'+landlordTotal.toFixed(1)+'万</div><div style="font-size:10px;color:var(--text-muted)">貸主負担</div></div>'
+    +'<div style="background:rgba(74,222,128,0.08);border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:900;color:'+refundColor+'">'+Math.abs(refund).toFixed(1)+'万</div><div style="font-size:10px;color:var(--text-muted)">'+refundLabel+'</div></div>'
+    +'</div>'
+    +(tenantRows?'<p style="font-size:11px;color:var(--text-muted);margin-bottom:4px">入居者負担の明細</p><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><tbody>'+tenantRows+'</tbody></table></div>':'')
+    +(landlordRows?'<p style="font-size:11px;color:var(--text-muted);margin:10px 0 4px">貸主負担（通常損耗）</p><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><tbody>'+landlordRows+'</tbody></table></div>':'')
+    +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 費用はあくまで目安です。実際は施工業者の見積もりが基準となります。居住'+years+'年での残存価値を反映しています。</p>';
+}
+(function(){ calcRestoreCheck(); })();
 
 // ===== 原状回復費用見積もり =====
 function calcRestoreCost() {
