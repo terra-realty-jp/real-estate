@@ -723,6 +723,21 @@
     <div id="reform-payback-result"></div>
   </div>
 
+  <!-- 補助金・支援策 適用チェックカード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">🏛️ 補助金・支援策 適用チェックカード</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家のリフォーム・活用に使える国・自治体の補助制度を確認します。当てはまる項目にチェックを入れてください。</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sub_c0" onchange="calcSubsidyCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>空き家状態が1年以上続いている（または相続取得した）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sub_c1" onchange="calcSubsidyCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>リフォーム・改修を100万円以上行う予定がある</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sub_c2" onchange="calcSubsidyCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>築20年以上の建物（木造）または築25年以上（非木造）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sub_c3" onchange="calcSubsidyCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>断熱・省エネ改修（窓・断熱材・設備の高効率化）を予定</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sub_c4" onchange="calcSubsidyCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>賃貸住宅として第三者に提供する（または空き家バンクに登録済み）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="sub_c5" onchange="calcSubsidyCheck()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>耐震診断・耐震改修工事を検討中（1981年以前の旧耐震建物）</span></label>
+    </div>
+    <div id="subsidy-check-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3437,6 +3452,44 @@ function calcTokuteiRisk() {
     + '<div style="margin-top:12px;text-align:center"><a href="mailto:terra.realty.iam@gmail.com?subject=特定空き家リスクについて相談したい&body=診断結果: ' + encodeURIComponent(level) + '" style="display:inline-block;background:#f87171;color:#fff;font-size:12px;font-weight:700;padding:8px 20px;border-radius:8px;text-decoration:none">空き家の今後について相談する →</a></div>'
     + '<div style="margin-top:10px;font-size:11px;color:var(--text-muted);line-height:1.7">&#8251; 「空家等対策の推進に関する特別措置法」（2023年改正）に基づく概要説明です。実際の指定は自治体が判断します。</div>';
 }
+
+// ===== 補助金・支援策 適用チェック =====
+function calcSubsidyCheck() {
+  var el = document.getElementById('subsidy-check-result');
+  if (!el) return;
+  var c = [0,1,2,3,4,5].map(function(i){ return document.getElementById('sub_c'+i) && document.getElementById('sub_c'+i).checked; });
+  var subsidies = [];
+  if (c[0] && c[4]) subsidies.push({ name:'空き家活用 移住・定住促進補助（自治体）', range:'30〜100万円', note:'自治体ごとに異なる。空き家バンク登録が条件の場合が多い', color:'var(--green)' });
+  if (c[0] && c[1] && c[2]) subsidies.push({ name:'長期優良住宅化リフォーム推進事業', range:'最大250万円', note:'国交省補助。耐久性・省エネ等の性能向上工事が対象', color:'var(--gold)' });
+  if (c[3]) subsidies.push({ name:'住宅省エネリフォーム支援（子育てエコホーム等）', range:'最大60万円', note:'経産省・国交省補助。断熱窓・高効率給湯器等の設置', color:'#60a5fa' });
+  if (c[5]) subsidies.push({ name:'耐震改修工事補助（国・自治体）', range:'最大100万円', note:'1981年以前の建物が対象。自治体独自上乗せあり', color:'#f87171' });
+  if (c[1] && c[2]) subsidies.push({ name:'リフォーム瑕疵保険 適用（費用軽減）', range:'数万円の保険料補助', note:'既存住宅の流通促進支援。リフォーム工事の安心確保', color:'#a78bfa' });
+  if (subsidies.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:10px 0">現在の条件では明確に適用できる補助制度が特定できませんでした。自治体窓口へお問い合わせください。</div>';
+    return;
+  }
+  var total = 0;
+  var rows = subsidies.map(function(s) {
+    var maxVal = parseInt(s.range.replace(/[^0-9]/g, '')) || 0;
+    if (s.range.indexOf('250') >= 0) maxVal = 250;
+    else if (s.range.indexOf('100') >= 0) maxVal = 100;
+    else if (s.range.indexOf('60') >= 0) maxVal = 60;
+    total += maxVal;
+    return '<div style="background:rgba(255,255,255,0.03);border-left:3px solid '+s.color+';border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.4">'+s.name+'</div>'
+      + '<div style="font-size:12px;font-weight:900;color:'+s.color+';white-space:nowrap">'+s.range+'</div></div>'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5">'+s.note+'</div></div>';
+  }).join('');
+  el.innerHTML = '<div style="margin-top:4px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">✅ 適用可能性がある補助制度（'+subsidies.length+'件）</div>'
+    + rows
+    + '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:10px 12px;margin-top:8px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">合計補助上限の目安</div>'
+    + '<div style="font-size:20px;font-weight:900;color:var(--gold)">最大 '+total+'万円</div></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 実際の補助金は予算状況・自治体・工事内容により異なります。事前に自治体窓口または補助事業者へご確認ください。</div></div>';
+}
+(function(){ calcSubsidyCheck(); })();
 
 // 初期化
 checkStorageWarning();
