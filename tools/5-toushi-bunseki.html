@@ -612,6 +612,35 @@
     </div>
     <div id="area-score-result"></div>
   </div>
+
+  <!-- 金利上昇リスクシミュレーターカード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📈 金利上昇リスク シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">変動金利型ローン利用中の方向け。金利が上昇した場合の月次返済額・年間CF・DSCRへの影響を5段階でシミュレーションします。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">借入残高（万円）</label>
+        <input type="number" id="rrs_loan" value="3000" min="100" max="50000" step="100" oninput="calcRateRisk()" style="width:100%;padding:8px;border-radius:6px;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);color:var(--text);font-size:14px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の金利（%）</label>
+        <input type="number" id="rrs_rate" value="1.5" min="0.1" max="10" step="0.1" oninput="calcRateRisk()" style="width:100%;padding:8px;border-radius:6px;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);color:var(--text);font-size:14px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">残期間（年）</label>
+        <input type="number" id="rrs_term" value="25" min="1" max="50" step="1" oninput="calcRateRisk()" style="width:100%;padding:8px;border-radius:6px;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);color:var(--text);font-size:14px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額賃料収入（万円）</label>
+        <input type="number" id="rrs_income" value="15" min="1" max="500" step="0.5" oninput="calcRateRisk()" style="width:100%;padding:8px;border-radius:6px;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);color:var(--text);font-size:14px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額固定費（万円）</label>
+        <input type="number" id="rrs_cost" value="2" min="0" max="50" step="0.5" oninput="calcRateRisk()" style="width:100%;padding:8px;border-radius:6px;background:var(--dark3);border:1px solid rgba(255,255,255,0.1);color:var(--text);font-size:14px">
+      </div>
+    </div>
+    <div id="rrs-result"></div>
+  </div>
 </div>
 </div>
 
@@ -3847,6 +3876,57 @@ function calcAreaScore() {
     + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; 自己評価に基づくスコアです。人口統計・空室率・開発計画は市区町村・国土交通省のデータで確認することをお勧めします。</div>';
 }
 (function(){ calcAreaScore(); })();
+
+function calcRateRisk() {
+  var loan = parseFloat(document.getElementById('rrs_loan').value)||3000;
+  var baseRate = parseFloat(document.getElementById('rrs_rate').value)||1.5;
+  var term = parseFloat(document.getElementById('rrs_term').value)||25;
+  var income = parseFloat(document.getElementById('rrs_income').value)||15;
+  var cost = parseFloat(document.getElementById('rrs_cost').value)||2;
+  var el = document.getElementById('rrs-result');
+  if(!el) return;
+  function monthlyRepay(loanMan, rateAnn, termYr) {
+    var p = loanMan * 10000;
+    var r = rateAnn / 100 / 12;
+    var n = termYr * 12;
+    if(r === 0) return p / n;
+    return p * r * Math.pow(1+r,n) / (Math.pow(1+r,n) - 1);
+  }
+  var scenarios = [0, 0.5, 1.0, 1.5, 2.0];
+  var rows = scenarios.map(function(delta) {
+    var r = baseRate + delta;
+    var repay = monthlyRepay(loan, r, term);
+    var annualCF = (income - cost) * 12 * 10000 - repay * 12;
+    var noi = (income - cost) * 12 * 10000;
+    var dscr = noi > 0 ? noi / (repay * 12) : 0;
+    return {delta: delta, rate: r, repay: repay, annualCF: annualCF, dscr: dscr};
+  });
+  var base = rows[0];
+  var tableRows = rows.map(function(s) {
+    var cfChange = s.annualCF - base.annualCF;
+    var cfColor = s.annualCF >= 0 ? 'var(--green)' : 'var(--red)';
+    var dscrColor = s.dscr >= 1.2 ? 'var(--green)' : s.dscr >= 1.0 ? 'var(--gold)' : 'var(--red)';
+    var label = s.delta === 0 ? '現在' : '+' + s.delta.toFixed(1) + '%';
+    var rowBg = s.delta === 0 ? 'background:rgba(255,255,255,0.04)' : '';
+    return '<tr style="' + rowBg + '">'
+      + '<td style="font-weight:700;color:' + (s.delta===0?'var(--gold)':'var(--text)') + '">' + label + '<br><span style="font-size:10px;color:var(--text-muted)">金利' + s.rate.toFixed(1) + '%</span></td>'
+      + '<td>' + Math.round(s.repay/10000*10)/10 + '万円/月</td>'
+      + '<td style="color:' + cfColor + '">' + (s.annualCF>=0?'+':'') + Math.round(s.annualCF/10000).toLocaleString() + '万円'
+        + (s.delta>0 ? '<br><span style="font-size:10px;color:var(--red)">' + (cfChange>=0?'+':'') + Math.round(cfChange/10000).toLocaleString() + '万</span>' : '') + '</td>'
+      + '<td style="color:' + dscrColor + '">' + s.dscr.toFixed(2) + '</td>'
+      + '</tr>';
+  }).join('');
+  var worstCF = rows[rows.length-1].annualCF;
+  var advice = worstCF >= 0
+    ? '<div style="padding:10px 12px;background:rgba(74,222,128,0.1);border-radius:6px;border-left:3px solid var(--green);font-size:12px">✅ 金利が2%上昇しても年間CFはプラスを維持できる見込みです。</div>'
+    : '<div style="padding:10px 12px;background:rgba(239,68,68,0.1);border-radius:6px;border-left:3px solid var(--red);font-size:12px">⚠️ 金利上昇時にCFがマイナスになるリスクがあります。繰上返済・固定金利への借換えを検討してください。</div>';
+  el.innerHTML = '<table class="sensitivity-table" style="margin-bottom:12px">'
+    + '<thead><tr><th>金利シナリオ</th><th>月次返済額</th><th>年間CF</th><th>DSCR</th></tr></thead>'
+    + '<tbody>' + tableRows + '</tbody></table>'
+    + '<p style="font-size:10px;color:var(--text-muted);margin-bottom:8px">DSCR（Debt Service Coverage Ratio）: 1.2以上が安全圏 / 1.0未満は返済不能リスク</p>'
+    + advice;
+}
+(function(){ calcRateRisk(); })();
 
 // ===== 物件スクリーニング 5軸チェック =====
 function calcScreening() {
