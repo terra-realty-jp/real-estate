@@ -522,6 +522,40 @@
     <div id="tokutei-result"></div>
   </div>
 
+  <!-- 遺品整理費用試算カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+      📦 遺品整理・荷物処分費用 かんたん試算
+    </h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家の片付けや遺品整理にかかる費用の目安を試算します。業者に依頼した場合と自分で行った場合を比較できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物の間取り</label>
+        <select id="es_layout" onchange="calcEstateClear()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1r">1K・1R（単身者向け）</option>
+          <option value="2ldk">2LDK〜3DK</option>
+          <option value="3ldk" selected>3LDK〜4DK（一般的な戸建て）</option>
+          <option value="4ldk">4LDK以上（大型戸建て）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">荷物の量</label>
+        <select id="es_volume" onchange="calcEstateClear()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="light">少ない（引越し後の残留品程度）</option>
+          <option value="normal" selected>普通（一般的な家財一式）</option>
+          <option value="heavy">多い（長年の蓄積・大型家具多数）</option>
+        </select>
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="es_recycle" onchange="calcEstateClear()" style="accent-color:var(--gold);width:16px;height:16px">
+          <span>買取・リサイクル対象品がある（家電・貴金属・骨董品など）</span>
+        </label>
+      </div>
+    </div>
+    <div id="estate-clear-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -2632,6 +2666,46 @@ function checkStorageWarning() {
       setTimeout(()=>el.remove(), 8000);
     }
   } catch(e){}
+}
+
+// ===== 遺品整理費用試算 =====
+function calcEstateClear() {
+  var el = document.getElementById('estate-clear-result');
+  if (!el) return;
+  var layout   = document.getElementById('es_layout').value;
+  var volume   = document.getElementById('es_volume').value;
+  var recycle  = document.getElementById('es_recycle').checked;
+  var baseMap = {
+    '1r':   {pro:[5, 12],   diy:[2, 5]},
+    '2ldk': {pro:[15, 30],  diy:[5, 12]},
+    '3ldk': {pro:[25, 50],  diy:[10, 20]},
+    '4ldk': {pro:[40, 80],  diy:[15, 30]},
+  };
+  var volMul = {light:0.7, normal:1.0, heavy:1.5};
+  var base = baseMap[layout] || baseMap['3ldk'];
+  var mul  = volMul[volume]  || 1.0;
+  var proLow  = Math.round(base.pro[0]  * mul);
+  var proHigh = Math.round(base.pro[1]  * mul);
+  var diyLow  = Math.round(base.diy[0]  * mul);
+  var diyHigh = Math.round(base.diy[1]  * mul);
+  var recycleNote = recycle ? '<div style="font-size:11px;color:#4ade80;margin-top:4px">✓ 買取品がある場合、業者によっては費用から差し引いてもらえることがあります</div>' : '';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'
+    + '<div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.08)">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">👔 業者に依頼</div>'
+    + '<div style="font-size:20px;font-weight:900;color:var(--gold)">' + proLow + '〜' + proHigh + '<span style="font-size:12px;font-weight:400">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">手間なし・スピーディ・粗大ゴミ処分まで一括</div>'
+    + recycleNote + '</div>'
+    + '<div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.08)">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🚛 自分で処分</div>'
+    + '<div style="font-size:20px;font-weight:900;color:#4ade80">' + diyLow + '〜' + diyHigh + '<span style="font-size:12px;font-weight:400">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">軽トラレンタル・粗大ゴミ収集・自治体の処分費用</div></div></div>'
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;margin-bottom:10px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">💡 費用を抑える3つのポイント</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.8">'
+    + '① 自治体の「粗大ごみ収集」は1点300〜1,000円が多く、業者より格安<br>'
+    + '② 売れるものはフリマアプリ・リサイクルショップで処分すると費用が回収できる<br>'
+    + '③ 遺品整理士認定業者なら遺骨・大切な品物の取り扱いも丁寧（認定証を確認）</div></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">&#8251; 費用は地域・業者・実際の荷物量によって大きく変わります。複数社の見積もりを取って比較することをお勧めします。</div>';
 }
 
 // ===== 特定空き家リスク診断 =====
