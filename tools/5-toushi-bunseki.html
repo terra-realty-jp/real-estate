@@ -698,6 +698,32 @@
     </div>
     <div id="rrs-result"></div>
   </div>
+
+  <!-- 法人化 vs 個人保有 比較カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">🏢 法人化 vs 個人保有 税負担比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">年間家賃収入と他の所得を入力して、個人所有と法人化（資産管理会社）での税負担の差を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間家賃収入（万円）</label>
+        <input type="number" id="corp_rent" value="500" min="0" max="10000" step="50" oninput="calcCorpVsPersonal()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">不動産所得の必要経費（万円/年）</label>
+        <input type="number" id="corp_expense" value="150" min="0" max="5000" step="50" oninput="calcCorpVsPersonal()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">給与・その他所得（万円/年）</label>
+        <input type="number" id="corp_salary" value="600" min="0" max="10000" step="100" oninput="calcCorpVsPersonal()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">法人から受け取る役員報酬（万円/年）</label>
+        <input type="number" id="corp_salary2" value="200" min="0" max="5000" step="50" oninput="calcCorpVsPersonal()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="corp-vs-personal-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4058,6 +4084,55 @@ function calcRateRisk() {
     + advice;
 }
 (function(){ calcRateRisk(); })();
+
+// ===== 法人化 vs 個人保有 税負担比較 =====
+function calcCorpVsPersonal() {
+  var el = document.getElementById('corp-vs-personal-result');
+  if(!el) return;
+  var rent     = parseFloat(document.getElementById('corp_rent').value)||0;
+  var expense  = parseFloat(document.getElementById('corp_expense').value)||0;
+  var salary   = parseFloat(document.getElementById('corp_salary').value)||0;
+  var salary2  = parseFloat(document.getElementById('corp_salary2').value)||0;
+  function incomeTax(income) {
+    var brackets = [[0,195,0.05,0],[195,330,0.10,9.75],[330,695,0.20,42.75],[695,900,0.23,63.6],[900,1800,0.33,153.6],[1800,4000,0.40,279.6],[4000,Infinity,0.45,479.6]];
+    for(var i=0;i<brackets.length;i++){
+      if(income<=brackets[i][1]){ return income*brackets[i][2]-brackets[i][3]; }
+    }
+    return income*0.45-479.6;
+  }
+  var netRent = rent - expense;
+  var personalIncome = salary + netRent;
+  var personalTax = incomeTax(personalIncome) * 1.021 + personalIncome * 0.10;
+  var salaryDeduct = salary >= 850 ? 195 : salary >= 660 ? salary*0.1+110 : salary >= 360 ? salary*0.2+44 : salary >= 180 ? salary*0.3+8 : salary*0.4;
+  var personalBase = salary - salaryDeduct + netRent;
+  var personalTax2 = incomeTax(Math.max(0,personalBase)) * 1.021 + Math.max(0,personalBase)*0.10;
+  var corpProfit = netRent - salary2;
+  var corpTax = corpProfit > 0 ? (corpProfit <= 800 ? corpProfit*0.15 : 800*0.15+(corpProfit-800)*0.234) : 0;
+  var salary2Deduct = salary2 >= 850 ? 195 : salary2 >= 660 ? salary2*0.1+110 : salary2 >= 360 ? salary2*0.2+44 : salary2 >= 180 ? salary2*0.3+8 : salary2*0.4;
+  var personalOnSalary2 = incomeTax(Math.max(0,salary+salary2-salaryDeduct-salary2Deduct)) * 1.021 + Math.max(0,salary+salary2-salaryDeduct-salary2Deduct)*0.10;
+  var personalOnSalaryOnly = incomeTax(Math.max(0,salary-salaryDeduct))*1.021 + Math.max(0,salary-salaryDeduct)*0.10;
+  var personalTaxOnSalary2 = personalOnSalary2 - personalOnSalaryOnly;
+  var corpTotalTax = corpTax + personalTaxOnSalary2;
+  var saving = personalTax2 - corpTotalTax;
+  var kpiS = 'background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;text-align:center';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+    +'<div style="'+kpiS+'"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">個人税負担（概算）</div><div style="font-size:20px;font-weight:900;color:var(--red)">'+personalTax2.toFixed(0)+'万</div></div>'
+    +'<div style="'+kpiS+'"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">法人化後 税合計（概算）</div><div style="font-size:20px;font-weight:900;color:var(--gold)">'+corpTotalTax.toFixed(0)+'万</div></div>'
+    +'<div style="'+kpiS+'"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">節税効果（年間）</div><div style="font-size:20px;font-weight:900;color:'+(saving>0?'var(--green)':'var(--red)')+'">'+( saving>=0?'+':'')+saving.toFixed(0)+'万</div></div>'
+    +'</div>'
+    +'<div style="overflow-x:auto;margin-bottom:12px"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:rgba(255,255,255,0.05)"><th style="padding:7px 8px;font-size:11px;text-align:left">比較項目</th><th style="padding:7px 8px;font-size:11px;text-align:right">個人</th><th style="padding:7px 8px;font-size:11px;text-align:right">法人化</th></tr></thead>'
+    +'<tbody>'
+    +'<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:7px 8px;font-size:12px">課税ベース</td><td style="padding:7px 8px;font-size:12px;text-align:right">'+Math.max(0,personalBase).toFixed(0)+'万</td><td style="padding:7px 8px;font-size:12px;text-align:right">法人利益 '+Math.max(0,corpProfit).toFixed(0)+'万</td></tr>'
+    +'<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:7px 8px;font-size:12px">所得税・法人税</td><td style="padding:7px 8px;font-size:12px;text-align:right;color:var(--red)">'+personalTax2.toFixed(0)+'万</td><td style="padding:7px 8px;font-size:12px;text-align:right;color:var(--gold)">'+corpTax.toFixed(0)+'万+個人'+personalTaxOnSalary2.toFixed(0)+'万</td></tr>'
+    +'<tr><td style="padding:7px 8px;font-size:12px">実効税率</td><td style="padding:7px 8px;font-size:12px;text-align:right">'+(personalBase>0?(personalTax2/personalBase*100).toFixed(1):0)+'%</td><td style="padding:7px 8px;font-size:12px;text-align:right">'+(netRent>0?(corpTotalTax/netRent*100).toFixed(1):0)+'%</td></tr>'
+    +'</tbody></table></div>'
+    +(saving>0
+      ? '<div style="padding:10px 12px;background:rgba(74,222,128,0.1);border-left:3px solid var(--green);border-radius:0 6px 6px 0;font-size:12px">💡 法人化で年間約<strong style="color:var(--green)">'+saving.toFixed(0)+'万円</strong>の節税が見込まれます。設立コスト・維持費（年20〜30万）との比較で判断を。</div>'
+      : '<div style="padding:10px 12px;background:rgba(255,80,80,0.1);border-left:3px solid var(--red);border-radius:0 6px 6px 0;font-size:12px">⚠️ 現時点の収入規模では法人化のメリットが小さい可能性があります。不動産所得が年間500万円超が目安です。</div>')
+    +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 所得控除（基礎控除48万等）は省略した概算です。実際は税理士への相談を強くお勧めします。</p>';
+}
+(function(){ calcCorpVsPersonal(); })();
 
 // ===== 物件スクリーニング 5軸チェック =====
 function calcScreening() {
