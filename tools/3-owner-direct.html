@@ -653,6 +653,26 @@
     <div id="pre-sale-reform-result"></div>
   </div>
 
+  <!-- 売却スケジュール逆算カード -->
+  <div class="card" style="margin-top:24px">
+    <div class="card-title">📅 売却スケジュール逆算カード</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">希望引渡し日から逆算し、査定依頼・媒介契約・売出・契約の各フェーズの目安期日を自動計算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">希望引渡し日</label>
+        <input type="date" id="ss_target" oninput="calcSaleSchedule()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却方法</label>
+        <select id="ss_type" onchange="calcSaleSchedule()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="agency">仲介売却（3〜6ヶ月）</option>
+          <option value="buy">買取（1〜2ヶ月）</option>
+        </select>
+      </div>
+    </div>
+    <div id="sale-schedule-result"></div>
+  </div>
+
   <!-- 値引き交渉シミュレーターカード -->
   <div class="card" style="margin-top:24px">
     <div class="card-title">🤝 値引き交渉 手取り影響シミュレーター</div>
@@ -3131,6 +3151,80 @@ function calcPreSaleReform() {
     + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; リフォームの種類（クロス貼替・水回り・外壁塗装など）によって価格上昇効果は大きく異なります。不動産会社と相談の上、費用対効果の高い箇所を優先しましょう。</div>';
 }
 (function(){ calcPreSaleReform(); })();
+
+// ===== 売却スケジュール 逆算 =====
+function calcSaleSchedule() {
+  var el = document.getElementById('sale-schedule-result');
+  if (!el) return;
+  var targetVal = document.getElementById('ss_target').value;
+  var stype = document.getElementById('ss_type').value;
+  if (!targetVal) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">希望引渡し日を選択してください</div>';
+    return;
+  }
+  var target = new Date(targetVal);
+  var today = new Date(2026, 4, 14);
+  var diffDays = Math.floor((target - today) / 86400000);
+  if (diffDays < 30) {
+    el.innerHTML = '<div style="color:var(--red);font-size:12px;padding:8px">⚠️ 引渡し日まで30日未満です。買取か急ぎの仲介が必要です。</div>';
+    return;
+  }
+  var steps;
+  if (stype === 'agency') {
+    steps = [
+      { label: '査定依頼・業者選定', daysBeforeClose: diffDays, note: '複数社査定を推奨（2〜4社）' },
+      { label: '媒介契約締結', daysBeforeClose: diffDays - 14, note: '専任・一般媒介を選択' },
+      { label: '売出開始（SUUMO等掲載）', daysBeforeClose: diffDays - 28, note: '物件写真・説明文を準備' },
+      { label: '購入申込・交渉', daysBeforeClose: 60, note: '価格交渉・条件確認' },
+      { label: '売買契約締結', daysBeforeClose: 45, note: '手付金受領・重要事項説明' },
+      { label: 'ローン審査完了目標', daysBeforeClose: 21, note: '買主のローン承認を確認' },
+      { label: '決済・引渡し準備', daysBeforeClose: 7, note: '残代金受領・鍵の引渡し準備' },
+      { label: '引渡し完了', daysBeforeClose: 0, note: '登記手続き・完了' },
+    ];
+  } else {
+    steps = [
+      { label: '買取業者への連絡・査定', daysBeforeClose: diffDays, note: '複数の買取業者に問合せ' },
+      { label: '買取価格の提示・交渉', daysBeforeClose: diffDays - 7, note: '複数社を比較して選定' },
+      { label: '売買契約締結', daysBeforeClose: 21, note: '手付金受領' },
+      { label: '決済・引渡し準備', daysBeforeClose: 7, note: '残代金受領・鍵の準備' },
+      { label: '引渡し完了', daysBeforeClose: 0, note: '登記手続き・完了' },
+    ];
+  }
+  var html = '<div style="margin-top:10px">';
+  var urgency = diffDays < 90 ? 'var(--red)' : (diffDays < 180 ? '#fb923c' : 'var(--green)');
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;margin-bottom:12px;text-align:center">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">引渡し日まで</div>';
+  html += '<div style="font-size:24px;font-weight:900;color:' + urgency + '">' + diffDays + '日</div>';
+  html += '</div>';
+  html += '<div style="position:relative;padding-left:24px">';
+  html += '<div style="position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:rgba(255,255,255,0.1)"></div>';
+  steps.forEach(function(s) {
+    var d = new Date(target);
+    d.setDate(d.getDate() - s.daysBeforeClose);
+    var isPast = d < today;
+    var isToday = Math.abs(d - today) < 86400000;
+    var dotColor = isPast ? 'rgba(255,255,255,0.2)' : (isToday ? 'var(--gold)' : 'var(--green)');
+    var textColor = isPast ? 'var(--text-muted)' : 'var(--text)';
+    var dateStr = d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate();
+    html += '<div style="position:relative;margin-bottom:14px">';
+    html += '<div style="position:absolute;left:-20px;top:4px;width:10px;height:10px;border-radius:50%;background:' + dotColor + '"></div>';
+    html += '<div style="font-size:12px;font-weight:700;color:' + textColor + '">' + s.label + '</div>';
+    html += '<div style="font-size:11px;color:var(--gold);margin:2px 0">' + dateStr + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-muted)">' + s.note + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 日程は目安です。市場状況・物件条件によって大きく変動します。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){
+  var d = new Date(2026, 4, 14);
+  d.setMonth(d.getMonth() + 6);
+  var yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+  var inp = document.getElementById('ss_target');
+  if (inp) { inp.value = yyyy + '-' + mm + '-' + dd; calcSaleSchedule(); }
+})();
 
 // ===== 値下げ許容ライン計算 =====
 function calcNegLimit() {
