@@ -1024,6 +1024,30 @@
     <div id="transfer-tax-result"></div>
   </div>
 
+  <!-- 売却諸費用 一覧シミュレーター -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">🧾 売却諸費用 一覧シミュレーター</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売却価格と条件を入力して、仲介手数料・登記費用・引越し費用など売却時に必要な全費用の内訳と合計を確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却予定価格（万円）</label>
+        <input type="number" id="sc_sell" value="3000" min="100" max="200000" step="100" oninput="calcSellCosts()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">残ローン残高（万円）</label>
+        <input type="number" id="sc_loan" value="1000" min="0" max="200000" step="100" oninput="calcSellCosts()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="sc_prepay" onchange="calcSellCosts()" style="accent-color:var(--gold)">繰り上げ返済手数料あり（約5万）</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="sc_survey" onchange="calcSellCosts()" style="accent-color:var(--gold)">土地測量・境界確認（20〜40万）</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="sc_repair" onchange="calcSellCosts()" style="accent-color:var(--gold)">売却前リフォーム・クリーニング（10〜50万）</label>
+      <label style="display:flex;align-items:center;gap=6px;font-size:12px;cursor:pointer"><input type="checkbox" id="sc_move" onchange="calcSellCosts()" style="accent-color:var(--gold)">引越し費用（5〜15万）</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="sc_stamp" onchange="calcSellCosts()" style="accent-color:var(--gold)">印紙税（契約書）</label>
+    </div>
+    <div id="sell-costs-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3591,6 +3615,54 @@ function calcTransferTax() {
     +'<p style="font-size:10px;color:var(--text-muted);margin-top:10px">※ 復興特別所得税(2.1%)含む実効税率。居住用3000万特控は売却年度居住・過去2年未適用など要件あり。実際は税理士への相談を推奨します。</p>';
 }
 (function(){ calcTransferTax(); })();
+
+// ===== 売却諸費用 一覧シミュレーター =====
+function calcSellCosts() {
+  var el = document.getElementById('sell-costs-result');
+  if(!el) return;
+  var sell    = parseFloat(document.getElementById('sc_sell').value)||0;
+  var loan    = parseFloat(document.getElementById('sc_loan').value)||0;
+  var prepay  = document.getElementById('sc_prepay').checked;
+  var survey  = document.getElementById('sc_survey').checked;
+  var repair  = document.getElementById('sc_repair').checked;
+  var move    = document.getElementById('sc_move').checked;
+  var stamp   = document.getElementById('sc_stamp').checked;
+  if(!sell){ el.innerHTML=''; return; }
+  var commission = Math.round((sell*0.03+6)*1.1*10)/10;
+  var stampTax = sell<500?0.015:sell<1000?0.01:sell<5000?0.02:sell<10000?0.03:sell<50000?0.06:sell<100000?0.1:0.2;
+  var items = [
+    {label:'仲介手数料（税込）', min:commission, max:commission, note:'(売価×3%+6万)×1.1（上限額）', required:true},
+    {label:'登記費用（抵当権抹消等）', min:1.5, max:3, note:'司法書士費用・登録免許税込み', required:true},
+  ];
+  if(loan>0) items.push({label:'ローン一括返済', min:loan, max:loan, note:'残高全額返済', required:true});
+  if(prepay) items.push({label:'繰り上げ返済手数料', min:3, max:5, note:'金融機関による', required:false});
+  if(stamp)  items.push({label:'印紙税（契約書）', min:stampTax, max:stampTax, note:'売買価格帯による', required:false});
+  if(survey) items.push({label:'土地測量・境界確認', min:20, max:40, note:'隣地立会い含む', required:false});
+  if(repair) items.push({label:'リフォーム・ハウスクリーニング', min:10, max:50, note:'範囲・状態による', required:false});
+  if(move)   items.push({label:'引越し費用', min:5, max:15, note:'距離・荷物量による', required:false});
+  var totalMin = items.reduce(function(s,i){return s+i.min;},0);
+  var totalMax = items.reduce(function(s,i){return s+i.max;},0);
+  var netMin = sell - totalMax;
+  var netMax = sell - totalMin;
+  var rows = items.map(function(it){
+    return '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)">'
+      +'<td style="padding:7px 8px;font-size:12px">'+(it.required?'':'<span style="font-size:10px;color:var(--text-muted)">[条件次第] </span>')+it.label+'</td>'
+      +'<td style="padding:7px 8px;font-size:12px;text-align:right;color:var(--red)">'+(it.min===it.max?it.min.toFixed(1):it.min.toFixed(1)+'〜'+it.max.toFixed(1))+'万</td>'
+      +'<td style="padding:7px 8px;font-size:11px;color:var(--text-muted)">'+it.note+'</td>'
+      +'</tr>';
+  }).join('');
+  var kpiS = 'background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+    +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:var(--red)">'+totalMin.toFixed(0)+'〜'+totalMax.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">費用合計</div></div>'
+    +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:var(--gold)">'+(commission/sell*100).toFixed(1)+'%</div><div style="font-size:10px;color:var(--text-muted)">費用率（概算）</div></div>'
+    +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:'+(netMin>=0?'var(--green)':'var(--red)')+'">'+netMin.toFixed(0)+'〜'+netMax.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">手取り（概算）</div></div>'
+    +'</div>'
+    +'<div style="overflow-x:auto;margin-bottom:10px"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:rgba(255,255,255,0.05)"><th style="padding:7px 8px;font-size:11px;text-align:left">費用項目</th><th style="padding:7px 8px;font-size:11px;text-align:right">金額目安</th><th style="padding:7px 8px;font-size:11px;text-align:left">備考</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table></div>'
+    +'<p style="font-size:10px;color:var(--text-muted)">※ 仲介手数料は上限額です。交渉次第で減額可能な場合もあります。実際の費用は担当者にご確認ください。</p>';
+}
+(function(){ calcSellCosts(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
