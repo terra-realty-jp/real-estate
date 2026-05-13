@@ -822,6 +822,40 @@
     </div>
   </div>
 
+  <!-- 相続税評価額 簡易試算カード -->
+  <div style="max-width:800px;margin:24px auto 0">
+    <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+        &#x1F4CA; 相続税評価額 と 売却価格の違いを知る
+      </h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">不動産の「相続税評価額」は実際の売却価格（時価）と大きく異なります。相続税の計算に使われる評価額と売却時の市場価格の差を把握することで、相続税対策の判断材料になります。</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">土地面積（㎡）</label>
+          <input type="number" id="it_land_sqm" placeholder="例: 100" min="10" step="1" oninput="calcInhTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">路線価（円/㎡）</label>
+          <input type="number" id="it_rosenka" placeholder="例: 300000" min="0" step="10000" oninput="calcInhTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">国税庁「路線価図」で確認できます（住宅地で7〜80万円/㎡程度）</div>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物延床面積（㎡）</label>
+          <input type="number" id="it_build_sqm" placeholder="例: 80" min="0" step="1" oninput="calcInhTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物の固定資産税評価額（万円）</label>
+          <input type="number" id="it_build_val" placeholder="例: 500" min="0" step="10" oninput="calcInhTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+        <div style="grid-column:1/-1">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">AI査定の時価（参考）</label>
+          <input type="number" id="it_market" placeholder="例: 4500" min="0" step="100" oninput="calcInhTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+      <div id="inh-tax-result"></div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -3043,6 +3077,42 @@ function copyResultText() {
     catch(e) { showHistoryToast('コピーに失敗しました', true); }
     ta.remove();
   }
+}
+
+// ===== 相続税評価額 簡易試算 =====
+function calcInhTax() {
+  var el = document.getElementById('inh-tax-result');
+  if (!el) return;
+  var landSqm   = parseFloat(document.getElementById('it_land_sqm').value)  || 0;
+  var rosenka   = parseFloat(document.getElementById('it_rosenka').value)   || 0;
+  var buildSqm  = parseFloat(document.getElementById('it_build_sqm').value) || 0;
+  var buildVal  = parseFloat(document.getElementById('it_build_val').value) || 0;
+  var market    = parseFloat(document.getElementById('it_market').value)    || 0;
+  if (!landSqm || !rosenka) { el.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">土地面積と路線価を入力してください</p>'; return; }
+  // 土地の相続税評価額（路線価方式）= 路線価 × 面積 × 奥行補正（0.95〜1.0）
+  var landEval = Math.round(rosenka * landSqm * 0.97 / 10000); // 万円
+  // 建物の相続税評価額 = 固定資産税評価額（そのまま）
+  var buildEval = buildVal;
+  var totalEval = landEval + buildEval;
+  var evalRatioVsMarket = market > 0 ? Math.round(totalEval / market * 100) : null;
+  var diff = market > 0 ? market - totalEval : null;
+  var kpiHtml = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">'
+    + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">土地の評価額</div><div style="font-size:15px;font-weight:900;color:var(--text)">' + landEval.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">路線価×面積×補正</div></div>'
+    + (buildEval > 0 ? '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">建物の評価額</div><div style="font-size:15px;font-weight:900;color:var(--text)">' + buildEval.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">固定資産税評価額</div></div>' : '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">建物の評価額</div><div style="font-size:15px;font-weight:900;color:var(--text-muted)">—</div><div style="font-size:10px;color:var(--text-muted)">固定資産税評価額を入力</div></div>')
+    + '<div style="text-align:center;padding:10px;background:rgba(201,168,76,0.1);border-radius:8px;border:1px solid rgba(201,168,76,0.2)"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">相続税評価額（概算）</div><div style="font-size:15px;font-weight:900;color:var(--gold)">' + totalEval.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">土地+建物</div></div></div>';
+  var compHtml = '';
+  if (diff !== null && market > 0) {
+    compHtml = '<div style="padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:10px">'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      + '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">時価（AI査定）</div><div style="font-size:14px;font-weight:900;color:var(--text)">' + market.toLocaleString() + '万円</div></div>'
+      + '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">評価額/時価</div><div style="font-size:14px;font-weight:900;color:' + (evalRatioVsMarket < 80 ? '#4ade80' : 'var(--gold)') + '">' + evalRatioVsMarket + '%</div></div></div>'
+      + '<div style="margin-top:8px;font-size:12px;color:var(--text-muted);line-height:1.6">相続税評価額が時価の約' + evalRatioVsMarket + '%。<strong style="color:var(--text)">時価より約' + (diff).toLocaleString() + '万円低い</strong>評価です。'
+      + (evalRatioVsMarket < 80 ? '<span style="color:#4ade80"> 評価額が低いほど相続税の節税効果が大きくなります。</span>' : '')
+      + '</div></div>';
+  }
+  el.innerHTML = kpiHtml + compHtml
+    + '<div style="padding:10px 14px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">'
+    + '&#x1F4A1; 相続税評価額は売却価格より一般的に20〜40%低くなります（路線価は公示地価の約80%水準）。不動産を相続で引き継ぐと、現金より相続税を抑えられる場合があります。詳細は税理士にご確認ください。</div>';
 }
 
 // ===== 告知義務チェックリスト =====
