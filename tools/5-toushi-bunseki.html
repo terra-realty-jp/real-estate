@@ -356,6 +356,40 @@
     <div class="empty-state"><div class="empty-icon">📊</div><p>物件入力タブで分析を実行してください</p></div>
   </div>
   <div id="purchase-checklist" style="display:none;margin-top:20px"></div>
+
+  <!-- 物件スクリーニング 5軸チェックカード -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">🔍 物件スクリーニング 5軸チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">購入候補の物件を5つの軸で素早くチェック。「購入を進めてよいか」の判断基準にしてください。</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><label style="font-size:12px;font-weight:700">1. 表面利回り</label><span id="sc_yield_val" style="font-size:12px;font-weight:700;color:var(--gold)">—</span></div>
+        <input type="range" id="sc_yield" min="1" max="20" step="0.5" value="7" oninput="calcScreening()" style="width:100%;accent-color:var(--gold);height:4px;cursor:pointer">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)"><span>1%</span><span>5%</span><span>10%</span><span>15%</span><span>20%</span></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><label style="font-size:12px;font-weight:700">2. 築年数（年）</label><span id="sc_age_val" style="font-size:12px;font-weight:700;color:var(--gold)">—</span></div>
+        <input type="range" id="sc_age" min="0" max="50" step="1" value="20" oninput="calcScreening()" style="width:100%;accent-color:var(--gold);height:4px;cursor:pointer">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)"><span>新築</span><span>10年</span><span>20年</span><span>35年</span><span>50年</span></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><label style="font-size:12px;font-weight:700">3. 最寄り駅 徒歩（分）</label><span id="sc_walk_val" style="font-size:12px;font-weight:700;color:var(--gold)">—</span></div>
+        <input type="range" id="sc_walk" min="1" max="30" step="1" value="10" oninput="calcScreening()" style="width:100%;accent-color:var(--gold);height:4px;cursor:pointer">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)"><span>1分</span><span>5分</span><span>10分</span><span>20分</span><span>30分</span></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><label style="font-size:12px;font-weight:700">4. LTV（借入比率%）</label><span id="sc_ltv_val" style="font-size:12px;font-weight:700;color:var(--gold)">—</span></div>
+        <input type="range" id="sc_ltv" min="0" max="100" step="5" value="80" oninput="calcScreening()" style="width:100%;accent-color:var(--gold);height:4px;cursor:pointer">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)"><span>0%</span><span>50%</span><span>80%</span><span>100%</span></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><label style="font-size:12px;font-weight:700">5. エリアの賃貸需要</label><span id="sc_demand_val" style="font-size:12px;font-weight:700;color:var(--gold)">—</span></div>
+        <input type="range" id="sc_demand" min="1" max="5" step="1" value="3" oninput="calcScreening()" style="width:100%;accent-color:var(--gold);height:4px;cursor:pointer">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)"><span>低い</span><span>やや低</span><span>普通</span><span>やや高</span><span>高い</span></div>
+      </div>
+    </div>
+    <div id="screening-result"></div>
+  </div>
 </div>
 </div>
 
@@ -3813,6 +3847,58 @@ function calcAreaScore() {
     + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; 自己評価に基づくスコアです。人口統計・空室率・開発計画は市区町村・国土交通省のデータで確認することをお勧めします。</div>';
 }
 (function(){ calcAreaScore(); })();
+
+// ===== 物件スクリーニング 5軸チェック =====
+function calcScreening() {
+  var el = document.getElementById('screening-result');
+  if (!el) return;
+  var yield_ = parseFloat(document.getElementById('sc_yield').value);
+  var age    = parseInt(document.getElementById('sc_age').value, 10);
+  var walk   = parseInt(document.getElementById('sc_walk').value, 10);
+  var ltv    = parseInt(document.getElementById('sc_ltv').value, 10);
+  var demand = parseInt(document.getElementById('sc_demand').value, 10);
+
+  document.getElementById('sc_yield_val').textContent = yield_ + '%';
+  document.getElementById('sc_age_val').textContent = age + '年';
+  document.getElementById('sc_walk_val').textContent = walk + '分';
+  document.getElementById('sc_ltv_val').textContent = ltv + '%';
+  var demandLabels = ['', '低い', 'やや低', '普通', 'やや高', '高い'];
+  document.getElementById('sc_demand_val').textContent = demandLabels[demand] || demand;
+
+  var axes = [
+    { label: '利回り',     score: yield_ >= 10 ? 5 : yield_ >= 8 ? 4 : yield_ >= 6 ? 3 : yield_ >= 4 ? 2 : 1,  note: yield_ >= 8 ? '高利回り' : yield_ >= 6 ? '標準的' : '低め' },
+    { label: '築年数',     score: age <= 5 ? 5 : age <= 15 ? 4 : age <= 25 ? 3 : age <= 35 ? 2 : 1,  note: age <= 15 ? '築浅・安心感◎' : age <= 25 ? '旧耐震基準確認を' : '耐震・修繕リスク' },
+    { label: '交通利便性', score: walk <= 5 ? 5 : walk <= 10 ? 4 : walk <= 15 ? 3 : walk <= 20 ? 2 : 1, note: walk <= 10 ? '駅近・空室リスク低' : walk <= 15 ? '許容範囲' : '駅遠は空室注意' },
+    { label: '財務健全性', score: ltv <= 60 ? 5 : ltv <= 70 ? 4 : ltv <= 80 ? 3 : ltv <= 90 ? 2 : 1, note: ltv <= 70 ? '余裕あり' : ltv <= 80 ? '標準的' : '高LTV・リスク注意' },
+    { label: 'エリア需要', score: demand, note: demandLabels[demand] },
+  ];
+  var total = axes.reduce(function(s, a) { return s + a.score; }, 0);
+  var maxScore = 25;
+  var pct = Math.round(total / maxScore * 100);
+  var verdict = pct >= 80 ? { label: '◎ 購入を前向きに検討', color: 'var(--green)' }
+              : pct >= 60 ? { label: '○ 条件次第で検討可', color: '#4fc3f7' }
+              : pct >= 40 ? { label: '△ 要改善ポイントあり', color: 'var(--gold)' }
+              : { label: '✗ リスクが高い', color: 'var(--red)' };
+
+  var html = '<div style="margin-top:12px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    + '<div style="font-size:14px;font-weight:700;color:' + verdict.color + '">' + verdict.label + '</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + verdict.color + '">' + total + '/' + maxScore + '<span style="font-size:11px">点</span></div></div>';
+
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 14px;margin-bottom:10px">';
+  axes.forEach(function(a) {
+    var w = Math.round(a.score / 5 * 100);
+    var c = a.score >= 4 ? 'var(--green)' : a.score >= 3 ? 'var(--gold)' : 'var(--red)';
+    html += '<div style="margin-bottom:6px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px">'
+      + '<span>' + a.label + '</span><span style="color:' + c + '">' + a.note + ' (' + a.score + '/5)</span></div>'
+      + '<div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px"><div style="height:100%;width:' + w + '%;background:' + c + ';border-radius:3px;transition:width 0.3s"></div></div></div>';
+  });
+  html += '</div>'
+    + '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">※ スクリーニングはあくまで参考指標です。実際の購入判断は物件調査・融資審査・専門家への相談の上で行ってください。</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcScreening(); })();
 
 // ===== 投資予算別 おすすめ物件タイプ診断 =====
 function calcBudgetFit() {
