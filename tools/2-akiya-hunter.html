@@ -865,6 +865,43 @@
     <div id="sokki-check-result"></div>
   </div>
 
+  <!-- 解体費用 概算計算カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">🏗️ 解体費用 概算計算カード</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">建物を解体して更地にする場合の費用目安を試算します。解体後の売却・活用判断にご活用ください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">延床面積（㎡）</label>
+        <input type="number" id="dem_area" placeholder="例: 120" min="10" max="2000" step="10" oninput="calcDemoCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物構造</label>
+        <select id="dem_struct" onchange="calcDemoCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="wood">木造</option>
+          <option value="steel">軽量鉄骨造</option>
+          <option value="rc">RC造・重量鉄骨</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">立地条件</label>
+        <select id="dem_loc" onchange="calcDemoCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="urban">都市部（搬出困難・市街地）</option>
+          <option value="sub">郊外・住宅地</option>
+          <option value="rural">地方・農村部</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">アスベスト調査の有無</label>
+        <select id="dem_asb" onchange="calcDemoCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="no">未調査・不明（築年不明）</option>
+          <option value="pre80">築40年以上（アスベスト要確認）</option>
+          <option value="new">築40年未満（可能性低）</option>
+        </select>
+      </div>
+    </div>
+    <div id="demo-cost-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3452,6 +3489,56 @@ function calcTokuteiRisk() {
     + '<div style="margin-top:12px;text-align:center"><a href="mailto:terra.realty.iam@gmail.com?subject=特定空き家リスクについて相談したい&body=診断結果: ' + encodeURIComponent(level) + '" style="display:inline-block;background:#f87171;color:#fff;font-size:12px;font-weight:700;padding:8px 20px;border-radius:8px;text-decoration:none">空き家の今後について相談する →</a></div>'
     + '<div style="margin-top:10px;font-size:11px;color:var(--text-muted);line-height:1.7">&#8251; 「空家等対策の推進に関する特別措置法」（2023年改正）に基づく概要説明です。実際の指定は自治体が判断します。</div>';
 }
+
+// ===== 解体費用 概算計算 =====
+function calcDemoCost() {
+  var el = document.getElementById('demo-cost-result');
+  if (!el) return;
+  var area   = parseFloat(document.getElementById('dem_area').value)   || 0;
+  var struct = document.getElementById('dem_struct').value;
+  var loc    = document.getElementById('dem_loc').value;
+  var asb    = document.getElementById('dem_asb').value;
+  if (!area) { el.innerHTML = ''; return; }
+
+  // 構造別 ㎡単価（万円）
+  var unitCost = { wood:{ lo:3, hi:5 }, steel:{ lo:4, hi:7 }, rc:{ lo:6, hi:10 } }[struct];
+  // 立地補正
+  var locFactor = { urban:1.3, sub:1.0, rural:0.85 }[loc];
+
+  var low  = Math.round(area * unitCost.lo * locFactor);
+  var high = Math.round(area * unitCost.hi * locFactor);
+  var mid  = Math.round((low + high) / 2);
+
+  // アスベスト関連追加費用
+  var asbNote = '';
+  var asbExtra = 0;
+  if (asb === 'pre80') {
+    asbExtra = Math.round(area * 0.5);
+    asbNote = 'アスベスト含有の可能性あり。事前調査費（10〜20万円）＋除去工事費（約'+asbExtra+'万円）が別途必要な場合があります。';
+  } else if (asb === 'no') {
+    asbNote = '築年が不明のため、事前にアスベスト含有調査をお勧めします（検査費用10〜20万円）。';
+  }
+
+  var bars = [
+    { label:'低めの見積り', val:low, color:'var(--green)', pct: 30 },
+    { label:'中間目安', val:mid, color:'var(--gold)', pct: 60 },
+    { label:'高めの見積り', val:high, color:'var(--red)', pct: 100 },
+  ];
+
+  var barHtml = bars.map(function(b) {
+    return '<div style="margin-bottom:8px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text-muted)">'+b.label+'</span><span style="font-weight:700;color:'+b.color+'">約'+b.val+'万円</span></div>'
+      + '<div style="height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+b.pct+'%;background:'+b.color+';border-radius:4px"></div></div></div>';
+  }).join('');
+
+  el.innerHTML = '<div style="margin-top:4px">' + barHtml
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 12px;margin-top:8px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px">💡 費用の目安</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">'+struct==='wood'?'木造':'鉄骨・RC'+'建物（延床'+area+'㎡）の解体費用は <strong style="color:var(--text)">'+low+'〜'+high+'万円</strong> が目安です。重機の搬入経路・廃棄物の分別・仮設足場の有無で変動します。</div></div>'
+    + (asbNote ? '<div style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:8px;padding:10px 12px;margin-top:8px"><div style="font-size:12px;font-weight:700;color:#fb923c;margin-bottom:4px">⚠ アスベスト関連</div><div style="font-size:12px;color:var(--text-muted);line-height:1.7">'+asbNote+'</div></div>' : '')
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 解体業者により大きく異なります。複数社の見積りを比較されることをお勧めします。自治体によっては解体補助金（上限50万円程度）が利用できます。</div></div>';
+}
+(function(){ calcDemoCost(); })();
 
 // ===== 補助金・支援策 適用チェック =====
 function calcSubsidyCheck() {
