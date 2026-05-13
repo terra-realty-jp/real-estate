@@ -1091,6 +1091,31 @@
     <div id="restore-check-result"></div>
   </div>
 
+  <!-- 大規模修繕 積立不足診断カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,165,0,0.2);border-radius:14px;padding:24px;margin-top:20px">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px">🏗️ 大規模修繕 積立不足診断カード</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">物件の築年・戸数・積立残高から、次の大規模修繕に向けた必要積立額と不足額を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">築年数（年）</label>
+        <input type="number" id="mr_age" placeholder="例: 15" min="0" max="80" step="1" value="15" oninput="calcMajorRepair()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">総戸数または部屋数</label>
+        <input type="number" id="mr_units" placeholder="例: 12" min="1" max="200" step="1" value="12" oninput="calcMajorRepair()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の修繕積立残高（万円）</label>
+        <input type="number" id="mr_balance" placeholder="例: 80" min="0" step="10" value="80" oninput="calcMajorRepair()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月間積立額（万円）</label>
+        <input type="number" id="mr_monthly" placeholder="例: 2" min="0" step="0.5" value="2" oninput="calcMajorRepair()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="major-repair-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -5859,6 +5884,61 @@ function calcMgmtVsSelf() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 時間コストは時給2,000円で換算。実際の委託内容・条件は管理会社によって異なります。</div>';
 }
 (function(){ calcMgmtVsSelf(); })();
+
+// ===== 大規模修繕 積立不足診断 =====
+function calcMajorRepair() {
+  var el = document.getElementById('major-repair-result');
+  if (!el) return;
+  var age     = parseFloat(document.getElementById('mr_age').value)     || 0;
+  var units   = parseFloat(document.getElementById('mr_units').value)   || 1;
+  var balance = parseFloat(document.getElementById('mr_balance').value) || 0;
+  var monthly = parseFloat(document.getElementById('mr_monthly').value) || 0;
+
+  // 大規模修繕サイクル: 12〜15年ごと。次の修繕まで何年か
+  var cycle = 12;
+  var lastRepair = Math.floor(age / cycle) * cycle;
+  var nextRepair = lastRepair + cycle;
+  var yearsToNext = Math.max(0, nextRepair - age);
+
+  // 修繕費用目安: 1戸あたり70〜120万円（平均95万円）
+  var costPerUnit = 95;
+  var totalCost = units * costPerUnit;
+
+  // 今後の積立予測
+  var futureBalance = balance + monthly * 12 * yearsToNext;
+  var shortage = totalCost - futureBalance;
+  var isSufficient = shortage <= 0;
+
+  // 月額不足分
+  var requiredMonthly = yearsToNext > 0 ? Math.ceil((totalCost - balance) / (yearsToNext * 12) * 10) / 10 : 0;
+  var additionalNeeded = Math.max(0, requiredMonthly - monthly);
+
+  var statusColor = isSufficient ? 'var(--green)' : shortage > totalCost * 0.3 ? 'var(--red)' : 'var(--gold)';
+  var statusLabel = isSufficient ? '✅ 積立は十分です' : shortage > totalCost * 0.3 ? '⚠ 積立が大幅に不足しています' : '⚡ 積立がやや不足しています';
+
+  var items = [
+    { label:'次回大規模修繕の時期', val: '築'+nextRepair+'年（約'+yearsToNext+'年後）' },
+    { label:'修繕費用の目安（'+units+'戸×'+costPerUnit+'万円）', val: totalCost+'万円' },
+    { label:'修繕時の予測積立残高', val: Math.round(futureBalance)+'万円' },
+    { label:'不足額（目安）', val: shortage > 0 ? '▲'+Math.round(shortage)+'万円' : '余剰 '+Math.round(-shortage)+'万円' },
+  ];
+
+  var rowHtml = items.map(function(it) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+      + '<div style="font-size:12px;color:var(--text-muted)">'+it.label+'</div>'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text)">'+it.val+'</div></div>';
+  }).join('');
+
+  el.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+    + '<div style="font-size:14px;font-weight:900;color:'+statusColor+';margin-bottom:8px">'+statusLabel+'</div>'
+    + rowHtml + '</div>'
+    + (!isSufficient && additionalNeeded > 0 ?
+      '<div style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+      + '<div style="font-size:12px;font-weight:700;color:#fb923c;margin-bottom:4px">💡 推奨追加積立</div>'
+      + '<div style="font-size:12px;color:var(--text);line-height:1.6">月額 <strong>+'+additionalNeeded+'万円</strong> 追加積立すると修繕費用を確保できます（現在'+monthly+'万円 → 推奨'+requiredMonthly+'万円）</div></div>' : '')
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; 修繕費用は建物の構造・劣化状態により大きく変動します。事前に専門家による建物診断をおすすめします。</div>';
+}
+(function(){ calcMajorRepair(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
