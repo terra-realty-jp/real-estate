@@ -629,6 +629,31 @@
     <div id="depreciation-result"></div>
   </div>
 
+  <!-- 実質利回り（インフレ調整）計算カード -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📊 実質利回り（インフレ調整済み）計算カード</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">名目利回りからインフレ率を除いた「実質利回り」を計算します。インフレ局面での不動産投資の真の収益力を評価できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">表面利回り（%）</label>
+        <input type="number" id="ir_gross" placeholder="例: 8" min="0" max="30" step="0.1" value="8" oninput="calcRealYield()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">実質利回り（経費控除後・%）</label>
+        <input type="number" id="ir_net" placeholder="例: 5.5" min="0" max="25" step="0.1" value="5.5" oninput="calcRealYield()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定インフレ率（%/年）</label>
+        <input type="number" id="ir_inflation" placeholder="例: 2" min="0" max="15" step="0.1" value="2" oninput="calcRealYield()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">投資金額（万円）</label>
+        <input type="number" id="ir_invest" placeholder="例: 1000" min="0" step="100" value="1000" oninput="calcRealYield()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="real-yield-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4796,6 +4821,54 @@ function showErrToast(msg) {
   setTimeout(()=>t.style.opacity='0',4000);
   setTimeout(()=>t.remove(),4300);
 }
+// ===== 実質利回り（インフレ調整済み）計算 =====
+function calcRealYield() {
+  var el = document.getElementById('real-yield-result');
+  if (!el) return;
+  var gross    = parseFloat(document.getElementById('ir_gross').value) || 0;
+  var net      = parseFloat(document.getElementById('ir_net').value) || 0;
+  var infl     = parseFloat(document.getElementById('ir_inflation').value) || 0;
+  var invest   = parseFloat(document.getElementById('ir_invest').value) || 0;
+  if (!gross && !net) { el.innerHTML = ''; return; }
+
+  // Fisher方程式: 実質利回り = (1+名目)/(1+インフレ) - 1
+  var realGross = ((1 + gross/100) / (1 + infl/100) - 1) * 100;
+  var realNet   = ((1 + net/100)   / (1 + infl/100) - 1) * 100;
+
+  // 10年後の資産購買力
+  var color = function(v) { return v >= 3 ? 'var(--green)' : v >= 0 ? 'var(--gold)' : 'var(--red)'; };
+  var rows = [
+    { label:'表面利回り（名目）',  nom: gross, real: realGross },
+    { label:'実質利回り（経費後）', nom: net,   real: realNet  },
+  ];
+  var rowHtml = rows.map(function(r) {
+    return '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">'
+      + '<div><div style="font-size:13px;font-weight:700;color:var(--text)">'+r.label+'</div>'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">名目 '+r.nom.toFixed(1)+'% → インフレ'+infl.toFixed(1)+'%調整後</div></div>'
+      + '<div style="text-align:right">'
+      + '<div style="font-size:11px;color:var(--text-muted)">実質</div>'
+      + '<div style="font-size:22px;font-weight:900;color:'+color(r.real)+'">'+r.real.toFixed(2)+'%</div></div></div>';
+  }).join('');
+
+  // 10年後の購買力変化
+  var future10 = invest > 0 ? Math.round(invest * Math.pow(1 + net/100, 10)) : 0;
+  var inflation10 = invest > 0 ? Math.round(invest * Math.pow(1 + infl/100, 10)) : 0;
+  var realGain10 = future10 - inflation10;
+
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">'
+    + rowHtml
+    + (invest > 0 ?
+      '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px 14px">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">10年後の資産価値（インフレ調整）</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">'
+      + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">名目資産価値</div><div style="font-size:14px;font-weight:900;color:var(--text)">'+future10+'万円</div></div>'
+      + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">物価水準（同額）</div><div style="font-size:14px;font-weight:900;color:var(--red)">'+inflation10+'万円</div></div>'
+      + '<div style="background:rgba('+(realGain10>=0?'74,222,128':'239,68,68')+',0.1);border-radius:8px;padding:8px;border:1px solid rgba('+(realGain10>=0?'74,222,128':'239,68,68')+',0.3)"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">実質ゲイン</div><div style="font-size:14px;font-weight:900;color:'+(realGain10>=0?'var(--green)':'var(--red)')+'">'+( realGain10>=0?'+':'' )+realGain10+'万円</div></div>'
+      + '</div></div>' : '')
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; Fisher方程式に基づく近似計算。実際の不動産投資では物件価格のインフレ連動・家賃上昇も複合的に影響します。</div></div>';
+}
+(function(){ calcRealYield(); })();
+
 function checkStorageWarning() {
   try {
     let used = 0;
