@@ -268,6 +268,36 @@
   </div>
   <div id="loan-estimate-card" style="display:none;margin-bottom:16px"></div>
   <div id="buyer-priority-card" style="display:none;margin-bottom:16px"></div>
+
+  <!-- 新築 vs 中古 購入コスト比較カード -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">🏗 新築 vs 中古 購入コスト比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">同じ予算なら新築と中古でどちらがお得か？購入時・維持費・資産価値の観点から5年・10年トータルコストを比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">新築物件価格（万円）</label>
+        <input type="number" id="nc_new" placeholder="例: 4500" min="100" max="100000" step="100" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">同等の中古物件価格（万円）</label>
+        <input type="number" id="nc_used" placeholder="例: 3000" min="100" max="100000" step="100" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">中古のリフォーム費用（万円）</label>
+        <input type="number" id="nc_reform" value="200" min="0" max="5000" step="50" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">保有予定年数</label>
+        <select id="nc_years" onchange="calcNewVsUsed()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="5">5年</option>
+          <option value="10" selected>10年</option>
+          <option value="20">20年</option>
+        </select>
+      </div>
+    </div>
+    <div id="new-vs-used-result"></div>
+  </div>
+
   <div id="buyers-list"></div>
 </div>
 </div>
@@ -2384,6 +2414,60 @@ function calcFee() {
     </tbody>
   </table>`;
 }
+
+// ===== 新築 vs 中古 購入コスト比較 =====
+function calcNewVsUsed() {
+  var el = document.getElementById('new-vs-used-result');
+  if(!el) return;
+  var newP   = parseFloat(document.getElementById('nc_new').value)||0;
+  var usedP  = parseFloat(document.getElementById('nc_used').value)||0;
+  var reform = parseFloat(document.getElementById('nc_reform').value)||200;
+  var years  = parseInt(document.getElementById('nc_years').value)||10;
+  if(!newP && !usedP) { el.innerHTML = ''; return; }
+  var newCost = newP > 0 ? Math.round(newP * 0.03) : 0;
+  var usedCost = usedP > 0 ? Math.round((usedP*0.03+6)*1.1 + usedP*0.007) : 0;
+  var newTotal = newP + newCost;
+  var usedTotal = usedP + usedCost + reform;
+  var newMaint = years * 20;
+  var usedMaint = years * 10;
+  var newDecline = newP * 0.1;
+  var usedDecline = usedP * 0.03;
+  var newFinalValue = Math.max(0, newP - newDecline * years);
+  var usedFinalValue = Math.max(0, usedP - usedDecline * years);
+  var newNetCost = newTotal + newMaint - newFinalValue;
+  var usedNetCost = usedTotal + usedMaint - usedFinalValue;
+  var winner = newNetCost < usedNetCost ? 'new' : 'used';
+  var diff = Math.abs(newNetCost - usedNetCost);
+  function col(label, v, sub, highlight) {
+    var bg = highlight ? 'rgba(74,222,128,0.07)' : 'rgba(255,255,255,0.04)';
+    var border = highlight ? '2px solid var(--green)' : '1px solid rgba(255,255,255,0.08)';
+    return '<div style="padding:12px;background:'+bg+';border:'+border+';border-radius:10px">'
+      + (highlight?'<div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px">💚 トータルコスト優位</div>':'')
+      + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">'+label+'</div>'
+      + v.map(function(r){ return '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:3px"><span>'+r[0]+'</span><span style="color:var(--text)">'+r[1]+'</span></div>'; }).join('')
+      + '<div style="border-top:1px solid rgba(255,255,255,0.1);margin-top:6px;padding-top:6px;font-size:13px;font-weight:700;color:'+(highlight?'var(--green)':'var(--text)')+'">正味コスト：'+sub+'</div>'
+      + '</div>';
+  }
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    + col('🏗 新築', [
+        ['購入価格', newP.toLocaleString()+'万'],
+        ['購入諸費用（約3%）', '+'+newCost.toLocaleString()+'万'],
+        ['維持費（'+years+'年）', '+'+newMaint.toLocaleString()+'万'],
+        ['資産価値（'+years+'年後）', '−'+newFinalValue.toLocaleString()+'万（年10%減）']
+      ], Math.round(newNetCost).toLocaleString()+'万円', winner==='new')
+    + col('🏚 中古＋リフォーム', [
+        ['購入価格', usedP.toLocaleString()+'万'],
+        ['購入諸費用（約7%）', '+'+usedCost.toLocaleString()+'万'],
+        ['リフォーム費', '+'+reform.toLocaleString()+'万'],
+        ['維持費（'+years+'年）', '+'+usedMaint.toLocaleString()+'万'],
+        ['資産価値（'+years+'年後）', '−'+usedFinalValue.toLocaleString()+'万（年3%減）']
+      ], Math.round(usedNetCost).toLocaleString()+'万円', winner==='used')
+    + '</div>'
+    + '<div style="padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px">'
+    + (winner==='new' ? '🏗 新築の方が'+diff.toLocaleString()+'万円（'+years+'年トータル）安い見込みです。' : '🏚 中古＋リフォームの方が'+diff.toLocaleString()+'万円（'+years+'年トータル）安い見込みです。')
+    + '<span style="color:var(--text-muted);font-size:10px"> ※ 資産価値の減少率は概算です。</span></div>';
+}
+(function(){ calcNewVsUsed(); })();
 
 // ===== 購入諸費用試算 =====
 function calcPurchaseCost() {
