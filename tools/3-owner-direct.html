@@ -628,6 +628,31 @@
     <div id="sale-score-result"></div>
   </div>
 
+  <!-- 売却前リフォーム 費用対効果 計算カード -->
+  <div class="card" style="margin-top:24px">
+    <div class="card-title">🔨 売却前リフォーム 費用対効果 計算カード</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売却前にリフォームする場合の費用対効果を試算します。価格上昇効果・売却期間短縮の金銭的価値を合算してリフォームが割に合うかを判定します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リフォーム費用（万円）</label>
+        <input type="number" id="pr_cost" placeholder="例: 80" min="0" step="10" oninput="calcPreSaleReform()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リフォーム後の価格上昇（万円）</label>
+        <input type="number" id="pr_uplift" placeholder="例: 150" min="0" step="10" oninput="calcPreSaleReform()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却期間の短縮（ヶ月）</label>
+        <input type="number" id="pr_faster" placeholder="例: 2" min="0" max="18" step="1" value="2" oninput="calcPreSaleReform()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額維持コスト（固定資産税等・万円）</label>
+        <input type="number" id="pr_maint" placeholder="例: 3" min="0" step="0.5" value="3" oninput="calcPreSaleReform()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="pre-sale-reform-result"></div>
+  </div>
+
   <!-- 値引き交渉シミュレーターカード -->
   <div class="card" style="margin-top:24px">
     <div class="card-title">🤝 値引き交渉 手取り影響シミュレーター</div>
@@ -3064,6 +3089,48 @@ function calcAcqTax() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 取得税は取得後3〜6ヶ月後に都道府県より通知。軽減措置の適用には申告が必要な場合があります。</div></div>';
 }
 (function(){ calcAcqTax(); })();
+
+// ===== 売却前リフォーム 費用対効果 =====
+function calcPreSaleReform() {
+  var el = document.getElementById('pre-sale-reform-result');
+  if (!el) return;
+  var cost    = parseFloat(document.getElementById('pr_cost').value)    || 0;
+  var uplift  = parseFloat(document.getElementById('pr_uplift').value)  || 0;
+  var faster  = parseFloat(document.getElementById('pr_faster').value)  || 0;
+  var maint   = parseFloat(document.getElementById('pr_maint').value)   || 0;
+  if (!cost && !uplift) { el.innerHTML = ''; return; }
+
+  var timeValue    = faster * maint; // 期間短縮による維持費節約
+  var totalBenefit = uplift + timeValue;
+  var netGain      = totalBenefit - cost;
+  var roi          = cost > 0 ? Math.round(netGain / cost * 100) : 0;
+
+  var verdict = netGain > 0
+    ? { label:'✅ リフォームが有利', color:'var(--green)', msg:'費用を上回るメリットがあります。売却前のリフォームを推奨します。' }
+    : netGain === 0
+    ? { label:'⚖ トントン', color:'var(--gold)', msg:'費用と効果が同程度です。物件の状態やターゲット買主によって判断してください。' }
+    : { label:'❌ 現状渡しが有利', color:'var(--red)', msg:'リフォーム費用が回収できない見込みです。現状渡しでの売却を検討してください。' };
+
+  var items = [
+    { label:'リフォーム費用', val:'▲'+cost+'万円', color:'var(--red)' },
+    { label:'売却価格上昇効果', val:'+'+uplift+'万円', color:'var(--green)' },
+    { label:'期間短縮による維持費節約（'+faster+'ヶ月×'+maint+'万円）', val:'+'+Math.round(timeValue*10)/10+'万円', color:'var(--green)' },
+    { label:'純損益', val:(netGain>=0?'+':'')+Math.round(netGain*10)/10+'万円', color: netGain>0?'var(--green)':netGain<0?'var(--red)':'var(--text)' },
+  ];
+
+  var rowHtml = items.map(function(it) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+      + '<div style="font-size:12px;color:var(--text-muted)">'+it.label+'</div>'
+      + '<div style="font-size:13px;font-weight:700;color:'+it.color+'">'+it.val+'</div></div>';
+  }).join('');
+
+  el.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+    + '<div style="font-size:14px;font-weight:700;color:'+verdict.color+';margin-bottom:8px">'+verdict.label+'（ROI: '+roi+'%）</div>'
+    + rowHtml
+    + '<div style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6">'+verdict.msg+'</div></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; リフォームの種類（クロス貼替・水回り・外壁塗装など）によって価格上昇効果は大きく異なります。不動産会社と相談の上、費用対効果の高い箇所を優先しましょう。</div>';
+}
+(function(){ calcPreSaleReform(); })();
 
 // ===== 値下げ許容ライン計算 =====
 function calcNegLimit() {
