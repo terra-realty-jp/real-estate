@@ -1627,6 +1627,57 @@
     <div id="common-alloc-result"></div>
   </div>
 
+  <!-- 退去時原状回復費用概算カード -->
+  <div class="card">
+    <div class="card-title">🔧 退去時 原状回復費用概算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">専有面積・築年数・入居期間・損傷状況をもとに退去時の原状回復費用を概算します。国交省ガイドライン準拠。</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">専有面積（㎡）</div>
+        <input type="number" id="rr_area" value="40" min="10" max="300" step="5" oninput="calcRestorationCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">入居期間（年）</div>
+        <input type="number" id="rr_years" value="3" min="0" max="30" step="1" oninput="calcRestorationCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">クロス損傷</div>
+        <select id="rr_wall" onchange="calcRestorationCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="0">なし（通常使用）</option>
+          <option value="1" selected>軽微（タバコ黄ばみ等）</option>
+          <option value="2">中程度（穴・破損あり）</option>
+          <option value="3">重大（広範囲の破損）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">床・フローリング損傷</div>
+        <select id="rr_floor" onchange="calcRestorationCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="0">なし</option>
+          <option value="1" selected>軽微（傷・日焼け）</option>
+          <option value="2">中程度（一部張替え）</option>
+          <option value="3">全面張替え必要</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">設備汚損（水回り等）</div>
+        <select id="rr_equip" onchange="calcRestorationCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="0">なし</option>
+          <option value="1" selected>軽微（清掃で対応可）</option>
+          <option value="2">中程度（パーツ交換）</option>
+          <option value="3">重大（設備交換）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">タバコ・ペット（臭い）</div>
+        <select id="rr_smell" onchange="calcRestorationCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="0" selected>なし</option>
+          <option value="1">あり（消臭対応必要）</option>
+        </select>
+      </div>
+    </div>
+    <div id="restoration-cost-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -7266,6 +7317,75 @@ function calcCommonAlloc() {
     + '</div>';
 }
 (function(){ calcCommonAlloc(); })();
+
+function calcRestorationCost() {
+  const area = parseFloat(document.getElementById('rr_area').value) || 0;
+  const years = parseInt(document.getElementById('rr_years').value) || 0;
+  const wall = parseInt(document.getElementById('rr_wall').value) || 0;
+  const floor = parseInt(document.getElementById('rr_floor').value) || 0;
+  const equip = parseInt(document.getElementById('rr_equip').value) || 0;
+  const smell = parseInt(document.getElementById('rr_smell').value) || 0;
+  const el = document.getElementById('restoration-cost-result');
+  if (!el) return;
+
+  // クロス: 残存価値率（6年で0→借主負担割合減少）
+  const wallRemain = Math.max(0, 1 - years / 6);
+  // クロス単価目安1000円/m2、6畳≒10m2、40m2→壁面積=周長×天井高 約100m2
+  const wallArea = area * 2.5;
+  const wallUnitCost = wall === 0 ? 0 : wall === 1 ? 500 : wall === 2 ? 800 : 1200;
+  const wallCost = Math.round(wallArea * wallUnitCost * wallRemain / 10000);
+
+  // フローリング: 残存価値率（木材20年）
+  const floorRemain = Math.max(0, 1 - years / 20);
+  const floorUnit = floor === 0 ? 0 : floor === 1 ? 3000 : floor === 2 ? 5000 : 8000;
+  const floorCost = Math.round(area * floorUnit * floorRemain / 10000);
+
+  // 設備: 残存価値率（機器15年）
+  const equipRemain = Math.max(0, 1 - years / 15);
+  const equipBase = equip === 0 ? 0 : equip === 1 ? 10000 : equip === 2 ? 30000 : 80000;
+  const equipCost = Math.round(equipBase * equipRemain / 10000);
+
+  // 臭い対応
+  const smellCost = smell === 1 ? Math.round(area * 500 / 10000) + 1 : 0;
+
+  // ハウスクリーニング（オーナー負担）
+  const cleanCost = Math.round(area * 300 / 10000) + 1;
+
+  const tenantTotal = wallCost + floorCost + equipCost + smellCost;
+  const ownerTotal = cleanCost;
+  const grandTotal = tenantTotal + ownerTotal;
+
+  const items = [
+    { name: 'クロス張替え（借主負担相当）', val: wallCost, who: '借主' },
+    { name: 'フローリング（借主負担相当）', val: floorCost, who: '借主' },
+    { name: '設備修繕・交換（借主負担相当）', val: equipCost, who: '借主' },
+    { name: '臭気対応（消臭・クリーニング）', val: smellCost, who: '借主' },
+    { name: 'ハウスクリーニング', val: cleanCost, who: 'オーナー' },
+  ];
+
+  const rows = items.map(it => '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07)">'
+    + '<span style="font-size:12px;color:var(--text-muted)">' + it.name
+    + ' <span style="background:' + (it.who === '借主' ? 'rgba(244,67,54,0.15)' : 'rgba(33,150,243,0.15)') + ';color:' + (it.who === '借主' ? '#f44336' : '#2196f3') + ';font-size:10px;padding:1px 5px;border-radius:4px">' + it.who + '</span></span>'
+    + '<span style="font-size:13px;font-weight:' + (it.val > 0 ? '700' : '400') + '">' + (it.val > 0 ? it.val.toLocaleString() + '万円' : '—') + '</span>'
+    + '</div>').join('');
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 概算費用内訳</div>'
+    + rows
+    + '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px">'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">'
+    + '<div><div style="font-size:11px;color:#f44336">借主負担合計</div><div style="font-size:18px;font-weight:900;color:#f44336">' + tenantTotal.toLocaleString() + '万円</div></div>'
+    + '<div><div style="font-size:11px;color:#2196f3">オーナー負担</div><div style="font-size:18px;font-weight:900;color:#2196f3">' + ownerTotal.toLocaleString() + '万円</div></div>'
+    + '<div><div style="font-size:11px;color:var(--text-muted)">合計費用</div><div style="font-size:18px;font-weight:900">' + grandTotal.toLocaleString() + '万円</div></div>'
+    + '</div></div>'
+    + '<div style="margin-top:10px;padding:10px;background:rgba(255,180,0,0.07);border-radius:8px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--gold)">📝 ガイドライン要点</div>'
+    + '<div style="font-size:12px;margin-top:4px;line-height:1.6">国交省「原状回復をめぐるトラブルとガイドライン」では、<strong>通常使用・経年劣化はオーナー負担</strong>、<strong>故意・過失・善管注意義務違反は借主負担</strong>が原則です。残存価値率（入居年数）に応じて借主負担額は減少します。</div>'
+    + '</div>'
+    + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">※概算値です。実際の査定は施工業者に依頼してください。敷金との相殺手続きも必要です。</div>'
+    + '</div>';
+}
+(function(){ calcRestorationCost(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
