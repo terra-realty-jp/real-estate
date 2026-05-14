@@ -1381,6 +1381,40 @@
     <div id="tenant-turnover-result"></div>
   </div>
 
+  <!-- 設備交換 積立シミュレーターカード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🔧 設備交換 積立シミュレーター</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">設備ごとの残余寿命と交換費用から、毎月の積立必要額を算出します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">設備種別</div>
+        <select id="eq_type" onchange="calcEquipReserve()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="ac">エアコン（15〜20万円）</option>
+          <option value="hw">給湯器（15〜25万円）</option>
+          <option value="ref">冷蔵庫・家電（5〜15万円）</option>
+          <option value="bath">浴室乾燥機（10〜20万円）</option>
+          <option value="ih">IHクッキングヒーター（10〜20万円）</option>
+          <option value="toilet">ウォシュレット（5〜12万円）</option>
+          <option value="intercom">インターホン（5〜15万円）</option>
+          <option value="custom">カスタム</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の築年数（年）</div>
+        <input type="number" id="eq_age" value="8" min="0" max="50" step="1" oninput="calcEquipReserve()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">交換費用（万円・カスタム時）</div>
+        <input type="number" id="eq_cost" value="20" min="1" max="500" step="1" oninput="calcEquipReserve()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">管理戸数（台数）</div>
+        <input type="number" id="eq_units" value="4" min="1" max="100" step="1" oninput="calcEquipReserve()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="equip-reserve-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -6625,6 +6659,60 @@ function calcTenantTurnover() {
   el.innerHTML = html;
 }
 (function(){ calcTenantTurnover(); })();
+
+// ===== 設備交換 積立シミュレーター =====
+function calcEquipReserve() {
+  var el = document.getElementById('equip-reserve-result');
+  if (!el) return;
+  var type = document.getElementById('eq_type').value;
+  var age = parseFloat(document.getElementById('eq_age').value) || 0;
+  var costInput = parseFloat(document.getElementById('eq_cost').value) || 0;
+  var units = parseFloat(document.getElementById('eq_units').value) || 1;
+
+  var specs = {
+    ac:       { life: 15, minCost: 15, maxCost: 20, label: 'エアコン' },
+    hw:       { life: 15, minCost: 15, maxCost: 25, label: '給湯器' },
+    ref:      { life: 10, minCost:  5, maxCost: 15, label: '冷蔵庫・家電' },
+    bath:     { life: 15, minCost: 10, maxCost: 20, label: '浴室乾燥機' },
+    ih:       { life: 15, minCost: 10, maxCost: 20, label: 'IHクッキングヒーター' },
+    toilet:   { life: 13, minCost:  5, maxCost: 12, label: 'ウォシュレット' },
+    intercom: { life: 15, minCost:  5, maxCost: 15, label: 'インターホン' },
+    custom:   { life: 15, minCost: costInput, maxCost: costInput, label: 'カスタム設備' }
+  };
+  var sp = specs[type] || specs.ac;
+  var avgCost = type === 'custom' ? costInput : Math.round((sp.minCost + sp.maxCost) / 2);
+  var remaining = Math.max(0, sp.life - age);
+  var urgency = remaining <= 2 ? 'urgent' : remaining <= 5 ? 'soon' : 'ok';
+  var totalCost = avgCost * units;
+  var monthly = remaining > 0 ? Math.ceil(totalCost / remaining / 12 * 10) / 10 : totalCost / 12;
+
+  var urgencyLabel = urgency === 'urgent' ? '要緊急交換' : urgency === 'soon' ? '交換準備推奨' : '問題なし';
+  var urgencyColor = urgency === 'urgent' ? '#f87171' : urgency === 'soon' ? '#fb923c' : '#4ade80';
+
+  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+  html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">残余寿命</div><div style="font-size:20px;font-weight:900;color:'+urgencyColor+'">'+remaining+'<span style="font-size:11px">年</span></div></div>';
+  html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">総交換費用</div><div style="font-size:20px;font-weight:900;color:#4db6f5">'+totalCost+'<span style="font-size:11px">万円</span></div></div>';
+  html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">月次積立目安</div><div style="font-size:20px;font-weight:900;color:'+urgencyColor+'">'+monthly.toFixed(1)+'<span style="font-size:11px">万円</span></div></div>';
+  html += '</div>';
+  html += '<div style="text-align:center;padding:7px;border-radius:6px;background:'+urgencyColor+'22;border:1px solid '+urgencyColor+'44;margin-bottom:10px">';
+  html += '<span style="font-size:14px;font-weight:900;color:'+urgencyColor+'">'+sp.label+' × '+units+'台 — '+urgencyLabel+'</span>';
+  html += '</div>';
+  html += '<table style="width:100%;font-size:12px;border-collapse:collapse">';
+  html += '<tr style="color:#aaa"><td style="padding:4px 6px">耐用年数</td><td style="padding:4px 6px;text-align:right">'+sp.life+'年</td></tr>';
+  html += '<tr style="color:#aaa"><td style="padding:4px 6px">現在経過</td><td style="padding:4px 6px;text-align:right">'+age+'年</td></tr>';
+  html += '<tr style="color:#aaa"><td style="padding:4px 6px">1台あたり費用</td><td style="padding:4px 6px;text-align:right">'+avgCost+'万円</td></tr>';
+  html += '<tr style="color:#aaa"><td style="padding:4px 6px">'+units+'台合計</td><td style="padding:4px 6px;text-align:right;color:#4db6f5;font-weight:700">'+totalCost+'万円</td></tr>';
+  html += '</table>';
+  if (urgency === 'urgent') {
+    html += '<div style="font-size:11px;color:#f87171;margin-top:8px;padding:6px 10px;background:rgba(248,113,113,0.08);border-radius:6px">⚠️ 耐用年数超過。故障時は緊急交換が必要になります。早めに見積もりを取得しましょう。</div>';
+  } else if (urgency === 'soon') {
+    html += '<div style="font-size:11px;color:#fb923c;margin-top:8px;padding:6px 10px;background:rgba(251,146,60,0.08);border-radius:6px">💡 残り'+remaining+'年以内に交換が必要です。月'+monthly.toFixed(1)+'万円の積立で準備できます。</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcEquipReserve(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
