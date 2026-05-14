@@ -1001,6 +1001,40 @@
     <div id="hikiwatashi-result"></div>
   </div>
 
+  <!-- 共有名義 売却合意 チェックリスト -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🤝 共有名義 売却合意 チェックリスト</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">相続や共同購入などで複数人が名義を持つ物件を売却する際の確認事項。<span style="color:#f87171">全員の同意なしに売却はできません</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">共有名義人の人数</div>
+        <select id="kn_count" onchange="calcKyoyuMeigi()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="2">2人</option>
+          <option value="3">3人</option>
+          <option value="4">4人以上</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">取得経緯</div>
+        <select id="kn_type" onchange="calcKyoyuMeigi()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="inherit">相続（親族間）</option>
+          <option value="joint">夫婦・パートナー共同購入</option>
+          <option value="divorce">離婚に伴う財産分与</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="kn-chk" onchange="calcKyoyuMeigi()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span><strong>全共有者の売却同意</strong>を口頭または書面で確認している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="kn-chk" onchange="calcKyoyuMeigi()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>全員の<strong>持分割合</strong>を登記簿で確認している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="kn-chk" onchange="calcKyoyuMeigi()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>全員の<strong>実印・印鑑証明書</strong>（3ヶ月以内）の取得が可能</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="kn-chk" onchange="calcKyoyuMeigi()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>売却代金の<strong>按分（持分割合）</strong>について全員が合意している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="kn-chk" onchange="calcKyoyuMeigi()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>遠方在住・高齢の共有者に<strong>委任状</strong>（司法書士作成）の準備ができる</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="kn-chk" onchange="calcKyoyuMeigi()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>反対する共有者・連絡が取れない共有者は<strong>いない</strong></span></label>
+    </div>
+    <div id="kyoyu-meigi-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -3850,6 +3884,48 @@ function calcHikiwatashi() {
   el.innerHTML = html;
 }
 (function(){ calcHikiwatashi(); })();
+
+// ===== 共有名義 売却合意 チェックリスト =====
+function calcKyoyuMeigi() {
+  var el = document.getElementById('kyoyu-meigi-result');
+  if (!el) return;
+  var count = parseInt(document.getElementById('kn_count').value) || 2;
+  var type = document.getElementById('kn_type').value;
+  var checks = document.querySelectorAll('.kn-chk');
+  var total = checks.length;
+  var done = 0;
+  checks.forEach(function(c){ if (c.checked) done++; });
+  var pct = Math.round(done / total * 100);
+  var barColor = pct >= 100 ? '#4ade80' : pct >= 70 ? '#f59e0b' : '#f87171';
+  var verdict, verdictColor;
+  if (pct >= 100) { verdict = '✅ 売却手続きを進められます'; verdictColor = '#4ade80'; }
+  else if (pct >= 70) { verdict = '⚡ 残り '+String(total-done)+' 項目を確認して進めましょう'; verdictColor = '#f59e0b'; }
+  else { verdict = '🔴 確認不足。未同意・連絡不可の共有者がいると売却できません'; verdictColor = '#f87171'; }
+
+  var extraAdvice = '';
+  if (type === 'divorce') extraAdvice = '離婚の場合、財産分与協議書または離婚協議書が必要です。調停・裁判中の場合は司法書士・弁護士に相談してください。';
+  else if (type === 'inherit') extraAdvice = '相続の場合、相続登記が未完了だと売却できません。先に全員分の相続登記を完了させてください。';
+  else if (count >= 4) extraAdvice = '4人以上の共有は、連絡が取れない・反対する人が出やすくなります。早めに全員の意思確認をしてください。';
+
+  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+  html += '<span style="font-size:12px;color:#aaa">合意準備進捗</span>';
+  html += '<span style="font-size:16px;font-weight:900;color:'+barColor+'">'+pct+'%</span>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.06);border-radius:8px;height:8px;overflow:hidden;margin-bottom:10px">';
+  html += '<div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:8px;transition:width 0.4s"></div>';
+  html += '</div>';
+  html += '<div style="font-size:13px;font-weight:700;color:'+verdictColor+';margin-bottom:8px">'+verdict+'</div>';
+  if (extraAdvice) {
+    html += '<div style="font-size:11px;color:#4db6f5;padding:7px 10px;background:rgba(77,182,245,0.08);border-radius:6px;margin-bottom:8px;line-height:1.7">💡 '+extraAdvice+'</div>';
+  }
+  if (pct < 100) {
+    html += '<div style="font-size:11px;color:#aaa;padding:7px 10px;background:rgba(255,255,255,0.03);border-radius:6px;line-height:1.7">📌 同意しない共有者がいる場合：①共有持分のみ売却（他の共有者に先買権なし）または②裁判所に共有物分割請求訴訟を起こすことができます。いずれも弁護士への相談を推奨。</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcKyoyuMeigi(); })();
 
 // 初期化
 checkStorageWarning();
