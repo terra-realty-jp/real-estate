@@ -1398,6 +1398,37 @@
     <div id="demo-subsidy-result"></div>
   </div>
 
+  <!-- 相続税節税チェックリスト（小規模宅地特例） -->
+  <div class="card">
+    <div class="card-title">🏛️ 相続税節税 小規模宅地等の特例 チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家・土地の相続で使える「小規模宅地等の特例」の適用条件を確認し、概算評価減額を試算します。</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">土地の相続税評価額（万円）</div>
+        <input type="number" id="st_value" value="2000" min="100" max="100000" step="100" oninput="calcSouzokuTokurei()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">土地面積（㎡）</div>
+        <input type="number" id="st_area" value="200" min="10" max="2000" step="10" oninput="calcSouzokuTokurei()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div style="grid-column:span 2">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">土地の用途</div>
+        <select id="st_use" onchange="calcSouzokuTokurei()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="kyojyo" selected>居住用（特定居住用宅地等）</option>
+          <option value="jigyou">事業用（特定事業用宅地等）</option>
+          <option value="kashitsuke">貸付事業用（アパート等）</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="st-chk" data-key="live" onchange="calcSouzokuTokurei()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>🏠 相続人が被相続人と同居していた（または別居だが無持ち家の親族）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="st-chk" data-key="cont" onchange="calcSouzokuTokurei()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>📋 相続税申告期限まで保有・居住継続する予定</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="st-chk" data-key="appraisal" onchange="calcSouzokuTokurei()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>📄 相続税申告書に「小規模宅地等の特例」の添付書類を準備する予定</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="st-chk" data-key="nokori" onchange="calcSouzokuTokurei()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>📐 限度面積の範囲内（居住用330㎡・事業用400㎡・貸付200㎡）</span></label>
+    </div>
+    <div id="souzoku-tokurei-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5064,6 +5095,59 @@ function calcDemoSubsidy() {
     + '</div>';
 }
 (function(){ calcDemoSubsidy(); })();
+
+function calcSouzokuTokurei() {
+  const value = parseFloat(document.getElementById('st_value').value) || 0;
+  const area = parseFloat(document.getElementById('st_area').value) || 0;
+  const useType = document.getElementById('st_use').value;
+  const chks = document.querySelectorAll('.st-chk');
+  const el = document.getElementById('souzoku-tokurei-result');
+  if (!el) return;
+
+  const checks = {};
+  chks.forEach(c => { checks[c.dataset.key] = c.checked; });
+  const metAll = Object.values(checks).every(v => v);
+
+  // 特例の種類に応じた限度面積・減額割合
+  const configs = {
+    kyojyo: { limit: 330, rate: 0.8, label: '特定居住用宅地等' },
+    jigyou: { limit: 400, rate: 0.8, label: '特定事業用宅地等' },
+    kashitsuke: { limit: 200, rate: 0.5, label: '貸付事業用宅地等' },
+  };
+  const cfg = configs[useType];
+
+  // 適用可能面積
+  const applicableArea = Math.min(area, cfg.limit);
+  const applicableRatio = area > 0 ? applicableArea / area : 0;
+  // 評価減額
+  const reduction = Math.round(value * applicableRatio * cfg.rate);
+  const afterValue = value - reduction;
+
+  const statusColor = metAll ? '#4caf50' : '#ff9800';
+  const unmet = Object.entries(checks).filter(([k,v]) => !v).length;
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="text-align:center;padding:10px 0;margin-bottom:12px">'
+    + '<div style="font-size:12px;color:var(--text-muted)">評価減額（概算）</div>'
+    + '<div style="font-size:36px;font-weight:900;color:#4caf50">' + reduction.toLocaleString() + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + cfg.label + ' 適用（減額率' + (cfg.rate * 100) + '%）</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:12px">'
+    + '<div><div style="font-size:11px;color:var(--text-muted)">特例前評価額</div><div style="font-size:16px;font-weight:700">' + value.toLocaleString() + '万円</div></div>'
+    + '<div><div style="font-size:11px;color:#4caf50">評価減額</div><div style="font-size:16px;font-weight:700;color:#4caf50">▲' + reduction.toLocaleString() + '万円</div></div>'
+    + '<div><div style="font-size:11px;color:var(--gold)">特例後評価額</div><div style="font-size:16px;font-weight:700;color:var(--gold)">' + afterValue.toLocaleString() + '万円</div></div>'
+    + '</div>'
+    + '<div style="padding:10px;background:rgba(255,180,0,0.07);border-radius:8px;border-left:3px solid ' + statusColor + '">'
+    + '<div style="font-size:12px;font-weight:700;color:' + statusColor + '">📝 適用チェック状況</div>'
+    + '<div style="font-size:12px;margin-top:4px;line-height:1.5">'
+    + (metAll
+        ? '全条件を満たしています。税理士に相談し確定申告時に特例を申請しましょう。土地面積' + area + '㎡中' + applicableArea + '㎡が適用対象です。'
+        : unmet + '件の条件が未確認です。特に居住継続・申告書添付は必須要件です。早めに税理士に相談してください。')
+    + '</div></div>'
+    + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.5">💡 小規模宅地等の特例は相続開始後10ヶ月以内の申告が期限です。適用には複数の要件があり、税理士への相談を強く推奨します。住居用と事業用の特例を併用できる場合があります（限度面積に注意）。</div>'
+    + '</div>';
+}
+(function(){ calcSouzokuTokurei(); })();
 
 // 初期化
 checkStorageWarning();
