@@ -1650,6 +1650,35 @@
     <div id="gain-tax-result"></div>
   </div>
 
+  <!-- 管理費・修繕積立金 値上がりシミュレーター -->
+  <div class="card">
+    <div class="card-title">🏢 管理費・修繕積立金 値上がり試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">マンションの管理費・修繕積立金の値上がりを試算し、10年後・20年後の月次負担額を予測します。</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の管理費（月額/万円）</div>
+        <input type="number" id="mu_mgmt" value="1.5" min="0" max="30" step="0.1" oninput="calcMgmtUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の修繕積立金（月額/万円）</div>
+        <input type="number" id="mu_repair" value="1.0" min="0" max="30" step="0.1" oninput="calcMgmtUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">管理費の想定年間値上がり率（%）</div>
+        <input type="number" id="mu_mgmt_rate" value="2" min="0" max="10" step="0.5" oninput="calcMgmtUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">修繕積立金の想定年間値上がり率（%）</div>
+        <input type="number" id="mu_repair_rate" value="5" min="0" max="20" step="0.5" oninput="calcMgmtUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">築年数（現在）</div>
+        <input type="number" id="mu_age" value="10" min="0" max="50" step="1" oninput="calcMgmtUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="mgmt-up-sim-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5416,6 +5445,60 @@ function calcGainTax() {
     + '</div>';
 }
 (function(){ calcGainTax(); })();
+
+function calcMgmtUpSim() {
+  const mgmt = parseFloat(document.getElementById('mu_mgmt').value) || 0;
+  const repair = parseFloat(document.getElementById('mu_repair').value) || 0;
+  const mgmtRate = parseFloat(document.getElementById('mu_mgmt_rate').value) || 0;
+  const repairRate = parseFloat(document.getElementById('mu_repair_rate').value) || 0;
+  const age = parseInt(document.getElementById('mu_age').value) || 0;
+  const el = document.getElementById('mgmt-up-sim-result');
+  if (!el) return;
+
+  const milestones = [0, 5, 10, 15, 20];
+  const data = milestones.map(yr => {
+    const m = Math.round((mgmt * Math.pow(1 + mgmtRate / 100, yr)) * 10) / 10;
+    const r = Math.round((repair * Math.pow(1 + repairRate / 100, yr)) * 10) / 10;
+    return { yr, mgmt: m, repair: r, total: Math.round((m + r) * 10) / 10, age: age + yr };
+  });
+
+  const nowTotal = data[0].total;
+  const y10Total = data[2].total;
+  const y20Total = data[4].total;
+  const annualCum20 = data.reduce((s, d, i) => {
+    if (i === 0) return s;
+    const prev = data[i - 1];
+    return s + ((prev.total + d.total) / 2 * 12 * 5);
+  }, 0);
+
+  const rows = data.map(d => '<tr>'
+    + '<td style="padding:6px 8px;text-align:center;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.07)">' + (d.yr === 0 ? '現在' : '+' + d.yr + '年後') + ' (築' + d.age + '年)</td>'
+    + '<td style="padding:6px 8px;text-align:right;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.07)">' + d.mgmt.toLocaleString() + '万円</td>'
+    + '<td style="padding:6px 8px;text-align:right;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.07)">' + d.repair.toLocaleString() + '万円</td>'
+    + '<td style="padding:6px 8px;text-align:right;font-size:13px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.07);color:' + (d.total > nowTotal * 1.5 ? '#f44336' : d.total > nowTotal * 1.2 ? '#ff9800' : 'var(--text)') + '">' + d.total.toLocaleString() + '万円</td>'
+    + '</tr>').join('');
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;padding:10px 0;margin-bottom:12px">'
+    + '<div><div style="font-size:11px;color:var(--text-muted)">現在（月額合計）</div><div style="font-size:20px;font-weight:900">' + nowTotal.toLocaleString() + '万円</div></div>'
+    + '<div><div style="font-size:11px;color:#ff9800">10年後（月額）</div><div style="font-size:20px;font-weight:900;color:#ff9800">' + y10Total.toLocaleString() + '万円</div></div>'
+    + '<div><div style="font-size:11px;color:#f44336">20年後（月額）</div><div style="font-size:20px;font-weight:900;color:#f44336">' + y20Total.toLocaleString() + '万円</div></div>'
+    + '</div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    + '<thead><tr style="background:rgba(255,255,255,0.05)">'
+    + '<th style="padding:6px 8px;font-size:11px;color:var(--text-muted)">時期</th>'
+    + '<th style="padding:6px 8px;font-size:11px;color:var(--text-muted);text-align:right">管理費</th>'
+    + '<th style="padding:6px 8px;font-size:11px;color:var(--text-muted);text-align:right">修繕積立金</th>'
+    + '<th style="padding:6px 8px;font-size:11px;color:var(--text-muted);text-align:right">合計</th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<div style="margin-top:10px;padding:10px;background:rgba(255,180,0,0.07);border-radius:8px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--gold)">💡 注意点</div>'
+    + '<div style="font-size:12px;margin-top:4px;line-height:1.5">修繕積立金は築年数が上がるにつれ大規模修繕に向けて大幅値上がりする場合があります（平均5〜10%/年）。購入時の金額は低く設定されていることが多く、長期保有のコスト増加を織り込んだ資産計画が必要です。</div>'
+    + '</div>'
+    + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">20年累計の管理費・修繕積立金合計（概算）: 約' + Math.round(annualCum20).toLocaleString() + '万円</div>'
+    + '</div>';
+}
+(function(){ calcMgmtUpSim(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
