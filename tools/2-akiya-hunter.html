@@ -1467,6 +1467,52 @@
     <div id="farmland-convert-result"></div>
   </div>
 
+  <!-- 限界集落・人口減少リスク診断カード -->
+  <div class="card">
+    <div class="card-title">📉 限界集落・人口減少 空き家リスク診断</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">所有地域の人口・高齢化・インフラ状況から空き家放置リスクを診断します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">地域の高齢化率（%）</label>
+        <input type="number" id="lr_elderly" value="35" min="5" max="80" step="1" oninput="calcIsolationRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">過去10年の人口減少率（%）</label>
+        <input type="number" id="lr_decline" value="20" min="0" max="60" step="1" oninput="calcIsolationRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">最寄り駅・バス停までの距離</label>
+        <select id="lr_transit" onchange="calcIsolationRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="walk">徒歩圏（15分以内）</option>
+          <option value="short">15〜30分（バス利用可）</option>
+          <option value="long" selected>30分超（車が必須）</option>
+          <option value="none">公共交通機関なし</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">周辺インフラ・生活利便性</label>
+        <select id="lr_infra" onchange="calcIsolationRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="good">充実（スーパー・病院あり）</option>
+          <option value="mid">普通（車で10〜20分）</option>
+          <option value="poor" selected>不便（生活施設が遠い）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">地域の空き家率（%）</label>
+        <input type="number" id="lr_vacancy" value="25" min="0" max="80" step="1" oninput="calcIsolationRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">自治体の活性化施策</label>
+        <select id="lr_policy" onchange="calcIsolationRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="active">積極的（移住支援・補助金あり）</option>
+          <option value="mid" selected>一部あり</option>
+          <option value="none">ほぼなし</option>
+        </select>
+      </div>
+    </div>
+    <div id="isolation-risk-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5248,6 +5294,70 @@ function calcFarmlandConvert() {
     + '</div>';
 }
 (function(){ calcFarmlandConvert(); })();
+
+function calcIsolationRisk() {
+  const elderly = parseFloat(document.getElementById('lr_elderly').value) || 0;
+  const decline = parseFloat(document.getElementById('lr_decline').value) || 0;
+  const transit = document.getElementById('lr_transit').value;
+  const infra = document.getElementById('lr_infra').value;
+  const vacRate = parseFloat(document.getElementById('lr_vacancy').value) || 0;
+  const policy = document.getElementById('lr_policy').value;
+  const r = document.getElementById('isolation-risk-result');
+  if (!r) return;
+
+  var score = 0;
+  score += elderly >= 50 ? 25 : elderly >= 35 ? 15 : elderly >= 25 ? 8 : 3;
+  score += decline >= 30 ? 20 : decline >= 15 ? 12 : decline >= 5 ? 6 : 2;
+  score += transit === 'none' ? 15 : transit === 'long' ? 10 : transit === 'short' ? 5 : 1;
+  score += infra === 'poor' ? 15 : infra === 'mid' ? 8 : 2;
+  score += vacRate >= 40 ? 15 : vacRate >= 25 ? 10 : vacRate >= 15 ? 5 : 2;
+  score += policy === 'none' ? 10 : policy === 'mid' ? 5 : 1;
+
+  var grade, col, actions;
+  if (score >= 70) {
+    grade = '限界集落レベル'; col = '#f44336';
+    actions = ['早期売却・譲渡を最優先で検討', '空き家バンクへの無償貸与・寄付も選択肢', '自治体の特定空き家指定リスクに注意', '固定資産税・管理コストの長期試算を実施'];
+  } else if (score >= 45) {
+    grade = '高リスク地区'; col = '#ff9800';
+    actions = ['5年以内の出口戦略（売却・賃貸・解体）を策定', '移住支援制度を活用した賃貸・売却を検討', '解体補助金の申請資格を確認', '地域の空き家バンクに登録を検討'];
+  } else if (score >= 25) {
+    grade = '中リスク地区'; col = '#ffeb3b';
+    actions = ['活用アイデア（民泊・シェアハウス・農家民宿）を比較検討', '自治体の移住定住支援策を確認', 'リフォーム補助金・固定資産税減免制度を活用'];
+  } else {
+    grade = '低リスク地区'; col = '#4caf50';
+    actions = ['賃貸活用・リノベーション投資で収益化を検討', '空き家バンク登録で移住者マッチングも有効', '地域の将来計画（都市計画・開発計画）を確認'];
+  }
+
+  var axes = [
+    { label: '高齢化率', val: elderly + '%', risk: elderly >= 50 ? 'high' : elderly >= 35 ? 'mid' : 'low' },
+    { label: '人口減少率', val: decline + '%', risk: decline >= 30 ? 'high' : decline >= 15 ? 'mid' : 'low' },
+    { label: '交通アクセス', val: { walk: '徒歩圏', short: '15-30分', long: '30分超', none: '公共交通なし' }[transit], risk: transit === 'none' ? 'high' : transit === 'long' ? 'mid' : 'low' },
+    { label: '生活インフラ', val: { good: '充実', mid: '普通', poor: '不便' }[infra], risk: infra === 'poor' ? 'high' : infra === 'mid' ? 'mid' : 'low' },
+    { label: '空き家率', val: vacRate + '%', risk: vacRate >= 40 ? 'high' : vacRate >= 25 ? 'mid' : 'low' },
+    { label: '自治体施策', val: { active: '積極的', mid: '一部あり', none: 'なし' }[policy], risk: policy === 'none' ? 'high' : policy === 'mid' ? 'mid' : 'low' },
+  ];
+  var riskCol = { high: '#f44336', mid: '#ff9800', low: '#4caf50' };
+  var axisRows = axes.map(function(a) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06)">'
+      + '<span style="font-size:12px;color:var(--text-muted)">' + a.label + '</span>'
+      + '<span style="font-size:12px;font-weight:700;color:' + riskCol[a.risk] + '">' + a.val + '</span>'
+      + '</div>';
+  }).join('');
+
+  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:14px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">総合リスクスコア</div>'
+    + '<div style="font-size:36px;font-weight:900;color:' + col + '">' + score + '<span style="font-size:14px">/100</span></div>'
+    + '<div style="font-size:14px;font-weight:700;color:' + col + ';margin-top:4px">' + grade + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:14px">' + axisRows + '</div>'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px">推奨アクション</div>'
+    + '<ul style="margin:0;padding-left:16px;font-size:12px;color:var(--text)">'
+    + actions.map(function(a){ return '<li style="margin-bottom:4px">' + a + '</li>'; }).join('')
+    + '</ul>'
+    + '</div>';
+}
+(function(){ calcIsolationRisk(); })();
 
 // 初期化
 checkStorageWarning();
