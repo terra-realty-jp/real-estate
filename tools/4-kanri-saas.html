@@ -1685,7 +1685,7 @@
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
       <div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">雇用形態</div>
-        <select id="tr_employ" onchange="calcTenantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <select id="ar_employ" onchange="calcApplicantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
           <option value="5">正社員（大企業・公務員）</option>
           <option value="4" selected>正社員（中小企業）</option>
           <option value="3">契約・派遣社員</option>
@@ -1695,19 +1695,19 @@
       </div>
       <div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">月収（万円）</div>
-        <input type="number" id="tr_income" value="25" min="5" max="200" step="1" oninput="calcTenantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        <input type="number" id="ar_income" value="25" min="5" max="200" step="1" oninput="calcApplicantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">申込家賃（万円）</div>
-        <input type="number" id="tr_rent" value="7" min="1" max="100" step="0.5" oninput="calcTenantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        <input type="number" id="ar_rent" value="7" min="1" max="100" step="0.5" oninput="calcApplicantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">既存ローン・借入（万円/月）</div>
-        <input type="number" id="tr_debt" value="0" min="0" max="50" step="0.5" oninput="calcTenantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        <input type="number" id="ar_debt" value="0" min="0" max="50" step="0.5" oninput="calcApplicantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">勤続年数</div>
-        <select id="tr_tenure" onchange="calcTenantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <select id="ar_tenure" onchange="calcApplicantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
           <option value="3">3年以上</option>
           <option value="2" selected>1〜3年</option>
           <option value="1">1年未満</option>
@@ -1715,14 +1715,14 @@
       </div>
       <div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">信用情報・保証会社審査</div>
-        <select id="tr_credit" onchange="calcTenantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <select id="ar_credit" onchange="calcApplicantRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
           <option value="3" selected>問題なし</option>
           <option value="2">不明・未確認</option>
           <option value="1">過去に滞納・事故歴あり</option>
         </select>
       </div>
     </div>
-    <div id="tenant-risk-result"></div>
+    <div id="applicant-risk-result"></div>
   </div>
 
   <div id="repairs-list"></div>
@@ -7434,14 +7434,14 @@ function calcRestorationCost() {
 }
 (function(){ calcRestorationCost(); })();
 
-function calcTenantRisk() {
-  const employ = parseInt(document.getElementById('tr_employ').value) || 4;
-  const income = parseFloat(document.getElementById('tr_income').value) || 0;
-  const rent = parseFloat(document.getElementById('tr_rent').value) || 0;
-  const debt = parseFloat(document.getElementById('tr_debt').value) || 0;
-  const tenure = parseInt(document.getElementById('tr_tenure').value) || 2;
-  const credit = parseInt(document.getElementById('tr_credit').value) || 3;
-  const el = document.getElementById('tenant-risk-result');
+function calcApplicantRisk() {
+  const employ = parseInt(document.getElementById('ar_employ').value) || 4;
+  const income = parseFloat(document.getElementById('ar_income').value) || 0;
+  const rent = parseFloat(document.getElementById('ar_rent').value) || 0;
+  const debt = parseFloat(document.getElementById('ar_debt').value) || 0;
+  const tenure = parseInt(document.getElementById('ar_tenure').value) || 2;
+  const credit = parseInt(document.getElementById('ar_credit').value) || 3;
+  const el = document.getElementById('applicant-risk-result');
   if (!el) return;
 
   // 返済比率（家賃+既存ローン / 月収）
@@ -7498,7 +7498,7 @@ function calcTenantRisk() {
     + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.5">💡 一般的に返済比率33%以下・月収の3倍以上が安全ラインとされます。必ず保証会社の審査を経ることで入居後の滞納リスクを大幅に軽減できます。</div>'
     + '</div>';
 }
-(function(){ calcTenantRisk(); })();
+(function(){ calcApplicantRisk(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
