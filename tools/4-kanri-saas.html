@@ -1517,6 +1517,46 @@
     <div id="rent-cut-result"></div>
   </div>
 
+  <!-- 礼金・AD設定 最適化カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🎯 礼金・AD設定 最適化カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">礼金・広告費（AD）の設定が入居者募集に与える影響と収支への効果を試算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">月額家賃（万円）</div>
+        <input type="number" id="km_rent" value="7" min="1" max="100" step="0.5" oninput="calcKeyMoneyOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">礼金（ヶ月分）</div>
+        <select id="km_rei" onchange="calcKeyMoneyOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="0">礼金なし（0ヶ月）</option>
+          <option value="0.5">0.5ヶ月</option>
+          <option value="1" selected>1ヶ月</option>
+          <option value="2">2ヶ月</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">AD（広告費・ヶ月分）</div>
+        <select id="km_ad" onchange="calcKeyMoneyOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="0">ADなし（0ヶ月）</option>
+          <option value="0.5">0.5ヶ月</option>
+          <option value="1" selected>1ヶ月</option>
+          <option value="2">2ヶ月</option>
+          <option value="3">3ヶ月</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">エリアの競争環境</div>
+        <select id="km_comp" onchange="calcKeyMoneyOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="low">競合少（空室が埋まりやすい）</option>
+          <option value="mid" selected>競合普通</option>
+          <option value="high">競合多（空室が長期化しやすい）</option>
+        </select>
+      </div>
+    </div>
+    <div id="key-money-opt-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -6967,6 +7007,71 @@ function calcRentCutBreakeven() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※損益分岐点とは「空室短縮で節約した損失を、値下げ後の月次減収で回収し終えるまでの月数」です。長期入居が見込める場合でもこの点数を参考に判断してください。</div>';
 }
 (function(){ calcRentCutBreakeven(); })();
+
+function calcKeyMoneyOpt() {
+  const rent = parseFloat(document.getElementById('km_rent').value) || 0;
+  const rei = parseFloat(document.getElementById('km_rei').value) || 0;
+  const ad = parseFloat(document.getElementById('km_ad').value) || 0;
+  const comp = document.getElementById('km_comp').value;
+  const el = document.getElementById('key-money-opt-result');
+  if (!rent) { el.innerHTML = ''; return; }
+
+  const compLabels = {low:'競合少', mid:'競合普通', high:'競合多'};
+  const baseVacancy = {low:1, mid:2, high:4}[comp];
+  const reiPenalty = rei > 0 ? rei * 0.5 : 0;
+  const adBonus = ad > 0 ? ad * 0.7 : 0;
+  const estVacancy = Math.max(0.5, baseVacancy + reiPenalty - adBonus);
+
+  const reiIncome = rei * rent;
+  const adCost = ad * rent;
+  const vacancyLoss = estVacancy * rent;
+  const netFirst = reiIncome - adCost - vacancyLoss;
+
+  const scenarios = [
+    {label:'礼金なし・ADなし', rei:0, ad:0},
+    {label:'礼金なし・AD1ヶ月', rei:0, ad:1},
+    {label:'礼金1ヶ月・AD1ヶ月', rei:1, ad:1},
+    {label:'礼金2ヶ月・AD1ヶ月', rei:2, ad:1},
+  ];
+  const scenRows = scenarios.map(s => {
+    const vacR = Math.max(0.5, baseVacancy + (s.rei>0?s.rei*0.5:0) - (s.ad>0?s.ad*0.7:0));
+    const net = s.rei * rent - s.ad * rent - vacR * rent;
+    const highlight = (s.rei === rei && s.ad === ad) ? 'background:rgba(201,168,76,0.12);' : '';
+    return '<tr style="' + highlight + '">'
+      + '<td style="padding:7px 10px;font-size:12px">' + s.label + (s.rei === rei && s.ad === ad ? ' ★' : '') + '</td>'
+      + '<td style="padding:7px 10px;font-size:12px;text-align:center">' + vacR.toFixed(1) + 'ヶ月</td>'
+      + '<td style="padding:7px 10px;font-size:12px;font-weight:700;text-align:right;color:' + (net >= 0 ? '#4ade80' : '#f87171') + '">'
+      + (net >= 0 ? '+' : '') + net.toFixed(1) + '万円</td></tr>';
+  }).join('');
+
+  let advice = '';
+  if (comp === 'high') {
+    advice = '⚠️ 競合が多いエリアでは<strong>礼金ゼロ＋AD増加</strong>が入居者獲得に有効です。礼金を取ると空室が長期化しやすいため、収支が悪化するリスクがあります。';
+  } else if (comp === 'low') {
+    advice = '✅ 空室が埋まりやすいエリアでは<strong>礼金1〜2ヶ月</strong>を設定しても入居者が集まりやすいです。ADは0.5〜1ヶ月の最小限で十分な場合が多いです。';
+  } else {
+    advice = '💡 標準的なエリアでは<strong>礼金1ヶ月＋AD1ヶ月</strong>が一般的なバランスです。空室が続く場合はまずADを増やして仲介会社のモチベーションを高めましょう。';
+  }
+
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted)">礼金収入</div>'
+    + '<div style="font-size:18px;font-weight:900;color:#4ade80">+' + reiIncome.toFixed(1) + '<span style="font-size:12px">万円</span></div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted)">AD費用</div>'
+    + '<div style="font-size:18px;font-weight:900;color:#f87171">▲' + adCost.toFixed(1) + '<span style="font-size:12px">万円</span></div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted)">推定空室期間</div>'
+    + '<div style="font-size:18px;font-weight:900;color:' + (estVacancy <= 1 ? '#4ade80' : estVacancy <= 2 ? '#facc15' : '#f87171') + '">' + estVacancy.toFixed(1) + '<span style="font-size:12px">ヶ月</span></div></div></div>'
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:10px;overflow:hidden;margin-bottom:12px">'
+    + '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:rgba(255,255,255,0.05)">'
+    + '<th style="padding:8px 10px;font-size:11px;color:var(--text-muted);text-align:left">設定パターン（' + compLabels[comp] + '）</th>'
+    + '<th style="padding:8px 10px;font-size:11px;color:var(--text-muted);text-align:center">推定空室</th>'
+    + '<th style="padding:8px 10px;font-size:11px;color:var(--text-muted);text-align:right">初期収支</th>'
+    + '</tr></thead><tbody>' + scenRows + '</tbody></table></div>'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:13px;line-height:1.7">' + advice + '</div>';
+}
+(function(){ calcKeyMoneyOpt(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
