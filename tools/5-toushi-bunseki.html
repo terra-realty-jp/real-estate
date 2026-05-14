@@ -1565,6 +1565,38 @@
     <div id="property-tax-sim-result"></div>
   </div>
 
+  <!-- 不動産REIT vs 現物投資 比較診断カード -->
+  <div class="card">
+    <div class="card-title">🏦 不動産REIT vs 現物投資 比較診断</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">投資予算（万円）</label>
+        <input type="number" id="rv_budget" value="3000" min="100" max="100000" step="100" oninput="calcREITComp()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">試算期間（年）</label>
+        <input type="number" id="rv_years" value="10" min="1" max="30" step="1" oninput="calcREITComp()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">REIT 想定分配利回り（%/年）</label>
+        <input type="number" id="rv_reit_yield" value="4" min="0.5" max="15" step="0.5" oninput="calcREITComp()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現物 表面利回り（%/年）</label>
+        <input type="number" id="rv_prop_yield" value="7" min="0.5" max="30" step="0.5" oninput="calcREITComp()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現物 LTV（借入比率%）</label>
+        <input type="number" id="rv_ltv" value="70" min="0" max="90" step="5" oninput="calcREITComp()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現物 借入金利（%/年）</label>
+        <input type="number" id="rv_loan_rate" value="2.0" min="0.5" max="10" step="0.1" oninput="calcREITComp()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="reit-comp-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -6976,6 +7008,65 @@ function calcPropertyTaxSim() {
   </div>`;
 }
 (function(){ calcPropertyTaxSim(); })();
+
+function calcREITComp() {
+  const budget = parseFloat(document.getElementById('rv_budget').value) || 0;
+  const years = parseInt(document.getElementById('rv_years').value) || 10;
+  const reitYield = parseFloat(document.getElementById('rv_reit_yield').value) || 0;
+  const propYield = parseFloat(document.getElementById('rv_prop_yield').value) || 0;
+  const ltv = parseFloat(document.getElementById('rv_ltv').value) || 0;
+  const loanRate = parseFloat(document.getElementById('rv_loan_rate').value) || 0;
+  const r = document.getElementById('reit-comp-result');
+  if (!r) return;
+  if (budget <= 0) { r.innerHTML = '<div style="color:var(--text-muted);font-size:13px">投資予算を入力してください</div>'; return; }
+
+  const reitAnnual = budget * reitYield / 100;
+  const reitTotal = reitAnnual * years;
+  const reitFinal = budget * Math.pow(1 + reitYield / 100, years);
+
+  const propPrice = budget / (1 - ltv / 100);
+  const loanAmt = propPrice * (ltv / 100);
+  const propGrossAnnual = propPrice * propYield / 100;
+  const expenseRate = 0.20;
+  const propNetAnnual = propGrossAnnual * (1 - expenseRate);
+  const loanCostAnnual = loanAmt * loanRate / 100;
+  const propCFAnnual = propNetAnnual - loanCostAnnual;
+  const propCFTotal = propCFAnnual * years;
+  const propEquityFinal = budget + propCFTotal;
+
+  const comparison = [
+    { label: '🏦 J-REIT（紙の不動産）', annual: reitAnnual, total: reitTotal, final: reitFinal,
+      pros: ['少額から投資可（数万円〜）', '流動性高・いつでも売却可', '分散投資・管理不要', '確定申告が比較的シンプル'],
+      cons: ['金利上昇時に価格下落リスク', 'レバレッジ効果なし', '物件選択の自由度なし'] },
+    { label: '🏠 現物不動産', annual: propCFAnnual, total: propCFTotal, final: propEquityFinal,
+      pros: ['レバレッジで少ない自己資金を増幅（LTV' + ltv + '%）', '実物資産で物価上昇に強い', '減価償却節税・ローン返済で資産形成', '物件選択の自由度・改善余地あり'],
+      cons: ['流動性低・換金まで時間がかかる', '管理・修繕の手間', '空室・金利上昇リスク', '取引コスト高（仲介・登記・税）'] },
+  ];
+
+  const best = comparison[0].final >= comparison[1].final ? 0 : 1;
+
+  var cards = comparison.map(function(c, i) {
+    var col = i === best ? '#d4af37' : 'var(--text)';
+    var badge = i === best ? '<span style="background:#d4af37;color:#1a1a1a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px">試算上有利</span>' : '';
+    return '<div style="background:var(--dark3);border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid ' + (i===best?'rgba(212,175,55,0.4)':'rgba(255,255,255,0.06)') + '">'
+      + '<div style="font-weight:700;font-size:14px;color:' + col + ';margin-bottom:8px">' + c.label + badge + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+      + '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">年間CF</div><div style="font-size:16px;font-weight:900;color:' + (c.annual>=0?'#4caf50':'#f44336') + '">' + c.annual.toFixed(1) + '<span style="font-size:10px">万円</span></div></div>'
+      + '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">' + years + '年間累計</div><div style="font-size:16px;font-weight:900;color:' + col + '">' + c.total.toFixed(0) + '<span style="font-size:10px">万円</span></div></div>'
+      + '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">' + years + '年後想定資産</div><div style="font-size:16px;font-weight:900;color:' + col + '">' + c.final.toFixed(0) + '<span style="font-size:10px">万円</span></div></div>'
+      + '</div>'
+      + '<div style="font-size:11px;color:#4caf50;margin-bottom:2px">✔ ' + c.pros.join(' ✔ ') + '</div>'
+      + '<div style="font-size:11px;color:#f44336;margin-top:4px">✖ ' + c.cons.join(' ✖ ') + '</div>'
+      + '</div>';
+  }).join('');
+
+  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">自己資金 <strong>' + budget.toFixed(0) + '万円</strong> × LTV' + ltv + '%（現物購入価格: ' + propPrice.toFixed(0) + '万円）</div>'
+    + cards
+    + '<div style="font-size:11px;color:var(--text-muted)">※税金・取得費・修繕費・空室率は考慮していません。あくまで参考試算です。</div>'
+    + '</div>';
+}
+(function(){ calcREITComp(); })();
 
 function checkStorageWarning() {
   try {
