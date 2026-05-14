@@ -1349,6 +1349,25 @@
     <div id="akiya-3choice-result"></div>
   </div>
 
+  <!-- 空き家バンク登録前チェックリスト -->
+  <div class="card">
+    <div class="card-title">🏛️ 空き家バンク 登録前チェックリスト</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">自治体の空き家バンクへ登録する前に確認すべき書類・要件・準備事項をチェックします。</p>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="ab-chk" data-cat="必須" onchange="calcAkiyaBank()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>📄 土地・建物の登記事項証明書（法務局で取得）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="ab-chk" data-cat="必須" onchange="calcAkiyaBank()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>📄 固定資産税納税通知書（最新年度）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="ab-chk" data-cat="必須" onchange="calcAkiyaBank()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>🏠 物件の現況写真（外観・各部屋・水回り）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="ab-chk" data-cat="必須" onchange="calcAkiyaBank()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>📐 建物の間取り図（手書き可）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="ab-chk" data-cat="必須" onchange="calcAkiyaBank()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>✅ 所有者全員の同意（相続未了の場合は相続登記を先に完了）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="ab-chk" data-cat="必須" onchange="calcAkiyaBank()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>⚡ 水道・電気・ガスの状態確認（使用可否）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="ab-chk" data-cat="推奨" onchange="calcAkiyaBank()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>🔍 雨漏り・シロアリ・傾き等の既知の瑕疵を整理</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="ab-chk" data-cat="推奨" onchange="calcAkiyaBank()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>🧹 最低限の清掃・除草（来訪者が内覧できる状態に）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="ab-chk" data-cat="推奨" onchange="calcAkiyaBank()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>📋 希望の利用用途（居住用/農地付き/DIY可/何でも可）を決める</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="ab-chk" data-cat="推奨" onchange="calcAkiyaBank()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>💰 希望価格・売渡し/賃貸の方針を家族で合意</span></label>
+    </div>
+    <div id="akiya-bank-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4906,6 +4925,67 @@ function calcAkiya3Choice() {
     + '</div>';
 }
 (function(){ calcAkiya3Choice(); })();
+
+function calcAkiyaBank() {
+  const chks = document.querySelectorAll('.ab-chk');
+  const el = document.getElementById('akiya-bank-result');
+  if (!el) return;
+  let mandatory = 0, recommended = 0, mandatoryTotal = 0, recommendedTotal = 0;
+  const missing = [];
+  chks.forEach(c => {
+    if (c.dataset.cat === '必須') {
+      mandatoryTotal++;
+      if (c.checked) mandatory++;
+      else missing.push({ cat: '必須', text: c.parentElement.textContent.trim() });
+    } else {
+      recommendedTotal++;
+      if (c.checked) recommended++;
+      else missing.push({ cat: '推奨', text: c.parentElement.textContent.trim() });
+    }
+  });
+
+  const pct = Math.round((mandatory + recommended) / (mandatoryTotal + recommendedTotal) * 100);
+  const ready = mandatory === mandatoryTotal;
+  const barColor = ready ? (pct >= 80 ? '#4caf50' : '#ff9800') : '#f44336';
+
+  let statusMsg, statusColor;
+  if (!ready) {
+    statusMsg = '必須項目が未完了です。必須' + (mandatoryTotal - mandatory) + '件を完了させてから登録申請してください。';
+    statusColor = '#f44336';
+  } else if (pct >= 80) {
+    statusMsg = '登録準備が整っています！市区町村の空き家バンク担当窓口に申請しましょう。';
+    statusColor = '#4caf50';
+  } else {
+    statusMsg = '必須項目はクリアです。推奨項目も準備するとより早く成約につながります。';
+    statusColor = '#ff9800';
+  }
+
+  const missingHtml = missing.length > 0
+    ? '<div style="margin-top:10px"><div style="font-size:12px;font-weight:700;margin-bottom:6px">未完了の項目</div>'
+      + missing.map(m => '<div style="font-size:11px;padding:5px 8px;margin-bottom:4px;background:rgba(255,255,255,0.03);border-radius:6px;border-left:3px solid '
+        + (m.cat === '必須' ? '#f44336' : '#fb923c') + '">'
+        + '<span style="font-size:10px;background:' + (m.cat === '必須' ? 'rgba(244,67,54,0.2)' : 'rgba(251,146,60,0.2)') + ';color:' + (m.cat === '必須' ? '#f44336' : '#fb923c') + ';padding:1px 5px;border-radius:3px;margin-right:6px">' + m.cat + '</span>'
+        + m.text + '</div>').join('')
+      + '</div>'
+    : '';
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="text-align:center;padding:10px 0">'
+    + '<div style="font-size:12px;color:var(--text-muted)">準備完了度</div>'
+    + '<div style="font-size:36px;font-weight:900;color:' + barColor + '">' + pct + '<span style="font-size:18px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">必須 ' + mandatory + '/' + mandatoryTotal + '件 ／ 推奨 ' + recommended + '/' + recommendedTotal + '件</div>'
+    + '<div style="background:rgba(255,255,255,0.08);border-radius:6px;height:10px;margin:8px 0">'
+    + '<div style="background:' + barColor + ';border-radius:6px;height:10px;width:' + pct + '%;transition:width 0.4s"></div>'
+    + '</div></div>'
+    + '<div style="padding:10px;background:rgba(255,180,0,0.07);border-radius:8px;border-left:3px solid ' + statusColor + '">'
+    + '<div style="font-size:12px;color:' + statusColor + ';font-weight:700">📝 診断</div>'
+    + '<div style="font-size:12px;margin-top:4px;line-height:1.5">' + statusMsg + '</div>'
+    + '</div>'
+    + missingHtml
+    + '<div style="margin-top:10px;font-size:11px;color:var(--text-muted);line-height:1.5">💡 空き家バンクは市区町村が運営する無料の物件マッチングサービスです。登録後、希望者が現れると行政が仲介します。登録から成約まで数ヶ月〜1年程度かかることもあります。</div>'
+    + '</div>';
+}
+(function(){ calcAkiyaBank(); })();
 
 // 初期化
 checkStorageWarning();
