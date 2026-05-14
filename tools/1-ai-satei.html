@@ -1679,6 +1679,38 @@
     <div id="mgmt-up-sim-result"></div>
   </div>
 
+  <!-- 売却手取り再投資プランシミュレーターカード -->
+  <div class="card">
+    <div class="card-title">📈 売却手取り 再投資プランシミュレーター</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">売却手取り額（万円）</label>
+        <input type="number" id="rp_proceeds" value="2000" min="100" max="100000" step="100" oninput="calcReinvestPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">試算期間（年）</label>
+        <input type="number" id="rp_years" value="10" min="1" max="30" step="1" oninput="calcReinvestPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">不動産再投資 想定利回り（%/年）</label>
+        <input type="number" id="rp_re_yield" value="5" min="0" max="20" step="0.5" oninput="calcReinvestPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">金融商品 想定利回り（%/年）</label>
+        <input type="number" id="rp_fin_yield" value="3" min="0" max="15" step="0.5" oninput="calcReinvestPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">住宅ローン残債（万円・0なら繰上返済なし）</label>
+        <input type="number" id="rp_loan" value="500" min="0" max="50000" step="100" oninput="calcReinvestPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">ローン金利（%/年）</label>
+        <input type="number" id="rp_loan_rate" value="1.5" min="0" max="10" step="0.1" oninput="calcReinvestPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="reinvest-plan-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5499,6 +5531,56 @@ function calcMgmtUpSim() {
     + '</div>';
 }
 (function(){ calcMgmtUpSim(); })();
+
+function calcReinvestPlan() {
+  const proceeds = parseFloat(document.getElementById('rp_proceeds').value) || 0;
+  const years = parseInt(document.getElementById('rp_years').value) || 10;
+  const reYield = parseFloat(document.getElementById('rp_re_yield').value) || 0;
+  const finYield = parseFloat(document.getElementById('rp_fin_yield').value) || 0;
+  const loan = parseFloat(document.getElementById('rp_loan').value) || 0;
+  const loanRate = parseFloat(document.getElementById('rp_loan_rate').value) || 0;
+  const r = document.getElementById('reinvest-plan-result');
+  if (!r) return;
+  if (proceeds <= 0) { r.innerHTML = '<div style="color:var(--text-muted);font-size:13px">売却手取り額を入力してください</div>'; return; }
+
+  const loanRepay = Math.min(loan, proceeds);
+  const loanSaving = loanRepay * loanRate / 100 * years;
+  const afterLoan = proceeds - loanRepay;
+
+  const reTotal = proceeds * Math.pow(1 + reYield / 100, years);
+  const reCF = proceeds * reYield / 100;
+  const finTotal = proceeds * Math.pow(1 + finYield / 100, years);
+  const finCF = proceeds * finYield / 100;
+  const repayTotal = afterLoan * Math.pow(1 + finYield / 100, years) + loanSaving + loanRepay;
+  const repayAnnual = afterLoan * finYield / 100 + loanSaving / years;
+
+  const plans = [
+    { label: '🏠 不動産再投資', total: reTotal, annual: reCF, note: '実質利回り' + reYield + '%複利（税・空室費用含まず）' },
+    { label: '📊 金融商品（投信等）', total: finTotal, annual: finCF, note: '年率' + finYield + '%複利（NISA等活用可）' },
+    { label: '💳 ローン繰上返済＋残余運用', total: repayTotal, annual: repayAnnual, note: '残債' + loanRepay.toFixed(0) + '万円返済＋残り' + afterLoan.toFixed(0) + '万円を金融運用' },
+  ];
+  plans.sort(function(a,b){ return b.total - a.total; });
+
+  var rows = plans.map(function(p, i) {
+    var col = i === 0 ? '#d4af37' : 'var(--text)';
+    var badge = i === 0 ? '<span style="background:#d4af37;color:#1a1a1a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px">最高</span>' : '';
+    return '<div style="background:var(--dark3);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid ' + (i===0?'rgba(212,175,55,0.4)':'rgba(255,255,255,0.06)') + '">'
+      + '<div style="font-weight:700;font-size:14px;color:' + col + ';margin-bottom:6px">' + p.label + badge + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      + '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">年間収益</div><div style="font-size:18px;font-weight:900;color:' + col + '">' + p.annual.toFixed(0) + '<span style="font-size:11px">万円</span></div></div>'
+      + '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">' + years + '年後総資産</div><div style="font-size:18px;font-weight:900;color:' + col + '">' + p.total.toFixed(0) + '<span style="font-size:11px">万円</span></div></div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);margin-top:6px">' + p.note + '</div>'
+      + '</div>';
+  }).join('');
+
+  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">手取り <strong>' + proceeds.toFixed(0) + '万円</strong> を' + years + '年間運用した場合の比較</div>'
+    + rows
+    + '<div style="font-size:11px;color:var(--text-muted)">※税金・取引費用は考慮していません。実際の運用は税理士・FPにご相談ください。</div>'
+    + '</div>';
+}
+(function(){ calcReinvestPlan(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
