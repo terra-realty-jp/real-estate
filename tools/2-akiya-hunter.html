@@ -1429,6 +1429,44 @@
     <div id="souzoku-tokurei-result"></div>
   </div>
 
+  <!-- 農地転用可能性・コスト試算カード -->
+  <div class="card">
+    <div class="card-title">🌾 農地転用 可能性チェック＆コスト試算</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">農地面積（m²）</label>
+        <input type="number" id="fa_area" value="500" min="10" max="100000" step="10" oninput="calcFarmlandConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">区域・農地種別</label>
+        <select id="fa_zone" onchange="calcFarmlandConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">3種農地（市街化区域隣接）</option>
+          <option value="2">2種農地（市街化調整区域）</option>
+          <option value="1">1種農地（優良農地）</option>
+          <option value="ms">市街化区域内農地</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">転用目的</label>
+        <select id="fa_purpose" onchange="calcFarmlandConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="house">住宅建設</option>
+          <option value="parking">駐車場</option>
+          <option value="solar">太陽光発電</option>
+          <option value="biz">商業・業務施設</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">農業委員会許可取得見込み</label>
+        <select id="fa_permit" onchange="calcFarmlandConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="high">高い（届出で可・3種農地等）</option>
+          <option value="mid">中程度（許可申請が必要）</option>
+          <option value="low">低い（優良農地・原則不許可）</option>
+        </select>
+      </div>
+    </div>
+    <div id="farmland-convert-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5148,6 +5186,68 @@ function calcSouzokuTokurei() {
     + '</div>';
 }
 (function(){ calcSouzokuTokurei(); })();
+
+function calcFarmlandConvert() {
+  const area = parseFloat(document.getElementById('fa_area').value) || 0;
+  const zone = document.getElementById('fa_zone').value;
+  const purpose = document.getElementById('fa_purpose').value;
+  const permit = document.getElementById('fa_permit').value;
+  const r = document.getElementById('farmland-convert-result');
+  if (!r) return;
+  if (area <= 0) { r.innerHTML = '<div style="color:var(--text-muted);font-size:13px">農地面積を入力してください</div>'; return; }
+
+  const feasMap = { ms: '届出のみ', '3': '許可取得可能性高', '2': '要件次第で可能', '1': 'ほぼ不許可（農業振興地域）' };
+  const permitColMap = { ms: '#4caf50', '3': '#4caf50', '2': '#ff9800', '1': '#f44336' };
+
+  const surFeePerM2 = 1500;
+  const registFee = Math.round(area * 0.5 / 10000) * 10000 + 30000;
+  const designFee = purpose === 'house' ? Math.round(area * 2000 / 10000) * 10000 : 0;
+  const solarFee = purpose === 'solar' ? Math.round(area * 3000 / 10000) * 10000 : 0;
+  const parkingFee = purpose === 'parking' ? Math.round(area * 2000 / 10000) * 10000 : 0;
+  const adminFee = zone === 'ms' ? 10000 : permit === 'high' ? 80000 : permit === 'mid' ? 150000 : 0;
+  const survey = Math.round(area * surFeePerM2 / 10000) * 10000;
+  const totalCost = survey + registFee + designFee + solarFee + parkingFee + adminFee;
+
+  const purposeLabel = { house: '住宅建設', parking: '駐車場', solar: '太陽光発電', biz: '商業・業務施設' };
+  const permitMap = { high: { label: '届出・許可取得しやすい', col: '#4caf50', period: '1〜3ヶ月' }, mid: { label: '許可申請が必要', col: '#ff9800', period: '3〜6ヶ月' }, low: { label: '難しい（農業委員会と相談を）', col: '#f44336', period: '不許可の可能性大' } };
+
+  const pm = permitMap[permit];
+  const fc = feasMap[zone];
+  const fcc = permitColMap[zone];
+
+  const items = [
+    ['測量費（概算）', (survey / 10000).toFixed(0) + '万円'],
+    ['登記・手続き費用', (registFee / 10000).toFixed(0) + '万円'],
+    ['行政許可申請費', (adminFee / 10000).toFixed(0) + '万円'],
+    purpose === 'house' ? ['造成・設計費（概算）', (designFee / 10000).toFixed(0) + '万円'] : null,
+    purpose === 'solar' ? ['太陽光設備設置費（概算）', (solarFee / 10000).toFixed(0) + '万円'] : null,
+    purpose === 'parking' ? ['駐車場整備費（概算）', (parkingFee / 10000).toFixed(0) + '万円'] : null,
+  ].filter(Boolean).map(function(i) {
+    return '<tr><td style="padding:6px 8px;color:var(--text-muted)">' + i[0] + '</td><td style="padding:6px 8px;text-align:right">' + i[1] + '</td></tr>';
+  }).join('');
+
+  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">区域別転用可能性</div>'
+    + '<div style="font-size:14px;font-weight:700;color:' + fcc + '">' + fc + '</div>'
+    + '</div>'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">許可取得難易度</div>'
+    + '<div style="font-size:13px;font-weight:700;color:' + pm.col + '">' + pm.label + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">期間目安: ' + pm.period + '</div>'
+    + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.15)"><th style="padding:6px 8px;text-align:left;color:var(--text-muted);font-weight:400">費用項目</th><th style="padding:6px 8px;text-align:right;color:var(--text-muted);font-weight:400">概算金額</th></tr></thead>'
+    + '<tbody>' + items + '</tbody>'
+    + '<tfoot><tr style="border-top:1px solid rgba(255,255,255,0.15)"><td style="padding:8px;font-weight:700">合計費用（概算）</td><td style="padding:8px;text-align:right;font-weight:900;color:#d4af37">' + (totalCost / 10000).toFixed(0) + '万円</td></tr></tfoot>'
+    + '</table>'
+    + (permit === 'low' ? '<div style="background:rgba(244,67,54,0.1);border-radius:8px;padding:10px;font-size:12px;color:#f44336">⚠️ 1種農地（農業振興地域内）は農地法上の転用が原則不許可です。農業委員会・市区町村農業担当窓口に必ずご相談ください。</div>' : '')
+    + '<div style="margin-top:10px;font-size:11px;color:var(--text-muted)">※概算費用です。実際は測量士・行政書士・農業委員会にご確認ください。</div>'
+    + '</div>';
+}
+(function(){ calcFarmlandConvert(); })();
 
 // 初期化
 checkStorageWarning();
