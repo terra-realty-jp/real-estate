@@ -1531,6 +1531,40 @@
     <div id="portfolio-div-result"></div>
   </div>
 
+  <!-- 固定資産税・都市計画税節税シミュレーターカード -->
+  <div class="card">
+    <div class="card-title">🏛️ 固定資産税・都市計画税 節税シミュレーター</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">土地 固定資産税評価額（万円）</label>
+        <input type="number" id="pt_land" value="2000" min="100" max="100000" step="100" oninput="calcPropertyTaxSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">建物 固定資産税評価額（万円）</label>
+        <input type="number" id="pt_build" value="800" min="0" max="50000" step="100" oninput="calcPropertyTaxSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">土地面積（m²）</label>
+        <input type="number" id="pt_area" value="150" min="1" max="10000" step="10" oninput="calcPropertyTaxSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">用途・区分</label>
+        <select id="pt_use" onchange="calcPropertyTaxSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="house">住宅用地（住宅建設済）</option>
+          <option value="land">更地・商業用地</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">都市計画税（市街化区域内）</label>
+        <select id="pt_city" onchange="calcPropertyTaxSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="1">かかる（市街化区域内）</option>
+          <option value="0">かからない</option>
+        </select>
+      </div>
+    </div>
+    <div id="property-tax-sim-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -6871,6 +6905,77 @@ function calcPortfolioDiv() {
     + '</div>';
 }
 (function(){ calcPortfolioDiv(); })();
+
+function calcPropertyTaxSim() {
+  const land = parseFloat(document.getElementById('pt_land').value) || 0;
+  const build = parseFloat(document.getElementById('pt_build').value) || 0;
+  const area = parseFloat(document.getElementById('pt_area').value) || 0;
+  const use = document.getElementById('pt_use').value;
+  const city = document.getElementById('pt_city').value === '1';
+  const r = document.getElementById('property-tax-sim-result');
+  if (!r) return;
+  if (land <= 0) { r.innerHTML = '<div style="color:var(--text-muted);font-size:13px">土地評価額を入力してください</div>'; return; }
+
+  const FIX_RATE = 0.014;
+  const CITY_RATE = 0.003;
+
+  let landMult = 1;
+  let smallLabel = '特例なし';
+  if (use === 'house' && area > 0) {
+    const small = Math.min(area, 200);
+    const over = Math.max(0, area - 200);
+    const smallRatio = small / area;
+    const overRatio = over / area;
+    landMult = smallRatio * (1/6) + overRatio * (1/3);
+    if (area <= 200) smallLabel = `小規模住宅用地（全面積）→ 評価額1/6`;
+    else smallLabel = `小規模200m²: 1/6 ＋ 超過${Math.round(over)}m²: 1/3 の按分`;
+  }
+
+  const landTax_base = land * FIX_RATE;
+  const landTax_special = land * landMult * FIX_RATE;
+  const buildTax = build * FIX_RATE;
+  const landCity_base = city ? land * CITY_RATE : 0;
+  const landCity_special = city ? land * landMult * CITY_RATE * (use === 'house' ? (2/3) : 1) : 0;
+  const buildCity = city ? build * CITY_RATE : 0;
+
+  const totalBase = landTax_base + buildTax + landCity_base + buildCity;
+  const totalSpecial = landTax_special + buildTax + landCity_special + buildCity;
+  const saving = totalBase - totalSpecial;
+
+  const rows = [
+    ['土地 固定資産税', (landTax_base * 10000).toLocaleString(), (landTax_special * 10000).toLocaleString()],
+    ['土地 都市計画税', (landCity_base * 10000).toLocaleString(), (landCity_special * 10000).toLocaleString()],
+    ['建物 固定資産税', (buildTax * 10000).toLocaleString(), (buildTax * 10000).toLocaleString()],
+    ['建物 都市計画税', (buildCity * 10000).toLocaleString(), (buildCity * 10000).toLocaleString()],
+  ].map(([label, base, sp]) => `<tr>
+    <td style="padding:7px 6px;color:var(--text-muted)">${label}</td>
+    <td style="padding:7px 6px;text-align:right">${base}円</td>
+    <td style="padding:7px 6px;text-align:right;color:#4caf50;font-weight:700">${sp}円</td>
+  </tr>`).join('');
+
+  r.innerHTML = `<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">
+    ${use === 'house' ? `<div style="font-size:12px;color:#4caf50;margin-bottom:10px;background:rgba(76,175,80,0.1);padding:8px 10px;border-radius:6px">住宅用地特例: ${smallLabel}</div>` : ''}
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">
+      <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.15)">
+        <th style="padding:6px;text-align:left;color:var(--text-muted);font-weight:400">税目</th>
+        <th style="padding:6px;text-align:right;color:var(--text-muted);font-weight:400">特例なし</th>
+        <th style="padding:6px;text-align:right;color:var(--text-muted);font-weight:400">特例適用後</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr style="border-top:1px solid rgba(255,255,255,0.15)">
+        <td style="padding:8px 6px;font-weight:700">合計</td>
+        <td style="padding:8px 6px;text-align:right;font-weight:700">${Math.round(totalBase * 10000).toLocaleString()}円/年</td>
+        <td style="padding:8px 6px;text-align:right;font-weight:900;color:#4caf50">${Math.round(totalSpecial * 10000).toLocaleString()}円/年</td>
+      </tr></tfoot>
+    </table>
+    ${saving > 0 ? `<div style="background:rgba(76,175,80,0.12);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">住宅用地特例による年間節税額</div>
+      <div style="font-size:28px;font-weight:900;color:#4caf50">▼${Math.round(saving * 10000).toLocaleString()}<span style="font-size:13px">円/年</span></div>
+    </div>` : ''}
+    <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">※固定資産税1.4%・都市計画税0.3%（標準税率）で試算。実際の税額は市区町村の課税明細書でご確認ください。</div>
+  </div>`;
+}
+(function(){ calcPropertyTaxSim(); })();
 
 function checkStorageWarning() {
   try {
