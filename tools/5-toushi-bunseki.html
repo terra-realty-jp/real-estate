@@ -1340,6 +1340,47 @@
   <div id="yield-distrib-card" style="display:none;margin-bottom:16px"></div>
   <div id="property-score-ranking" style="display:none;margin-bottom:16px"></div>
 
+  <!-- 融資審査 通過確率 診断カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏦 融資審査 通過確率 診断カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">年収・LTV・物件利回り・築年・返済比率から投資用ローンの融資承認可能性を診断します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年収（万円）</div>
+        <input type="number" id="fa_income" value="800" min="200" max="5000" step="50" oninput="calcFusaiCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件価格（万円）</div>
+        <input type="number" id="fa_price" value="3000" min="500" max="100000" step="100" oninput="calcFusaiCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">借入希望額（万円）</div>
+        <input type="number" id="fa_loan" value="2400" min="100" max="100000" step="100" oninput="calcFusaiCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">表面利回り（%）</div>
+        <input type="number" id="fa_yield" value="8" min="1" max="30" step="0.5" oninput="calcFusaiCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">築年数（年）</div>
+        <input type="number" id="fa_age" value="15" min="0" max="60" step="1" oninput="calcFusaiCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">金利（%）</div>
+        <input type="number" id="fa_rate" value="2.5" min="0.5" max="10" step="0.1" oninput="calcFusaiCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">返済期間（年）</div>
+        <input type="number" id="fa_term" value="25" min="5" max="35" step="1" oninput="calcFusaiCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">既存ローン年返済額（万円）</div>
+        <input type="number" id="fa_existing" value="0" min="0" max="2000" step="10" oninput="calcFusaiCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="fusai-check-result"></div>
+  </div>
+
   <!-- 物件比較パネル -->
   <div id="compare-panel" style="display:none;margin-bottom:24px">
     <div class="card" style="border-color:rgba(201,168,76,0.3)">
@@ -5852,6 +5893,96 @@ function calcCFStability() {
   el.innerHTML = html;
 }
 (function(){ calcCFStability(); })();
+
+// ===== 融資審査 通過確率 診断 =====
+function calcFusaiCheck() {
+  var el = document.getElementById('fusai-check-result');
+  if (!el) return;
+  var income = parseFloat(document.getElementById('fa_income').value) || 0;
+  var price = parseFloat(document.getElementById('fa_price').value) || 0;
+  var loan = parseFloat(document.getElementById('fa_loan').value) || 0;
+  var yld = parseFloat(document.getElementById('fa_yield').value) || 0;
+  var age = parseFloat(document.getElementById('fa_age').value) || 0;
+  var rate = parseFloat(document.getElementById('fa_rate').value) || 0;
+  var term = parseFloat(document.getElementById('fa_term').value) || 0;
+  var existing = parseFloat(document.getElementById('fa_existing').value) || 0;
+
+  var ltv = price > 0 ? (loan / price * 100) : 0;
+  var r = rate / 100 / 12;
+  var n = term * 12;
+  var monthlyPay = (r > 0 && n > 0) ? loan * 10000 * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1) : 0;
+  var annualPay = monthlyPay * 12 / 10000;
+  var totalAnnualPay = annualPay + existing;
+  var repayRatio = income > 0 ? (totalAnnualPay / income * 100) : 0;
+  var annualRent = price * yld / 100;
+  var dscr = annualPay > 0 ? ((annualRent * 0.75) / annualPay) : 0;
+
+  var scores = [];
+  var demerits = [];
+  var merits = [];
+
+  // LTV判定
+  var ltvScore = ltv <= 70 ? 3 : ltv <= 80 ? 2 : ltv <= 90 ? 1 : 0;
+  scores.push(ltvScore);
+  if (ltvScore >= 3) merits.push('LTV '+ltv.toFixed(0)+'%：優良');
+  else if (ltvScore <= 1) demerits.push('LTV '+ltv.toFixed(0)+'%が高い（目安：70%以下）');
+
+  // 返済比率判定
+  var rpScore = repayRatio <= 25 ? 3 : repayRatio <= 35 ? 2 : repayRatio <= 45 ? 1 : 0;
+  scores.push(rpScore);
+  if (rpScore >= 3) merits.push('返済比率 '+repayRatio.toFixed(0)+'%：余裕あり');
+  else if (rpScore <= 1) demerits.push('返済比率 '+repayRatio.toFixed(0)+'%が高い（目安：35%以下）');
+
+  // DSCR判定
+  var dscrScore = dscr >= 1.3 ? 3 : dscr >= 1.1 ? 2 : dscr >= 1.0 ? 1 : 0;
+  scores.push(dscrScore);
+  if (dscrScore >= 2) merits.push('DSCR '+dscr.toFixed(2)+'：CF余裕あり');
+  else demerits.push('DSCR '+dscr.toFixed(2)+'が低い（目安：1.2以上）');
+
+  // 利回り判定
+  var yldScore = yld >= 8 ? 3 : yld >= 6 ? 2 : yld >= 4 ? 1 : 0;
+  scores.push(yldScore);
+  if (yldScore >= 2) merits.push('利回り '+yld+'%：収益性良好');
+  else demerits.push('利回り '+yld+'%がやや低い（目安：6%以上）');
+
+  // 築年判定
+  var ageScore = age <= 10 ? 3 : age <= 20 ? 2 : age <= 30 ? 1 : 0;
+  scores.push(ageScore);
+  if (ageScore >= 2) merits.push('築'+age+'年：融資期間が取りやすい');
+  else demerits.push('築'+age+'年が古い（融資期間が短くなりやすい）');
+
+  var totalScore = scores.reduce(function(a,b){ return a+b; }, 0);
+  var maxScore = scores.length * 3;
+  var pct = Math.round(totalScore / maxScore * 100);
+
+  var grade, color, label;
+  if (pct >= 80) { grade = 'A'; color = '#4ade80'; label = '通過可能性 高'; }
+  else if (pct >= 60) { grade = 'B'; color = '#34d399'; label = '通過可能性 中〜高'; }
+  else if (pct >= 40) { grade = 'C'; color = '#f59e0b'; label = '通過可能性 中'; }
+  else if (pct >= 25) { grade = 'D'; color = '#fb923c'; label = '通過可能性 低'; }
+  else { grade = 'E'; color = '#f87171'; label = '厳しい状況'; }
+
+  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+  html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">LTV</div><div style="font-size:18px;font-weight:900;color:'+( ltv<=70?'#4ade80':ltv<=80?'#f59e0b':'#f87171')+'">'+ltv.toFixed(0)+'<span style="font-size:11px">%</span></div></div>';
+  html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">返済比率</div><div style="font-size:18px;font-weight:900;color:'+( repayRatio<=35?'#4ade80':repayRatio<=45?'#f59e0b':'#f87171')+'">'+repayRatio.toFixed(0)+'<span style="font-size:11px">%</span></div></div>';
+  html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">DSCR</div><div style="font-size:18px;font-weight:900;color:'+( dscr>=1.2?'#4ade80':dscr>=1.0?'#f59e0b':'#f87171')+'">'+dscr.toFixed(2)+'</div></div>';
+  html += '</div>';
+  html += '<div style="text-align:center;padding:10px;border-radius:8px;background:'+color+'22;border:1px solid '+color+'44;margin-bottom:10px">';
+  html += '<div style="font-size:28px;font-weight:900;color:'+color+'">'+grade+'</div>';
+  html += '<div style="font-size:13px;font-weight:700;color:'+color+'">'+label+'（スコア'+pct+'%）</div>';
+  html += '</div>';
+  if (merits.length > 0) {
+    html += '<div style="font-size:11px;color:#4ade80;margin-bottom:8px">✅ '+merits.join(' / ')+'</div>';
+  }
+  if (demerits.length > 0) {
+    html += '<div style="font-size:11px;color:#fb923c;margin-bottom:8px">⚠️ '+demerits.join(' / ')+'</div>';
+  }
+  html += '<div style="font-size:11px;color:#666;margin-top:6px">※ 参考値。実際の審査は金融機関の独自基準・信用情報・物件評価による</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcFusaiCheck(); })();
 
 function checkStorageWarning() {
   try {
