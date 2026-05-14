@@ -1300,6 +1300,39 @@
     <div id="cf-stability-result"></div>
   </div>
 
+  <!-- 不動産クラウドファンディング vs 直接投資 比較診断カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🌐 クラウドファンディング vs 直接投資 比較診断カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">投資予算・期間・想定利回りを入力すると、両者の期待リターンと特性を比較します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">投資予算（万円・頭金）</div>
+        <input type="number" id="cfd_budget" value="500" min="10" max="100000" step="50" oninput="calcCrowdFundCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">投資期間（年）</div>
+        <input type="number" id="cfd_years" value="3" min="1" max="30" step="1" oninput="calcCrowdFundCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">CF 想定年利（%・税引前）</div>
+        <input type="number" id="cfd_crowd_rate" value="5" min="1" max="20" step="0.5" oninput="calcCrowdFundCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">直接投資 表面利回り（%）</div>
+        <input type="number" id="cfd_direct_rate" value="8" min="1" max="30" step="0.5" oninput="calcCrowdFundCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">LTV（借入比率 %）</div>
+        <input type="number" id="cfd_ltv" value="70" min="0" max="90" step="5" oninput="calcCrowdFundCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">借入金利（%）</div>
+        <input type="number" id="cfd_loan_rate" value="2.5" min="0.5" max="8" step="0.1" oninput="calcCrowdFundCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="crowdfund-compare-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -6115,6 +6148,82 @@ function calcLossCut() {
   el.innerHTML = html;
 }
 (function(){ calcLossCut(); })();
+
+function calcCrowdFundCompare() {
+  const budget = parseFloat(document.getElementById('cfd_budget').value) || 0;
+  const years = parseFloat(document.getElementById('cfd_years').value) || 1;
+  const crowdRate = parseFloat(document.getElementById('cfd_crowd_rate').value) || 0;
+  const directRate = parseFloat(document.getElementById('cfd_direct_rate').value) || 0;
+  const ltv = parseFloat(document.getElementById('cfd_ltv').value) || 70;
+  const loanRate = parseFloat(document.getElementById('cfd_loan_rate').value) || 2.5;
+  const el = document.getElementById('crowdfund-compare-result');
+  if (!budget || !years || !crowdRate || !directRate) { el.innerHTML = ''; return; }
+
+  const crowdGross = budget * (Math.pow(1 + crowdRate / 100, years) - 1);
+  const crowdNet = crowdGross * (1 - 0.20315);
+
+  const ltvR = ltv / 100;
+  const propertyPrice = ltvR < 1 ? budget / (1 - ltvR) : budget * 5;
+  const loanAmount = propertyPrice * ltvR;
+  const r = loanRate / 100 / 12;
+  const n = 25 * 12;
+  const monthlyLoan = r > 0 ? loanAmount * r / (1 - Math.pow(1 + r, -n)) : loanAmount / n;
+  const monthlyRent = propertyPrice * directRate / 100 / 12;
+  const monthlyExpense = propertyPrice * 0.05 / 12;
+  const monthlyCF = monthlyRent - monthlyLoan - monthlyExpense;
+  const totalCF = monthlyCF * 12 * years;
+
+  const leverage = ltvR < 1 ? (1 / (1 - ltvR)).toFixed(1) : '—';
+  const compareRows = [
+    ['最低投資額', '1万円〜', budget.toFixed(0) + '万円（頭金）'],
+    ['物件規模', '—（ファンド運用）', propertyPrice.toFixed(0) + '万円規模'],
+    ['レバレッジ', 'なし（1倍）', leverage + '倍'],
+    ['流動性', '低い（満期まで換金不可）', '中程度（売却に数ヶ月）'],
+    ['管理の手間', 'なし（完全受動的）', 'あり（入居者・修繕）'],
+    ['節税効果', 'なし', '減価償却・経費計上可'],
+    ['主なリスク', '元本毀損・遅延', '空室・修繕・地価下落'],
+    ['出口戦略', '満期償還のみ', '任意売却・保有継続'],
+  ];
+  const tableRows = compareRows.map(r =>
+    '<tr><td style="padding:7px 10px;font-size:12px;color:var(--text-muted);white-space:nowrap">' + r[0] + '</td>'
+    + '<td style="padding:7px 10px;font-size:12px;color:#60a5fa">' + r[1] + '</td>'
+    + '<td style="padding:7px 10px;font-size:12px;color:#4ade80">' + r[2] + '</td></tr>'
+  ).join('');
+
+  let rec = '';
+  if (budget < 100) {
+    rec = '💡 投資予算が少ない場合、<strong>クラウドファンディング</strong>から始めるのが現実的です。少額から不動産投資を体験しながら直接投資の頭金を積み立てましょう。';
+  } else if (budget < 500 || ltv === 0) {
+    rec = '💡 両者を<strong>組み合わせる戦略</strong>が有効です。CFで不動産投資を学びながら、直接投資に向けた頭金・知識を蓄積していきましょう。';
+  } else {
+    rec = '💡 十分な自己資金がある場合は<strong>直接投資</strong>がレバレッジ・節税効果で有利になりやすいです。ただし管理業務・流動性リスクを理解した上でご判断ください。';
+  }
+
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+    + '<div style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);border-radius:10px;padding:14px">'
+    + '<div style="font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:8px">🌐 クラウドファンディング</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">投資額</div>'
+    + '<div style="font-size:18px;font-weight:900;margin-bottom:8px">' + budget.toFixed(0) + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">' + years + '年後 税引後リターン（概算）</div>'
+    + '<div style="font-size:20px;font-weight:900;color:#60a5fa">+' + crowdNet.toFixed(1) + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">年利' + crowdRate + '% × ' + years + '年（税引後）</div></div>'
+    + '<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:14px">'
+    + '<div style="font-size:13px;font-weight:700;color:#4ade80;margin-bottom:8px">🏠 直接投資（LTV ' + ltv + '%）</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">物件規模</div>'
+    + '<div style="font-size:18px;font-weight:900;margin-bottom:8px">' + propertyPrice.toFixed(0) + '万円規模</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">' + years + '年間 累計CF（概算）</div>'
+    + '<div style="font-size:20px;font-weight:900;color:' + (totalCF >= 0 ? '#4ade80' : '#f87171') + '">' + (totalCF >= 0 ? '+' : '') + totalCF.toFixed(1) + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">月次CF ' + monthlyCF.toFixed(1) + '万円 × ' + Math.round(years * 12) + 'ヶ月</div></div></div>'
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:10px;overflow:hidden;margin-bottom:12px">'
+    + '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:rgba(255,255,255,0.05)">'
+    + '<th style="padding:8px 10px;font-size:11px;color:var(--text-muted);text-align:left">比較項目</th>'
+    + '<th style="padding:8px 10px;font-size:11px;color:#60a5fa;text-align:left">クラウドファンディング</th>'
+    + '<th style="padding:8px 10px;font-size:11px;color:#4ade80;text-align:left">直接投資</th>'
+    + '</tr></thead><tbody>' + tableRows + '</tbody></table></div>'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:13px;line-height:1.7">' + rec + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※クラウドファンディングの年利は分配型ファンドの想定利回り（COZUCHI・FUNDOSなど）。直接投資の月次CFは経費5%・返済期間25年で概算。実際の数値は個別案件により大きく異なります。</div>';
+}
+(function(){ calcCrowdFundCompare(); })();
 
 function checkStorageWarning() {
   try {
