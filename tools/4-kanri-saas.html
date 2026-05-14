@@ -1253,6 +1253,35 @@
     <div id="original-restore-result"></div>
   </div>
 
+  <!-- 賃貸物件 月次ヘルスチェック スコアカード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🩺 賃貸物件 月次ヘルスチェック</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">今月の数字を入力して物件の健全性を5項目でスコアリング</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">満室時の月額家賃収入（万円）</div>
+        <input type="number" id="hc_full" value="80" min="1" max="5000" step="5" oninput="calcHealthCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">今月の実際の収入（万円）</div>
+        <input type="number" id="hc_actual" value="72" min="0" max="5000" step="5" oninput="calcHealthCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">今月の修繕・維持費（万円）</div>
+        <input type="number" id="hc_repair" value="5" min="0" max="1000" step="1" oninput="calcHealthCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">未入金テナント数（件）</div>
+        <input type="number" id="hc_unpaid" value="0" min="0" max="100" step="1" oninput="calcHealthCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div style="grid-column:1/-1">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">90日以内に契約更新が来るテナント数</div>
+        <input type="number" id="hc_renewal" value="1" min="0" max="100" step="1" oninput="calcHealthCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="health-check-result"></div>
+  </div>
+
   <!-- 確定申告 年間収支サマリーカード -->
   <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
     <div style="font-size:15px;font-weight:900;margin-bottom:4px">📑 確定申告 年間収支サマリー</div>
@@ -6376,6 +6405,75 @@ function calcOriginalRestore() {
   el.innerHTML = html;
 }
 (function(){ calcOriginalRestore(); })();
+
+// ===== 賃貸物件 月次ヘルスチェック =====
+function calcHealthCheck() {
+  var el = document.getElementById('health-check-result');
+  if (!el) return;
+  var full = parseFloat(document.getElementById('hc_full').value) || 0;
+  var actual = parseFloat(document.getElementById('hc_actual').value) || 0;
+  var repair = parseFloat(document.getElementById('hc_repair').value) || 0;
+  var unpaid = parseFloat(document.getElementById('hc_unpaid').value) || 0;
+  var renewal = parseFloat(document.getElementById('hc_renewal').value) || 0;
+  if (full <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">満室時の月額収入を入力してください</div>'; return; }
+
+  var occupancyRate = Math.min(100, Math.round(actual / full * 100));
+  var repairRate = actual > 0 ? Math.round(repair / actual * 100) : 0;
+  var cf = actual - repair;
+
+  function score(val, thresholds, scores) {
+    for (var i = 0; i < thresholds.length; i++) {
+      if (val >= thresholds[i]) return scores[i];
+    }
+    return scores[scores.length - 1];
+  }
+
+  var metrics = [
+    { label: '入居率', value: occupancyRate + '%',
+      sc: score(occupancyRate, [95, 85, 75], [100, 75, 50, 25]),
+      good: '95%以上', status: occupancyRate >= 95 ? '◎' : occupancyRate >= 85 ? '○' : occupancyRate >= 75 ? '△' : '✕' },
+    { label: '修繕費率', value: repairRate + '%',
+      sc: score(repairRate, [0, 10, 20, 30], [100, 80, 50, 20]).toString() === '100' ? 100 : score(100 - repairRate, [80, 70, 50, 0], [100, 75, 50, 20]),
+      good: '15%以下', status: repairRate <= 10 ? '◎' : repairRate <= 20 ? '○' : repairRate <= 30 ? '△' : '✕' },
+    { label: '未入金テナント', value: unpaid + '件',
+      sc: unpaid === 0 ? 100 : unpaid === 1 ? 60 : unpaid <= 2 ? 30 : 0,
+      good: '0件', status: unpaid === 0 ? '◎' : unpaid === 1 ? '△' : '✕' },
+    { label: '月次CF', value: cf + '万円',
+      sc: cf > 0 ? Math.min(100, Math.round(cf / full * 200)) : 0,
+      good: 'プラス', status: cf > full * 0.3 ? '◎' : cf > 0 ? '○' : '✕' },
+    { label: '更新対応', value: renewal + '件',
+      sc: renewal === 0 ? 100 : 80,
+      good: '準備済み', status: renewal === 0 ? '◎' : '要確認' }
+  ];
+
+  var totalScore = Math.round(metrics.reduce(function(s, m){ return s + m.sc; }, 0) / metrics.length);
+  var grade = totalScore >= 85 ? 'S' : totalScore >= 70 ? 'A' : totalScore >= 55 ? 'B' : totalScore >= 40 ? 'C' : 'D';
+  var gradeColor = { S: 'var(--gold)', A: 'var(--green)', B: '#34d399', C: '#f59e0b', D: 'var(--red)' }[grade];
+  var gradeMsg = { S: '健全・優秀', A: '良好', B: '標準的', C: '要注意', D: '要改善' }[grade];
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;background:rgba(255,255,255,0.04);border-radius:10px;padding:12px">';
+  html += '<div style="text-align:center"><div style="font-size:36px;font-weight:900;color:' + gradeColor + '">' + grade + '</div><div style="font-size:10px;color:var(--text-muted)">総合グレード</div></div>';
+  html += '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:' + gradeColor + ';margin-bottom:4px">' + gradeMsg + '（' + totalScore + '点）</div>';
+  html += '<div style="background:rgba(255,255,255,0.06);border-radius:4px;height:8px;overflow:hidden"><div style="height:100%;width:' + totalScore + '%;background:' + gradeColor + ';border-radius:4px;transition:width 0.4s"></div></div>';
+  html += '</div></div>';
+  html += '<div style="display:grid;gap:6px;margin-bottom:8px">';
+  metrics.forEach(function(m) {
+    var barColor = m.sc >= 80 ? 'var(--green)' : m.sc >= 55 ? '#f59e0b' : 'var(--red)';
+    html += '<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border-radius:8px;padding:7px 10px">';
+    html += '<span style="font-size:12px;min-width:100px">' + m.label + '</span>';
+    html += '<span style="font-size:13px;font-weight:700;min-width:60px;color:' + barColor + '">' + m.value + '</span>';
+    html += '<div style="flex:1;background:rgba(255,255,255,0.06);border-radius:4px;height:6px;overflow:hidden"><div style="height:100%;width:' + m.sc + '%;background:' + barColor + ';border-radius:4px"></div></div>';
+    html += '<span style="font-size:12px;min-width:24px;text-align:center">' + m.status + '</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+  if (renewal > 0) html += '<div style="font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border-radius:6px;padding:8px;margin-bottom:6px">⚡ 契約更新が' + renewal + '件あります。更新案内の送付・家賃交渉・退去確認を早めに進めましょう</div>';
+  if (unpaid > 0) html += '<div style="font-size:11px;color:var(--red);background:rgba(239,68,68,0.08);border-radius:6px;padding:8px">⚠️ 未入金テナントが' + unpaid + '件あります。督促連絡を行い、2ヶ月以上続く場合は法的対応を検討してください</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcHealthCheck(); })();
 
 // ===== 確定申告 年間収支サマリー =====
 function calcTaxSummary() {
