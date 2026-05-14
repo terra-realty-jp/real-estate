@@ -1316,6 +1316,39 @@
     <div id="share-house-convert-result"></div>
   </div>
 
+  <!-- 空き家3択（放置/売却/活用）損得比較カード -->
+  <div class="card">
+    <div class="card-title">⚖️ 放置・売却・活用 損得10年比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家を「このまま放置」「売却」「賃貸活用」した場合の10年間の損得を試算します。</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の不動産評価額（万円）</div>
+        <input type="number" id="ak3_price" value="1500" min="100" max="100000" step="100" oninput="calcAkiya3Choice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間維持費（固定資産税+管理等）（万円）</div>
+        <input type="number" id="ak3_cost" value="15" min="0" max="200" step="1" oninput="calcAkiya3Choice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売却時の諸費用・税金（%）</div>
+        <input type="number" id="ak3_sell_cost" value="5" min="0" max="20" step="0.5" oninput="calcAkiya3Choice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">10年後の推定地価変動（%）</div>
+        <input type="number" id="ak3_land_chg" value="-10" min="-50" max="50" step="5" oninput="calcAkiya3Choice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">賃貸月額（万円）</div>
+        <input type="number" id="ak3_rent" value="6" min="1" max="500" step="0.5" oninput="calcAkiya3Choice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">賃貸開始リフォーム費（万円）</div>
+        <input type="number" id="ak3_reform" value="100" min="0" max="2000" step="50" oninput="calcAkiya3Choice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="akiya-3choice-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4810,6 +4843,69 @@ function calcShareHouseConvert() {
     + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:12px;line-height:1.7">💡 シェアハウスは' + (uplift > 20 ? '単独賃貸より年間' + uplift.toFixed(0) + '万円以上の収入増が見込めます。管理業者委託（家賃の15〜20%）を活用することで手間を抑えながら収益を上げることができます。' : '収益差が小さい場合は管理負担を考えると単独賃貸の方がシンプルです。エリアの需要を慎重に確認しましょう。') + '</div>';
 }
 (function(){ calcShareHouseConvert(); })();
+
+function calcAkiya3Choice() {
+  const price = parseFloat(document.getElementById('ak3_price').value) || 0;
+  const cost = parseFloat(document.getElementById('ak3_cost').value) || 0;
+  const sellCostPct = parseFloat(document.getElementById('ak3_sell_cost').value) || 5;
+  const landChgPct = parseFloat(document.getElementById('ak3_land_chg').value) || -10;
+  const rent = parseFloat(document.getElementById('ak3_rent').value) || 0;
+  const reform = parseFloat(document.getElementById('ak3_reform').value) || 0;
+  const el = document.getElementById('akiya-3choice-result');
+  if (!el) return;
+
+  const years = 10;
+  // 放置シナリオ: -維持費×10年、資産価値は地価変動
+  const holdCost = cost * years;
+  const futureVal = price * (1 + landChgPct / 100);
+  const holdNet = futureVal - price - holdCost; // キャピタル損益 - 維持費
+
+  // 売却シナリオ: 今すぐ売却し手取りを運用（1%/年複利で保守試算）
+  const sellProceeds = price * (1 - sellCostPct / 100);
+  const sellInvested = sellProceeds * Math.pow(1.01, years);
+  const sellNet = sellInvested - price;
+
+  // 賃貸活用シナリオ: リフォーム後賃料収入（経費20%）× 10年 + 売却
+  const rentAnnual = rent * 12 * 0.8; // 経費20%控除
+  const rentTotal = rentAnnual * years - reform;
+  const rentSellVal = futureVal * (1 - sellCostPct / 100);
+  const rentNet = rentTotal + (rentSellVal - price);
+
+  const scenarios = [
+    { name: '放置（維持管理のみ）', net: holdNet, color: '#9e9e9e', icon: '🏚️',
+      desc: '維持費 ' + holdCost.toLocaleString() + '万円の支出。10年後売却時の想定資産額 ' + Math.round(futureVal).toLocaleString() + '万円（地価変動含む）。' },
+    { name: '今すぐ売却', net: sellNet, color: '#2196f3', icon: '🏠',
+      desc: '売却手取 ' + Math.round(sellProceeds).toLocaleString() + '万円を1%/年で運用。10年後 ' + Math.round(sellInvested).toLocaleString() + '万円。維持費ゼロの安心感も。' },
+    { name: '賃貸活用（10年後売却）', net: rentNet, color: '#ff9800', icon: '🏡',
+      desc: 'リフォーム' + reform.toLocaleString() + '万円投資で年間CF ' + Math.round(rentAnnual).toLocaleString() + '万円。10年賃料+売却益を合算。' }
+  ];
+
+  const sorted = [...scenarios].sort((a, b) => b.net - a.net);
+  const best = sorted[0];
+
+  const cards = scenarios.map(s => {
+    const isBest = s.name === best.name;
+    const sign = s.net >= 0 ? '+' : '';
+    return '<div style="background:' + (isBest ? 'rgba(201,168,76,0.1)' : 'rgba(255,255,255,0.03)') + ';border:1px solid ' + (isBest ? 'rgba(201,168,76,0.4)' : 'rgba(255,255,255,0.1)') + ';border-radius:8px;padding:12px;margin-bottom:8px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      + '<div style="font-size:13px;font-weight:700">' + s.icon + ' ' + s.name + (isBest ? ' <span style="background:var(--gold);color:#000;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:4px">最有利</span>' : '') + '</div>'
+      + '<div style="font-size:18px;font-weight:900;color:' + (s.net >= 0 ? '#4caf50' : '#f44336') + '">' + sign + Math.round(s.net).toLocaleString() + '<span style="font-size:11px">万円</span></div>'
+      + '</div>'
+      + '<div style="font-size:11px;color:var(--text-muted);line-height:1.5">' + s.desc + '</div>'
+      + '</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 10年間の損益試算（現在価格との比較）</div>'
+    + cards
+    + '<div style="margin-top:8px;padding:10px;background:rgba(255,180,0,0.07);border-radius:8px;border-left:3px solid var(--gold)">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--gold)">📝 診断</div>'
+    + '<div style="font-size:12px;margin-top:4px;line-height:1.5">試算上は「' + best.name + '」が最も有利です（' + (best.net >= 0 ? '＋' : '') + Math.round(best.net).toLocaleString() + '万円）。ただし賃料・地価は変動します。複数の不動産会社に相談し最新の市場情報で判断してください。</div>'
+    + '</div>'
+    + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">※税金・保険・空室リスクは簡略化しています。実際の判断は専門家にご相談ください。</div>'
+    + '</div>';
+}
+(function(){ calcAkiya3Choice(); })();
 
 // 初期化
 checkStorageWarning();
