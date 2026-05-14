@@ -1180,6 +1180,22 @@
     <div id="diy-cost-result"></div>
   </div>
 
+  <!-- 空き家 隣地・近隣への影響リスク診断 -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">⚠️ 空き家 近隣影響リスク診断カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">空き家を放置した場合に<span style="color:#f87171">隣地・近隣へ被害を与えるリスク</span>を診断します。被害が発生すると所有者が損害賠償責任を問われる可能性があります</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="nr-chk" data-score="3" onchange="calcNearRisk()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>建物・屋根・ブロック塀に<strong>ひび割れ・傾き・崩落リスク</strong>がある</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="nr-chk" data-score="3" onchange="calcNearRisk()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>大きな木・竹が隣地に越境または台風で倒れるリスクがある</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="nr-chk" data-score="2" onchange="calcNearRisk()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>ゴミ・廃棄物・草木が敷地外に溢れ出している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="nr-chk" data-score="2" onchange="calcNearRisk()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>不審者・不法侵入・放火のリスクがある（空き家と判別しやすい）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="nr-chk" data-score="2" onchange="calcNearRisk()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>害虫（ゴキブリ・ネズミ・ハチ）の発生源になっている可能性がある</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="nr-chk" data-score="1" onchange="calcNearRisk()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span>近隣から苦情や行政への通報が届いたことがある</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="nr-chk" data-score="1" onchange="calcNearRisk()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span>雨水・排水が隣地へ流れ込む可能性がある</span></label>
+    </div>
+    <div id="near-risk-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4461,6 +4477,45 @@ function calcDIYCost() {
   el.innerHTML = html;
 }
 (function(){ calcDIYCost(); })();
+
+// ===== 近隣影響リスク診断 =====
+function calcNearRisk() {
+  var el = document.getElementById('near-risk-result');
+  if (!el) return;
+  var total = 0;
+  document.querySelectorAll('.nr-chk').forEach(function(c) {
+    if (c.checked) total += parseInt(c.getAttribute('data-score') || '0');
+  });
+  var level, color, label, action;
+  if (total >= 7) {
+    level = 'S'; color = '#f87171'; label = '近隣被害リスク 最高';
+    action = '今すぐ専門業者に連絡し、倒壊・越境・害虫の危険源を緊急対処してください。被害が出ると損害賠償請求を受ける可能性があります。';
+  } else if (total >= 4) {
+    level = 'A'; color = '#fb923c'; label = '近隣被害リスク 高';
+    action = '2〜3ヶ月以内に草木の管理・建物の応急補修を行ってください。行政からの指導が来る前に自主対処が重要です。';
+  } else if (total >= 2) {
+    level = 'B'; color = '#f59e0b'; label = '近隣被害リスク 中';
+    action = '年1〜2回の定期点検と草刈りで管理を継続してください。現状は軽微ですが放置すると悪化します。';
+  } else if (total >= 1) {
+    level = 'C'; color = '#34d399'; label = '近隣被害リスク 低';
+    action = '現時点のリスクは低めです。定期的な外観確認を続けましょう。';
+  } else {
+    level = '–'; color = '#6b7280'; label = 'チェックなし';
+    action = '該当する項目にチェックを入れてください。';
+  }
+  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">';
+  html += '<div style="width:52px;height:52px;border-radius:50%;background:'+color+'22;border:2px solid '+color+';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:'+color+'">'+level+'</div>';
+  html += '<div><div style="font-size:14px;font-weight:700;color:'+color+'">'+label+'</div><div style="font-size:11px;color:#aaa;margin-top:2px">リスクスコア：'+total+'点</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:#aaa;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;line-height:1.7">📌 '+action+'</div>';
+  if (total >= 4) {
+    html += '<div style="font-size:11px;color:#f87171;margin-top:8px;padding:6px 10px;background:rgba(248,113,113,0.08);border-radius:6px;line-height:1.7">⚖️ 法的注意：木竹の越境（民法233条）・建物の崩落（民法717条工作物責任）・不法投棄は所有者が賠償責任を問われます。「知らなかった」は免責になりません。</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcNearRisk(); })();
 
 // 初期化
 checkStorageWarning();
