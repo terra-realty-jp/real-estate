@@ -1519,6 +1519,64 @@
     <div id="pre-sale-reform-roi-result"></div>
   </div>
 
+  <!-- 売却タイミングスコア診断カード -->
+  <div class="card">
+    <div class="card-title">⏰ 売却タイミングスコア診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">市場環境・季節・金利・個人事情を総合評価し、今が売り時かをスコア診断します。</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の市場環境</div>
+        <select id="ts_market" onchange="calcTimingScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">売り手市場（需要 > 供給）</option>
+          <option value="2" selected>均衡状態</option>
+          <option value="1">買い手市場（供給 > 需要）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売り出し時期（月）</div>
+        <select id="ts_month" onchange="calcTimingScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">1〜3月（繁忙期）</option>
+          <option value="2">4〜6月（春〜初夏）</option>
+          <option value="1" selected>7〜9月（夏・閑散期）</option>
+          <option value="2">10〜12月（秋・需要回復）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">住宅ローン金利動向</div>
+        <select id="ts_rate" onchange="calcTimingScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">低金利・横ばい（買いやすい）</option>
+          <option value="2" selected>緩やかな上昇</option>
+          <option value="1">急上昇中（買い控えリスク）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">周辺の新規競合物件</div>
+        <select id="ts_comp" onchange="calcTimingScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">少ない（競合なし）</option>
+          <option value="2" selected>普通（数件あり）</option>
+          <option value="1">多い（同タイプが多数）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">個人事情（急ぎ度）</div>
+        <select id="ts_urgency" onchange="calcTimingScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">急がない（半年以上余裕）</option>
+          <option value="2" selected>やや急ぐ（3〜6ヶ月）</option>
+          <option value="1">急ぎ（3ヶ月以内）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建物の現況</div>
+        <select id="ts_cond" onchange="calcTimingScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">良好（築浅・リフォーム済）</option>
+          <option value="2" selected>普通（目立つ劣化なし）</option>
+          <option value="1">要修繕（雨漏り・老朽化）</option>
+        </select>
+      </div>
+    </div>
+    <div id="timing-score-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5075,6 +5133,79 @@ function calcPreSaleReformROI() {
     + '<div style="background:' + verdict.color + '22;border:1px solid ' + verdict.color + '44;border-radius:10px;padding:12px;font-size:13px;color:' + verdict.color + '">ROI ' + totalROI + '% — ' + verdict.txt + '</div>';
 }
 (function(){ calcPreSaleReformROI(); })();
+
+function calcTimingScore() {
+  const market = parseInt(document.getElementById('ts_market').value) || 2;
+  const month = parseInt(document.getElementById('ts_month').value) || 2;
+  const rate = parseInt(document.getElementById('ts_rate').value) || 2;
+  const comp = parseInt(document.getElementById('ts_comp').value) || 2;
+  const urgency = parseInt(document.getElementById('ts_urgency').value) || 2;
+  const cond = parseInt(document.getElementById('ts_cond').value) || 2;
+  const el = document.getElementById('timing-score-result');
+  if (!el) return;
+
+  const total = market + month + rate + comp + urgency + cond;
+  const max = 18;
+  const pct = Math.round(total / max * 100);
+
+  const axes = [
+    { label: '市場環境', val: market, max: 3 },
+    { label: '売り出し時期', val: month, max: 3 },
+    { label: '金利動向', val: rate, max: 3 },
+    { label: '競合物件', val: comp, max: 3 },
+    { label: '個人事情', val: urgency, max: 3 },
+    { label: '建物の状態', val: cond, max: 3 }
+  ];
+
+  let grade, gradeColor, advice;
+  if (pct >= 80) {
+    grade = 'S — 今すぐ売り出しを！'; gradeColor = '#4caf50';
+    advice = '市場・季節・個人事情がすべて揃った絶好の売り時です。早めに仲介業者に査定を依頼し、できるだけ早く売り出しを開始しましょう。';
+  } else if (pct >= 65) {
+    grade = 'A — 売り出しに適した時期'; gradeColor = '#8bc34a';
+    advice = '概ね良好な条件です。競合物件や金利の動きを注視しながら1〜2ヶ月以内に売り出し開始が理想的です。';
+  } else if (pct >= 50) {
+    grade = 'B — 準備しながら様子見'; gradeColor = '#ff9800';
+    advice = 'やや懸念点があります。弱い項目を改善しつつ（建物修繕・競合が減る時期を待つなど）、2〜3ヶ月後の売り出しを検討してください。';
+  } else if (pct >= 35) {
+    grade = 'C — 条件改善後に動くと良い'; gradeColor = '#ff5722';
+    advice = '複数の不利な条件が重なっています。急ぎでなければ市場の回復・繁忙期（1〜3月）・競合物件の減少を待ってから動くのが賢明です。';
+  } else {
+    grade = 'D — 急がずに待つことを推奨'; gradeColor = '#f44336';
+    advice = '現時点では不利な条件が多く揃っています。緊急の資金需要がない限り、売り出しは見送り、市場環境の改善を待ちましょう。';
+  }
+
+  const axisRows = axes.map(a => {
+    const starFull = '★'.repeat(a.val);
+    const starEmpty = '☆'.repeat(a.max - a.val);
+    const starColor = a.val === 3 ? '#4caf50' : a.val === 2 ? '#ff9800' : '#f44336';
+    return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07)">'
+      + '<span style="font-size:12px;color:var(--text-muted)">' + a.label + '</span>'
+      + '<span style="font-size:13px;color:' + starColor + '">' + starFull + '<span style="opacity:0.3">' + starEmpty + '</span></span>'
+      + '</div>';
+  }).join('');
+
+  const barPct = Math.min(100, pct);
+  const barColor = pct >= 65 ? '#4caf50' : pct >= 50 ? '#ff9800' : '#f44336';
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="text-align:center;padding:12px 0">'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">総合タイミングスコア</div>'
+    + '<div style="font-size:36px;font-weight:900;color:' + gradeColor + '">' + pct + '<span style="font-size:18px">点</span></div>'
+    + '<div style="font-size:14px;font-weight:700;color:' + gradeColor + ';margin-top:4px">' + grade + '</div>'
+    + '<div style="background:rgba(255,255,255,0.08);border-radius:6px;height:10px;margin:10px 0">'
+    + '<div style="background:' + barColor + ';border-radius:6px;height:10px;width:' + barPct + '%;transition:width 0.5s"></div>'
+    + '</div></div>'
+    + axisRows
+    + '<div style="margin-top:12px;padding:10px;background:rgba(255,180,0,0.07);border-radius:8px;border-left:3px solid ' + gradeColor + '">'
+    + '<div style="font-size:12px;font-weight:700;color:' + gradeColor + '">📝 アドバイス</div>'
+    + '<div style="font-size:12px;margin-top:4px;line-height:1.6">' + advice + '</div>'
+    + '</div>'
+    + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.5">'
+    + '💡 満点18点中' + total + '点。このスコアはあくまで目安です。最終的な売り出し時期は担当者と相談の上ご判断ください。'
+    + '</div></div>';
+}
+(function(){ calcTimingScore(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
