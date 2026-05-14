@@ -1282,6 +1282,39 @@
     <div id="build-cost-result"></div>
   </div>
 
+  <!-- 物件将来価値予測カード -->
+  <div class="card">
+    <div class="card-title">🔮 物件 将来価値予測（地価・建物劣化）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">地価変動率と建物劣化率をもとに、購入物件の5年後・10年後・20年後の想定市場価格を試算します。</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">購入価格（万円）</div>
+        <input type="number" id="fv_price" value="4000" min="100" max="100000" step="100" oninput="calcFutureValue()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">土地比率（%）</div>
+        <input type="number" id="fv_land_ratio" value="50" min="0" max="100" step="5" oninput="calcFutureValue()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">地価変動率（年/%）</div>
+        <input type="number" id="fv_land_chg" value="-1" min="-10" max="15" step="0.5" oninput="calcFutureValue()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建物の構造</div>
+        <select id="fv_struct" onchange="calcFutureValue()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="22" selected>木造（法定耐用22年）</option>
+          <option value="27">軽量鉄骨（27年）</option>
+          <option value="47">RC造（47年）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の築年数（年）</div>
+        <input type="number" id="fv_age" value="5" min="0" max="50" step="1" oninput="calcFutureValue()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="future-value-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4643,6 +4676,75 @@ function calcBuildCost() {
     + '</div>';
 }
 (function(){ calcBuildCost(); })();
+
+function calcFutureValue() {
+  const price = parseFloat(document.getElementById('fv_price').value) || 0;
+  const landRatio = parseFloat(document.getElementById('fv_land_ratio').value) || 50;
+  const landChg = parseFloat(document.getElementById('fv_land_chg').value) || 0;
+  const lifespan = parseInt(document.getElementById('fv_struct').value) || 22;
+  const age = parseInt(document.getElementById('fv_age').value) || 0;
+  const r = document.getElementById('future-value-result');
+  if (!r) return;
+  if (price <= 0) { r.innerHTML = '<div style="color:var(--text-muted);font-size:13px">購入価格を入力してください</div>'; return; }
+
+  const landVal0 = price * (landRatio / 100);
+  const buildVal0 = price * (1 - landRatio / 100);
+
+  function projectBuild(yr) {
+    const remain = Math.max(0, lifespan - age - yr);
+    return buildVal0 * (remain / lifespan);
+  }
+  function projectLand(yr) {
+    return landVal0 * Math.pow(1 + landChg / 100, yr);
+  }
+
+  const years = [5, 10, 20];
+  const rows = years.map(yr => {
+    const land = projectLand(yr);
+    const build = projectBuild(yr);
+    const total = land + build;
+    const diff = total - price;
+    const pct = price > 0 ? (diff / price * 100) : 0;
+    const col = pct >= 0 ? '#4caf50' : '#f44336';
+    const sign = pct >= 0 ? '+' : '';
+    return `<tr>
+      <td style="padding:8px 6px;font-weight:700">${yr}年後</td>
+      <td style="padding:8px 6px;text-align:right">${Math.round(land).toLocaleString()}万円</td>
+      <td style="padding:8px 6px;text-align:right">${Math.round(build).toLocaleString()}万円</td>
+      <td style="padding:8px 6px;text-align:right;font-weight:700">${Math.round(total).toLocaleString()}万円</td>
+      <td style="padding:8px 6px;text-align:right;color:${col};font-weight:700">${sign}${pct.toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+
+  const total0 = price;
+  const structName = lifespan === 22 ? '木造' : lifespan === 27 ? '軽量鉄骨' : 'RC造';
+  const landChgLabel = landChg >= 0 ? `+${landChg}%/年` : `${landChg}%/年`;
+
+  r.innerHTML = `<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">構造: ${structName}（耐用年数${lifespan}年）／築${age}年／地価変動: ${landChgLabel}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.15)">
+        <th style="padding:6px;text-align:left;color:var(--text-muted);font-weight:400">時期</th>
+        <th style="padding:6px;text-align:right;color:var(--text-muted);font-weight:400">土地</th>
+        <th style="padding:6px;text-align:right;color:var(--text-muted);font-weight:400">建物</th>
+        <th style="padding:6px;text-align:right;color:var(--text-muted);font-weight:400">合計</th>
+        <th style="padding:6px;text-align:right;color:var(--text-muted);font-weight:400">増減率</th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.08)">
+          <td style="padding:8px 6px">現在</td>
+          <td style="padding:8px 6px;text-align:right">${Math.round(landVal0).toLocaleString()}万円</td>
+          <td style="padding:8px 6px;text-align:right">${Math.round(buildVal0).toLocaleString()}万円</td>
+          <td style="padding:8px 6px;text-align:right;font-weight:700">${Math.round(total0).toLocaleString()}万円</td>
+          <td style="padding:8px 6px;text-align:right;color:var(--text-muted)">基準</td>
+        </tr>
+        ${rows}
+      </tbody>
+    </table>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">※建物は残存耐用年数による直線償却で試算。土地は複利で変動。概算値のため参考程度にご利用ください。</div>
+  </div>`;
+}
+(function(){ calcFutureValue(); })();
 
 // 初期化
 checkStorageWarning();
