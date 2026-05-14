@@ -1725,6 +1725,35 @@
     <div id="applicant-risk-result"></div>
   </div>
 
+  <!-- 家賃滞納損失・回収コスト試算カード -->
+  <div class="card">
+    <div class="card-title">💸 家賃滞納 損失・回収コスト試算</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">月額家賃（万円）</label>
+        <input type="number" id="al_rent" value="7" min="1" max="100" step="0.5" oninput="calcArrearsLoss()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">滞納月数（ヶ月）</label>
+        <input type="number" id="al_months" value="3" min="1" max="24" step="1" oninput="calcArrearsLoss()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">法的手続き</label>
+        <select id="al_legal" onchange="calcArrearsLoss()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="0">なし（自分で交渉）</option>
+          <option value="1">内容証明のみ</option>
+          <option value="2" selected>弁護士介入・交渉</option>
+          <option value="3">訴訟・強制執行</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">明渡し後 空室想定（ヶ月）</label>
+        <input type="number" id="al_vacancy" value="2" min="0" max="12" step="1" oninput="calcArrearsLoss()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="arrears-loss-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -7499,6 +7528,61 @@ function calcApplicantRisk() {
     + '</div>';
 }
 (function(){ calcApplicantRisk(); })();
+
+function calcArrearsLoss() {
+  const rent = parseFloat(document.getElementById('al_rent').value) || 0;
+  const months = parseInt(document.getElementById('al_months').value) || 0;
+  const legal = parseInt(document.getElementById('al_legal').value) || 0;
+  const vacancy = parseInt(document.getElementById('al_vacancy').value) || 0;
+  const r = document.getElementById('arrears-loss-result');
+  if (!r) return;
+  if (rent <= 0 || months <= 0) { r.innerHTML = '<div style="color:var(--text-muted);font-size:13px">家賃と滞納月数を入力してください</div>'; return; }
+
+  const arrears = rent * months;
+
+  const legalCostMap = [0, 3, 30, 60];
+  const recoveryRateMap = [0.4, 0.5, 0.65, 0.75];
+  const legalLabel = ['自己交渉', '内容証明', '弁護士交渉', '訴訟・強制執行'];
+  const legalCost = legalCostMap[legal];
+  const recoveryRate = recoveryRateMap[legal];
+
+  const vacancyLoss = rent * vacancy;
+  const claimableRent = arrears * recoveryRate;
+  const netRecovery = Math.max(0, claimableRent - legalCost);
+  const totalLoss = arrears + vacancyLoss + legalCost - netRecovery;
+
+  const grade = totalLoss <= rent * 2 ? { label: '低損失', col: '#4caf50' }
+    : totalLoss <= rent * 5 ? { label: '中損失', col: '#ff9800' }
+    : { label: '高損失', col: '#f44336' };
+
+  r.innerHTML = `<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">滞納家賃合計</div>
+        <div style="font-size:22px;font-weight:900;color:#f44336">${arrears.toFixed(1)}<span style="font-size:12px">万円</span></div>
+      </div>
+      <div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">空室損失</div>
+        <div style="font-size:22px;font-weight:900;color:#ff9800">${vacancyLoss.toFixed(1)}<span style="font-size:12px">万円</span></div>
+      </div>
+      <div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">法的費用（${legalLabel[legal]}）</div>
+        <div style="font-size:22px;font-weight:900;color:#ff9800">${legalCost.toFixed(0)}<span style="font-size:12px">万円</span></div>
+      </div>
+      <div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">推定回収額（回収率${Math.round(recoveryRate*100)}%）</div>
+        <div style="font-size:22px;font-weight:900;color:#4caf50">${netRecovery.toFixed(1)}<span style="font-size:12px">万円</span></div>
+      </div>
+    </div>
+    <div style="background:var(--dark3);border-radius:8px;padding:14px;text-align:center;margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">推定 純損失（回収後）</div>
+      <div style="font-size:32px;font-weight:900;color:${grade.col}">${totalLoss.toFixed(1)}<span style="font-size:14px">万円</span></div>
+      <div style="font-size:13px;font-weight:700;color:${grade.col};margin-top:4px">${grade.label}</div>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted)">※法的費用・回収率は一般的な目安です。実際は弁護士にご相談ください。家賃保証会社加入で損失を大幅に抑制できます。</div>
+  </div>`;
+}
+(function(){ calcArrearsLoss(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
