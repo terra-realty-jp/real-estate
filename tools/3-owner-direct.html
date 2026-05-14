@@ -1067,6 +1067,32 @@
     <div id="sell-buy-order-result"></div>
   </div>
 
+  <!-- 不動産購入後 やること チェックリスト -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">📝 不動産購入後 やること チェックリスト</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">購入・決済が完了したら忘れずに対応すべき手続きを確認してください</div>
+    <div style="font-size:12px;font-weight:700;color:#4db6f5;margin-bottom:6px">📋 登記・行政手続き</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="pa-chk" onchange="calcPostAcq()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>所有権移転登記の完了確認（登記事項証明書の取得）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="pa-chk" onchange="calcPostAcq()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>不動産取得税の申告（取得後60日以内・都道府県税事務所）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="pa-chk" onchange="calcPostAcq()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>固定資産税の名義変更・納税義務者変更の確認</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="pa-chk" onchange="calcPostAcq()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>住民票・住所変更（自宅購入の場合、引越し後14日以内）</span></label>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#4db6f5;margin-bottom:6px">🏦 ローン・保険</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="pa-chk" onchange="calcPostAcq()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>住宅ローン控除の確定申告（翌年3月15日まで・初年度のみ）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="pa-chk" onchange="calcPostAcq()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>火災保険・地震保険の加入確認（証券の受取・内容確認）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="pa-chk" onchange="calcPostAcq()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>団体信用生命保険の確認（ローン付帯の場合）</span></label>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#4db6f5;margin-bottom:6px">🔑 物件・管理</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="pa-chk" onchange="calcPostAcq()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>鍵の交換・スペアキーの管理体制を整えた</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="pa-chk" onchange="calcPostAcq()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>電気・ガス・水道の名義変更・開栓手続き</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="pa-chk" onchange="calcPostAcq()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>マンションの場合：管理組合への区分所有者変更届</span></label>
+    </div>
+    <div id="post-acq-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4021,6 +4047,39 @@ function calcSellBuyOrder() {
   el.innerHTML = html;
 }
 (function(){ calcSellBuyOrder(); })();
+
+// ===== 不動産購入後 やること チェックリスト =====
+function calcPostAcq() {
+  var el = document.getElementById('post-acq-result');
+  if (!el) return;
+  var checks = document.querySelectorAll('.pa-chk');
+  var total = checks.length;
+  var done = 0;
+  checks.forEach(function(c){ if (c.checked) done++; });
+  var pct = Math.round(done / total * 100);
+  var barColor = pct >= 100 ? '#4ade80' : pct >= 70 ? '#f59e0b' : '#f87171';
+  var verdict;
+  if (pct >= 100) verdict = '✅ 購入後手続き 全完了！';
+  else if (pct >= 70) verdict = '⚡ もう少し！残り'+String(total-done)+'項目';
+  else verdict = '🔴 未対応 '+String(total-done)+' 項目あり';
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:flex;justify-content:space-between;margin-bottom:4px">';
+  html += '<span style="font-size:12px;color:#aaa">完了進捗</span>';
+  html += '<span style="font-size:16px;font-weight:900;color:'+barColor+'">'+pct+'%</span>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.06);border-radius:8px;height:8px;overflow:hidden;margin-bottom:8px">';
+  html += '<div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:8px;transition:width 0.4s"></div>';
+  html += '</div>';
+  html += '<div style="font-size:13px;font-weight:700;color:'+barColor+';margin-bottom:8px">'+verdict+'</div>';
+  if (pct < 100) {
+    html += '<div style="font-size:12px;color:#aaa;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;line-height:1.7">⚠️ 期限のある手続き：<strong style="color:#f87171">不動産取得税は取得後60日以内</strong>、住宅ローン控除の初年度確定申告は<strong style="color:#f87171">翌年3月15日まで</strong>です。忘れると減税が受けられなくなります。</div>';
+  } else {
+    html += '<div style="font-size:12px;color:#4ade80;padding:8px;background:rgba(74,222,128,0.06);border-radius:6px;line-height:1.7">🎉 全手続き完了です！2年目以降の住宅ローン控除は年末調整で自動適用されます。</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcPostAcq(); })();
 
 // 初期化
 checkStorageWarning();
