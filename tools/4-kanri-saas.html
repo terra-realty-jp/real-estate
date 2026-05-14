@@ -1557,6 +1557,43 @@
     <div id="key-money-opt-result"></div>
   </div>
 
+  <!-- 修繕依頼 緊急度トリアージカード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🚨 修繕依頼 緊急度トリアージカード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">複数の修繕依頼が重なったとき、対応優先度を4軸スコアで判断します（1件ずつ評価）</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">修繕内容（任意）</div>
+        <input type="text" id="rt_name" placeholder="例：給湯器故障" oninput="calcRepairTriage()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">安全・衛生への影響</div>
+        <select id="rt_safety" onchange="calcRepairTriage()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">高（放置すると危険・けが・漏水拡大等）</option>
+          <option value="2" selected>中（生活に支障あるが緊急性は低い）</option>
+          <option value="1">低（外見・機能的な問題だが安全性なし）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">放置した場合の損害拡大リスク</div>
+        <select id="rt_spread" onchange="calcRepairTriage()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">高（漏水・雨漏り・腐食が拡大する）</option>
+          <option value="2">中（徐々に悪化する可能性あり）</option>
+          <option value="1" selected>低（今すぐ拡大しない）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">入居者への影響</div>
+        <select id="rt_tenant" onchange="calcRepairTriage()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">高（退去・クレーム・家賃減額要求のリスク）</option>
+          <option value="2" selected>中（不満はあるが退去まで至らない）</option>
+          <option value="1">低（入居者への影響は軽微）</option>
+        </select>
+      </div>
+    </div>
+    <div id="repair-triage-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -7072,6 +7109,55 @@ function calcKeyMoneyOpt() {
     + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:13px;line-height:1.7">' + advice + '</div>';
 }
 (function(){ calcKeyMoneyOpt(); })();
+
+function calcRepairTriage() {
+  const name = document.getElementById('rt_name').value.trim() || '未入力の修繕';
+  const safety = parseInt(document.getElementById('rt_safety').value);
+  const spread = parseInt(document.getElementById('rt_spread').value);
+  const tenant = parseInt(document.getElementById('rt_tenant').value);
+  const el = document.getElementById('repair-triage-result');
+  const total = safety + spread + tenant;
+  const maxScore = 9;
+
+  const levels = [
+    {min:8, label:'最優先', color:'#f87171', action:'今すぐ（24時間以内）対応', badge:'🔴'},
+    {min:6, label:'高優先', color:'#fb923c', action:'今週中に対応', badge:'🟠'},
+    {min:4, label:'中優先', color:'#facc15', action:'今月中に対応', badge:'🟡'},
+    {min:0, label:'低優先', color:'#4ade80', action:'次回まとめて対応可', badge:'🟢'},
+  ];
+  const level = levels.find(l => total >= l.min);
+  const barW = Math.round(total / maxScore * 100);
+
+  const axes = [
+    {name:'安全・衛生への影響', score:safety, max:3, labels:['低','中','高']},
+    {name:'損害拡大リスク', score:spread, max:3, labels:['低','中','高']},
+    {name:'入居者への影響', score:tenant, max:3, labels:['低','中','高']},
+  ];
+  const axisRows = axes.map(a => {
+    const w = Math.round(a.score / a.max * 100);
+    return '<div style="margin-bottom:8px">'
+      + '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+      + '<span style="font-size:11px;color:var(--text-muted)">' + a.name + '</span>'
+      + '<span style="font-size:11px;font-weight:700;color:' + level.color + '">' + a.labels[a.score-1] + '（' + a.score + '/3）</span></div>'
+      + '<div style="height:6px;background:rgba(255,255,255,0.06);border-radius:3px">'
+      + '<div style="width:' + w + '%;height:6px;background:' + level.color + ';border-radius:3px"></div></div></div>';
+  }).join('');
+
+  const legalNote = safety === 3 || spread === 3
+    ? '<div style="margin-top:10px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px;font-size:11px;color:#fca5a5;line-height:1.6">⚖️ <strong>法的注意</strong>：漏水・設備故障など入居者の生活に支障がある修繕は、民法606条（賃貸人の修繕義務）に基づき迅速対応が必要です。放置した場合は家賃減額請求（民法611条）の対象になる可能性があります。</div>' : '';
+
+  el.innerHTML = '<div style="background:' + level.color + '22;border:1px solid ' + level.color + '44;border-radius:10px;padding:14px;margin-bottom:12px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    + '<div><div style="font-size:16px;font-weight:900">' + level.badge + ' ' + level.label + '対応</div>'
+    + '<div style="font-size:12px;color:' + level.color + '">' + name + '</div></div>'
+    + '<div style="text-align:right"><div style="font-size:28px;font-weight:900;color:' + level.color + '">' + total + '<span style="font-size:14px">/9</span></div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">優先度スコア</div></div></div>'
+    + '<div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-bottom:10px">'
+    + '<div style="width:' + barW + '%;height:8px;background:' + level.color + ';border-radius:4px;transition:width 0.3s"></div></div>'
+    + '<div style="font-size:12px;font-weight:700">⏰ 推奨対応期限: ' + level.action + '</div></div>'
+    + axisRows + legalNote;
+}
+(function(){ calcRepairTriage(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
