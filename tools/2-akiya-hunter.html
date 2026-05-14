@@ -1220,6 +1220,31 @@
     <div id="akiya-sec-result"></div>
   </div>
 
+  <!-- 空き家 水道・電気・ガス 契約見直しカード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">💡 水道・電気・ガス 契約見直しカード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">空き家になると毎月かかる基本料金。「休止」または「解約」でいくら節約できるか試算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">電気 基本料金（円/月）</div>
+        <input type="number" id="us_elec" value="1500" min="0" max="10000" step="100" oninput="calcUtilityStatus()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ガス 基本料金（円/月）</div>
+        <input type="number" id="us_gas" value="800" min="0" max="10000" step="100" oninput="calcUtilityStatus()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">水道 基本料金（円/月）</div>
+        <input type="number" id="us_water" value="1200" min="0" max="10000" step="100" oninput="calcUtilityStatus()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">空き家になる期間（ヶ月）</div>
+        <input type="number" id="us_months" value="12" min="1" max="120" step="1" oninput="calcUtilityStatus()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="utility-status-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4578,6 +4603,52 @@ function calcAkiyaSec() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaSec(); })();
+
+function calcUtilityStatus() {
+  const elec = parseFloat(document.getElementById('us_elec').value) || 0;
+  const gas = parseFloat(document.getElementById('us_gas').value) || 0;
+  const water = parseFloat(document.getElementById('us_water').value) || 0;
+  const months = parseFloat(document.getElementById('us_months').value) || 0;
+  const el = document.getElementById('utility-status-result');
+  if (!months) { el.innerHTML = ''; return; }
+  const totalMonthly = elec + gas + water;
+  const totalPeriod = totalMonthly * months;
+  const items = [
+    {name: '⚡ 電気', monthly: elec, suspend: '可能（解約手続き不要の場合も）', resumeCost: '約0円', risk: '凍結・漏電チェックに必要な場合あり'},
+    {name: '🔥 ガス', monthly: gas, suspend: '可能（閉栓手数料：無料〜数千円）', resumeCost: '開栓費用 3,000〜5,000円', risk: '再開時は開栓立会いが必要'},
+    {name: '💧 水道', monthly: water, suspend: '可能（止水栓で対応）', resumeCost: '約0円', risk: '冬季の凍結防止は自己対応'},
+  ];
+  const rows = items.map(i =>
+    '<tr><td style="padding:8px 10px;font-size:12px;font-weight:700">' + i.name + '</td>'
+    + '<td style="padding:8px 10px;font-size:12px;color:var(--text-muted)">' + (i.monthly > 0 ? (i.monthly).toLocaleString() + '円/月' : '—') + '</td>'
+    + '<td style="padding:8px 10px;font-size:12px;color:#4ade80">' + (i.monthly > 0 ? (i.monthly * months / 10000).toFixed(1) + '万円節約' : '—') + '</td>'
+    + '<td style="padding:8px 10px;font-size:11px;color:var(--text-muted)">' + i.resumeCost + '</td></tr>'
+  ).join('');
+  const adviceKey = months >= 12 ? 'long' : months >= 3 ? 'mid' : 'short';
+  const advice = {
+    short: '⚠️ 3ヶ月未満の短期空き家の場合、解約手続きのコスト・手間を考えると<strong>継続がおすすめ</strong>の場合もあります。',
+    mid: '✅ 3〜12ヶ月の場合は<strong>ガス閉栓</strong>（費用0〜数千円）から始めるのがおすすめ。電気・水道は最小プランに変更しましょう。',
+    long: '✅ 1年以上の長期空き家は<strong>全契約の休止・解約</strong>を検討してください。最大' + (totalPeriod / 10000).toFixed(1) + '万円の節約効果があります。'
+  };
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+    + '<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:12px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現状 ' + months + 'ヶ月間の無駄な固定費</div>'
+    + '<div style="font-size:24px;font-weight:900;color:#f87171">' + (totalPeriod / 10000).toFixed(1) + '<span style="font-size:14px">万円</span></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + totalMonthly.toLocaleString() + '円/月 × ' + months + 'ヶ月</div></div>'
+    + '<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:12px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">全休止・解約した場合の節約</div>'
+    + '<div style="font-size:24px;font-weight:900;color:#4ade80">' + (totalPeriod / 10000).toFixed(1) + '<span style="font-size:14px">万円</span></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">最大節約可能額</div></div></div>'
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:10px;overflow:hidden;margin-bottom:12px">'
+    + '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:rgba(255,255,255,0.05)">'
+    + '<th style="padding:8px 10px;font-size:11px;color:var(--text-muted);text-align:left">種別</th>'
+    + '<th style="padding:8px 10px;font-size:11px;color:var(--text-muted);text-align:left">現在の基本料</th>'
+    + '<th style="padding:8px 10px;font-size:11px;color:#4ade80;text-align:left">期間節約</th>'
+    + '<th style="padding:8px 10px;font-size:11px;color:var(--text-muted);text-align:left">再開費用</th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:13px;line-height:1.7">' + advice[adviceKey] + '</div>';
+}
+(function(){ calcUtilityStatus(); })();
 
 // 初期化
 checkStorageWarning();
