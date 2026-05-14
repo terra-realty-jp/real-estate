@@ -1403,6 +1403,28 @@
     <div id="price-scenario-result"></div>
   </div>
 
+  <!-- 複数社査定 比較分析カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏢 複数社査定 比較分析カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">複数の不動産会社から受け取った査定額を入力して、適正価格の目安と高値・安値の理由を分析します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">A社 査定額（万円）</div>
+        <input type="number" id="ms_a" value="3800" min="100" max="100000" step="100" oninput="calcMultiSatei()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">B社 査定額（万円）</div>
+        <input type="number" id="ms_b" value="3500" min="100" max="100000" step="100" oninput="calcMultiSatei()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">C社 査定額（万円）</div>
+        <input type="number" id="ms_c" value="3200" min="0" max="100000" step="100" oninput="calcMultiSatei()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:#666;margin-top:2px">0=未入力</div>
+      </div>
+    </div>
+    <div id="multi-satei-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4704,6 +4726,61 @@ function calcPriceScenario() {
   el.innerHTML = html;
 }
 (function(){ calcPriceScenario(); })();
+
+// ===== 複数社査定 比較分析 =====
+function calcMultiSatei() {
+  var el = document.getElementById('multi-satei-result');
+  if (!el) return;
+  var a = parseFloat(document.getElementById('ms_a').value) || 0;
+  var b = parseFloat(document.getElementById('ms_b').value) || 0;
+  var c = parseFloat(document.getElementById('ms_c').value) || 0;
+  var vals = [a, b, c].filter(function(v){ return v > 0; });
+  if (vals.length < 2) {
+    el.innerHTML = '<div style="font-size:12px;color:#aaa;padding:8px">A社・B社の両方に査定額を入力してください</div>';
+    return;
+  }
+  var avg = vals.reduce(function(s,v){ return s+v; }, 0) / vals.length;
+  var maxV = Math.max.apply(null, vals);
+  var minV = Math.min.apply(null, vals);
+  var spread = avg > 0 ? ((maxV - minV) / avg * 100) : 0;
+  var spreadLabel, spreadColor, advice;
+  if (spread <= 5) {
+    spreadColor = '#4ade80'; spreadLabel = '差異 小（信頼性高）';
+    advice = '各社の見解がほぼ一致。平均値付近が適正な売出価格の目安です。';
+  } else if (spread <= 15) {
+    spreadColor = '#f59e0b'; spreadLabel = '差異 中（要確認）';
+    advice = '各社の根拠（取引事例・物件評価）を確認し、中間値から売出価格を検討しましょう。';
+  } else {
+    spreadColor = '#f87171'; spreadLabel = '差異 大（注意）';
+    advice = '高値査定は「囲い込み目的」や「値下げ前提」の可能性があります。査定根拠を必ず確認してください。';
+  }
+  var labels = ['A社','B社','C社'];
+  var colors = ['#4db6f5','#4ade80','#f59e0b'];
+  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  html += '<div style="display:grid;grid-template-columns:repeat('+vals.length+',1fr);gap:8px;margin-bottom:12px">';
+  vals.forEach(function(v, i) {
+    var isMax = v === maxV;
+    var isMin = v === minV && vals.length > 1 && maxV !== minV;
+    var tag = isMax ? '<span style="font-size:10px;color:#f87171;margin-left:4px">最高値</span>' : isMin ? '<span style="font-size:10px;color:#4ade80;margin-left:4px">最低値</span>' : '';
+    html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">'+labels[i]+'</div>';
+    html += '<div style="font-size:16px;font-weight:900;color:'+colors[i]+'">'+v.toLocaleString()+'万</div>'+tag+'</div>';
+  });
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+  html += '<div style="text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px"><div style="font-size:11px;color:#aaa">平均査定額</div><div style="font-size:18px;font-weight:900;color:var(--gold)">'+Math.round(avg).toLocaleString()+'<span style="font-size:11px">万円</span></div></div>';
+  html += '<div style="text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px"><div style="font-size:11px;color:#aaa">査定額 乖離率</div><div style="font-size:18px;font-weight:900;color:'+spreadColor+'">'+spread.toFixed(1)+'<span style="font-size:11px">%</span></div></div>';
+  html += '</div>';
+  html += '<div style="text-align:center;padding:7px;border-radius:6px;background:'+spreadColor+'22;border:1px solid '+spreadColor+'44;margin-bottom:10px">';
+  html += '<span style="font-size:13px;font-weight:700;color:'+spreadColor+'">'+spreadLabel+'</span>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:#aaa;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;line-height:1.7">💡 '+advice+'</div>';
+  if (spread > 15) {
+    html += '<div style="font-size:11px;color:#f87171;margin-top:8px;padding:6px 10px;background:rgba(248,113,113,0.08);border-radius:6px">⚠️ 高値査定の見極め方：取引事例を3件以上提示できるか・成約期間の見込みを具体的に言えるかを確認してください</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMultiSatei(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
