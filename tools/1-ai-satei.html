@@ -1484,6 +1484,21 @@
     <div id="commission-save-result"></div>
   </div>
 
+  <!-- ハザードマップ リスク確認チェックカード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🗺 ハザードマップ リスク確認チェックカード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">売却物件のハザードリスクを確認し、買い手への説明と価格設定への影響を診断します</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="hz-chk" data-impact="3" onchange="calcHazardCheck()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>🌊 洪水浸水想定区域（浸水深0.5m以上）に含まれる</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="hz-chk" data-impact="3" onchange="calcHazardCheck()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>⛰ 土砂災害警戒区域（イエローゾーン）または特別警戒区域（レッドゾーン）に含まれる</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="hz-chk" data-impact="2" onchange="calcHazardCheck()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>🌊 津波浸水想定区域に含まれる</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="hz-chk" data-impact="2" onchange="calcHazardCheck()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>🔥 地震ハザードマップで揺れやすいエリア（増幅率1.5倍以上）に含まれる</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="hz-chk" data-impact="1" onchange="calcHazardCheck()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span>💨 暴風（台風）浸水・高潮ハザードゾーンに含まれる</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="hz-chk" data-impact="1" onchange="calcHazardCheck()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span>⚠️ 過去に床上浸水・土砂災害の実績がある</span></label>
+    </div>
+    <div id="hazard-check-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4964,6 +4979,40 @@ function calcCommissionSave() {
     + '⚠️ ただし割引仲介は「囲い込み」や「積極的な売却活動の低下」リスクがあります。実績・口コミを必ず確認し、TERRA REALTYへの無料相談もご活用ください。</div>';
 }
 (function(){ calcCommissionSave(); })();
+
+function calcHazardCheck() {
+  const chks = document.querySelectorAll('.hz-chk');
+  const el = document.getElementById('hazard-check-result');
+  let score = 0;
+  const checked = [];
+  chks.forEach(c => {
+    if (c.checked) {
+      score += parseInt(c.dataset.impact);
+      checked.push(c.parentElement.querySelector('span').textContent.trim());
+    }
+  });
+  const levels = [
+    {min:5, label:'高リスク', color:'#f87171', pctImpact:'▲5〜15%', msg:'複数の重大ハザードが重複しています。買い手に対するリスク説明義務を確認し、価格設定は相場から5〜15%のディスカウントを想定してください。'},
+    {min:3, label:'中リスク', color:'#fb923c', pctImpact:'▲3〜8%', msg:'重大なリスク要因があります。売却時の重要事項説明でハザード情報を正確に伝えることが法的義務です。価格は3〜8%低めに設定することを検討してください。'},
+    {min:1, label:'低リスク', color:'#facc15', pctImpact:'▲1〜3%', msg:'軽度のハザードリスクがあります。重要事項説明書に明記し、買い手の納得を得てから進めましょう。価格への影響は軽微です。'},
+    {min:0, label:'リスクなし', color:'#4ade80', pctImpact:'影響なし', msg:'主要なハザードリスクは確認されていません。市場価格での売却を進められます。念のため市区町村のハザードマップで最新情報を確認しましょう。'},
+  ];
+  const level = levels.find(l => score >= l.min);
+  const mandatory = score >= 1;
+  const checkedList = checked.length > 0
+    ? '<div style="margin-top:10px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">該当するハザード要因：</div>'
+      + checked.map(t => '<div style="font-size:11px;padding:4px 8px;background:rgba(248,113,113,0.08);border-radius:4px;margin-bottom:3px;color:#fca5a5">' + t + '</div>').join('')
+      + '</div>' : '';
+  el.innerHTML = '<div style="background:' + level.color + '22;border:1px solid ' + level.color + '44;border-radius:10px;padding:14px;margin-bottom:12px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+    + '<span style="font-size:16px;font-weight:900;color:' + level.color + '">' + level.label + '</span>'
+    + '<span style="font-size:13px;font-weight:700;color:' + level.color + '">売却価格への影響: ' + level.pctImpact + '</span></div>'
+    + '<div style="font-size:12px;line-height:1.7;color:var(--text)">' + level.msg + '</div>'
+    + checkedList + '</div>'
+    + (mandatory ? '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:12px;font-size:12px;line-height:1.7;color:#fca5a5">⚖️ <strong>重要事項説明における義務</strong>：2020年8月の宅建業法改正により、洪水・土砂・津波のハザードマップ情報は重要事項説明で<strong>必ず説明が義務付け</strong>られています。説明漏れは行政処分の対象となります。</div>'
+    : '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:12px;font-size:12px;color:#86efac">✅ 重大なハザードリスクは確認されていません。最新のハザードマップは国土交通省の「重ねるハザードマップ」で無料確認できます。</div>');
+}
+(function(){ calcHazardCheck(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
