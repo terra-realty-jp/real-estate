@@ -1021,6 +1021,27 @@
     <div id="akiya-bep-result"></div>
   </div>
 
+  <!-- 空き家 主要リフォーム費用相場カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🔨 主要リフォーム費用相場 早見表</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">床面積と施工グレードを選ぶと主要工事の概算費用を一覧表示。予算計画の参考に</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">延床面積（㎡）</div>
+        <input type="number" id="rf_area" value="80" min="20" max="500" step="5" oninput="calcReformCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">施工グレード</div>
+        <select id="rf_grade" onchange="calcReformCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="0.7">最小限（必要箇所のみ）</option>
+          <option value="1.0" selected>標準（賃貸・売却向け）</option>
+          <option value="1.5">フルリノベーション</option>
+        </select>
+      </div>
+    </div>
+    <div id="reform-cost-result"></div>
+  </div>
+
   <!-- 空き家 賃貸転用 採算診断カード -->
   <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
     <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏠 空き家 賃貸転用 採算診断</div>
@@ -4082,6 +4103,57 @@ function calcSozokuHyouka() {
   el.innerHTML = html;
 }
 (function(){ calcSozokuHyouka(); })();
+
+// ===== 空き家 主要リフォーム費用相場 =====
+function calcReformCost() {
+  var el = document.getElementById('reform-cost-result');
+  if (!el) return;
+  var area = parseFloat(document.getElementById('rf_area').value) || 0;
+  var grade = parseFloat(document.getElementById('rf_grade').value) || 1.0;
+  if (area <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">延床面積を入力してください</div>'; return; }
+  var gradeLabel = { 0.7: '最小限', 1.0: '標準', 1.5: 'フルリノベーション' }[grade] || '標準';
+
+  var works = [
+    { name: '内装（壁紙・床）', unit: 1.5, perSqm: true, icon: '🪟' },
+    { name: 'キッチン交換', unit: 60, perSqm: false, icon: '🍳' },
+    { name: 'ユニットバス交換', unit: 80, perSqm: false, icon: '🛁' },
+    { name: 'トイレ交換', unit: 20, perSqm: false, icon: '🚽' },
+    { name: '給湯器交換', unit: 20, perSqm: false, icon: '🔥' },
+    { name: '屋根修繕', unit: 1.0, perSqm: true, icon: '🏠' },
+    { name: '外壁塗装', unit: 1.2, perSqm: true, icon: '🎨' },
+    { name: '電気・配線', unit: 0.4, perSqm: true, icon: '⚡' },
+    { name: '給排水管', unit: 0.5, perSqm: true, icon: '🔧' },
+    { name: 'ハウスクリーニング', unit: 0.1, perSqm: true, icon: '🧹' }
+  ];
+
+  var total = 0;
+  var rows = '';
+  works.forEach(function(w) {
+    var base = w.perSqm ? w.unit * area : w.unit;
+    var cost = Math.round(base * grade);
+    total += cost;
+    var barW = Math.min(100, Math.round(cost / 200 * 100));
+    rows += '<tr style="border-top:1px solid rgba(255,255,255,0.06)">';
+    rows += '<td style="padding:7px 6px;font-size:12px;white-space:nowrap">' + w.icon + ' ' + w.name + '</td>';
+    rows += '<td style="padding:7px 6px;text-align:right;font-size:13px;font-weight:700;white-space:nowrap;color:var(--gold)">' + cost.toLocaleString() + '<span style="font-size:10px;color:var(--text-muted)">万円</span></td>';
+    rows += '<td style="padding:7px 6px;width:80px"><div style="background:rgba(255,255,255,0.06);border-radius:3px;height:6px"><div style="height:100%;width:' + barW + '%;background:var(--gold);border-radius:3px"></div></div></td>';
+    rows += '</tr>';
+  });
+
+  var html = '<div style="overflow-x:auto">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">';
+  html += '<thead><tr><th style="text-align:left;color:var(--text-muted);padding:4px 6px;font-size:11px">工事内容</th><th style="text-align:right;color:var(--text-muted);padding:4px 6px;font-size:11px">概算費用</th><th style="padding:4px 6px"></th></tr></thead>';
+  html += '<tbody>' + rows + '</tbody>';
+  html += '</table></div>';
+  html += '<div style="background:rgba(201,168,76,0.1);border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  html += '<div><div style="font-size:11px;color:var(--text-muted)">合計目安（' + gradeLabel + '・' + area + '㎡）</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:var(--gold)">' + total.toLocaleString() + '<span style="font-size:12px">万円</span></div></div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);line-height:1.7;text-align:right">坪単価換算<br>' + (total / (area / 3.3)).toFixed(0) + '万円/坪</div>';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.02);border-radius:6px;padding:8px;line-height:1.6">⚠️ 上記は目安です。実際の費用は建物の状態・築年数・地域・業者によって大きく異なります。複数社に見積もりを取ることを推奨します。空き家リフォーム補助金（自治体によって50〜100万円補助あり）も確認を。</div>';
+  el.innerHTML = html;
+}
+(function(){ calcReformCost(); })();
 
 // ===== 空き家 賃貸転用 採算診断 =====
 function calcAkiyaRental() {
