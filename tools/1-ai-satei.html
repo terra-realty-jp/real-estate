@@ -1267,6 +1267,35 @@
     <div id="fat-result"></div>
   </div>
 
+  <!-- 売却活動 振り返りログカード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">📊 売却活動 振り返りログ</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">売出しからの反響・内覧・交渉の経過を入力して成約までの活動を分析</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売出し開始からの経過週数</div>
+        <input type="number" id="al_weeks" value="8" min="1" max="104" step="1" oninput="calcActivityLog()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">問い合わせ総数（件）</div>
+        <input type="number" id="al_inquiry" value="12" min="0" max="500" step="1" oninput="calcActivityLog()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">内覧総数（件）</div>
+        <input type="number" id="al_viewing" value="5" min="0" max="200" step="1" oninput="calcActivityLog()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">価格交渉の申し出（件）</div>
+        <input type="number" id="al_offer" value="2" min="0" max="50" step="1" oninput="calcActivityLog()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div style="grid-column:1/-1">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">値下げ回数（回）</div>
+        <input type="number" id="al_price_cut" value="1" min="0" max="20" step="1" oninput="calcActivityLog()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="activity-log-result"></div>
+  </div>
+
   <!-- 売却後 手取り総額シミュレーター -->
   <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
     <div style="font-size:15px;font-weight:900;margin-bottom:4px">💴 売却後 手取り総額シミュレーター</div>
@@ -4410,6 +4439,51 @@ function calcFixedAssetTax() {
     calcFixedAssetTax();
   }
 })();
+
+// ===== 売却活動 振り返りログ =====
+function calcActivityLog() {
+  var el = document.getElementById('activity-log-result');
+  if (!el) return;
+  var weeks = parseFloat(document.getElementById('al_weeks').value) || 0;
+  var inquiry = parseFloat(document.getElementById('al_inquiry').value) || 0;
+  var viewing = parseFloat(document.getElementById('al_viewing').value) || 0;
+  var offer = parseFloat(document.getElementById('al_offer').value) || 0;
+  var priceCut = parseFloat(document.getElementById('al_price_cut').value) || 0;
+
+  var inquiryPerWeek = weeks > 0 ? (inquiry / weeks) : 0;
+  var viewRate = inquiry > 0 ? (viewing / inquiry * 100) : 0;
+  var offerRate = viewing > 0 ? (offer / viewing * 100) : 0;
+
+  // 健全度判定
+  var score = 0;
+  var issues = [];
+  if (inquiryPerWeek >= 2) score += 2; else if (inquiryPerWeek >= 1) score += 1; else issues.push('問い合わせ数が少ない（週1件未満）');
+  if (viewRate >= 30) score += 2; else if (viewRate >= 15) score += 1; else issues.push('内覧転換率が低い（問合せ対比'+viewRate.toFixed(0)+'%）');
+  if (offerRate >= 30) score += 2; else if (offerRate >= 15) score += 1; else issues.push('価格交渉転換率が低い（内覧対比'+offerRate.toFixed(0)+'%）');
+  if (priceCut === 0) score += 1; else if (priceCut >= 3) issues.push('値下げが'+priceCut+'回と多い');
+
+  var grade, color, action;
+  if (score >= 6) { grade = '順調'; color = '#4caf50'; action = '現状維持。内覧対応の質を高めてクロージングへ'; }
+  else if (score >= 4) { grade = '要改善'; color = '#ff9800'; action = '反響数 or 内覧率のどちらかを集中改善する'; }
+  else { grade = '要再検討'; color = '#f44336'; action = '価格・写真・間取り図・広告範囲の全面見直しを推奨'; }
+
+  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+  html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">週平均問合せ</div><div style="font-size:20px;font-weight:900;color:#4db6f5">'+inquiryPerWeek.toFixed(1)+'<span style="font-size:11px">件</span></div></div>';
+  html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">内覧転換率</div><div style="font-size:20px;font-weight:900;color:#4db6f5">'+viewRate.toFixed(0)+'<span style="font-size:11px">%</span></div></div>';
+  html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">交渉転換率</div><div style="font-size:20px;font-weight:900;color:#4db6f5">'+offerRate.toFixed(0)+'<span style="font-size:11px">%</span></div></div>';
+  html += '</div>';
+  html += '<div style="text-align:center;padding:8px;border-radius:6px;background:'+color+'22;border:1px solid '+color+'44;margin-bottom:10px">';
+  html += '<span style="font-size:16px;font-weight:900;color:'+color+'">活動状況：'+grade+'</span>';
+  html += '</div>';
+  if (issues.length > 0) {
+    html += '<div style="font-size:12px;color:#ff9800;margin-bottom:8px">⚠ 課題：'+issues.join(' / ')+'</div>';
+  }
+  html += '<div style="font-size:12px;color:#aaa;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px">💡 '+action+'</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcActivityLog(); })();
 
 // ===== 売却後 手取り総額シミュレーター =====
 function calcNetProceeds() {
