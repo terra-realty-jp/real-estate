@@ -1174,6 +1174,39 @@
     <div id="disclosure-check-result"></div>
   </div>
 
+  <!-- つなぎ融資コスト試算カード -->
+  <div class="card">
+    <div class="card-title">🔗 住み替えつなぎ融資コスト試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">旧居を売却する前に新居を購入する「つなぎ融資」の利息・諸費用を試算します。</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">つなぎ融資額（万円）</div>
+        <input type="number" id="br_amount" value="3000" min="100" max="30000" step="100" oninput="calcBridgeLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">つなぎ融資金利（年%）</div>
+        <input type="number" id="br_rate" value="3.5" min="1" max="10" step="0.1" oninput="calcBridgeLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">つなぎ期間（ヶ月）</div>
+        <input type="number" id="br_months" value="3" min="1" max="24" step="1" oninput="calcBridgeLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">旧居の住宅ローン残債（万円）</div>
+        <input type="number" id="br_old_loan" value="1000" min="0" max="20000" step="100" oninput="calcBridgeLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">旧居の月額ローン返済（万円）</div>
+        <input type="number" id="br_old_repay" value="8" min="0" max="100" step="0.5" oninput="calcBridgeLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">新居の月額ローン返済（万円）</div>
+        <input type="number" id="br_new_repay" value="12" min="0" max="100" step="0.5" oninput="calcBridgeLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="bridge-loan-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4324,6 +4357,69 @@ function calcDisclosureCheck() {
       : '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:12px;line-height:1.7">💡 推奨告知事項は法的義務ではありませんが、後のトラブル防止のため積極的に開示することをおすすめします。誠実な情報開示は買主との信頼関係にもつながります。</div>');
 }
 (function(){ calcDisclosureCheck(); })();
+
+function calcBridgeLoan() {
+  const amount = parseFloat(document.getElementById('br_amount').value) || 0;
+  const rate = parseFloat(document.getElementById('br_rate').value) || 3.5;
+  const months = parseInt(document.getElementById('br_months').value) || 3;
+  const oldLoan = parseFloat(document.getElementById('br_old_loan').value) || 0;
+  const oldRepay = parseFloat(document.getElementById('br_old_repay').value) || 0;
+  const newRepay = parseFloat(document.getElementById('br_new_repay').value) || 0;
+  const el = document.getElementById('bridge-loan-result');
+  if (!el) return;
+
+  // つなぎ融資利息（利息のみ返済）
+  const monthlyInterest = Math.round(amount * (rate / 100) / 12);
+  const totalInterest = monthlyInterest * months;
+
+  // 二重ローン期間の月次負担
+  const doubleMonthly = oldRepay + newRepay + monthlyInterest;
+
+  // 融資手数料（目安: 融資額の2〜3%）
+  const fee = Math.round(amount * 0.02);
+
+  // 総コスト
+  const totalCost = totalInterest + fee;
+
+  // 売却後の残り手取り
+  const sellNet = amount - oldLoan;
+
+  let warning = '';
+  if (doubleMonthly > 30) {
+    warning = '<div style="margin-top:10px;padding:10px;background:rgba(244,67,54,0.08);border-radius:8px;border-left:3px solid #f44336;font-size:12px;color:#f44336">⚠️ 二重ローン期間の月次負担が<strong>' + doubleMonthly.toLocaleString() + '万円</strong>と高額です。売却が長引くと資金繰りが厳しくなるリスクがあります。旧居の早期売却を優先しましょう。</div>';
+  }
+
+  const rows = [
+    ['つなぎ融資額', amount.toLocaleString() + '万円'],
+    ['月次利息（利息のみ）', monthlyInterest.toLocaleString() + '万円/月'],
+    ['融資期間', months + 'ヶ月'],
+    ['利息合計', totalInterest.toLocaleString() + '万円'],
+    ['融資手数料（目安）', fee.toLocaleString() + '万円'],
+    ['つなぎ融資 総コスト', totalCost.toLocaleString() + '万円'],
+    ['二重ローン期間の月次負担', doubleMonthly.toLocaleString() + '万円/月'],
+    ['売却後 旧居手取り（残債控除後）', sellNet.toLocaleString() + '万円'],
+  ];
+
+  const rowsHtml = rows.map((r, i) => {
+    const isBold = i === 5 || i === 6;
+    return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07)">'
+      + '<span style="font-size:12px;color:var(--text-muted)">' + r[0] + '</span>'
+      + '<span style="font-size:' + (isBold ? '15' : '13') + 'px;font-weight:' + (isBold ? '700' : '400') + ';color:' + (isBold && i === 5 ? '#f44336' : 'var(--text)') + '">' + r[1] + '</span>'
+      + '</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 試算結果</div>'
+    + rowsHtml
+    + warning
+    + '<div style="margin-top:10px;padding:10px;background:rgba(255,180,0,0.07);border-radius:8px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--gold)">💡 つなぎ融資とは？</div>'
+    + '<div style="font-size:12px;margin-top:4px;line-height:1.5">旧居売却前に新居の購入代金を銀行が一時的に立て替える短期融資。利息のみ支払い、旧居売却後に一括返済します。金利は通常の住宅ローンより高く（年2.5〜5%程度）、早期売却が重要です。</div>'
+    + '</div>'
+    + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">※手数料は金融機関によって異なります。事前に担当行へご確認ください。</div>'
+    + '</div>';
+}
+(function(){ calcBridgeLoan(); })();
 
 // 初期化
 checkStorageWarning();
