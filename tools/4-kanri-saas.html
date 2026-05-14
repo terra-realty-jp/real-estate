@@ -1594,6 +1594,39 @@
     <div id="repair-triage-result"></div>
   </div>
 
+  <!-- 共用部 光熱費・維持費 按分計算カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">💡 共用部 光熱費・維持費 按分計算カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">廊下・エントランス・駐輪場などの共用部コストを入居者の戸数・面積・人数で按分します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">共用部 月間電気代（円）</div>
+        <input type="number" id="ca_elec" value="3000" min="0" max="100000" step="500" oninput="calcCommonAlloc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">共用部 月間水道代（円）</div>
+        <input type="number" id="ca_water" value="1500" min="0" max="50000" step="500" oninput="calcCommonAlloc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">月間清掃・管理費（円）</div>
+        <input type="number" id="ca_clean" value="5000" min="0" max="100000" step="1000" oninput="calcCommonAlloc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">月間その他共益費（円）</div>
+        <input type="number" id="ca_misc" value="2000" min="0" max="50000" step="500" oninput="calcCommonAlloc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">入居戸数（戸）</div>
+        <input type="number" id="ca_units" value="6" min="1" max="100" step="1" oninput="calcCommonAlloc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の共益費 徴収額（円/戸/月）</div>
+        <input type="number" id="ca_current" value="2000" min="0" max="30000" step="500" oninput="calcCommonAlloc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="common-alloc-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -7158,6 +7191,81 @@ function calcRepairTriage() {
     + axisRows + legalNote;
 }
 (function(){ calcRepairTriage(); })();
+
+function calcCommonAlloc() {
+  const elec = parseFloat(document.getElementById('ca_elec').value) || 0;
+  const water = parseFloat(document.getElementById('ca_water').value) || 0;
+  const clean = parseFloat(document.getElementById('ca_clean').value) || 0;
+  const misc = parseFloat(document.getElementById('ca_misc').value) || 0;
+  const units = parseInt(document.getElementById('ca_units').value) || 1;
+  const current = parseFloat(document.getElementById('ca_current').value) || 0;
+  const el = document.getElementById('common-alloc-result');
+  if (!el) return;
+
+  const total = elec + water + clean + misc;
+  const perUnit = Math.round(total / units);
+  const diff = perUnit - current;
+  const diffAnnual = diff * 12;
+  const totalAnnual = total * 12;
+
+  const items = [
+    { name: '電気代', val: elec },
+    { name: '水道代', val: water },
+    { name: '清掃費', val: clean },
+    { name: 'その他共益費', val: misc }
+  ];
+  let rows = items.map(it => {
+    const pct = total > 0 ? Math.round(it.val / total * 100) : 0;
+    return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07)">'
+      + '<span style="color:var(--text-muted);font-size:13px">' + it.name + '</span>'
+      + '<span style="font-size:13px">' + it.val.toLocaleString() + '円 <span style="color:var(--text-muted);font-size:11px">(' + pct + '%)</span></span>'
+      + '</div>';
+  }).join('');
+
+  let verdict, verdictColor;
+  if (Math.abs(diff) <= 200) {
+    verdict = '適正 — 現在の共益費設定は実費とほぼ一致しています';
+    verdictColor = '#4caf50';
+  } else if (diff > 0) {
+    verdict = '不足 — 共益費を月' + diff.toLocaleString() + '円/戸 値上げ検討を推奨します（年間' + Math.abs(diffAnnual).toLocaleString() + '円/戸の赤字）';
+    verdictColor = '#f44336';
+  } else {
+    verdict = '余剰 — 共益費が実費より多く、テナント還元か積立への転用を検討できます（年間' + Math.abs(diffAnnual).toLocaleString() + '円/戸の余剰）';
+    verdictColor = '#2196f3';
+  }
+
+  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 按分結果</div>'
+    + rows
+    + '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px">'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+    + '<span style="font-size:13px;color:var(--text-muted)">月間共用コスト合計</span>'
+    + '<span style="font-size:15px;font-weight:700">' + total.toLocaleString() + '円</span>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+    + '<span style="font-size:13px;color:var(--text-muted)">1戸あたり実費</span>'
+    + '<span style="font-size:15px;font-weight:700">' + perUnit.toLocaleString() + '円</span>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+    + '<span style="font-size:13px;color:var(--text-muted)">現在の共益費徴収額</span>'
+    + '<span style="font-size:15px;font-weight:700">' + current.toLocaleString() + '円</span>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:space-between">'
+    + '<span style="font-size:13px;color:var(--text-muted)">差額（1戸/月）</span>'
+    + '<span style="font-size:15px;font-weight:700;color:' + verdictColor + '">' + (diff > 0 ? '+' : '') + diff.toLocaleString() + '円</span>'
+    + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px;padding:10px;background:rgba(255,180,0,0.07);border-radius:8px;border-left:3px solid ' + verdictColor + '">'
+    + '<div style="font-size:12px;font-weight:700;color:' + verdictColor + '">📝 診断結果</div>'
+    + '<div style="font-size:12px;margin-top:4px;line-height:1.5">' + verdict + '</div>'
+    + '</div>'
+    + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.5">'
+    + '💡 年間共用コスト合計: ' + totalAnnual.toLocaleString() + '円 ／ '
+    + '入居' + units + '戸で按分。共益費は借主への事前告知・重要事項説明書への記載が必要です。'
+    + '</div>'
+    + '</div>';
+}
+(function(){ calcCommonAlloc(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
