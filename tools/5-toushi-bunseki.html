@@ -1333,6 +1333,39 @@
     <div id="crowdfund-compare-result"></div>
   </div>
 
+  <!-- 5年後 出口シナリオ別 純資産試算カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">📅 5年後 出口シナリオ別 純資産試算カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">購入物件を5年後に売却した場合の純資産を楽観・標準・悲観の3シナリオで比較します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">購入価格（万円）</div>
+        <input type="number" id="es5_price" value="3000" min="100" max="100000" step="100" oninput="calcExitScenario5Y()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">借入額（万円）</div>
+        <input type="number" id="es5_loan" value="2400" min="0" max="100000" step="100" oninput="calcExitScenario5Y()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">金利（%）</div>
+        <input type="number" id="es5_rate" value="2.5" min="0.5" max="10" step="0.1" oninput="calcExitScenario5Y()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">返済期間（年）</div>
+        <input type="number" id="es5_term" value="25" min="5" max="40" step="1" oninput="calcExitScenario5Y()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間家賃収入（万円）</div>
+        <input type="number" id="es5_rent" value="240" min="0" max="10000" step="12" oninput="calcExitScenario5Y()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間経費（万円）</div>
+        <input type="number" id="es5_expense" value="36" min="0" max="5000" step="6" oninput="calcExitScenario5Y()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="exit-scenario-5y-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -6224,6 +6257,77 @@ function calcCrowdFundCompare() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※クラウドファンディングの年利は分配型ファンドの想定利回り（COZUCHI・FUNDOSなど）。直接投資の月次CFは経費5%・返済期間25年で概算。実際の数値は個別案件により大きく異なります。</div>';
 }
 (function(){ calcCrowdFundCompare(); })();
+
+function calcExitScenario5Y() {
+  const price = parseFloat(document.getElementById('es5_price').value) || 0;
+  const loanAmt = parseFloat(document.getElementById('es5_loan').value) || 0;
+  const rate = parseFloat(document.getElementById('es5_rate').value) || 0;
+  const term = parseFloat(document.getElementById('es5_term').value) || 25;
+  const rentAnn = parseFloat(document.getElementById('es5_rent').value) || 0;
+  const expenseAnn = parseFloat(document.getElementById('es5_expense').value) || 0;
+  const el = document.getElementById('exit-scenario-5y-result');
+  if (!price || !loanAmt || !rate) { el.innerHTML = ''; return; }
+
+  const r = rate / 100 / 12;
+  const n = term * 12;
+  const monthlyPay = r > 0 ? loanAmt * r / (1 - Math.pow(1 + r, -n)) : loanAmt / n;
+  let remaining = loanAmt;
+  let totalInterest = 0;
+  for (let m = 0; m < 60; m++) {
+    const interest = remaining * r;
+    totalInterest += interest;
+    remaining = remaining - (monthlyPay - interest);
+  }
+  remaining = Math.max(0, remaining);
+  const totalLoanPay = monthlyPay * 60;
+  const annualCF = rentAnn - expenseAnn - monthlyPay * 12;
+  const totalCF5 = annualCF * 5;
+
+  const scenarios = [
+    {label:'楽観', sub:'地価+10%', change:0.10, color:'#4ade80'},
+    {label:'標準', sub:'地価±0%', change:0, color:'#facc15'},
+    {label:'悲観', sub:'地価-15%', change:-0.15, color:'#f87171'},
+  ];
+  const sellCostRate = 0.04;
+  const equityInit = price - loanAmt;
+
+  const cols = scenarios.map(s => {
+    const sellPrice = Math.round(price * (1 + s.change));
+    const sellCost = Math.round(sellPrice * sellCostRate);
+    const netSell = sellPrice - remaining - sellCost;
+    const totalReturn = netSell - equityInit + totalCF5;
+    const roiPct = equityInit > 0 ? (totalReturn / equityInit * 100).toFixed(1) : '—';
+    return {s, sellPrice, sellCost, netSell, totalReturn, roiPct};
+  });
+
+  const cardRows = cols.map(c =>
+    '<div style="background:' + c.s.color + '11;border:1px solid ' + c.s.color + '33;border-radius:10px;padding:14px">'
+    + '<div style="font-size:13px;font-weight:700;color:' + c.s.color + ';margin-bottom:2px">' + c.s.label + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">' + c.s.sub + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">推定売却価格</div>'
+    + '<div style="font-size:16px;font-weight:900;margin-bottom:6px">' + c.sellPrice.toLocaleString() + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">ローン残債</div>'
+    + '<div style="font-size:13px;font-weight:700;color:#f87171;margin-bottom:6px">▲' + Math.round(remaining).toLocaleString() + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">売却純益</div>'
+    + '<div style="font-size:13px;font-weight:700;color:' + (c.netSell >= 0 ? '#4ade80' : '#f87171') + ';margin-bottom:6px">' + (c.netSell >= 0 ? '+' : '') + Math.round(c.netSell).toLocaleString() + '万円</div>'
+    + '<div style="border-top:1px solid rgba(255,255,255,0.08);margin:8px 0;padding-top:8px">'
+    + '<div style="font-size:11px;color:var(--text-muted)">5年CF合計</div>'
+    + '<div style="font-size:13px;font-weight:700;color:' + (totalCF5 >= 0 ? '#60a5fa' : '#f87171') + ';margin-bottom:6px">' + (totalCF5 >= 0 ? '+' : '') + Math.round(totalCF5).toLocaleString() + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">総合リターン</div>'
+    + '<div style="font-size:18px;font-weight:900;color:' + (c.totalReturn >= 0 ? c.s.color : '#f87171') + '">' + (c.totalReturn >= 0 ? '+' : '') + Math.round(c.totalReturn).toLocaleString() + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">自己資金ROI: <strong style="color:' + c.s.color + '">' + c.roiPct + '%</strong></div></div></div>'
+  ).join('');
+
+  const bestScenario = cols[0].totalReturn >= 0 ? '楽観シナリオでも十分なリターンが見込めます。' : cols[1].totalReturn >= 0 ? '標準シナリオではプラスですが、悲観シナリオでは注意が必要です。' : '地価下落リスクが高い場合は5年以内の売却で損失になる可能性があります。長期保有か購入価格の再検討を。';
+
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">' + cardRows + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
+    + '<span style="font-size:12px;color:var(--text-muted)">自己資金（頭金） </span><strong>' + equityInit.toLocaleString() + '万円</strong>'
+    + '<span style="font-size:12px;color:var(--text-muted);margin-left:12px">5年後残債 </span><strong style="color:#f87171">' + Math.round(remaining).toLocaleString() + '万円</strong>'
+    + '<span style="font-size:12px;color:var(--text-muted);margin-left:12px">年間CF </span><strong style="color:' + (annualCF >= 0 ? '#4ade80' : '#f87171') + '">' + (annualCF >= 0 ? '+' : '') + Math.round(annualCF).toLocaleString() + '万円</strong></div>'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:13px;line-height:1.7">💡 ' + bestScenario + '</div>';
+}
+(function(){ calcExitScenario5Y(); })();
 
 function checkStorageWarning() {
   try {
