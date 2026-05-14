@@ -1196,6 +1196,30 @@
     <div id="near-risk-result"></div>
   </div>
 
+  <!-- 空き家 防犯・防災 緊急対策チェックリスト -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🔒 空き家 防犯・防災 対策チェックリスト</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">空き家は侵入・放火・災害のターゲットになりやすい。最低限の対策を確認してください</div>
+    <div style="font-size:12px;font-weight:700;color:#f87171;margin-bottom:6px">🚪 侵入防止</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="bs-chk" onchange="calcAkiyaSec()" style="accent-color:var(--gold)"><span>全ての玄関・裏口・窓の施錠を確認・補強している</span></label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="bs-chk" onchange="calcAkiyaSec()" style="accent-color:var(--gold)"><span>ポスト・郵便受けに郵便物が溜まらないよう転送設定している</span></label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="bs-chk" onchange="calcAkiyaSec()" style="accent-color:var(--gold)"><span>「空き家」とわかる外観（表札なし・暗い・草ぼうぼう）を改善している</span></label>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#fb923c;margin-bottom:6px">🔥 放火・火災防止</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="bs-chk" onchange="calcAkiyaSec()" style="accent-color:var(--gold)"><span>ガス・電気の元栓・ブレーカーを切っている</span></label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="bs-chk" onchange="calcAkiyaSec()" style="accent-color:var(--gold)"><span>燃えやすいゴミ・段ボール・新聞紙等を建物内外に放置していない</span></label>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:6px">🌪️ 台風・災害対策</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="bs-chk" onchange="calcAkiyaSec()" style="accent-color:var(--gold)"><span>台風前に飛散しそうな物（プランター・看板・物干し竿）を撤去している</span></label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="bs-chk" onchange="calcAkiyaSec()" style="accent-color:var(--gold)"><span>雨漏り・排水管の詰まりを定期確認している（年1回以上）</span></label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px"><input type="checkbox" class="bs-chk" onchange="calcAkiyaSec()" style="accent-color:var(--gold)"><span>火災保険・地震保険が空き家状態でも有効か確認している</span></label>
+    </div>
+    <div id="akiya-sec-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4516,6 +4540,44 @@ function calcNearRisk() {
   el.innerHTML = html;
 }
 (function(){ calcNearRisk(); })();
+
+// ===== 空き家 防犯・防災 対策チェックリスト =====
+function calcAkiyaSec() {
+  var el = document.getElementById('akiya-sec-result');
+  if (!el) return;
+  var checks = document.querySelectorAll('.bs-chk');
+  var total = checks.length;
+  var done = 0;
+  checks.forEach(function(c){ if (c.checked) done++; });
+  var pct = Math.round(done / total * 100);
+  var barColor = pct >= 100 ? '#4ade80' : pct >= 70 ? '#f59e0b' : '#f87171';
+  var verdict, tips;
+  if (pct >= 100) {
+    verdict = '✅ 防犯・防災対策 完了';
+    tips = '全項目対応済みです。年1回以上の状態確認を続けてください。';
+  } else if (pct >= 60) {
+    verdict = '⚡ 対策 進行中（'+done+'/'+total+'項目）';
+    tips = '未対策の箇所を早めに対処してください。特にガス・電気の遮断と施錠は最優先です。';
+  } else {
+    verdict = '🔴 対策 不十分（'+done+'/'+total+'項目）';
+    tips = '空き家は放置期間が長いほど侵入・放火・災害リスクが高まります。まずガス・電気の遮断と施錠確認から始めてください。';
+  }
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+  html += '<span style="font-size:12px;color:#aaa">対策進捗</span><span style="font-size:16px;font-weight:900;color:'+barColor+'">'+pct+'%</span>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.06);border-radius:8px;height:8px;overflow:hidden;margin-bottom:10px">';
+  html += '<div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:8px;transition:width 0.4s"></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;font-weight:700;color:'+barColor+';margin-bottom:6px">'+verdict+'</div>';
+  html += '<div style="font-size:12px;color:#aaa;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;line-height:1.7">💡 '+tips+'</div>';
+  if (pct < 100) {
+    html += '<div style="font-size:11px;color:#f59e0b;margin-top:8px;padding:6px 10px;background:rgba(245,158,11,0.08);border-radius:6px">⚠️ 注意：火災保険は「空き家状態」を保険会社に申告していないと保険金が支払われない場合があります。必ず保険会社に空き家旨を伝えてください。</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaSec(); })();
 
 // 初期化
 checkStorageWarning();
