@@ -1499,6 +1499,26 @@
     <div id="hazard-check-result"></div>
   </div>
 
+  <!-- 売却前リフォーム箇所 費用対効果カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🔨 売却前リフォーム 費用対効果カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">リフォーム箇所ごとの費用と想定価格上昇効果を比較し、やるべきリフォームを判断します</div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の想定売却価格（万円）</div>
+      <input type="number" id="rfr_price" value="3000" min="100" max="100000" step="100" oninput="calcPreSaleReformROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;max-width:300px">
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">実施するリフォームを選択：</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="rfr-chk" data-cost="15" data-effect="1.5" onchange="calcPreSaleReformROI()" style="accent-color:var(--gold)"><span>🏠 外壁塗装・屋根塗装（費用目安 80〜150万円）</span></label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="rfr-chk" data-cost="8" data-effect="1.0" onchange="calcPreSaleReformROI()" style="accent-color:var(--gold)"><span>🛁 ユニットバス交換（費用目安 50〜100万円）</span></label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="rfr-chk" data-cost="8" data-effect="1.2" onchange="calcPreSaleReformROI()" style="accent-color:var(--gold)"><span>🍳 キッチン交換（費用目安 50〜120万円）</span></label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="rfr-chk" data-cost="3" data-effect="0.8" onchange="calcPreSaleReformROI()" style="accent-color:var(--gold)"><span>🏠 内装クリーニング（費用目安 5〜30万円）</span></label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="rfr-chk" data-cost="5" data-effect="0.6" onchange="calcPreSaleReformROI()" style="accent-color:var(--gold)"><span>🪟 窓・サッシ交換（費用目安 20〜80万円）</span></label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="rfr-chk" data-cost="2" data-effect="0.4" onchange="calcPreSaleReformROI()" style="accent-color:var(--gold)"><span>🚪 玄関ドア交換・クロス張替え（費用目安 10〜30万円）</span></label>
+    </div>
+    <div id="pre-sale-reform-roi-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5013,6 +5033,48 @@ function calcHazardCheck() {
     : '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:12px;font-size:12px;color:#86efac">✅ 重大なハザードリスクは確認されていません。最新のハザードマップは国土交通省の「重ねるハザードマップ」で無料確認できます。</div>');
 }
 (function(){ calcHazardCheck(); })();
+
+function calcPreSaleReformROI() {
+  const price = parseFloat(document.getElementById('rfr_price').value) || 0;
+  const chks = document.querySelectorAll('.rfr-chk');
+  const el = document.getElementById('pre-sale-reform-roi-result');
+  if (!price) { el.innerHTML = ''; return; }
+  let totalCost = 0;
+  let totalEffect = 0;
+  const rows = [];
+  chks.forEach(c => {
+    if (c.checked) {
+      const cost = parseFloat(c.dataset.cost);
+      const effect = parseFloat(c.dataset.effect) / 100 * price;
+      totalCost += cost;
+      totalEffect += effect;
+      const roi = cost > 0 ? Math.round(effect / cost * 100) : 0;
+      const roiColor = roi >= 100 ? '#4ade80' : roi >= 60 ? '#facc15' : '#f87171';
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px;margin-bottom:4px">'
+        + '<span style="font-size:12px">' + c.parentElement.querySelector('span').textContent.trim() + '</span>'
+        + '<div style="display:flex;gap:12px;align-items:center;white-space:nowrap">'
+        + '<span style="font-size:11px;color:var(--text-muted)">費用目安 ' + cost + '万円</span>'
+        + '<span style="font-size:11px;color:#60a5fa">+' + effect.toFixed(0) + '万円</span>'
+        + '<span style="font-size:12px;font-weight:700;color:' + roiColor + '">ROI ' + roi + '%</span></div></div>');
+    }
+  });
+  if (rows.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px">リフォーム箇所を選択してください</div>';
+    return;
+  }
+  const netGain = totalEffect - totalCost;
+  const totalROI = totalCost > 0 ? Math.round(totalEffect / totalCost * 100) : 0;
+  const verdict = totalROI >= 100 ? {txt:'投資効果あり：費用を上回る価値上昇が期待できます', color:'#4ade80'}
+    : totalROI >= 60 ? {txt:'投資効果あり（一部）：費用の60〜100%は回収できる見込み', color:'#facc15'}
+    : {txt:'費用対効果が低い：リフォームより値下げ対応の方が有利な可能性あり', color:'#f87171'};
+  el.innerHTML = '<div style="margin-bottom:10px">' + rows.join('') + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted)">リフォーム費用合計</div><div style="font-size:16px;font-weight:900;color:#f87171">▲' + totalCost + '万円</div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted)">価格上昇効果</div><div style="font-size:16px;font-weight:900;color:#60a5fa">+' + totalEffect.toFixed(0) + '万円</div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted)">純利益</div><div style="font-size:16px;font-weight:900;color:' + (netGain >= 0 ? '#4ade80' : '#f87171') + '">' + (netGain >= 0 ? '+' : '') + netGain.toFixed(0) + '万円</div></div></div>'
+    + '<div style="background:' + verdict.color + '22;border:1px solid ' + verdict.color + '44;border-radius:10px;padding:12px;font-size:13px;color:' + verdict.color + '">ROI ' + totalROI + '% — ' + verdict.txt + '</div>';
+}
+(function(){ calcPreSaleReformROI(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
