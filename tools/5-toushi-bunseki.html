@@ -1340,6 +1340,23 @@
   <div id="yield-distrib-card" style="display:none;margin-bottom:16px"></div>
   <div id="property-score-ranking" style="display:none;margin-bottom:16px"></div>
 
+  <!-- 投資物件 損切り（売り時）判断カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🚨 投資物件 損切り・売り時 判断カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">保有中の投資物件が「今すぐ売るべき状態」かを8項目で診断します</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="lc-chk" data-score="3" onchange="calcLossCut()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>月次CF（キャッシュフロー）が<strong>マイナスで改善見込みがない</strong></span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="lc-chk" data-score="3" onchange="calcLossCut()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>空室率が<strong>6ヶ月以上</strong>高止まりしている（30%以上）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="lc-chk" data-score="2" onchange="calcLossCut()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>大規模修繕が必要で費用をローンなしでは賄えない</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="lc-chk" data-score="2" onchange="calcLossCut()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>エリアの人口・企業・駅が<strong>年々縮小</strong>している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="lc-chk" data-score="2" onchange="calcLossCut()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>DSCRが1.0を下回っており金融機関からの信頼が落ちている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="lc-chk" data-score="1" onchange="calcLossCut()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span>築年数が法定耐用年数を超え、融資が付かなくなってきた</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="lc-chk" data-score="1" onchange="calcLossCut()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span>ポートフォリオ全体の次のステップ（物件買い増し等）の資金源にしたい</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="lc-chk" data-score="1" onchange="calcLossCut()" style="accent-color:#facc15;flex-shrink:0;margin-top:2px"><span>市況が良く、買い手が付きやすいタイミングだと感じる</span></label>
+    </div>
+    <div id="loss-cut-result"></div>
+  </div>
+
   <!-- 融資審査 通過確率 診断カード -->
   <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-bottom:16px">
     <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏦 融資審査 通過確率 診断カード</div>
@@ -6060,6 +6077,44 @@ function calcCapRate() {
   el.innerHTML = html;
 }
 (function(){ calcCapRate(); })();
+
+// ===== 投資物件 損切り・売り時 判断 =====
+function calcLossCut() {
+  var el = document.getElementById('loss-cut-result');
+  if (!el) return;
+  var total = 0;
+  document.querySelectorAll('.lc-chk').forEach(function(c) {
+    if (c.checked) total += parseInt(c.getAttribute('data-score') || '0');
+  });
+  var level, color, label, action;
+  if (total >= 8) {
+    level = '今すぐ売却を検討'; color = '#f87171';
+    action = '複数の売却シグナルが重なっています。売却タイミングが遅れると資産毀損が拡大するリスクがあります。不動産会社への査定依頼から始めましょう。';
+  } else if (total >= 5) {
+    level = '売却を前向きに検討'; color = '#fb923c';
+    action = '複数の課題を抱えています。出口戦略（キャップレート・税金）を試算し、売却価格の許容ラインを確認してください。';
+  } else if (total >= 3) {
+    level = '保有継続・状況監視'; color = '#f59e0b';
+    action = '一部課題あり。売却は急がないが、CF改善策（空室対策・賃料見直し）を先行して実施してください。';
+  } else if (total >= 1) {
+    level = '戦略的な売却を将来検討'; color = '#34d399';
+    action = '現状は問題が少ない。市況・税務（長期譲渡税率）も踏まえながら中長期の出口戦略を描いておきましょう。';
+  } else {
+    level = '保有継続が有利'; color = '#4ade80';
+    action = '現時点で売却を急ぐ理由はありません。引き続き収益最大化を目指してください。';
+  }
+  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  html += '<div style="text-align:center;padding:10px;border-radius:8px;background:'+color+'22;border:1px solid '+color+'44;margin-bottom:10px">';
+  html += '<div style="font-size:15px;font-weight:900;color:'+color+'">'+level+'（スコア'+total+'点）</div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:#aaa;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;line-height:1.7">📌 '+action+'</div>';
+  if (total >= 5) {
+    html += '<div style="font-size:11px;color:#4db6f5;margin-top:8px;padding:6px 10px;background:rgba(77,182,245,0.08);border-radius:6px;line-height:1.7">💡 売却時のポイント：①5年超保有なら長期譲渡税率（約20%）が適用 ②市況が高い時に売るほど手取りが増える ③TERRA REALTYで無料査定相談が可能です</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcLossCut(); })();
 
 function checkStorageWarning() {
   try {
