@@ -1283,6 +1283,39 @@
     <div id="cleanup-cost-result"></div>
   </div>
 
+  <!-- 空き家 シェアハウス転用 収益診断カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏘 シェアハウス転用 収益診断カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">空き家を複数人が入居するシェアハウスに転用した場合の収益性を試算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">延床面積（㎡）</div>
+        <input type="number" id="sh_area" value="100" min="30" max="500" step="10" oninput="calcShareHouseConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">想定居室数（部屋）</div>
+        <input type="number" id="sh_rooms" value="5" min="2" max="20" step="1" oninput="calcShareHouseConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">想定月額家賃/部屋（万円）</div>
+        <input type="number" id="sh_rent_per" value="4.5" min="1" max="20" step="0.5" oninput="calcShareHouseConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">転用リフォーム費（万円）</div>
+        <input type="number" id="sh_reform" value="300" min="50" max="3000" step="50" oninput="calcShareHouseConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">単独賃貸の場合の月額（万円）</div>
+        <input type="number" id="sh_single_rent" value="8" min="1" max="100" step="0.5" oninput="calcShareHouseConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">想定稼働率（%）</div>
+        <input type="number" id="sh_occ" value="80" min="30" max="100" step="5" oninput="calcShareHouseConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="share-house-convert-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4731,6 +4764,52 @@ function calcCleanupCost() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※費用は目安です。実際は業者・地域・物件状態によって大きく異なります。複数社から見積もりを取ることを強くおすすめします。</div>';
 }
 (function(){ calcCleanupCost(); })();
+
+function calcShareHouseConvert() {
+  const area = parseFloat(document.getElementById('sh_area').value) || 0;
+  const rooms = parseFloat(document.getElementById('sh_rooms').value) || 0;
+  const rentPer = parseFloat(document.getElementById('sh_rent_per').value) || 0;
+  const reform = parseFloat(document.getElementById('sh_reform').value) || 0;
+  const singleRent = parseFloat(document.getElementById('sh_single_rent').value) || 0;
+  const occ = parseFloat(document.getElementById('sh_occ').value) || 80;
+  const el = document.getElementById('share-house-convert-result');
+  if (!area || !rooms || !rentPer) { el.innerHTML = ''; return; }
+
+  const shareMonthly = rooms * rentPer * (occ / 100);
+  const shareAnnual = shareMonthly * 12;
+  const shareMgmt = shareAnnual * 0.15;
+  const shareNet = shareAnnual - shareMgmt;
+  const reformPayback = reform > 0 ? (reform / (shareNet - singleRent * 12)).toFixed(1) : '—';
+
+  const singleAnnual = singleRent * 12;
+  const uplift = shareNet - singleAnnual;
+
+  const pros = ['複数入居者でリスク分散（1部屋退去でも収入ゼロにならない）', '単独賃貸より高い賃料収入が期待できる', '都市部・駅近・若者需要が高いエリアで特に有効'];
+  const cons = ['管理の手間が多い（入居者間トラブル・共用部清掃）', '水道光熱費負担（共用部は原則オーナー負担）', '住宅ローンの条件によっては用途変更が必要になる場合あり'];
+
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+    + '<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:14px">'
+    + '<div style="font-size:13px;font-weight:700;color:#4ade80;margin-bottom:8px">🏘 シェアハウス（' + rooms + '室）</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">月額収入（稼働率' + occ + '%）</div>'
+    + '<div style="font-size:18px;font-weight:900;margin-bottom:6px">' + shareMonthly.toFixed(1) + '万円/月</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">年間収入（管理費15%控除後）</div>'
+    + '<div style="font-size:16px;font-weight:900;color:#4ade80">' + shareNet.toFixed(1) + '万円/年</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">リフォーム回収期間: ' + reformPayback + '年</div></div>'
+    + '<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:10px;padding:14px">'
+    + '<div style="font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:8px">🏠 単独賃貸（比較）</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">月額収入</div>'
+    + '<div style="font-size:18px;font-weight:900;margin-bottom:6px">' + singleRent + '万円/月</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">年間収入</div>'
+    + '<div style="font-size:16px;font-weight:900;color:#60a5fa">' + singleAnnual.toFixed(1) + '万円/年</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">シェアハウスとの差: <strong style="color:' + (uplift >= 0 ? '#4ade80' : '#f87171') + '">' + (uplift >= 0 ? '+' : '') + uplift.toFixed(1) + '万円/年</strong></div></div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    + '<div style="background:rgba(74,222,128,0.06);border-radius:8px;padding:10px"><div style="font-size:11px;color:#4ade80;font-weight:700;margin-bottom:6px">✅ メリット</div>'
+    + pros.map(p => '<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">・' + p + '</div>').join('') + '</div>'
+    + '<div style="background:rgba(248,113,113,0.06);border-radius:8px;padding:10px"><div style="font-size:11px;color:#f87171;font-weight:700;margin-bottom:6px">⚠️ デメリット</div>'
+    + cons.map(c => '<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">・' + c + '</div>').join('') + '</div></div>'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:12px;line-height:1.7">💡 シェアハウスは' + (uplift > 20 ? '単独賃貸より年間' + uplift.toFixed(0) + '万円以上の収入増が見込めます。管理業者委託（家賃の15〜20%）を活用することで手間を抑えながら収益を上げることができます。' : '収益差が小さい場合は管理負担を考えると単独賃貸の方がシンプルです。エリアの需要を慎重に確認しましょう。') + '</div>';
+}
+(function(){ calcShareHouseConvert(); })();
 
 // 初期化
 checkStorageWarning();
