@@ -1157,6 +1157,23 @@
     <div id="new-vs-used-result"></div>
   </div>
 
+  <!-- 売主 告知義務 確認チェックカード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">⚖️ 売主 告知義務 確認チェックカード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">売主として買主に必ず告知すべき事項を確認します。告知漏れは「契約不適合責任」の対象となります</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="dc-chk" data-level="必須" onchange="calcDisclosureCheck()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>🏚 建物の雨漏り・漏水・シロアリ被害・構造上の欠陥を知っている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="dc-chk" data-level="必須" onchange="calcDisclosureCheck()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>⚰️ 物件内で死亡事故・自殺・孤独死（発見遅延）が過去にあった</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="dc-chk" data-level="必須" onchange="calcDisclosureCheck()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>🏭 近隣に著しい騒音・悪臭・振動を発する施設がある</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="dc-chk" data-level="必須" onchange="calcDisclosureCheck()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>🗺 ハザードマップの浸水・土砂・津波等のリスクエリアに含まれる</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="dc-chk" data-level="必須" onchange="calcDisclosureCheck()" style="accent-color:#f87171;flex-shrink:0;margin-top:2px"><span>🚧 接道義務・再建築不可・用途制限等の法的制限がある</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="dc-chk" data-level="推奨" onchange="calcDisclosureCheck()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>📬 近隣との境界未確定・越境がある</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="dc-chk" data-level="推奨" onchange="calcDisclosureCheck()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>⚡ 設備（給湯器・エアコン等）に老朽化・故障がある</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" class="dc-chk" data-level="推奨" onchange="calcDisclosureCheck()" style="accent-color:#fb923c;flex-shrink:0;margin-top:2px"><span>🏘 近隣との過去・現在のトラブルがある（騒音苦情・ゴミ等）</span></label>
+    </div>
+    <div id="disclosure-check-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4271,6 +4288,42 @@ function calcNewVsUsed() {
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※修繕費は新築0.5%/年・中古1.5%/年で概算。資産価値（売却想定価格）は考慮していません。個別の条件により大きく異なります。</div>';
 }
 (function(){ calcNewVsUsed(); })();
+
+function calcDisclosureCheck() {
+  const chks = document.querySelectorAll('.dc-chk');
+  const el = document.getElementById('disclosure-check-result');
+  let mandatory = 0, recommended = 0;
+  const issues = [];
+  chks.forEach(c => {
+    if (c.checked) {
+      if (c.dataset.level === '必須') mandatory++;
+      else recommended++;
+      issues.push({text: c.parentElement.querySelector('span').textContent.trim(), level: c.dataset.level});
+    }
+  });
+  const total = mandatory + recommended;
+  if (total === 0) {
+    el.innerHTML = '<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:14px;font-size:13px;color:#4ade80">✅ 現在選択されている告知事項はありません。全項目に該当がなければ、安心して売却を進めることができます。</div>';
+    return;
+  }
+  const issueList = issues.map(i =>
+    '<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 10px;background:' + (i.level === '必須' ? 'rgba(248,113,113,0.08)' : 'rgba(251,146,60,0.08)') + ';border-radius:6px;margin-bottom:4px">'
+    + '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:' + (i.level === '必須' ? '#f87171' : '#fb923c') + ';color:#000;white-space:nowrap;flex-shrink:0">' + i.level + '</span>'
+    + '<span style="font-size:11px;color:var(--text-muted)">' + i.text + '</span></div>'
+  ).join('');
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:#f87171;font-weight:700">必須告知事項</div>'
+    + '<div style="font-size:24px;font-weight:900;color:#f87171">' + mandatory + '件</div></div>'
+    + '<div style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:#fb923c;font-weight:700">推奨告知事項</div>'
+    + '<div style="font-size:24px;font-weight:900;color:#fb923c">' + recommended + '件</div></div></div>'
+    + '<div style="margin-bottom:12px">' + issueList + '</div>'
+    + (mandatory > 0
+      ? '<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:12px;font-size:12px;line-height:1.7;color:#fca5a5">⚖️ <strong>契約不適合責任について</strong>：2020年民法改正により、売主が知っていた欠陥を告知しなかった場合は<strong>契約不適合責任</strong>が問われます。買主は修繕請求・代金減額請求・損害賠償請求・契約解除が可能です。必ず不動産会社に相談してから告知書を作成してください。</div>'
+      : '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:12px;line-height:1.7">💡 推奨告知事項は法的義務ではありませんが、後のトラブル防止のため積極的に開示することをおすすめします。誠実な情報開示は買主との信頼関係にもつながります。</div>');
+}
+(function(){ calcDisclosureCheck(); })();
 
 // 初期化
 checkStorageWarning();
