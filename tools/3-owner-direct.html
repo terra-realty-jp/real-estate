@@ -1315,6 +1315,38 @@
     <div id="future-value-result"></div>
   </div>
 
+  <!-- インスペクション費用対効果チェックカード -->
+  <div class="card">
+    <div class="card-title">🔍 インスペクション費用対効果チェック</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">購入・売却前の建物検査（インスペクション）の費用対効果を診断します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">物件価格（万円）</label>
+        <input type="number" id="ins_price" value="3000" min="100" max="100000" step="100" oninput="calcInspectionCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">築年数（年）</label>
+        <input type="number" id="ins_age" value="20" min="0" max="60" step="1" oninput="calcInspectionCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">建物種別</label>
+        <select id="ins_type" onchange="calcInspectionCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="house">戸建住宅</option>
+          <option value="mansion">マンション（区分）</option>
+          <option value="apartment">アパート・一棟</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">立場</label>
+        <select id="ins_role" onchange="calcInspectionCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="buyer">買主（購入前調査）</option>
+          <option value="seller">売主（売却前調査）</option>
+        </select>
+      </div>
+    </div>
+    <div id="inspection-cost-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4745,6 +4777,55 @@ function calcFutureValue() {
   </div>`;
 }
 (function(){ calcFutureValue(); })();
+
+function calcInspectionCost() {
+  const price = parseFloat(document.getElementById('ins_price').value) || 0;
+  const age = parseInt(document.getElementById('ins_age').value) || 0;
+  const type = document.getElementById('ins_type').value;
+  const role = document.getElementById('ins_role').value;
+  const r = document.getElementById('inspection-cost-result');
+  if (!r) return;
+  if (price <= 0) { r.innerHTML = '<div style="color:var(--text-muted);font-size:13px">物件価格を入力してください</div>'; return; }
+
+  const feeMap = { house: [4, 6], mansion: [3, 5], apartment: [8, 15] };
+  const range = feeMap[type];
+  const feeMid = (range[0] + range[1]) / 2;
+
+  const defectProb = age < 10 ? 0.05 : age < 20 ? 0.15 : age < 30 ? 0.35 : age < 40 ? 0.55 : 0.70;
+  const defectCostPct = age < 20 ? 0.005 : age < 30 ? 0.012 : age < 40 ? 0.025 : 0.04;
+  const avgDefectCost = price * defectCostPct;
+  const expectedSaving = avgDefectCost * defectProb;
+  const roi = expectedSaving / feeMid;
+
+  const typeLabel = { house: '戸建住宅', mansion: 'マンション（区分）', apartment: 'アパート・一棟' };
+  const roleAdvice = {
+    buyer: ['欠陥発見による値下げ交渉・キャンセル権の確保', '不動産取得後の予期せぬ修繕費リスクを低減', '住宅ローン審査資料として利用可能な場合あり'],
+    seller: ['告知義務の事前確認でトラブル予防', 'インスペクション済み物件として付加価値アップ', '買主の安心感向上で成約スピード改善']
+  };
+
+  const grade = roi >= 2 ? { label: '費用対効果：高', col: '#4caf50' }
+    : roi >= 1 ? { label: '費用対効果：中', col: '#ff9800' }
+    : { label: '費用対効果：低', col: '#f44336' };
+
+  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">費用目安</div><div style="font-size:18px;font-weight:900;color:#d4af37">' + range[0] + '〜' + range[1] + '<span style="font-size:11px">万円</span></div></div>'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">欠陥発見確率</div><div style="font-size:18px;font-weight:900;color:#ff9800">' + Math.round(defectProb * 100) + '<span style="font-size:11px">%</span></div></div>'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">期待節約額</div><div style="font-size:18px;font-weight:900;color:#4caf50">' + Math.round(expectedSaving).toLocaleString() + '<span style="font-size:11px">万円</span></div></div>'
+    + '</div>'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">費用対効果（ROI倍率）</div>'
+    + '<div style="font-size:28px;font-weight:900;color:' + grade.col + '">' + roi.toFixed(1) + '<span style="font-size:13px">倍</span></div>'
+    + '<div style="font-size:13px;font-weight:700;color:' + grade.col + ';margin-top:2px">' + grade.label + '</div>'
+    + '</div>'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px">' + (role === 'buyer' ? '買主として' : '売主として') + 'のメリット</div>'
+    + '<ul style="margin:0;padding-left:16px;font-size:12px;color:var(--text)">'
+    + roleAdvice[role].map(function(a){ return '<li style="margin-bottom:4px">' + a + '</li>'; }).join('')
+    + '</ul>'
+    + '<div style="margin-top:10px;font-size:11px;color:var(--text-muted)">※費用・確率は一般的な目安です。実際は検査機関（建築士・ホームインスペクター）にお問い合わせください。</div>'
+    + '</div>';
+}
+(function(){ calcInspectionCost(); })();
 
 // 初期化
 checkStorageWarning();
