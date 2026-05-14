@@ -1245,6 +1245,44 @@
     <div id="utility-status-result"></div>
   </div>
 
+  <!-- 空き家売却前 片付け・クリーニングコスト試算カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🧹 売却前 片付け・クリーニングコスト試算カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">空き家を売却・賃貸に出す前に必要な片付け・清掃の費用を概算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">延床面積（㎡）</div>
+        <input type="number" id="cc_area" value="80" min="20" max="500" step="10" oninput="calcCleanupCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">家具・家電の残量</div>
+        <select id="cc_stuff" onchange="calcCleanupCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="none">ほぼなし（空家状態）</option>
+          <option value="some" selected>一部あり（家具等が残っている）</option>
+          <option value="full">多数あり（生前の家財一式が残っている）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建物の状態</div>
+        <select id="cc_cond" onchange="calcCleanupCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="good">比較的きれい（数年内に誰かが住んでいた）</option>
+          <option value="mid" selected>やや汚れあり（5〜10年以上空き家）</option>
+          <option value="bad">かなり汚れ・カビ・ゴミあり（10年以上放置）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">庭・外構の状態</div>
+        <select id="cc_garden" onchange="calcCleanupCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="none">なし（庭なし・マンション等）</option>
+          <option value="small">小さい庭あり（20㎡未満）</option>
+          <option value="mid" selected>中程度の庭（20〜60㎡）</option>
+          <option value="large">広い庭（60㎡以上）</option>
+        </select>
+      </div>
+    </div>
+    <div id="cleanup-cost-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4649,6 +4687,50 @@ function calcUtilityStatus() {
     + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:13px;line-height:1.7">' + advice[adviceKey] + '</div>';
 }
 (function(){ calcUtilityStatus(); })();
+
+function calcCleanupCost() {
+  const area = parseFloat(document.getElementById('cc_area').value) || 0;
+  const stuff = document.getElementById('cc_stuff').value;
+  const cond = document.getElementById('cc_cond').value;
+  const garden = document.getElementById('cc_garden').value;
+  const el = document.getElementById('cleanup-cost-result');
+  if (!area) { el.innerHTML = ''; return; }
+
+  const stuffCost = {none:0, some:Math.round(area*0.3), full:Math.round(area*1.2)}[stuff];
+  const cleanCostBase = {good:Math.round(area*0.35), mid:Math.round(area*0.7), bad:Math.round(area*1.4)}[cond];
+  const gardenCost = {none:0, small:3, mid:8, large:20}[garden];
+  const total = stuffCost + cleanCostBase + gardenCost;
+  const totalMax = Math.round(total * 1.5);
+
+  const items = [
+    {name:'🚚 不用品・家財処分（遺品整理）', cost:stuffCost, unit:'万円', note:{none:'なし', some:'家具等数点', full:'家財一式'}[stuff]},
+    {name:'🧽 ハウスクリーニング', cost:cleanCostBase, unit:'万円', note:{good:'通常清掃', mid:'本格清掃', bad:'特殊清掃含む'}[cond]},
+    {name:'🌿 庭・外構の草刈り・整理', cost:gardenCost, unit:'万円', note:{none:'なし', small:'小規模', mid:'中規模', large:'大規模'}[garden]},
+  ];
+  const rows = items.map(i =>
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)">'
+    + '<div><div style="font-size:12px;font-weight:700">' + i.name + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">目安: ' + i.note + '</div></div>'
+    + '<div style="font-size:14px;font-weight:900;color:' + (i.cost > 0 ? 'var(--gold)' : 'var(--text-muted)') + '">' + (i.cost > 0 ? i.cost + i.unit + '〜' : '—') + '</div></div>'
+  ).join('');
+
+  let advice = '';
+  if (stuff === 'full' || cond === 'bad') {
+    advice = '⚠️ 遺品整理・特殊清掃が必要な場合は複数社に見積もりを依頼してください。費用差が2〜3倍になることがあります。業者選びの際は「一般廃棄物収集運搬業許可」を持つ業者を選びましょう。';
+  } else if (total > 30) {
+    advice = '💡 費用が大きくなる場合は「不用品の買取」と組み合わせることで実質費用を抑えられることがあります。リサイクル業者への買取依頼も検討してください。';
+  } else {
+    advice = '✅ 比較的費用は少額です。売却後の価格交渉余地（値引き分）と比べて、先に費用をかけて物件をきれいにしてから売却する方が高値を引きやすい場合があります。';
+  }
+
+  el.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;margin-bottom:12px">' + rows
+    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 0">'
+    + '<div style="font-size:13px;font-weight:700">合計概算</div>'
+    + '<div style="font-size:20px;font-weight:900;color:var(--gold)">' + total + '〜' + totalMax + '万円</div></div></div>'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:12px;line-height:1.7">' + advice + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※費用は目安です。実際は業者・地域・物件状態によって大きく異なります。複数社から見積もりを取ることを強くおすすめします。</div>';
+}
+(function(){ calcCleanupCost(); })();
 
 // 初期化
 checkStorageWarning();
