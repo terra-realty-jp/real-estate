@@ -1711,6 +1711,38 @@
     <div id="reinvest-plan-result"></div>
   </div>
 
+  <!-- 相続不動産 相続登記費用・期限チェックカード -->
+  <div class="card">
+    <div class="card-title">📋 相続不動産 相続登記 費用・期限チェック</div>
+    <div style="font-size:12px;color:rgba(244,67,54,0.9);background:rgba(244,67,54,0.08);padding:8px 10px;border-radius:6px;margin-bottom:10px">⚠️ 2024年4月1日から相続登記が義務化。相続を知った日から3年以内に申請しないと10万円以下の過料。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">不動産の固定資産税評価額（万円）</label>
+        <input type="number" id="ir_value" value="2000" min="100" max="100000" step="100" oninput="calcInhRegistration()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">相続発生（被相続人死亡）からの経過月数</label>
+        <input type="number" id="ir_elapsed" value="6" min="0" max="60" step="1" oninput="calcInhRegistration()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">不動産の種別</label>
+        <select id="ir_type" onchange="calcInhRegistration()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="house">土地＋建物（戸建）</option>
+          <option value="land">土地のみ</option>
+          <option value="mansion">マンション（区分所有）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">手続きの方法</label>
+        <select id="ir_method" onchange="calcInhRegistration()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="self">自分で申請（DIY）</option>
+          <option value="judicial">司法書士に依頼</option>
+        </select>
+      </div>
+    </div>
+    <div id="inh-registration-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -5581,6 +5613,46 @@ function calcReinvestPlan() {
     + '</div>';
 }
 (function(){ calcReinvestPlan(); })();
+
+function calcInhRegistration() {
+  const value = parseFloat(document.getElementById('ir_value').value) || 0;
+  const elapsed = parseInt(document.getElementById('ir_elapsed').value) || 0;
+  const type = document.getElementById('ir_type').value;
+  const method = document.getElementById('ir_method').value;
+  const r = document.getElementById('inh-registration-result');
+  if (!r) return;
+  if (value <= 0) { r.innerHTML = '<div style="color:var(--text-muted);font-size:13px">固定資産税評価額を入力してください</div>'; return; }
+
+  const remaining = Math.max(0, 36 - elapsed);
+  const urgency = elapsed >= 30 ? { label: '要急手続き', col: '#f44336' }
+    : elapsed >= 18 ? { label: '早急に対応を', col: '#ff9800' }
+    : { label: '余裕あり', col: '#4caf50' };
+
+  const regTax = Math.max(1000, Math.round(value * 10000 * 0.004 / 1000) * 1000);
+  const docCost = type === 'mansion' ? 5000 : 8000;
+  const judicialFee = method === 'judicial' ? Math.min(150000, Math.max(50000, value * 10000 * 0.005)) : 0;
+  const totalCost = regTax + docCost + judicialFee;
+
+  const docs = type === 'mansion'
+    ? ['被相続人の出生〜死亡の戸籍謄本（全部事項）', '相続人全員の戸籍謄本・住民票', '遺産分割協議書（相続人全員の実印・印鑑証明書付）', '登記識別情報または登記済証', '管理組合規約（マンション）']
+    : ['被相続人の出生〜死亡の戸籍謄本（全部事項）', '相続人全員の戸籍謄本・住民票', '遺産分割協議書（相続人全員の実印・印鑑証明書付）', '固定資産税評価証明書', '不動産の登記済権利証または登記識別情報'];
+
+  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">申請期限まで</div><div style="font-size:20px;font-weight:900;color:' + urgency.col + '">' + remaining + '<span style="font-size:11px">ヶ月</span></div><div style="font-size:11px;color:' + urgency.col + '">' + urgency.label + '</div></div>'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">登録免許税</div><div style="font-size:18px;font-weight:900;color:#d4af37">' + Math.round(regTax / 10000).toLocaleString() + '<span style="font-size:11px">万円</span></div></div>'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">総費用見込み</div><div style="font-size:18px;font-weight:900;color:#d4af37">' + Math.round(totalCost / 10000) + '<span style="font-size:11px">万円</span></div></div>'
+    + '</div>'
+    + (method === 'judicial' ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">司法書士報酬（目安）: 約' + Math.round(judicialFee / 10000) + '万円</div>' : '')
+    + '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px">必要書類チェックリスト</div>'
+    + '<ul style="margin:0;padding-left:16px;font-size:12px;color:var(--text)">'
+    + docs.map(function(d){ return '<li style="margin-bottom:4px">' + d + '</li>'; }).join('')
+    + '</ul>'
+    + (elapsed >= 36 ? '<div style="margin-top:10px;background:rgba(244,67,54,0.1);border-radius:8px;padding:10px;font-size:12px;color:#f44336">⚠️ 3年の申請期限を超えています。法務局への相談・早急な手続きを強くお勧めします（過料対象）。</div>' : '')
+    + '<div style="margin-top:10px;font-size:11px;color:var(--text-muted)">※費用は概算です。遺産分割協議の有無・相続人数により変動します。司法書士にご相談ください。</div>'
+    + '</div>';
+}
+(function(){ calcInhRegistration(); })();
 
 // ===== リード管理 =====
 function renderLeads() {
