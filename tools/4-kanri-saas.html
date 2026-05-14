@@ -1253,6 +1253,35 @@
     <div id="original-restore-result"></div>
   </div>
 
+  <!-- 管理委託 vs 自主管理 コスト比較カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">⚖️ 管理委託 vs 自主管理 コスト比較</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">委託料・時間コストを数値化して最適な管理方式を判断</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">総戸数</div>
+        <input type="number" id="mgcmp_units" value="6" min="1" max="100" step="1" oninput="calcMgmtCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">平均月額家賃（万円/戸）</div>
+        <input type="number" id="mgcmp_rent" value="8" min="1" max="100" step="0.5" oninput="calcMgmtCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">管理委託料率（%）</div>
+        <input type="number" id="mgcmp_rate" value="5" min="3" max="15" step="0.5" oninput="calcMgmtCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">自主管理の月間作業時間（h）</div>
+        <input type="number" id="mgcmp_hours" value="8" min="1" max="80" step="1" oninput="calcMgmtCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div style="grid-column:1/-1">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">あなたの時給換算（円/h）</div>
+        <input type="number" id="mgcmp_wage" value="2000" min="500" max="10000" step="500" oninput="calcMgmtCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="mgmt-compare-result"></div>
+  </div>
+
   <!-- テナント回転コスト計算カード -->
   <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
     <div style="font-size:15px;font-weight:900;margin-bottom:4px">🔄 テナント回転コスト計算</div>
@@ -6310,6 +6339,56 @@ function calcOriginalRestore() {
   el.innerHTML = html;
 }
 (function(){ calcOriginalRestore(); })();
+
+// ===== 管理委託 vs 自主管理 コスト比較 =====
+function calcMgmtCompare() {
+  var el = document.getElementById('mgmt-compare-result');
+  if (!el) return;
+  var units = parseFloat(document.getElementById('mgcmp_units').value) || 0;
+  var rent = parseFloat(document.getElementById('mgcmp_rent').value) || 0;
+  var rate = parseFloat(document.getElementById('mgcmp_rate').value) || 5;
+  var hours = parseFloat(document.getElementById('mgcmp_hours').value) || 0;
+  var wage = parseFloat(document.getElementById('mgcmp_wage').value) || 2000;
+  if (units <= 0 || rent <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">戸数と家賃を入力してください</div>'; return; }
+  var grossRent = rent * units;
+  var annualRent = grossRent * 12;
+  var monthlyDelegation = grossRent * rate / 100;
+  var annualDelegation = monthlyDelegation * 12;
+  var monthlyTimeCost = hours * wage / 10000;
+  var annualTimeCost = monthlyTimeCost * 12;
+  var annualSelfTotal = annualTimeCost;
+  var diff = annualDelegation - annualTimeCost;
+  var recommendation = diff < -20 ? '委託が割高：自主管理のほうが経済合理性あり' : diff < 20 ? 'ほぼ同等：手間と安心度で判断を' : '委託が割安：プロに任せてオーナーの時間を確保';
+  var recColor = diff < -20 ? '#34d399' : diff < 20 ? '#f59e0b' : 'var(--gold)';
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px">';
+  html += '<div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px;text-align:center">📋 管理委託の場合</div>';
+  html += '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">月額委託費</div><div style="font-size:18px;font-weight:900;color:var(--text)">' + monthlyDelegation.toFixed(1) + '<span style="font-size:10px">万円</span></div></div>';
+  html += '<div style="text-align:center;margin-top:4px"><div style="font-size:10px;color:var(--text-muted)">年間委託費</div><div style="font-size:14px;font-weight:900;color:var(--red)">' + annualDelegation.toFixed(0) + '<span style="font-size:10px">万円</span></div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px">';
+  html += '<div style="font-size:11px;color:#34d399;font-weight:700;margin-bottom:6px;text-align:center">🔧 自主管理の場合</div>';
+  html += '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">月間時間コスト</div><div style="font-size:18px;font-weight:900;color:var(--text)">' + monthlyTimeCost.toFixed(1) + '<span style="font-size:10px">万円</span></div></div>';
+  html += '<div style="text-align:center;margin-top:4px"><div style="font-size:10px;color:var(--text-muted)">年間時間コスト</div><div style="font-size:14px;font-weight:900;color:#34d399">' + annualSelfTotal.toFixed(0) + '<span style="font-size:10px">万円</span></div></div>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;margin-bottom:8px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+  html += '<span style="font-size:12px;color:var(--text-muted)">委託費との差額（年間）</span>';
+  html += '<span style="font-size:15px;font-weight:900;color:' + (diff >= 0 ? 'var(--red)' : 'var(--green)') + '">' + (diff >= 0 ? '+' : '') + diff.toFixed(0) + '万円</span>';
+  html += '</div>';
+  html += '<div style="font-size:12px;font-weight:700;color:' + recColor + '">' + recommendation + '</div>';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.02);border-radius:6px;padding:8px;line-height:1.6">';
+  html += '📌 委託のメリット：24時間クレーム対応・入居付け・更新管理・書類作成のプロ代行<br>';
+  html += '📌 自主管理のメリット：委託費ゼロ・入居者との直接関係で早期対応<br>';
+  html += '⚠️ 戸数が少ない（1〜2戸）ほど自主管理の費用対効果が高い傾向。遠方物件は委託一択';
+  html += '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMgmtCompare(); })();
 
 // ===== テナント回転コスト計算 =====
 function calcTenantTurnover() {
