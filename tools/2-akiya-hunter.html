@@ -1134,6 +1134,28 @@
     <div id="sozoku-hyouka-result"></div>
   </div>
 
+  <!-- 相続登記義務化 対応チェックリスト -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">📋 相続登記 義務化対応 チェックリスト</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">2024年4月1日から相続登記が義務化。未登記は<span style="color:#f87171">10万円以下の過料</span>。既存の未登記物件も<span style="color:#f87171">2027年4月1日まで</span>に登記が必要です</div>
+    <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#f87171">
+      ⚠️ 申告期限：相続を知った日から<strong>3年以内</strong>（2024年4月以前の相続は2027年4月1日まで）
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="srg_c0" onchange="calcSouzokuToki()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span><strong>相続が発生している</strong>（被相続人が死亡）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="srg_c1" onchange="calcSouzokuToki()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>不動産（土地・建物）の名義が被相続人（故人）のままになっている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="srg_c2" onchange="calcSouzokuToki()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>遺産分割協議がまだ完了していない（相続人間で話し合い中）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="srg_c3" onchange="calcSouzokuToki()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>相続人が複数いる（兄弟姉妹・子ども等）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="srg_c4" onchange="calcSouzokuToki()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>被相続人の除籍謄本（出生〜死亡の連続した戸籍）を集め終えていない</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="srg_c5" onchange="calcSouzokuToki()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>固定資産税の納税通知書がまだ故人（または旧住所）宛に届いている</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="srg_c6" onchange="calcSouzokuToki()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>数次相続（祖父→父→自分など複数世代の未登記）が発生している</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="srg_c7" onchange="calcSouzokuToki()" style="accent-color:var(--gold);flex-shrink:0;margin-top:2px"><span>遺言書がある（公正証書遺言・自筆証書遺言）</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="srg_c8" onchange="calcSouzokuToki()" style="accent-color:#4db6f5;flex-shrink:0;margin-top:2px"><span>司法書士・弁護士等の専門家に相談済み</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px"><input type="checkbox" id="srg_c9" onchange="calcSouzokuToki()" style="accent-color:#4db6f5;flex-shrink:0;margin-top:2px"><span>相続登記の申請（または相続人申告登記）が完了している</span></label>
+    </div>
+    <div id="souzoku-toki-result"></div>
+  </div>
+
 </div>
 </div>
 
@@ -4291,6 +4313,69 @@ function calcAkiyaRental() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaRental(); })();
+
+// ===== 相続登記義務化 対応チェックリスト =====
+function calcSouzokuToki() {
+  var el = document.getElementById('souzoku-toki-result');
+  if (!el) return;
+  var checks = [
+    document.getElementById('srg_c0'),
+    document.getElementById('srg_c1'),
+    document.getElementById('srg_c2'),
+    document.getElementById('srg_c3'),
+    document.getElementById('srg_c4'),
+    document.getElementById('srg_c5'),
+    document.getElementById('srg_c6'),
+    document.getElementById('srg_c7'),
+    document.getElementById('srg_c8'),
+    document.getElementById('srg_c9')
+  ];
+  var vals = checks.map(function(c){ return c ? c.checked : false; });
+  var noInherit = !vals[0];
+  if (noInherit) {
+    el.innerHTML = '<div style="padding:10px;background:rgba(74,222,128,0.08);border-radius:8px;font-size:13px;color:#4ade80;text-align:center">✅ 現時点で相続登記の義務はありません</div>';
+    return;
+  }
+  var urgency = [];
+  var nextSteps = [];
+  var done = 0;
+  if (vals[1]) urgency.push({ label:'未登記物件あり', color:'#f87171', level: 3 });
+  if (vals[2]) urgency.push({ label:'遺産分割未了', color:'#fb923c', level: 2 });
+  if (vals[3]) urgency.push({ label:'相続人複数', color:'#fb923c', level: 2 });
+  if (vals[4]) urgency.push({ label:'戸籍収集未完了', color:'#facc15', level: 1 });
+  if (vals[5]) urgency.push({ label:'納税通知書が未変更', color:'#facc15', level: 1 });
+  if (vals[6]) urgency.push({ label:'数次相続あり（複雑）', color:'#f87171', level: 3 });
+  if (vals[8]) done++;
+  if (vals[9]) done++;
+  if (!vals[1]) { nextSteps.push('登記事項証明書で名義を確認'); }
+  if (!vals[7] && vals[2]) { nextSteps.push('遺言書の有無を確認（自宅・公証役場・法務局）'); }
+  if (vals[2] && !vals[8]) { nextSteps.push('遺産分割協議書の作成（司法書士に依頼推奨）'); }
+  if (!vals[8]) { nextSteps.push('司法書士または弁護士に早めに相談する'); }
+  if (!vals[9] && vals[1]) { nextSteps.push('法務局へ相続登記申請（または相続人申告登記で暫定対応）'); }
+  var maxLevel = urgency.length > 0 ? Math.max.apply(null, urgency.map(function(u){ return u.level; })) : 0;
+  var overallColor = maxLevel === 3 ? '#f87171' : maxLevel === 2 ? '#fb923c' : '#facc15';
+  var overallLabel = maxLevel === 3 ? '要緊急対応' : maxLevel === 2 ? '要対応' : '確認推奨';
+  if (vals[9]) { overallColor = '#4ade80'; overallLabel = '対応済み'; }
+  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  html += '<div style="text-align:center;padding:8px;border-radius:6px;background:'+overallColor+'22;border:1px solid '+overallColor+'44;margin-bottom:10px">';
+  html += '<span style="font-size:16px;font-weight:900;color:'+overallColor+'">登記対応ステータス：'+overallLabel+'</span>';
+  html += '</div>';
+  if (urgency.length > 0 && !vals[9]) {
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
+    urgency.forEach(function(u){ html += '<span style="font-size:11px;padding:3px 8px;border-radius:4px;background:'+u.color+'22;color:'+u.color+';border:1px solid '+u.color+'44">'+u.label+'</span>'; });
+    html += '</div>';
+  }
+  if (nextSteps.length > 0) {
+    html += '<div style="font-size:12px;font-weight:700;color:#aaa;margin-bottom:6px">📌 次にすべきこと：</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px">';
+    nextSteps.forEach(function(s, i){ html += '<div style="font-size:12px;padding:6px 10px;background:rgba(255,255,255,0.04);border-radius:6px;color:var(--text)">'+String(i+1)+'. '+s+'</div>'; });
+    html += '</div>';
+  }
+  html += '<div style="font-size:11px;color:#666;margin-top:10px">※ 法務局の「相続人申告登記」制度を使うと、分割協議完了前でも義務履行が可能です</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSouzokuToki(); })();
 
 // 初期化
 checkStorageWarning();
