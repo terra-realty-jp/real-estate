@@ -1492,6 +1492,31 @@
     <div id="rent-nego-result"></div>
   </div>
 
+  <!-- 家賃値下げ vs 空室継続 損益分岐カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">⚖️ 家賃値下げ vs 空室継続 損益分岐カード</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">「今の家賃を下げて早く入居者を探す」vs「値下げせず待つ」、どちらが得かを損益で比較します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の家賃（月額・万円）</div>
+        <input type="number" id="rce_rent" value="8" min="1" max="100" step="0.5" oninput="calcRentCutBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">値下げ額（月額・万円）</div>
+        <input type="number" id="rce_cut" value="1" min="0.1" max="20" step="0.1" oninput="calcRentCutBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">値下げなし 想定空室期間（ヶ月）</div>
+        <input type="number" id="rce_v_long" value="4" min="1" max="24" step="1" oninput="calcRentCutBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">値下げ後 想定空室期間（ヶ月）</div>
+        <input type="number" id="rce_v_short" value="1" min="0" max="12" step="1" oninput="calcRentCutBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rent-cut-result"></div>
+  </div>
+
   <div id="repairs-list"></div>
 </div>
 </div>
@@ -6898,6 +6923,50 @@ function calcRentNego() {
   el.innerHTML = html;
 }
 (function(){ calcRentNego(); })();
+
+function calcRentCutBreakeven() {
+  const rent = parseFloat(document.getElementById('rce_rent').value) || 0;
+  const cut = parseFloat(document.getElementById('rce_cut').value) || 0;
+  const vLong = parseInt(document.getElementById('rce_v_long').value) || 0;
+  const vShort = parseInt(document.getElementById('rce_v_short').value) || 0;
+  const el = document.getElementById('rent-cut-result');
+  if (!rent || !cut || vLong <= 0) { el.innerHTML = ''; return; }
+  const lossNocut = vLong * rent;
+  const lossVacant = vShort * rent;
+  const savedVacancy = (vLong - vShort) * rent;
+  const breakeven = cut > 0 ? Math.round(savedVacancy / cut) : 0;
+  let recommendation = '';
+  let color = '';
+  if (vShort >= vLong) {
+    recommendation = '⚠️ 値下げ後の空室期間が値下げなし以上の設定です。値下げ後の空室期間を短く設定してください。';
+    color = '#f87171';
+  } else if (breakeven <= 12) {
+    recommendation = '✅ 入居後<strong>' + breakeven + 'ヶ月</strong>で損益分岐。値下げを<strong>強くおすすめします</strong>。';
+    color = '#4ade80';
+  } else if (breakeven <= 24) {
+    recommendation = '🟡 損益分岐まで約<strong>' + breakeven + 'ヶ月</strong>。値下げは検討の余地あり（2年以内に回収可能）。';
+    color = '#facc15';
+  } else {
+    recommendation = '⚠️ 損益分岐まで約<strong>' + breakeven + 'ヶ月（' + (breakeven/12).toFixed(1) + '年）</strong>。値下げ幅が大きすぎる可能性があります。';
+    color = '#fb923c';
+  }
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    + '<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:12px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">値下げなし 空室損失</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#f87171">' + lossNocut.toFixed(1) + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + vLong + 'ヶ月 × ' + rent + '万円</div></div>'
+    + '<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:12px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">値下げあり 空室損失</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#4ade80">' + lossVacant.toFixed(1) + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + vShort + 'ヶ月 × ' + rent + '万円</div></div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between">'
+    + '<div><span style="font-size:12px;color:var(--text-muted)">空室短縮による節約 </span><strong style="color:var(--gold)">' + savedVacancy.toFixed(1) + '万円</strong></div>'
+    + '<div><span style="font-size:12px;color:var(--text-muted)">月次減収 </span><strong style="color:#fb923c">▲' + cut + '万円/月</strong></div>'
+    + '<div><span style="font-size:12px;color:var(--text-muted)">損益分岐 </span><strong style="color:var(--text)">' + (vShort < vLong ? breakeven + 'ヶ月後' : '—') + '</strong></div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;font-size:13px;color:' + color + ';line-height:1.6">' + recommendation + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※損益分岐点とは「空室短縮で節約した損失を、値下げ後の月次減収で回収し終えるまでの月数」です。長期入居が見込める場合でもこの点数を参考に判断してください。</div>';
+}
+(function(){ calcRentCutBreakeven(); })();
 
 // ストレージ警告
 function checkStorageWarning() {
