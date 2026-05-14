@@ -1021,6 +1021,31 @@
     <div id="akiya-bep-result"></div>
   </div>
 
+  <!-- 解体 vs リフォーム vs そのまま売却 3択コスト比較カード -->
+  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">⚖️ 解体 vs リフォーム vs そのまま売却 3択比較</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">費用・手取り・期間を比較して空き家の最善策を判断</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現況での売却見込み額（万円）</div>
+        <input type="number" id="d3_as_is" value="800" min="0" max="50000" step="50" oninput="calcDispose3()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">延床面積（㎡）</div>
+        <input type="number" id="d3_area" value="80" min="20" max="500" step="5" oninput="calcDispose3()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">リフォーム後の売却見込み額（万円）</div>
+        <input type="number" id="d3_reformed" value="1200" min="0" max="50000" step="50" oninput="calcDispose3()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">解体後の土地売却見込み額（万円）</div>
+        <input type="number" id="d3_land" value="600" min="0" max="50000" step="50" oninput="calcDispose3()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="dispose3-result"></div>
+  </div>
+
   <!-- 空き家 主要リフォーム費用相場カード -->
   <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
     <div style="font-size:15px;font-weight:900;margin-bottom:4px">🔨 主要リフォーム費用相場 早見表</div>
@@ -4103,6 +4128,78 @@ function calcSozokuHyouka() {
   el.innerHTML = html;
 }
 (function(){ calcSozokuHyouka(); })();
+
+// ===== 解体 vs リフォーム vs そのまま売却 3択比較 =====
+function calcDispose3() {
+  var el = document.getElementById('dispose3-result');
+  if (!el) return;
+  var asIs = parseFloat(document.getElementById('d3_as_is').value) || 0;
+  var area = parseFloat(document.getElementById('d3_area').value) || 0;
+  var reformed = parseFloat(document.getElementById('d3_reformed').value) || 0;
+  var land = parseFloat(document.getElementById('d3_land').value) || 0;
+  if (area <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">延床面積を入力してください</div>'; return; }
+
+  var demolishCost = Math.round(area * 4);
+  var reformCost = Math.round(area * 15);
+  var commissionRate = function(p){ return Math.round((p * 0.03 + 6) * 1.1 * 10) / 10; };
+
+  var options = [
+    {
+      label: 'そのまま売却', icon: '🏚️',
+      proceeds: asIs,
+      cost: 0,
+      net: asIs - commissionRate(asIs),
+      period: '1〜3ヶ月',
+      merit: '費用ゼロ・最速で手放せる',
+      demerit: '買い手が限られ価格が下がりやすい',
+      color: '#f59e0b'
+    },
+    {
+      label: 'リフォーム後売却', icon: '🔨',
+      proceeds: reformed,
+      cost: reformCost,
+      net: reformed - reformCost - commissionRate(reformed),
+      period: '3〜6ヶ月（工事含む）',
+      merit: '物件の魅力が上がり買い手が広がる',
+      demerit: 'リフォーム費用の回収ができない場合がある',
+      color: '#a78bfa'
+    },
+    {
+      label: '解体して土地売却', icon: '🏗️',
+      proceeds: land,
+      cost: demolishCost,
+      net: land - demolishCost - commissionRate(land),
+      period: '2〜4ヶ月（解体含む）',
+      merit: '更地にすると買い手が格段に増える',
+      demerit: '解体費用がかかる・固定資産税が最大6倍になる',
+      color: '#34d399'
+    }
+  ];
+
+  var best = options.slice().sort(function(a,b){ return b.net - a.net; })[0];
+
+  var html = '<div style="display:grid;gap:8px;margin-top:10px;margin-bottom:10px">';
+  options.forEach(function(o) {
+    var isBest = o.label === best.label;
+    var border = isBest ? 'border:2px solid ' + o.color : 'border:1px solid rgba(255,255,255,0.08)';
+    html += '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;' + border + '">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html += '<span style="font-size:13px;font-weight:900;color:' + o.color + '">' + o.icon + ' ' + o.label + (isBest ? ' ★最有利' : '') + '</span>';
+    html += '<span style="font-size:10px;color:var(--text-muted)">⏱ ' + o.period + '</span>';
+    html += '</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">';
+    html += '<div style="text-align:center"><div style="font-size:9px;color:var(--text-muted)">売却額</div><div style="font-size:14px;font-weight:900">' + o.proceeds.toLocaleString() + '<span style="font-size:9px">万</span></div></div>';
+    html += '<div style="text-align:center"><div style="font-size:9px;color:var(--text-muted)">費用</div><div style="font-size:14px;font-weight:900;color:var(--red)">▲' + o.cost.toLocaleString() + '<span style="font-size:9px">万</span></div></div>';
+    html += '<div style="text-align:center"><div style="font-size:9px;color:var(--text-muted)">手取り概算</div><div style="font-size:14px;font-weight:900;color:' + (o.net >= 0 ? o.color : 'var(--red)') + '">' + Math.round(o.net).toLocaleString() + '<span style="font-size:9px">万</span></div></div>';
+    html += '</div>';
+    html += '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">✅ ' + o.merit + '<br>⚠️ ' + o.demerit + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.02);border-radius:6px;padding:8px;line-height:1.6">📌 仲介手数料は売却価格の3%+6万円（税込）で計算。解体費は目安4万円/㎡、リフォームは15万円/㎡で算出。実際の費用は業者見積もりを取ってください。</div>';
+  el.innerHTML = html;
+}
+(function(){ calcDispose3(); })();
 
 // ===== 空き家 主要リフォーム費用相場 =====
 function calcReformCost() {
