@@ -174,6 +174,12 @@
     .empty-state { text-align: center; padding: 60px; color: var(--text-muted); }
     .empty-icon { font-size: 48px; margin-bottom: 16px; }
 
+    /* Calc Cards */
+    .card { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 28px; margin-bottom: 20px; position: relative; }
+    .card-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .card-title .icon { font-size: 18px; }
+    .wiz-recommended { border-color: rgba(201,168,76,0.6) !important; box-shadow: 0 0 0 2px rgba(201,168,76,0.12); transition: border-color 0.3s; }
+
     /* Algorithm Info */
     .algo-info { background: var(--dark2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; margin-top: 24px; }
     .algo-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
@@ -826,6 +832,28 @@
   <h2 style="font-size:15px;font-weight:700;color:var(--gold);margin:28px 0 12px;letter-spacing:0.5px;max-width:800px;margin-left:auto;margin-right:auto">🧮 かんたん計算ツール</h2>
   <!-- お気に入りバー（動的） -->
   <div id="re-fav-bar" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:10px;max-width:800px;margin-left:auto;margin-right:auto"></div>
+  <!-- ウィザード: 状況別おすすめカード案内 -->
+  <div id="satei-wizard-box" style="margin-bottom:16px;padding:14px 16px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:12px;max-width:800px;margin-left:auto;margin-right:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:#4ade80">🧭 はじめての方へ — 状況を選ぶとおすすめカードへ案内します</div>
+      <button onclick="document.getElementById('satei-wizard-box').style.display='none';try{localStorage.setItem('satei_wiz_closed','1');}catch(e){}" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;cursor:pointer;padding:0;line-height:1">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
+      <button onclick="sateiWizardSelect('price')" id="swiz-btn-price" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 6px;text-align:left;cursor:pointer;font-family:inherit;color:var(--text);transition:all 0.15s">
+        <div style="font-size:16px;margin-bottom:3px">💴</div><div style="font-size:10px;font-weight:700;line-height:1.4">相場・価格を<br>知りたい</div>
+      </button>
+      <button onclick="sateiWizardSelect('tax')" id="swiz-btn-tax" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 6px;text-align:left;cursor:pointer;font-family:inherit;color:var(--text);transition:all 0.15s">
+        <div style="font-size:16px;margin-bottom:3px">📋</div><div style="font-size:10px;font-weight:700;line-height:1.4">税金・費用を<br>知りたい</div>
+      </button>
+      <button onclick="sateiWizardSelect('use')" id="swiz-btn-use" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 6px;text-align:left;cursor:pointer;font-family:inherit;color:var(--text);transition:all 0.15s">
+        <div style="font-size:16px;margin-bottom:3px">💰</div><div style="font-size:10px;font-weight:700;line-height:1.4">売却後のお金を<br>考えたい</div>
+      </button>
+      <button onclick="sateiWizardSelect('timing')" id="swiz-btn-timing" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 6px;text-align:left;cursor:pointer;font-family:inherit;color:var(--text);transition:all 0.15s">
+        <div style="font-size:16px;margin-bottom:3px">⏰</div><div style="font-size:10px;font-weight:700;line-height:1.4">売り時・<br>タイミング</div>
+      </button>
+    </div>
+    <div id="satei-wizard-result" style="display:none;margin-top:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px"></div>
+  </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;max-width:800px;margin-left:auto;margin-right:auto">
     <button onclick="document.getElementById('card-price-scenario').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">📊 価格シナリオ比較</button>
     <button onclick="document.getElementById('card-capital-gains').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">📋 譲渡所得税試算</button>
@@ -6367,6 +6395,41 @@ renderLeads();
     refreshStars();renderFavBar();
   }
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
+})();
+
+// ===== ウィザード: 状況別おすすめカード案内 =====
+(function(){
+  try{if(localStorage.getItem('satei_wiz_closed')){var b=document.getElementById('satei-wizard-box');if(b)b.style.display='none';}}catch(e){}
+  var WIZ_MAP={
+    price:{label:'相場・価格を知りたい',cards:['card-price-scenario','card-comparable-sales','card-resale-value'],hint:'価格シナリオ比較 → 近隣成約事例で相場確認 → 将来価格を予測'},
+    tax:{label:'税金・費用を知りたい',cards:['card-capital-gains','card-inheritance-reg','card-demolish-compare'],hint:'譲渡所得税試算 → 相続登記チェック → 更地vs建物あり費用比較'},
+    use:{label:'売却後のお金を考えたい',cards:['card-proceeds-invest','card-staging-roi','card-resale-value'],hint:'資金運用シナリオ比較 → ホームステージング効果 → 将来価格予測'},
+    timing:{label:'売り時・タイミング',cards:['card-comparable-sales','card-resale-value','card-staging-roi'],hint:'近隣成約事例で相場 → 将来価格予測 → ステージングで価格UP'}
+  };
+  window.sateiWizardSelect=function(type){
+    var info=WIZ_MAP[type];if(!info)return;
+    ['price','tax','use','timing'].forEach(function(k){
+      var btn=document.getElementById('swiz-btn-'+k);
+      if(!btn)return;
+      if(k===type){btn.style.background='rgba(34,197,94,0.15)';btn.style.borderColor='rgba(34,197,94,0.5)';}
+      else{btn.style.background='rgba(255,255,255,0.04)';btn.style.borderColor='rgba(255,255,255,0.1)';}
+    });
+    document.querySelectorAll('.wiz-recommended').forEach(function(el){el.classList.remove('wiz-recommended');});
+    info.cards.forEach(function(id,i){
+      var el=document.getElementById(id);if(!el)return;
+      el.classList.add('wiz-recommended');
+      if(i===0) setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'center'});},150);
+    });
+    var res=document.getElementById('satei-wizard-result');if(!res)return;
+    res.style.display='block';
+    res.innerHTML='<div style="font-size:10px;color:#4ade80;font-weight:700;margin-bottom:6px">▼ '+info.label+' — おすすめカード</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+
+      info.cards.map(function(id){
+        var el=document.getElementById(id);
+        var titleEl=el?el.querySelector('.card-title'):null;
+        var label=titleEl?titleEl.textContent.replace(/[★☆]/g,'').trim().slice(0,16):id;
+        return '<button onclick="document.getElementById(\''+id+'\').scrollIntoView({behavior:\'smooth\',block:\'center\'})" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:16px;padding:4px 10px;color:#4ade80;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">▶ '+label+'</button>';
+      }).join('')+'</div><div style="margin-top:5px;font-size:10px;color:rgba(255,255,255,0.4)">'+info.hint+'</div>';
+  };
 })();
 </script>
 </body>
