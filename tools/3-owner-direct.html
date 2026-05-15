@@ -1508,6 +1508,48 @@
     <div id="land-build-split-result"></div>
   </div>
 
+  <!-- 住宅ローン 金利タイプ選択診断カード -->
+  <div class="card" id="card-rate-type-choice">
+    <div class="card-title">📊 住宅ローン 金利タイプ選択診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">全期間固定・10年固定後変動・変動金利の3タイプを比較し、<strong style="color:var(--text)">総支払いが最も少ないプラン</strong>を診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">借入額（万円）</label>
+        <input type="number" id="rt_loan" value="3000" min="500" max="20000" step="100" oninput="calcRateTypeChoice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">返済期間（年）</label>
+        <input type="number" id="rt_years" value="35" min="10" max="35" step="5" oninput="calcRateTypeChoice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">全期間固定金利（%）</label>
+        <input type="number" id="rt_fixed_r" value="1.8" min="0.5" max="5" step="0.05" oninput="calcRateTypeChoice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">当初10年固定金利（%）</label>
+        <input type="number" id="rt_semi_r" value="1.2" min="0.5" max="4" step="0.05" oninput="calcRateTypeChoice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">10年後の変動金利想定（%）</label>
+        <input type="number" id="rt_semi_after" value="1.5" min="0.5" max="5" step="0.1" oninput="calcRateTypeChoice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">変動金利（現在 %）</label>
+        <input type="number" id="rt_var_r" value="0.5" min="0.1" max="4" step="0.05" oninput="calcRateTypeChoice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">将来の変動金利想定（%）</label>
+        <input type="number" id="rt_var_future" value="2.0" min="0.5" max="6" step="0.1" oninput="calcRateTypeChoice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">変動の想定上昇後の水準</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">変動金利が上昇するまでの年数</label>
+        <input type="number" id="rt_var_rise_yr" value="5" min="1" max="30" step="1" oninput="calcRateTypeChoice()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rate-type-choice-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -5292,6 +5334,68 @@ function calcEarlyRepay() {
     + '</div>';
 }
 (function(){ calcEarlyRepay(); })();
+
+function calcRateTypeChoice() {
+  var el = document.getElementById('rate-type-choice-result'); if (!el) return;
+  var loan = parseFloat(document.getElementById('rt_loan').value) || 3000;
+  var yrs = parseInt(document.getElementById('rt_years').value) || 35;
+  var r1 = (parseFloat(document.getElementById('rt_fixed_r').value) || 1.8) / 100 / 12;
+  var r2a = (parseFloat(document.getElementById('rt_semi_r').value) || 1.2) / 100 / 12;
+  var r2b = (parseFloat(document.getElementById('rt_semi_after').value) || 1.5) / 100 / 12;
+  var r3a = (parseFloat(document.getElementById('rt_var_r').value) || 0.5) / 100 / 12;
+  var r3b = (parseFloat(document.getElementById('rt_var_future').value) || 2.0) / 100 / 12;
+  var riseYr = parseInt(document.getElementById('rt_var_rise_yr').value) || 5;
+  var n = yrs * 12, p = loan * 10000;
+  function pmt(rate, months, principal) { return rate === 0 ? principal / months : principal * rate * Math.pow(1+rate, months) / (Math.pow(1+rate, months) - 1); }
+  // Plan A: 全期間固定
+  var pmtA = pmt(r1, n, p);
+  var totalA = pmtA * n;
+  // Plan B: 10年固定→その後変動
+  var n1 = Math.min(120, n), n2 = n - n1;
+  var pmtB1 = pmt(r2a, n, p);
+  var paidB1 = 0; var balB = p;
+  for (var i=0; i<n1; i++) { var int1=balB*r2a; var pri1=pmtB1-int1; balB-=pri1; paidB1+=pmtB1; }
+  var pmtB2 = n2 > 0 ? pmt(r2b, n2, balB) : 0;
+  var totalB = paidB1 + pmtB2 * n2;
+  // Plan C: 変動（riseYr年後に上昇）
+  var nr = Math.min(riseYr * 12, n);
+  var pmtC1 = pmt(r3a, n, p);
+  var paidC1 = 0; var balC = p;
+  for (var j=0; j<nr; j++) { var intC=balC*r3a; var priC=pmtC1-intC; balC-=priC; paidC1+=pmtC1; }
+  var nr2 = n - nr;
+  var pmtC2 = nr2 > 0 ? pmt(r3b, nr2, balC) : 0;
+  var totalC = paidC1 + pmtC2 * nr2;
+  var intA = totalA - p, intB = totalB - p, intC = totalC - p;
+  var fmt = function(v) { return Math.round(v / 10000).toLocaleString() + '万円'; };
+  var fmtM = function(v) { return Math.round(v / 10000 * 10) / 10 + '万円/月'; };
+  var plans = [
+    {n:'全期間固定', r1: r1*12*100, r2:null, tot:totalA, int:intA, m1:pmtA, m2:null, key:'A'},
+    {n:'10年固定→変動', r1: r2a*12*100, r2:r2b*12*100, tot:totalB, int:intB, m1:pmtB1, m2:pmtB2, key:'B'},
+    {n:'変動金利', r1: r3a*12*100, r2:r3b*12*100, tot:totalC, int:intC, m1:pmtC1, m2:pmtC2, key:'C'}
+  ];
+  var minTot = Math.min(totalA, totalB, totalC);
+  var rows = plans.map(function(pl) {
+    var best = pl.tot === minTot;
+    var bc = best ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.02)';
+    var bc2 = best ? 'rgba(59,130,246,0.35)' : 'rgba(255,255,255,0.08)';
+    var diff = pl.tot - minTot;
+    return '<div style="background:'+bc+';border:1px solid '+bc2+';border-radius:8px;padding:10px 12px;margin-bottom:6px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+      +'<span style="font-size:12px;font-weight:700;color:'+(best?'#60a5fa':'rgba(255,255,255,0.6)')+'">'+pl.n+(best?' ⭐ 最安プラン':'')+'</span>'
+      +'<span style="font-size:11px;color:rgba(255,255,255,0.4)">'+diff>0?'+'+fmt(diff):'基準'+'</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px">'
+      +'<div><span style="color:rgba(255,255,255,0.4)">月返済(当初)</span><br><b style="color:var(--text)">'+fmtM(pl.m1)+'</b></div>'
+      +(pl.m2?'<div><span style="color:rgba(255,255,255,0.4)">月返済(後半想定)</span><br><b style="color:var(--text)">'+fmtM(pl.m2)+'</b></div>':'<div></div>')
+      +'<div><span style="color:rgba(255,255,255,0.4)">総利息</span><br><b style="color:var(--text)">'+fmt(pl.int)+'</b></div>'
+      +'</div></div>';
+  }).join('');
+  var bestName = totalA <= totalB && totalA <= totalC ? '全期間固定' : totalB <= totalC ? '10年固定→変動' : '変動金利';
+  el.innerHTML = rows
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 12px;font-size:11px;color:rgba(255,255,255,0.5);line-height:1.7">'
+    +'💡 入力した金利シナリオでは <b style="color:#60a5fa">'+bestName+'</b> が総支払い最小。ただし変動は金利上昇リスクあり。金利上昇が遅い場合は変動が有利になる傾向。最終判断は金融機関窓口でご相談ください。</div>';
+}
+(function(){ calcRateTypeChoice(); })();
 
 function filterOwnerCalcCards(query) {
   var cards = document.querySelectorAll('#owner-calc-cards > div');

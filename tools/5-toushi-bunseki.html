@@ -1800,6 +1800,40 @@
     <div id="full-loan-risk-result"></div>
   </div>
 
+  <!-- 現金購入 vs 融資活用 投資比較カード -->
+  <div class="card" id="card-cash-vs-loan">
+    <div class="card-title">💵 現金購入 vs 融資活用 投資比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">同じ物件を<strong style="color:var(--text)">全額現金</strong>で買う場合と<strong style="color:var(--text)">融資を使う</strong>場合の月次CF・CCR・自己資金効率を比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">物件価格（万円）</label>
+        <input type="number" id="cv_price" value="3000" min="500" max="50000" step="100" oninput="calcCashVsLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">月間満室賃料（万円）</label>
+        <input type="number" id="cv_rent" value="15" min="1" max="500" step="0.5" oninput="calcCashVsLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">年間経費（管理費・修繕等 万円）</label>
+        <input type="number" id="cv_exp" value="20" min="0" max="500" step="1" oninput="calcCashVsLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">融資LTV（%）</label>
+        <input type="number" id="cv_ltv" value="70" min="10" max="100" step="5" oninput="calcCashVsLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">物件価格の何%を借入するか</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">融資金利（%）</label>
+        <input type="number" id="cv_rate" value="2.0" min="0.5" max="6" step="0.1" oninput="calcCashVsLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">融資期間（年）</label>
+        <input type="number" id="cv_term" value="25" min="5" max="35" step="5" oninput="calcCashVsLoan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="cash-vs-loan-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -7806,6 +7840,58 @@ function calcLoanTermCFComp() {
   el.innerHTML = html;
 }
 (function(){ calcLoanTermCFComp(); })();
+
+function calcCashVsLoan() {
+  var el = document.getElementById('cash-vs-loan-result'); if (!el) return;
+  var price = (parseFloat(document.getElementById('cv_price').value) || 3000) * 10000;
+  var rent = (parseFloat(document.getElementById('cv_rent').value) || 15) * 10000;
+  var exp = (parseFloat(document.getElementById('cv_exp').value) || 20) * 10000;
+  var ltv = (parseFloat(document.getElementById('cv_ltv').value) || 70) / 100;
+  var rate = (parseFloat(document.getElementById('cv_rate').value) || 2.0) / 100 / 12;
+  var term = parseInt(document.getElementById('cv_term').value) || 25;
+  var noi = rent * 12 - exp;
+  // Plan A: 全額現金
+  var equityA = price;
+  var cfA = noi / 12;
+  var ccrA = noi / equityA * 100;
+  // Plan B: 融資活用
+  var loanAmt = price * ltv;
+  var equityB = price * (1 - ltv);
+  var pmt = loanAmt * rate * Math.pow(1+rate, term*12) / (Math.pow(1+rate, term*12) - 1);
+  var debtAnnual = pmt * 12;
+  var cfB_annual = noi - debtAnnual;
+  var cfB = cfB_annual / 12;
+  var ccrB = cfB_annual / equityB * 100;
+  var dscr = noi / debtAnnual;
+  var fmtM = function(v) { return (v >= 0 ? '+' : '') + Math.round(v / 10000 * 10) / 10 + '万円/月'; };
+  var fmt = function(v) { return Math.round(v / 10000).toLocaleString() + '万円'; };
+  var fmtR = function(v) { return (v >= 0 ? '+' : '') + Math.round(v * 10) / 10 + '%'; };
+  var leverageOK = ccrB > ccrA;
+  var lc = leverageOK ? '#d4af37' : '#f44336';
+  var cards = [
+    {label:'全額現金購入', equity:equityA, cf:cfA, ccr:ccrA, extra:null, col:'rgba(255,255,255,0.05)', bc:'rgba(255,255,255,0.1)'},
+    {label:'融資活用 (LTV '+Math.round(ltv*100)+'%)', equity:equityB, cf:cfB, ccr:ccrB, extra:'DSCR: '+Math.round(dscr*100)/100, col:'rgba(212,175,55,0.06)', bc:'rgba(212,175,55,0.3)'}
+  ];
+  var rows = cards.map(function(c) {
+    var cfColor = c.cf >= 0 ? '#4ade80' : '#f44336';
+    var ccrColor = c.ccr >= 5 ? '#4ade80' : c.ccr >= 2 ? '#f9a825' : '#f44336';
+    return '<div style="background:'+c.col+';border:1px solid '+c.bc+';border-radius:8px;padding:10px 12px;margin-bottom:6px">'
+      +'<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);margin-bottom:8px">'+c.label+'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px">'
+      +'<div><span style="color:rgba(255,255,255,0.4)">自己資金</span><br><b style="color:var(--text);font-size:13px">'+fmt(c.equity)+'</b></div>'
+      +'<div><span style="color:rgba(255,255,255,0.4)">月次CF</span><br><b style="color:'+cfColor+';font-size:13px">'+fmtM(c.cf)+'</b></div>'
+      +'<div><span style="color:rgba(255,255,255,0.4)">CCR（自己資金利回り）</span><br><b style="color:'+ccrColor+';font-size:13px">'+fmtR(c.ccr)+'</b></div>'
+      +(c.extra?'<div style="grid-column:1/-1;font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px">'+c.extra+'</div>':'')
+      +'</div></div>';
+  }).join('');
+  var verdict = leverageOK
+    ? '💡 <b style="color:#d4af37">融資活用の方がCCRが高い</b>（ポジティブレバレッジ）。同じ自己資金で<b style="color:#d4af37">' + fmt(equityA - equityB) + '分の物件追加投資</b>が可能になります。'
+    : '⚠️ <b style="color:#f44336">現金購入の方がCCRが高い</b>（ネガティブレバレッジ）。借入コストが物件利回りを上回っています。利回り改善か金利交渉が必要です。';
+  el.innerHTML = rows
+    +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba('+lc.replace('#','').replace(/(..)(..)(..)/, function(_,r,g,b){ return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16); })+',0.2);border-radius:8px;padding:10px;font-size:11px;line-height:1.7">'+verdict+'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px">📌 CF・CCRは満室想定。空室率・税金は含みません。DSCR(返済余裕率)は1.2以上が融資審査の目安。</div>';
+}
+(function(){ calcCashVsLoan(); })();
 
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');

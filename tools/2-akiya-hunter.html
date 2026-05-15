@@ -1699,6 +1699,21 @@
     <div id="kominka-convert-result"></div>
   </div>
 
+  <!-- 空き家 近隣迷惑度チェックカード -->
+  <div class="card" id="card-neighbor-impact">
+    <div class="card-title">🏚️ 空き家 近隣迷惑度チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家が近隣に与える迷惑度をチェックし、<strong style="color:var(--text)">「特定空き家」指定リスク</strong>を診断します。指定されると固定資産税が最大6倍になります。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px" id="ni_checks">
+      <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;color:var(--text)"><input type="checkbox" id="ni_c1" onchange="calcNeighborImpact()" style="accent-color:#fb923c">外観が荒れ・汚れている</label>
+      <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;color:var(--text)"><input type="checkbox" id="ni_c2" onchange="calcNeighborImpact()" style="accent-color:#fb923c">雑草・樹木が敷地外まで伸びている</label>
+      <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;color:var(--text)"><input type="checkbox" id="ni_c3" onchange="calcNeighborImpact()" style="accent-color:#fb923c">ゴミの不法投棄・散乱がある</label>
+      <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;color:var(--text)"><input type="checkbox" id="ni_c4" onchange="calcNeighborImpact()" style="accent-color:#fb923c">害虫・害獣の発生が確認されている</label>
+      <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;color:var(--text)"><input type="checkbox" id="ni_c5" onchange="calcNeighborImpact()" style="accent-color:#fb923c">建物の傾き・破損・倒壊リスクあり</label>
+      <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;color:var(--text)"><input type="checkbox" id="ni_c6" onchange="calcNeighborImpact()" style="accent-color:#fb923c">不法侵入・落書きの痕跡がある</label>
+    </div>
+    <div id="neighbor-impact-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -5755,6 +5770,34 @@ function calcKouminkaConvert() {
     + '</div>';
 }
 (function(){ calcKouminkaConvert(); })();
+
+function calcNeighborImpact() {
+  var el = document.getElementById('neighbor-impact-result'); if (!el) return;
+  var checks = [1,2,3,4,5,6].map(function(i){ return document.getElementById('ni_c'+i) && document.getElementById('ni_c'+i).checked; });
+  var cnt = checks.filter(Boolean).length;
+  var weights = [15, 15, 10, 20, 25, 15]; // 重み（倒壊・害虫が高リスク）
+  var score = checks.reduce(function(s,v,i){ return s + (v ? weights[i] : 0); }, 0);
+  var risk, rc, rdesc, actions;
+  if (score === 0) { risk='リスクなし'; rc='#4ade80'; rdesc='現状では近隣への迷惑は確認されていません。定期的な見回りで維持しましょう。'; actions=['月1回の目視点検','草刈りの定期委託（春・秋）']; }
+  else if (score <= 25) { risk='低リスク'; rc='#22d3ee'; rdesc='軽微な問題があります。放置すると悪化するため早めの対処を。'; actions=['草刈り・清掃の実施','管理業者への委託を検討']; }
+  else if (score <= 55) { risk='中リスク'; rc='#f9a825'; rdesc='近隣からの苦情や行政からの指導が入る可能性があります。速やかな対処が必要です。'; actions=['1ヶ月以内に草刈り・清掃','建物点検と補修','管理委託の契約','売却・賃貸活用の検討']; }
+  else { risk='高リスク（特定空き家指定の可能性）'; rc='#f44336'; rdesc='行政から「特定空き家」に指定されるリスクが高い状態です。指定されると固定資産税の住宅用地特例（1/6軽減）が解除され、税額が最大6倍になります。'; actions=['即時：草刈り・ゴミ撤去・施錠確認','1週間以内：建物の倒壊リスク診断（建築士）','管理委託または売却・解体を決断する']; }
+  var items = ['外観荒れ','雑草越境','ゴミ散乱','害虫・害獣','倒壊リスク','不法侵入'];
+  var tags = checks.map(function(v,i){ return '<span style="display:inline-block;margin:2px;padding:2px 8px;border-radius:12px;font-size:10px;'+(v?'background:rgba(244,67,54,0.12);color:#f44336;border:1px solid rgba(244,67,54,0.3)':'background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.08)')+'">'+(v?'⚠':'✓')+' '+items[i]+'</span>'; }).join('');
+  el.innerHTML = '<div style="border:1px solid '+rc.replace(')',',0.3)').replace('rgb(','rgba(')+';border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+    +'<div style="font-size:28px;font-weight:900;color:'+rc+'">'+score+'<span style="font-size:13px">pt</span></div>'
+    +'<div><div style="font-size:13px;font-weight:700;color:'+rc+'">'+risk+'</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">チェック '+cnt+'/6件</div></div>'
+    +'</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:8px;line-height:1.6">'+rdesc+'</div>'
+    +'<div style="margin-bottom:8px">'+tags+'</div>'
+    +'<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 10px">'
+    +'<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:4px">推奨アクション</div>'
+    +'<ul style="margin:0;padding-left:14px">'+actions.map(function(a){ return '<li style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:2px">'+a+'</li>'; }).join('')+'</ul>'
+    +'</div></div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6">📌 空き家対策特別措置法（2023年改正）により、特定空き家の行政代執行・費用請求が強化されました。早期対処が得策です。</div>';
+}
+(function(){ calcNeighborImpact(); })();
 
 function filterAkiyaCalcCards(query) {
   var cards = document.querySelectorAll('#akiya-calc-cards .card');

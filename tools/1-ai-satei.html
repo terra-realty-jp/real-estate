@@ -1910,6 +1910,52 @@
     <div id="staging-roi-result"></div>
   </div>
 
+  <!-- 売却成功確率 3ヶ月予測カード -->
+  <div class="card" id="card-sale-success-prob">
+    <div class="card-title">🎯 売却成功確率 3ヶ月予測</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">価格設定・築年数・立地・管理状態・急ぎ度の5軸から、<strong style="color:var(--text)">3ヶ月以内の成約確率</strong>を試算します。値下げや準備の判断基準にご活用ください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">価格設定（市場価格比 %）</label>
+        <input type="number" id="sp_price" value="100" min="80" max="120" step="1" oninput="calcSaleSuccessProb()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">95%=5%値引き水準 / 100%=市場価格 / 105%=強気</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">築年数（年）</label>
+        <input type="number" id="sp_age" value="20" min="0" max="60" step="1" oninput="calcSaleSuccessProb()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">立地・交通アクセス</label>
+        <select id="sp_loc" onchange="calcSaleSuccessProb()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="5">都心・駅徒歩5分以内</option>
+          <option value="4">駅徒歩10分以内</option>
+          <option value="3" selected>駅徒歩15分以内</option>
+          <option value="2">駅徒歩20分超・郊外</option>
+          <option value="1">地方・過疎地域</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">建物の管理・状態</label>
+        <select id="sp_cond" onchange="calcSaleSuccessProb()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="5">リフォーム済・非常に良好</option>
+          <option value="4">良好</option>
+          <option value="3" selected>普通（生活使用感あり）</option>
+          <option value="2">やや老朽化・要部分修繕</option>
+          <option value="1">荒れている・要大規模修繕</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">売却の急ぎ度</label>
+        <select id="sp_urgency" onchange="calcSaleSuccessProb()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="3">早期売却優先（値引きも可）</option>
+          <option value="2" selected>6ヶ月程度で売りたい</option>
+          <option value="1">価格優先・時間はかけられる</option>
+        </select>
+      </div>
+    </div>
+    <div id="sale-success-prob-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -6322,6 +6368,46 @@ function calcStagingROI() {
     + '</div>';
 }
 (function(){ calcStagingROI(); })();
+
+function calcSaleSuccessProb() {
+  var el = document.getElementById('sale-success-prob-result'); if (!el) return;
+  var pr = parseFloat(document.getElementById('sp_price').value) || 100;
+  var age = parseFloat(document.getElementById('sp_age').value) || 20;
+  var loc = parseInt(document.getElementById('sp_loc').value) || 3;
+  var cond = parseInt(document.getElementById('sp_cond').value) || 3;
+  var urg = parseInt(document.getElementById('sp_urgency').value) || 2;
+  var ps = pr <= 90 ? 5 : pr <= 95 ? 4.5 : pr <= 100 ? 3.5 : pr <= 105 ? 2 : pr <= 110 ? 1 : 0.5;
+  var as = age <= 5 ? 5 : age <= 10 ? 4 : age <= 20 ? 3 : age <= 30 ? 2 : 1;
+  var score = ps * 0.30 + loc * 0.25 + cond * 0.20 + as * 0.15 + urg * 0.10;
+  var prob = Math.min(94, Math.max(6, Math.round((score - 0.85) / (4.55 - 0.85) * 88 + 6)));
+  var gc = prob >= 75 ? '#4ade80' : prob >= 55 ? '#22d3ee' : prob >= 35 ? '#f9a825' : '#f44336';
+  var gn = prob >= 75 ? 'A（高確率）' : prob >= 55 ? 'B（良好）' : prob >= 35 ? 'C（要改善）' : 'D（低確率）';
+  var adv = prob >= 75 ? '現在の条件で積極的に売り出せます。市場反応を見ながら進めましょう。'
+    : prob >= 55 ? '良好な水準です。内覧時の印象アップや問い合わせ対応の迅速化で確率が上がります。'
+    : prob >= 35 ? '価格設定か管理状態の改善が効果的です。5〜10%の値引きで成約率が大きく改善します。'
+    : '現在の条件では3ヶ月成約は困難です。価格の大幅見直しまたはリフォームを強くお勧めします。';
+  var axes = [
+    {n:'価格設定',s:ps,m:5}, {n:'立地',s:loc,m:5}, {n:'管理状態',s:cond,m:5}, {n:'築年数',s:as,m:5}, {n:'急ぎ度',s:urg*5/3,m:5}
+  ];
+  var bars = axes.map(function(a) {
+    var pct = Math.round(a.s / a.m * 100);
+    var bc = pct >= 70 ? '#4ade80' : pct >= 40 ? '#f9a825' : '#f44336';
+    return '<div style="margin-bottom:5px"><div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:2px"><span>'+a.n+'</span><span>'+pct+'%</span></div>'
+      +'<div style="background:rgba(255,255,255,0.06);border-radius:4px;height:5px"><div style="width:'+pct+'%;background:'+bc+';height:5px;border-radius:4px;transition:width 0.4s"></div></div></div>';
+  }).join('');
+  el.innerHTML = '<div style="background:rgba('+gc.replace('#','').replace(/(..)(..)(..)/, function(_,r,g,b){return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16);})+',0.06);border:1px solid '+gc.replace(')',',0.3)').replace('rgb(','rgba(')+';border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start">'
+    +'<div style="text-align:center;min-width:72px;flex-shrink:0">'
+    +'<div style="font-size:32px;font-weight:900;color:'+gc+'">'+prob+'<span style="font-size:16px">%</span></div>'
+    +'<div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:1px">3ヶ月成約確率</div>'
+    +'<div style="font-size:13px;font-weight:700;color:'+gc+';margin-top:4px">'+gn+'</div>'
+    +'</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:11px;color:'+gc+';font-weight:700;margin-bottom:8px">'+adv+'</div>'
+    +bars
+    +'</div></div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6">※成約確率は統計的な推計値です。実際の売却活動・担当者の力量・市況によって変動します。</div>';
+}
+(function(){ calcSaleSuccessProb(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');

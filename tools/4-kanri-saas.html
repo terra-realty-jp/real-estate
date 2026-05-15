@@ -2082,6 +2082,45 @@
     <div id="equip-age-result"></div>
   </div>
 
+  <!-- 物件スペック別 適正家賃診断カード -->
+  <div class="card" id="card-fair-rent-check">
+    <div class="card-title">💴 物件スペック別 適正家賃診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">専有面積・築年数・駅距離・設備グレードから<strong style="color:var(--text)">推定適正家賃</strong>を算出し、現在設定との乖離を診断します。値上げ余地・値下げリスクの判断に。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">専有面積（㎡）</label>
+        <input type="number" id="fr_area" value="40" min="10" max="200" step="1" oninput="calcFairRentCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">築年数（年）</label>
+        <input type="number" id="fr_age" value="15" min="0" max="60" step="1" oninput="calcFairRentCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">最寄り駅から徒歩（分）</label>
+        <input type="number" id="fr_walk" value="7" min="1" max="30" step="1" oninput="calcFairRentCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">エリア賃料単価（円/㎡）</label>
+        <input type="number" id="fr_unit" value="2000" min="500" max="8000" step="100" oninput="calcFairRentCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">都心目安:2500〜4000 / 郊外:1200〜2000</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">設備グレード</label>
+        <select id="fr_grade" onchange="calcFairRentCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1.1">プレミアム（デザイナーズ・高級設備）</option>
+          <option value="1.0" selected>スタンダード（一般的な設備）</option>
+          <option value="0.9">ベーシック（設備がやや古い）</option>
+          <option value="0.8">最低限（設備老朽化・未整備）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">現在の設定家賃（万円）</label>
+        <input type="number" id="fr_current" value="7" min="1" max="100" step="0.1" oninput="calcFairRentCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="fair-rent-check-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -8458,6 +8497,50 @@ function calcRenewalSchedule() {
   el.innerHTML = html;
 }
 (function(){ renderRenewalRows(); })();
+
+function calcFairRentCheck() {
+  var el = document.getElementById('fair-rent-check-result'); if (!el) return;
+  var area = parseFloat(document.getElementById('fr_area').value) || 40;
+  var age = parseFloat(document.getElementById('fr_age').value) || 15;
+  var walk = parseFloat(document.getElementById('fr_walk').value) || 7;
+  var unit = parseFloat(document.getElementById('fr_unit').value) || 2000;
+  var grade = parseFloat(document.getElementById('fr_grade').value) || 1.0;
+  var current = (parseFloat(document.getElementById('fr_current').value) || 7) * 10000;
+  var ageFactor = age <= 5 ? 1.05 : age <= 10 ? 1.0 : age <= 20 ? 0.90 : age <= 30 ? 0.80 : 0.72;
+  var walkFactor = walk <= 3 ? 1.10 : walk <= 7 ? 1.0 : walk <= 10 ? 0.95 : walk <= 15 ? 0.88 : 0.80;
+  var fairRent = area * unit * ageFactor * walkFactor * grade;
+  var rangeLow = Math.round(fairRent * 0.93);
+  var rangeHigh = Math.round(fairRent * 1.07);
+  var diff = current - fairRent;
+  var diffPct = Math.round(diff / fairRent * 100);
+  var fmtM = function(v) { return (Math.round(v / 1000) / 10).toFixed(1) + '万円'; };
+  var verdict, vc, advice;
+  if (diffPct >= 8) { verdict = '設定高め（値下げ検討）'; vc = '#f44336'; advice = '市場相場より'+Math.abs(diffPct)+'%高い設定です。空室が長引くリスクがあります。5〜10%の値下げで成約確率が大幅に上がります。'; }
+  else if (diffPct >= 3) { verdict = 'やや高め'; vc = '#f9a825'; advice = '若干高めの設定です。内覧数が少ない場合は3〜5%の値引きを検討してください。'; }
+  else if (diffPct >= -3) { verdict = '適正範囲内'; vc = '#4ade80'; advice = '市場相場に合った適正な家賃設定です。現状維持で問題ありません。'; }
+  else if (diffPct >= -8) { verdict = 'やや低め（値上げ余地あり）'; vc = '#22d3ee'; advice = '若干低めの設定です。更新時に3〜5%の値上げ交渉が可能な水準です。'; }
+  else { verdict = '設定低すぎ（値上げ強く推奨）'; vc = '#60a5fa'; advice = '市場相場より'+Math.abs(diffPct)+'%低い設定です。年間損失額は'+fmtM(Math.abs(diff)*12)+'。次回更新時に値上げ交渉を強くお勧めします。'; }
+  var annualLoss = diff < 0 ? Math.abs(diff) * 12 : 0;
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4)">推定適正家賃</div>'
+    +'<div style="font-size:16px;font-weight:900;color:#60a5fa">'+fmtM(fairRent)+'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3)">相場幅: '+fmtM(rangeLow)+'〜'+fmtM(rangeHigh)+'</div></div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4)">現在の設定</div>'
+    +'<div style="font-size:16px;font-weight:900;color:var(--text)">'+fmtM(current)+'</div>'
+    +'<div style="font-size:11px;font-weight:700;color:'+vc+'">'+(diffPct>=0?'+':'')+diffPct+'% '+verdict+'</div></div>'
+    +'<div style="background:rgba('+(annualLoss>0?'59,130,246':'74,222,128')+',0.06);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4)">'+(annualLoss>0?'年間値上げ余地':'年間差額')+'</div>'
+    +'<div style="font-size:16px;font-weight:900;color:'+(annualLoss>0?'#60a5fa':'#4ade80')+'">'+(annualLoss>0?'+':'')+fmtM(annualLoss>0?annualLoss:Math.abs(diff)*12)+'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3)">年間換算</div></div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px;font-size:11px;color:rgba(255,255,255,0.6);line-height:1.7">'
+    +'<b style="color:'+vc+'">'+verdict+'</b> — '+advice
+    +'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px;line-height:1.6">📌 推定適正家賃はエリア賃料単価・築年数・駅距離・設備から算出した目安です。実際の相場はSUUMO・at home等で確認してください。</div>';
+}
+(function(){ calcFairRentCheck(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');
