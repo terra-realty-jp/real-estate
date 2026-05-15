@@ -1,8 +1,10 @@
-name: Push Report Email
+name: Daily Push Report Email
 
 on:
-  push:
-    branches: [ main ]
+  schedule:
+    # 毎日 23:00 JST (14:00 UTC) に実行 — 1日の実装内容をまとめて送信
+    - cron: '0 14 * * *'
+  workflow_dispatch: # 手動実行ボタン付き
 
 jobs:
   send-report:
@@ -11,50 +13,67 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 10
+          fetch-depth: 30
 
       - name: Gather git info
         id: info
         run: |
-          echo "hash=$(git log -1 --format='%h')" >> $GITHUB_OUTPUT
-          echo "msg=$(git log -1 --format='%s')" >> $GITHUB_OUTPUT
           echo "time=$(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M JST')" >> $GITHUB_OUTPUT
+          echo "date=$(TZ=Asia/Tokyo date '+%Y-%m-%d')" >> $GITHUB_OUTPUT
           {
             echo 'recent<<EOF'
-            git log -5 --oneline
+            git log --oneline --since="24 hours ago" || git log -10 --oneline
             echo 'EOF'
           } >> $GITHUB_OUTPUT
+          {
+            echo 'top<<EOF'
+            git log -1 --format='%s'
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+          COUNT=$(git log --oneline --since="24 hours ago" | wc -l | tr -d ' ')
+          echo "count=${COUNT}" >> $GITHUB_OUTPUT
 
       - name: Send HTML Report Email
         env:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          COMMIT_HASH: ${{ steps.info.outputs.hash }}
-          COMMIT_MSG: ${{ steps.info.outputs.msg }}
-          COMMIT_TIME: ${{ steps.info.outputs.time }}
+          REPORT_TIME: ${{ steps.info.outputs.time }}
+          REPORT_DATE: ${{ steps.info.outputs.date }}
           RECENT_COMMITS: ${{ steps.info.outputs.recent }}
+          TOP_MSG: ${{ steps.info.outputs.top }}
+          COMMIT_COUNT: ${{ steps.info.outputs.count }}
         run: |
           python3 << 'PYEOF'
           import smtplib, os
           from email.mime.text import MIMEText
           from email.mime.multipart import MIMEMultipart
 
-          pw           = os.environ["GMAIL_APP_PASSWORD"]
-          commit_hash  = os.environ.get("COMMIT_HASH", "")
-          commit_msg   = os.environ.get("COMMIT_MSG",  "")
-          commit_time  = os.environ.get("COMMIT_TIME", "")
+          pw           = os.environ.get("GMAIL_APP_PASSWORD", "")
+          report_time  = os.environ.get("REPORT_TIME", "")
+          report_date  = os.environ.get("REPORT_DATE", "")
           recent_raw   = os.environ.get("RECENT_COMMITS", "")
+          top_msg      = os.environ.get("TOP_MSG", "")
+          count        = os.environ.get("COMMIT_COUNT", "0")
+
+          if not pw:
+              print("⚠️ GMAIL_APP_PASSWORD not set — skipping email")
+              exit(0)
 
           commit_rows = ""
           for line in recent_raw.strip().splitlines():
+              if not line.strip():
+                  continue
               parts = line.split(" ", 1)
               sha = parts[0] if parts else ""
               msg = parts[1] if len(parts) > 1 else line
               commit_rows += (
                   f'<tr>'
-                  f'<td style="font-family:monospace;color:#888;padding:4px 10px;white-space:nowrap">{sha}</td>'
-                  f'<td style="padding:4px 10px;color:#ddd">{msg}</td>'
+                  f'<td style="font-family:monospace;color:#888;padding:5px 10px;white-space:nowrap;font-size:11px">{sha}</td>'
+                  f'<td style="padding:5px 10px;color:#ddd;font-size:12px">{msg}</td>'
                   f'</tr>'
               )
+
+          if not commit_rows:
+              commit_rows = '<tr><td colspan="2" style="padding:10px;color:#666;font-size:12px">本日のコミットはありませんでした</td></tr>'
 
           html = f"""<!DOCTYPE html>
 <html lang="ja">
@@ -65,20 +84,20 @@ jobs:
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
 
   <tr><td style="background:linear-gradient(135deg,#1a1a1a,#111);border-bottom:2px solid #c9a84c;border-radius:12px 12px 0 0;padding:28px 28px 20px;text-align:center">
-    <div style="font-size:36px;margin-bottom:8px">🚀</div>
-    <div style="font-size:20px;font-weight:900;color:#c9a84c;margin-bottom:4px">不動産ツール — プッシュ完了</div>
-    <div style="font-size:13px;color:#888">{commit_time}</div>
+    <div style="font-size:36px;margin-bottom:8px">📊</div>
+    <div style="font-size:20px;font-weight:900;color:#c9a84c;margin-bottom:4px">不動産ツール — 本日の実装サマリー</div>
+    <div style="font-size:13px;color:#888">{report_date} 23:00 JST</div>
+    <div style="display:inline-block;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.4);border-radius:20px;padding:6px 18px;margin-top:10px;font-size:14px;font-weight:700;color:#c9a84c">{count}件のコミット</div>
   </td></tr>
 
   <tr><td style="background:#111;padding:22px 28px">
     <div style="font-size:11px;color:#c9a84c;font-weight:700;letter-spacing:1px;margin-bottom:8px">最新コミット</div>
-    <div style="font-size:16px;font-weight:700;color:#e8e4db;line-height:1.5">{commit_msg}</div>
-    <div style="font-family:monospace;font-size:11px;color:#888;margin-top:6px;background:#0e0e0e;padding:6px 10px;border-radius:4px;display:inline-block">{commit_hash}</div>
+    <div style="font-size:15px;font-weight:700;color:#e8e4db;line-height:1.5">{top_msg}</div>
   </td></tr>
 
   <tr><td style="background:#161616;border-top:1px solid rgba(255,255,255,0.06);padding:18px 28px">
-    <div style="font-size:11px;color:#888;font-weight:700;letter-spacing:1px;margin-bottom:10px">直近5コミット</div>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:12px;background:#0e0e0e;border-radius:6px">
+    <div style="font-size:11px;color:#888;font-weight:700;letter-spacing:1px;margin-bottom:10px">本日のコミット一覧</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#0e0e0e;border-radius:6px">
       {commit_rows}
     </table>
   </td></tr>
@@ -93,10 +112,10 @@ jobs:
 </table>
 </body></html>"""
 
-          plain = f"[プッシュ完了] {commit_msg}\n{commit_time}\n\nURL: https://shinji-japaaaan.github.io/real-estate/"
+          plain = f"[{report_date} 本日のサマリー] {count}件のコミット\n{top_msg}\n\nURL: https://shinji-japaaaan.github.io/real-estate/"
 
           msg = MIMEMultipart("alternative")
-          msg["Subject"] = f"🚀 プッシュ完了: {commit_msg[:60]}"
+          msg["Subject"] = f"📊 本日の実装サマリー ({report_date}) — {count}件のコミット"
           msg["From"] = "shinji.japaaan@gmail.com"
           msg["To"]   = "shinji.japaaan@gmail.com"
           msg.attach(MIMEText(plain, "plain",  "utf-8"))
@@ -106,5 +125,5 @@ jobs:
               server.login("shinji.japaaan@gmail.com", pw)
               server.sendmail("shinji.japaaan@gmail.com", "shinji.japaaan@gmail.com", msg.as_string())
 
-          print(f"✅ メール送信完了: {commit_msg[:60]}")
+          print(f"✅ 日次サマリーメール送信完了: {count}件のコミット ({report_date})")
           PYEOF
