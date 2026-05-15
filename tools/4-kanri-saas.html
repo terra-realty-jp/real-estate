@@ -1938,6 +1938,36 @@
     <div id="tenant-satisfaction-result"></div>
   </div>
 
+  <!-- 賃貸契約更新スケジュール管理カード -->
+  <div class="card" id="card-renewal-schedule">
+    <div class="card-title">📋 賃貸契約更新スケジュール 管理カード</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">入居日と部屋数を入力すると、各部屋の次回更新月・更新までの残月数・更新料収入の見込みを一覧表示します。更新漏れ・退去リスクを事前に把握しましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">戸数（最大6部屋）</label>
+        <input type="number" id="rs_units" value="3" min="1" max="6" step="1" oninput="renderRenewalRows()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">契約期間（年）</label>
+        <select id="rs_period" onchange="calcRenewalSchedule()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="2" selected>2年</option>
+          <option value="1">1年</option>
+          <option value="3">3年</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">更新料（ヶ月分）</label>
+        <select id="rs_fee_month" onchange="calcRenewalSchedule()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="0">なし（0ヶ月）</option>
+          <option value="0.5">0.5ヶ月</option>
+          <option value="1" selected>1ヶ月</option>
+        </select>
+      </div>
+    </div>
+    <div id="renewal-rows-container" style="margin-bottom:10px"></div>
+    <div id="renewal-schedule-result"></div>
+  </div>
+
   <!-- 長期修繕計画カード -->
   <div class="card" id="card-long-repair-plan">
     <div class="card-title">📅 長期修繕計画 費用スケジュール</div>
@@ -8317,6 +8347,90 @@ function calcTenantSatisfaction() {
   el.innerHTML = html;
 }
 (function(){ calcTenantSatisfaction(); })();
+
+function renderRenewalRows() {
+  var units = Math.min(6, Math.max(1, parseInt(document.getElementById('rs_units').value) || 3));
+  var container = document.getElementById('renewal-rows-container');
+  if (!container) return;
+  var existing = container.querySelectorAll('.rs-row').length;
+  if (existing === units) { calcRenewalSchedule(); return; }
+  var today = new Date();
+  var defaultDates = [];
+  for (var i = 0; i < 6; i++) {
+    var d = new Date(today);
+    d.setMonth(d.getMonth() - Math.floor(Math.random() * 24) - 1);
+    defaultDates.push(d.toISOString().slice(0, 7));
+  }
+  var defaultRents = [80000, 75000, 70000, 85000, 65000, 90000];
+  container.innerHTML = '';
+  for (var u = 0; u < units; u++) {
+    var row = document.createElement('div');
+    row.className = 'rs-row';
+    row.style.cssText = 'display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;margin-bottom:6px;align-items:end';
+    row.innerHTML = '<div style="font-size:12px;color:var(--gold);font-weight:700;padding-bottom:10px">' + (u + 1) + '号室</div>'
+      + '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">入居開始年月</label>'
+      + '<input type="month" class="rs-start" id="rs_start_' + u + '" value="' + defaultDates[u] + '" oninput="calcRenewalSchedule()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"></div>'
+      + '<div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">月額家賃（円）</label>'
+      + '<input type="number" class="rs-rent" id="rs_rent_' + u + '" value="' + defaultRents[u] + '" oninput="calcRenewalSchedule()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"></div>';
+    container.appendChild(row);
+  }
+  calcRenewalSchedule();
+}
+
+function calcRenewalSchedule() {
+  var el = document.getElementById('renewal-schedule-result');
+  if (!el) return;
+  var units = Math.min(6, Math.max(1, parseInt(document.getElementById('rs_units').value) || 3));
+  var period = parseInt(document.getElementById('rs_period').value) || 2;
+  var feeMonths = parseFloat(document.getElementById('rs_fee_month').value) || 0;
+  var today = new Date();
+  var todayYM = today.getFullYear() * 12 + today.getMonth();
+  var rows = [];
+  for (var u = 0; u < units; u++) {
+    var startEl = document.getElementById('rs_start_' + u);
+    var rentEl  = document.getElementById('rs_rent_' + u);
+    if (!startEl || !rentEl) continue;
+    var startVal = startEl.value;
+    if (!startVal) continue;
+    var parts = startVal.split('-');
+    var startYM = parseInt(parts[0]) * 12 + (parseInt(parts[1]) - 1);
+    var periodMonths = period * 12;
+    var elapsed = todayYM - startYM;
+    var nextRenewalM = elapsed >= 0 ? startYM + Math.ceil((elapsed + 1) / periodMonths) * periodMonths : startYM + periodMonths;
+    var remaining = nextRenewalM - todayYM;
+    var rent = parseInt(rentEl.value) || 0;
+    var fee = Math.round(rent * feeMonths);
+    var nextDate = new Date(Math.floor(nextRenewalM / 12), nextRenewalM % 12, 1);
+    var nextStr = nextDate.getFullYear() + '年' + (nextDate.getMonth() + 1) + '月';
+    rows.push({ unit: u + 1, remaining: remaining, nextStr: nextStr, rent: rent, fee: fee });
+  }
+  rows.sort(function(a, b) { return a.remaining - b.remaining; });
+  var totalFee = rows.reduce(function(s, r) { return s + r.fee; }, 0);
+  var urgentCount = rows.filter(function(r) { return r.remaining <= 3; }).length;
+  var html = '<div style="margin-bottom:8px">';
+  rows.forEach(function(r) {
+    var color = r.remaining <= 3 ? 'var(--red)' : r.remaining <= 6 ? '#f9a825' : '#4caf50';
+    var label = r.remaining <= 3 ? '⚠️ 要対応' : r.remaining <= 6 ? '📌 要確認' : '✅ 余裕あり';
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:6px;margin-bottom:4px;border-left:3px solid ' + color + '">'
+      + '<div style="font-size:13px;font-weight:700;color:var(--gold);min-width:36px">' + r.unit + '号室</div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text)">次回更新: ' + r.nextStr + '</div>'
+      + '<div style="font-size:11px;color:var(--text-muted)">残り ' + r.remaining + 'ヶ月　月額 ' + (r.rent / 10000).toFixed(1) + '万円</div>'
+      + '</div>'
+      + '<div style="text-align:right">'
+      + '<div style="font-size:11px;font-weight:700;color:' + color + '">' + label + '</div>'
+      + (r.fee > 0 ? '<div style="font-size:11px;color:var(--text-muted)">更新料 ' + (r.fee / 10000).toFixed(1) + '万円</div>' : '')
+      + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 14px;display:flex;gap:16px;flex-wrap:wrap">'
+    + (urgentCount > 0 ? '<div><div style="font-size:11px;color:var(--red)">⚠️ 3ヶ月以内の更新</div><div style="font-size:18px;font-weight:900;color:var(--red)">' + urgentCount + '件</div></div>' : '')
+    + (feeMonths > 0 ? '<div><div style="font-size:11px;color:var(--text-muted)">次回更新料合計</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + Math.round(totalFee / 10000) + '万円</div></div>' : '')
+    + '<div><div style="font-size:11px;color:var(--text-muted)">管理部屋数</div><div style="font-size:18px;font-weight:900;color:var(--text)">' + rows.length + '室</div></div>'
+    + '</div>';
+  el.innerHTML = html;
+}
+(function(){ renderRenewalRows(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');
