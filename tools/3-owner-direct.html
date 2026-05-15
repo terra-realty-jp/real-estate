@@ -628,8 +628,23 @@
     <div id="sale-score-result"></div>
   </div>
 
+  <!-- かんたん計算ツールセクション -->
+  <h2 style="font-size:15px;font-weight:700;color:var(--gold);margin:28px 0 12px;letter-spacing:0.5px">🧮 かんたん計算ツール</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <button onclick="document.getElementById('card-reform-roi').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">🔨 リフォーム効果</button>
+    <button onclick="document.getElementById('card-deposit-risk').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">🤝 手付金リスク</button>
+    <button onclick="document.getElementById('card-bridge-loan').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">🔗 つなぎ融資試算</button>
+  </div>
+  <div style="margin-bottom:16px;position:relative">
+    <input type="text" id="owner-calc-search" placeholder="🔍 計算カードを検索..." oninput="filterOwnerCalcCards(this.value)" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+    <span id="owner-calc-count" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
+  </div>
+  <div id="owner-calc-noresult" style="display:none;text-align:center;padding:20px;color:var(--text-muted);font-size:13px">該当する計算カードが見つかりません</div>
+
+  <div id="owner-calc-cards">
+
   <!-- 売却前リフォーム 費用対効果 計算カード -->
-  <div class="card" style="margin-top:24px">
+  <div class="card" id="card-reform-roi" style="margin-top:24px">
     <div class="card-title">🔨 売却前リフォーム 費用対効果 計算カード</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売却前にリフォームする場合の費用対効果を試算します。価格上昇効果・売却期間短縮の金銭的価値を合算してリフォームが割に合うかを判定します。</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
@@ -946,7 +961,7 @@
   </div>
 
   <!-- 手付金リスク診断カード -->
-  <div style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
+  <div id="card-deposit-risk" style="background:var(--dark2);border-radius:14px;padding:20px;margin-top:16px">
     <div style="font-size:15px;font-weight:900;margin-bottom:4px">🤝 手付金リスク診断</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">売買価格・手付金率・解約理由ごとの返還/没収リスクと適正手付金額を診断</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
@@ -1175,7 +1190,7 @@
   </div>
 
   <!-- つなぎ融資コスト試算カード -->
-  <div class="card">
+  <div class="card" id="card-bridge-loan">
     <div class="card-title">🔗 住み替えつなぎ融資コスト試算</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">旧居を売却する前に新居を購入する「つなぎ融資」の利息・諸費用を試算します。</p>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
@@ -1346,6 +1361,8 @@
     </div>
     <div id="inspection-cost-result"></div>
   </div>
+
+  </div><!-- /owner-calc-cards -->
 
 </div>
 </div>
@@ -4826,6 +4843,22 @@ function calcInspectionCost() {
     + '</div>';
 }
 (function(){ calcInspectionCost(); })();
+
+function filterOwnerCalcCards(query) {
+  var cards = document.querySelectorAll('#owner-calc-cards > div');
+  var q = query.trim().toLowerCase();
+  var shown = 0;
+  cards.forEach(function(card) {
+    var text = card.textContent.toLowerCase();
+    var match = !q || text.indexOf(q) !== -1;
+    card.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  var countEl = document.getElementById('owner-calc-count');
+  var noResult = document.getElementById('owner-calc-noresult');
+  if (countEl) countEl.textContent = q ? shown + '件' : '';
+  if (noResult) noResult.style.display = (q && shown === 0) ? '' : 'none';
+}
 
 // 初期化
 checkStorageWarning();
