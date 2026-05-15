@@ -1674,6 +1674,15 @@
     <div id="quick-check-result"></div>
   </div>
 
+  <!-- ポートフォリオCF合算チェックカード -->
+  <div class="card" id="card-portfolio-cf-sum">
+    <div class="card-title">🗂️ 複数物件ポートフォリオ CF合算チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">保有する複数物件の月次CFを合算して総合的な投資パフォーマンスを確認します。最大5物件まで入力できます。</p>
+    <div id="pcs-properties" style="margin-bottom:10px"></div>
+    <button onclick="calcPortfolioCFSum()" style="width:100%;background:var(--gold);color:#000;font-weight:700;font-size:13px;padding:10px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;margin-bottom:8px">CFを合算する</button>
+    <div id="portfolio-cf-sum-result"></div>
+  </div>
+
   <!-- フルローン投資リスク診断カード -->
   <div class="card" id="card-full-loan-risk">
     <div class="card-title">💳 フルローン投資リスク 自己資金回収診断</div>
@@ -7442,6 +7451,89 @@ function calcFullLoanRisk() {
   el.innerHTML = html;
 }
 (function(){ calcFullLoanRisk(); })();
+
+function calcPortfolioCFSum() {
+  var el = document.getElementById('portfolio-cf-sum-result');
+  var container = document.getElementById('pcs-properties');
+  if (!el || !container) return;
+
+  var rows = container.querySelectorAll('.pcs-row');
+  if (rows.length === 0) {
+    initPortfolioCFRows();
+    return;
+  }
+
+  var totalCF = 0, totalPrice = 0, totalRent = 0, count = 0;
+  var items = [];
+  rows.forEach(function(row, i) {
+    var name = row.querySelector('.pcs-name') ? row.querySelector('.pcs-name').value : '物件' + (i + 1);
+    var price = parseFloat(row.querySelector('.pcs-price') ? row.querySelector('.pcs-price').value : 0) || 0;
+    var rent = parseFloat(row.querySelector('.pcs-rent') ? row.querySelector('.pcs-rent').value : 0) || 0;
+    var loan = parseFloat(row.querySelector('.pcs-loan') ? row.querySelector('.pcs-loan').value : 0) || 0;
+    var cf = rent - loan;
+    totalCF += cf;
+    totalPrice += price;
+    totalRent += rent;
+    count++;
+    items.push({ name: name || '物件' + (i + 1), price: price, rent: rent, loan: loan, cf: cf });
+  });
+
+  var grossYield = totalPrice > 0 ? (totalRent * 12 / totalPrice * 100) : 0;
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">合計月次CF</div><div style="font-size:22px;font-weight:900;color:' + (totalCF >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + (totalCF >= 0 ? '+' : '') + totalCF.toFixed(1) + '<span style="font-size:11px">万円</span></div></div>';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">合計年間CF</div><div style="font-size:22px;font-weight:900;color:' + (totalCF >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + (totalCF * 12 >= 0 ? '+' : '') + (totalCF * 12).toFixed(1) + '<span style="font-size:11px">万円</span></div></div>';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">全体表面利回り</div><div style="font-size:22px;font-weight:900;color:var(--gold)">' + grossYield.toFixed(1) + '<span style="font-size:11px">%</span></div></div>';
+  html += '</div>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<tr style="background:rgba(255,255,255,0.06)"><th style="padding:7px;text-align:left;color:var(--text-muted)">物件名</th><th style="padding:7px;text-align:right;color:var(--text-muted)">投資額</th><th style="padding:7px;text-align:right;color:var(--text-muted)">月収入</th><th style="padding:7px;text-align:right;color:var(--text-muted)">月返済</th><th style="padding:7px;text-align:right;color:var(--text-muted)">月CF</th></tr>';
+  items.forEach(function(item) {
+    html += '<tr style="border-top:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:7px">' + item.name + '</td>';
+    html += '<td style="padding:7px;text-align:right;color:var(--text-muted)">' + item.price + '万</td>';
+    html += '<td style="padding:7px;text-align:right">' + item.rent + '万</td>';
+    html += '<td style="padding:7px;text-align:right;color:var(--text-muted)">' + item.loan + '万</td>';
+    html += '<td style="padding:7px;text-align:right;font-weight:700;color:' + (item.cf >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (item.cf >= 0 ? '+' : '') + item.cf.toFixed(1) + '万</td>';
+    html += '</tr>';
+  });
+  html += '</table></div></div>';
+  el.innerHTML = html;
+}
+
+function initPortfolioCFRows() {
+  var container = document.getElementById('pcs-properties');
+  if (!container) return;
+  container.innerHTML = '';
+  for (var i = 0; i < 3; i++) {
+    var row = document.createElement('div');
+    row.className = 'pcs-row';
+    row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px;align-items:center';
+    row.innerHTML = '<input class="pcs-name" placeholder="物件名（例: 港区マンション）" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">'
+      + '<input class="pcs-price" type="number" placeholder="投資額(万)" value="3000" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">'
+      + '<input class="pcs-rent" type="number" placeholder="月収入(万)" value="8" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">'
+      + '<input class="pcs-loan" type="number" placeholder="月返済(万)" value="5" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">';
+    container.appendChild(row);
+  }
+  if (container.rows < 5) {
+    var addBtn = document.createElement('button');
+    addBtn.textContent = '＋ 物件を追加（最大5件）';
+    addBtn.style.cssText = 'background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text-muted);font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:inherit;margin-bottom:8px';
+    addBtn.onclick = function() {
+      var rows = container.querySelectorAll('.pcs-row');
+      if (rows.length >= 5) return;
+      var row2 = document.createElement('div');
+      row2.className = 'pcs-row';
+      row2.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px;align-items:center';
+      row2.innerHTML = '<input class="pcs-name" placeholder="物件名" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">'
+        + '<input class="pcs-price" type="number" placeholder="投資額(万)" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">'
+        + '<input class="pcs-rent" type="number" placeholder="月収入(万)" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">'
+        + '<input class="pcs-loan" type="number" placeholder="月返済(万)" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">';
+      container.insertBefore(row2, addBtn);
+    };
+    container.appendChild(addBtn);
+  }
+}
+(function(){ initPortfolioCFRows(); })();
 
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');
