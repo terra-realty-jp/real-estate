@@ -1758,6 +1758,31 @@
     <div id="inh-registration-result"></div>
   </div>
 
+  <!-- 更地渡し vs 建物あり売却 費用・価格差比較カード -->
+  <div class="card" id="card-demolish-compare">
+    <div class="card-title">🏗️ 更地渡し vs 建物あり売却 費用・手取り比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">解体して更地で売るか、建物をそのまま売るかを費用・税制・手取り額の観点で比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">建物あり査定額（万円）</label>
+        <input type="number" id="dc_with_bldg" value="2000" min="100" max="100000" step="100" oninput="calcDemolishCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">更地想定売出価格（万円）</label>
+        <input type="number" id="dc_land_only" value="2300" min="100" max="100000" step="100" oninput="calcDemolishCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">解体費用（万円）</label>
+        <input type="number" id="dc_demo_cost" value="150" min="0" max="2000" step="10" oninput="calcDemolishCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">建物の築年数（年）</label>
+        <input type="number" id="dc_age" value="35" min="0" max="80" step="1" oninput="calcDemolishCompare()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="demolish-compare-result"></div>
+  </div>
+
   </div><!-- /satei-calc-cards -->
 
 </div>
@@ -5888,6 +5913,74 @@ function checkStorageWarning() {
     }
   } catch(e){}
 }
+
+// ===== 更地渡し vs 建物あり売却 費用・手取り比較 =====
+function calcDemolishCompare() {
+  var el = document.getElementById('demolish-compare-result');
+  if (!el) return;
+  var withBldg = parseFloat(document.getElementById('dc_with_bldg').value) || 0;
+  var landOnly = parseFloat(document.getElementById('dc_land_only').value) || 0;
+  var demoCost = parseFloat(document.getElementById('dc_demo_cost').value) || 0;
+  var age = parseInt(document.getElementById('dc_age').value) || 0;
+  if (withBldg <= 0 || landOnly <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">査定額を入力してください</div>'; return; }
+
+  // 建物あり売却
+  var commissionWith = Math.round((withBldg * 0.03 + 6) * 1.1 * 10) / 10;
+  var netWith = withBldg - commissionWith;
+
+  // 更地渡し
+  var netLand = landOnly - demoCost - Math.round((landOnly * 0.03 + 6) * 1.1 * 10) / 10;
+
+  // 固定資産税の影響（更地にすると住宅用地特例が外れて税額最大6倍）
+  var taxNote = demoCost > 0 ? '⚠️ 解体後は住宅用地の固定資産税軽減（最大1/6）が外れます。売却まで時間がかかると税負担増に注意。' : '';
+
+  // 建物のエコポイント・補助金の可能性
+  var subsidyNote = age >= 30 ? '✅ 築' + age + '年以上の建物は解体補助金（自治体により10〜50万円）の対象になる場合があります。' : '';
+
+  var diff = netLand - netWith;
+  var winner = diff >= 0 ? '更地渡し' : '建物あり売却';
+  var winnerColor = diff >= 0 ? 'var(--green)' : 'var(--gold)';
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
+
+  // 建物ありカード
+  html += '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px">';
+  html += '<div style="font-size:12px;font-weight:700;margin-bottom:8px">🏠 建物あり売却</div>';
+  html += '<div style="margin-bottom:4px"><span style="font-size:10px;color:var(--text-muted)">売出価格</span><br><span style="font-size:16px;font-weight:900">' + withBldg.toLocaleString() + '万</span></div>';
+  html += '<div style="margin-bottom:4px"><span style="font-size:10px;color:var(--text-muted)">仲介手数料</span><br><span style="font-size:12px;color:var(--red)">▲' + commissionWith.toLocaleString() + '万</span></div>';
+  html += '<div style="margin-bottom:4px"><span style="font-size:10px;color:var(--text-muted)">解体費</span><br><span style="font-size:12px;color:#888">なし</span></div>';
+  html += '<div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:8px;margin-top:4px">';
+  html += '<span style="font-size:10px;color:var(--text-muted)">手取り（概算）</span><br>';
+  html += '<span style="font-size:20px;font-weight:900;color:var(--gold)">' + Math.round(netWith).toLocaleString() + '<span style="font-size:11px">万</span></span></div>';
+  html += '</div>';
+
+  // 更地カード
+  html += '<div style="background:rgba(255,255,255,0.04);border:' + (diff >= 0 ? '2px solid rgba(74,222,128,0.4)' : '1px solid rgba(255,255,255,0.1)') + ';border-radius:8px;padding:12px">';
+  html += '<div style="font-size:12px;font-weight:700;margin-bottom:8px">🏗️ 更地渡し' + (diff >= 0 ? ' <span style="background:var(--green);color:#000;font-size:10px;padding:1px 5px;border-radius:3px">有利</span>' : '') + '</div>';
+  html += '<div style="margin-bottom:4px"><span style="font-size:10px;color:var(--text-muted)">売出価格</span><br><span style="font-size:16px;font-weight:900">' + landOnly.toLocaleString() + '万</span></div>';
+  html += '<div style="margin-bottom:4px"><span style="font-size:10px;color:var(--text-muted)">仲介手数料</span><br><span style="font-size:12px;color:var(--red)">▲' + Math.round((landOnly * 0.03 + 6) * 1.1).toLocaleString() + '万</span></div>';
+  html += '<div style="margin-bottom:4px"><span style="font-size:10px;color:var(--text-muted)">解体費</span><br><span style="font-size:12px;color:var(--red)">▲' + demoCost.toLocaleString() + '万</span></div>';
+  html += '<div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:8px;margin-top:4px">';
+  html += '<span style="font-size:10px;color:var(--text-muted)">手取り（概算）</span><br>';
+  html += '<span style="font-size:20px;font-weight:900;color:' + winnerColor + '">' + Math.round(netLand).toLocaleString() + '<span style="font-size:11px">万</span></span></div>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-bottom:8px">';
+  html += '<div style="font-size:13px;font-weight:700;color:' + winnerColor + '">📝 ' + winner + 'が手取り ' + Math.abs(Math.round(diff)).toLocaleString() + '万円 有利</div>';
+  html += '</div>';
+
+  if (taxNote || subsidyNote) {
+    html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.7;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px">';
+    if (taxNote) html += taxNote + '<br>';
+    if (subsidyNote) html += subsidyNote;
+    html += '</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcDemolishCompare(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');
