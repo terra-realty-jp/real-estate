@@ -1362,6 +1362,35 @@
     <div id="inspection-cost-result"></div>
   </div>
 
+  <!-- 価格ギャップ 交渉余地診断カード -->
+  <div class="card" id="card-price-gap">
+    <div class="card-title">📐 売主・買主 価格ギャップ 交渉余地診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売主の希望価格と買主の想定価格のギャップから交渉余地・妥結確率・歩み寄り提案を診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">売主希望価格（万円）</label>
+        <input type="number" id="pg_ask" value="3800" min="100" max="100000" step="100" oninput="calcPriceGap()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">買主想定価格（万円）</label>
+        <input type="number" id="pg_bid" value="3400" min="100" max="100000" step="100" oninput="calcPriceGap()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">売主のローン残高（万円）</label>
+        <input type="number" id="pg_loan" value="2000" min="0" max="100000" step="100" oninput="calcPriceGap()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">売主の売却急ぎ度</label>
+        <select id="pg_urgency" onchange="calcPriceGap()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="low">余裕あり（半年以上）</option>
+          <option value="mid" selected>普通（3〜6ヶ月）</option>
+          <option value="high">急いでいる（3ヶ月以内）</option>
+        </select>
+      </div>
+    </div>
+    <div id="price-gap-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -4856,6 +4885,72 @@ function calcInspectionCost() {
     + '</div>';
 }
 (function(){ calcInspectionCost(); })();
+
+// ===== 売主・買主 価格ギャップ 交渉余地診断 =====
+function calcPriceGap() {
+  var el = document.getElementById('price-gap-result');
+  if (!el) return;
+  var ask = parseFloat(document.getElementById('pg_ask').value) || 0;
+  var bid = parseFloat(document.getElementById('pg_bid').value) || 0;
+  var loan = parseFloat(document.getElementById('pg_loan').value) || 0;
+  var urgency = document.getElementById('pg_urgency').value;
+  if (ask <= 0 || bid <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">売主・買主の価格を入力してください</div>'; return; }
+
+  var gap = ask - bid;
+  var gapPct = ask > 0 ? gap / ask * 100 : 0;
+
+  // 売主の手取り下限（ローン返済+最低手残り200万想定）
+  var minProceeds = loan + 200;
+  var commissionBid = Math.round((bid * 0.03 + 6) * 1.1 * 10) / 10;
+  var netAtBid = bid - loan - commissionBid;
+
+  // 妥結確率スコア
+  var baseProb = gapPct <= 3 ? 90 : gapPct <= 5 ? 75 : gapPct <= 8 ? 55 : gapPct <= 12 ? 35 : 15;
+  var urgAdj = urgency === 'high' ? 15 : urgency === 'low' ? -10 : 0;
+  var netAdj = netAtBid < 0 ? -20 : netAtBid < 100 ? -10 : 0;
+  var prob = Math.min(95, Math.max(5, baseProb + urgAdj + netAdj));
+
+  // 歩み寄り提案
+  var meetPct = urgency === 'high' ? 0.6 : urgency === 'low' ? 0.4 : 0.5;
+  var suggestedPrice = Math.round((ask - gap * meetPct) / 100) * 100;
+
+  var probColor = prob >= 70 ? 'var(--green)' : prob >= 40 ? '#f59e0b' : 'var(--red)';
+  var gapColor = gapPct <= 5 ? 'var(--green)' : gapPct <= 10 ? '#f59e0b' : 'var(--red)';
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">価格ギャップ</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:' + gapColor + '">' + gap.toLocaleString() + '万</div>';
+  html += '<div style="font-size:10px;color:' + gapColor + '">（' + gapPct.toFixed(1) + '%）</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">妥結確率（目安）</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:' + probColor + '">' + prob + '%</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">買主手取り（概算）</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:' + (netAtBid >= 0 ? 'var(--green)' : 'var(--red)') + '">' + Math.round(netAtBid).toLocaleString() + '万</div>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:12px;margin-bottom:10px">';
+  html += '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px">💡 歩み寄り提案価格</div>';
+  html += '<div style="font-size:20px;font-weight:900">' + suggestedPrice.toLocaleString() + '万円</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">（' + (urgency === 'high' ? '急ぎのため売主60%歩み寄り' : urgency === 'low' ? '余裕のため売主40%歩み寄り' : '5:5の折衷案') + '）</div>';
+  html += '</div>';
+
+  if (netAtBid < 0) {
+    html += '<div style="background:rgba(239,68,68,0.1);border-radius:8px;padding:10px;font-size:11px;color:var(--red)">';
+    html += '⚠️ 買主提示価格での売却ではローン完済できません。最低売却ラインは' + Math.ceil(minProceeds + commissionBid) + '万円以上です。';
+    html += '</div>';
+  }
+
+  html += '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.6">📌 一般的に売出価格の3〜5%以内のギャップは交渉成立しやすく、10%超は価格見直しが必要なことが多いです。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcPriceGap(); })();
 
 function filterOwnerCalcCards(query) {
   var cards = document.querySelectorAll('#owner-calc-cards > div');
