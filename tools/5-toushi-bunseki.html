@@ -1674,6 +1674,31 @@
     <div id="quick-check-result"></div>
   </div>
 
+  <!-- レバレッジ効果（CCR）比較カード -->
+  <div class="card" id="card-ccr-leverage">
+    <div class="card-title">⚖️ 自己資金比率別 CCR（キャッシュ・オン・キャッシュ）比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">同じ物件を異なる自己資金比率で購入した場合の自己資本利益率（CCR）を比較します。レバレッジの効果とリスクを同時に確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">物件価格（万円）</label>
+        <input type="number" id="ccr_price" value="3000" min="100" max="50000" step="100" oninput="calcCCRLeverage()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">年間純利益NOI（万円）</label>
+        <input type="number" id="ccr_noi" value="180" min="10" max="10000" step="10" oninput="calcCCRLeverage()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">ローン金利（%）</label>
+        <input type="number" id="ccr_rate" value="2.0" min="0.5" max="8" step="0.1" oninput="calcCCRLeverage()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">返済期間（年）</label>
+        <input type="number" id="ccr_term" value="30" min="5" max="50" step="1" oninput="calcCCRLeverage()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="ccr-leverage-result"></div>
+  </div>
+
   <!-- ポートフォリオCF合算チェックカード -->
   <div class="card" id="card-portfolio-cf-sum">
     <div class="card-title">🗂️ 複数物件ポートフォリオ CF合算チェック</div>
@@ -7534,6 +7559,57 @@ function initPortfolioCFRows() {
   }
 }
 (function(){ initPortfolioCFRows(); })();
+
+function calcCCRLeverage() {
+  var el = document.getElementById('ccr-leverage-result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('ccr_price').value) || 0;
+  var noi = parseFloat(document.getElementById('ccr_noi').value) || 0;
+  var rate = parseFloat(document.getElementById('ccr_rate').value) || 0;
+  var term = parseFloat(document.getElementById('ccr_term').value) || 0;
+  if (price <= 0 || noi <= 0 || term <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">各項目を入力してください</div>'; return; }
+
+  var capRate = noi / price * 100;
+  var equityPcts = [100, 50, 30, 20, 10];
+
+  function annualLoanPayment(loanAmt, r, y) {
+    var m = r / 100 / 12;
+    var n = y * 12;
+    if (m === 0) return loanAmt / y;
+    return loanAmt * m / (1 - Math.pow(1 + m, -n)) * 12;
+  }
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">利回り（Cap Rate）: <strong style="color:var(--gold)">' + capRate.toFixed(2) + '%</strong> / ローン金利: <strong style="color:var(--text)">' + rate + '%</strong></div>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<tr style="background:rgba(255,255,255,0.06)"><th style="padding:7px;text-align:right;color:var(--text-muted)">自己資金</th><th style="padding:7px;text-align:right;color:var(--text-muted)">自己資金額</th><th style="padding:7px;text-align:right;color:var(--text-muted)">年間返済</th><th style="padding:7px;text-align:right;color:var(--text-muted)">年間CF</th><th style="padding:7px;text-align:right;color:var(--text-muted)">CCR</th></tr>';
+
+  equityPcts.forEach(function(epct) {
+    var equityAmt = price * epct / 100;
+    var loanAmt = price - equityAmt;
+    var annualDebt = loanAmt > 0 ? annualLoanPayment(loanAmt * 10000, rate, term) / 10000 : 0;
+    var annualCF = noi - annualDebt;
+    var ccr = equityAmt > 0 ? (annualCF / equityAmt * 100) : 0;
+    var ccrColor = ccr >= 8 ? '#4caf50' : ccr >= 4 ? '#f9a825' : ccr >= 0 ? '#888' : 'var(--red)';
+    html += '<tr style="border-top:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:7px;text-align:right;font-weight:700">' + epct + '%</td>';
+    html += '<td style="padding:7px;text-align:right;color:var(--text-muted)">' + Math.round(equityAmt).toLocaleString() + '万</td>';
+    html += '<td style="padding:7px;text-align:right;color:var(--text-muted)">' + (loanAmt > 0 ? Math.round(annualDebt).toLocaleString() : '—') + '万</td>';
+    html += '<td style="padding:7px;text-align:right;font-weight:700;color:' + (annualCF >= 0 ? '#8bc34a' : 'var(--red)') + '">' + (annualCF >= 0 ? '+' : '') + Math.round(annualCF).toLocaleString() + '万</td>';
+    html += '<td style="padding:7px;text-align:right;font-weight:700;font-size:14px;color:' + ccrColor + '">' + ccr.toFixed(1) + '%</td>';
+    html += '</tr>';
+  });
+  html += '</table></div>';
+
+  html += '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">';
+  var leverageAdvantage = capRate > rate;
+  html += leverageAdvantage
+    ? '✅ 利回り(' + capRate.toFixed(1) + '%)＞金利(' + rate + '%)：ポジティブレバレッジ。借入を増やすほどCCRが高くなります。'
+    : '⚠️ 利回り(' + capRate.toFixed(1) + '%)≤金利(' + rate + '%)：ネガティブレバレッジ。借入を増やすとCCRが低下します。';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcCCRLeverage(); })();
 
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');
