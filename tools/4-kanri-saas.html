@@ -2154,6 +2154,32 @@
     <div id="fair-rent-check-result"></div>
   </div>
 
+  <!-- 退去フロー＆費用診断カード -->
+  <div class="card" id="card-eviction-flow">
+    <div class="card-title">🚪 退去フロー＆費用診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">賃借人の退去時に発生する<strong style="color:var(--text)">原状回復・募集・空室期間コスト</strong>を試算し、適切な対応フローを案内します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額家賃（万円）</label>
+        <input type="number" id="ef_rent" value="8" min="1" max="100" step="0.5" oninput="calcEvictionFlow()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">居住年数（年）</label>
+        <input type="number" id="ef_years" value="3" min="0" max="30" step="1" oninput="calcEvictionFlow()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">原状回復工事費（万円）</label>
+        <input type="number" id="ef_repair" value="20" min="0" max="500" step="5" oninput="calcEvictionFlow()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">目安: 1K=10〜20万、2LDK=30〜60万</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">次入居まで空室期間（ヶ月）</label>
+        <input type="number" id="ef_vacant" value="2" min="0" max="24" step="1" oninput="calcEvictionFlow()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="eviction-flow-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -8619,6 +8645,61 @@ function calcFairRentCheck() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px;line-height:1.6">📌 推定適正家賃はエリア賃料単価・築年数・駅距離・設備から算出した目安です。実際の相場はSUUMO・at home等で確認してください。</div>';
 }
 (function(){ calcFairRentCheck(); })();
+
+function calcEvictionFlow() {
+  var el = document.getElementById('eviction-flow-result'); if (!el) return;
+  var rent = parseFloat(document.getElementById('ef_rent').value) || 8;
+  var years = parseFloat(document.getElementById('ef_years').value) || 3;
+  var repair = parseFloat(document.getElementById('ef_repair').value) || 20;
+  var vacant = parseFloat(document.getElementById('ef_vacant').value) || 2;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var adFee = rent * 1;
+  var cleanFee = Math.max(2, rent * 0.5);
+  var vacantLoss = rent * vacant;
+  var depositMonths = Math.min(2, 1 + Math.floor(years / 3));
+  var deposit = rent * depositMonths;
+  var tenantShare = Math.min(repair * 0.4, deposit);
+  var ownerShare = repair - tenantShare;
+  var totalCost = ownerShare + cleanFee + adFee + vacantLoss;
+  var netCost = totalCost - deposit + tenantShare;
+  var STEPS = [
+    { phase: '①退去通知受領', period: '〜退去1ヶ月前', action: '解約通知書の確認（書面 or メール）。退去日・鍵返却日を確定する。' },
+    { phase: '②立会い', period: '退去当日', action: '入居者と共に室内確認。傷・汚れ・設備破損を写真撮影。チェックリストを共有する。' },
+    { phase: '③原状回復費用の確定', period: '退去後1〜2週間', action: '業者見積もりを取得。入居者負担分・オーナー負担分をガイドライン（国交省）に従い区分。' },
+    { phase: '④敷金精算', period: '退去後1ヶ月以内', action: '敷金から修繕費を差し引いた金額を返金。精算明細書を書面で送付。' },
+    { phase: '⑤募集開始', period: '退去後すぐ', action: '空室広告を出稿。AD（広告料）は礼金0の場合1〜2ヶ月分が目安。' }
+  ];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:8px;font-size:13px">💰 退去関連コスト試算</div>';
+  var items = [
+    ['原状回復費（入居者負担）', '+' + tenantShare.toFixed(1) + '万（敷金充当）', '#4ade80'],
+    ['原状回復費（オーナー負担）', '−' + ownerShare.toFixed(1) + '万', '#f87171'],
+    ['清掃費', '−' + cleanFee.toFixed(1) + '万', '#f87171'],
+    ['広告料（AD）', '−' + adFee.toFixed(1) + '万', '#f87171'],
+    ['空室損失（' + vacant + 'ヶ月）', '−' + vacantLoss.toFixed(1) + '万', '#f87171'],
+    ['敷金回収', '+' + deposit.toFixed(1) + '万', '#4ade80'],
+    ['実質負担合計', netCost > 0 ? '−' + netCost.toFixed(1) + '万' : '+' + Math.abs(netCost).toFixed(1) + '万（プラス）', netCost > 0 ? '#fb923c' : '#4ade80']
+  ];
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;margin-bottom:10px">';
+  items.forEach(function(item, i) {
+    var bg = i === items.length - 1 ? 'background:rgba(255,255,255,0.05);font-weight:700;' : '';
+    html += '<div style="display:flex;justify-content:space-between;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;' + bg + '">';
+    html += '<span style="color:var(--text-muted)">' + item[0] + '</span>';
+    html += '<span style="color:' + item[2] + '">' + item[1] + '</span></div>';
+  });
+  html += '</div>';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:8px;font-size:13px">📋 退去対応フロー</div>';
+  STEPS.forEach(function(s) {
+    html += '<div style="margin-bottom:6px;padding:7px 10px;background:rgba(255,255,255,0.02);border-left:3px solid ' + ACCENT + ';border-radius:0 6px 6px 0">';
+    html += '<div style="font-size:11px;font-weight:700;color:' + ACCENT + '">' + s.phase + ' <span style="font-weight:400;color:var(--text-muted)">(' + s.period + ')</span></div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + s.action + '</div>';
+    html += '</div>';
+  });
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:8px">📌 国交省ガイドラインでは、通常損耗・経年劣化はオーナー負担が原則。入居者への不当な費用請求はトラブルの元です。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcEvictionFlow(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');

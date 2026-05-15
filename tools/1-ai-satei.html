@@ -1910,6 +1910,32 @@
     <div id="staging-roi-result"></div>
   </div>
 
+  <!-- 値下げ効果シミュレーターカード -->
+  <div class="card" id="card-price-drop-effect">
+    <div class="card-title">📉 値下げ効果シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売却価格を<strong style="color:var(--text)">3% / 5% / 10% 値下げ</strong>した場合の成約スピード改善と、維持費節約による<strong style="color:var(--text)">実質的な手取り差</strong>を比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">現在の売出価格（万円）</label>
+        <input type="number" id="pd_price" value="3000" min="100" max="100000" step="100" oninput="calcPriceDropEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">現在の売り出し期間（ヶ月）</label>
+        <input type="number" id="pd_months" value="6" min="1" max="36" step="1" oninput="calcPriceDropEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">月額維持費（ローン+管理費 万円）</label>
+        <input type="number" id="pd_maintain" value="10" min="0" max="200" step="1" oninput="calcPriceDropEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">現在の成約確率（% / 月）</label>
+        <input type="number" id="pd_prob" value="10" min="1" max="50" step="1" oninput="calcPriceDropEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">月1件問い合わせなら10%が目安</div>
+      </div>
+    </div>
+    <div id="price-drop-effect-result"></div>
+  </div>
+
   <!-- 相続不動産 売却vs賃貸 10年損得比較カード -->
   <div class="card" id="card-inheritance-sale">
     <div class="card-title">🏛️ 相続不動産 売却 vs 賃貸 10年比較</div>
@@ -6403,6 +6429,58 @@ function calcStagingROI() {
     + '</div>';
 }
 (function(){ calcStagingROI(); })();
+
+function calcPriceDropEffect() {
+  var el = document.getElementById('price-drop-effect-result'); if (!el) return;
+  var price = parseFloat(document.getElementById('pd_price').value) || 3000;
+  var months = parseFloat(document.getElementById('pd_months').value) || 6;
+  var maintain = parseFloat(document.getElementById('pd_maintain').value) || 10;
+  var prob = (parseFloat(document.getElementById('pd_prob').value) || 10) / 100;
+  function expectedMonths(p) { if (p <= 0) return 99; return Math.min(Math.round(1 / p * 10) / 10, 36); }
+  var scenarios = [
+    { label: '現状維持', rate: 0, probBoost: 1.0 },
+    { label: '▼3%値下げ', rate: 0.03, probBoost: 1.4 },
+    { label: '▼5%値下げ', rate: 0.05, probBoost: 1.8 },
+    { label: '▼10%値下げ', rate: 0.10, probBoost: 2.8 }
+  ];
+  var rows = scenarios.map(function(s) {
+    var sellPrice = price * (1 - s.rate);
+    var newProb = Math.min(prob * s.probBoost, 0.95);
+    var expM = expectedMonths(newProb);
+    var holdCost = expM * maintain;
+    var net = sellPrice - holdCost;
+    return { label: s.label, sellPrice: sellPrice, expM: expM, holdCost: holdCost, net: net };
+  });
+  var bestIdx = rows.reduce(function(bi, r, i) { return r.net > rows[bi].net ? i : bi; }, 0);
+  var html = '<div style="background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:#4ade80;margin-bottom:10px;font-size:13px">📊 値下げシナリオ比較</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)">';
+  html += '<th style="text-align:left;padding:4px 6px">シナリオ</th><th style="text-align:right;padding:4px 6px">売出価格</th><th style="text-align:right;padding:4px 6px">予想成約</th><th style="text-align:right;padding:4px 6px">維持費合計</th><th style="text-align:right;padding:4px 6px">手取り試算</th></tr>';
+  rows.forEach(function(r, i) {
+    var isBest = i === bestIdx;
+    var bg = isBest ? 'background:rgba(74,222,128,0.12);' : '';
+    var badge = isBest ? ' <span style="background:#4ade80;color:#000;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700">最適</span>' : '';
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.06);' + bg + '">';
+    html += '<td style="padding:5px 6px;color:var(--text)">' + r.label + badge + '</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:var(--text)">' + r.sellPrice.toFixed(0) + '万</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:var(--text)">' + r.expM + 'ヶ月</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:#f87171">−' + r.holdCost.toFixed(1) + '万</td>';
+    html += '<td style="text-align:right;padding:5px 6px;font-weight:700;color:' + (r.net >= rows[0].net ? '#4ade80' : '#fb923c') + '">' + r.net.toFixed(1) + '万</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  var bestRow = rows[bestIdx];
+  var gain = bestRow.net - rows[0].net;
+  html += '<div style="margin-top:10px;font-size:12px;color:var(--text-muted);line-height:1.7">';
+  html += '🏆 <b style="color:#4ade80">' + bestRow.label + '</b> が手取り最大：<b style="color:#4ade80">' + bestRow.net.toFixed(1) + '万円</b>';
+  if (bestIdx > 0) html += '（現状比 <b style="color:#4ade80">+' + gain.toFixed(1) + '万円</b>）';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 成約確率は値下げ3%で約1.4倍、10%で約2.8倍に改善するとされています。維持費（ローン・管理費）が高いほど早期売却の恩恵が大きくなります。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcPriceDropEffect(); })();
 
 function calcInheritanceSale() {
   var el = document.getElementById('inheritance-sale-result'); if (!el) return;

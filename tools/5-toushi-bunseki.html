@@ -1891,6 +1891,32 @@
     <div id="cash-vs-loan-result"></div>
   </div>
 
+  <!-- 不動産 vs 株式投資 20年比較カード -->
+  <div class="card" id="card-property-vs-stock">
+    <div class="card-title">📊 不動産 vs 株式投資 20年比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">同じ元手で<strong style="color:var(--text)">不動産（ローン活用）と株式インデックス投資</strong>の20年後の資産を比較します。レバレッジ効果と流動性リスクを可視化。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">手元資金（万円）</label>
+        <input type="number" id="pvs_fund" value="500" min="100" max="10000" step="100" oninput="calcPropertyVsStock()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件価格（万円）</label>
+        <input type="number" id="pvs_prop" value="3000" min="500" max="30000" step="100" oninput="calcPropertyVsStock()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">表面利回り（%）</label>
+        <input type="number" id="pvs_yield" value="7" min="1" max="20" step="0.5" oninput="calcPropertyVsStock()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">株式年利回り（%）</label>
+        <input type="number" id="pvs_stock" value="7" min="1" max="20" step="0.5" oninput="calcPropertyVsStock()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">MSCI世界株式の30年平均 約7〜8%</div>
+      </div>
+    </div>
+    <div id="property-vs-stock-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -8003,6 +8029,51 @@ function calcCashVsLoan() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px">📌 CF・CCRは満室想定。空室率・税金は含みません。DSCR(返済余裕率)は1.2以上が融資審査の目安。</div>';
 }
 (function(){ calcCashVsLoan(); })();
+
+function calcPropertyVsStock() {
+  var el = document.getElementById('property-vs-stock-result'); if (!el) return;
+  var fund = parseFloat(document.getElementById('pvs_fund').value) || 500;
+  var prop = parseFloat(document.getElementById('pvs_prop').value) || 3000;
+  var yieldRate = (parseFloat(document.getElementById('pvs_yield').value) || 7) / 100;
+  var stockRate = (parseFloat(document.getElementById('pvs_stock').value) || 7) / 100;
+  var YEARS = 20;
+  var LOAN_RATE = 0.025;
+  var loanAmt = prop - fund;
+  var loanMonthly = loanAmt * 10000 * (LOAN_RATE / 12) * Math.pow(1 + LOAN_RATE / 12, YEARS * 12) / (Math.pow(1 + LOAN_RATE / 12, YEARS * 12) - 1);
+  var annualRent = prop * 10000 * yieldRate * 0.75;
+  var annualLoan = loanMonthly * 12;
+  var annualCF = annualRent - annualLoan;
+  var propEquity20 = prop * 10000 * Math.pow(1.01, YEARS);
+  var propTotalCF = annualCF > 0 ? annualCF * YEARS : 0;
+  var propTotal = (propEquity20 + propTotalCF - loanAmt * 10000) / 10000;
+  var stockTotal = fund * Math.pow(1 + stockRate, YEARS);
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var propWins = propTotal > stockTotal;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + GOLD + ';margin-bottom:10px;font-size:13px">📊 20年後の資産比較</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (propWins ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏠 不動産（ローン活用）</div>';
+  html += '<div style="font-size:20px;font-weight:900;color:' + (propWins ? '#4ade80' : 'var(--text)') + '">' + propTotal.toFixed(0) + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">レバレッジ: ' + (prop / fund).toFixed(1) + '倍<br>実質利回り: ' + yieldRate * 100 * 0.75 + '% (空室考慮)</div>';
+  if (propWins) html += '<div style="font-size:10px;background:#4ade80;color:#000;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:4px;font-weight:700">有利</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (!propWins ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📈 株式インデックス</div>';
+  html += '<div style="font-size:20px;font-weight:900;color:' + (!propWins ? '#4ade80' : 'var(--text)') + '">' + stockTotal.toFixed(0) + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">元手: ' + fund + '万円<br>年利: ' + (stockRate * 100).toFixed(1) + '% 複利</div>';
+  if (!propWins) html += '<div style="font-size:10px;background:#4ade80;color:#000;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:4px;font-weight:700">有利</div>';
+  html += '</div></div>';
+  var diff = Math.abs(propTotal - stockTotal).toFixed(0);
+  var winner = propWins ? '不動産' : '株式';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">';
+  html += '🏆 20年後の試算では <b style="color:#4ade80">' + winner + '</b> が <b style="color:#4ade80">' + diff + '万円</b> 多い結果。';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 不動産はレバレッジで資産増幅が可能ですが、空室・修繕・金利上昇リスクがあります。株式は流動性が高く分散しやすい反面、元本保証なし。投資判断は専門家にご相談ください。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcPropertyVsStock(); })();
 
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');

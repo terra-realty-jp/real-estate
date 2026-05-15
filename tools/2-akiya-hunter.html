@@ -1745,6 +1745,33 @@
     <div id="neighbor-impact-result"></div>
   </div>
 
+  <!-- 空き家 価値下落シミュレーターカード -->
+  <div class="card" id="card-akiya-value-decline">
+    <div class="card-title">📉 空き家の価値下落シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">放置すると毎年どのくらい価値が下がるか、<strong style="color:var(--text)">5年・10年・20年後の試算</strong>と売却 vs 放置の損得を比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の評価額（万円）</label>
+        <input type="number" id="avd_price" value="1500" min="100" max="50000" step="100" oninput="calcAkiyaValueDecline()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物築年数（年）</label>
+        <input type="number" id="avd_age" value="20" min="0" max="60" step="1" oninput="calcAkiyaValueDecline()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額維持費（万円）</label>
+        <input type="number" id="avd_maint" value="3" min="0" max="50" step="0.5" oninput="calcAkiyaValueDecline()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">固定資産税・保険・電気など</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">土地価格の割合（%）</label>
+        <input type="number" id="avd_land_ratio" value="60" min="10" max="90" step="5" oninput="calcAkiyaValueDecline()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">都市部ほど土地比率が高い</div>
+      </div>
+    </div>
+    <div id="akiya-value-decline-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -5868,6 +5895,57 @@ function calcNeighborImpact() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6">📌 空き家対策特別措置法（2023年改正）により、特定空き家の行政代執行・費用請求が強化されました。早期対処が得策です。</div>';
 }
 (function(){ calcNeighborImpact(); })();
+
+function calcAkiyaValueDecline() {
+  var el = document.getElementById('akiya-value-decline-result'); if (!el) return;
+  var price = parseFloat(document.getElementById('avd_price').value) || 1500;
+  var age = parseFloat(document.getElementById('avd_age').value) || 20;
+  var maint = parseFloat(document.getElementById('avd_maint').value) || 3;
+  var landRatio = (parseFloat(document.getElementById('avd_land_ratio').value) || 60) / 100;
+  var landVal = price * landRatio;
+  var bldVal = price * (1 - landRatio);
+  var ACCENT = '#fb923c', ACCTXT = 'rgba(251,146,60,0.07)', ACCBDR = 'rgba(251,146,60,0.2)';
+  function projVal(years) {
+    var maxAge = 47;
+    var remainRatio = Math.max(0, (maxAge - age - years) / (maxAge - age));
+    var bldFuture = bldVal * remainRatio;
+    var landFuture = landVal * Math.pow(0.995, years);
+    var totalCost = maint * 12 * years;
+    return { prop: landFuture + bldFuture, cost: totalCost, net: landFuture + bldFuture - totalCost };
+  }
+  var milestones = [5, 10, 20];
+  var rows = milestones.map(function(y) { var v = projVal(y); return { years: y, prop: v.prop, cost: v.cost, net: v.net }; });
+  var sellNow = price;
+  var html = '<div style="background:' + ACCTXT + ';border:1px solid ' + ACCBDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">📊 放置した場合の価値推移</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">経過年数</th><th style="text-align:right;padding:4px 6px">物件評価額</th><th style="text-align:right;padding:4px 6px">維持費累計</th><th style="text-align:right;padding:4px 6px">実質価値</th><th style="text-align:right;padding:4px 6px">今すぐ売却との差</th></tr>';
+  rows.forEach(function(r) {
+    var diff = r.prop - sellNow;
+    var diffColor = diff >= 0 ? '#4ade80' : '#f87171';
+    var diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(0) + '万';
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:5px 6px;color:var(--text)">' + r.years + '年後</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:var(--text)">' + r.prop.toFixed(0) + '万</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:#f87171">−' + r.cost.toFixed(0) + '万</td>';
+    html += '<td style="text-align:right;padding:5px 6px;font-weight:700;color:' + (r.net >= sellNow ? '#4ade80' : '#fb923c') + '">' + r.net.toFixed(0) + '万</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:' + diffColor + '">' + diffStr + '</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  var loss10 = sellNow - rows[1].net;
+  html += '<div style="margin-top:10px;font-size:12px;color:var(--text-muted);line-height:1.7">';
+  if (loss10 > 0) {
+    html += '⚠️ 10年放置すると実質 <b style="color:#f87171">−' + loss10.toFixed(0) + '万円</b> の損失見込み';
+  } else {
+    html += '✅ 10年保有しても価値が維持されています。賃貸活用も有効です。';
+  }
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 木造建物の法定耐用年数は22年（鉄骨：34年・RC：47年）。維持費・固定資産税・管理コストを含めた実質損失は想定より大きくなりがちです。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaValueDecline(); })();
 
 function filterAkiyaCalcCards(query) {
   var cards = document.querySelectorAll('#akiya-calc-cards .card');
