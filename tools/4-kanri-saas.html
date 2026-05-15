@@ -1627,8 +1627,23 @@
     <div id="common-alloc-result"></div>
   </div>
 
+  <!-- かんたん計算ツールセクション -->
+  <h2 style="font-size:15px;font-weight:700;color:var(--gold);margin:28px 0 12px;letter-spacing:0.5px">🧮 かんたん計算ツール</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <button onclick="document.getElementById('card-restoration').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">🔧 原状回復費用</button>
+    <button onclick="document.getElementById('card-applicant-risk').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">👤 滞納リスク診断</button>
+    <button onclick="document.getElementById('card-arrears-loss').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">💸 滞納損失試算</button>
+  </div>
+  <div style="margin-bottom:16px;position:relative">
+    <input type="text" id="kanri-calc-search" placeholder="🔍 計算カードを検索..." oninput="filterKanriCalcCards(this.value)" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+    <span id="kanri-calc-count" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
+  </div>
+  <div id="kanri-calc-noresult" style="display:none;text-align:center;padding:20px;color:var(--text-muted);font-size:13px">該当する計算カードが見つかりません</div>
+
+  <div id="kanri-calc-cards">
+
   <!-- 退去時原状回復費用概算カード -->
-  <div class="card">
+  <div class="card" id="card-restoration">
     <div class="card-title">🔧 退去時 原状回復費用概算</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">専有面積・築年数・入居期間・損傷状況をもとに退去時の原状回復費用を概算します。国交省ガイドライン準拠。</p>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
@@ -1679,7 +1694,7 @@
   </div>
 
   <!-- 家賃滞納リスクスコアリングカード -->
-  <div class="card">
+  <div class="card" id="card-applicant-risk">
     <div class="card-title">👤 入居申込者 滞納リスクスコアリング</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">入居申込者の属性・返済比率・信用情報を評価し滞納リスクをA〜Eグレードで診断します。</p>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
@@ -1726,7 +1741,7 @@
   </div>
 
   <!-- 家賃滞納損失・回収コスト試算カード -->
-  <div class="card">
+  <div class="card" id="card-arrears-loss">
     <div class="card-title">💸 家賃滞納 損失・回収コスト試算</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
@@ -1755,7 +1770,7 @@
   </div>
 
   <!-- 家賃保証会社 保証料コスト試算カード -->
-  <div class="card">
+  <div class="card" id="card-guaranty">
     <div class="card-title">🛡️ 家賃保証会社 保証料コスト試算</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
@@ -1785,6 +1800,8 @@
     </div>
     <div id="guaranty-fee-result"></div>
   </div>
+
+  </div><!-- /kanri-calc-cards -->
 
   <div id="repairs-list"></div>
 </div>
@@ -7726,6 +7743,22 @@ function _loadFromLocalStorage() {
   rents          = JSON.parse(localStorage.getItem('saas_rents')            || '[]');
   repairs        = JSON.parse(localStorage.getItem('saas_repairs')          || '[]');
   plannedRepairs = JSON.parse(localStorage.getItem('saas_planned_repairs')  || '[]');
+}
+
+function filterKanriCalcCards(query) {
+  var cards = document.querySelectorAll('#kanri-calc-cards .card');
+  var q = query.trim().toLowerCase();
+  var shown = 0;
+  cards.forEach(function(card) {
+    var text = card.textContent.toLowerCase();
+    var match = !q || text.indexOf(q) !== -1;
+    card.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  var countEl = document.getElementById('kanri-calc-count');
+  var noResult = document.getElementById('kanri-calc-noresult');
+  if (countEl) countEl.textContent = q ? shown + '件' : '';
+  if (noResult) noResult.style.display = (q && shown === 0) ? '' : 'none';
 }
 
 initApp();
