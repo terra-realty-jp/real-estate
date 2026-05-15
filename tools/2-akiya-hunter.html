@@ -1543,6 +1543,39 @@
     <div id="isolation-risk-result"></div>
   </div>
 
+  <!-- 民泊転用収益診断カード -->
+  <div class="card" id="card-minpaku-convert">
+    <div class="card-title">🏡 空き家を民泊に転用 収益診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">住宅宿泊事業法（民泊新法）の年間180日ルールを考慮して、民泊として活用した場合の年間収益と通常賃貸との比較を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">1泊あたり料金（円）</label>
+        <input type="number" id="mp_nightly" value="12000" min="3000" max="100000" step="1000" oninput="calcMinpakuConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">年間稼働率（%）</label>
+        <input type="number" id="mp_occ" value="55" min="10" max="90" step="5" oninput="calcMinpakuConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">清掃費（1回あたり・円）</label>
+        <input type="number" id="mp_clean" value="4000" min="0" max="20000" step="500" oninput="calcMinpakuConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">初期リフォーム費（万円）</label>
+        <input type="number" id="mp_reform" value="150" min="0" max="1000" step="10" oninput="calcMinpakuConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">通常賃貸の月額家賃（万円）</label>
+        <input type="number" id="mp_rent" value="6" min="1" max="100" step="0.5" oninput="calcMinpakuConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">月間固定費（管理・光熱費・万円）</label>
+        <input type="number" id="mp_fixed" value="2" min="0" max="30" step="0.5" oninput="calcMinpakuConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="minpaku-convert-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -5402,6 +5435,54 @@ function calcIsolationRisk() {
     + '</div>';
 }
 (function(){ calcIsolationRisk(); })();
+
+function calcMinpakuConvert() {
+  var el = document.getElementById('minpaku-convert-result');
+  if (!el) return;
+  var nightly = parseFloat(document.getElementById('mp_nightly').value) || 0;
+  var occ = parseFloat(document.getElementById('mp_occ').value) || 0;
+  var clean = parseFloat(document.getElementById('mp_clean').value) || 0;
+  var reform = parseFloat(document.getElementById('mp_reform').value) || 0;
+  var rent = parseFloat(document.getElementById('mp_rent').value) || 0;
+  var fixed = parseFloat(document.getElementById('mp_fixed').value) || 0;
+  if (nightly <= 0 || occ <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">1泊料金と稼働率を入力してください</div>'; return; }
+
+  var maxDays = 180; // 民泊新法年間上限
+  var annualDays = Math.round(maxDays * occ / 100);
+  var annualRevenue = nightly * annualDays;
+  var annualClean = clean * annualDays;
+  var annualFixed = fixed * 10000 * 12;
+  var annualNetMinpaku = annualRevenue - annualClean - annualFixed;
+  var annualNetRental = (rent * 10000 * 12) - annualFixed;
+  var diff = annualNetMinpaku - annualNetRental;
+  var payback = reform > 0 ? (reform * 10000 / Math.max(1, annualNetMinpaku)) : 0;
+  var diffColor = diff >= 0 ? 'var(--green)' : 'var(--red)';
+  var diffLabel = diff >= 0 ? '民泊の方が有利' : '通常賃貸の方が有利';
+
+  var html = '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  html += '<div style="padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;text-align:center">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">民泊 年間純収益</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:var(--gold)">' + Math.round(annualNetMinpaku / 10000).toLocaleString() + '<span style="font-size:13px">万円</span></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">稼働' + annualDays + '日／年</div>';
+  html += '</div>';
+  html += '<div style="padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;text-align:center">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">通常賃貸 年間純収益</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:var(--text)">' + Math.round(annualNetRental / 10000).toLocaleString() + '<span style="font-size:13px">万円</span></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">安定収入</div>';
+  html += '</div></div>';
+
+  html += '<div style="margin-top:10px;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px">';
+  html += '<div style="font-size:13px;font-weight:700;color:' + diffColor + ';margin-bottom:6px">' + diffLabel + ' (' + (diff >= 0 ? '+' : '') + Math.round(diff / 10000).toLocaleString() + '万円/年)</div>';
+  if (reform > 0) {
+    html += '<div style="font-size:12px;color:var(--text-muted)">初期リフォーム費' + reform + '万円の回収: <strong style="color:var(--text)">' + (payback > 0 ? payback.toFixed(1) + '年' : '—') + '</strong></div>';
+  }
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.7">';
+  html += '⚠️ 住宅宿泊事業法により年間180日が上限。届出（市区町村）・消防法基準適合・近隣同意が必要。管理業者委託の場合は売上の15〜25%が手数料となります。';
+  html += '</div></div>';
+
+  el.innerHTML = html;
+}
+(function(){ calcMinpakuConvert(); })();
 
 function filterAkiyaCalcCards(query) {
   var cards = document.querySelectorAll('#akiya-calc-cards .card');
