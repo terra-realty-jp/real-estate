@@ -1875,6 +1875,69 @@
     <div id="tenant-churn-result"></div>
   </div>
 
+  <!-- 入居者満足度自己診断カード -->
+  <div class="card" id="card-tenant-satisfaction">
+    <div class="card-title">😊 入居者満足度 自己診断チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">オーナー視点で入居者満足度を自己診断します。スコアが低い軸は入居率・更新率の低下につながるため、優先的な改善が有効です。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">修繕・クレーム対応速度</label>
+        <select id="ts_response" onchange="calcTenantSatisfaction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">即日〜翌日対応</option>
+          <option value="2" selected>3日以内</option>
+          <option value="1">1週間程度</option>
+          <option value="0">対応が遅い</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">設備・建物の状態</label>
+        <select id="ts_facility" onchange="calcTenantSatisfaction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">良好・きれい</option>
+          <option value="2" selected>普通</option>
+          <option value="1">やや老朽化</option>
+          <option value="0">古くて問題あり</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">家賃水準（近隣相場比）</label>
+        <select id="ts_rent" onchange="calcTenantSatisfaction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">相場より安い</option>
+          <option value="2" selected>ほぼ相場通り</option>
+          <option value="1">やや高め</option>
+          <option value="0">かなり高い</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">共用部の清掃・管理状態</label>
+        <select id="ts_clean" onchange="calcTenantSatisfaction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">清潔・定期清掃あり</option>
+          <option value="2" selected>まあまあ</option>
+          <option value="1">汚れ目立つ</option>
+          <option value="0">ほぼ未管理</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">騒音・近隣トラブル状況</label>
+        <select id="ts_noise" onchange="calcTenantSatisfaction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">問題なし</option>
+          <option value="2" selected>軽微なトラブルあり</option>
+          <option value="1">たびたびクレーム</option>
+          <option value="0">深刻な問題あり</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">駐車場・収納などの付帯設備</label>
+        <select id="ts_amenity" onchange="calcTenantSatisfaction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="3">充実・満足度高い</option>
+          <option value="2" selected>普通</option>
+          <option value="1">やや不足</option>
+          <option value="0">大幅に不足</option>
+        </select>
+      </div>
+    </div>
+    <div id="tenant-satisfaction-result"></div>
+  </div>
+
   <!-- 長期修繕計画カード -->
   <div class="card" id="card-long-repair-plan">
     <div class="card-title">📅 長期修繕計画 費用スケジュール</div>
@@ -8199,6 +8262,61 @@ function calcLongRepairPlan() {
   el.innerHTML = html;
 }
 (function(){ calcLongRepairPlan(); })();
+
+function calcTenantSatisfaction() {
+  var el = document.getElementById('tenant-satisfaction-result');
+  if (!el) return;
+  var axes = [
+    { id: 'ts_response', label: '修繕対応速度' },
+    { id: 'ts_facility', label: '設備・建物状態' },
+    { id: 'ts_rent', label: '家賃水準' },
+    { id: 'ts_clean', label: '清掃・管理' },
+    { id: 'ts_noise', label: '騒音・トラブル' },
+    { id: 'ts_amenity', label: '付帯設備' }
+  ];
+  var scores = axes.map(function(a) {
+    return { label: a.label, score: parseInt(document.getElementById(a.id).value) || 0 };
+  });
+  var total = scores.reduce(function(s,a){return s+a.score;},0);
+  var maxScore = axes.length * 3;
+  var pct = Math.round(total / maxScore * 100);
+  var grade, gradeColor, comment;
+  if (pct >= 85) { grade = 'S'; gradeColor = '#4caf50'; comment = '高い満足度。更新率向上・口コミでの入居者紹介が期待できます。'; }
+  else if (pct >= 70) { grade = 'A'; gradeColor = '#8bc34a'; comment = '概ね良好。低スコアの軸を改善するとさらに安定します。'; }
+  else if (pct >= 50) { grade = 'B'; gradeColor = '#f9a825'; comment = '改善の余地があります。退去増加リスクに注意してください。'; }
+  else if (pct >= 35) { grade = 'C'; gradeColor = '#ff7043'; comment = '入居者満足度が低い状態です。早急な改善が必要です。'; }
+  else { grade = 'D'; gradeColor = '#e53935'; comment = '深刻な状態です。退去・空室増加が差し迫っている可能性があります。'; }
+
+  var lowest = scores.slice().sort(function(a,b){return a.score-b.score;}).slice(0,2);
+
+  var html = '<div style="margin-top:10px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
+  html += '<div style="width:52px;height:52px;border-radius:50%;background:' + gradeColor + ';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0">' + grade + '</div>';
+  html += '<div><div style="font-size:16px;font-weight:700;color:' + gradeColor + '">' + comment + '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">総合スコア: ' + total + '/' + maxScore + ' (' + pct + '%)</div></div></div>';
+
+  html += '<div style="margin-bottom:12px">';
+  scores.forEach(function(s) {
+    var barPct = Math.round(s.score / 3 * 100);
+    var barColor = s.score >= 2 ? 'var(--green)' : s.score === 1 ? '#f9a825' : 'var(--red)';
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+    html += '<div style="width:80px;font-size:11px;color:var(--text-muted);flex-shrink:0">' + s.label + '</div>';
+    html += '<div style="flex:1;background:rgba(255,255,255,0.07);border-radius:4px;height:8px;overflow:hidden">';
+    html += '<div style="height:100%;width:' + barPct + '%;background:' + barColor + ';border-radius:4px"></div></div>';
+    html += '<div style="width:20px;font-size:12px;font-weight:700;color:' + barColor + '">' + s.score + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600">⬇️ 優先改善ポイント</div>';
+  html += '<ul style="margin:0;padding-left:18px;font-size:12px;color:var(--text);line-height:1.8">';
+  lowest.forEach(function(l) {
+    if (l.score < 3) html += '<li>' + l.label + '（現在スコア: ' + l.score + '/3）</li>';
+  });
+  html += '</ul></div>';
+  el.innerHTML = html;
+}
+(function(){ calcTenantSatisfaction(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');
