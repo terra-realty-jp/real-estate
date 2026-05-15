@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-05-15 セッション継続47（Phase 2 新計算カード5枚追加）
+
+- **対象**: tools/1-ai-satei.html, 2-akiya-hunter.html, 3-owner-direct.html, 4-kanri-saas.html, 5-toushi-bunseki.html
+- **フェーズ**: Phase 2 機能拡充
+- **改善内容**:
+  1. **Tool1: 住宅ローン減税シミュレーター（calcMortgageTaxDeduction）** — 13年間控除総額を年次残高ベースで試算、新築/中古/認定住宅の上限額に対応。コミット: 65370f2
+  2. **Tool2: 固定資産税特例外しリスク試算（calcAkiyaTaxSpecial）** — 特定空き家認定後の住宅特例除外による税額倍増（最大6倍）をシミュレーション。コミット: 65370f2
+  3. **Tool3: 仲介手数料あり vs 直接売買コスト比較（calcDirectVsAgent）** — 値引き率込みの手取り差と直接売買のリスク・デメリットを可視化。コミット: 65370f2
+  4. **Tool4: 敷金・礼金ゼロ物件リスク診断（calcZeroDepositRisk）** — フリーレント・敷金ゼロの損益分岐月数と空室短縮効果・リスク注意点を試算。コミット: 65370f2
+  5. **Tool5: 区分マンション vs 一棟アパート比較診断（calcCondoVsApartment）** — CF・空室リスク・管理負担・融資・流動性の5軸スコア比較と推奨判定。コミット: 65370f2
+- **理由**: 意思決定支援コンテンツ（控除・税・コスト比較）を追加し、ユーザーが「具体的な判断」に使える機能を強化。
+
+---
+
 ## 2026-05-15 セッション継続46（Phase 2 新計算カード10枚追加）
 
 - **対象**: tools/1-ai-satei.html, 2-akiya-hunter.html, 3-owner-direct.html, 4-kanri-saas.html, 5-toushi-bunseki.html
