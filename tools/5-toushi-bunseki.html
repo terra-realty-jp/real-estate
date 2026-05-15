@@ -906,6 +906,8 @@
 
   <!-- かんたん計算ツールセクション -->
   <h2 style="font-size:15px;font-weight:700;color:var(--gold);margin:28px 0 12px;letter-spacing:0.5px">🧮 かんたん計算ツール</h2>
+  <!-- お気に入りバー（動的） -->
+  <div id="re-fav-bar" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:10px"></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
     <button onclick="document.getElementById('card-cf-stability').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">🛡️ CF安定性スコア</button>
     <button onclick="document.getElementById('card-property-tax').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">🏛️ 固定資産税試算</button>
@@ -7838,6 +7840,52 @@ renderReitCompare();
       }
     });
   }
+})();
+
+// ===== お気に入り機能 =====
+(function(){
+  var TOOL='tool5', LS='re_favs_tool5';
+  function getFavs(){try{return JSON.parse(localStorage.getItem(LS)||'[]');}catch(e){return [];}}
+  function setFavs(a){try{localStorage.setItem(LS,JSON.stringify(a));}catch(e){}}
+  function isFav(id){return getFavs().some(function(f){return f.id===id;});}
+  function toggleFav(id,title){
+    var favs=getFavs(),idx=favs.findIndex(function(f){return f.id===id;});
+    if(idx>=0){favs.splice(idx,1);}else{favs.unshift({id:id,title:title});if(favs.length>5)favs=favs.slice(0,5);}
+    setFavs(favs);refreshStars();renderFavBar();
+  }
+  function refreshStars(){
+    document.querySelectorAll('[data-fav-id]').forEach(function(btn){
+      var faved=isFav(btn.dataset.favId);
+      btn.textContent=faved?'★':'☆';
+      btn.style.color=faved?'#d4af37':'rgba(255,255,255,0.2)';
+      btn.title=faved?'お気に入りを解除':'よく使う機能に登録';
+    });
+  }
+  function renderFavBar(){
+    var bar=document.getElementById('re-fav-bar');if(!bar)return;
+    var favs=getFavs().slice(0,3);
+    if(favs.length===0){bar.style.display='none';return;}
+    bar.style.display='block';
+    bar.innerHTML='<div style="font-size:11px;color:rgba(212,175,55,0.65);margin-bottom:7px">★ あなたのよく使う機能</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+
+      favs.map(function(f){return '<button onclick="(function(){var el=document.getElementById(\''+f.id+'\');if(el)el.scrollIntoView({behavior:\'smooth\',block:\'center\'});})()" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:5px 12px;color:#d4af37;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">★ '+f.title+'</button>';}).join('')+'</div>';
+  }
+  function shortTitle(s){return s.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[^\x00-\x7F぀-鿿]/g,'').trim().slice(0,14);}
+  function init(){
+    var ai=0;
+    document.querySelectorAll('.card').forEach(function(card){
+      if(!card.id)card.id=TOOL+'-ac-'+(ai++);
+      var titleEl=card.querySelector('.card-title');
+      if(!titleEl||card.querySelector('[data-fav-id]'))return;
+      var title=shortTitle(titleEl.textContent);
+      var btn=document.createElement('button');
+      btn.dataset.favId=card.id;
+      btn.style.cssText='background:none;border:none;font-size:15px;cursor:pointer;padding:0;line-height:1;margin-left:auto;flex-shrink:0;transition:color 0.15s';
+      btn.onclick=function(e){e.stopPropagation();toggleFav(card.id,title);};
+      titleEl.appendChild(btn);
+    });
+    refreshStars();renderFavBar();
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
 })();
 </script>
 </body>
