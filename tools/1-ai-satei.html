@@ -1783,6 +1783,30 @@
     <div id="demolish-compare-result"></div>
   </div>
 
+  <!-- 近隣成約事例比較カード -->
+  <div class="card" id="card-comparable-sales">
+    <div class="card-title">🏘️ 近隣成約事例 比較分析</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">自分の物件と近隣の成約事例を比較して、価格の妥当性を確認します。売却価格の根拠として活用できます。</p>
+    <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">自物件の情報</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">希望価格（万円）</label>
+        <input type="number" id="cs_my_price" value="3000" min="100" max="100000" step="100" oninput="calcComparableSales()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">面積（㎡）</label>
+        <input type="number" id="cs_my_area" value="80" min="10" max="1000" step="5" oninput="calcComparableSales()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">築年数（年）</label>
+        <input type="number" id="cs_my_age" value="25" min="0" max="80" step="1" oninput="calcComparableSales()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-sub);margin-bottom:8px">近隣成約事例（最大3件）</div>
+    <div id="cs-comps" style="margin-bottom:10px"></div>
+    <div id="comparable-sales-result"></div>
+  </div>
+
   <!-- 将来売却価格予測カード -->
   <div class="card" id="card-resale-value">
     <div class="card-title">🔮 将来の売却価格 シナリオ予測</div>
@@ -6112,6 +6136,94 @@ function calcResaleValue() {
   el.innerHTML = html;
 }
 (function(){ calcResaleValue(); })();
+
+function initComparableSales() {
+  var container = document.getElementById('cs-comps');
+  if (!container || container.children.length > 0) return;
+  var defaults = [
+    { price: 2800, area: 75, age: 22 },
+    { price: 3200, area: 85, age: 20 },
+    { price: 2950, area: 78, age: 28 }
+  ];
+  defaults.forEach(function(d, i) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center';
+    row.innerHTML = '<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">事例' + (i+1) + '</span>'
+      + '<input class="cs-price" type="number" value="' + d.price + '" placeholder="成約価格(万)" oninput="calcComparableSales()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">'
+      + '<input class="cs-area" type="number" value="' + d.area + '" placeholder="面積(㎡)" oninput="calcComparableSales()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">'
+      + '<input class="cs-age" type="number" value="' + d.age + '" placeholder="築年数" oninput="calcComparableSales()" style="background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">';
+    container.appendChild(row);
+  });
+  calcComparableSales();
+}
+
+function calcComparableSales() {
+  var el = document.getElementById('comparable-sales-result');
+  if (!el) return;
+  var myPrice = parseFloat(document.getElementById('cs_my_price').value) || 0;
+  var myArea = parseFloat(document.getElementById('cs_my_area').value) || 0;
+  var myAge = parseFloat(document.getElementById('cs_my_age').value) || 0;
+  if (myPrice <= 0 || myArea <= 0) { el.innerHTML = ''; return; }
+
+  var myTsubo = Math.round(myPrice / (myArea / 3.306) * 10) / 10;
+
+  var compRows = document.querySelectorAll('#cs-comps > div');
+  var comps = [];
+  compRows.forEach(function(row, i) {
+    var p = parseFloat(row.querySelector('.cs-price') ? row.querySelector('.cs-price').value : 0) || 0;
+    var a = parseFloat(row.querySelector('.cs-area') ? row.querySelector('.cs-area').value : 0) || 0;
+    var ag = parseFloat(row.querySelector('.cs-age') ? row.querySelector('.cs-age').value : 0) || 0;
+    if (p > 0 && a > 0) comps.push({ price: p, area: a, age: ag, tsubo: Math.round(p / (a / 3.306) * 10) / 10, label: '事例' + (i+1) });
+  });
+
+  if (comps.length === 0) { el.innerHTML = ''; return; }
+
+  var avgTsubo = comps.reduce(function(s,c){return s+c.tsubo;},0) / comps.length;
+  var avgPrice = comps.reduce(function(s,c){return s+c.price;},0) / comps.length;
+  var diffPct = ((myPrice - avgPrice) / avgPrice * 100);
+  var diffColor = diffPct > 10 ? 'var(--red)' : diffPct < -10 ? '#4caf50' : '#f9a825';
+  var diffLabel = diffPct > 10 ? '相場より高め' : diffPct < -10 ? '相場より安め' : 'ほぼ相場通り';
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">自物件 坪単価</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + myTsubo.toLocaleString() + '<span style="font-size:11px">万/坪</span></div></div>';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">近隣平均 坪単価</div><div style="font-size:20px;font-weight:900;color:var(--text)">' + avgTsubo.toLocaleString() + '<span style="font-size:11px">万/坪</span></div></div>';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">価格差</div><div style="font-size:20px;font-weight:900;color:' + diffColor + '">' + (diffPct >= 0 ? '+' : '') + diffPct.toFixed(1) + '<span style="font-size:11px">%</span></div><div style="font-size:10px;color:' + diffColor + '">' + diffLabel + '</div></div>';
+  html += '</div>';
+
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr style="background:rgba(255,255,255,0.06)"><th style="padding:6px;text-align:left;color:var(--text-muted)">物件</th><th style="padding:6px;text-align:right;color:var(--text-muted)">成約価格</th><th style="padding:6px;text-align:right;color:var(--text-muted)">面積</th><th style="padding:6px;text-align:right;color:var(--text-muted)">築年</th><th style="padding:6px;text-align:right;color:var(--text-muted)">坪単価</th></tr>';
+
+  var myRow = '<tr style="background:rgba(212,175,55,0.08);border-top:1px solid rgba(255,255,255,0.06)">';
+  myRow += '<td style="padding:6px;font-weight:700;color:var(--gold)">自物件</td>';
+  myRow += '<td style="padding:6px;text-align:right;font-weight:700;color:var(--gold)">' + myPrice.toLocaleString() + '万</td>';
+  myRow += '<td style="padding:6px;text-align:right">' + myArea + '㎡</td>';
+  myRow += '<td style="padding:6px;text-align:right">' + myAge + '年</td>';
+  myRow += '<td style="padding:6px;text-align:right;font-weight:700;color:var(--gold)">' + myTsubo + '万</td></tr>';
+  html += myRow;
+
+  comps.forEach(function(c) {
+    html += '<tr style="border-top:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:6px;color:var(--text-muted)">' + c.label + '</td>';
+    html += '<td style="padding:6px;text-align:right">' + c.price.toLocaleString() + '万</td>';
+    html += '<td style="padding:6px;text-align:right">' + c.area + '㎡</td>';
+    html += '<td style="padding:6px;text-align:right">' + c.age + '年</td>';
+    html += '<td style="padding:6px;text-align:right">' + c.tsubo + '万</td>';
+    html += '</tr>';
+  });
+  html += '</table></div>';
+
+  if (Math.abs(diffPct) > 10) {
+    html += '<div style="margin-top:8px;padding:8px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">';
+    html += diffPct > 10
+      ? '⚠️ 希望価格が近隣平均より' + Math.abs(diffPct).toFixed(0) + '%高めです。内覧が少ない場合は価格見直しを検討してください。'
+      : '💡 希望価格が近隣平均より' + Math.abs(diffPct).toFixed(0) + '%安めです。早期成約が期待できますが、適切な価格設定かどうか再確認してみましょう。';
+    html += '</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ initComparableSales(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');
