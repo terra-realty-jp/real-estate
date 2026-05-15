@@ -1632,6 +1632,8 @@
   <h2 style="font-size:15px;font-weight:700;color:var(--gold);margin:28px 0 12px;letter-spacing:0.5px">🧮 かんたん計算ツール</h2>
   <!-- お気に入りバー（動的） -->
   <div id="re-fav-bar" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:10px"></div>
+  <!-- 計算履歴パネル（動的） -->
+  <div id="re-history-panel" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:10px"></div>
   <!-- ウィザード: 状況別おすすめカード案内 -->
   <div id="kanri-wizard-box" style="margin-bottom:16px;padding:14px 16px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:12px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -8555,6 +8557,66 @@ initApp();
   }
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
 })();
+// ===== 計算結果 履歴保存機能 =====
+(function(){
+  var LS='re_history_tool4',MAX=8;
+  var ACCENT='rgba(59,130,246,0.07)',ACCTXT='#60a5fa',ACCBDR='rgba(59,130,246,0.25)';
+  function getHist(){try{return JSON.parse(localStorage.getItem(LS)||'[]');}catch(e){return [];}}
+  function saveResult(cid,title,summary){
+    var h=getHist();var d=new Date();
+    var ts=(d.getMonth()+1)+'/'+(d.getDate())+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+    h.unshift({id:cid,title:title.slice(0,20),summary:summary.slice(0,100),ts:ts});
+    if(h.length>MAX)h=h.slice(0,MAX);
+    try{localStorage.setItem(LS,JSON.stringify(h));}catch(e){}
+    renderHistPanel();
+  }
+  window._reClearHist4=function(){try{localStorage.removeItem(LS);}catch(e){}renderHistPanel();};
+  function renderHistPanel(){
+    var p=document.getElementById('re-history-panel');if(!p)return;
+    var h=getHist();
+    if(h.length===0){p.style.display='none';return;}
+    p.style.display='block';
+    p.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4)">📋 保存した計算履歴（'+h.length+'件）</div>'
+      +'<button onclick="_reClearHist4()" style="background:none;border:none;color:rgba(255,255,255,0.2);font-size:11px;cursor:pointer;font-family:inherit;padding:0">クリア</button>'
+      +'</div>'
+      +h.map(function(e,i){
+        return '<div style="padding:5px 0;'+(i<h.length-1?'border-bottom:1px solid rgba(255,255,255,0.04)':'')+'">'
+          +'<div style="display:flex;gap:8px;align-items:baseline">'
+          +'<span style="font-size:10px;color:rgba(255,255,255,0.25);white-space:nowrap">'+e.ts+'</span>'
+          +'<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6)">'+e.title+'</span>'
+          +'</div>'
+          +'<div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;line-height:1.5">'+e.summary+'</div>'
+          +'</div>';
+      }).join('');
+  }
+  function watchDiv(div){
+    var obs=new MutationObserver(function(){
+      if(!div.innerHTML.trim()||div.querySelector('.re-save-btn'))return;
+      var card=div.closest('.card');
+      var titleEl=card?card.querySelector('.card-title'):null;
+      var title=titleEl?titleEl.textContent.replace(/[★☆]/g,'').trim():'計算結果';
+      var cid=card?(card.id||div.id):div.id;
+      var rawText=div.textContent.replace(/\s+/g,' ').trim();
+      var btn=document.createElement('button');
+      btn.className='re-save-btn';
+      btn.innerHTML='📌 この結果を保存';
+      btn.style.cssText='display:block;margin-top:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:5px 12px;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;font-family:inherit;transition:all 0.15s';
+      btn.onmouseover=function(){this.style.background=ACCENT;this.style.color=ACCTXT;this.style.borderColor=ACCBDR;};
+      btn.onmouseout=function(){this.style.background='rgba(255,255,255,0.03)';this.style.color='rgba(255,255,255,0.35)';this.style.borderColor='rgba(255,255,255,0.08)';};
+      btn.onclick=function(){
+        saveResult(cid,title,rawText.slice(0,100));
+        btn.innerHTML='✅ 保存しました';btn.style.color=ACCTXT;btn.style.borderColor=ACCBDR;btn.disabled=true;
+        setTimeout(function(){btn.innerHTML='📌 もう一度保存';btn.disabled=false;btn.style.color='rgba(255,255,255,0.35)';btn.style.borderColor='rgba(255,255,255,0.08)';},1800);
+      };
+      div.appendChild(btn);
+    });
+    obs.observe(div,{childList:true,subtree:true});
+  }
+  document.querySelectorAll('[id$="-result"]').forEach(watchDiv);
+  renderHistPanel();
+})();
+
 // ── Auto-save: フォーム入力値を自動保存・次回訪問時に復元 ──
 (function(){
   var LS='re_autosave_tool4';
