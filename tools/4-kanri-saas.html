@@ -2154,6 +2154,31 @@
     <div id="fair-rent-check-result"></div>
   </div>
 
+  <!-- 敷金・礼金ゼロ物件リスク診断カード -->
+  <div class="card" id="card-zero-deposit-risk">
+    <div class="card-title">⚠️ 敷金・礼金ゼロ物件リスク診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「フリーレント・敷金ゼロ・礼金ゼロ」条件を設定した場合に、<strong style="color:var(--text)">オーナーが負うリスク金額と空室解消効果</strong>を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額家賃（万円）</label>
+        <input type="number" id="zdr_rent" value="8" min="1" max="100" step="0.5" oninput="calcZeroDepositRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の空室期間（ヶ月）</label>
+        <input type="number" id="zdr_vacant" value="3" min="0" max="24" step="1" oninput="calcZeroDepositRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">原状回復コスト想定（万円）</label>
+        <input type="number" id="zdr_repair" value="15" min="0" max="200" step="5" oninput="calcZeroDepositRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">フリーレント月数</label>
+        <input type="number" id="zdr_free" value="1" min="0" max="6" step="1" oninput="calcZeroDepositRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="zero-deposit-risk-result"></div>
+  </div>
+
   <!-- 退去フロー＆費用診断カード -->
   <div class="card" id="card-eviction-flow">
     <div class="card-title">🚪 退去フロー＆費用診断</div>
@@ -8645,6 +8670,51 @@ function calcFairRentCheck() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px;line-height:1.6">📌 推定適正家賃はエリア賃料単価・築年数・駅距離・設備から算出した目安です。実際の相場はSUUMO・at home等で確認してください。</div>';
 }
 (function(){ calcFairRentCheck(); })();
+
+function calcZeroDepositRisk() {
+  var el = document.getElementById('zero-deposit-risk-result'); if (!el) return;
+  var rent = parseFloat(document.getElementById('zdr_rent').value) || 8;
+  var vacant = parseFloat(document.getElementById('zdr_vacant').value) || 3;
+  var repair = parseFloat(document.getElementById('zdr_repair').value) || 15;
+  var freeMonths = parseFloat(document.getElementById('zdr_free').value) || 1;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var vacantLoss = rent * vacant;
+  var freeLoss = rent * freeMonths;
+  var totalRisk = repair + freeLoss;
+  var breakeven = repair / rent + freeMonths;
+  var normalDeposit = rent * 1;
+  var shortfall = Math.max(0, repair - normalDeposit);
+  var vacantLossWith = 0;
+  var vacantLossWithout = rent * Math.max(0, vacant - 1.5);
+  var netEffect = vacantLossWithout - freeLoss;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">📊 ゼロ条件設定のリスク試算</div>';
+  var items = [
+    ['現在の空室損失（' + vacant + 'ヶ月）', '−' + vacantLoss.toFixed(1) + '万', '#f87171'],
+    ['敷金ゼロによる原状回復不足', '−' + shortfall.toFixed(1) + '万', '#f87171'],
+    ['フリーレント（' + freeMonths + 'ヶ月）', '−' + freeLoss.toFixed(1) + '万', '#fb923c'],
+    ['ゼロ条件設定後の機会損失', netEffect > 0 ? '+' + netEffect.toFixed(1) + '万（空室短縮効果）' : '±0万', netEffect > 0 ? '#4ade80' : 'var(--text-muted)']
+  ];
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;margin-bottom:10px">';
+  items.forEach(function(item) {
+    html += '<div style="display:flex;justify-content:space-between;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">';
+    html += '<span style="color:var(--text-muted)">' + item[0] + '</span>';
+    html += '<span style="color:' + item[2] + '">' + item[1] + '</span></div>';
+  });
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:8px">';
+  html += '損益分岐: <b style="color:' + ACCENT + '">' + breakeven.toFixed(1) + 'ヶ月</b> 早く入居が決まれば採算が合う計算。';
+  if (netEffect > 0) {
+    html += ' 空室 ' + vacant + 'ヶ月→1.5ヶ月に短縮できれば <b style="color:#4ade80">+' + netEffect.toFixed(1) + '万円</b> の改善。';
+  }
+  html += '</div>';
+  var risks = ['敷金ゼロは退去時の原状回復費回収が困難→保証会社必須', '礼金ゼロは問い合わせ数増加に有効だが収益性が下がる', 'フリーレントは家賃収入の一時的な損失だが入居率改善効果が大きい'];
+  html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.8">' + risks.map(function(r) { return '⚠️ ' + r; }).join('<br>') + '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 空室が2ヶ月以上続いている場合は、フリーレント1ヶ月が最もコストパフォーマンスが高い誘客策です。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcZeroDepositRisk(); })();
 
 function calcEvictionFlow() {
   var el = document.getElementById('eviction-flow-result'); if (!el) return;

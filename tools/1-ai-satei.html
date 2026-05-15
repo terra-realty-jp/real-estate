@@ -1910,6 +1910,36 @@
     <div id="staging-roi-result"></div>
   </div>
 
+  <!-- 住宅ローン減税 控除額シミュレーターカード -->
+  <div class="card" id="card-mortgage-tax-deduction">
+    <div class="card-title">🏦 住宅ローン減税 控除額シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">借入残高・金利・年収から<strong style="color:var(--text)">13年間の住宅ローン控除（減税）総額</strong>を試算します。新築・中古・認定住宅の上限額に対応。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">借入額（万円）</label>
+        <input type="number" id="mtd_loan" value="3000" min="100" max="20000" step="100" oninput="calcMortgageTaxDeduction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">金利（%）</label>
+        <input type="number" id="mtd_rate" value="0.5" min="0.1" max="5" step="0.1" oninput="calcMortgageTaxDeduction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">返済期間（年）</label>
+        <input type="number" id="mtd_years" value="35" min="10" max="50" step="5" oninput="calcMortgageTaxDeduction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">住宅種別</label>
+        <select id="mtd_type" onchange="calcMortgageTaxDeduction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="4000">新築（一般）上限4,000万</option>
+          <option value="5000">新築（認定長期優良）上限5,000万</option>
+          <option value="3000">中古（耐震適合）上限3,000万</option>
+          <option value="2000">中古（一般）上限2,000万</option>
+        </select>
+      </div>
+    </div>
+    <div id="mortgage-tax-deduction-result"></div>
+  </div>
+
   <!-- 値下げ効果シミュレーターカード -->
   <div class="card" id="card-price-drop-effect">
     <div class="card-title">📉 値下げ効果シミュレーター</div>
@@ -6429,6 +6459,51 @@ function calcStagingROI() {
     + '</div>';
 }
 (function(){ calcStagingROI(); })();
+
+function calcMortgageTaxDeduction() {
+  var el = document.getElementById('mortgage-tax-deduction-result'); if (!el) return;
+  var loan = parseFloat(document.getElementById('mtd_loan').value) || 3000;
+  var rate = (parseFloat(document.getElementById('mtd_rate').value) || 0.5) / 100 / 12;
+  var years = parseFloat(document.getElementById('mtd_years').value) || 35;
+  var cap = parseFloat(document.getElementById('mtd_type').value) || 4000;
+  var n = years * 12;
+  var monthly = rate > 0 ? loan * 10000 * rate * Math.pow(1 + rate, n) / (Math.pow(1 + rate, n) - 1) : loan * 10000 / n;
+  var DEDUCT_RATE = 0.007;
+  var DEDUCT_YEARS = 13;
+  var totalDeduct = 0;
+  var tableRows = [];
+  for (var y = 1; y <= Math.min(DEDUCT_YEARS, years); y++) {
+    var mPaid = monthly * (y - 1) * 12;
+    var balance;
+    if (rate > 0) {
+      balance = loan * 10000 * Math.pow(1 + rate, (y - 1) * 12) - monthly * (Math.pow(1 + rate, (y - 1) * 12) - 1) / rate;
+    } else {
+      balance = loan * 10000 - mPaid;
+    }
+    var cappedBal = Math.min(balance, cap * 10000);
+    var deduct = Math.round(cappedBal * DEDUCT_RATE);
+    totalDeduct += deduct;
+    if (y <= 5 || y === 10 || y === 13) tableRows.push({ y: y, bal: Math.round(balance / 10000), deduct: Math.round(deduct / 10000 * 10) / 10 });
+  }
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';font-size:15px;margin-bottom:6px">13年間 控除総額: <span style="font-size:20px">' + Math.round(totalDeduct / 10000).toLocaleString() + '万円</span></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">控除率0.7% / 上限' + cap + '万円 / 最大' + DEDUCT_YEARS + '年間</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">年次</th><th style="text-align:right;padding:4px 6px">残高</th><th style="text-align:right;padding:4px 6px">年間控除額</th></tr>';
+  tableRows.forEach(function(r) {
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:4px 6px;color:var(--text)">' + r.y + '年目</td>';
+    html += '<td style="text-align:right;padding:4px 6px;color:var(--text-muted)">' + r.bal.toLocaleString() + '万</td>';
+    html += '<td style="text-align:right;padding:4px 6px;color:' + ACCENT + '">' + r.deduct + '万円</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:8px">📌 2024年以降の制度。実際の控除額は所得税・住民税の税額上限があります。年収400万以下では控除しきれない場合も。確定申告（初年度）が必要です。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMortgageTaxDeduction(); })();
 
 function calcPriceDropEffect() {
   var el = document.getElementById('price-drop-effect-result'); if (!el) return;

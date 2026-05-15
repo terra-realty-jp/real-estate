@@ -1891,6 +1891,23 @@
     <div id="cash-vs-loan-result"></div>
   </div>
 
+  <!-- 区分マンション vs 一棟アパート比較カード -->
+  <div class="card" id="card-condo-vs-apartment">
+    <div class="card-title">🏢 区分マンション vs 一棟アパート 比較診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">投資予算・希望利回りを入力して、<strong style="color:var(--text)">区分マンション（1室）と一棟アパートのCF・リスク・管理負担</strong>を5軸で比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">投資予算（万円）</label>
+        <input type="number" id="cva_budget" value="2000" min="500" max="30000" step="100" oninput="calcCondoVsApartment()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">希望表面利回り（%）</label>
+        <input type="number" id="cva_yield" value="8" min="3" max="20" step="0.5" oninput="calcCondoVsApartment()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="condo-vs-apartment-result"></div>
+  </div>
+
   <!-- 不動産 vs 株式投資 20年比較カード -->
   <div class="card" id="card-property-vs-stock">
     <div class="card-title">📊 不動産 vs 株式投資 20年比較</div>
@@ -8029,6 +8046,63 @@ function calcCashVsLoan() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px">📌 CF・CCRは満室想定。空室率・税金は含みません。DSCR(返済余裕率)は1.2以上が融資審査の目安。</div>';
 }
 (function(){ calcCashVsLoan(); })();
+
+function calcCondoVsApartment() {
+  var el = document.getElementById('condo-vs-apartment-result'); if (!el) return;
+  var budget = parseFloat(document.getElementById('cva_budget').value) || 2000;
+  var yieldRate = (parseFloat(document.getElementById('cva_yield').value) || 8) / 100;
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var annualRent = budget * 10000 * yieldRate;
+  var condoMgmtFee = annualRent * 0.07;
+  var condoRepair = annualRent * 0.05;
+  var condoVacancyLoss = annualRent * 0.12;
+  var condoCF = (annualRent - condoMgmtFee - condoRepair - condoVacancyLoss) / 10000;
+  var apartUnits = Math.max(2, Math.floor(budget / 1000));
+  var apartRent = annualRent * 0.95;
+  var apartMgmt = apartRent * 0.05;
+  var apartRepair = apartRent * 0.08;
+  var apartVacancyLoss = apartRent * 0.08;
+  var apartCF = (apartRent - apartMgmt - apartRepair - apartVacancyLoss) / 10000;
+  var AXES = [
+    { label: '月間CF', condo: Math.round(condoCF / 12 * 10) / 10 + '万', apart: Math.round(apartCF / 12 * 10) / 10 + '万', winner: condoCF >= apartCF ? 'condo' : 'apart' },
+    { label: '空室リスク', condo: '高（1室全損）', apart: '低（分散可能）', winner: 'apart' },
+    { label: '管理負担', condo: '低（管理組合あり）', apart: '高（全自己管理 or 委託）', winner: 'condo' },
+    { label: '融資調達', condo: '比較的容易', apart: '困難（属性・担保）', winner: 'condo' },
+    { label: '流動性・出口', condo: '高（1室単位で売却可）', apart: '低（一棟まとめて売却）', winner: 'condo' }
+  ];
+  var condoScore = AXES.filter(function(a) { return a.winner === 'condo'; }).length;
+  var apartScore = AXES.length - condoScore;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">';
+  html += '<div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:8px;padding:8px">';
+  html += '<div style="font-size:11px;color:var(--text-muted)">🏢 区分マンション</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:' + GOLD + '">' + condoScore + '<span style="font-size:12px">/5</span></div>';
+  html += '<div style="font-size:10px;color:var(--text-muted)">総合スコア</div></div>';
+  html += '<div style="text-align:center;background:rgba(255,255,255,0.03);border-radius:8px;padding:8px">';
+  html += '<div style="font-size:11px;color:var(--text-muted)">🏘️ 一棟アパート</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:' + GOLD + '">' + apartScore + '<span style="font-size:12px">/5</span></div>';
+  html += '<div style="font-size:10px;color:var(--text-muted)">総合スコア</div></div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">評価軸</th><th style="text-align:center;padding:4px 6px">区分</th><th style="text-align:center;padding:4px 6px">一棟</th></tr>';
+  AXES.forEach(function(a) {
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:5px 6px;color:var(--text-muted)">' + a.label + '</td>';
+    html += '<td style="text-align:center;padding:5px 6px;color:' + (a.winner === 'condo' ? '#4ade80' : 'var(--text)') + '">' + a.condo + (a.winner === 'condo' ? ' ✓' : '') + '</td>';
+    html += '<td style="text-align:center;padding:5px 6px;color:' + (a.winner === 'apart' ? '#4ade80' : 'var(--text)') + '">' + a.apart + (a.winner === 'apart' ? ' ✓' : '') + '</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  var rec = condoScore >= apartScore ? '区分マンション' : '一棟アパート';
+  html += '<div style="margin-top:10px;font-size:12px;color:var(--text-muted);line-height:1.7">';
+  html += '🏆 5軸総合では <b style="color:#4ade80">' + rec + '</b> が有利。';
+  html += rec === '区分マンション' ? '投資初心者・融資枠が少ない・副業として始めたい方に適しています。' : '高CF重視・経験者・一括管理で効率化したい方に向いています。';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 CF試算は表面利回り×経費率（管理費7%・修繕5%・空室率12%）を想定。実際の条件により大きく異なります。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcCondoVsApartment(); })();
 
 function calcPropertyVsStock() {
   var el = document.getElementById('property-vs-stock-result'); if (!el) return;

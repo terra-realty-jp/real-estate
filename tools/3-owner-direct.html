@@ -1591,6 +1591,24 @@
     <div id="rate-type-choice-result"></div>
   </div>
 
+  <!-- 仲介手数料あり vs 直接売買 コスト比較カード -->
+  <div class="card" id="card-direct-vs-agent">
+    <div class="card-title">💰 仲介手数料あり vs 直接売買 コスト比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産会社経由（仲介）と売主・買主が直接取引する場合の<strong style="color:var(--text)">手数料・手取り差</strong>を比較します。直接売買のリスクも確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却価格（万円）</label>
+        <input type="number" id="dva_price" value="3000" min="100" max="50000" step="100" oninput="calcDirectVsAgent()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却価格に対する値引き率（直接売買 %）</label>
+        <input type="number" id="dva_discount" value="3" min="0" max="20" step="0.5" oninput="calcDirectVsAgent()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">直接売買では値引き交渉されやすい</div>
+      </div>
+    </div>
+    <div id="direct-vs-agent-result"></div>
+  </div>
+
   <!-- ペアローン vs 単独ローン診断カード -->
   <div class="card" id="card-pair-loan">
     <div class="card-title">👫 ペアローン vs 単独ローン診断</div>
@@ -5508,6 +5526,45 @@ function calcRateTypeChoice() {
     +'💡 入力した金利シナリオでは <b style="color:#60a5fa">'+bestName+'</b> が総支払い最小。ただし変動は金利上昇リスクあり。金利上昇が遅い場合は変動が有利になる傾向。最終判断は金融機関窓口でご相談ください。</div>';
 }
 (function(){ calcRateTypeChoice(); })();
+
+function calcDirectVsAgent() {
+  var el = document.getElementById('direct-vs-agent-result'); if (!el) return;
+  var price = parseFloat(document.getElementById('dva_price').value) || 3000;
+  var discount = (parseFloat(document.getElementById('dva_discount').value) || 3) / 100;
+  function agentFee(p) { return p <= 200 ? p * 0.05 + 2 : p <= 400 ? p * 0.04 + 4 : p * 0.03 + 6; }
+  var feeAgent = agentFee(price);
+  var directPrice = price * (1 - discount);
+  var directNet = directPrice;
+  var agentNet = price - feeAgent;
+  var diff = directNet - agentNet;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">📊 手取り比較</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (agentNet >= directNet ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏢 仲介あり</div>';
+  html += '<div style="font-size:17px;font-weight:900;color:var(--text)">' + agentNet.toFixed(1) + '万円</div>';
+  html += '<div style="font-size:10px;color:#f87171;margin-top:4px">手数料: −' + feeAgent.toFixed(1) + '万円</div>';
+  if (agentNet >= directNet) html += '<div style="font-size:10px;background:#4ade80;color:#000;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:4px;font-weight:700">手取り多</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (directNet > agentNet ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🤝 直接売買</div>';
+  html += '<div style="font-size:17px;font-weight:900;color:var(--text)">' + directNet.toFixed(1) + '万円</div>';
+  html += '<div style="font-size:10px;color:#fb923c;margin-top:4px">値引き: −' + (price * discount).toFixed(1) + '万円</div>';
+  if (directNet > agentNet) html += '<div style="font-size:10px;background:#4ade80;color:#000;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:4px;font-weight:700">手取り多</div>';
+  html += '</div></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">';
+  if (diff > 0) {
+    html += '✅ 直接売買の方が <b style="color:#4ade80">+' + Math.abs(diff).toFixed(1) + '万円</b> 多い試算。ただし契約書作成・重説・買主調査などの手間と法的リスクが発生します。';
+  } else {
+    html += '⚠️ 値引き率が仲介手数料を超えており、<b style="color:#f87171">仲介ありの方が手取りが多い</b>試算。プロの交渉力・安全性を考えると仲介が有利なケースです。';
+  }
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 直接売買では重要事項説明書・売買契約書を自分で用意する必要あり。買主のローン審査・境界確認・瑕疵担保対応など、専門的な対応が必要です。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcDirectVsAgent(); })();
 
 function calcPairLoan() {
   var el = document.getElementById('pair-loan-result'); if (!el) return;

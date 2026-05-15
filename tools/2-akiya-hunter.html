@@ -1745,6 +1745,31 @@
     <div id="neighbor-impact-result"></div>
   </div>
 
+  <!-- 空き家 固定資産税 特例外し試算カード -->
+  <div class="card" id="card-akiya-tax-special">
+    <div class="card-title">🏚️ 固定資産税「特例外し」リスク試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家を放置して<strong style="color:var(--text)">「特定空き家」に指定されると固定資産税が最大6倍</strong>になります。現在の税額と特例外し後の税額を比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">土地の評価額（万円）</label>
+        <input type="number" id="ats_land" value="1000" min="100" max="20000" step="100" oninput="calcAkiyaTaxSpecial()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">土地面積（㎡）</label>
+        <input type="number" id="ats_area" value="100" min="10" max="5000" step="10" oninput="calcAkiyaTaxSpecial()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物の評価額（万円）</label>
+        <input type="number" id="ats_bld" value="300" min="0" max="5000" step="50" oninput="calcAkiyaTaxSpecial()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">都市計画税（ある場合✓）</label>
+        <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;color:var(--text);margin-top:4px"><input type="checkbox" id="ats_city" onchange="calcAkiyaTaxSpecial()" style="accent-color:#fb923c">市街化区域・都市計画税あり</label>
+      </div>
+    </div>
+    <div id="akiya-tax-special-result"></div>
+  </div>
+
   <!-- 空き家 価値下落シミュレーターカード -->
   <div class="card" id="card-akiya-value-decline">
     <div class="card-title">📉 空き家の価値下落シミュレーター</div>
@@ -5895,6 +5920,54 @@ function calcNeighborImpact() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6">📌 空き家対策特別措置法（2023年改正）により、特定空き家の行政代執行・費用請求が強化されました。早期対処が得策です。</div>';
 }
 (function(){ calcNeighborImpact(); })();
+
+function calcAkiyaTaxSpecial() {
+  var el = document.getElementById('akiya-tax-special-result'); if (!el) return;
+  var land = parseFloat(document.getElementById('ats_land').value) || 1000;
+  var area = parseFloat(document.getElementById('ats_area').value) || 100;
+  var bld = parseFloat(document.getElementById('ats_bld').value) || 300;
+  var hasCity = document.getElementById('ats_city').checked;
+  var FIXED_RATE = 0.014;
+  var CITY_RATE = 0.003;
+  var SMALL_LIMIT = 200;
+  var smallArea = Math.min(area, SMALL_LIMIT);
+  var largeArea = Math.max(0, area - SMALL_LIMIT);
+  var landVal = land * 10000;
+  var perSqm = landVal / area;
+  var smallLandVal = perSqm * smallArea;
+  var largeLandVal = perSqm * largeArea;
+  var fixedLandNow = smallLandVal * (1/6) * FIXED_RATE + largeLandVal * (1/3) * FIXED_RATE;
+  var fixedBldNow = bld * 10000 * FIXED_RATE;
+  var cityLandNow = hasCity ? (smallLandVal * (1/3) * CITY_RATE + largeLandVal * (2/3) * CITY_RATE) : 0;
+  var cityBldNow = hasCity ? bld * 10000 * CITY_RATE : 0;
+  var totalNow = fixedLandNow + fixedBldNow + cityLandNow + cityBldNow;
+  var fixedLandAfter = landVal * FIXED_RATE;
+  var cityLandAfter = hasCity ? landVal * CITY_RATE : 0;
+  var totalAfter = fixedLandAfter + fixedBldNow + cityLandAfter + cityBldNow;
+  var diff = totalAfter - totalNow;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var fmt = function(v) { return Math.round(v).toLocaleString(); };
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在（住宅特例あり）</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:#4ade80">' + fmt(totalNow / 10000) + '<span style="font-size:12px">万円/年</span></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(244,67,54,0.3)">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">特定空き家指定後</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:#f87171">' + fmt(totalAfter / 10000) + '<span style="font-size:12px">万円/年</span></div>';
+  html += '</div></div>';
+  var multi = Math.round(totalAfter / totalNow * 10) / 10;
+  html += '<div style="font-size:13px;font-weight:700;color:#f87171;margin-bottom:6px">⚠️ 年間 +' + fmt(diff / 10000) + '万円（約' + multi + '倍）の税負担増</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;font-size:11px;color:var(--text-muted);line-height:1.7">';
+  html += '住宅特例（小規模宅地 1/6軽減）は建物が存在し居住用として管理されている間のみ適用。';
+  html += '空き家対策特別措置法により「特定空き家」に認定されると特例が除外され、土地の固定資産税が最大6倍に。';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 10年放置すると累計 <b style="color:#f87171">+' + fmt(diff / 10000 * 10) + '万円</b> の追加負担。早期解体・売却・賃貸活用が得策です。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaTaxSpecial(); })();
 
 function calcAkiyaValueDecline() {
   var el = document.getElementById('akiya-value-decline-result'); if (!el) return;
