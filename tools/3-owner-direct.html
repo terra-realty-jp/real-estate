@@ -1416,6 +1416,17 @@
     <div id="rate-rise-result"></div>
   </div>
 
+  <!-- 引渡し前最終確認チェックリストカード -->
+  <div class="card" id="card-handover-check">
+    <div class="card-title">✅ 引渡し前 最終確認チェックリスト</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産売買の決済・引渡し前に売主・買主それぞれが確認すべき重要項目です。チェックを入れながら準備の抜け漏れをゼロにしましょう。</p>
+    <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">売主 チェックリスト</div>
+    <div id="hc-seller-list" style="margin-bottom:16px"></div>
+    <div style="font-size:12px;font-weight:700;color:#4db6f5;margin-bottom:8px">買主 チェックリスト</div>
+    <div id="hc-buyer-list" style="margin-bottom:14px"></div>
+    <div id="handover-check-result"></div>
+  </div>
+
   <!-- 土地・建物価格按分計算カード -->
   <div class="card" id="card-land-build-split">
     <div class="card-title">📐 土地・建物価格 按分計算</div>
@@ -5101,6 +5112,68 @@ function calcLandBuildSplit() {
   el.innerHTML = html;
 }
 (function(){ calcLandBuildSplit(); })();
+
+function initHandoverCheck() {
+  var sellerItems = [
+    '権利証（登記識別情報）の準備・確認',
+    '印鑑証明書（3ヶ月以内）の取得',
+    '固定資産税評価証明書の取得',
+    '残置物・家財の搬出完了',
+    'ローン残債の完済・抵当権抹消手続きの確認',
+    '境界標の確認・設置',
+    '付帯設備の動作確認（照明・給湯器・エアコン等）',
+    '引渡し前の清掃・内覧準備'
+  ];
+  var buyerItems = [
+    '残代金・決済資金の準備（銀行振込先確認）',
+    '住宅ローン実行の確認（融資日程の調整）',
+    '火災保険の加入手続き完了',
+    '引越し日程・業者の手配',
+    'ライフライン（電気・ガス・水道）の名義変更申込',
+    '住民票の移転申請（引渡し後）',
+    '固定資産税精算額の確認',
+    '鍵・関係書類の受取確認リスト作成'
+  ];
+  function renderList(containerId, items, type) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    items.forEach(function(item, i) {
+      var row = document.createElement('label');
+      row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px;margin-bottom:4px;cursor:pointer';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.id = type + '_' + i;
+      cb.style.cssText = 'margin-top:2px;flex-shrink:0;accent-color:' + (type === 'seller' ? 'var(--gold)' : '#4db6f5');
+      cb.onchange = function() { updateHandoverResult(); };
+      var span = document.createElement('span');
+      span.style.cssText = 'font-size:12px;color:var(--text);line-height:1.5';
+      span.textContent = item;
+      row.appendChild(cb);
+      row.appendChild(span);
+      container.appendChild(row);
+    });
+  }
+  renderList('hc-seller-list', sellerItems, 'seller');
+  renderList('hc-buyer-list', buyerItems, 'buyer');
+  updateHandoverResult();
+}
+
+function updateHandoverResult() {
+  var el = document.getElementById('handover-check-result');
+  if (!el) return;
+  var allCbs = document.querySelectorAll('#hc-seller-list input[type=checkbox], #hc-buyer-list input[type=checkbox]');
+  var total = allCbs.length, checked = 0;
+  allCbs.forEach(function(cb) { if (cb.checked) checked++; });
+  var pct = total > 0 ? Math.round(checked / total * 100) : 0;
+  var color = pct >= 90 ? '#4caf50' : pct >= 70 ? '#f9a825' : 'var(--red)';
+  el.innerHTML = '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;display:flex;align-items:center;gap:12px">'
+    + '<div style="font-size:28px;font-weight:900;color:' + color + '">' + pct + '%</div>'
+    + '<div><div style="font-size:12px;font-weight:700;color:' + color + '">' + (pct >= 90 ? '引渡し準備ほぼ完了！' : pct >= 70 ? '残り項目を確認してください' : '未確認項目が多数あります') + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">' + checked + '/' + total + '項目完了</div></div>'
+    + '</div>';
+}
+(function(){ initHandoverCheck(); })();
 
 function filterOwnerCalcCards(query) {
   var cards = document.querySelectorAll('#owner-calc-cards > div');
