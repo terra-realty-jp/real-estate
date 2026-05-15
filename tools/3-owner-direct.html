@@ -1819,6 +1819,46 @@
     <div id="mediation-clause-result"></div>
   </div>
 
+  <!-- 融資特約 あり/なし 判断診断カード -->
+  <div class="card" id="card-contingency-clause">
+    <div class="card-title">🏦 融資特約 あり/なし 判断診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">住宅ローン融資特約（ローン特約）を付けるか外すかを、購入者の状況・物件・市場から判断するための診断です。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">自分の立場</div>
+        <select id="cc_role" onchange="calcContingencyClause()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="buyer" selected>買主（物件を購入したい）</option>
+          <option value="seller">売主（特約の有無で判断したい）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">自己資金の状況</div>
+        <select id="cc_funds" onchange="calcContingencyClause()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="rich">豊富（現金でも購入可能）</option>
+          <option value="mid" selected>普通（頭金20〜30%）</option>
+          <option value="thin">少ない（フルローン希望）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ローン審査の見込み</div>
+        <select id="cc_loan_chance" onchange="calcContingencyClause()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="high" selected>高い（事前審査通過済み）</option>
+          <option value="mid">普通（事前審査未実施）</option>
+          <option value="low">低い（年収・勤続年数が心配）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">市場の競争状況</div>
+        <select id="cc_competition" onchange="calcContingencyClause()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="high">激しい（複数の買い希望者あり）</option>
+          <option value="mid" selected>普通</option>
+          <option value="low">少ない（競合なし）</option>
+        </select>
+      </div>
+    </div>
+    <div id="contingency-clause-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -6101,6 +6141,55 @@ function calcMediationClause() {
   el.innerHTML = html;
 }
 (function(){ calcMediationClause(); })();
+
+function calcContingencyClause() {
+  var el = document.getElementById('contingency-clause-result'); if (!el) return;
+  var role = document.getElementById('cc_role').value;
+  var funds = document.getElementById('cc_funds').value;
+  var loanChance = document.getElementById('cc_loan_chance').value;
+  var competition = document.getElementById('cc_competition').value;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var withScore = 0, withoutScore = 0;
+  if (funds === 'rich') { withoutScore += 40; }
+  else if (funds === 'mid') { withScore += 20; withoutScore += 10; }
+  else { withScore += 40; }
+  if (loanChance === 'high') { withoutScore += 25; withScore += 15; }
+  else if (loanChance === 'mid') { withScore += 25; withoutScore += 10; }
+  else { withScore += 40; withoutScore += 0; }
+  if (competition === 'high') { withoutScore += 30; withScore += 10; }
+  else if (competition === 'mid') { withScore += 20; withoutScore += 20; }
+  else { withScore += 25; withoutScore += 10; }
+  var rec = withScore >= withoutScore ? 'with' : 'without';
+  var buyerAdvice, sellerAdvice;
+  if (role === 'buyer') {
+    buyerAdvice = rec === 'with'
+      ? '融資特約を付けることをおすすめします。ローン審査が通らなかった場合でも手付金が戻ります。ただし競合が多い場合は特約なし申込みで差別化も選択肢です。'
+      : '融資特約なしで申込むことで競争力が上がります。ただし審査落ちの場合は手付金を失うリスクがあります。事前審査を必ず完了してから判断してください。';
+  } else {
+    buyerAdvice = rec === 'with'
+      ? '特約あり申込みの場合、売主は融資否認時の白紙解除リスクを負います。高需要物件なら特約なし条件を提示する交渉も可能です。'
+      : '競合需要が高い場合、特約なし申込みを優先条件として選ぶことで早期成約を狙えます。ただし買主の与信確認を徹底してください。';
+  }
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  var opts = [
+    { label: '融資特約あり', score: withScore, pros: '審査落ち時に手付金返還', cons: '売主側のリスク大・競争で不利' },
+    { label: '融資特約なし', score: withoutScore, pros: '売主へのアピール・競争力UP', cons: '審査落ち時に手付金没収リスク' }
+  ];
+  opts.forEach(function(o) {
+    var isRec = (o.label.indexOf('あり') >= 0 && rec === 'with') || (o.label.indexOf('なし') >= 0 && rec === 'without');
+    html += '<div style="border:1px solid ' + (isRec ? BDR : 'rgba(255,255,255,0.07)') + ';border-radius:8px;padding:10px;background:' + (isRec ? BG : 'rgba(255,255,255,0.02)') + '">';
+    html += '<div style="font-size:12px;font-weight:700;color:' + (isRec ? ACCENT : 'var(--text)') + ';margin-bottom:4px">' + o.label + (isRec ? ' ★' : '') + '</div>';
+    html += '<div style="font-size:10px;color:#4ade80;margin-bottom:2px">✅ ' + o.pros + '</div>';
+    html += '<div style="font-size:10px;color:#f87171;margin-bottom:4px">⚠️ ' + o.cons + '</div>';
+    html += '<div style="font-size:11px;color:' + ACCENT + '">マッチ度: ' + o.score + 'pt</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);border-top:1px solid rgba(255,255,255,0.08);padding-top:10px">💡 ' + buyerAdvice + '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcContingencyClause(); })();
 
 function filterOwnerCalcCards(query) {
   var cards = document.querySelectorAll('#owner-calc-cards > div');

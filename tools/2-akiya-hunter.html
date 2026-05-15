@@ -1985,6 +1985,31 @@
     <div id="akiya-empty-risk-result"></div>
   </div>
 
+  <!-- 建蔽率・容積率 活用診断カード -->
+  <div class="card" id="card-plot-utility">
+    <div class="card-title">📐 建蔽率・容積率 活用診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">土地の建蔽率・容積率と現在の建物面積を比較し、増築・建て替え余地と活用できる容積率残量を診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">土地面積（m²）</div>
+        <input type="number" id="pu_land" value="200" min="10" max="5000" step="10" oninput="calcPlotUtility()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の建物面積（m²）</div>
+        <input type="number" id="pu_current_build" value="80" min="0" max="2000" step="10" oninput="calcPlotUtility()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建蔽率（%）</div>
+        <input type="number" id="pu_coverage" value="60" min="20" max="80" step="10" oninput="calcPlotUtility()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">容積率（%）</div>
+        <input type="number" id="pu_far" value="200" min="50" max="600" step="50" oninput="calcPlotUtility()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="plot-utility-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -6308,6 +6333,51 @@ function calcAkiyaEmptyRisk() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaEmptyRisk(); })();
+
+function calcPlotUtility() {
+  var el = document.getElementById('plot-utility-result'); if (!el) return;
+  var land = parseFloat(document.getElementById('pu_land').value) || 200;
+  var currentBuild = parseFloat(document.getElementById('pu_current_build').value) || 80;
+  var coverage = (parseFloat(document.getElementById('pu_coverage').value) || 60) / 100;
+  var far = (parseFloat(document.getElementById('pu_far').value) || 200) / 100;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var maxCoverage = land * coverage;
+  var maxFloorArea = land * far;
+  var currentCoverageRate = land > 0 ? currentBuild / land * 100 : 0;
+  var currentFARRate = land > 0 ? currentBuild / land * 100 : 0;
+  var remainCoverage = maxCoverage - currentBuild;
+  var remainFAR = maxFloorArea - currentBuild;
+  var useRateCoverage = land > 0 ? currentBuild / maxCoverage * 100 : 0;
+  var useRateFAR = land > 0 ? currentBuild / maxFloorArea * 100 : 0;
+  var status = remainFAR > currentBuild * 0.5 ? '余裕あり（増築・建て替えで大幅拡張可能）' : remainFAR > 0 ? 'やや余裕あり' : '上限到達（これ以上の拡張不可）';
+  var statusColor = remainFAR > currentBuild * 0.5 ? '#4ade80' : remainFAR > 0 ? '#facc15' : '#f87171';
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
+  var panels3 = [
+    { label: '建蔽率の上限', val: Math.round(maxCoverage) + 'm²', sub: '建物1階部分の上限', used: useRateCoverage },
+    { label: '容積率の上限', val: Math.round(maxFloorArea) + 'm²', sub: '全フロア合計の上限', used: useRateFAR }
+  ];
+  panels3.forEach(function(p) {
+    var barColor = p.used >= 90 ? '#f87171' : p.used >= 70 ? '#fb923c' : '#4ade80';
+    html += '<div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:10px">';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">' + p.label + '</div>';
+    html += '<div style="font-size:14px;font-weight:900;color:' + ACCENT + '">' + p.val + '</div>';
+    html += '<div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">' + p.sub + '</div>';
+    html += '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px"><div style="width:' + Math.min(100, Math.round(p.used)) + '%;background:' + barColor + ';height:6px;border-radius:4px"></div></div>';
+    html += '<div style="font-size:9px;color:' + barColor + ';margin-top:2px">現在' + Math.round(p.used) + '%使用</div></div>';
+  });
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">項目</th><th style="text-align:right;padding:4px 6px">現在</th><th style="text-align:right;padding:4px 6px">上限</th><th style="text-align:right;padding:4px 6px">残余</th></tr>';
+  var rows8 = [['建築面積（建蔽率）', Math.round(currentBuild) + 'm²', Math.round(maxCoverage) + 'm²', Math.round(remainCoverage) + 'm²'], ['延床面積（容積率）', Math.round(currentBuild) + 'm²', Math.round(maxFloorArea) + 'm²', Math.round(remainFAR) + 'm²']];
+  rows8.forEach(function(r) { html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:5px 6px">' + r[0] + '</td><td style="text-align:right;padding:5px 6px">' + r[1] + '</td><td style="text-align:right;padding:5px 6px">' + r[2] + '</td><td style="text-align:right;padding:5px 6px;color:' + ACCENT + '">' + r[3] + '</td></tr>'; });
+  html += '</table>';
+  html += '<div style="font-size:12px;color:' + statusColor + ';font-weight:700;margin-bottom:4px">判定: ' + status + '</div>';
+  if (remainFAR > 0) html += '<div style="font-size:11px;color:var(--text-muted)">💡 増築可能面積（容積率基準）: <b style="color:' + ACCENT + '">' + Math.round(remainFAR) + 'm²</b>。賃貸スペースを追加したい場合の参考値です。</div>';
+  html += '</div><div style="font-size:10px;color:var(--text-muted);padding:4px 0">※ 実際の計画には建築基準法の各種規定（高さ制限・斜線制限等）が適用されます。建築士に要確認。</div>';
+  el.innerHTML = html;
+}
+(function(){ calcPlotUtility(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;

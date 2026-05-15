@@ -2226,6 +2226,39 @@
     <div id="absence-risk-result"></div>
   </div>
 
+  <!-- 査定価格 vs 希望価格 ギャップ分析カード -->
+  <div class="card" id="card-sale-gap-analysis">
+    <div class="card-title">📉 査定価格 vs 希望価格 ギャップ分析</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">「高く売りたい」という希望と実際の査定価格のギャップを分析。乖離率・売却期間・成約確率への影響を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">市場査定価格（万円）</div>
+        <input type="number" id="sga_market" value="3000" min="100" max="100000" step="100" oninput="calcSaleGapAnalysis()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">希望売出価格（万円）</div>
+        <input type="number" id="sga_ask" value="3300" min="100" max="100000" step="100" oninput="calcSaleGapAnalysis()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件の需要（エリア人気度）</div>
+        <select id="sga_demand" onchange="calcSaleGapAnalysis()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="high">高い（人気エリア・駅近）</option>
+          <option value="mid" selected>普通</option>
+          <option value="low">低い（郊外・築古）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売却希望期間</div>
+        <select id="sga_timeline" onchange="calcSaleGapAnalysis()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="fast">3ヶ月以内に売りたい</option>
+          <option value="mid" selected>6ヶ月以内が目標</option>
+          <option value="flex">時間は気にしない</option>
+        </select>
+      </div>
+    </div>
+    <div id="sale-gap-analysis-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7091,6 +7124,61 @@ function calcAbsenceRisk() {
   el.innerHTML = html;
 }
 (function(){ calcAbsenceRisk(); })();
+
+function calcSaleGapAnalysis() {
+  var el = document.getElementById('sale-gap-analysis-result'); if (!el) return;
+  var market = parseFloat(document.getElementById('sga_market').value) || 3000;
+  var ask = parseFloat(document.getElementById('sga_ask').value) || 3300;
+  var demand = document.getElementById('sga_demand').value;
+  var timeline = document.getElementById('sga_timeline').value;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var gapAmt = ask - market;
+  var gapPct = market > 0 ? gapAmt / market * 100 : 0;
+  var demandBase = { high: 90, mid: 70, low: 45 }[demand] || 70;
+  var gapPenalty = Math.min(60, Math.abs(gapPct) * 3);
+  var successProb = Math.max(5, demandBase - gapPenalty);
+  var timelineMulti = { fast: 0.7, mid: 1.0, flex: 1.3 }[timeline] || 1.0;
+  var expectedWeeks = Math.round((1 / (successProb / 100)) * 4 * timelineMulti);
+  var optimalAsk = market * 1.05;
+  var gapLabel = gapPct <= 0 ? '査定内' : gapPct <= 5 ? '小幅乖離（許容範囲）' : gapPct <= 10 ? '中程度乖離（要注意）' : gapPct <= 20 ? '大幅乖離（販売困難）' : '過大乖離（売却不可能に近い）';
+  var gapColor = gapPct <= 5 ? '#4ade80' : gapPct <= 10 ? '#facc15' : gapPct <= 20 ? '#fb923c' : '#f87171';
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+  var pnls = [
+    { label: '乖離額', val: (gapAmt >= 0 ? '+' : '') + Math.round(gapAmt).toLocaleString() + '万円', sub: (gapPct >= 0 ? '+' : '') + gapPct.toFixed(1) + '%', color: gapColor },
+    { label: '成約確率（目安）', val: successProb.toFixed(0) + '%', sub: demand + '需要', color: successProb >= 70 ? '#4ade80' : successProb >= 40 ? '#facc15' : '#f87171' },
+    { label: '予想売却期間', val: expectedWeeks + '週', sub: '期待値', color: ACCENT }
+  ];
+  pnls.forEach(function(p) {
+    html += '<div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:8px;text-align:center">';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">' + p.label + '</div>';
+    html += '<div style="font-size:15px;font-weight:900;color:' + p.color + '">' + p.val + '</div>';
+    html += '<div style="font-size:10px;color:var(--text-muted)">' + p.sub + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;margin-bottom:10px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">乖離評価: <b style="color:' + gapColor + '">' + gapLabel + '</b></div>';
+  var cutTargets = [
+    { label: '査定価格丁度', price: market, prob: demandBase, weeks: Math.round(4 / (demandBase / 100)) },
+    { label: '5%上乗せ（おすすめ）', price: Math.round(market * 1.05), prob: Math.max(5, demandBase - 15), weeks: Math.round(6 / (Math.max(5, demandBase - 15) / 100)) },
+    { label: '10%上乗せ', price: Math.round(market * 1.10), prob: Math.max(5, demandBase - 30), weeks: Math.round(8 / (Math.max(5, demandBase - 30) / 100)) },
+    { label: '現在の希望価格', price: ask, prob: successProb, weeks: expectedWeeks }
+  ];
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:3px 6px">価格設定</th><th style="text-align:right;padding:3px 6px">売出価格</th><th style="text-align:right;padding:3px 6px">成約確率</th><th style="text-align:right;padding:3px 6px">期間目安</th></tr>';
+  cutTargets.forEach(function(t) {
+    var isRec = t.label.indexOf('おすすめ') >= 0;
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)' + (isRec ? ';background:rgba(74,222,128,0.07)' : '') + '">';
+    html += '<td style="padding:4px 6px;color:' + (isRec ? ACCENT : 'var(--text)') + '">' + t.label + (isRec ? ' ★' : '') + '</td>';
+    html += '<td style="text-align:right;padding:4px 6px">' + t.price.toLocaleString() + '万円</td>';
+    html += '<td style="text-align:right;padding:4px 6px;color:' + (t.prob >= 70 ? '#4ade80' : t.prob >= 40 ? '#facc15' : '#f87171') + '">' + t.prob.toFixed(0) + '%</td>';
+    html += '<td style="text-align:right;padding:4px 6px">' + t.weeks + '週</td></tr>';
+  });
+  html += '</table></div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSaleGapAnalysis(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');

@@ -2113,6 +2113,31 @@
     <div id="dcf-valuation-result"></div>
   </div>
 
+  <!-- IRR（内部収益率）計算カード -->
+  <div class="card" id="card-irr-calc">
+    <div class="card-title">📈 IRR（内部収益率）計算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">投資から生じるキャッシュフローの現在価値合計がゼロになる割引率（IRR）を計算。ローン金利・他の投資との比較に使います。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">初期投資額（万円）</div>
+        <input type="number" id="irr_init" value="3000" min="100" max="100000" step="100" oninput="calcIRRCalc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間税引前収益（万円）</div>
+        <input type="number" id="irr_annual_cf" value="180" min="1" max="5000" step="10" oninput="calcIRRCalc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">保有期間（年）</div>
+        <input type="number" id="irr_period" value="10" min="1" max="30" step="1" oninput="calcIRRCalc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">期末売却価格（万円）</div>
+        <input type="number" id="irr_exit_price" value="2500" min="0" max="100000" step="100" oninput="calcIRRCalc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="irr-calc-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -8663,6 +8688,67 @@ function calcDCFValuation() {
   el.innerHTML = html;
 }
 (function(){ calcDCFValuation(); })();
+
+function calcIRRCalc() {
+  var el = document.getElementById('irr-calc-result'); if (!el) return;
+  var init = parseFloat(document.getElementById('irr_init').value) || 3000;
+  var annualCF = parseFloat(document.getElementById('irr_annual_cf').value) || 180;
+  var period = Math.round(parseFloat(document.getElementById('irr_period').value) || 10);
+  var exitPrice = parseFloat(document.getElementById('irr_exit_price').value) || 2500;
+  var ACCENT = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var irr = 0.05;
+  for (var iter = 0; iter < 100; iter++) {
+    var npv = -init;
+    for (var i = 1; i <= period; i++) npv += annualCF / Math.pow(1 + irr, i);
+    npv += exitPrice / Math.pow(1 + irr, period);
+    var dnpv = 0;
+    for (var j = 1; j <= period; j++) dnpv -= j * annualCF / Math.pow(1 + irr, j + 1);
+    dnpv -= period * exitPrice / Math.pow(1 + irr, period + 1);
+    if (Math.abs(dnpv) < 1e-10) break;
+    var newIrr = irr - npv / dnpv;
+    if (Math.abs(newIrr - irr) < 1e-8) { irr = newIrr; break; }
+    irr = newIrr;
+    if (irr < -0.99) { irr = -0.99; break; }
+    if (irr > 10) { irr = 10; break; }
+  }
+  var irrPct = irr * 100;
+  var totalReturn = annualCF * period + exitPrice;
+  var totalProfit = totalReturn - init;
+  var simpleYield = init > 0 ? annualCF / init * 100 : 0;
+  var irrColor = irrPct >= 8 ? '#4ade80' : irrPct >= 5 ? ACCENT : irrPct >= 3 ? '#facc15' : '#f87171';
+  var irrLabel = irrPct >= 8 ? '優良投資' : irrPct >= 5 ? '合格水準' : irrPct >= 3 ? '低水準' : '要検討';
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="text-align:center;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">内部収益率（IRR）</div>';
+  html += '<div style="font-size:36px;font-weight:900;color:' + irrColor + '">' + irrPct.toFixed(2) + '<span style="font-size:18px">%</span></div>';
+  html += '<div style="font-size:13px;color:' + irrColor + ';font-weight:700">' + irrLabel + '</div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  var mp = [
+    { label: '表面利回り', val: simpleYield.toFixed(2) + '%', sub: '年間収益÷初期投資' },
+    { label: '総収入合計', val: Math.round(totalReturn).toLocaleString() + '万円', sub: period + '年間+売却益' },
+    { label: '総利益（税前）', val: (totalProfit >= 0 ? '+' : '') + Math.round(totalProfit).toLocaleString() + '万円', sub: '初期投資との差額' }
+  ];
+  mp.forEach(function(m) {
+    html += '<div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:8px;text-align:center">';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">' + m.label + '</div>';
+    html += '<div style="font-size:12px;font-weight:900;color:' + ACCENT + '">' + m.val + '</div>';
+    html += '<div style="font-size:9px;color:var(--text-muted)">' + m.sub + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:10px;font-size:11px">';
+  html += '<div style="color:var(--text-muted);margin-bottom:6px">📊 IRR比較基準</div>';
+  var benchmarks = [['銀行預金', '0.1%'], ['国債', '0.5〜1.5%'], ['REIT（平均）', '3〜5%'], ['不動産投資（目標）', '5〜8%'], ['このシミュレーション', irrPct.toFixed(2) + '%']];
+  benchmarks.forEach(function(b) {
+    var isSelf = b[0].indexOf('シミュ') >= 0;
+    html += '<div style="display:flex;justify-content:space-between;padding:2px 0;' + (isSelf ? 'color:' + irrColor + ';font-weight:700' : 'color:var(--text-muted)') + '">';
+    html += '<span>' + b[0] + '</span><span>' + b[1] + '</span></div>';
+  });
+  html += '</div></div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);padding:4px 0">※ IRRはNewton-Raphson法で反復計算。税金・ローン返済・空室リスクは含みません。</div>';
+  el.innerHTML = html;
+}
+(function(){ calcIRRCalc(); })();
 
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');
