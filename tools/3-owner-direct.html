@@ -1391,6 +1391,31 @@
     <div id="price-gap-result"></div>
   </div>
 
+  <!-- 住宅ローン金利上昇シミュレーションカード -->
+  <div class="card" id="card-rate-rise">
+    <div class="card-title">📈 住宅ローン 金利上昇シミュレーション</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">変動金利ローンで金利が上昇した場合に月々の返済額がどう変わるかを試算します。金利リスクに備えた家計計画を立てましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現在のローン残高（万円）</label>
+        <input type="number" id="rr_balance" value="3000" min="100" max="50000" step="100" oninput="calcRateRise()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現在の金利（%）</label>
+        <input type="number" id="rr_rate" value="0.5" min="0.1" max="8" step="0.1" oninput="calcRateRise()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">残り返済期間（年）</label>
+        <input type="number" id="rr_term" value="25" min="1" max="50" step="1" oninput="calcRateRise()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">月収（収支の安全確認用・万円）</label>
+        <input type="number" id="rr_income" value="35" min="10" max="300" step="1" oninput="calcRateRise()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rate-rise-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -4951,6 +4976,57 @@ function calcPriceGap() {
   el.innerHTML = html;
 }
 (function(){ calcPriceGap(); })();
+
+function calcRateRise() {
+  var el = document.getElementById('rate-rise-result');
+  if (!el) return;
+  var balance = parseFloat(document.getElementById('rr_balance').value) || 0;
+  var rate = parseFloat(document.getElementById('rr_rate').value) || 0;
+  var term = parseFloat(document.getElementById('rr_term').value) || 0;
+  var income = parseFloat(document.getElementById('rr_income').value) || 0;
+  if (balance <= 0 || term <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">ローン残高と返済期間を入力してください</div>'; return; }
+
+  function monthlyPayment(b, r, y) {
+    var m = r / 100 / 12;
+    var n = y * 12;
+    if (m === 0) return b * 10000 / n;
+    return b * 10000 * m / (1 - Math.pow(1 + m, -n));
+  }
+
+  var current = monthlyPayment(balance, rate, term);
+  var scenarios = [
+    { label: '現状維持', rate: rate, color: 'var(--text)' },
+    { label: '+0.5%', rate: rate + 0.5, color: '#f9a825' },
+    { label: '+1.0%', rate: rate + 1.0, color: '#ff7043' },
+    { label: '+2.0%', rate: rate + 2.0, color: '#e53935' }
+  ];
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<tr style="background:rgba(255,255,255,0.06)"><th style="padding:8px;text-align:left;color:var(--text-muted);font-weight:600">シナリオ</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">適用金利</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">月返済額</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">増加額</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">返済比率</th></tr>';
+
+  scenarios.forEach(function(s) {
+    var pm = monthlyPayment(balance, s.rate, term);
+    var diff = pm - current;
+    var ratio = income > 0 ? (pm / (income * 10000) * 100) : 0;
+    var ratioColor = ratio >= 35 ? 'var(--red)' : ratio >= 25 ? '#f9a825' : 'var(--green)';
+    html += '<tr style="border-top:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:8px;font-weight:700;color:' + s.color + '">' + s.label + '</td>';
+    html += '<td style="padding:8px;text-align:right;color:var(--text-muted)">' + s.rate.toFixed(1) + '%</td>';
+    html += '<td style="padding:8px;text-align:right;font-weight:700;color:' + s.color + '">' + Math.round(pm / 10000 * 10) / 10 + '万円</td>';
+    html += '<td style="padding:8px;text-align:right;color:' + (diff > 0 ? 'var(--red)' : 'var(--green)') + '">' + (diff > 0 ? '+' : '') + Math.round(diff / 10000 * 10) / 10 + '万円</td>';
+    html += '<td style="padding:8px;text-align:right;font-weight:700;color:' + ratioColor + '">' + ratio.toFixed(1) + '%</td>';
+    html += '</tr>';
+  });
+  html += '</table></div>';
+
+  var riseAmt = monthlyPayment(balance, rate + 2.0, term) - current;
+  html += '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">';
+  html += '💡 +2%シナリオで月' + Math.round(riseAmt / 10000 * 10) / 10 + '万円の増加。変動金利の5年ルール・125%ルールにより即時に上昇しない場合もありますが、長期的な上昇リスクに備えて毎月の余裕資金を確認しておきましょう。';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcRateRise(); })();
 
 function filterOwnerCalcCards(query) {
   var cards = document.querySelectorAll('#owner-calc-cards > div');
