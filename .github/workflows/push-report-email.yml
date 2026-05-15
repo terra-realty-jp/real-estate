@@ -1,129 +1,160 @@
-name: Daily Push Report Email
+name: Generate Implementation Report
 
 on:
-  schedule:
-    # 毎日 23:00 JST (14:00 UTC) に実行 — 1日の実装内容をまとめて送信
-    - cron: '0 14 * * *'
-  workflow_dispatch: # 手動実行ボタン付き
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  send-report:
+  generate-report:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 30
+          fetch-depth: 50
 
-      - name: Gather git info
-        id: info
-        run: |
-          echo "time=$(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M JST')" >> $GITHUB_OUTPUT
-          echo "date=$(TZ=Asia/Tokyo date '+%Y-%m-%d')" >> $GITHUB_OUTPUT
-          {
-            echo 'recent<<EOF'
-            git log --oneline --since="24 hours ago" || git log -10 --oneline
-            echo 'EOF'
-          } >> $GITHUB_OUTPUT
-          {
-            echo 'top<<EOF'
-            git log -1 --format='%s'
-            echo 'EOF'
-          } >> $GITHUB_OUTPUT
-          COUNT=$(git log --oneline --since="24 hours ago" | wc -l | tr -d ' ')
-          echo "count=${COUNT}" >> $GITHUB_OUTPUT
-
-      - name: Send HTML Report Email
-        env:
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          REPORT_TIME: ${{ steps.info.outputs.time }}
-          REPORT_DATE: ${{ steps.info.outputs.date }}
-          RECENT_COMMITS: ${{ steps.info.outputs.recent }}
-          TOP_MSG: ${{ steps.info.outputs.top }}
-          COMMIT_COUNT: ${{ steps.info.outputs.count }}
+      - name: Generate HTML Report
         run: |
           python3 << 'PYEOF'
-          import smtplib, os
-          from email.mime.text import MIMEText
-          from email.mime.multipart import MIMEMultipart
+          import subprocess, datetime, os, re
 
-          pw           = os.environ.get("GMAIL_APP_PASSWORD", "")
-          report_time  = os.environ.get("REPORT_TIME", "")
-          report_date  = os.environ.get("REPORT_DATE", "")
-          recent_raw   = os.environ.get("RECENT_COMMITS", "")
-          top_msg      = os.environ.get("TOP_MSG", "")
-          count        = os.environ.get("COMMIT_COUNT", "0")
+          def git(cmd):
+              return subprocess.check_output(cmd, shell=True, text=True, errors='replace').strip()
 
-          if not pw:
-              print("⚠️ GMAIL_APP_PASSWORD not set — skipping email")
-              exit(0)
+          now_jst = datetime.datetime.utcnow() + datetime.timedelta(hours=9)
+          date_str = now_jst.strftime('%Y-%m-%d %H:%M JST')
 
-          commit_rows = ""
-          for line in recent_raw.strip().splitlines():
-              if not line.strip():
-                  continue
-              parts = line.split(" ", 1)
-              sha = parts[0] if parts else ""
-              msg = parts[1] if len(parts) > 1 else line
-              commit_rows += (
-                  f'<tr>'
-                  f'<td style="font-family:monospace;color:#888;padding:5px 10px;white-space:nowrap;font-size:11px">{sha}</td>'
-                  f'<td style="padding:5px 10px;color:#ddd;font-size:12px">{msg}</td>'
-                  f'</tr>'
-              )
+          # 直近30件のコミット取得
+          log_raw = git("git log -30 --format='%H|%s|%an|%ad' --date=format:'%Y-%m-%d %H:%M'")
+          commits = []
+          for line in log_raw.splitlines():
+              parts = line.split('|', 3)
+              if len(parts) == 4:
+                  commits.append({'sha': parts[0][:7], 'msg': parts[1], 'author': parts[2], 'date': parts[3]})
 
-          if not commit_rows:
-              commit_rows = '<tr><td colspan="2" style="padding:10px;color:#666;font-size:12px">本日のコミットはありませんでした</td></tr>'
+          # ツール別変更ファイル（最新コミット）
+          changed = git("git diff --name-only HEAD~1 HEAD 2>/dev/null || git show --name-only --format='' HEAD").splitlines()
+
+          # カテゴリ別色分け
+          def tag_color(msg):
+              m = msg.lower()
+              if 'tool1' in m or '1-ai' in m: return ('#4ade80', '🏠 Tool1 AI査定')
+              if 'tool2' in m or '2-akiya' in m: return ('#fb923c', '🏚️ Tool2 空き家')
+              if 'tool3' in m or '3-owner' in m: return ('#60a5fa', '🤝 Tool3 売買')
+              if 'tool4' in m or '4-kanri' in m: return ('#60a5fa', '🏢 Tool4 管理')
+              if 'tool5' in m or '5-toushi' in m: return ('#d4af37', '📊 Tool5 投資')
+              if 'tool1-5' in m or 'all' in m: return ('#a78bfa', '🛠️ 全ツール')
+              if 'ux:' in m: return ('#34d399', '✨ UX改善')
+              if 'seo:' in m or 'aeo:' in m: return ('#f472b6', '🔍 SEO/AEO')
+              if 'log:' in m: return ('#6b7280', '📝 ログ')
+              if 'index' in m: return ('#fbbf24', '🏠 index')
+              return ('#9ca3af', '⚙️ その他')
+
+          rows = ''
+          for c in commits:
+              color, label = tag_color(c['msg'])
+              rows += f'''
+              <tr>
+                <td style="padding:10px 14px;white-space:nowrap">
+                  <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:11px;color:#9ca3af">{c['sha']}</code>
+                </td>
+                <td style="padding:10px 8px;white-space:nowrap">
+                  <span style="background:{color}22;color:{color};border:1px solid {color}55;border-radius:12px;padding:2px 10px;font-size:10px;font-weight:700">{label}</span>
+                </td>
+                <td style="padding:10px 14px;color:#e5e7eb;font-size:13px;line-height:1.4">{c['msg']}</td>
+                <td style="padding:10px 14px;white-space:nowrap;color:#6b7280;font-size:11px">{c['date']}</td>
+              </tr>'''
+
+          changed_rows = ''
+          tool_counts = {'Tool1':0,'Tool2':0,'Tool3':0,'Tool4':0,'Tool5':0,'その他':0}
+          for f in changed:
+              if not f: continue
+              if '1-ai-satei' in f: tool_counts['Tool1'] += 1
+              elif '2-akiya' in f: tool_counts['Tool2'] += 1
+              elif '3-owner' in f: tool_counts['Tool3'] += 1
+              elif '4-kanri' in f: tool_counts['Tool4'] += 1
+              elif '5-toushi' in f: tool_counts['Tool5'] += 1
+              else: tool_counts['その他'] += 1
+              changed_rows += f'<div style="padding:4px 10px;border-left:2px solid #4ade80;margin-bottom:4px;font-family:monospace;font-size:12px;color:#9ca3af">{f}</div>'
+
+          bar_html = ''
+          bar_colors = {'Tool1':'#4ade80','Tool2':'#fb923c','Tool3':'#60a5fa','Tool4':'#60a5fa','Tool5':'#d4af37','その他':'#6b7280'}
+          for k,v in tool_counts.items():
+              if v > 0:
+                  bar_html += f'<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span style="color:#9ca3af">{k}</span><span style="color:{bar_colors[k]}">{v}件</span></div><div style="background:#1f2937;border-radius:4px;height:8px"><div style="background:{bar_colors[k]};width:{min(v*25,100)}%;height:8px;border-radius:4px"></div></div></div>'
 
           html = f"""<!DOCTYPE html>
 <html lang="ja">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0e0e0e;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#e8e4db">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0e0e0e;padding:24px 0">
-<tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>実装レポート — {date_str}</title>
+<style>
+  * {{ box-sizing:border-box; margin:0; padding:0; }}
+  body {{ background:#0f172a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; min-height:100vh; }}
+  .header {{ background:linear-gradient(135deg,#1e293b,#0f172a); border-bottom:2px solid #c9a84c; padding:32px 40px; }}
+  .header h1 {{ font-size:24px; font-weight:900; color:#c9a84c; margin-bottom:6px; }}
+  .header .sub {{ font-size:13px; color:#64748b; }}
+  .badge {{ display:inline-block; background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.4); border-radius:20px; padding:5px 16px; font-size:14px; font-weight:700; color:#c9a84c; margin-top:12px; }}
+  .container {{ max-width:1100px; margin:0 auto; padding:28px 24px; }}
+  .grid {{ display:grid; grid-template-columns:1fr 320px; gap:20px; }}
+  .card {{ background:#1e293b; border:1px solid rgba(255,255,255,0.06); border-radius:12px; overflow:hidden; }}
+  .card-header {{ padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.06); font-size:12px; font-weight:700; color:#94a3b8; letter-spacing:0.8px; text-transform:uppercase; }}
+  table {{ width:100%; border-collapse:collapse; }}
+  tr:hover {{ background:rgba(255,255,255,0.03); }}
+  tr + tr {{ border-top:1px solid rgba(255,255,255,0.04); }}
+  @media(max-width:768px){{ .grid{{ grid-template-columns:1fr; }} }}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>📊 不動産ツール 実装レポート</h1>
+  <div class="sub">最終更新: {date_str}</div>
+  <div class="badge">直近 {len(commits)} コミット</div>
+</div>
+<div class="container">
+<div class="grid">
+  <div>
+    <div class="card">
+      <div class="card-header">コミット履歴</div>
+      <table>{rows}</table>
+    </div>
+  </div>
+  <div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">最新プッシュの変更ファイル</div>
+      <div style="padding:14px">{changed_rows or '<div style="color:#6b7280;font-size:12px">変更なし</div>'}</div>
+    </div>
+    <div class="card">
+      <div class="card-header">ツール別コミット数（最新）</div>
+      <div style="padding:14px">{bar_html or '<div style="color:#6b7280;font-size:12px">データなし</div>'}</div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-header">クイックリンク</div>
+      <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+        <a href="https://shinji-japaaaan.github.io/real-estate/" style="display:block;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:10px 14px;color:#c9a84c;text-decoration:none;font-size:13px;font-weight:600">🌐 本番サイトを開く</a>
+        <a href="https://github.com/shinji-japaaaan/real-estate/commits/main" style="display:block;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#94a3b8;text-decoration:none;font-size:13px">📜 GitHub コミット一覧</a>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>"""
 
-  <tr><td style="background:linear-gradient(135deg,#1a1a1a,#111);border-bottom:2px solid #c9a84c;border-radius:12px 12px 0 0;padding:28px 28px 20px;text-align:center">
-    <div style="font-size:36px;margin-bottom:8px">📊</div>
-    <div style="font-size:20px;font-weight:900;color:#c9a84c;margin-bottom:4px">不動産ツール — 本日の実装サマリー</div>
-    <div style="font-size:13px;color:#888">{report_date} 23:00 JST</div>
-    <div style="display:inline-block;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.4);border-radius:20px;padding:6px 18px;margin-top:10px;font-size:14px;font-weight:700;color:#c9a84c">{count}件のコミット</div>
-  </td></tr>
-
-  <tr><td style="background:#111;padding:22px 28px">
-    <div style="font-size:11px;color:#c9a84c;font-weight:700;letter-spacing:1px;margin-bottom:8px">最新コミット</div>
-    <div style="font-size:15px;font-weight:700;color:#e8e4db;line-height:1.5">{top_msg}</div>
-  </td></tr>
-
-  <tr><td style="background:#161616;border-top:1px solid rgba(255,255,255,0.06);padding:18px 28px">
-    <div style="font-size:11px;color:#888;font-weight:700;letter-spacing:1px;margin-bottom:10px">本日のコミット一覧</div>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#0e0e0e;border-radius:6px">
-      {commit_rows}
-    </table>
-  </td></tr>
-
-  <tr><td style="background:#1a1a1a;border-top:1px solid rgba(201,168,76,0.3);padding:22px 28px;text-align:center;border-radius:0 0 12px 12px">
-    <a href="https://shinji-japaaaan.github.io/real-estate/" style="display:inline-block;background:#c9a84c;color:#000;font-weight:700;font-size:13px;padding:11px 26px;border-radius:8px;text-decoration:none;margin-right:10px">ツールを開く →</a>
-    <a href="https://github.com/shinji-japaaaan/real-estate/commits/main" style="display:inline-block;background:rgba(255,255,255,0.08);color:#ccc;font-size:12px;padding:11px 20px;border-radius:8px;text-decoration:none">GitHubで確認</a>
-  </td></tr>
-
-</table>
-</td></tr>
-</table>
-</body></html>"""
-
-          plain = f"[{report_date} 本日のサマリー] {count}件のコミット\n{top_msg}\n\nURL: https://shinji-japaaaan.github.io/real-estate/"
-
-          msg = MIMEMultipart("alternative")
-          msg["Subject"] = f"📊 本日の実装サマリー ({report_date}) — {count}件のコミット"
-          msg["From"] = "shinji.japaaan@gmail.com"
-          msg["To"]   = "shinji.japaaan@gmail.com"
-          msg.attach(MIMEText(plain, "plain",  "utf-8"))
-          msg.attach(MIMEText(html,  "html",   "utf-8"))
-
-          with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-              server.login("shinji.japaaan@gmail.com", pw)
-              server.sendmail("shinji.japaaan@gmail.com", "shinji.japaaan@gmail.com", msg.as_string())
-
-          print(f"✅ 日次サマリーメール送信完了: {count}件のコミット ({report_date})")
+          os.makedirs('reports', exist_ok=True)
+          with open('reports/implementation-report.html', 'w', encoding='utf-8') as f:
+              f.write(html)
+          print("✅ reports/implementation-report.html を生成しました")
           PYEOF
+
+      - name: Commit Report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/implementation-report.html
+          git diff --staged --quiet || git commit -m "report: 実装レポート自動生成 $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+          git push
