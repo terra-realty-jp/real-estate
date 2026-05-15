@@ -1858,6 +1858,32 @@
   </div>
 
   <!-- 現金購入 vs 融資活用 投資比較カード -->
+  <!-- 不動産ポートフォリオ リバランス診断カード -->
+  <div class="card" id="card-portfolio-rebalance">
+    <div class="card-title">⚖️ 不動産ポートフォリオ リバランス診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">現在の物件構成（住宅・商業・土地）と目標比率を入力して、<strong style="color:var(--text)">リバランスに必要な売買・CF改善効果</strong>を診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">住宅系（現状 万円）</label>
+        <input type="number" id="pr_housing" value="5000" min="0" max="100000" step="100" oninput="calcPortfolioRebalance()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">商業系（現状 万円）</label>
+        <input type="number" id="pr_commercial" value="2000" min="0" max="100000" step="100" oninput="calcPortfolioRebalance()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">土地・その他（現状 万円）</label>
+        <input type="number" id="pr_land" value="1000" min="0" max="100000" step="100" oninput="calcPortfolioRebalance()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">目標：住宅系の比率（%）</label>
+        <input type="number" id="pr_target" value="60" min="0" max="100" step="5" oninput="calcPortfolioRebalance()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">残りを商業・土地で按分</div>
+      </div>
+    </div>
+    <div id="portfolio-rebalance-result"></div>
+  </div>
+
   <!-- 不動産 相続税試算カード -->
   <div class="card" id="card-inheritance-tax">
     <div class="card-title">👪 不動産 相続税 概算試算</div>
@@ -8097,6 +8123,67 @@ function calcCashVsLoan() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px">📌 CF・CCRは満室想定。空室率・税金は含みません。DSCR(返済余裕率)は1.2以上が融資審査の目安。</div>';
 }
 (function(){ calcCashVsLoan(); })();
+
+function calcPortfolioRebalance() {
+  var el = document.getElementById('portfolio-rebalance-result'); if (!el) return;
+  var housing = parseFloat(document.getElementById('pr_housing').value) || 5000;
+  var commercial = parseFloat(document.getElementById('pr_commercial').value) || 2000;
+  var land = parseFloat(document.getElementById('pr_land').value) || 1000;
+  var targetHousing = (parseFloat(document.getElementById('pr_target').value) || 60) / 100;
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var total = housing + commercial + land;
+  var housingRatio = housing / total;
+  var commercialRatio = commercial / total;
+  var landRatio = land / total;
+  var targetCommercial = (1 - targetHousing) * 0.6;
+  var targetLand = (1 - targetHousing) * 0.4;
+  var tgtHousingAmt = total * targetHousing;
+  var tgtCommAmt = total * targetCommercial;
+  var tgtLandAmt = total * targetLand;
+  var diffHousing = tgtHousingAmt - housing;
+  var diffCommercial = tgtCommAmt - commercial;
+  var diffLand = tgtLandAmt - land;
+  var YIELDS = { housing: 0.06, commercial: 0.08, land: 0.02 };
+  var currentCF = housing * YIELDS.housing + commercial * YIELDS.commercial + land * YIELDS.land;
+  var targetCF = tgtHousingAmt * YIELDS.housing + tgtCommAmt * YIELDS.commercial + tgtLandAmt * YIELDS.land;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + GOLD + ';margin-bottom:10px;font-size:13px">📊 現状 vs 目標 比率比較</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">種別</th><th style="text-align:right;padding:4px 6px">現状</th><th style="text-align:right;padding:4px 6px">目標</th><th style="text-align:right;padding:4px 6px">差額</th></tr>';
+  var types = [
+    { name: '🏠 住宅系', curr: housing, currR: housingRatio, tgt: tgtHousingAmt, diff: diffHousing },
+    { name: '🏬 商業系', curr: commercial, currR: commercialRatio, tgt: tgtCommAmt, diff: diffCommercial },
+    { name: '🌱 土地・他', curr: land, currR: landRatio, tgt: tgtLandAmt, diff: diffLand }
+  ];
+  types.forEach(function(t) {
+    var diffColor = Math.abs(t.diff) < 50 ? '#4ade80' : t.diff > 0 ? '#fb923c' : '#60a5fa';
+    var diffStr = (t.diff >= 0 ? '+' : '') + t.diff.toFixed(0) + '万';
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:5px 6px;color:var(--text)">' + t.name + '</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:var(--text-muted)">' + t.curr + '万<br><span style="font-size:10px">(' + Math.round(t.currR * 100) + '%)</span></td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:var(--text)">' + t.tgt.toFixed(0) + '万</td>';
+    html += '<td style="text-align:right;padding:5px 6px;font-weight:700;color:' + diffColor + '">' + diffStr + '</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px;text-align:center">';
+  html += '<div style="font-size:10px;color:var(--text-muted)">現在の想定年間CF</div>';
+  html += '<div style="font-size:16px;font-weight:900;color:' + GOLD + '">' + currentCF.toFixed(0) + '万円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px;text-align:center">';
+  html += '<div style="font-size:10px;color:var(--text-muted)">目標比率達成後のCF</div>';
+  html += '<div style="font-size:16px;font-weight:900;color:' + (targetCF > currentCF ? '#4ade80' : '#fb923c') + '">' + targetCF.toFixed(0) + '万円</div></div>';
+  html += '</div>';
+  var cfDiff = targetCF - currentCF;
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">';
+  html += 'リバランス後のCF変化: <b style="color:' + (cfDiff >= 0 ? '#4ade80' : '#f87171') + '">' + (cfDiff >= 0 ? '+' : '') + cfDiff.toFixed(0) + '万円/年</b>。';
+  html += commercial < tgtCommAmt ? ' 商業系を増やすとCFが高まりますが空室リスクも上昇します。' : ' 住宅系中心に安定性を高める方向性です。';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 利回り仮定: 住宅6%、商業8%、土地2%（年間CF÷評価額）。実際の利回りに応じて調整してください。リバランスには売買コスト・税金も考慮が必要です。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcPortfolioRebalance(); })();
 
 function calcInheritanceTax() {
   var el = document.getElementById('inheritance-tax-result'); if (!el) return;

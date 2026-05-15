@@ -1910,6 +1910,44 @@
     <div id="staging-roi-result"></div>
   </div>
 
+  <!-- 売却時期判定 複合診断カード -->
+  <div class="card" id="card-market-timing">
+    <div class="card-title">📅 売却タイミング 複合診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7"><strong style="color:var(--text)">季節・金利動向・市場需給・保有期間</strong>の4軸から、今が売り時かどうかを100点満点でスコアリングします。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月</label>
+        <select id="mt_month" onchange="calcMarketTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1">1月</option><option value="2">2月</option><option value="3" selected>3月</option>
+          <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+          <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+          <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">金利動向（現在）</label>
+        <select id="mt_rate" onchange="calcMarketTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="low">低金利・横ばい</option>
+          <option value="rising" selected>上昇傾向</option>
+          <option value="high">高金利</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">エリア需給状況</label>
+        <select id="mt_demand" onchange="calcMarketTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="hot">売り手市場（在庫不足）</option>
+          <option value="mid" selected>均衡</option>
+          <option value="cool">買い手市場（在庫過多）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件の保有期間（年）</label>
+        <input type="number" id="mt_years" value="10" min="0" max="50" step="1" oninput="calcMarketTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="market-timing-result"></div>
+  </div>
+
   <!-- 買い替え特例 vs 居住用3,000万控除 比較カード -->
   <div class="card" id="card-replace-special">
     <div class="card-title">🔄 買い替え特例 vs 3,000万控除 比較</div>
@@ -6509,6 +6547,61 @@ function calcStagingROI() {
     + '</div>';
 }
 (function(){ calcStagingROI(); })();
+
+function calcMarketTiming() {
+  var el = document.getElementById('market-timing-result'); if (!el) return;
+  var month = parseInt(document.getElementById('mt_month').value) || 3;
+  var rateEnv = document.getElementById('mt_rate').value;
+  var demand = document.getElementById('mt_demand').value;
+  var years = parseFloat(document.getElementById('mt_years').value) || 10;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var seasonScore, seasonLabel;
+  if (month === 2 || month === 3) { seasonScore = 25; seasonLabel = '最高（引越しシーズン・需要ピーク）'; }
+  else if (month === 9 || month === 10) { seasonScore = 20; seasonLabel = '良好（秋の引越しシーズン）'; }
+  else if (month === 1 || month === 4) { seasonScore = 15; seasonLabel = '普通（シーズン初め/終わり）'; }
+  else if (month === 7 || month === 8) { seasonScore = 5; seasonLabel = '低（夏期は動き鈍い）'; }
+  else { seasonScore = 12; seasonLabel = '普通'; }
+  var rateScore, rateLabel;
+  if (rateEnv === 'low') { rateScore = 25; rateLabel = '買いやすい→売りやすい'; }
+  else if (rateEnv === 'rising') { rateScore = 15; rateLabel = '駆込み需要あり→今が機会'; }
+  else { rateScore = 5; rateLabel = '購買力低下→売れにくい'; }
+  var demandScore, demandLabel;
+  if (demand === 'hot') { demandScore = 30; demandLabel = '売り手市場→有利'; }
+  else if (demand === 'mid') { demandScore = 18; demandLabel = '均衡→普通'; }
+  else { demandScore = 5; demandLabel = '買い手市場→不利'; }
+  var holdScore, holdLabel;
+  if (years >= 5) { holdScore = 20; holdLabel = '5年超（長期税率20%）✓'; }
+  else { holdScore = 5; holdLabel = '5年以下（短期税率30%）★要注意'; }
+  var total = seasonScore + rateScore + demandScore + holdScore;
+  var verdict, vcolor;
+  if (total >= 75) { verdict = '🏆 今が売り時！ 積極的に動くべきタイミング'; vcolor = '#4ade80'; }
+  else if (total >= 55) { verdict = '✅ 売りやすい時期。早めの準備を推奨'; vcolor = '#4ade80'; }
+  else if (total >= 35) { verdict = '⚠️ 普通。急ぎでなければ時期を選ぶ余地あり'; vcolor = '#fb923c'; }
+  else { verdict = '❌ 売り時ではない。市場回復・シーズンを待つべき'; vcolor = '#f87171'; }
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + vcolor + ';font-size:14px;margin-bottom:12px">' + verdict + '</div>';
+  html += '<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">4軸スコア（100点満点中 <b style="color:' + ACCENT + ';font-size:16px">' + total + '点</b>）</div>';
+  var axes = [
+    { name: '季節タイミング', score: seasonScore, max: 25, note: seasonLabel },
+    { name: '金利環境', score: rateScore, max: 25, note: rateLabel },
+    { name: 'エリア需給', score: demandScore, max: 30, note: demandLabel },
+    { name: '保有期間・税制', score: holdScore, max: 20, note: holdLabel }
+  ];
+  axes.forEach(function(a) {
+    var pct = Math.round(a.score / a.max * 100);
+    var barColor = pct >= 70 ? '#4ade80' : pct >= 40 ? '#fb923c' : '#f87171';
+    html += '<div style="margin-bottom:8px">';
+    html += '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">';
+    html += '<span style="color:var(--text-muted)">' + a.name + '</span>';
+    html += '<span style="color:' + barColor + '">' + a.score + '/' + a.max + '点　' + a.note + '</span></div>';
+    html += '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px"><div style="background:' + barColor + ';width:' + pct + '%;height:6px;border-radius:4px"></div></div>';
+    html += '</div>';
+  });
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:8px">📌 不動産売却の最繁忙期は1〜3月。売出しは繁忙期の1〜2ヶ月前（11〜1月）に開始するのが理想。金利が上昇する前に動くことで買い手の購買力を確保できます。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMarketTiming(); })();
 
 function calcReplaceSpecial() {
   var el = document.getElementById('replace-special-result'); if (!el) return;

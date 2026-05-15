@@ -2154,6 +2154,37 @@
     <div id="fair-rent-check-result"></div>
   </div>
 
+  <!-- 家賃滞納 早期対応フロー診断カード -->
+  <div class="card" id="card-arrear-response">
+    <div class="card-title">🚨 家賃滞納 早期対応フロー診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">滞納月数・保証会社の有無から<strong style="color:var(--text)">累積損失額・回収見込み・次にすべき対応手順</strong>を示します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額家賃（万円）</label>
+        <input type="number" id="ar_rent" value="8" min="1" max="100" step="0.5" oninput="calcArrearResponse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">滞納月数</label>
+        <input type="number" id="ar_months" value="2" min="1" max="12" step="1" oninput="calcArrearResponse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">保証会社</label>
+        <select id="ar_guarantee" onchange="calcArrearResponse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="yes" selected>あり（保証会社経由）</option>
+          <option value="no">なし（直接交渉）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">入居者との連絡</label>
+        <select id="ar_contact" onchange="calcArrearResponse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="ok">取れている</option>
+          <option value="ng" selected>取れない（無視・音信不通）</option>
+        </select>
+      </div>
+    </div>
+    <div id="arrear-response-result"></div>
+  </div>
+
   <!-- 賃貸物件 保険最適化診断カード -->
   <div class="card" id="card-insurance-opt">
     <div class="card-title">🛡️ 賃貸物件 保険最適化診断</div>
@@ -8735,6 +8766,62 @@ function calcFairRentCheck() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px;line-height:1.6">📌 推定適正家賃はエリア賃料単価・築年数・駅距離・設備から算出した目安です。実際の相場はSUUMO・at home等で確認してください。</div>';
 }
 (function(){ calcFairRentCheck(); })();
+
+function calcArrearResponse() {
+  var el = document.getElementById('arrear-response-result'); if (!el) return;
+  var rent = parseFloat(document.getElementById('ar_rent').value) || 8;
+  var months = parseFloat(document.getElementById('ar_months').value) || 2;
+  var guarantee = document.getElementById('ar_guarantee').value;
+  var contact = document.getElementById('ar_contact').value;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var arrearTotal = rent * months;
+  var recoverRate = guarantee === 'yes' ? 0.95 : (contact === 'ok' ? 0.6 : 0.3);
+  var expectedRecover = arrearTotal * recoverRate;
+  var expectedLoss = arrearTotal - expectedRecover;
+  var urgency = months >= 3 || (months >= 2 && contact === 'ng') ? 'high' : months >= 2 ? 'mid' : 'low';
+  var urgencyLabel = urgency === 'high' ? '🔴 緊急（法的手続きを検討）' : urgency === 'mid' ? '🟠 注意（今月中に書面送付）' : '🟢 通常対応（連絡・確認）';
+  var FLOWS = guarantee === 'yes'
+    ? [
+      { step: '①保証会社へ代位弁済請求', timing: '滞納確認後すぐ', detail: '保証会社の専用窓口に連絡し、代位弁済申請（最短数日で振込）。' },
+      { step: '②保証会社が入居者に請求', timing: '代位弁済後', detail: '保証会社が入居者に直接請求・督促。オーナーの手間なし。' },
+      { step: '③解約・退去手続き', timing: '3ヶ月以上の場合', detail: '保証会社の法務部門が退去交渉・明渡し訴訟を支援してくれる場合が多い。' }
+    ]
+    : contact === 'ok'
+    ? [
+      { step: '①口頭での確認・支払い約束書', timing: '即時', detail: '入居者に直接連絡し、支払い見込みと分割払い合意書を書面で作成。' },
+      { step: '②内容証明郵便の送付', timing: '2週間後も未払いなら', detail: '「支払い催告書」を内容証明で送付。法的証拠として重要。' },
+      { step: '③少額訴訟・支払督促', timing: '3ヶ月以上の場合', detail: '60万円以下なら少額訴訟（費用1〜2万円）。弁護士不要で申請可能。' }
+    ]
+    : [
+      { step: '①書面による催告（内容証明）', timing: '即時', detail: '音信不通でも内容証明郵便で催告。受取拒否でも法的効力あり。' },
+      { step: '②連帯保証人への連絡', timing: '同時進行', detail: '契約書記載の連帯保証人（緊急連絡先）に支払い請求。' },
+      { step: '③建物明渡し請求訴訟', timing: '3ヶ月未払い以上', detail: '弁護士に依頼し、明渡し訴訟提起。確定まで6ヶ月〜1年程度かかる場合あり。' }
+    ];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + (urgency === 'high' ? '#f87171' : urgency === 'mid' ? '#fb923c' : '#4ade80') + ';font-size:13px;margin-bottom:10px">' + urgencyLabel + '</div>';
+  var items = [
+    ['滞納総額', arrearTotal.toFixed(1)+'万円', '#f87171'],
+    ['回収見込み（'+Math.round(recoverRate*100)+'%）', '+'+expectedRecover.toFixed(1)+'万円', '#4ade80'],
+    ['損失見込み', '−'+expectedLoss.toFixed(1)+'万円', expectedLoss > 0 ? '#fb923c' : '#4ade80']
+  ];
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">';
+  items.forEach(function(item) {
+    html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px;text-align:center">';
+    html += '<div style="font-size:10px;color:var(--text-muted)">' + item[0] + '</div>';
+    html += '<div style="font-size:14px;font-weight:900;color:' + item[2] + '">' + item[1] + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="font-weight:600;color:' + ACCENT + ';font-size:12px;margin-bottom:6px">📋 今すぐ取るべき対応ステップ</div>';
+  FLOWS.forEach(function(f) {
+    html += '<div style="margin-bottom:6px;padding:7px 10px;background:rgba(255,255,255,0.02);border-left:3px solid ' + ACCENT + ';border-radius:0 6px 6px 0">';
+    html += '<div style="font-size:11px;font-weight:700;color:' + ACCENT + '">' + f.step + ' <span style="font-weight:400;color:var(--text-muted)">(' + f.timing + ')</span></div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + f.detail + '</div></div>';
+  });
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 「鍵を交換する」「荷物を勝手に撤去する」など自力救済は違法。必ず法的手順を踏むことが重要です。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcArrearResponse(); })();
 
 function calcInsuranceOpt() {
   var el = document.getElementById('insurance-opt-result'); if (!el) return;

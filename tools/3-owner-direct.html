@@ -1591,6 +1591,31 @@
     <div id="rate-type-choice-result"></div>
   </div>
 
+  <!-- 住み替え順序 診断カード -->
+  <div class="card" id="card-move-order">
+    <div class="card-title">🏠→🏡 住み替え順序 リスク診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7"><strong style="color:var(--text)">売却先行（今の家を売ってから買う）</strong>と<strong style="color:var(--text)">購入先行（新居を買ってから売る）</strong>のコスト・リスクを5軸で比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の物件価格（万円）</label>
+        <input type="number" id="mo_curr" value="4000" min="500" max="50000" step="100" oninput="calcMoveOrder()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">新居購入価格（万円）</label>
+        <input type="number" id="mo_new" value="5000" min="500" max="50000" step="100" oninput="calcMoveOrder()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">仮住まい期間目安（ヶ月）</label>
+        <input type="number" id="mo_temp" value="3" min="0" max="12" step="1" oninput="calcMoveOrder()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">仮住まい月額（万円）</label>
+        <input type="number" id="mo_rent" value="12" min="1" max="100" step="0.5" oninput="calcMoveOrder()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="move-order-result"></div>
+  </div>
+
   <!-- 抵当権抹消 手続き費用試算カード -->
   <div class="card" id="card-mortgage-release">
     <div class="card-title">🔓 抵当権抹消 費用・手続き試算</div>
@@ -5577,6 +5602,60 @@ function calcRateTypeChoice() {
     +'💡 入力した金利シナリオでは <b style="color:#60a5fa">'+bestName+'</b> が総支払い最小。ただし変動は金利上昇リスクあり。金利上昇が遅い場合は変動が有利になる傾向。最終判断は金融機関窓口でご相談ください。</div>';
 }
 (function(){ calcRateTypeChoice(); })();
+
+function calcMoveOrder() {
+  var el = document.getElementById('move-order-result'); if (!el) return;
+  var curr = parseFloat(document.getElementById('mo_curr').value) || 4000;
+  var newPrice = parseFloat(document.getElementById('mo_new').value) || 5000;
+  var tempMonths = parseFloat(document.getElementById('mo_temp').value) || 3;
+  var rent = parseFloat(document.getElementById('mo_rent').value) || 12;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var tempCost = rent * tempMonths;
+  var movingCostExtra = 10;
+  var sellFirstCost = tempCost + movingCostExtra;
+  var BRIDGE_RATE = 0.035;
+  var bridgeMonths = 6;
+  var bridgeInterest = newPrice * 10000 * BRIDGE_RATE / 12 * bridgeMonths / 10000;
+  var holdRisk = curr * 0.03;
+  var buyFirstCost = bridgeInterest + holdRisk;
+  var AXES = [
+    { label: '💰 追加費用', sell: sellFirstCost.toFixed(0)+'万', buy: buyFirstCost.toFixed(0)+'万', better: sellFirstCost <= buyFirstCost ? 'sell' : 'buy' },
+    { label: '🏠 住む場所', sell: '仮住まい（'+tempMonths+'ヶ月）', buy: 'そのまま暮らせる', better: 'buy' },
+    { label: '💴 資金計画', sell: '売却益確定後に購入可能', buy: 'つなぎ融資が必要', better: 'sell' },
+    { label: '📉 価格交渉力', sell: '急ぎ売り→値引きリスク', buy: '余裕を持って売却可能', better: 'buy' },
+    { label: '⚡ リスク', sell: '新居が見つかるか不安', buy: '旧宅が売れない資金難リスク', better: 'neutral' }
+  ];
+  var sellScore = AXES.filter(function(a) { return a.better === 'sell'; }).length;
+  var buyScore = AXES.filter(function(a) { return a.better === 'buy'; }).length;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (sellScore >= buyScore ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted)">売却先行</div>';
+  html += '<div style="font-size:20px;font-weight:900;color:' + ACCENT + '">' + sellScore + '<span style="font-size:11px">/5</span></div>';
+  html += '<div style="font-size:10px;color:var(--text-muted)">追加費用目安: <b style="color:#4ade80">' + sellFirstCost.toFixed(0) + '万</b></div>';
+  if (sellScore >= buyScore) html += '<div style="font-size:10px;background:#4ade80;color:#000;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:4px;font-weight:700">有利</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (buyScore > sellScore ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted)">購入先行</div>';
+  html += '<div style="font-size:20px;font-weight:900;color:' + ACCENT + '">' + buyScore + '<span style="font-size:11px">/5</span></div>';
+  html += '<div style="font-size:10px;color:var(--text-muted)">追加費用目安: <b style="color:#fb923c">' + buyFirstCost.toFixed(0) + '万</b>（つなぎ利息+値引きリスク）</div>';
+  if (buyScore > sellScore) html += '<div style="font-size:10px;background:#4ade80;color:#000;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:4px;font-weight:700">有利</div>';
+  html += '</div></div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">評価軸</th><th style="text-align:left;padding:4px 6px;color:#60a5fa">売却先行</th><th style="text-align:left;padding:4px 6px;color:#fb923c">購入先行</th></tr>';
+  AXES.forEach(function(a) {
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:5px 6px;color:var(--text-muted)">' + a.label + '</td>';
+    html += '<td style="padding:5px 6px;font-size:11px;color:' + (a.better === 'sell' ? '#4ade80' : 'var(--text)') + '">' + a.sell + (a.better === 'sell' ? ' ✓' : '') + '</td>';
+    html += '<td style="padding:5px 6px;font-size:11px;color:' + (a.better === 'buy' ? '#4ade80' : 'var(--text)') + '">' + a.buy + (a.better === 'buy' ? ' ✓' : '') + '</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:8px">📌 資金力・市場動向・住み替え先の在庫状況によって有利な順序が変わります。つなぎ融資（ブリッジローン）の利率は高め（3〜4%/年）なので期間を短くする工夫が重要です。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMoveOrder(); })();
 
 function calcMortgageRelease() {
   var el = document.getElementById('mortgage-release-result'); if (!el) return;

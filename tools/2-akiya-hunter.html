@@ -1745,6 +1745,31 @@
     <div id="neighbor-impact-result"></div>
   </div>
 
+  <!-- 空き家 リノベ収益 回収期間試算カード -->
+  <div class="card" id="card-akiya-renov-return">
+    <div class="card-title">🔨 空き家リノベ 投資回収期間試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">リノベーション費用をかけた場合の<strong style="color:var(--text)">家賃上昇効果・回収期間・10年後純収益</strong>を、現状のまま賃貸との比較で試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月額家賃目安（万円）</label>
+        <input type="number" id="arr_base_rent" value="4" min="0.5" max="50" step="0.5" oninput="calcAkiyaRenovReturn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リノベ後の想定家賃（万円）</label>
+        <input type="number" id="arr_new_rent" value="7" min="1" max="100" step="0.5" oninput="calcAkiyaRenovReturn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リノベ費用（万円）</label>
+        <input type="number" id="arr_renov_cost" value="500" min="50" max="5000" step="50" oninput="calcAkiyaRenovReturn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">空室率（%）</label>
+        <input type="number" id="arr_vacancy" value="10" min="0" max="50" step="5" oninput="calcAkiyaRenovReturn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="akiya-renov-return-result"></div>
+  </div>
+
   <!-- 民泊収益 詳細試算カード -->
   <div class="card" id="card-minpaku-detail">
     <div class="card-title">🏨 民泊収益 詳細シミュレーター</div>
@@ -5979,6 +6004,61 @@ function calcNeighborImpact() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6">📌 空き家対策特別措置法（2023年改正）により、特定空き家の行政代執行・費用請求が強化されました。早期対処が得策です。</div>';
 }
 (function(){ calcNeighborImpact(); })();
+
+function calcAkiyaRenovReturn() {
+  var el = document.getElementById('akiya-renov-return-result'); if (!el) return;
+  var baseRent = parseFloat(document.getElementById('arr_base_rent').value) || 4;
+  var newRent = parseFloat(document.getElementById('arr_new_rent').value) || 7;
+  var renovCost = parseFloat(document.getElementById('arr_renov_cost').value) || 500;
+  var vacancy = (parseFloat(document.getElementById('arr_vacancy').value) || 10) / 100;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var YEARS = 10;
+  var baseAnnual = baseRent * 12 * (1 - vacancy);
+  var newAnnual = newRent * 12 * (1 - vacancy);
+  var extraPerYear = newAnnual - baseAnnual;
+  var paybackYears = extraPerYear > 0 ? renovCost / extraPerYear : 999;
+  var net10Base = baseAnnual * YEARS;
+  var net10Renov = newAnnual * YEARS - renovCost;
+  var extraNet10 = net10Renov - net10Base;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  var kpis = [
+    ['家賃UP効果/年', '+' + extraPerYear.toFixed(1) + '万円', extraPerYear > 0 ? '#4ade80' : '#f87171'],
+    ['投資回収期間', paybackYears < 100 ? paybackYears.toFixed(1) + '年' : '回収困難', paybackYears <= YEARS ? '#4ade80' : '#f87171'],
+    ['10年後純収益差', (extraNet10 >= 0 ? '+' : '') + extraNet10.toFixed(0) + '万円', extraNet10 >= 0 ? '#4ade80' : '#f87171']
+  ];
+  kpis.forEach(function(k) {
+    html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px;text-align:center">';
+    html += '<div style="font-size:10px;color:var(--text-muted)">' + k[0] + '</div>';
+    html += '<div style="font-size:15px;font-weight:900;color:' + k[2] + '">' + k[1] + '</div></div>';
+  });
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px"></th><th style="text-align:right;padding:4px 6px">現状のまま賃貸</th><th style="text-align:right;padding:4px 6px">リノベ後賃貸</th></tr>';
+  var rows = [
+    ['年間賃料収入', baseAnnual.toFixed(1)+'万', newAnnual.toFixed(1)+'万'],
+    ['リノベ費用', '0万', '−'+renovCost+'万'],
+    ['10年間純収益', net10Base.toFixed(0)+'万', net10Renov.toFixed(0)+'万']
+  ];
+  rows.forEach(function(r, i) {
+    var bold = i === rows.length - 1 ? 'font-weight:700;background:rgba(255,255,255,0.04);' : '';
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.06);' + bold + '">';
+    html += '<td style="padding:5px 6px;color:var(--text-muted)">' + r[0] + '</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:var(--text)">' + r[1] + '</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:' + (i === rows.length - 1 ? (net10Renov >= net10Base ? '#4ade80' : '#f87171') : 'var(--text)') + '">' + r[2] + '</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  if (paybackYears <= YEARS) {
+    html += '<div style="font-size:12px;color:#4ade80;line-height:1.7">✅ ' + paybackYears.toFixed(1) + '年で投資回収完了。10年スパンでリノベが有利です。</div>';
+  } else {
+    html += '<div style="font-size:12px;color:#fb923c;line-height:1.7">⚠️ 10年内に回収できない試算。家賃上昇幅拡大またはリノベ費用削減を検討してください。</div>';
+  }
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 補助金活用で実質コスト削減可能。自治体の空き家リノベ補助金（50〜100万円）や国の省エネ改修補助金を組み合わせると回収期間が大幅に短縮されます。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaRenovReturn(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;
