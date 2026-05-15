@@ -2301,6 +2301,35 @@
     <div id="eviction-flow-result"></div>
   </div>
 
+  <!-- 原状回復費用 負担ガイドカード -->
+  <div class="card" id="card-restoration-guide">
+    <div class="card-title">🔧 原状回復 費用負担ガイド</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">国土交通省ガイドラインに基づき、退去時の原状回復費用を「借主負担」「貸主負担」に自動振り分けします。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">入居年数（年）</div>
+        <input type="number" id="rg_years" value="4" min="1" max="30" step="1" oninput="calcRestorationGuide()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">部屋の広さ（m²）</div>
+        <input type="number" id="rg_area" value="30" min="10" max="200" step="5" oninput="calcRestorationGuide()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">損傷の程度</div>
+        <select id="rg_damage" onchange="calcRestorationGuide()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="normal" selected>通常使用の範囲（日常的な汚れ）</option>
+          <option value="moderate">やや過失あり（タバコ・ペット臭含む）</option>
+          <option value="heavy">明らかな過失（穴・大型汚損）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建物の築年数（年）</div>
+        <input type="number" id="rg_build_age" value="15" min="1" max="60" step="1" oninput="calcRestorationGuide()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="restoration-guide-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -9013,6 +9042,59 @@ function calcEvictionFlow() {
   el.innerHTML = html;
 }
 (function(){ calcEvictionFlow(); })();
+
+function calcRestorationGuide() {
+  var el = document.getElementById('restoration-guide-result'); if (!el) return;
+  var years = parseFloat(document.getElementById('rg_years').value) || 4;
+  var area = parseFloat(document.getElementById('rg_area').value) || 30;
+  var damage = document.getElementById('rg_damage').value;
+  var buildAge = parseFloat(document.getElementById('rg_build_age').value) || 15;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var wallCostPerM = 1200;
+  var floorCostPerM = 3500;
+  var cleanCostPerM = 800;
+  var wallTotal = area * 1.5 * wallCostPerM / 10000;
+  var floorTotal = area * floorCostPerM / 10000;
+  var cleanTotal = area * cleanCostPerM / 10000;
+  var wallDepRate = Math.max(0.1, 1 - years / 6);
+  var floorDepRate = Math.max(0.1, 1 - years / 15);
+  var wallTenantShare = damage === 'normal' ? 0 : damage === 'moderate' ? wallDepRate * 0.5 : wallDepRate;
+  var floorTenantShare = damage === 'normal' ? 0 : damage === 'moderate' ? floorDepRate * 0.3 : floorDepRate * 0.7;
+  var cleanTenantShare = damage === 'normal' ? 0 : damage === 'moderate' ? 0.5 : 1.0;
+  var wallTenant = Math.round(wallTotal * wallTenantShare * 10) / 10;
+  var wallOwner = Math.round((wallTotal - wallTotal * wallTenantShare) * 10) / 10;
+  var floorTenant = Math.round(floorTotal * floorTenantShare * 10) / 10;
+  var floorOwner = Math.round((floorTotal - floorTotal * floorTenantShare) * 10) / 10;
+  var cleanTenant = Math.round(cleanTotal * cleanTenantShare * 10) / 10;
+  var cleanOwner = Math.round((cleanTotal - cleanTotal * cleanTenantShare) * 10) / 10;
+  var totalTenant = Math.round((wallTenant + floorTenant + cleanTenant) * 10) / 10;
+  var totalOwner = Math.round((wallOwner + floorOwner + cleanOwner) * 10) / 10;
+  var damageLabel = { normal: '通常使用', moderate: 'やや過失あり', heavy: '明らかな過失' }[damage];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">入居' + years + '年 / ' + area + 'm² / ' + damageLabel + ' / 築' + buildAge + '年</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">項目</th><th style="text-align:right;padding:4px 6px">借主負担</th><th style="text-align:right;padding:4px 6px">貸主負担</th></tr>';
+  var rows3 = [['壁紙・クロス', wallTenant, wallOwner], ['床材', floorTenant, floorOwner], ['ハウスクリーニング', cleanTenant, cleanOwner]];
+  rows3.forEach(function(r) {
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:5px 6px">' + r[0] + '</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:#f87171">' + r[1] + '万円</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:' + ACCENT + '">' + r[2] + '万円</td></tr>';
+  });
+  html += '<tr style="border-top:2px solid rgba(255,255,255,0.15);font-weight:900"><td style="padding:6px 6px">合計</td>';
+  html += '<td style="text-align:right;padding:6px 6px;color:#f87171;font-size:13px">' + totalTenant + '万円</td>';
+  html += '<td style="text-align:right;padding:6px 6px;color:' + ACCENT + ';font-size:13px">' + totalOwner + '万円</td></tr>';
+  html += '</table>';
+  var guide = damage === 'normal'
+    ? '通常使用の範囲内の汚れは、原則として貸主負担です。借主に全額請求すると法的トラブルになる場合があります。'
+    : damage === 'moderate'
+    ? '過失・タバコ・ペットによる損耗は借主一部負担になります。ただし経過年数による価値低下分は差し引かれます。'
+    : '明らかな故意・過失による損傷は借主が実費負担します。証拠写真の保管が請求の根拠になります。';
+  html += '<div style="font-size:11px;color:var(--text-muted);border-top:1px solid rgba(255,255,255,0.08);padding-top:10px">';
+  html += '💡 ' + guide + '</div></div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);padding:4px 0">※ 国土交通省「原状回復をめぐるトラブルとガイドライン」に基づく目安です。</div>';
+  el.innerHTML = html;
+}
+(function(){ calcRestorationGuide(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');

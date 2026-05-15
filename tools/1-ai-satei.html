@@ -1910,6 +1910,34 @@
     <div id="staging-roi-result"></div>
   </div>
 
+  <!-- 共有名義 売却合意シミュレーターカード -->
+  <div class="card" id="card-joint-ownership">
+    <div class="card-title">👥 共有名義 売却合意シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">相続などで<strong style="color:var(--text)">複数の共有者がいる場合</strong>の売却手取り分配額と、合意を得られない場合の共有物分割請求コストを試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却価格（万円）</label>
+        <input type="number" id="jo_price" value="3000" min="100" max="100000" step="100" oninput="calcJointOwnership()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">共有者の人数</label>
+        <input type="number" id="jo_owners" value="3" min="2" max="10" step="1" oninput="calcJointOwnership()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">自分の持分割合（%）</label>
+        <input type="number" id="jo_share" value="50" min="1" max="99" step="1" oninput="calcJointOwnership()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">反対する共有者がいるか</label>
+        <select id="jo_dispute" onchange="calcJointOwnership()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="no" selected>全員同意できそう</option>
+          <option value="yes">反対者がいる（調停・訴訟の可能性）</option>
+        </select>
+      </div>
+    </div>
+    <div id="joint-ownership-result"></div>
+  </div>
+
   <!-- 売却時期判定 複合診断カード -->
   <div class="card" id="card-market-timing">
     <div class="card-title">📅 売却タイミング 複合診断</div>
@@ -6547,6 +6575,53 @@ function calcStagingROI() {
     + '</div>';
 }
 (function(){ calcStagingROI(); })();
+
+function calcJointOwnership() {
+  var el = document.getElementById('joint-ownership-result'); if (!el) return;
+  var price = parseFloat(document.getElementById('jo_price').value) || 3000;
+  var owners = parseFloat(document.getElementById('jo_owners').value) || 3;
+  var share = (parseFloat(document.getElementById('jo_share').value) || 50) / 100;
+  var dispute = document.getElementById('jo_dispute').value;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var fee = price <= 200 ? price * 0.05 + 2 : price <= 400 ? price * 0.04 + 4 : price * 0.03 + 6;
+  var netSell = price - fee;
+  var myShare = netSell * share;
+  var DISPUTE_ATTY = 50;
+  var DISPUTE_COURT = 15;
+  var DISPUTE_MONTHS = 18;
+  var disputeCost = dispute === 'yes' ? DISPUTE_ATTY + DISPUTE_COURT : 0;
+  var myNet = myShare - disputeCost;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">💰 売却時の手取り分配</div>';
+  var items = [
+    ['売却価格', price.toLocaleString() + '万円', 'var(--text)'],
+    ['仲介手数料', '−' + fee.toFixed(1) + '万円', '#f87171'],
+    ['売却純収入', netSell.toFixed(1) + '万円', 'var(--text)'],
+    ['あなたの持分（' + Math.round(share * 100) + '%）', myShare.toFixed(1) + '万円', '#4ade80'],
+    dispute === 'yes' ? ['共有物分割請求費用（弁護士+裁判所）', '−' + disputeCost + '万円', '#f87171'] : null,
+    ['あなたの実質手取り', myNet.toFixed(1) + '万円', myNet >= 0 ? '#4ade80' : '#f87171']
+  ].filter(Boolean);
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;margin-bottom:10px">';
+  items.forEach(function(item, i) {
+    var bold = i === items.length - 1 ? 'font-weight:700;background:rgba(255,255,255,0.05);' : '';
+    html += '<div style="display:flex;justify-content:space-between;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;' + bold + '">';
+    html += '<span style="color:var(--text-muted)">' + item[0] + '</span>';
+    html += '<span style="color:' + item[2] + '">' + item[1] + '</span></div>';
+  });
+  html += '</div>';
+  if (dispute === 'yes') {
+    html += '<div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text-muted);line-height:1.7">';
+    html += '⚠️ 共有物分割請求（調停→訴訟）は平均 <b style="color:#fb923c">' + DISPUTE_MONTHS + 'ヶ月</b> かかります。';
+    html += '<br>弁護士費用目安: 着手金20〜50万円 + 成功報酬。調停で合意できれば費用を大幅に抑えられます。';
+    html += '</div>';
+  } else {
+    html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">✅ 全員合意なら費用最小で手続き可能。<b style="color:#4ade80">他の共有者への内容証明郵便</b>で正式合意を文書化することを推奨します。</div>';
+  }
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 共有者の2/3以上の同意があれば「管理行為」として賃貸は可能。売却には全員の同意が必要。合意が得られない場合は共有物分割請求訴訟（民法258条）で強制的に分割できます。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcJointOwnership(); })();
 
 function calcMarketTiming() {
   var el = document.getElementById('market-timing-result'); if (!el) return;

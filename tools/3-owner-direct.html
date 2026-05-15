@@ -1710,6 +1710,35 @@
     <div id="pair-loan-result"></div>
   </div>
 
+  <!-- 購入申込みタイミング診断カード -->
+  <div class="card" id="card-offer-timing">
+    <div class="card-title">⏱️ 購入申込み タイミング診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">物件の掲載からの経過日数・価格推移・競合状況をもとに、申込みの最適タイミングと交渉余地を診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">掲載からの経過日数</div>
+        <input type="number" id="ot_days" value="45" min="1" max="365" step="1" oninput="calcOfferTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件の売出価格（万円）</div>
+        <input type="number" id="ot_list_price" value="3500" min="500" max="50000" step="100" oninput="calcOfferTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">値下げ回数（0〜5回）</div>
+        <input type="number" id="ot_price_cuts" value="1" min="0" max="5" step="1" oninput="calcOfferTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">競合状況</div>
+        <select id="ot_competition" onchange="calcOfferTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="high">人気あり（内覧が多い）</option>
+          <option value="mid" selected>普通（週1〜2件）</option>
+          <option value="low">少ない（月1件以下）</option>
+        </select>
+      </div>
+    </div>
+    <div id="offer-timing-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -5856,6 +5885,52 @@ function calcPairLoan() {
   el.innerHTML = html;
 }
 (function(){ calcPairLoan(); })();
+
+function calcOfferTiming() {
+  var el = document.getElementById('offer-timing-result'); if (!el) return;
+  var days = parseFloat(document.getElementById('ot_days').value) || 45;
+  var listPrice = parseFloat(document.getElementById('ot_list_price').value) || 3500;
+  var priceCuts = parseFloat(document.getElementById('ot_price_cuts').value) || 0;
+  var competition = document.getElementById('ot_competition').value;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var dayScore = days < 14 ? 0 : days < 30 ? 20 : days < 60 ? 40 : days < 90 ? 60 : 80;
+  var cutScore = priceCuts === 0 ? 0 : priceCuts === 1 ? 25 : priceCuts === 2 ? 45 : 60;
+  var compScore = { high: 0, mid: 20, low: 40 }[competition] || 0;
+  var totalScore = Math.min(100, dayScore + cutScore + compScore);
+  var negoRate = priceCuts * 1.5 + (days > 60 ? 2 : days > 30 ? 1 : 0) + (competition === 'low' ? 2 : 0);
+  negoRate = Math.min(10, negoRate);
+  var negoAmt = Math.round(listPrice * negoRate / 100);
+  var timingLabel, timingColor, advice;
+  if (totalScore >= 70) {
+    timingLabel = '今すぐ申込みチャンス'; timingColor = '#4ade80';
+    advice = '掲載日数・値下げ回数・競合少なさから、売主の妥協余地が高まっています。積極的な条件交渉を検討してください。';
+  } else if (totalScore >= 40) {
+    timingLabel = '申込み検討段階'; timingColor = ACCENT;
+    advice = 'もう少し様子を見るか、内覧を増やして判断材料を集める段階です。競合が現れたら即申込みの準備を。';
+  } else {
+    timingLabel = '急ぐ必要なし・情報収集段階'; timingColor = '#fb923c';
+    advice = '掲載直後の人気物件は値引き交渉が難しい傾向があります。市場動向を観察しつつタイミングを計りましょう。';
+  }
+  var compLabel = { high: '人気あり（競合が多い）', mid: '普通', low: '少ない（交渉しやすい）' }[competition];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="text-align:center;margin-bottom:12px">';
+  html += '<div style="font-size:22px;font-weight:900;color:' + timingColor + '">' + timingLabel + '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">タイミング指数: ' + totalScore + '/100</div>';
+  html += '</div>';
+  var scoreBar = '<div style="background:rgba(255,255,255,0.08);border-radius:6px;height:8px;margin-bottom:14px"><div style="width:' + totalScore + '%;background:' + timingColor + ';height:8px;border-radius:6px;transition:width 0.3s"></div></div>';
+  html += scoreBar;
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">診断項目</th><th style="text-align:right;padding:4px 6px">状況</th><th style="text-align:right;padding:4px 6px">スコア</th></tr>';
+  var rows2 = [['掲載経過日数', days + '日', dayScore], ['値下げ回数', priceCuts + '回', cutScore], ['競合状況', compLabel, compScore]];
+  rows2.forEach(function(r) { html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:5px 6px">' + r[0] + '</td><td style="text-align:right;padding:5px 6px">' + r[1] + '</td><td style="text-align:right;padding:5px 6px;color:' + ACCENT + '">' + r[2] + 'pt</td></tr>'; });
+  html += '</table>';
+  html += '<div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;margin-top:4px">';
+  html += '<div style="font-size:12px;margin-bottom:6px">💰 <b style="color:' + ACCENT + '">交渉余地の目安: 約' + negoAmt + '万円（' + negoRate.toFixed(1) + '%）</b></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">' + advice + '</div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcOfferTiming(); })();
 
 function filterOwnerCalcCards(query) {
   var cards = document.querySelectorAll('#owner-calc-cards > div');
