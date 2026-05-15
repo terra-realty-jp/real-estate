@@ -1853,6 +1853,31 @@
     <div id="proceeds-invest-result"></div>
   </div>
 
+  <!-- ホームステージング効果診断カード -->
+  <div class="card" id="card-staging-roi">
+    <div class="card-title">🛋️ 売却前ホームステージング 効果診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">ホームステージング（家具・インテリアで部屋を魅力的に演出）にかかる費用対効果を診断します。売却価格の上乗せ期待額と販売期間短縮効果を試算しましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">物件の売出価格（万円）</label>
+        <input type="number" id="sg_price" value="3500" min="100" max="100000" step="100" oninput="calcStagingROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">ステージング費用（万円）</label>
+        <input type="number" id="sg_cost" value="30" min="5" max="500" step="5" oninput="calcStagingROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月額維持費（万円）</label>
+        <input type="number" id="sg_monthly" value="5" min="0" max="50" step="0.5" oninput="calcStagingROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現状の販売見込み期間（ヶ月）</label>
+        <input type="number" id="sg_months" value="6" min="1" max="24" step="1" oninput="calcStagingROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="staging-roi-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -6224,6 +6249,47 @@ function calcComparableSales() {
   el.innerHTML = html;
 }
 (function(){ initComparableSales(); })();
+
+function calcStagingROI() {
+  var el = document.getElementById('staging-roi-result');
+  if (!el) return;
+  var price   = parseFloat(document.getElementById('sg_price').value) * 10000 || 0;
+  var cost    = parseFloat(document.getElementById('sg_cost').value) * 10000 || 0;
+  var monthly = parseFloat(document.getElementById('sg_monthly').value) * 10000 || 0;
+  var months  = parseInt(document.getElementById('sg_months').value) || 0;
+  if (price <= 0 || months <= 0) { el.innerHTML = '<p style="color:var(--red);font-size:12px">入力値を確認してください。</p>'; return; }
+  // ステージングで期間短縮（2ヶ月短縮を基準）と価格上乗せ（1%想定）
+  var priceUp = price * 0.01;
+  var shortMonths = Math.min(2, months - 1);
+  var holdingSave = monthly * shortMonths;
+  var totalBenefit = priceUp + holdingSave;
+  var netGain = totalBenefit - cost;
+  var roi = cost > 0 ? (netGain / cost * 100).toFixed(0) : 0;
+  var fmtW = function(v) { return Math.round(v / 10000).toLocaleString() + '万円'; };
+  var gainColor = netGain >= 0 ? '#4caf50' : 'var(--red)';
+  var verdict = netGain > 0 ? '✅ ステージングに投資する価値あり' : '⚠️ 費用対効果が低い可能性あり';
+  var verdictColor = netGain > 0 ? '#4caf50' : '#f9a825';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted)">売却価格の上乗せ期待</div>'
+    + '<div style="font-size:15px;font-weight:700;color:#4db6f5">+' + fmtW(priceUp) + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">(+1%想定)</div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted)">販売期間短縮の維持費節約</div>'
+    + '<div style="font-size:15px;font-weight:700;color:#4db6f5">+' + fmtW(holdingSave) + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">(' + shortMonths + 'ヶ月短縮想定)</div></div>'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted)">投資収益（純利益）</div>'
+    + '<div style="font-size:15px;font-weight:700;color:' + gainColor + '">' + (netGain >= 0 ? '+' : '') + fmtW(netGain) + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">ROI ' + roi + '%</div></div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.7">'
+    + '<div style="font-weight:700;color:' + verdictColor + ';margin-bottom:4px">' + verdict + '</div>'
+    + '<div style="color:var(--text-muted)">ステージング費用: <b style="color:var(--text)">' + fmtW(cost) + '</b>　期待効果合計: <b style="color:var(--text)">' + fmtW(totalBenefit) + '</b></div>'
+    + '<div style="color:#f9a825;font-size:11px;margin-top:4px">📌 物件価格の0.5〜2%が一般的なステージング費用。築浅・高額物件ほど効果が高い傾向。写真撮影・VR内覧も組み合わせると効果的。</div>'
+    + '</div>';
+}
+(function(){ calcStagingROI(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');
