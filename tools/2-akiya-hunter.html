@@ -1543,6 +1543,31 @@
     <div id="isolation-risk-result"></div>
   </div>
 
+  <!-- リノベvs建替え費用比較カード -->
+  <div class="card" id="card-renov-vs-rebuild">
+    <div class="card-title">🔨 フルリノベvs建替え 費用・収益比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家を「フルリノベーション（大規模改修）」するか「解体して建替え」するかを費用・工期・賃料収入の観点から比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">延床面積（㎡）</label>
+        <input type="number" id="rvr_area" value="100" min="20" max="500" step="10" oninput="calcRenovVsRebuild()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">築年数（年）</label>
+        <input type="number" id="rvr_age" value="40" min="5" max="80" step="1" oninput="calcRenovVsRebuild()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">リノベ後の月額家賃見込み（万円）</label>
+        <input type="number" id="rvr_renov_rent" value="8" min="1" max="100" step="0.5" oninput="calcRenovVsRebuild()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">建替え後の月額家賃見込み（万円）</label>
+        <input type="number" id="rvr_rebuild_rent" value="12" min="1" max="100" step="0.5" oninput="calcRenovVsRebuild()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="renov-vs-rebuild-result"></div>
+  </div>
+
   <!-- 空き家保険費用概算カード -->
   <div class="card" id="card-akiya-insurance">
     <div class="card-title">🛡️ 空き家 火災・地震保険 概算費用チェック</div>
@@ -5506,6 +5531,69 @@ function calcAkiyaInsurance() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaInsurance(); })();
+
+function calcRenovVsRebuild() {
+  var el = document.getElementById('renov-vs-rebuild-result');
+  if (!el) return;
+  var area = parseFloat(document.getElementById('rvr_area').value) || 0;
+  var age = parseFloat(document.getElementById('rvr_age').value) || 0;
+  var renovRent = parseFloat(document.getElementById('rvr_renov_rent').value) || 0;
+  var rebuildRent = parseFloat(document.getElementById('rvr_rebuild_rent').value) || 0;
+  if (area <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">延床面積を入力してください</div>'; return; }
+
+  // フルリノベ費用（木造前提: 7〜12万/㎡, 築年数で係数）
+  var renovUnit = age >= 50 ? 12 : age >= 35 ? 10 : 8;
+  var renovCost = area * renovUnit;
+  // 解体費（木造3万/㎡）+ 建替え費（木造18万/㎡）
+  var demoCost = area * 3;
+  var rebuildUnit = 18;
+  var newBuildCost = area * rebuildUnit;
+  var rebuildTotal = demoCost + newBuildCost;
+
+  // 工期（概算）
+  var renovPeriod = age >= 50 ? '5〜8ヶ月' : '3〜5ヶ月';
+  var rebuildPeriod = '8〜12ヶ月';
+
+  // 10年収益（空室率10%想定）
+  var occ = 0.90;
+  var renovIncome10 = renovRent * 12 * 10 * occ;
+  var renovNet10 = renovIncome10 - renovCost;
+  var rebuildIncome10 = rebuildRent * 12 * 10 * occ;
+  var rebuildNet10 = rebuildIncome10 - rebuildTotal;
+  var renovPayback = renovRent > 0 ? (renovCost / (renovRent * 12 * occ)) : null;
+  var rebuildPayback = rebuildRent > 0 ? (rebuildTotal / (rebuildRent * 12 * occ)) : null;
+
+  var betterOption = renovNet10 > rebuildNet10 ? 'リノベ' : '建替え';
+  var betterColor = renovNet10 > rebuildNet10 ? '#4caf50' : '#d4af37';
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+
+  // Renov card
+  html += '<div style="padding:12px;background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.3);border-radius:8px">';
+  html += '<div style="font-size:13px;font-weight:700;color:#4caf50;margin-bottom:8px">🔨 フルリノベーション</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">費用</div><div style="font-size:20px;font-weight:900;color:var(--text);margin-bottom:4px">' + Math.round(renovCost).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">工期: ' + renovPeriod + '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">10年純収益: <strong style="color:' + (renovNet10>=0?'#4caf50':'var(--red)') + '">' + (renovNet10>=0?'+':'') + Math.round(renovNet10).toLocaleString() + '万円</strong></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">投資回収: ' + (renovPayback ? Math.round(renovPayback * 10)/10 + '年' : '—') + '</div>';
+  html += '</div>';
+
+  // Rebuild card
+  html += '<div style="padding:12px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:8px">';
+  html += '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">🏗️ 解体+建替え</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">費用（解体込み）</div><div style="font-size:20px;font-weight:900;color:var(--text);margin-bottom:4px">' + Math.round(rebuildTotal).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">工期: ' + rebuildPeriod + '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">10年純収益: <strong style="color:' + (rebuildNet10>=0?'#4caf50':'var(--red)') + '">' + (rebuildNet10>=0?'+':'') + Math.round(rebuildNet10).toLocaleString() + '万円</strong></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">投資回収: ' + (rebuildPayback ? Math.round(rebuildPayback * 10)/10 + '年' : '—') + '</div>';
+  html += '</div></div>';
+
+  html += '<div style="padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px;color:var(--text-muted);line-height:1.7">';
+  html += '📌 10年純収益の有利な方: <strong style="color:' + betterColor + '">' + betterOption + '</strong>（差額 ' + Math.abs(Math.round(renovNet10 - rebuildNet10)).toLocaleString() + '万円）。';
+  html += '築' + age + '年の建物は構造・基礎の状態次第でリノベコストが大きく変わります。現地調査（ホームインスペクション）での確認を推奨します。';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcRenovVsRebuild(); })();
 
 function calcMinpakuConvert() {
   var el = document.getElementById('minpaku-convert-result');
