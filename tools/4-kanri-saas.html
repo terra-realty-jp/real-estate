@@ -1801,6 +1801,31 @@
     <div id="guaranty-fee-result"></div>
   </div>
 
+  <!-- 空室期間別 損失シミュレーターカード -->
+  <div class="card" id="card-vacancy-loss">
+    <div class="card-title">🏚️ 空室期間別 損失シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空室が続いた場合の機会損失と、広告費・リフォーム費などの対策コストを比較して早期決着の判断材料を提供します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">月額家賃（万円）</label>
+        <input type="number" id="vl_rent" value="8" min="1" max="100" step="0.5" oninput="calcVacancyLoss()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">月間固定費（ローン返済等・万円）</label>
+        <input type="number" id="vl_fixed" value="5" min="0" max="100" step="0.5" oninput="calcVacancyLoss()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">想定広告費・仲介謝礼（万円）</label>
+        <input type="number" id="vl_ad" value="8" min="0" max="100" step="1" oninput="calcVacancyLoss()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">原状回復・小修繕費（万円）</label>
+        <input type="number" id="vl_repair" value="15" min="0" max="200" step="5" oninput="calcVacancyLoss()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="vacancy-loss-result"></div>
+  </div>
+
   </div><!-- /kanri-calc-cards -->
 
   <div id="repairs-list"></div>
@@ -7747,6 +7772,47 @@ function _loadFromLocalStorage() {
   repairs        = JSON.parse(localStorage.getItem('saas_repairs')          || '[]');
   plannedRepairs = JSON.parse(localStorage.getItem('saas_planned_repairs')  || '[]');
 }
+
+// ===== 空室期間別 損失シミュレーター =====
+function calcVacancyLoss() {
+  var el = document.getElementById('vacancy-loss-result');
+  if (!el) return;
+  var rent = parseFloat(document.getElementById('vl_rent').value) || 0;
+  var fixed = parseFloat(document.getElementById('vl_fixed').value) || 0;
+  var ad = parseFloat(document.getElementById('vl_ad').value) || 0;
+  var repair = parseFloat(document.getElementById('vl_repair').value) || 0;
+  if (rent <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">月額家賃を入力してください</div>'; return; }
+
+  var totalCost = ad + repair;
+  var breakeven = rent > 0 ? Math.ceil(totalCost / rent) : 0;
+
+  var rows = [1, 2, 3, 6, 9, 12];
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">広告費＋修繕費合計: <strong style="color:var(--gold)">' + totalCost.toLocaleString() + '万円</strong>　損益分岐: 空室<strong style="color:var(--gold)">' + breakeven + 'ヶ月</strong>未満で対策コストが空室損失を下回ります</div>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<tr style="background:rgba(255,255,255,0.06)"><th style="padding:8px;text-align:left;color:var(--text-muted);font-weight:600">空室期間</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">機会損失</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">固定費負担</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">合計損失</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">対策cost vs 損失</th></tr>';
+  rows.forEach(function(m) {
+    var opp = rent * m;
+    var fixedTotal = fixed * m;
+    var total = opp + fixedTotal;
+    var diff = totalCost - total;
+    var diffColor = diff > 0 ? 'var(--green)' : 'var(--red)';
+    var diffLabel = diff > 0 ? '▼ 対策が' + Math.abs(diff).toFixed(1) + '万お得' : '▲ 空室の方が' + Math.abs(diff).toFixed(1) + '万損';
+    html += '<tr style="border-top:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:8px;font-weight:700">' + m + 'ヶ月</td>';
+    html += '<td style="padding:8px;text-align:right;color:var(--red)">▲' + opp.toLocaleString() + '万</td>';
+    html += '<td style="padding:8px;text-align:right;color:#888">▲' + fixedTotal.toLocaleString() + '万</td>';
+    html += '<td style="padding:8px;text-align:right;font-weight:700;color:var(--red)">▲' + total.toLocaleString() + '万</td>';
+    html += '<td style="padding:8px;text-align:right;font-size:11px;color:' + diffColor + '">' + diffLabel + '</td>';
+    html += '</tr>';
+  });
+  html += '</table></div>';
+  html += '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.6">';
+  html += '💡 空室' + breakeven + 'ヶ月未満なら広告強化・リフォームによる対策コスト（' + totalCost + '万円）が損失より少なく、積極投資が合理的です。それ以上の空室は家賃見直しも検討を。';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcVacancyLoss(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');
