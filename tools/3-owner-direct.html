@@ -1779,6 +1779,46 @@
     <div id="buyer-profile-result"></div>
   </div>
 
+  <!-- 媒介契約タイプ 比較診断カード -->
+  <div class="card" id="card-mediation-clause">
+    <div class="card-title">📝 媒介契約タイプ 比較診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">「一般媒介」「専任媒介」「専属専任媒介」の3タイプを状況別に比較し、あなたの物件に最適な媒介契約タイプを診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件の売りやすさ</div>
+        <select id="mc_demand" onchange="calcMediationClause()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="high" selected>高い（人気エリア・築浅）</option>
+          <option value="mid">普通（標準的な物件）</option>
+          <option value="low">難しい（築古・遠隔地など）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売主の希望</div>
+        <select id="mc_priority" onchange="calcMediationClause()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="price" selected>できるだけ高く売りたい</option>
+          <option value="speed">早く売りたい</option>
+          <option value="balance">高さと速さのバランス</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">業者への信頼度</div>
+        <select id="mc_trust" onchange="calcMediationClause()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="high">高い（信頼できる1社がある）</option>
+          <option value="mid" selected>普通（まだ決めていない）</option>
+          <option value="low">低い（複数業者を競わせたい）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">対応できる手間</div>
+        <select id="mc_effort" onchange="calcMediationClause()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="low">少ない（任せたい）</option>
+          <option value="high" selected>多い（自分でも動ける）</option>
+        </select>
+      </div>
+    </div>
+    <div id="mediation-clause-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -6017,6 +6057,50 @@ function calcBuyerProfile() {
   el.innerHTML = html;
 }
 (function(){ calcBuyerProfile(); })();
+
+function calcMediationClause() {
+  var el = document.getElementById('mediation-clause-result'); if (!el) return;
+  var demand = document.getElementById('mc_demand').value;
+  var priority = document.getElementById('mc_priority').value;
+  var trust = document.getElementById('mc_trust').value;
+  var effort = document.getElementById('mc_effort').value;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var generalScore = 0, senninScore = 0, sensokuScore = 0;
+  if (demand === 'high') { generalScore += 30; senninScore += 10; sensokuScore += 5; }
+  else if (demand === 'mid') { generalScore += 15; senninScore += 20; sensokuScore += 15; }
+  else { generalScore += 5; senninScore += 25; sensokuScore += 30; }
+  if (priority === 'price') { generalScore += 25; senninScore += 15; sensokuScore += 10; }
+  else if (priority === 'speed') { generalScore += 10; senninScore += 20; sensokuScore += 25; }
+  else { generalScore += 15; senninScore += 20; sensokuScore += 15; }
+  if (trust === 'high') { generalScore += 5; senninScore += 15; sensokuScore += 25; }
+  else if (trust === 'mid') { generalScore += 15; senninScore += 20; sensokuScore += 15; }
+  else { generalScore += 25; senninScore += 15; sensokuScore += 5; }
+  if (effort === 'high') { generalScore += 20; senninScore += 15; sensokuScore += 10; }
+  else { generalScore += 5; senninScore += 15; sensokuScore += 20; }
+  var contracts = [
+    { name: '一般媒介', score: generalScore, reportObligation: 'なし', periodMax: '指定なし', selfFind: '可（自己発見取引OK）', pros: '複数業者を競わせてより高値を狙える。業者を縛らない自由度', cons: '各業者の積極性が下がりやすい。情報が分散する' },
+    { name: '専任媒介', score: senninScore, reportObligation: '2週間に1回以上', periodMax: '3ヶ月以内', selfFind: '可（自己発見取引OK）', pros: '業者の積極性UP。レインズ登録でネット拡散。定期報告で進捗確認', cons: '1社への依存リスク。囲い込みに注意が必要' },
+    { name: '専属専任媒介', score: sensokuScore, reportObligation: '1週間に1回以上', periodMax: '3ヶ月以内', selfFind: '不可（業者経由のみ）', pros: '業者の最大積極性。週次報告で最も手厚いサポート', cons: '自己発見取引不可。1社への最大依存' }
+  ];
+  contracts.sort(function(a, b) { return b.score - a.score; });
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="font-size:12px;font-weight:700;color:' + ACCENT + ';margin-bottom:10px">おすすめ順: ' + contracts.map(function(c) { return c.name; }).join(' → ') + '</div>';
+  contracts.forEach(function(c, i) {
+    var isTop = i === 0;
+    html += '<div style="border:1px solid ' + (isTop ? BDR : 'rgba(255,255,255,0.07)') + ';border-radius:8px;padding:10px;margin-bottom:8px;background:' + (isTop ? BG : 'rgba(255,255,255,0.02)') + '">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html += '<div style="font-size:13px;font-weight:900;color:' + (isTop ? ACCENT : 'var(--text)') + '">' + c.name + (isTop ? ' ★おすすめ' : '') + '</div>';
+    html += '<div style="font-size:10px;color:var(--text-muted)">マッチ度 ' + c.score + 'pt</div></div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:10px;color:var(--text-muted);margin-bottom:6px">';
+    html += '<div>報告義務: ' + c.reportObligation + '</div><div>契約期間: ' + c.periodMax + '</div><div>自己取引: ' + c.selfFind + '</div></div>';
+    html += '<div style="font-size:10px;color:#4ade80;margin-bottom:2px">✅ ' + c.pros + '</div>';
+    html += '<div style="font-size:10px;color:#f87171">⚠️ ' + c.cons + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMediationClause(); })();
 
 function filterOwnerCalcCards(query) {
   var cards = document.querySelectorAll('#owner-calc-cards > div');

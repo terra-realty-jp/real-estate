@@ -1947,6 +1947,44 @@
     <div id="akiya-grant-sim-result"></div>
   </div>
 
+  <!-- 空き家放置リスク 総合診断カード -->
+  <div class="card" id="card-akiya-empty-risk">
+    <div class="card-title">⚠️ 空き家放置リスク 総合診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">空き家を放置した場合の「特定空き家指定リスク」「倒壊・事故リスク」「防犯・火災リスク」「固定資産税増税リスク」を総合スコアで評価します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">空き家の状態</div>
+        <select id="aer_condition" onchange="calcAkiyaEmptyRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="good" selected>良好（定期的に管理）</option>
+          <option value="fair">やや劣化（1〜2年放置）</option>
+          <option value="poor">老朽化（3〜5年放置）</option>
+          <option value="critical">危険（5年超・雨漏りあり）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建物の築年数</div>
+        <input type="number" id="aer_build_age" value="35" min="1" max="80" step="1" oninput="calcAkiyaEmptyRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">周辺環境</div>
+        <select id="aer_env" onchange="calcAkiyaEmptyRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="urban">住宅密集地（隣家が近い）</option>
+          <option value="suburban" selected>住宅地（一般的）</option>
+          <option value="rural">郊外・農村（隣家が遠い）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">自治体の空き家対策</div>
+        <select id="aer_policy" onchange="calcAkiyaEmptyRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="strict">積極的（空き家対策課あり）</option>
+          <option value="normal" selected>普通</option>
+          <option value="loose">緩い（対策なし）</option>
+        </select>
+      </div>
+    </div>
+    <div id="akiya-empty-risk-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -6220,6 +6258,56 @@ function calcAkiyaGrantSim() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaGrantSim(); })();
+
+function calcAkiyaEmptyRisk() {
+  var el = document.getElementById('akiya-empty-risk-result'); if (!el) return;
+  var condition = document.getElementById('aer_condition').value;
+  var buildAge = parseFloat(document.getElementById('aer_build_age').value) || 35;
+  var env = document.getElementById('aer_env').value;
+  var policy = document.getElementById('aer_policy').value;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var condScore = { good: 10, fair: 35, poor: 65, critical: 90 }[condition] || 35;
+  var ageScore = buildAge < 20 ? 10 : buildAge < 30 ? 20 : buildAge < 40 ? 40 : buildAge < 50 ? 60 : 80;
+  var envScore = { urban: 75, suburban: 50, rural: 25 }[env] || 50;
+  var policyScore = { strict: 85, normal: 50, loose: 25 }[policy] || 50;
+  var collapseRisk = Math.round((condScore * 0.5 + ageScore * 0.5));
+  var fireRisk = Math.round((condScore * 0.4 + envScore * 0.3 + ageScore * 0.3));
+  var crimeRisk = Math.round((condScore * 0.5 + envScore * 0.5));
+  var specialRisk = Math.round((condScore * 0.4 + policyScore * 0.4 + ageScore * 0.2));
+  var taxRisk = Math.round((condScore * 0.6 + policyScore * 0.4));
+  var totalRisk = Math.round((collapseRisk + fireRisk + crimeRisk + specialRisk + taxRisk) / 5);
+  var riskLevel = totalRisk >= 70 ? '高危険' : totalRisk >= 45 ? '要注意' : totalRisk >= 25 ? '軽度リスク' : '低リスク';
+  var riskColor = totalRisk >= 70 ? '#f87171' : totalRisk >= 45 ? '#fb923c' : totalRisk >= 25 ? '#facc15' : '#4ade80';
+  var condLabel = { good: '良好', fair: 'やや劣化', poor: '老朽化', critical: '危険' }[condition];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="text-align:center;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">総合リスクスコア</div>';
+  html += '<div style="font-size:32px;font-weight:900;color:' + riskColor + '">' + totalRisk + '<span style="font-size:14px">/100</span></div>';
+  html += '<div style="font-size:14px;font-weight:700;color:' + riskColor + '">' + riskLevel + '</div>';
+  html += '</div>';
+  var scoreBar = '<div style="background:rgba(255,255,255,0.08);border-radius:6px;height:10px;margin-bottom:14px"><div style="width:' + totalRisk + '%;background:' + riskColor + ';height:10px;border-radius:6px"></div></div>';
+  html += scoreBar;
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">リスク種別</th><th style="text-align:right;padding:4px 6px">スコア</th><th style="text-align:right;padding:4px 6px">評価</th></tr>';
+  var riskRows = [
+    ['🏚️ 倒壊・損壊リスク', collapseRisk, '近隣への損害賠償責任発生の可能性'],
+    ['🔥 火災・漏電リスク', fireRisk, '無人状態での電気系統劣化・ショートなど'],
+    ['🚨 防犯・不審者リスク', crimeRisk, '不法侵入・放火・ゴミ不法投棄の温床に'],
+    ['📋 特定空き家指定リスク', specialRisk, '指定されると固定資産税特例（6分の1）が外れる'],
+    ['💴 固定資産税増税リスク', taxRisk, '特定空き家→解体命令→更地化で税額最大6倍']
+  ];
+  riskRows.forEach(function(r) {
+    var c = r[1] >= 70 ? '#f87171' : r[1] >= 45 ? '#fb923c' : r[1] >= 25 ? '#facc15' : '#4ade80';
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:5px 6px">' + r[0] + '<br><span style="font-size:10px;color:var(--text-muted)">' + r[2] + '</span></td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:' + c + ';font-weight:700">' + r[1] + '</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:' + c + '">' + (r[1] >= 70 ? '危険' : r[1] >= 45 ? '要注意' : '軽微') + '</td></tr>';
+  });
+  html += '</table>';
+  var action = condition === 'good' ? '現状は良好ですが、定期管理を続けることで低リスクを維持できます。' : condition === 'fair' ? '早期の活用計画（賃貸・売却・解体）を検討するタイミングです。' : condition === 'poor' ? '老朽化が進んでいます。自治体から連絡が来る前に活用・処分を決断してください。' : '今すぐ行動が必要です。特定空き家に指定される前に専門家への相談をお勧めします。';
+  html += '<div style="font-size:11px;color:var(--text-muted);border-top:1px solid rgba(255,255,255,0.08);padding-top:10px">💡 ' + action + '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaEmptyRisk(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;

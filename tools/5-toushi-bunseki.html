@@ -2080,6 +2080,39 @@
     <div id="noi-detail-result"></div>
   </div>
 
+  <!-- DCF法 収益価値算定カード -->
+  <div class="card" id="card-dcf-valuation">
+    <div class="card-title">📊 DCF法による収益価値 算定</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">将来のキャッシュフローを現在価値に割り引くDCF（割引現在価値）法で、物件の理論価値を算定します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間NOI（万円）</div>
+        <input type="number" id="dcf_noi" value="200" min="1" max="10000" step="10" oninput="calcDCFValuation()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">割引率（%）</div>
+        <input type="number" id="dcf_discount" value="5" min="1" max="20" step="0.5" oninput="calcDCFValuation()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">賃料変動率（%/年）</div>
+        <input type="number" id="dcf_noi_growth" value="-0.5" min="-5" max="5" step="0.5" oninput="calcDCFValuation()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">保有期間（年）</div>
+        <input type="number" id="dcf_period" value="10" min="1" max="30" step="1" oninput="calcDCFValuation()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">期末還元利回り（%）</div>
+        <input type="number" id="dcf_exit_rate" value="6" min="1" max="20" step="0.5" oninput="calcDCFValuation()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">実際の取得価格（万円）</div>
+        <input type="number" id="dcf_purchase" value="3000" min="100" max="100000" step="100" oninput="calcDCFValuation()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="dcf-valuation-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -8572,6 +8605,64 @@ function calcNOIDetail() {
   el.innerHTML = html;
 }
 (function(){ calcNOIDetail(); })();
+
+function calcDCFValuation() {
+  var el = document.getElementById('dcf-valuation-result'); if (!el) return;
+  var noi = parseFloat(document.getElementById('dcf_noi').value) || 200;
+  var discountRate = (parseFloat(document.getElementById('dcf_discount').value) || 5) / 100;
+  var noiGrowth = (parseFloat(document.getElementById('dcf_noi_growth').value) || -0.5) / 100;
+  var period = Math.round(parseFloat(document.getElementById('dcf_period').value) || 10);
+  var exitRate = (parseFloat(document.getElementById('dcf_exit_rate').value) || 6) / 100;
+  var purchase = parseFloat(document.getElementById('dcf_purchase').value) || 3000;
+  var ACCENT = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var pvSum = 0;
+  var noiYear = noi;
+  var cashFlows = [];
+  for (var i = 1; i <= period; i++) {
+    var pv = noiYear / Math.pow(1 + discountRate, i);
+    pvSum += pv;
+    if (i <= 5 || i === period) cashFlows.push({ year: i, noi: Math.round(noiYear * 10) / 10, pv: Math.round(pv * 10) / 10 });
+    noiYear = noiYear * (1 + noiGrowth);
+  }
+  var exitNOI = noi * Math.pow(1 + noiGrowth, period);
+  var exitValue = exitRate > 0 ? exitNOI / exitRate : 0;
+  var exitPV = exitValue / Math.pow(1 + discountRate, period);
+  var dcfValue = pvSum + exitPV;
+  var diff = dcfValue - purchase;
+  var diffPct = purchase > 0 ? diff / purchase * 100 : 0;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+  var pvPanels = [
+    { label: '賃料収入の現在価値', val: Math.round(pvSum).toLocaleString() + '万円', sub: period + '年間のPV合計' },
+    { label: '売却価格の現在価値', val: Math.round(exitPV).toLocaleString() + '万円', sub: '期末NOI÷' + (exitRate * 100).toFixed(1) + '% を割引' },
+    { label: 'DCF理論価値', val: Math.round(dcfValue).toLocaleString() + '万円', sub: '割引率' + (discountRate * 100).toFixed(1) + '%', bold: true }
+  ];
+  pvPanels.forEach(function(p) {
+    html += '<div style="background:rgba(255,255,255,0.03);border-radius:6px;padding:8px;text-align:center">';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">' + p.label + '</div>';
+    html += '<div style="font-size:' + (p.bold ? '16' : '13') + 'px;font-weight:900;color:' + ACCENT + '">' + p.val + '</div>';
+    html += '<div style="font-size:9px;color:var(--text-muted)">' + p.sub + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="font-size:12px;margin-bottom:8px">';
+  if (diff > 0) {
+    html += '✅ <b style="color:#4ade80">取得価格より' + Math.round(diff).toLocaleString() + '万円（' + diffPct.toFixed(1) + '%）割安。</b>投資価値ありと判断できます。';
+  } else {
+    html += '⚠️ <b style="color:#f87171">取得価格より' + Math.abs(Math.round(diff)).toLocaleString() + '万円（' + Math.abs(diffPct).toFixed(1) + '%）割高。</b>割引率・還元利回りを再検討してください。';
+  }
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:6px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="padding:4px 6px;text-align:left">年</th><th style="text-align:right;padding:4px 6px">NOI</th><th style="text-align:right;padding:4px 6px">現在価値（PV）</th></tr>';
+  cashFlows.forEach(function(cf) {
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 6px">' + cf.year + '年目</td><td style="text-align:right;padding:4px 6px">' + cf.noi + '万円</td><td style="text-align:right;padding:4px 6px;color:' + ACCENT + '">' + cf.pv + '万円</td></tr>';
+  });
+  if (period > 6) html += '<tr><td colspan="3" style="padding:2px 6px;font-size:10px;color:var(--text-muted);text-align:center">…（中間年省略）…</td></tr>';
+  html += '</table>';
+  html += '<div style="font-size:10px;color:var(--text-muted)">※ 税金・減価償却・ローン返済は含まず。DCFは将来予測の不確実性を含みます。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcDCFValuation(); })();
 
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');
