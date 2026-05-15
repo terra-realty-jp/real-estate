@@ -7945,6 +7945,36 @@ renderReitCompare();
   }
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
 })();
+// ── Auto-save: フォーム入力値を自動保存・次回訪問時に復元 ──
+(function(){
+  var LS='re_autosave_tool5';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(LS)||'{}');}catch(e){}
+  var inputs=[].slice.call(document.querySelectorAll('input:not([type=button]):not([type=submit]):not([type=reset]),select,textarea'));
+  var restoredCount=0;
+  inputs.forEach(function(el){
+    if(!el.id||saved[el.id]===undefined)return;
+    if(el.type==='checkbox'){el.checked=saved[el.id];}
+    else{el.value=saved[el.id];}
+    restoredCount++;
+  });
+  if(restoredCount>0){
+    var bid='re-resume-bar-5';
+    var bar=document.createElement('div');
+    bar.id=bid;
+    bar.style.cssText='max-width:800px;margin:0 auto 12px;padding:8px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.7)';
+    bar.innerHTML='<span>📋 前回入力した値を復元しました（'+restoredCount+'項目）</span><button onclick="localStorage.removeItem(\''+LS+'\');document.getElementById(\''+bid+'\').remove()" style="background:none;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;padding:2px 8px;font-family:inherit">クリア</button>';
+    var anchor=document.getElementById('re-fav-bar')||document.querySelector('main')||document.body;
+    anchor.parentNode.insertBefore(bar,anchor);
+  }
+  document.addEventListener('change',function(e){
+    var el=e.target;
+    if(!el.id||!['INPUT','SELECT','TEXTAREA'].includes(el.tagName))return;
+    if(el.type==='button'||el.type==='submit'||el.type==='reset')return;
+    saved[el.id]=el.type==='checkbox'?el.checked:el.value;
+    try{localStorage.setItem(LS,JSON.stringify(saved));}catch(e){}
+  });
+})();
 </script>
 </body>
 </html>
