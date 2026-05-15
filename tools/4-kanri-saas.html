@@ -1875,6 +1875,39 @@
     <div id="tenant-churn-result"></div>
   </div>
 
+  <!-- 設備老朽化リスク判定カード -->
+  <div class="card" id="card-equip-age">
+    <div class="card-title">🔧 設備老朽化リスク 更新優先度チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">主要設備の設置年数を入力して更新推奨時期と優先度を判定します。修繕トラブルを防ぐ先手管理に活用してください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">エアコン（設置から何年）</label>
+        <input type="number" id="ea_ac" value="8" min="0" max="30" step="1" oninput="calcEquipAgeRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">給湯器（設置から何年）</label>
+        <input type="number" id="ea_hw" value="10" min="0" max="30" step="1" oninput="calcEquipAgeRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">換気扇（設置から何年）</label>
+        <input type="number" id="ea_vent" value="12" min="0" max="30" step="1" oninput="calcEquipAgeRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">インターホン（設置から何年）</label>
+        <input type="number" id="ea_ih" value="15" min="0" max="30" step="1" oninput="calcEquipAgeRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">浴室設備（設置から何年）</label>
+        <input type="number" id="ea_bath" value="18" min="0" max="40" step="1" oninput="calcEquipAgeRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">洗濯機用排水パン（設置から何年）</label>
+        <input type="number" id="ea_pan" value="20" min="0" max="40" step="1" oninput="calcEquipAgeRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="equip-age-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -7957,6 +7990,54 @@ function calcTenantChurn() {
   el.innerHTML = html;
 }
 (function(){ calcTenantChurn(); })();
+
+function calcEquipAgeRisk() {
+  var el = document.getElementById('equip-age-result');
+  if (!el) return;
+  var items = [
+    { name: 'エアコン', age: parseFloat(document.getElementById('ea_ac').value)||0, limit: 10, warn: 8, cost: '3〜8万円' },
+    { name: '給湯器', age: parseFloat(document.getElementById('ea_hw').value)||0, limit: 10, warn: 8, cost: '15〜25万円' },
+    { name: '換気扇', age: parseFloat(document.getElementById('ea_vent').value)||0, limit: 15, warn: 12, cost: '2〜5万円' },
+    { name: 'インターホン', age: parseFloat(document.getElementById('ea_ih').value)||0, limit: 15, warn: 12, cost: '3〜10万円' },
+    { name: '浴室設備', age: parseFloat(document.getElementById('ea_bath').value)||0, limit: 20, warn: 15, cost: '50〜120万円' },
+    { name: '洗濯機排水パン', age: parseFloat(document.getElementById('ea_pan').value)||0, limit: 25, warn: 20, cost: '1〜3万円' }
+  ];
+
+  items.sort(function(a, b) { return (b.age - b.limit) - (a.age - a.limit); });
+
+  var html = '<div style="margin-top:10px">';
+  items.forEach(function(item) {
+    var ratio = item.age / item.limit;
+    var overLimit = item.age >= item.limit;
+    var nearLimit = item.age >= item.warn;
+    var pct = Math.min(ratio * 100, 100);
+    var barColor = overLimit ? 'var(--red)' : nearLimit ? '#f9a825' : 'var(--green)';
+    var priority = overLimit ? '🔴 要即対応' : nearLimit ? '🟡 要注意' : '🟢 問題なし';
+    var remaining = Math.max(0, item.limit - item.age);
+
+    html += '<div style="margin-bottom:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html += '<span style="font-size:13px;font-weight:700">' + item.name + '</span>';
+    html += '<span style="font-size:12px">' + priority + '</span>';
+    html += '</div>';
+    html += '<div style="background:rgba(255,255,255,0.07);border-radius:4px;height:8px;margin-bottom:6px;overflow:hidden">';
+    html += '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:4px"></div></div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between">';
+    html += '<span>' + item.age + '年経過 / 寿命目安' + item.limit + '年</span>';
+    html += '<span>' + (overLimit ? '超過中・交換推奨 ' + item.cost : remaining + '年後に交換 ' + item.cost) + '</span>';
+    html += '</div></div>';
+  });
+
+  var urgentCount = items.filter(function(i){ return i.age >= i.limit; }).length;
+  if (urgentCount > 0) {
+    html += '<div style="padding:10px;background:rgba(229,57,53,0.12);border:1px solid rgba(229,57,53,0.3);border-radius:8px;font-size:12px;color:var(--red);line-height:1.7">';
+    html += '⚠️ ' + urgentCount + '件が寿命超過です。入居者からの故障連絡前に計画的な交換を強くお勧めします。民法606条に基づき、修繕義務はオーナーが負います。';
+    html += '</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcEquipAgeRisk(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');
