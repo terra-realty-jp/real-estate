@@ -1,0 +1,30 @@
+name: Supabase Keepalive Ping
+
+on:
+  schedule:
+    # 月・木・土 の UTC 00:00 (JST 09:00) に実行 — 7日以内に必ず1回ping
+    - cron: '0 0 * * 1,4,6'
+  workflow_dispatch: # 手動実行ボタン付き
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          SUPABASE_URL="https://egiklnkfwynogawdfnjw.supabase.co"
+          ANON_KEY="sb_publishable_3M5DgUWoMnXvelUiILMiAQ_aQQeGFlf"
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: ${ANON_KEY}" \
+            -H "Authorization: Bearer ${ANON_KEY}" \
+            "${SUPABASE_URL}/rest/v1/")
+
+          echo "$(date '+%Y-%m-%d %H:%M:%S') JST — Supabase ping: HTTP ${STATUS}"
+
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "404" ]; then
+            echo "OK: Supabase is alive"
+          else
+            echo "WARNING: Unexpected status ${STATUS}"
+            exit 1
+          fi
