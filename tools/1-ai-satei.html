@@ -1783,6 +1783,23 @@
     <div id="demolish-compare-result"></div>
   </div>
 
+  <!-- 売却後資金運用プランカード -->
+  <div class="card" id="card-proceeds-invest">
+    <div class="card-title">💰 売却後の資金 運用シナリオ比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売却で得た手取り資金をどう運用するか。3つのリスク水準（安定・バランス・成長）で期待資産を試算して、次の一手の選択肢を把握しましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">売却手取り額（万円）</label>
+        <input type="number" id="pi_proceeds" value="2000" min="100" max="100000" step="100" oninput="calcProceedsInvest()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">運用期間（年）</label>
+        <input type="number" id="pi_period" value="10" min="1" max="30" step="1" oninput="calcProceedsInvest()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="proceeds-invest-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -5990,6 +6007,40 @@ function calcDemolishCompare() {
   el.innerHTML = html;
 }
 (function(){ calcDemolishCompare(); })();
+
+function calcProceedsInvest() {
+  var el = document.getElementById('proceeds-invest-result');
+  if (!el) return;
+  var proceeds = parseFloat(document.getElementById('pi_proceeds').value) || 0;
+  var period = parseFloat(document.getElementById('pi_period').value) || 0;
+  if (proceeds <= 0 || period <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">手取り額と運用期間を入力してください</div>'; return; }
+
+  var plans = [
+    { label: '安定運用', desc: '定期預金・債券・個人向け国債', rate: 0.015, color: '#4db6f5', icon: '🏦', note: '元本保全優先。インフレリスクは残る。' },
+    { label: 'バランス運用', desc: 'バランス型投信・NISA（債券+株式）', rate: 0.04, color: '#8bc34a', icon: '📊', note: 'NISAを活用すれば利益非課税。分散投資でリスク低減。' },
+    { label: '成長投資', desc: '株式インデックス・不動産再投資', rate: 0.07, color: '#d4af37', icon: '📈', note: '長期ではリターンが高いが価格変動リスクあり。' }
+  ];
+
+  var html = '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+  plans.forEach(function(p) {
+    var future = proceeds * Math.pow(1 + p.rate, period);
+    var profit = future - proceeds;
+    html += '<div style="padding:12px;background:rgba(255,255,255,0.05);border-radius:10px;text-align:center">';
+    html += '<div style="font-size:18px;margin-bottom:4px">' + p.icon + '</div>';
+    html += '<div style="font-size:12px;font-weight:700;color:' + p.color + ';margin-bottom:2px">' + p.label + '</div>';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;line-height:1.4">' + p.desc + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-muted)">年利' + (p.rate*100).toFixed(1) + '%想定</div>';
+    html += '<div style="font-size:22px;font-weight:900;color:' + p.color + ';margin:6px 0">' + Math.round(future).toLocaleString() + '<span style="font-size:11px">万円</span></div>';
+    html += '<div style="font-size:11px;color:var(--text-muted)">利益 +' + Math.round(profit).toLocaleString() + '万円</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">';
+  html += '⚠️ 上記は複利計算の概算です。税金（株式譲渡益20.315%等）・手数料・インフレを考慮して実際の資産形成計画を立ててください。NISA口座の活用で利益が非課税になります。';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcProceedsInvest(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');
