@@ -1612,6 +1612,40 @@
     <div id="reit-comp-result"></div>
   </div>
 
+  <!-- 投資ローン 借入可能額＋ストレス金利チェックカード -->
+  <div class="card" id="card-loan-capacity">
+    <div class="card-title">💳 投資ローン 借入可能額＋ストレス金利チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">年収・返済比率から借入可能額を算出し、金利上昇時（ストレス金利）の月返済額増加リスクを同時チェックします。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">年収（万円）</label>
+        <input type="number" id="lc_income" value="700" min="100" max="10000" step="50" oninput="calcLoanCapacity()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">既存ローン年間返済（万円）</label>
+        <input type="number" id="lc_existing" value="0" min="0" max="5000" step="10" oninput="calcLoanCapacity()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">返済比率上限（%）</label>
+        <input type="number" id="lc_ratio" value="35" min="10" max="50" step="5" oninput="calcLoanCapacity()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">想定金利（%）</label>
+        <input type="number" id="lc_rate" value="2.0" min="0.5" max="10" step="0.1" oninput="calcLoanCapacity()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">返済期間（年）</label>
+        <input type="number" id="lc_term" value="30" min="5" max="50" step="1" oninput="calcLoanCapacity()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">ストレス金利（%）</label>
+        <input type="number" id="lc_stress" value="4.0" min="1" max="15" step="0.5" oninput="calcLoanCapacity()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">金融庁の審査金利目安: 3〜4%</div>
+      </div>
+    </div>
+    <div id="loan-capacity-result"></div>
+  </div>
+
   </div><!-- /toushi-calc-cards -->
 
 </div>
@@ -7102,6 +7136,85 @@ function checkStorageWarning() {
     }
   } catch(e){}
 }
+
+// ===== 投資ローン 借入可能額＋ストレス金利チェック =====
+function calcLoanCapacity() {
+  var el = document.getElementById('loan-capacity-result');
+  if (!el) return;
+  var income = parseFloat(document.getElementById('lc_income').value) || 0;
+  var existing = parseFloat(document.getElementById('lc_existing').value) || 0;
+  var ratioLimit = parseFloat(document.getElementById('lc_ratio').value) || 35;
+  var rate = parseFloat(document.getElementById('lc_rate').value) || 2.0;
+  var term = parseInt(document.getElementById('lc_term').value) || 30;
+  var stress = parseFloat(document.getElementById('lc_stress').value) || 4.0;
+  if (income <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">年収を入力してください</div>'; return; }
+
+  // 年間返済可能額 = 年収 × 返済比率 - 既存ローン
+  var annualBudget = income * (ratioLimit / 100) - existing;
+  if (annualBudget <= 0) { el.innerHTML = '<div style="color:var(--red);font-size:12px;padding:8px">既存ローン返済が返済比率を超えています。新規融資は難しい状況です。</div>'; return; }
+
+  // 元利均等返済の係数: r/12 / (1-(1+r/12)^-n)
+  function monthlyPayment(principal, annualRate, years) {
+    var r = annualRate / 100 / 12;
+    var n = years * 12;
+    if (r === 0) return principal / n;
+    return principal * r / (1 - Math.pow(1 + r, -n));
+  }
+  function loanFromMonthly(monthly, annualRate, years) {
+    var r = annualRate / 100 / 12;
+    var n = years * 12;
+    if (r === 0) return monthly * n;
+    return monthly / (r / (1 - Math.pow(1 + r, -n)));
+  }
+
+  var monthlyBudget = annualBudget * 10000 / 12;
+  var loanAmount = loanFromMonthly(monthlyBudget, rate, term);
+  var loanMan = Math.floor(loanAmount / 10000);
+
+  // 同額ローンのストレス金利時月返済
+  var stressMonthly = monthlyPayment(loanAmount, stress, term);
+  var normalMonthly = monthlyPayment(loanAmount, rate, term);
+  var stressIncrease = Math.round((stressMonthly - normalMonthly) / 10000 * 10) / 10;
+
+  // 頭金別の購入可能価格
+  var downPatterns = [
+    { pct: 10, label: '頭金10%' },
+    { pct: 20, label: '頭金20%' },
+    { pct: 30, label: '頭金30%' }
+  ];
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:14px;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">借入可能額（年収' + income.toLocaleString() + '万・返済比率' + ratioLimit + '%）</div>';
+  html += '<div style="font-size:30px;font-weight:900;color:var(--gold)">' + loanMan.toLocaleString() + '<span style="font-size:14px;color:var(--text-muted)"> 万円</span></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">月返済上限: 約' + Math.round(monthlyBudget / 10000 * 10) / 10 + '万円</div>';
+  html += '</div>';
+
+  html += '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px">📋 頭金別 購入可能物件価格</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
+  downPatterns.forEach(function(d) {
+    var buyable = Math.floor(loanMan / (1 - d.pct / 100));
+    html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">' + d.label + '</div>';
+    html += '<div style="font-size:16px;font-weight:900">' + buyable.toLocaleString() + '<span style="font-size:10px">万円</span></div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  var stressRisk = stressIncrease >= 5 ? { color: 'var(--red)', label: '高リスク' } : stressIncrease >= 2 ? { color: '#f59e0b', label: '要注意' } : { color: 'var(--green)', label: '低リスク' };
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px">';
+  html += '<div style="font-size:12px;font-weight:700;margin-bottom:6px">⚠️ ストレス金利（' + stress + '%）シミュレーション</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+  html += '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">現在の月返済</div><div style="font-size:14px;font-weight:900">' + Math.round(normalMonthly / 10000 * 10) / 10 + '万円</div></div>';
+  html += '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">ストレス時</div><div style="font-size:14px;font-weight:900;color:' + stressRisk.color + '">' + Math.round(stressMonthly / 10000 * 10) / 10 + '万円</div></div>';
+  html += '<div style="text-align:center"><div style="font-size:10px;color:var(--text-muted)">月額増加</div><div style="font-size:14px;font-weight:900;color:' + stressRisk.color + '">+' + stressIncrease + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="margin-top:8px;font-size:11px;color:' + stressRisk.color + '">▶ ' + stressRisk.label + ': ';
+  html += stressIncrease >= 5 ? '金利上昇時の月返済増加が大きい。変動金利の場合は要注意。固定金利化を検討。' : stressIncrease >= 2 ? '金利上昇の影響は中程度。返済余力を確保しておきましょう。' : 'ストレス金利でも返済への影響は小さい。変動金利でも比較的安全。';
+  html += '</div></div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcLoanCapacity(); })();
 
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');
