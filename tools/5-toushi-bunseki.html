@@ -2206,6 +2206,34 @@
     <div id="area-diversify-result"></div>
   </div>
 
+  <div class="card" id="card-dscr">
+    <div class="card-title">🏦 DSCR（債務返済余裕率）診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">DSCR（Debt Service Coverage Ratio）は不動産融資審査の重要指標。NOIが年間ローン返済額の何倍あるかを示します。1.2以上が望ましい。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間NOI（純営業収益・万円）</div>
+        <input type="number" id="dscr_noi" value="240" min="10" max="10000" step="10" oninput="calcDSCR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間ローン返済額（元利合計・万円）</div>
+        <input type="number" id="dscr_debt" value="180" min="10" max="10000" step="10" oninput="calcDSCR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ローン残高（万円）</div>
+        <input type="number" id="dscr_balance" value="3000" min="100" max="100000" step="100" oninput="calcDSCR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">金融機関タイプ</div>
+        <select id="dscr_bank" onchange="calcDSCR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="mega" selected>メガバンク・都市銀行</option>
+          <option value="regional">地方銀行・信用金庫</option>
+          <option value="nonbank">ノンバンク・不動産専門</option>
+        </select>
+      </div>
+    </div>
+    <div id="dscr-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -8902,6 +8930,42 @@ function calcAreaDiversify() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ リスクスコアはエリア特性・集中度・棟数から試算した独自指標です。実際のリスクは個別物件・経済状況によります。</p></div>';
 }
 (function(){ calcAreaDiversify(); })();
+
+function calcDSCR() {
+  var el = document.getElementById('dscr-result'); if (!el) return;
+  var noi = parseFloat(document.getElementById('dscr_noi').value) || 240;
+  var debt = parseFloat(document.getElementById('dscr_debt').value) || 180;
+  var balance = parseFloat(document.getElementById('dscr_balance').value) || 3000;
+  var bank = document.getElementById('dscr_bank').value;
+  var ACCENT = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var dscr = debt > 0 ? Math.round(noi / debt * 100) / 100 : 0;
+  var thresholds = { mega: 1.4, regional: 1.2, nonbank: 1.0 };
+  var threshold = thresholds[bank] || 1.2;
+  var bankLabel = { mega: 'メガバンク・都市銀行', regional: '地方銀行・信用金庫', nonbank: 'ノンバンク・不動産専門' }[bank];
+  var okLabel = dscr >= threshold;
+  var dscrColor = dscr >= threshold ? '#4ade80' : dscr >= 1.0 ? '#fb923c' : '#f87171';
+  var verdict = dscr >= threshold
+    ? '✅ 融資基準クリア（' + bankLabel + 'の基準 ' + threshold + ' 以上）'
+    : dscr >= 1.0
+    ? '⚠️ 融資が厳しい可能性。NOI改善かローン条件変更を検討してください'
+    : '❌ DSCR 1.0未満。返済がNOIを上回っており、融資審査は困難です';
+  var breakEvenNOI = Math.round(debt * threshold * 10) / 10;
+  var noiGap = Math.round((breakEvenNOI - noi) * 10) / 10;
+  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+    + '<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">'
+    + '<div style="width:72px;height:72px;border-radius:50%;border:3px solid ' + dscrColor + ';display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">'
+    + '<div style="font-size:18px;font-weight:900;color:' + dscrColor + '">' + dscr.toFixed(2) + '</div>'
+    + '<div style="font-size:9px;color:rgba(255,255,255,0.5)">DSCR</div></div>'
+    + '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:' + dscrColor + ';margin-bottom:4px">' + verdict + '</div>'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.6)">審査基準値: ' + threshold + '以上（' + bankLabel + '）</div></div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+    + '<div style="padding:8px;background:rgba(0,0,0,0.2);border-radius:6px;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.5)">年間NOI</div><div style="font-size:16px;font-weight:700;color:' + ACCENT + '">' + noi + '万円</div></div>'
+    + '<div style="padding:8px;background:rgba(0,0,0,0.2);border-radius:6px;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.5)">年間返済額</div><div style="font-size:16px;font-weight:700;color:rgba(255,255,255,0.7)">' + debt + '万円</div></div>'
+    + '<div style="padding:8px;background:rgba(0,0,0,0.2);border-radius:6px;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.5)">CF余裕</div><div style="font-size:16px;font-weight:700;color:' + (noi - debt > 0 ? '#4ade80' : '#f87171') + '">' + Math.round(noi - debt) + '万円</div></div></div>'
+    + (noiGap > 0 ? '<div style="padding:8px 12px;background:rgba(0,0,0,0.15);border-radius:8px;font-size:12px;color:rgba(255,255,255,0.7)">審査通過に必要なNOI: <b style="color:' + ACCENT + '">' + breakEvenNOI + '万円</b>（現在より<b style="color:#f87171"> +' + noiGap + '万円</b>必要）</div>' : '')
+    + '<p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">※ DSCRの基準値は金融機関・物件種別・担保評価によって異なります。空室率・諸経費を加味したNOIで算出することが重要です。</p></div>';
+}
+(function(){ calcDSCR(); })();
 
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');

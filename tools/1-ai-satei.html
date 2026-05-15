@@ -2333,6 +2333,40 @@
     <div id="equity-extract-result"></div>
   </div>
 
+  <div class="card" id="card-demand-score">
+    <div class="card-title">📈 物件需要スコア診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">物件の種別・エリア・駅距離・築年数から「買い手がつきやすさ」を100点満点でスコアリングします。売却戦略の参考に。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件種別</div>
+        <select id="ds_type" onchange="calcDemandScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="condo" selected>マンション（区分）</option>
+          <option value="house">一戸建て</option>
+          <option value="land">土地</option>
+          <option value="invest">投資用収益物件</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">エリア</div>
+        <select id="ds_area" onchange="calcDemandScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="city_center" selected>都心（23区等）</option>
+          <option value="major">主要都市（政令市・県庁所在地）</option>
+          <option value="suburb">郊外（通勤圏）</option>
+          <option value="rural">地方・郡部</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">最寄り駅までの徒歩（分）</div>
+        <input type="number" id="ds_station" value="8" min="1" max="60" step="1" oninput="calcDemandScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">築年数</div>
+        <input type="number" id="ds_age" value="15" min="0" max="70" step="1" oninput="calcDemandScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="demand-score-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7337,6 +7371,42 @@ function calcEquityExtract() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">※ 実際の融資額は金融機関の審査・属性・収入等によります。不動産担保ローン・フラット35リノベ等が主な選択肢です。</p></div>';
 }
 (function(){ calcEquityExtract(); })();
+
+function calcDemandScore() {
+  var el = document.getElementById('demand-score-result'); if (!el) return;
+  var ptype = document.getElementById('ds_type').value;
+  var area = document.getElementById('ds_area').value;
+  var station = parseInt(document.getElementById('ds_station').value) || 8;
+  var age = parseInt(document.getElementById('ds_age').value) || 15;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var areaScore = { city_center: 35, major: 28, suburb: 18, rural: 8 }[area] || 18;
+  var typeScore = { condo: 25, house: 22, land: 18, invest: 20 }[ptype] || 20;
+  var stationScore = station <= 5 ? 20 : station <= 10 ? 16 : station <= 20 ? 10 : station <= 30 ? 5 : 2;
+  var ageScore = age <= 5 ? 20 : age <= 10 ? 18 : age <= 20 ? 14 : age <= 30 ? 9 : age <= 40 ? 5 : 2;
+  var total = areaScore + typeScore + stationScore + ageScore;
+  var grade = total >= 85 ? { label: 'S', color: '#4ade80', comment: '非常に高い需要。早期成約が期待できます。' }
+    : total >= 70 ? { label: 'A', color: '#86efac', comment: '需要が高く、適正価格設定で成約しやすい物件です。' }
+    : total >= 55 ? { label: 'B', color: ACCENT, comment: '需要は普通。価格設定と情報発信を工夫しましょう。' }
+    : total >= 40 ? { label: 'C', color: '#fb923c', comment: '需要がやや低め。リフォームやプライシングで差別化が必要です。' }
+    : { label: 'D', color: '#f87171', comment: '需要が低い物件タイプです。空き家バンク・競売・解体など複数の出口戦略を検討してください。' };
+  var days = total >= 85 ? '15〜30日' : total >= 70 ? '30〜60日' : total >= 55 ? '60〜120日' : total >= 40 ? '120〜180日' : '180日以上';
+  var areaLabel = { city_center: '都心', major: '主要都市', suburb: '郊外', rural: '地方・郡部' }[area];
+  var typeLabel = { condo: 'マンション', house: '一戸建て', land: '土地', invest: '収益物件' }[ptype];
+  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+    + '<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">'
+    + '<div style="width:64px;height:64px;border-radius:50%;border:3px solid ' + grade.color + ';display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">'
+    + '<div style="font-size:20px;font-weight:900;color:' + grade.color + '">' + grade.label + '</div>'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.5)">' + total + '/100</div></div>'
+    + '<div><div style="font-size:13px;font-weight:700;color:' + grade.color + ';margin-bottom:4px">需要スコア ' + total + '点（グレード ' + grade.label + '）</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.5">' + grade.comment + '</div></div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    + '<div style="padding:8px;background:rgba(0,0,0,0.2);border-radius:6px"><div style="font-size:11px;color:rgba(255,255,255,0.5)">物件タイプ</div><div style="font-size:12px;color:' + ACCENT + '">' + typeLabel + '</div></div>'
+    + '<div style="padding:8px;background:rgba(0,0,0,0.2);border-radius:6px"><div style="font-size:11px;color:rgba(255,255,255,0.5)">エリア需要</div><div style="font-size:12px;color:' + ACCENT + '">' + areaLabel + '</div></div>'
+    + '<div style="padding:8px;background:rgba(0,0,0,0.2);border-radius:6px"><div style="font-size:11px;color:rgba(255,255,255,0.5)">駅アクセス</div><div style="font-size:12px;color:' + ACCENT + '">徒歩' + station + '分</div></div>'
+    + '<div style="padding:8px;background:rgba(0,0,0,0.2);border-radius:6px"><div style="font-size:11px;color:rgba(255,255,255,0.5)">想定成約期間</div><div style="font-size:12px;color:' + ACCENT + '">' + days + '</div></div></div>'
+    + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ 独自のスコアリング指標です。実際の売れやすさは市場動向・価格設定・物件の状態により大きく異なります。</p></div>';
+}
+(function(){ calcDemandScore(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');
