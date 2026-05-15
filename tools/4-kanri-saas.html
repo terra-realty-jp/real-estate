@@ -1826,6 +1826,55 @@
     <div id="vacancy-loss-result"></div>
   </div>
 
+  <!-- テナント退去予測リスクスコアカード -->
+  <div class="card" id="card-tenant-churn">
+    <div class="card-title">🚪 テナント退去リスク 早期察知スコア</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">入居状況や関係性の指標を入力してテナントの退去リスクを早期に察知します。リスクが高い場合の先手を打つアドバイスも表示します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">入居期間（年）</label>
+        <input type="number" id="tc_tenure" value="3" min="0" max="30" step="0.5" oninput="calcTenantChurn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">更新まであと（ヶ月）</label>
+        <input type="number" id="tc_renewal_left" value="6" min="0" max="24" step="1" oninput="calcTenantChurn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">家賃の市場相場比</label>
+        <select id="tc_rent_ratio" onchange="calcTenantChurn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="low">相場より安い（-10%以上）</option>
+          <option value="mid" selected>相場並み（±10%以内）</option>
+          <option value="high">相場より高い（+10%以上）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">最近の問い合わせ・クレーム</label>
+        <select id="tc_complaints" onchange="calcTenantChurn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="none" selected>なし</option>
+          <option value="minor">軽微（1〜2件）</option>
+          <option value="major">多い・深刻（3件以上）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">ライフステージの変化</label>
+        <select id="tc_life_change" onchange="calcTenantChurn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="none" selected>なし・不明</option>
+          <option value="maybe">転職・結婚等の可能性あり</option>
+          <option value="likely">転職・結婚・出産・子の独立 確実</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">建物の管理状態</label>
+        <select id="tc_condition" onchange="calcTenantChurn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="good" selected>良好（定期的に修繕）</option>
+          <option value="fair">普通（要望時に対応）</option>
+          <option value="poor">老朽化・修繕遅れあり</option>
+        </select>
+      </div>
+    </div>
+    <div id="tenant-churn-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -7822,6 +7871,92 @@ function calcVacancyLoss() {
   el.innerHTML = html;
 }
 (function(){ calcVacancyLoss(); })();
+
+function calcTenantChurn() {
+  var tenure = parseFloat(document.getElementById('tc_tenure').value) || 0;
+  var renewalLeft = parseFloat(document.getElementById('tc_renewal_left').value) || 0;
+  var rentRatio = document.getElementById('tc_rent_ratio').value;
+  var complaints = document.getElementById('tc_complaints').value;
+  var lifeChange = document.getElementById('tc_life_change').value;
+  var condition = document.getElementById('tc_condition').value;
+  var el = document.getElementById('tenant-churn-result');
+  if (!el) return;
+
+  var score = 0;
+
+  // 居住年数: 短いほど移動リスク高、2年未満は高リスク
+  if (tenure < 1) score += 25;
+  else if (tenure < 2) score += 18;
+  else if (tenure < 4) score += 10;
+  else if (tenure < 7) score += 5;
+  else score += 0;
+
+  // 更新残月数: 6ヶ月以内は退去検討期
+  if (renewalLeft <= 1) score += 25;
+  else if (renewalLeft <= 3) score += 18;
+  else if (renewalLeft <= 6) score += 10;
+  else score += 0;
+
+  // 家賃水準比較
+  if (rentRatio === 'high') score += 20;
+  else if (rentRatio === 'mid') score += 8;
+  else score += 0;
+
+  // クレーム・問い合わせ
+  if (complaints === 'major') score += 20;
+  else if (complaints === 'minor') score += 8;
+  else score += 0;
+
+  // ライフイベント変化
+  if (lifeChange === 'likely') score += 10;
+  else if (lifeChange === 'maybe') score += 4;
+  else score += 0;
+
+  // 物件状態
+  if (condition === 'poor') score += 10;
+  else if (condition === 'fair') score += 4;
+  else score += 0;
+
+  // 最大100に正規化
+  score = Math.min(score, 100);
+
+  var grade, gradeColor, label, actions;
+  if (score <= 20) {
+    grade = 'A'; gradeColor = '#4caf50'; label = '低リスク';
+    actions = ['定期的な挨拶・点検で関係を維持しましょう', '更新時に設備改善の提案を検討してください'];
+  } else if (score <= 45) {
+    grade = 'B'; gradeColor = '#f9a825'; label = '要注意';
+    actions = ['更新前に家賃・条件の確認を', '入居者の満足度ヒアリングを実施しましょう', '近隣相場と家賃水準を見直すと良いでしょう'];
+  } else if (score <= 70) {
+    grade = 'C'; gradeColor = '#ff7043'; label = '高リスク';
+    actions = ['早急に入居者と面談・状況確認を', '家賃値下げや設備修繕で引き止めを検討', '空室対策（次の入居者募集）を並行して準備'];
+  } else {
+    grade = 'D'; gradeColor = '#e53935'; label = '退去間近';
+    actions = ['入居者へ退去意向の直接確認を', '原状回復・リフォーム費用の見積もりを取る', '募集開始・内覧の準備を今すぐ開始してください'];
+  }
+
+  var barWidth = score + '%';
+  var barColor = gradeColor;
+
+  var html = '<div style="margin-top:14px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
+  html += '<div style="width:56px;height:56px;border-radius:50%;background:' + barColor + ';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">' + grade + '</div>';
+  html += '<div>';
+  html += '<div style="font-size:18px;font-weight:700;color:' + gradeColor + '">' + label + '</div>';
+  html += '<div style="font-size:13px;color:var(--text-sub)">リスクスコア: ' + score + ' / 100</div>';
+  html += '</div></div>';
+
+  html += '<div style="background:rgba(255,255,255,0.07);border-radius:6px;height:10px;margin-bottom:14px;overflow:hidden">';
+  html += '<div style="height:100%;width:' + barWidth + ';background:' + barColor + ';border-radius:6px;transition:width 0.5s"></div></div>';
+
+  html += '<div style="font-size:13px;color:var(--text-sub);margin-bottom:8px;font-weight:600">推奨アクション</div>';
+  html += '<ul style="margin:0;padding-left:18px;font-size:13px;color:var(--text);line-height:1.8">';
+  actions.forEach(function(a) { html += '<li>' + a + '</li>'; });
+  html += '</ul></div>';
+
+  el.innerHTML = html;
+}
+(function(){ calcTenantChurn(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');
