@@ -1875,6 +1875,35 @@
     <div id="tenant-churn-result"></div>
   </div>
 
+  <!-- 長期修繕計画カード -->
+  <div class="card" id="card-long-repair-plan">
+    <div class="card-title">📅 長期修繕計画 費用スケジュール</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">建物の構造・築年数・延床面積をもとに、今後10〜30年の主要修繕項目と概算費用スケジュールを表示します。計画的な修繕積立の基礎として活用してください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">建物の構造</label>
+        <select id="lrp_struct" onchange="calcLongRepairPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="wood">木造</option>
+          <option value="steel">軽量鉄骨・重量鉄骨</option>
+          <option value="rc">RC（鉄筋コンクリート）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現在の築年数（年）</label>
+        <input type="number" id="lrp_age" value="15" min="0" max="60" step="1" oninput="calcLongRepairPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">延床面積（㎡）</label>
+        <input type="number" id="lrp_area" value="80" min="20" max="1000" step="10" oninput="calcLongRepairPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">戸数</label>
+        <input type="number" id="lrp_units" value="4" min="1" max="50" step="1" oninput="calcLongRepairPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="long-repair-plan-result"></div>
+  </div>
+
   <!-- 空室時リフォームROI診断カード -->
   <div class="card" id="card-vacancy-reform-roi">
     <div class="card-title">🛠️ 空室時リフォーム ROI診断</div>
@@ -8098,6 +8127,78 @@ function calcVacancyReformROI() {
   el.innerHTML = html;
 }
 (function(){ calcVacancyReformROI(); })();
+
+function calcLongRepairPlan() {
+  var el = document.getElementById('long-repair-plan-result');
+  if (!el) return;
+  var struct = document.getElementById('lrp_struct').value;
+  var age = parseFloat(document.getElementById('lrp_age').value) || 0;
+  var area = parseFloat(document.getElementById('lrp_area').value) || 0;
+  var units = parseFloat(document.getElementById('lrp_units').value) || 1;
+  if (area <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">延床面積を入力してください</div>'; return; }
+
+  // 修繕サイクル（築年数ベース）
+  var items = [
+    { name: '外壁塗装', cycle: 12, unitCost: struct === 'rc' ? 0.8 : 0.7, unit: '万円/㎡' },
+    { name: '屋根修繕', cycle: 15, unitCost: struct === 'wood' ? 0.5 : 0.3, unit: '万円/㎡' },
+    { name: '給湯器交換', cycle: 10, unitCost: 20, unit: '万円/戸', perUnit: true },
+    { name: 'エアコン交換', cycle: 10, unitCost: 6, unit: '万円/戸', perUnit: true },
+    { name: '水回り修繕', cycle: 20, unitCost: struct === 'rc' ? 100 : 60, unit: '万円/棟' },
+    { name: '防水工事', cycle: 10, unitCost: 0.5, unit: '万円/㎡' },
+    { name: '大規模修繕', cycle: struct === 'rc' ? 12 : 20, unitCost: struct === 'rc' ? 1.5 : 0.8, unit: '万円/㎡' }
+  ];
+
+  var scheduleMap = {};
+  items.forEach(function(item) {
+    var firstTrigger = Math.ceil(age / item.cycle) * item.cycle;
+    for (var y = firstTrigger; y <= age + 30; y += item.cycle) {
+      if (y > age) {
+        var yr = y - age;
+        if (!scheduleMap[yr]) scheduleMap[yr] = [];
+        var cost = item.perUnit ? item.unitCost * units : item.unitCost * area;
+        scheduleMap[yr].push({ name: item.name, cost: Math.round(cost) });
+      }
+    }
+  });
+
+  var years = Object.keys(scheduleMap).map(Number).sort(function(a,b){return a-b;});
+  var total10 = 0, total20 = 0, total30 = 0;
+  years.forEach(function(yr) {
+    var sum = scheduleMap[yr].reduce(function(s,i){return s+i.cost;},0);
+    if (yr <= 10) total10 += sum;
+    if (yr <= 20) total20 += sum;
+    if (yr <= 30) total30 += sum;
+  });
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">10年間合計</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + total10.toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">20年間合計</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + total20.toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">30年間合計</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + total30.toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
+  html += '</div>';
+
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<tr style="background:rgba(255,255,255,0.06)"><th style="padding:7px;text-align:left;color:var(--text-muted)">時期</th><th style="padding:7px;text-align:left;color:var(--text-muted)">修繕内容</th><th style="padding:7px;text-align:right;color:var(--text-muted)">概算費用</th></tr>';
+  years.forEach(function(yr) {
+    var items2 = scheduleMap[yr];
+    var urgColor = yr <= 3 ? 'var(--red)' : yr <= 7 ? '#f9a825' : 'var(--text-muted)';
+    items2.forEach(function(item, i) {
+      html += '<tr style="border-top:1px solid rgba(255,255,255,0.06)">';
+      if (i === 0) html += '<td style="padding:7px;font-weight:700;color:' + urgColor + '">' + yr + '年後</td>';
+      else html += '<td style="padding:7px"></td>';
+      html += '<td style="padding:7px">' + item.name + '</td>';
+      html += '<td style="padding:7px;text-align:right;font-weight:700">' + item.cost.toLocaleString() + '万円</td>';
+      html += '</tr>';
+    });
+  });
+  html += '</table></div>';
+  var monthlyReserve = Math.round(total30 / 30 / 12 * 10) / 10;
+  html += '<div style="margin-top:10px;padding:10px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:8px;font-size:12px;color:var(--text-muted)">';
+  html += '💡 推奨月次積立額: <strong style="color:var(--gold)">' + monthlyReserve + '万円/月</strong>（30年費用÷12ヶ月÷12ヶ月ベース）。実際の積立額は修繕の優先度と手元資金に応じて調整してください。';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcLongRepairPlan(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');
