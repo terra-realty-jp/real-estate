@@ -1316,8 +1316,38 @@
     <div id="share-house-convert-result"></div>
   </div>
 
+  <!-- ===== 計算ツールセクション ===== -->
+  <div style="margin-top:32px;margin-bottom:8px">
+    <h2 style="font-size:18px;font-weight:900;color:var(--gold);margin-bottom:4px">🧮 かんたん計算ツール</h2>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">空き家に関する費用・税金・活用の損得をすぐに試算できます</p>
+
+    <!-- TOP3ピン留め -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+      <button onclick="document.getElementById('card-akiya3').scrollIntoView({behavior:'smooth',block:'center'})" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.35);border-radius:10px;padding:12px 8px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.4">
+        ⭐ よく使われる<br><span style="color:#d4af37">放置vs売却vs活用</span>
+      </button>
+      <button onclick="document.getElementById('card-souzoku').scrollIntoView({behavior:'smooth',block:'center'})" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.35);border-radius:10px;padding:12px 8px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.4">
+        ⭐ よく使われる<br><span style="color:#d4af37">相続税節税チェック</span>
+      </button>
+      <button onclick="document.getElementById('card-demolish').scrollIntoView({behavior:'smooth',block:'center'})" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.35);border-radius:10px;padding:12px 8px;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.4">
+        ⭐ よく使われる<br><span style="color:#d4af37">解体補助金チェック</span>
+      </button>
+    </div>
+
+    <!-- 検索バー -->
+    <div style="position:relative;margin-bottom:6px">
+      <input type="text" id="akiya-calc-search" placeholder="🔍 計算ツールを検索（例: 解体・相続・農地）" oninput="filterAkiyaCalcCards(this.value)" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:11px 40px 11px 16px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      <span id="akiya-calc-count" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
+    </div>
+    <div id="akiya-calc-noresult" style="display:none;padding:20px;text-align:center;color:var(--text-muted);font-size:13px;background:var(--dark2);border-radius:10px;margin-bottom:16px">
+      該当するツールが見つかりませんでした
+    </div>
+  </div>
+
+  <div id="akiya-calc-cards">
+
   <!-- 空き家3択（放置/売却/活用）損得比較カード -->
-  <div class="card">
+  <div class="card" id="card-akiya3">
     <div class="card-title">⚖️ 放置・売却・活用 損得10年比較</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家を「このまま放置」「売却」「賃貸活用」した場合の10年間の損得を試算します。</p>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
@@ -1369,7 +1399,7 @@
   </div>
 
   <!-- 解体補助金要件確認カード -->
-  <div class="card">
+  <div class="card" id="card-demolish">
     <div class="card-title">🏗️ 空き家解体補助金 要件確認チェック</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">自治体の解体補助金申請に必要な一般的な要件を確認します。概算の補助金額も試算します。</p>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
@@ -1399,7 +1429,7 @@
   </div>
 
   <!-- 相続税節税チェックリスト（小規模宅地特例） -->
-  <div class="card">
+  <div class="card" id="card-souzoku">
     <div class="card-title">🏛️ 相続税節税 小規模宅地等の特例 チェック</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家・土地の相続で使える「小規模宅地等の特例」の適用条件を確認し、概算評価減額を試算します。</p>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
@@ -1512,6 +1542,8 @@
     </div>
     <div id="isolation-risk-result"></div>
   </div>
+
+  </div><!-- /#akiya-calc-cards -->
 
 </div>
 </div>
@@ -5358,6 +5390,22 @@ function calcIsolationRisk() {
     + '</div>';
 }
 (function(){ calcIsolationRisk(); })();
+
+function filterAkiyaCalcCards(query) {
+  var cards = document.querySelectorAll('#akiya-calc-cards .card');
+  var q = query.trim().toLowerCase();
+  var shown = 0;
+  cards.forEach(function(card) {
+    var text = card.textContent.toLowerCase();
+    var match = !q || text.indexOf(q) !== -1;
+    card.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+  var countEl = document.getElementById('akiya-calc-count');
+  var noResult = document.getElementById('akiya-calc-noresult');
+  if (countEl) countEl.textContent = q ? shown + '件' : '';
+  if (noResult) noResult.style.display = (q && shown === 0) ? '' : 'none';
+}
 
 // 初期化
 checkStorageWarning();
