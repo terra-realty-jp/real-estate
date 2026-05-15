@@ -1739,6 +1739,46 @@
     <div id="offer-timing-result"></div>
   </div>
 
+  <!-- 購入者プロファイル 診断カード -->
+  <div class="card" id="card-buyer-profile">
+    <div class="card-title">👤 購入者プロファイル 診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">物件の特性から「どんな人が買いそうか」を分析。ターゲット購入者像を絞ることで、広告文・売出し価格・内覧準備の方向性が決まります。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件の種別</div>
+        <select id="bp_type" onchange="calcBuyerProfile()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="house_family" selected>一戸建て（ファミリー向け）</option>
+          <option value="condo_1r">マンション（1R〜1LDK）</option>
+          <option value="condo_3ldk">マンション（3LDK以上）</option>
+          <option value="old_house">築古物件（築30年超）</option>
+          <option value="large_land">土地（100坪以上）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">最寄り駅まで（分）</div>
+        <input type="number" id="bp_station" value="10" min="1" max="60" step="1" oninput="calcBuyerProfile()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売出価格帯</div>
+        <select id="bp_price" onchange="calcBuyerProfile()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="low">〜2,000万円</option>
+          <option value="mid" selected>2,000〜5,000万円</option>
+          <option value="high">5,000万円〜</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">周辺環境</div>
+        <select id="bp_env" onchange="calcBuyerProfile()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="school" selected>学校・公園が近い</option>
+          <option value="commercial">商業施設が充実</option>
+          <option value="quiet">閑静な住宅地</option>
+          <option value="rural">郊外・自然豊か</option>
+        </select>
+      </div>
+    </div>
+    <div id="buyer-profile-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -5931,6 +5971,52 @@ function calcOfferTiming() {
   el.innerHTML = html;
 }
 (function(){ calcOfferTiming(); })();
+
+function calcBuyerProfile() {
+  var el = document.getElementById('buyer-profile-result'); if (!el) return;
+  var pType = document.getElementById('bp_type').value;
+  var station = parseFloat(document.getElementById('bp_station').value) || 10;
+  var price = document.getElementById('bp_price').value;
+  var env = document.getElementById('bp_env').value;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var profiles = {
+    house_family: { main: '子育て世代ファミリー（30〜40代）', sub: '共働き夫婦・子供1〜2人、マイホーム初購入層' },
+    condo_1r: { main: '単身社会人・投資家（20〜40代）', sub: '都市勤務の単身者、または賃貸投資目的の購入者' },
+    condo_3ldk: { main: 'ファミリー〜シニア層（35〜60代）', sub: '子育て終了後の住み替え、または上位スペック志向層' },
+    old_house: { main: 'リノベ志向層・投資家（30〜50代）', sub: '低価格でカスタマイズしたい層、DIY・古民家好き' },
+    large_land: { main: '資産家・開発業者・農業法人', sub: '複数棟建設・農業利用・資産分散目的の買い手' }
+  };
+  var stationNote = station <= 5 ? '徒歩5分圏内は最高立地。都市部勤務の単身・ファミリーに絶大な人気' : station <= 10 ? '徒歩10分以内は標準的な利便性。ファミリー層の購入意欲が高い' : station <= 20 ? '徒歩20分以内はやや遠め。車保有世帯や地元密着層がメインターゲット' : '徒歩20分超は電車利用者に不利。車前提・地方志向層に絞った訴求が必要';
+  var priceNote = { low: '価格帯が低いため購入ハードルが下がり、ローン審査が通りやすい層も参入', mid: '一般的なサラリーマン世帯が届く価格帯。最も競争が激しい層', high: '高額物件は購買層が絞られるが、意思決定が早く交渉スキルが高い' }[price];
+  var envLabels = { school: '学校・公園が近い', commercial: '商業施設充実', quiet: '閑静な住宅地', rural: '郊外・自然豊か' };
+  var envTargets = {
+    school: '子供がいるファミリー層が特に反応。「◯◯小学校区」の強調が有効',
+    commercial: '買い物好き・高齢世帯・単身者が評価。「生活便利」の訴求を前面に',
+    quiet: 'テレワーク実施者・シニア・第2の人生設計層に響く。「静かな環境」を強調',
+    rural: '移住希望者・自然志向層・定年後移住組がターゲット。広さと自然をアピール'
+  };
+  var pLabel = { house_family: '一戸建て（ファミリー向け）', condo_1r: 'マンション（1R〜1LDK）', condo_3ldk: 'マンション（3LDK〜）', old_house: '築古物件', large_land: '大型土地' }[pType];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">📍 ' + pLabel + ' / 駅' + station + '分 / ' + envLabels[env] + '</div>';
+  html += '<div style="margin-bottom:12px">';
+  html += '<div style="font-size:12px;color:' + ACCENT + ';font-weight:700;margin-bottom:2px">主要ターゲット</div>';
+  html += '<div style="font-size:14px;font-weight:900;color:var(--text)">' + profiles[pType].main + '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + profiles[pType].sub + '</div>';
+  html += '</div>';
+  var tips = [
+    { title: '📍 立地の訴求ポイント', body: stationNote },
+    { title: '💰 価格帯からの分析', body: priceNote },
+    { title: '🌿 周辺環境の訴求', body: envTargets[env] }
+  ];
+  tips.forEach(function(t) {
+    html += '<div style="border-top:1px solid rgba(255,255,255,0.07);padding:8px 0">';
+    html += '<div style="font-size:11px;color:' + ACCENT + ';font-weight:700;margin-bottom:3px">' + t.title + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">' + t.body + '</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcBuyerProfile(); })();
 
 function filterOwnerCalcCards(query) {
   var cards = document.querySelectorAll('#owner-calc-cards > div');

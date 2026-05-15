@@ -2330,6 +2330,39 @@
     <div id="restoration-guide-result"></div>
   </div>
 
+  <!-- 賃料vs空室期間 最適化診断カード -->
+  <div class="card" id="card-rent-vacancy-opt">
+    <div class="card-title">🎯 賃料 vs 空室期間 最適化診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">「賃料を下げて早く入居者を決める」vs「賃料維持で長期空室を受け入れる」のどちらが年間収益を最大化するかを試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の設定賃料（万円/月）</div>
+        <input type="number" id="rvo_rent" value="8" min="1" max="100" step="0.5" oninput="calcRentVacancyOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の空室期間（ヶ月）</div>
+        <input type="number" id="rvo_vacant_months" value="3" min="0" max="24" step="1" oninput="calcRentVacancyOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">想定の賃料引下げ率（%）</div>
+        <input type="number" id="rvo_cut_rate" value="5" min="1" max="30" step="1" oninput="calcRentVacancyOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">引下げ後の想定成約期間（ヶ月）</div>
+        <input type="number" id="rvo_cut_wait" value="1" min="0.5" max="12" step="0.5" oninput="calcRentVacancyOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">維持した場合の想定成約期間（ヶ月）</div>
+        <input type="number" id="rvo_hold_wait" value="3" min="1" max="24" step="1" oninput="calcRentVacancyOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">シミュレーション期間（年）</div>
+        <input type="number" id="rvo_sim_years" value="3" min="1" max="10" step="1" oninput="calcRentVacancyOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rent-vacancy-opt-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -9095,6 +9128,61 @@ function calcRestorationGuide() {
   el.innerHTML = html;
 }
 (function(){ calcRestorationGuide(); })();
+
+function calcRentVacancyOpt() {
+  var el = document.getElementById('rent-vacancy-opt-result'); if (!el) return;
+  var rent = parseFloat(document.getElementById('rvo_rent').value) || 8;
+  var vacantMonths = parseFloat(document.getElementById('rvo_vacant_months').value) || 3;
+  var cutRate = (parseFloat(document.getElementById('rvo_cut_rate').value) || 5) / 100;
+  var cutWait = parseFloat(document.getElementById('rvo_cut_wait').value) || 1;
+  var holdWait = parseFloat(document.getElementById('rvo_hold_wait').value) || 3;
+  var simYears = parseFloat(document.getElementById('rvo_sim_years').value) || 3;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var simMonths = simYears * 12;
+  var newRent = rent * (1 - cutRate);
+  var cutLossPerMonth = rent - newRent;
+  var cutTotalVacant = vacantMonths + cutWait;
+  var holdTotalVacant = vacantMonths + holdWait;
+  var cutOccupied = simMonths - cutTotalVacant;
+  var holdOccupied = simMonths - holdTotalVacant;
+  cutOccupied = Math.max(0, cutOccupied);
+  holdOccupied = Math.max(0, holdOccupied);
+  var cutIncome = newRent * cutOccupied;
+  var holdIncome = rent * holdOccupied;
+  var diff = cutIncome - holdIncome;
+  var better = diff > 0 ? 'cut' : 'hold';
+  var breakEvenMonths = cutLossPerMonth > 0 ? (holdWait - cutWait) * rent / cutLossPerMonth : 0;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+  var panels = [
+    { label: '賃料' + Math.round(cutRate * 100) + '%引下げ案\n(' + rent + '万→' + Math.round(newRent * 10) / 10 + '万円)', val: Math.round(cutIncome).toLocaleString() + '万円', sub: '成約まで'+cutWait+'ヶ月想定', color: ACCENT, best: better === 'cut' },
+    { label: '賃料維持案\n(' + rent + '万円/月)', val: Math.round(holdIncome).toLocaleString() + '万円', sub: '成約まで'+holdWait+'ヶ月想定', color: '#4ade80', best: better === 'hold' }
+  ];
+  panels.forEach(function(p) {
+    html += '<div style="background:' + (p.best ? 'rgba(96,165,250,0.1)' : 'rgba(255,255,255,0.03)') + ';border:1px solid ' + (p.best ? BDR : 'rgba(255,255,255,0.08)') + ';border-radius:8px;padding:10px;text-align:center">';
+    html += '<div style="font-size:10px;color:var(--text-muted);white-space:pre-line;margin-bottom:4px">' + p.label + (p.best ? ' ★' : '') + '</div>';
+    html += '<div style="font-size:16px;font-weight:900;color:' + p.color + '">' + p.val + '</div>';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + simYears + '年間累計収入</div>';
+    html += '<div style="font-size:10px;color:var(--text-muted)">' + p.sub + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="font-size:12px;margin-bottom:8px">';
+  if (better === 'cut') {
+    html += '💡 <b style="color:' + ACCENT + '">賃料引下げが' + Math.abs(Math.round(diff)) + '万円有利。</b>';
+    html += '空室期間の短縮効果が賃料減少分を上回っています。';
+  } else {
+    html += '💡 <b style="color:#4ade80">賃料維持が' + Math.abs(Math.round(diff)) + '万円有利。</b>';
+    html += '引下げによる月次減収の累積が大きく、じっくり待つ方が得策です。';
+  }
+  html += '</div>';
+  if (breakEvenMonths > 0 && breakEvenMonths < 24) {
+    html += '<div style="font-size:11px;color:var(--text-muted)">📌 損益分岐点: 引下げで空室が<b style="color:var(--text)">' + Math.round(breakEvenMonths * 10) / 10 + 'ヶ月以上</b>短縮されれば引下げ案が優勢になります。</div>';
+  }
+  html += '</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);padding:4px 0">※ 試算は現在の空室期間を含めた' + simYears + '年間の単純合計。リノベ費用・管理費・税金は含みません。</div>';
+  el.innerHTML = html;
+}
+(function(){ calcRentVacancyOpt(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');

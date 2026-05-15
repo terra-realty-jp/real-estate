@@ -2163,6 +2163,44 @@
     <div id="sale-success-prob-result"></div>
   </div>
 
+  <!-- 売却前 必要書類チェックリストカード -->
+  <div class="card" id="card-sale-document-check">
+    <div class="card-title">📋 売却前 必要書類チェックリスト</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">物件の種別・状況を選ぶと、売却に必要な書類を一覧表示します。事前準備で売却をスムーズに進めましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件の種別</div>
+        <select id="sdc_type" onchange="calcSaleDocumentCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="house" selected>一戸建て（土地付き）</option>
+          <option value="condo">マンション</option>
+          <option value="land">土地のみ</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ローン状況</div>
+        <select id="sdc_loan" onchange="calcSaleDocumentCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="none" selected>ローンなし（完済済み）</option>
+          <option value="active">ローン残あり</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">相続物件か</div>
+        <select id="sdc_inherit" onchange="calcSaleDocumentCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="no" selected>相続物件ではない</option>
+          <option value="yes">相続した物件</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">リノベ・増改築歴</div>
+        <select id="sdc_reform" onchange="calcSaleDocumentCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="no" selected>なし</option>
+          <option value="yes">あり</option>
+        </select>
+      </div>
+    </div>
+    <div id="sale-document-check-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -6947,6 +6985,48 @@ function calcSaleSuccessProb() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6">※成約確率は統計的な推計値です。実際の売却活動・担当者の力量・市況によって変動します。</div>';
 }
 (function(){ calcSaleSuccessProb(); })();
+
+function calcSaleDocumentCheck() {
+  var el = document.getElementById('sale-document-check-result'); if (!el) return;
+  var pType = document.getElementById('sdc_type').value;
+  var loan = document.getElementById('sdc_loan').value;
+  var inherit = document.getElementById('sdc_inherit').value;
+  var reform = document.getElementById('sdc_reform').value;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var docs = [
+    { name: '登記識別情報（権利証）', req: true, note: '法務局で再発行不可。紛失時は本人確認情報の作成が必要（弁護士費用3〜5万円）' },
+    { name: '固定資産税納税通知書', req: true, note: '最新年度分。役所で再発行可（数百円）' },
+    { name: '土地測量図・境界確認書', req: pType !== 'condo', note: pType !== 'condo' ? '境界未確定の場合、測量（30〜80万円）が必要になる場合あり' : '— マンションは不要' },
+    { name: 'マンション管理規約・総会議事録', req: pType === 'condo', note: pType === 'condo' ? '管理組合から取り寄せ。最低3年分が望ましい' : '— 一戸建て・土地は不要' },
+    { name: '建築確認済証・検査済証', req: pType !== 'land', note: pType !== 'land' ? '紛失時は市区町村で台帳証明（300〜500円）を取得' : '— 土地のみは不要' },
+    { name: 'ローン残高証明書', req: loan === 'active', note: loan === 'active' ? '金融機関に請求。繰上げ返済の手数料確認も同時に行うと効率的' : '— ローンなしのため不要' },
+    { name: '抵当権抹消書類（金融機関保管）', req: loan === 'active', note: loan === 'active' ? '売却代金で完済と同時に決済するため事前確認が必要' : '— ローンなしのため不要' },
+    { name: '相続登記済証・遺産分割協議書', req: inherit === 'yes', note: inherit === 'yes' ? '相続登記が完了していない場合、まず相続登記（5〜15万円）が必要' : '— 相続物件でないため不要' },
+    { name: '増改築の建築確認書類', req: reform === 'yes', note: reform === 'yes' ? '未申請のリノベがあると売却困難になる場合がある。仲介業者に要相談' : '— 増改築なしのため不要' },
+    { name: '本人確認書類（免許証等）', req: true, note: '売買契約・決済時に必要。有効期限切れに注意' }
+  ];
+  var required = docs.filter(function(d) { return d.req; });
+  var optional = docs.filter(function(d) { return !d.req; });
+  var pLabel = { house: '一戸建て', condo: 'マンション', land: '土地のみ' }[pType];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">📍 ' + pLabel + ' / ' + (loan === 'active' ? 'ローン残あり' : 'ローンなし') + (inherit === 'yes' ? ' / 相続物件' : '') + (reform === 'yes' ? ' / 増改築あり' : '') + '</div>';
+  html += '<div style="font-size:12px;font-weight:700;color:' + ACCENT + ';margin-bottom:6px">✅ 必要な書類（' + required.length + '件）</div>';
+  required.forEach(function(d) {
+    html += '<div style="border-bottom:1px solid rgba(255,255,255,0.05);padding:7px 0">';
+    html += '<div style="font-size:12px;color:var(--text)">' + d.name + '</div>';
+    html += '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + d.note + '</div></div>';
+  });
+  if (optional.length > 0) {
+    html += '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-top:10px;margin-bottom:6px">— 不要な書類（' + optional.length + '件）</div>';
+    optional.forEach(function(d) {
+      html += '<div style="padding:3px 0;font-size:11px;color:rgba(255,255,255,0.35)">' + d.name + ': ' + d.note + '</div>';
+    });
+  }
+  html += '<div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;margin-top:10px;font-size:11px;color:var(--text-muted)">💡 書類の準備は売却活動開始の<b style="color:' + ACCENT + '">1〜2ヶ月前</b>から始めると余裕があります。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSaleDocumentCheck(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');
