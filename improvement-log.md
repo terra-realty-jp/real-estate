@@ -1386,3 +1386,15 @@
   - Tool3: `calcNewVsUsed` → `calcNewUsedComp`、結果div `new-vs-used-result` → `new-used-comp-result`（旧: 新築vs中古コスト比較、新: 同テーマの別バージョン）
   - Tool4: `calcHealthCheck` → `calcMonthlyHealth`、結果div `health-check-result` → `monthly-health-result`（旧: 賃貸経営健全性チェック5指標、新: 月次ヘルスチェック）
 - **理由**: 関数名・ID重複によりJavaScriptの後定義で前の機能が上書きされ、正しい要素IDが見つからない不具合を修正。
+
+## 2026-05-15 セッション継続38（機能拡充 3件 + AEO/PLG完了）
+
+- **対象**: Tool3（1件）, Tool4（1件）, Tool5（1件）、全ツール（AEO/PLG）
+- **改善内容**:
+  1. **Tool5: 物件購入可否5秒チェックカード（calcQuickCheck）** — 物件価格・月間賃料・借入額・金利・返済期間を入力し「利回り6%以上・LTV75%以下・CF0円以上」の3基準をgreen/yellow/redで即時判定。
+  2. **Tool3: 売主・買主 価格ギャップ交渉余地診断カード（calcPriceGap）** — 売出価格・買い付け価格・ローン上限・売主の急ぎ度を入力し乖離率・成立確率・交渉ラインを試算。
+  3. **Tool4: テナント退去予測リスク早期察知スコアカード（calcTenantChurn）** — 居住年数・更新残月数・家賃水準・クレーム有無・ライフイベント変化・物件状態の6軸でA〜Dグレード評価。推奨アクションを表示。
+  4. **AEO（AI Answer Engine Optimization）**: llms.txt作成・index.htmlにFAQPage JSON-LD追加
+  5. **PLG（Product-Led Growth）**: 全5ツールの主要計算結果にLINEシェアボタン追加・TERRA REALTY CTAカード全ツール追加
+  6. **Phase1 UX（全5ツール）**: 計算カードセクションに検索フィルター・TOP3ピン留めボタン追加
+- **理由**: ユーザーの即時意思決定支援（5秒チェック・交渉余地）・退去リスクの早期発見（オーナー向け）・AEO/PLGによる集客・口コミ拡散・LINE共有でサービス認知拡大。
