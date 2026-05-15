@@ -1674,6 +1674,13 @@
     <div id="quick-check-result"></div>
   </div>
 
+  <!-- 物件種別別 投資特性比較マトリックスカード -->
+  <div class="card" id="card-property-type-matrix">
+    <div class="card-title">🏗️ 物件種別別 投資特性比較マトリックス</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">区分マンション・一棟アパート・戸建て・商業物件の4タイプを利回り・リスク・流動性・管理手間・融資難易度の5軸で比較します。自分に合った投資タイプ選びの参考にしてください。</p>
+    <div id="property-type-matrix-result"></div>
+  </div>
+
   <!-- レバレッジ効果（CCR）比較カード -->
   <div class="card" id="card-ccr-leverage">
     <div class="card-title">⚖️ 自己資金比率別 CCR（キャッシュ・オン・キャッシュ）比較</div>
@@ -7610,6 +7617,82 @@ function calcCCRLeverage() {
   el.innerHTML = html;
 }
 (function(){ calcCCRLeverage(); })();
+
+function initPropertyTypeMatrix() {
+  var el = document.getElementById('property-type-matrix-result');
+  if (!el) return;
+
+  var types = [
+    {
+      name: '区分マンション', icon: '🏢',
+      axes: { yield: 3, risk: 2, liquid: 4, mgmt: 4, loan: 4 },
+      pros: ['流動性が高く売却しやすい', 'ローンが通りやすい', '少額から始められる'],
+      cons: ['管理組合の制約あり', '修繕積立金の値上げリスク', '1室空室=収入ゼロ']
+    },
+    {
+      name: '一棟アパート', icon: '🏘️',
+      axes: { yield: 4, risk: 3, liquid: 3, mgmt: 2, loan: 3 },
+      pros: ['複数戸で空室リスク分散', '高い利回りが狙える', '土地も所有'],
+      cons: ['管理・修繕を自分で決断必要', '初期投資額が大きい', '融資審査が厳しい']
+    },
+    {
+      name: '戸建て', icon: '🏠',
+      axes: { yield: 3, risk: 2, liquid: 3, mgmt: 3, loan: 3 },
+      pros: ['長期入居者が多い', 'DIYリフォームで付加価値UP', '地方でも収益化可能'],
+      cons: ['1棟=1世帯でリスク集中', '流動性が低い場合も', 'エリアにより空室リスク']
+    },
+    {
+      name: '商業物件', icon: '🏪',
+      axes: { yield: 5, risk: 4, liquid: 2, mgmt: 2, loan: 2 },
+      pros: ['高利回りが期待できる', '長期契約で安定収入', '原状回復義務が借主負担'],
+      cons: ['景気の影響を受けやすい', '融資が難しい', '空室期間が長くなりがち']
+    }
+  ];
+
+  var axisLabels = { yield: '利回り', risk: 'リスク', liquid: '流動性', mgmt: '管理楽さ', loan: '融資易さ' };
+  var axisKeys = ['yield', 'risk', 'liquid', 'mgmt', 'loan'];
+
+  var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:340px">';
+  // Header
+  html += '<tr style="background:rgba(255,255,255,0.06)">';
+  html += '<th style="padding:8px;text-align:left;color:var(--text-muted);min-width:80px">評価軸</th>';
+  types.forEach(function(t) {
+    html += '<th style="padding:8px;text-align:center;color:var(--gold)">' + t.icon + '<br>' + t.name + '</th>';
+  });
+  html += '</tr>';
+
+  // Axis rows
+  axisKeys.forEach(function(key) {
+    html += '<tr style="border-top:1px solid rgba(255,255,255,0.06)">';
+    html += '<td style="padding:7px 8px;color:var(--text-muted);font-size:11px">' + axisLabels[key] + '</td>';
+    types.forEach(function(t) {
+      var s = t.axes[key];
+      var stars = '';
+      for (var i = 0; i < 5; i++) {
+        stars += '<span style="color:' + (i < s ? '#d4af37' : 'rgba(255,255,255,0.15)') + ';font-size:13px">★</span>';
+      }
+      html += '<td style="padding:7px 8px;text-align:center">' + stars + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</table></div>';
+
+  // Pros/Cons
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">';
+  types.forEach(function(t) {
+    html += '<div style="padding:10px;background:rgba(255,255,255,0.04);border-radius:8px">';
+    html += '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:6px">' + t.icon + ' ' + t.name + '</div>';
+    html += '<div style="font-size:10px;color:#4caf50;margin-bottom:4px">✅ メリット</div>';
+    t.pros.forEach(function(p) { html += '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">・' + p + '</div>'; });
+    html += '<div style="font-size:10px;color:var(--red);margin-top:6px;margin-bottom:4px">⚠️ デメリット</div>';
+    t.cons.forEach(function(c) { html += '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">・' + c + '</div>'; });
+    html += '</div>';
+  });
+  html += '</div>';
+
+  el.innerHTML = html;
+}
+(function(){ initPropertyTypeMatrix(); })();
 
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');
