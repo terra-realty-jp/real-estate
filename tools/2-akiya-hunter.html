@@ -1543,6 +1543,38 @@
     <div id="isolation-risk-result"></div>
   </div>
 
+  <!-- 空き家保険費用概算カード -->
+  <div class="card" id="card-akiya-insurance">
+    <div class="card-title">🛡️ 空き家 火災・地震保険 概算費用チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家は通常の住宅より火災リスクが高く、放火・漏水・不法侵入などの被害を受けやすいため、適切な保険加入が重要です。年間保険料の目安を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">建物の構造</label>
+        <select id="ai_struct" onchange="calcAkiyaInsurance()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="wood">木造（M構造以外）</option>
+          <option value="light_steel">軽量鉄骨</option>
+          <option value="rc">鉄筋コンクリート・鉄骨</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">延床面積（㎡）</label>
+        <input type="number" id="ai_area" value="80" min="20" max="500" step="5" oninput="calcAkiyaInsurance()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">築年数（年）</label>
+        <input type="number" id="ai_age" value="30" min="0" max="80" step="1" oninput="calcAkiyaInsurance()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">地震保険</label>
+        <select id="ai_quake" onchange="calcAkiyaInsurance()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="yes">加入する</option>
+          <option value="no">加入しない</option>
+        </select>
+      </div>
+    </div>
+    <div id="akiya-insurance-result"></div>
+  </div>
+
   <!-- 民泊転用収益診断カード -->
   <div class="card" id="card-minpaku-convert">
     <div class="card-title">🏡 空き家を民泊に転用 収益診断</div>
@@ -5435,6 +5467,45 @@ function calcIsolationRisk() {
     + '</div>';
 }
 (function(){ calcIsolationRisk(); })();
+
+function calcAkiyaInsurance() {
+  var el = document.getElementById('akiya-insurance-result');
+  if (!el) return;
+  var struct = document.getElementById('ai_struct').value;
+  var area = parseFloat(document.getElementById('ai_area').value) || 0;
+  var age = parseFloat(document.getElementById('ai_age').value) || 0;
+  var quake = document.getElementById('ai_quake').value;
+  if (area <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">延床面積を入力してください</div>'; return; }
+
+  // 建物評価額の概算（再調達単価）
+  var unitPrice = struct === 'rc' ? 20 : struct === 'light_steel' ? 15 : 12; // 万円/㎡
+  var depRate = struct === 'rc' ? Math.max(0.1, 1 - age / 60) : struct === 'light_steel' ? Math.max(0.1, 1 - age / 34) : Math.max(0.1, 1 - age / 22);
+  var buildingValue = area * unitPrice * depRate;
+
+  // 火災保険概算（空き家は割増・年間0.3〜0.6%相当）
+  var fireRate = struct === 'rc' ? 0.003 : struct === 'light_steel' ? 0.004 : 0.005;
+  var fireAdj = 1.3; // 空き家割増
+  var firePremium = buildingValue * 10000 * fireRate * fireAdj / 10000;
+
+  // 地震保険（火災保険の30〜50%）
+  var quakePremium = quake === 'yes' ? firePremium * 0.4 : 0;
+  var total = firePremium + quakePremium;
+
+  var structLabel = struct === 'rc' ? 'RC・鉄骨造' : struct === 'light_steel' ? '軽量鉄骨造' : '木造';
+
+  var html = '<div style="margin-top:10px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">建物評価額（概算）: <strong style="color:var(--text)">' + Math.round(buildingValue).toLocaleString() + '万円</strong>（' + structLabel + '・' + age + '年経過）</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">火災保険（年額）</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + Math.round(firePremium).toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">地震保険（年額）</div><div style="font-size:18px;font-weight:900;color:' + (quake === 'yes' ? 'var(--gold)' : '#888') + '">' + (quake === 'yes' ? Math.round(quakePremium).toLocaleString() : '—') + '<span style="font-size:11px">' + (quake === 'yes' ? '万円' : '') + '</span></div></div>';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">合計（年額）</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + Math.round(total).toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">';
+  html += '⚠️ 空き家は居住中より保険料が高く、長期間空き家の場合は保険会社が引き受け不可になるケースがあります。加入前に複数社で見積もりを取ることをお勧めします。地震保険は単独加入不可で火災保険とセットで加入します。';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaInsurance(); })();
 
 function calcMinpakuConvert() {
   var el = document.getElementById('minpaku-convert-result');
