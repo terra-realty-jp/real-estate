@@ -1646,6 +1646,34 @@
     <div id="loan-capacity-result"></div>
   </div>
 
+  <!-- 物件購入可否 5秒チェックカード -->
+  <div class="card" id="card-quick-check">
+    <div class="card-title">⚡ 物件購入可否 5秒チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">表面利回り・CF・LTVの3指標で投資物件の「とりあえずアリ/ナシ」を即判定。詳細分析の前のふるい分けに使えます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">物件価格（万円）</label>
+        <input type="number" id="qc_price" value="5000" min="100" max="100000" step="100" oninput="calcQuickCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">年間賃料収入（万円）</label>
+        <input type="number" id="qc_rent" value="360" min="10" max="10000" step="10" oninput="calcQuickCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">借入希望額（万円）</label>
+        <input type="number" id="qc_loan" value="3500" min="0" max="100000" step="100" oninput="calcQuickCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">金利（%）/ 返済期間（年）</label>
+        <div style="display:flex;gap:6px">
+          <input type="number" id="qc_rate" value="2.0" min="0.5" max="10" step="0.1" oninput="calcQuickCheck()" style="width:50%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+          <input type="number" id="qc_term" value="30" min="5" max="50" step="1" oninput="calcQuickCheck()" style="width:50%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+    </div>
+    <div id="quick-check-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -7147,6 +7175,83 @@ function checkStorageWarning() {
 }
 
 // ===== 投資ローン 借入可能額＋ストレス金利チェック =====
+// ===== 物件購入可否 5秒チェック =====
+function calcQuickCheck() {
+  var el = document.getElementById('quick-check-result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('qc_price').value) || 0;
+  var rent = parseFloat(document.getElementById('qc_rent').value) || 0;
+  var loan = parseFloat(document.getElementById('qc_loan').value) || 0;
+  var rate = parseFloat(document.getElementById('qc_rate').value) || 2.0;
+  var term = parseInt(document.getElementById('qc_term').value) || 30;
+  if (price <= 0 || rent <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">物件価格と賃料収入を入力してください</div>'; return; }
+
+  // 表面利回り
+  var grossYield = rent / price * 100;
+  var yieldOk = grossYield >= 6;
+  var yieldNote = grossYield >= 8 ? '高利回り' : grossYield >= 6 ? '標準的' : grossYield >= 4 ? '低め' : '要注意';
+  var yieldColor = grossYield >= 8 ? 'var(--green)' : grossYield >= 6 ? '#f59e0b' : 'var(--red)';
+
+  // LTV
+  var ltv = price > 0 ? loan / price * 100 : 0;
+  var ltvOk = ltv <= 75;
+  var ltvNote = ltv <= 60 ? '低LTV（安全）' : ltv <= 75 ? '標準的' : ltv <= 85 ? '高め（注意）' : '過大';
+  var ltvColor = ltv <= 60 ? 'var(--green)' : ltv <= 75 ? '#f59e0b' : 'var(--red)';
+
+  // 月次CF概算
+  var r = rate / 100 / 12;
+  var n = term * 12;
+  var monthlyLoan = loan > 0 && r > 0 ? loan * 10000 * r / (1 - Math.pow(1 + r, -n)) : 0;
+  var monthlyRent = rent * 10000 / 12;
+  var expenseRatio = 0.20; // 経費率20%
+  var netMonthlyRent = monthlyRent * (1 - expenseRatio);
+  var monthlyCF = netMonthlyRent - monthlyLoan;
+  var cfMan = Math.round(monthlyCF / 10000 * 10) / 10;
+  var cfOk = monthlyCF >= 0;
+  var cfColor = monthlyCF >= 50000 ? 'var(--green)' : monthlyCF >= 0 ? '#f59e0b' : 'var(--red)';
+
+  var passed = (yieldOk ? 1 : 0) + (ltvOk ? 1 : 0) + (cfOk ? 1 : 0);
+  var verdict, verdictColor, verdictIcon;
+  if (passed === 3) { verdict = '✅ 詳細分析を進める価値あり'; verdictColor = 'var(--green)'; verdictIcon = '🟢'; }
+  else if (passed === 2) { verdict = '⚠️ 条件付きで検討可能'; verdictColor = '#f59e0b'; verdictIcon = '🟡'; }
+  else { verdict = '❌ この条件では慎重に'; verdictColor = 'var(--red)'; verdictIcon = '🔴'; }
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">';
+  html += '<div style="font-size:24px;margin-bottom:4px">' + verdictIcon + '</div>';
+  html += '<div style="font-size:14px;font-weight:900;color:' + verdictColor + '">' + verdict + '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">' + passed + '/3 指標クリア</div>';
+  html += '</div>';
+  html += '<div style="display:grid;gap:8px">';
+
+  // 表面利回り
+  html += '<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '<div style="font-size:20px">' + (yieldOk ? '✅' : '❌') + '</div>';
+  html += '<div style="flex:1"><div style="font-size:12px;font-weight:700">表面利回り</div><div style="font-size:10px;color:var(--text-muted)">目安: 6%以上</div></div>';
+  html += '<div style="text-align:right"><div style="font-size:18px;font-weight:900;color:' + yieldColor + '">' + grossYield.toFixed(1) + '%</div><div style="font-size:10px;color:' + yieldColor + '">' + yieldNote + '</div></div>';
+  html += '</div>';
+
+  // LTV
+  html += '<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '<div style="font-size:20px">' + (ltvOk ? '✅' : '❌') + '</div>';
+  html += '<div style="flex:1"><div style="font-size:12px;font-weight:700">LTV（借入比率）</div><div style="font-size:10px;color:var(--text-muted)">目安: 75%以下</div></div>';
+  html += '<div style="text-align:right"><div style="font-size:18px;font-weight:900;color:' + ltvColor + '">' + ltv.toFixed(0) + '%</div><div style="font-size:10px;color:' + ltvColor + '">' + ltvNote + '</div></div>';
+  html += '</div>';
+
+  // 月次CF
+  html += '<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '<div style="font-size:20px">' + (cfOk ? '✅' : '❌') + '</div>';
+  html += '<div style="flex:1"><div style="font-size:12px;font-weight:700">月次CF（概算）</div><div style="font-size:10px;color:var(--text-muted)">経費20%・ローン後プラス</div></div>';
+  html += '<div style="text-align:right"><div style="font-size:18px;font-weight:900;color:' + cfColor + '">' + (cfMan >= 0 ? '+' : '') + cfMan + '万</div><div style="font-size:10px;color:var(--text-muted)">月</div></div>';
+  html += '</div>';
+
+  html += '</div>';
+  html += '<div style="margin-top:10px;font-size:11px;color:var(--text-muted);padding:8px;background:rgba(255,255,255,0.03);border-radius:6px">💡 このチェックはあくまで簡易基準です。詳細分析（上部タブ「物件入力」）で正確なシミュレーションを行ってください。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcQuickCheck(); })();
+
 function calcLoanCapacity() {
   var el = document.getElementById('loan-capacity-result');
   if (!el) return;
