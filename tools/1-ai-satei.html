@@ -1910,6 +1910,31 @@
     <div id="staging-roi-result"></div>
   </div>
 
+  <!-- 売却益 譲渡所得税 試算カード -->
+  <div class="card" id="card-capital-gains-tax">
+    <div class="card-title">💴 売却益 譲渡所得税 試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産を売却したときにかかる<strong style="color:var(--text)">譲渡所得税・住民税の概算</strong>を試算します。保有期間5年超（長期）と5年以下（短期）の違いも確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却価格（万円）</label>
+        <input type="number" id="cgt_sell" value="4000" min="100" max="100000" step="100" oninput="calcCapitalGainsTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得費（購入価格 万円）</label>
+        <input type="number" id="cgt_cost" value="3000" min="0" max="100000" step="100" oninput="calcCapitalGainsTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">譲渡費用（仲介手数料等 万円）</label>
+        <input type="number" id="cgt_expense" value="120" min="0" max="2000" step="10" oninput="calcCapitalGainsTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">居住用（3,000万控除 対象か）</label>
+        <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;color:var(--text);margin-top:4px"><input type="checkbox" id="cgt_resident" onchange="calcCapitalGainsTax()" style="accent-color:#4ade80">居住用不動産（マイホーム）</label>
+      </div>
+    </div>
+    <div id="capital-gains-tax-result"></div>
+  </div>
+
   <!-- 住宅ローン減税 控除額シミュレーターカード -->
   <div class="card" id="card-mortgage-tax-deduction">
     <div class="card-title">🏦 住宅ローン減税 控除額シミュレーター</div>
@@ -6459,6 +6484,51 @@ function calcStagingROI() {
     + '</div>';
 }
 (function(){ calcStagingROI(); })();
+
+function calcCapitalGainsTax() {
+  var el = document.getElementById('capital-gains-tax-result'); if (!el) return;
+  var sell = parseFloat(document.getElementById('cgt_sell').value) || 4000;
+  var cost = parseFloat(document.getElementById('cgt_cost').value) || 3000;
+  var expense = parseFloat(document.getElementById('cgt_expense').value) || 120;
+  var isResident = document.getElementById('cgt_resident').checked;
+  var gain = sell - cost - expense;
+  var RESIDENT_DEDUCT = 3000;
+  var taxableShort = Math.max(0, gain);
+  var taxableLong = Math.max(0, gain);
+  if (isResident) { taxableShort = Math.max(0, gain - RESIDENT_DEDUCT); taxableLong = Math.max(0, gain - RESIDENT_DEDUCT); }
+  var shortTax = taxableShort * 10000 * 0.30315;
+  var longTax = taxableLong * 10000 * 0.20315;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var fmt = function(v) { return Math.round(v / 10000).toLocaleString(); };
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:8px;font-size:13px">💴 譲渡所得税 試算結果</div>';
+  html += '<div style="margin-bottom:8px;font-size:12px;color:var(--text-muted)">';
+  html += '売却益: <b style="color:' + (gain > 0 ? '#4ade80' : '#f87171') + '">' + gain.toFixed(0) + '万円</b>';
+  if (isResident && gain > 0) html += ' → 居住用控除後: <b style="color:#4ade80">' + Math.max(0, gain - RESIDENT_DEDUCT).toFixed(0) + '万円</b>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📅 短期（5年以下）</div>';
+  html += '<div style="font-size:17px;font-weight:900;color:#f87171">' + fmt(shortTax) + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">税率 30.315%</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(74,222,128,0.25)">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📅 長期（5年超）</div>';
+  html += '<div style="font-size:17px;font-weight:900;color:#4ade80">' + fmt(longTax) + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">税率 20.315%</div></div>';
+  html += '</div>';
+  if (gain > 0) {
+    var diff = shortTax - longTax;
+    html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">5年超まで保有すると <b style="color:#4ade80">' + fmt(diff) + '万円</b> の節税効果。';
+    if (!isResident) html += ' 居住用の場合は3,000万円特別控除も適用可能。';
+    html += '</div>';
+  } else {
+    html += '<div style="font-size:12px;color:#4ade80">売却益がマイナス（譲渡損失）のため課税なし。損失は他の所得と損益通算できる場合があります。</div>';
+  }
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 取得費不明の場合は売却価格の5%を概算取得費として使用可能。復興特別所得税（2.1%）込みの税率です。正確な計算は税理士にご確認ください。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcCapitalGainsTax(); })();
 
 function calcMortgageTaxDeduction() {
   var el = document.getElementById('mortgage-tax-deduction-result'); if (!el) return;

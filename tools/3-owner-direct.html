@@ -1591,6 +1591,35 @@
     <div id="rate-type-choice-result"></div>
   </div>
 
+  <!-- 住宅診断（インスペクション）費用対効果カード -->
+  <div class="card" id="card-inspection-roi">
+    <div class="card-title">🔍 住宅診断（インスペクション）費用対効果</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売却・購入前の<strong style="color:var(--text)">インスペクション費用</strong>に対して、価格交渉メリット・トラブル回避効果・売却期間短縮の期待リターンを試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件価格（万円）</label>
+        <input type="number" id="iroi_price" value="3000" min="500" max="50000" step="100" oninput="calcInspectionROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">インスペクション費用（万円）</label>
+        <input type="number" id="iroi_cost" value="5" min="1" max="50" step="0.5" oninput="calcInspectionROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">一般的な相場: 3〜8万円</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">目的</label>
+        <select id="iroi_purpose" onchange="calcInspectionROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="sell">売却前（売主）</option>
+          <option value="buy">購入前（買主）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">築年数</label>
+        <input type="number" id="iroi_age" value="25" min="0" max="60" step="1" oninput="calcInspectionROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="inspection-roi-result"></div>
+  </div>
+
   <!-- 仲介手数料あり vs 直接売買 コスト比較カード -->
   <div class="card" id="card-direct-vs-agent">
     <div class="card-title">💰 仲介手数料あり vs 直接売買 コスト比較</div>
@@ -5526,6 +5555,67 @@ function calcRateTypeChoice() {
     +'💡 入力した金利シナリオでは <b style="color:#60a5fa">'+bestName+'</b> が総支払い最小。ただし変動は金利上昇リスクあり。金利上昇が遅い場合は変動が有利になる傾向。最終判断は金融機関窓口でご相談ください。</div>';
 }
 (function(){ calcRateTypeChoice(); })();
+
+function calcInspectionROI() {
+  var el = document.getElementById('inspection-roi-result'); if (!el) return;
+  var price = parseFloat(document.getElementById('iroi_price').value) || 3000;
+  var cost = parseFloat(document.getElementById('iroi_cost').value) || 5;
+  var purpose = document.getElementById('iroi_purpose').value;
+  var age = parseFloat(document.getElementById('iroi_age').value) || 25;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var ageFactor = age >= 30 ? 1.4 : age >= 20 ? 1.2 : age >= 10 ? 1.0 : 0.7;
+  var defectProbability = Math.min(0.75, 0.2 * ageFactor);
+  var avgDefectCost = price * 0.03 * ageFactor;
+  var negotiationBenefit, timeBenefit, trustBenefit, avoidLoss;
+  if (purpose === 'sell') {
+    negotiationBenefit = price * 0.01;
+    timeBenefit = price * 0.005;
+    trustBenefit = price * 0.008;
+    avoidLoss = price * 0.015;
+  } else {
+    negotiationBenefit = price * 0.015;
+    timeBenefit = 0;
+    trustBenefit = 0;
+    avoidLoss = defectProbability * avgDefectCost;
+  }
+  var totalBenefit = negotiationBenefit + timeBenefit + trustBenefit + avoidLoss;
+  var roi = (totalBenefit / cost - 1) * 100;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';font-size:15px;margin-bottom:6px">ROI: <span style="font-size:20px;color:#4ade80">' + Math.round(roi).toLocaleString() + '%</span> （費用対効果）</div>';
+  var items;
+  if (purpose === 'sell') {
+    items = [
+      ['価格交渉予防効果（値引き回避）', '+' + negotiationBenefit.toFixed(0) + '万', '#4ade80'],
+      ['成約スピード改善（空室・維持費節約）', '+' + timeBenefit.toFixed(0) + '万', '#4ade80'],
+      ['買主安心による成約率向上', '+' + trustBenefit.toFixed(0) + '万', '#4ade80'],
+      ['契約後クレーム・損害賠償回避', '+' + avoidLoss.toFixed(0) + '万', '#4ade80'],
+      ['インスペクション費用', '−' + cost.toFixed(1) + '万', '#f87171'],
+      ['期待リターン合計', '+' + (totalBenefit - cost).toFixed(0) + '万', '#4ade80']
+    ];
+  } else {
+    items = [
+      ['価格交渉メリット（欠陥発見時）', '+' + negotiationBenefit.toFixed(0) + '万', '#4ade80'],
+      ['欠陥見落とし回避（期待値）', '+' + avoidLoss.toFixed(0) + '万', '#4ade80'],
+      ['インスペクション費用', '−' + cost.toFixed(1) + '万', '#f87171'],
+      ['期待リターン合計', '+' + (totalBenefit - cost).toFixed(0) + '万', '#4ade80']
+    ];
+  }
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;margin-bottom:10px">';
+  items.forEach(function(item, i) {
+    var bold = i === items.length - 1 ? 'font-weight:700;background:rgba(255,255,255,0.05);' : '';
+    html += '<div style="display:flex;justify-content:space-between;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;' + bold + '">';
+    html += '<span style="color:var(--text-muted)">' + item[0] + '</span>';
+    html += '<span style="color:' + item[2] + '">' + item[1] + '</span></div>';
+  });
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">🏆 築' + age + '年 × ' + (purpose === 'sell' ? '売却' : '購入') + '前では <b style="color:#4ade80">投資対効果が高い</b> 診断です。';
+  html += purpose === 'sell' ? ' 売主インスペクションは「安心R住宅」認定の条件にもなります。' : ' 特に築20年超の中古物件では、見えない欠陥（雨漏り・白蟻）が購入後の大きな損失につながります。';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 インスペクションは宅建業法改正（2018年）により仲介業者の説明義務化。JSHI・日本ホームインスペクターズ協会認定士に依頼することが推奨されます。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcInspectionROI(); })();
 
 function calcDirectVsAgent() {
   var el = document.getElementById('direct-vs-agent-result'); if (!el) return;

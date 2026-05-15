@@ -1858,6 +1858,32 @@
   </div>
 
   <!-- 現金購入 vs 融資活用 投資比較カード -->
+  <!-- サブリース vs 自主管理 収益比較カード -->
+  <div class="card" id="card-sublease-vs-self">
+    <div class="card-title">🏢 サブリース vs 自主管理 収益比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7"><strong style="color:var(--text)">サブリース契約（家賃保証）</strong>と<strong style="color:var(--text)">自主管理（管理会社委託）</strong>の10年間の収益差を比較します。安定性 vs 収益性のトレードオフを可視化。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">市場賃料（万円/月）</label>
+        <input type="number" id="svs_market" value="10" min="1" max="200" step="0.5" oninput="calcSubleaseVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">サブリース保証賃料（%）</label>
+        <input type="number" id="svs_sl_rate" value="85" min="70" max="95" step="1" oninput="calcSubleaseVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">市場賃料の何%が保証されるか</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定空室率（自主管理 %）</label>
+        <input type="number" id="svs_vacancy" value="8" min="0" max="50" step="1" oninput="calcSubleaseVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">管理委託費（自主管理 %）</label>
+        <input type="number" id="svs_mgmt" value="5" min="0" max="15" step="0.5" oninput="calcSubleaseVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="sublease-vs-self-result"></div>
+  </div>
+
   <div class="card" id="card-cash-vs-loan">
     <div class="card-title">💵 現金購入 vs 融資活用 投資比較</div>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">同じ物件を<strong style="color:var(--text)">全額現金</strong>で買う場合と<strong style="color:var(--text)">融資を使う</strong>場合の月次CF・CCR・自己資金効率を比較します。</p>
@@ -8046,6 +8072,53 @@ function calcCashVsLoan() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px">📌 CF・CCRは満室想定。空室率・税金は含みません。DSCR(返済余裕率)は1.2以上が融資審査の目安。</div>';
 }
 (function(){ calcCashVsLoan(); })();
+
+function calcSubleaseVsSelf() {
+  var el = document.getElementById('sublease-vs-self-result'); if (!el) return;
+  var market = parseFloat(document.getElementById('svs_market').value) || 10;
+  var slRate = (parseFloat(document.getElementById('svs_sl_rate').value) || 85) / 100;
+  var vacancy = (parseFloat(document.getElementById('svs_vacancy').value) || 8) / 100;
+  var mgmt = (parseFloat(document.getElementById('svs_mgmt').value) || 5) / 100;
+  var YEARS = 10;
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var slMonthly = market * slRate;
+  var slAnnual = slMonthly * 12;
+  var selfMonthly = market * (1 - vacancy) * (1 - mgmt);
+  var selfAnnual = selfMonthly * 12;
+  var SL_DECLINE_RATE = 0.01;
+  var slTotal = 0;
+  var selfTotal = 0;
+  for (var y = 0; y < YEARS; y++) {
+    slTotal += slAnnual * Math.pow(1 - SL_DECLINE_RATE, y);
+    selfTotal += selfAnnual;
+  }
+  var diff = selfTotal - slTotal;
+  var slWins = slTotal > selfTotal;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + GOLD + ';margin-bottom:10px;font-size:13px">📊 10年間 収益比較</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (slWins ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏢 サブリース</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:' + (slWins ? '#4ade80' : 'var(--text)') + '">' + Math.round(slTotal).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">月額保証: ' + slMonthly.toFixed(1) + '万<br>毎年1%ずつ見直しあり</div>';
+  if (slWins) html += '<div style="font-size:10px;background:#4ade80;color:#000;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:4px;font-weight:700">有利</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (!slWins ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏠 自主管理（委託）</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:' + (!slWins ? '#4ade80' : 'var(--text)') + '">' + Math.round(selfTotal).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">月額想定: ' + selfMonthly.toFixed(1) + '万<br>空室' + Math.round(vacancy*100) + '% 管理' + Math.round(mgmt*100) + '%控除</div>';
+  if (!slWins) html += '<div style="font-size:10px;background:#4ade80;color:#000;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:4px;font-weight:700">有利</div>';
+  html += '</div></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">';
+  html += '10年差額: <b style="color:' + (!slWins ? '#4ade80' : '#f87171') + '">' + (diff >= 0 ? '+' : '') + Math.round(diff).toLocaleString() + '万円</b>（自主管理が ' + (diff > 0 ? '多い' : 'サブリースが多い') + '）。';
+  if (!slWins) html += ' サブリースは空室リスクゼロの安心感と引き換えに収益を犠牲にしています。';
+  else html += ' 空室率が高いエリアではサブリースが有利になる場合があります。';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 サブリース契約は一括借上げ後に入居者を付ける形態。賃料減額請求権があり年々保証額が下がる場合があります。解約条件・原状回復負担を契約前に必ず確認してください。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSubleaseVsSelf(); })();
 
 function calcCondoVsApartment() {
   var el = document.getElementById('condo-vs-apartment-result'); if (!el) return;
