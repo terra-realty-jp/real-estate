@@ -2431,6 +2431,39 @@
     <div id="seismic-retrofit-result"></div>
   </div>
 
+  <!-- リフォーム予算配分 最適化診断カード -->
+  <div class="card" id="card-renov-budget">
+    <div class="card-title">💡 リフォーム予算配分 最適化診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">賃貸物件の空室対策リフォームに予算をどう配分すれば最も入居率・賃料UPに効果的かを試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">リフォーム総予算（万円）</div>
+        <input type="number" id="rb_budget" value="200" min="50" max="3000" step="50" oninput="calcRenovBudget()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件の築年数</div>
+        <input type="number" id="rb_age" value="20" min="1" max="60" step="1" oninput="calcRenovBudget()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ターゲット入居者</div>
+        <select id="rb_target" onchange="calcRenovBudget()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="young" selected>若い単身者（20〜30代）</option>
+          <option value="family">ファミリー（30〜40代）</option>
+          <option value="senior">シニア（60代以上）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の主な問題点</div>
+        <select id="rb_issue" onchange="calcRenovBudget()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="old_look" selected>見た目が古い（壁・床）</option>
+          <option value="equipment">設備が古い（水回り）</option>
+          <option value="both">見た目も設備も両方</option>
+        </select>
+      </div>
+    </div>
+    <div id="renov-budget-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -9347,6 +9380,59 @@ function calcSeismicRetrofit() {
   el.innerHTML = html;
 }
 (function(){ calcSeismicRetrofit(); })();
+
+function calcRenovBudget() {
+  var el = document.getElementById('renov-budget-result'); if (!el) return;
+  var budget = parseInt(document.getElementById('rb_budget').value) || 300;
+  var age = parseInt(document.getElementById('rb_age').value) || 25;
+  var tenant = document.getElementById('rb_tenant').value;
+  var issue = document.getElementById('rb_issue').value;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var allocs = [];
+  if (issue === 'old_look' || issue === 'both') {
+    var intShare = issue === 'both' ? 0.35 : 0.55;
+    allocs.push({ name: '内装（クロス・フロア・建具）', share: intShare });
+  }
+  if (issue === 'equipment' || issue === 'both') {
+    var eqShare = issue === 'both' ? 0.40 : 0.60;
+    allocs.push({ name: '設備（キッチン・浴室・トイレ）', share: eqShare });
+  }
+  if (issue === 'both') {
+    allocs.push({ name: '共用部・外観', share: 0.15 });
+  }
+  if (tenant === 'senior') {
+    allocs.push({ name: 'バリアフリー改修（手すり・段差解消）', share: issue === 'both' ? 0.10 : 0.20 });
+  }
+  if (tenant === 'family') {
+    allocs.push({ name: '収納増設・子供室対応', share: issue === 'both' ? 0.10 : 0.20 });
+  }
+  var totalShare = allocs.reduce(function(s, a) { return s + a.share; }, 0);
+  allocs = allocs.map(function(a) { return { name: a.name, amount: Math.round(budget * a.share / totalShare) }; });
+  var tenantLabel = tenant === 'young' ? '若年単身' : tenant === 'family' ? 'ファミリー' : 'シニア';
+  var issueLabel = issue === 'old_look' ? '老朽見た目' : issue === 'equipment' ? '設備劣化' : '総合改修';
+  var rows = allocs.map(function(a) {
+    var pct = Math.round(a.amount / budget * 100);
+    return '<tr><td style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.06)">' + a.name + '</td>'
+      + '<td style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.06);text-align:right;color:' + ACCENT + '">' + a.amount + '万円</td>'
+      + '<td style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.06);text-align:right;color:rgba(255,255,255,0.5)">' + pct + '%</td></tr>';
+  }).join('');
+  var rentBoost = issue === 'both' ? 12 : issue === 'equipment' ? 8 : 5;
+  var payback = Math.round(budget / (budget * rentBoost / 100 * 12) * 10) / 10;
+  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+    + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">🔨 リフォーム予算配分（' + tenantLabel + '向け・' + issueLabel + '）</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    + '<tr style="color:rgba(255,255,255,0.5);font-size:11px"><th style="padding:4px 8px;text-align:left">工事項目</th><th style="padding:4px 8px;text-align:right">配分額</th><th style="padding:4px 8px;text-align:right">比率</th></tr>'
+    + rows + '</table>'
+    + '<div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">家賃改善効果目安</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + ACCENT + '">+' + rentBoost + '%</div></div>'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">投資回収年数目安</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + ACCENT + '">' + payback + '年</div></div></div>'
+    + '<p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">※ 回収年数は家賃上昇分のみで算出。空室率改善・物件価値向上効果は含みません。</p></div>';
+}
+(function(){ calcRenovBudget(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');

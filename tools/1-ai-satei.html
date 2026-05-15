@@ -2259,6 +2259,47 @@
     <div id="sale-gap-analysis-result"></div>
   </div>
 
+  <!-- 引き渡し前 確認・費用チェックリストカード -->
+  <div class="card" id="card-handover-plan">
+    <div class="card-title">📦 引き渡し前 確認・費用チェックリスト</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">物件の種別・状況を選ぶと引き渡し前に必要な作業・費用の目安を一覧表示します。準備漏れを防ぎましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件の種別</div>
+        <select id="hp_type" onchange="calcHandoverPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="house" selected>一戸建て</option>
+          <option value="condo">マンション</option>
+          <option value="land">土地のみ</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">居住状況</div>
+        <select id="hp_status" onchange="calcHandoverPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="living" selected>現在も居住中</option>
+          <option value="vacant">既に空き家</option>
+          <option value="rental">賃貸中（借主あり）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">家財・荷物</div>
+        <select id="hp_furniture" onchange="calcHandoverPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="full" selected>家財あり（引っ越しが必要）</option>
+          <option value="partial">一部のみ残る</option>
+          <option value="none">荷物なし（空家）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">クリーニング希望</div>
+        <select id="hp_clean" onchange="calcHandoverPlan()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="full">ハウスクリーニングあり</option>
+          <option value="basic" selected>簡易清掃のみ</option>
+          <option value="none">なし（現状引き渡し）</option>
+        </select>
+      </div>
+    </div>
+    <div id="handover-plan-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7179,6 +7220,53 @@ function calcSaleGapAnalysis() {
   el.innerHTML = html;
 }
 (function(){ calcSaleGapAnalysis(); })();
+
+function calcHandoverPlan() {
+  var el = document.getElementById('handover-plan-result'); if (!el) return;
+  var pType = document.getElementById('hp_type').value;
+  var status = document.getElementById('hp_status').value;
+  var furniture = document.getElementById('hp_furniture').value;
+  var clean = document.getElementById('hp_clean').value;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var pLabel = { house: '一戸建て', condo: 'マンション', land: '土地のみ' }[pType];
+  var statusLabel = { living: '居住中', vacant: '空き家', rental: '賃貸中' }[status];
+  var tasks = [];
+  if (furniture === 'full') tasks.push({ cat: '引越し・荷物', name: '引越し業者の手配', cost: '3〜20万円', timing: '決済2〜4週間前', priority: '高' });
+  if (furniture !== 'none') tasks.push({ cat: '引越し・荷物', name: '不用品の処分・粗大ゴミ', cost: '1〜5万円', timing: '決済2〜3週間前', priority: '中' });
+  if (clean === 'full') tasks.push({ cat: 'クリーニング', name: 'ハウスクリーニング（全体）', cost: pType === 'house' ? '5〜15万円' : '3〜8万円', timing: '荷物搬出後', priority: '高' });
+  else if (clean === 'basic') tasks.push({ cat: 'クリーニング', name: '簡易清掃（自分で）', cost: '0〜1万円（材料費）', timing: '荷物搬出後', priority: '中' });
+  if (pType !== 'land') tasks.push({ cat: '設備確認', name: '水道・ガス・電気の停止手続き', cost: '0円', timing: '決済日前後', priority: '高' });
+  if (pType !== 'land') tasks.push({ cat: '設備確認', name: '給湯器・エアコン・換気扇の動作確認', cost: '0円', timing: '決済1〜2週間前', priority: '中' });
+  if (pType === 'house') tasks.push({ cat: '境界・付帯設備', name: '境界杭の確認・目印', cost: '0〜5万円', timing: '決済前', priority: '高' });
+  tasks.push({ cat: '境界・付帯設備', name: '付帯設備表・物件状況確認書の作成', cost: '0円（業者サポートあり）', timing: '契約締結時', priority: '高' });
+  if (pType === 'condo') tasks.push({ cat: '管理組合手続き', name: '管理費・修繕積立金の精算確認', cost: '0円', timing: '決済日', priority: '高' });
+  if (pType === 'condo') tasks.push({ cat: '管理組合手続き', name: '管理組合への名義変更届け', cost: '0円', timing: '決済後1週間以内', priority: '中' });
+  if (status === 'rental') tasks.push({ cat: '借主対応', name: '借主への退去連絡・協議', cost: '0〜50万円（立退料）', timing: '契約前に完了', priority: '最高' });
+  tasks.push({ cat: '鍵・書類', name: '全ての鍵（玄関・勝手口・郵便受け）を引き渡し', cost: '0円', timing: '決済日', priority: '高' });
+  tasks.push({ cat: '鍵・書類', name: '保証書・取扱説明書・設備図面を準備', cost: '0円', timing: '決済日', priority: '中' });
+  var totalCostMin = furniture === 'full' ? 9 : furniture === 'partial' ? 4 : 0;
+  totalCostMin += clean === 'full' ? (pType === 'house' ? 5 : 3) : 0;
+  totalCostMin += status === 'rental' ? 0 : 0;
+  var totalCostMax = furniture === 'full' ? 26 : furniture === 'partial' ? 7 : 1;
+  totalCostMax += clean === 'full' ? (pType === 'house' ? 15 : 8) : 0;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">📍 ' + pLabel + ' / ' + statusLabel + '</div>';
+  html += '<div style="font-size:12px;margin-bottom:10px">引き渡し前の概算費用: <b style="color:' + ACCENT + '">' + totalCostMin + '〜' + totalCostMax + '万円</b></div>';
+  var cats = {};
+  tasks.forEach(function(t) { if (!cats[t.cat]) cats[t.cat] = []; cats[t.cat].push(t); });
+  Object.keys(cats).forEach(function(cat) {
+    html += '<div style="font-size:11px;font-weight:700;color:' + ACCENT + ';margin:8px 0 4px">' + cat + '</div>';
+    cats[cat].forEach(function(t) {
+      var pColor = t.priority === '最高' ? '#f87171' : t.priority === '高' ? '#fb923c' : '#facc15';
+      html += '<div style="border-bottom:1px solid rgba(255,255,255,0.05);padding:6px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+      html += '<div style="flex:1"><div style="font-size:12px;color:var(--text)">' + t.name + '</div><div style="font-size:10px;color:var(--text-muted);margin-top:1px">⏰ ' + t.timing + '</div></div>';
+      html += '<div style="text-align:right;flex-shrink:0"><div style="font-size:11px;color:var(--text)">' + t.cost + '</div><div style="font-size:10px;color:' + pColor + '">優先度: ' + t.priority + '</div></div></div>';
+    });
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcHandoverPlan(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');
