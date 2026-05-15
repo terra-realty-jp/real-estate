@@ -2082,6 +2082,39 @@
     <div id="equip-age-result"></div>
   </div>
 
+  <!-- 家賃UP交渉シミュレーターカード -->
+  <div class="card" id="card-rent-up-sim">
+    <div class="card-title">📈 家賃UP交渉シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">更新時の<strong style="color:var(--text)">家賃値上げ交渉</strong>の成功確率と、値上げした場合・断られた場合の損益分岐を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">現在の月額家賃（万円）</label>
+        <input type="number" id="ru_current" value="7" min="1" max="100" step="0.1" oninput="calcRentUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">希望値上げ額（万円）</label>
+        <input type="number" id="ru_raise" value="0.5" min="0.1" max="10" step="0.1" oninput="calcRentUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">入居年数（年）</label>
+        <input type="number" id="ru_tenure" value="3" min="1" max="20" step="1" oninput="calcRentUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">周辺相場（万円/月）</label>
+        <input type="number" id="ru_market" value="7.5" min="1" max="100" step="0.1" oninput="calcRentUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">退去後の空室期間見込み（ヶ月）</label>
+        <input type="number" id="ru_vacancy" value="3" min="0" max="12" step="1" oninput="calcRentUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">退去後の原状回復費（万円）</label>
+        <input type="number" id="ru_restore" value="20" min="0" max="200" step="5" oninput="calcRentUpSim()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rent-up-sim-result"></div>
+  </div>
+
   <!-- 物件スペック別 適正家賃診断カード -->
   <div class="card" id="card-fair-rent-check">
     <div class="card-title">💴 物件スペック別 適正家賃診断</div>
@@ -8497,6 +8530,51 @@ function calcRenewalSchedule() {
   el.innerHTML = html;
 }
 (function(){ renderRenewalRows(); })();
+
+function calcRentUpSim() {
+  var el = document.getElementById('rent-up-sim-result'); if (!el) return;
+  var cur = (parseFloat(document.getElementById('ru_current').value) || 7) * 10000;
+  var raise = (parseFloat(document.getElementById('ru_raise').value) || 0.5) * 10000;
+  var tenure = parseInt(document.getElementById('ru_tenure').value) || 3;
+  var market = (parseFloat(document.getElementById('ru_market').value) || 7.5) * 10000;
+  var vac = parseInt(document.getElementById('ru_vacancy').value) || 3;
+  var restore = (parseFloat(document.getElementById('ru_restore').value) || 20) * 10000;
+  var newRent = cur + raise;
+  var diffPct = raise / cur * 100;
+  var marketPct = (newRent - market) / market * 100;
+  // 成功確率スコア
+  var marketScore = marketPct <= 0 ? 30 : marketPct <= 5 ? 15 : marketPct <= 10 ? 0 : -20;
+  var raisePctScore = diffPct <= 3 ? 25 : diffPct <= 5 ? 15 : diffPct <= 8 ? 5 : -10;
+  var tenureScore = tenure >= 5 ? 20 : tenure >= 3 ? 10 : 0;
+  var totalS = marketScore + raisePctScore + tenureScore;
+  var prob = Math.min(85, Math.max(10, totalS + 35));
+  var gc = prob >= 60 ? '#60a5fa' : prob >= 40 ? '#f9a825' : '#f44336';
+  // 損益分岐: 退去された場合の損失 vs 値上げ効果
+  var exitLoss = cur * vac + restore; // 退去コスト
+  var annualGain = raise * 12; // 年間値上げ効果
+  var breakEvenMonths = Math.ceil(exitLoss / raise); // 何ヶ月で損失を回収
+  var fmt = function(v) { return Math.round(Math.abs(v) / 10000 * 10) / 10 + '万円'; };
+  var advice = marketPct > 0
+    ? '値上げ後の家賃（'+fmt(newRent)+'）は周辺相場より'+Math.round(Math.abs(marketPct)*10)/10+'%高い。退去リスクが高いため、相場に近い水準に調整することを検討してください。'
+    : '値上げ後でも周辺相場以下です。退去リスクが低く、合意を得やすい水準です。';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+    +'<div style="background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4)">交渉成功確率</div>'
+    +'<div style="font-size:20px;font-weight:900;color:'+gc+'">'+prob+'%</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3)">値上げ'+fmt(raise)+'/月</div></div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4)">退去時の損失</div>'
+    +'<div style="font-size:16px;font-weight:900;color:#f44336">'+fmt(exitLoss)+'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3)">空室'+vac+'ヶ月+原状回復</div></div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4)">損失回収期間</div>'
+    +'<div style="font-size:16px;font-weight:900;color:var(--text)">'+breakEvenMonths+'ヶ月</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3)">退去後に値上げで回収</div></div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px;font-size:11px;color:rgba(255,255,255,0.55);line-height:1.7">'+advice+'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px;line-height:1.6">📌 借地借家法上、オーナーからの賃料値上げ請求は正当理由が必要。入居年数・原価上昇・周辺相場を根拠にした書面交渉が基本です。</div>';
+}
+(function(){ calcRentUpSim(); })();
 
 function calcFairRentCheck() {
   var el = document.getElementById('fair-rent-check-result'); if (!el) return;

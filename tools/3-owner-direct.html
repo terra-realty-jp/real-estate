@@ -1508,6 +1508,47 @@
     <div id="land-build-split-result"></div>
   </div>
 
+  <!-- 価格交渉 成功確率診断カード -->
+  <div class="card" id="card-nego-success">
+    <div class="card-title">🤝 価格交渉 成功確率診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売出価格・交渉希望価格・売主の状況・物件の売れ行きから<strong style="color:var(--text)">値引き交渉の成功確率</strong>と<strong style="color:var(--text)">適切な交渉戦略</strong>を診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">売出価格（万円）</label>
+        <input type="number" id="ns_ask" value="3000" min="100" max="100000" step="100" oninput="calcNegoSuccess()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">希望購入価格（万円）</label>
+        <input type="number" id="ns_bid" value="2800" min="100" max="100000" step="100" oninput="calcNegoSuccess()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">売主の急ぎ度</label>
+        <select id="ns_urgency" onchange="calcNegoSuccess()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="5">非常に急いでいる（転勤・相続税等）</option>
+          <option value="3" selected>普通（いつか売りたい）</option>
+          <option value="1">急いでいない（価格優先）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">物件の売り出し期間</label>
+        <select id="ns_period" onchange="calcNegoSuccess()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1">売り出したばかり（1ヶ月未満）</option>
+          <option value="3" selected>3〜6ヶ月経過</option>
+          <option value="5">半年以上経過している</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">競合する検討者の状況</label>
+        <select id="ns_competi" onchange="calcNegoSuccess()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1">他に複数の検討者がいる</option>
+          <option value="3" selected>検討者がいるかどうか不明</option>
+          <option value="5">自分だけが検討している様子</option>
+        </select>
+      </div>
+    </div>
+    <div id="nego-success-result"></div>
+  </div>
+
   <!-- 住宅ローン 金利タイプ選択診断カード -->
   <div class="card" id="card-rate-type-choice">
     <div class="card-title">📊 住宅ローン 金利タイプ選択診断</div>
@@ -5334,6 +5375,52 @@ function calcEarlyRepay() {
     + '</div>';
 }
 (function(){ calcEarlyRepay(); })();
+
+function calcNegoSuccess() {
+  var el = document.getElementById('nego-success-result'); if (!el) return;
+  var ask = parseFloat(document.getElementById('ns_ask').value) || 3000;
+  var bid = parseFloat(document.getElementById('ns_bid').value) || 2800;
+  var urgency = parseInt(document.getElementById('ns_urgency').value) || 3;
+  var period = parseInt(document.getElementById('ns_period').value) || 3;
+  var competi = parseInt(document.getElementById('ns_competi').value) || 3;
+  var diffPct = (ask - bid) / ask * 100;
+  if (diffPct < 0) { el.innerHTML = '<div style="color:#f44336;padding:10px;font-size:12px">希望価格が売出価格を上回っています。値下げ交渉の範囲外です。</div>'; return; }
+  // 値引き率スコア: 3%以下→+20, 5%以下→+10, 8%以下→0, 10%以下→-15, 10%超→-30
+  var discScore = diffPct <= 3 ? 20 : diffPct <= 5 ? 10 : diffPct <= 8 ? 0 : diffPct <= 10 ? -15 : -30;
+  // 総合スコア（50点満点）
+  var totalScore = discScore + urgency * 3 + period * 3 + competi * 3;
+  var maxS = 20 + 5*3 + 5*3 + 5*3; // 65 max
+  var minS = -30 + 1*3 + 1*3 + 1*3; // -21 min
+  var prob = Math.min(92, Math.max(5, Math.round((totalScore - minS) / (maxS - minS) * 87 + 5)));
+  var gc = prob >= 65 ? '#4ade80' : prob >= 40 ? '#f9a825' : '#f44336';
+  var gn = prob >= 65 ? '成功確率 高' : prob >= 40 ? '成功確率 中' : '成功確率 低';
+  var strategy, steps;
+  if (prob >= 65) {
+    strategy = '積極的に指値を入れましょう。条件が揃っており成立する可能性が高い状況です。';
+    steps = ['希望価格そのままで買付証明書を提出', '即決・現金購入をアピールすると有利', '融資特約なし（ローン審査済み）で交渉力UP'];
+  } else if (prob >= 40) {
+    strategy = '交渉の余地はあります。段階的に進めることで合意に近づける可能性があります。';
+    steps = ['最初は希望価格より少し高め（'+Math.round(ask-(ask-bid)*0.5)+'万円）で交渉開始', '引き渡し時期・付帯設備など価格以外の条件も柔軟に', '相場データ（近隣成約事例）を根拠として提示'];
+  } else {
+    strategy = '大幅な値引きは難しい状況です。価格を引き上げるか、好条件を付けることを検討してください。';
+    steps = ['値引き幅を縮小（売出価格の3〜5%以内に調整）', '売主の希望条件（引き渡し時期・家財処分等）に寄り添う', '他物件との比較・代替案も同時に検討する'];
+  }
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:14px;border:1px solid '+gc.replace(')',',0.25)').replace('rgb(','rgba(')+';border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+    +'<div style="text-align:center;min-width:70px;flex-shrink:0">'
+    +'<div style="font-size:32px;font-weight:900;color:'+gc+'">'+prob+'<span style="font-size:14px">%</span></div>'
+    +'<div style="font-size:9px;color:rgba(255,255,255,0.4)">交渉成功確率</div>'
+    +'<div style="font-size:12px;font-weight:700;color:'+gc+';margin-top:3px">'+gn+'</div>'
+    +'</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:6px;line-height:1.6">値引き率: <b style="color:'+gc+'">'+Math.round(diffPct*10)/10+'%</b>（'+Math.round(ask-bid)+'万円の値引き希望）</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:6px">'+strategy+'</div>'
+    +'</div></div>'
+    +'<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 12px">'
+    +'<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:4px">交渉ステップ</div>'
+    +'<ol style="margin:0;padding-left:16px">'+steps.map(function(s){ return '<li style="font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:3px">'+s+'</li>'; }).join('')+'</ol>'
+    +'</div>';
+}
+(function(){ calcNegoSuccess(); })();
 
 function calcRateTypeChoice() {
   var el = document.getElementById('rate-type-choice-result'); if (!el) return;

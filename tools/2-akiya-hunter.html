@@ -1699,6 +1699,37 @@
     <div id="kominka-convert-result"></div>
   </div>
 
+  <!-- 空き家 定期借家 vs 普通借家 収益比較カード -->
+  <div class="card" id="card-akiya-kashi">
+    <div class="card-title">📋 定期借家 vs 普通借家 収益比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家を賃貸に出す際、<strong style="color:var(--text)">定期借家</strong>（解約しやすい）と<strong style="color:var(--text)">普通借家</strong>（相場通り借りやすい）の10年収益を比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">普通借家の月額賃料（万円）</label>
+        <input type="number" id="ak_rent_normal" value="8" min="1" max="100" step="0.5" oninput="calcAkiyaKashi()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">定期借家の月額賃料（万円）</label>
+        <input type="number" id="ak_rent_teiki" value="7" min="1" max="100" step="0.5" oninput="calcAkiyaKashi()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">普通より5〜15%低めが相場</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">普通借家の想定空室率（%）</label>
+        <input type="number" id="ak_vac_normal" value="15" min="0" max="60" step="5" oninput="calcAkiyaKashi()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">定期借家の想定空室率（%）</label>
+        <input type="number" id="ak_vac_teiki" value="25" min="0" max="80" step="5" oninput="calcAkiyaKashi()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">入居者が見つかりにくい分</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">年間管理・維持費（万円）</label>
+        <input type="number" id="ak_maint" value="12" min="0" max="200" step="1" oninput="calcAkiyaKashi()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="akiya-kashi-result"></div>
+  </div>
+
   <!-- 空き家 近隣迷惑度チェックカード -->
   <div class="card" id="card-neighbor-impact">
     <div class="card-title">🏚️ 空き家 近隣迷惑度チェック</div>
@@ -5770,6 +5801,45 @@ function calcKouminkaConvert() {
     + '</div>';
 }
 (function(){ calcKouminkaConvert(); })();
+
+function calcAkiyaKashi() {
+  var el = document.getElementById('akiya-kashi-result'); if (!el) return;
+  var rentN = (parseFloat(document.getElementById('ak_rent_normal').value) || 8) * 10000;
+  var rentT = (parseFloat(document.getElementById('ak_rent_teiki').value) || 7) * 10000;
+  var vacN = (parseFloat(document.getElementById('ak_vac_normal').value) || 15) / 100;
+  var vacT = (parseFloat(document.getElementById('ak_vac_teiki').value) || 25) / 100;
+  var maint = (parseFloat(document.getElementById('ak_maint').value) || 12) * 10000;
+  var annualN = rentN * 12 * (1 - vacN) - maint;
+  var annualT = rentT * 12 * (1 - vacT) - maint;
+  var total10N = annualN * 10;
+  var total10T = annualT * 10;
+  var diff = total10T - total10N;
+  var fmt = function(v) { return (Math.round(v / 10000)).toLocaleString() + '万円'; };
+  var fmtM = function(v) { return (Math.round(v / 10000 * 10) / 10).toFixed(1) + '万円/月'; };
+  var winner = annualN >= annualT ? '普通借家' : '定期借家';
+  var wc = annualN >= annualT ? '#4ade80' : '#fb923c';
+  var memos = annualN >= annualT
+    ? ['入居者は退去させにくいが、長期安定収益が期待できる', '将来の自己利用や売却前に普通借家では立退き料が必要なケースあり', '更新料（1〜2ヶ月分）の追加収益も期待できる']
+    : ['将来の売却・自己利用がしやすい（期間満了で確実に返還）', '入居者が見つかりにくく空室率が高くなる点を考慮', '2年以内の短期利用や将来売却予定の物件に特に有効'];
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    +'<div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">普通借家</div>'
+    +'<div style="font-size:15px;font-weight:900;color:#4ade80">'+fmtM(annualN/12)+'</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,0.5)">10年: '+fmt(total10N)+'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3)">空室率'+Math.round(vacN*100)+'%想定</div></div>'
+    +'<div style="background:rgba(251,146,60,0.06);border:1px solid rgba(251,146,60,0.2);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">定期借家</div>'
+    +'<div style="font-size:15px;font-weight:900;color:#fb923c">'+fmtM(annualT/12)+'</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,0.5)">10年: '+fmt(total10T)+'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3)">空室率'+Math.round(vacT*100)+'%想定</div></div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;margin-bottom:8px">'
+    +'<div style="font-size:12px;font-weight:700;color:'+wc+';margin-bottom:6px">'+winner+'が10年で <b>'+fmt(Math.abs(diff))+'</b> '+(diff > 0 ? '多い' : '多い')+'</div>'
+    +'<ul style="margin:0;padding-left:14px">'+memos.map(function(m){ return '<li style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:3px">'+m+'</li>'; }).join('')+'</ul>'
+    +'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.25);line-height:1.6">📌 定期借家は2000年3月施行の借地借家法改正で創設。公証役場での契約書作成（費用：数万円）が必要。将来の売却・建替えを検討している場合は定期借家が安全です。</div>';
+}
+(function(){ calcAkiyaKashi(); })();
 
 function calcNeighborImpact() {
   var el = document.getElementById('neighbor-impact-result'); if (!el) return;

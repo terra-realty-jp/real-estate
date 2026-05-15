@@ -1910,6 +1910,41 @@
     <div id="staging-roi-result"></div>
   </div>
 
+  <!-- 相続不動産 売却vs賃貸 10年損得比較カード -->
+  <div class="card" id="card-inheritance-sale">
+    <div class="card-title">🏛️ 相続不動産 売却 vs 賃貸 10年比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">相続した不動産を<strong style="color:var(--text)">今すぐ売却</strong>するか<strong style="color:var(--text)">賃貸活用</strong>するかの10年損得を試算します。相続税・税金・維持費込みで比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">相続不動産の時価（万円）</label>
+        <input type="number" id="is_price" value="3000" min="100" max="50000" step="100" oninput="calcInheritanceSale()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">相続税評価額（万円）</label>
+        <input type="number" id="is_eval" value="2000" min="100" max="50000" step="100" oninput="calcInheritanceSale()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">路線価×面積など。不明な場合は時価の8割</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">月間賃料見込み（万円）</label>
+        <input type="number" id="is_rent" value="10" min="1" max="200" step="0.5" oninput="calcInheritanceSale()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">年間維持費（固都税・管理費 万円）</label>
+        <input type="number" id="is_maint" value="30" min="0" max="500" step="5" oninput="calcInheritanceSale()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">10年後の予想売却価格（万円）</label>
+        <input type="number" id="is_future" value="2500" min="100" max="50000" step="100" oninput="calcInheritanceSale()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">売却時の譲渡費用（万円）</label>
+        <input type="number" id="is_cost" value="100" min="0" max="500" step="10" oninput="calcInheritanceSale()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">仲介手数料・登記費用など</div>
+      </div>
+    </div>
+    <div id="inheritance-sale-result"></div>
+  </div>
+
   <!-- 売却成功確率 3ヶ月予測カード -->
   <div class="card" id="card-sale-success-prob">
     <div class="card-title">🎯 売却成功確率 3ヶ月予測</div>
@@ -6368,6 +6403,47 @@ function calcStagingROI() {
     + '</div>';
 }
 (function(){ calcStagingROI(); })();
+
+function calcInheritanceSale() {
+  var el = document.getElementById('inheritance-sale-result'); if (!el) return;
+  var price = (parseFloat(document.getElementById('is_price').value) || 3000) * 10000;
+  var eval_ = (parseFloat(document.getElementById('is_eval').value) || 2000) * 10000;
+  var rent = (parseFloat(document.getElementById('is_rent').value) || 10) * 10000;
+  var maint = (parseFloat(document.getElementById('is_maint').value) || 30) * 10000;
+  var future = (parseFloat(document.getElementById('is_future').value) || 2500) * 10000;
+  var cost = (parseFloat(document.getElementById('is_cost').value) || 100) * 10000;
+  // Plan A: 今すぐ売却
+  var acqCost = eval_ * 0.03; // 取得費概算（評価額の3%）
+  var gain = price - acqCost - cost;
+  var taxA = gain > 0 ? gain * 0.20315 : 0; // 長期譲渡所得税（居住用3000万控除なし想定）
+  var proceedsA = price - cost - taxA;
+  // Plan B: 10年賃貸後売却
+  var annualNOI = rent * 12 - maint;
+  var totalRent10 = annualNOI * 10 * 0.85; // 所得税約15%控除後
+  var gainB = future - eval_ * 0.05 - (future * 0.04); // 10年後売却 費用考慮
+  var taxB = gainB > 0 ? gainB * 0.20315 : 0;
+  var proceedsB = totalRent10 + future - (future * 0.04) - taxB;
+  var diff = proceedsB - proceedsA;
+  var fmt = function(v) { return Math.round(Math.abs(v) / 10000).toLocaleString() + '万円'; };
+  var winner = diff > 0 ? '賃貸活用後売却' : '今すぐ売却';
+  var wc = diff > 0 ? '#22d3ee' : '#4ade80';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    +'<div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">今すぐ売却</div>'
+    +'<div style="font-size:18px;font-weight:900;color:#4ade80">'+fmt(proceedsA)+'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3)">手取り（税引後）</div></div>'
+    +'<div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.2);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">10年賃貸後売却</div>'
+    +'<div style="font-size:18px;font-weight:900;color:#22d3ee">'+fmt(proceedsB)+'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3)">賃料+売却(税引後)</div></div>'
+    +'</div>'
+    +'<div style="background:rgba('+wc.replace('#','').replace(/(..)(..)(..)/, function(_,r,g,b){ return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16); })+',0.06);border:1px solid rgba('+wc.replace('#','').replace(/(..)(..)(..)/, function(_,r,g,b){ return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16); })+',0.25);border-radius:8px;padding:10px;margin-bottom:8px;text-align:center">'
+    +'<div style="font-size:12px;font-weight:700;color:'+wc+'">'+winner+'が <b>'+fmt(Math.abs(diff))+'</b> 有利</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px">年間賃料手取り: '+fmt(annualNOI*0.85/12)+'万円/月 × 10年</div>'
+    +'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.25);line-height:1.6">📌 取得費不明の場合は売却額の5%として計算。相続後3年10ヶ月以内の売却は「取得費加算」特例あり。実際の税額は税理士にご確認ください。</div>';
+}
+(function(){ calcInheritanceSale(); })();
 
 function calcSaleSuccessProb() {
   var el = document.getElementById('sale-success-prob-result'); if (!el) return;

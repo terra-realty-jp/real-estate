@@ -1800,6 +1800,63 @@
     <div id="full-loan-risk-result"></div>
   </div>
 
+  <!-- エリア別 人口動態リスク診断カード -->
+  <div class="card" id="card-regional-risk">
+    <div class="card-title">📍 エリア別 人口動態リスク診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">投資エリアの<strong style="color:var(--text)">人口減少リスク・高齢化リスク</strong>を診断し、長期的な賃貸需要・物件価値への影響を評価します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">都市規模</label>
+        <select id="rr_city" onchange="calcRegionalRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="5">三大都市圏中心部（東京23区・大阪市・名古屋市）</option>
+          <option value="4">政令指定都市・県庁所在地</option>
+          <option value="3" selected>地方中核都市（人口20万〜）</option>
+          <option value="2">地方中小都市（人口5〜20万）</option>
+          <option value="1">過疎地域・人口5万未満</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">駅距離・アクセス</label>
+        <select id="rr_access" onchange="calcRegionalRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="5">駅徒歩5分以内</option>
+          <option value="4">駅徒歩10分以内</option>
+          <option value="3" selected>駅徒歩15分以内</option>
+          <option value="2">バス利用・徒歩20分超</option>
+          <option value="1">車必須・公共交通なし</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">周辺の雇用環境</label>
+        <select id="rr_employ" onchange="calcRegionalRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="5">大企業・オフィス街が集中</option>
+          <option value="4">中規模企業・工場・病院等が多い</option>
+          <option value="3" selected>普通（住宅街・小規模商業）</option>
+          <option value="2">産業空洞化・工場閉鎖が多い</option>
+          <option value="1">主要雇用主が撤退・衰退している</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">大学・専門学校の存在</label>
+        <select id="rr_univ" onchange="calcRegionalRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="5">2km以内に大学・専門学校あり</option>
+          <option value="3" selected>周辺にあるが遠い</option>
+          <option value="1">近隣に教育機関なし</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">過去5年の人口変化</label>
+        <select id="rr_pop" onchange="calcRegionalRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="5">増加傾向（+2%以上）</option>
+          <option value="4">微増（0〜+2%）</option>
+          <option value="3" selected>横ばい</option>
+          <option value="2">微減（0〜-5%）</option>
+          <option value="1">大きく減少（-5%以上）</option>
+        </select>
+      </div>
+    </div>
+    <div id="regional-risk-result"></div>
+  </div>
+
   <!-- 現金購入 vs 融資活用 投資比較カード -->
   <div class="card" id="card-cash-vs-loan">
     <div class="card-title">💵 現金購入 vs 融資活用 投資比較</div>
@@ -7840,6 +7897,60 @@ function calcLoanTermCFComp() {
   el.innerHTML = html;
 }
 (function(){ calcLoanTermCFComp(); })();
+
+function calcRegionalRisk() {
+  var el = document.getElementById('regional-risk-result'); if (!el) return;
+  var city = parseInt(document.getElementById('rr_city').value) || 3;
+  var access = parseInt(document.getElementById('rr_access').value) || 3;
+  var employ = parseInt(document.getElementById('rr_employ').value) || 3;
+  var univ = parseInt(document.getElementById('rr_univ').value) || 3;
+  var pop = parseInt(document.getElementById('rr_pop').value) || 3;
+  var score = city * 0.30 + access * 0.25 + employ * 0.20 + pop * 0.15 + univ * 0.10;
+  var maxS = 5, minS = 1;
+  var pct = Math.round((score - minS) / (maxS - minS) * 100);
+  var grade, gc, demand10, price10;
+  if (pct >= 75) { grade='A（低リスク）'; gc='#4ade80'; demand10='需要維持・微増の可能性'; price10='地価は安定〜上昇トレンド'; }
+  else if (pct >= 55) { grade='B（やや低リスク）'; gc='#22d3ee'; demand10='需要はほぼ維持される'; price10='地価は横ばい〜微減'; }
+  else if (pct >= 35) { grade='C（中リスク）'; gc='#f9a825'; demand10='需要の緩やかな低下を想定'; price10='地価は5〜15%程度下落リスク'; }
+  else { grade='D（高リスク）'; gc='#f44336'; demand10='10〜20年で賃貸需要が大幅低下の懸念'; price10='地価は20〜40%下落リスク'; }
+  var axes = [
+    {n:'都市規模',s:city,w:'30%'},{n:'駅アクセス',s:access,w:'25%'},{n:'雇用環境',s:employ,w:'20%'},
+    {n:'人口動態',s:pop,w:'15%'},{n:'教育機関',s:univ,w:'10%'}
+  ];
+  var bars = axes.map(function(a) {
+    var p = Math.round(a.s / 5 * 100);
+    var bc = p >= 70 ? '#4ade80' : p >= 40 ? '#f9a825' : '#f44336';
+    return '<div style="margin-bottom:5px"><div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:2px"><span>'+a.n+' ('+a.w+')</span><span>'+p+'%</span></div>'
+      +'<div style="background:rgba(255,255,255,0.06);border-radius:3px;height:5px"><div style="width:'+p+'%;background:'+bc+';height:5px;border-radius:3px"></div></div></div>';
+  }).join('');
+  var cautions = [];
+  if (city <= 2) cautions.push('⚠️ 人口規模が小さく流動性リスクが高い。出口戦略（売却）が困難になりやすい');
+  if (pop <= 2) cautions.push('⚠️ 人口減少エリア。入居者獲得のための家賃値下げ圧力が継続する可能性');
+  if (access <= 2) cautions.push('⚠️ 公共交通不便エリア。若年層の流入が少なく高齢化が進みやすい');
+  if (employ <= 2) cautions.push('⚠️ 雇用の縮小が空室率上昇につながるリスクあり');
+  if (cautions.length === 0) cautions.push('✅ 特段の懸念事項は確認されません');
+  el.innerHTML = '<div style="background:rgba('+gc.replace('#','').replace(/(..)(..)(..)/, function(_,r,g,b){ return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16); })+',0.06);border:1px solid '+gc.replace(')',',0.25)').replace('rgb(','rgba(')+';border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;gap:14px">'
+    +'<div style="text-align:center;min-width:70px;flex-shrink:0">'
+    +'<div style="font-size:30px;font-weight:900;color:'+gc+'">'+pct+'<span style="font-size:14px">pt</span></div>'
+    +'<div style="font-size:9px;color:rgba(255,255,255,0.4)">エリア健全性</div>'
+    +'<div style="font-size:12px;font-weight:700;color:'+gc+';margin-top:3px">'+grade+'</div>'
+    +'</div>'
+    +'<div style="flex:1">'
+    +bars
+    +'</div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    +'<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 10px">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:3px">10年後の賃貸需要予測</div>'
+    +'<div style="font-size:11px;color:var(--text)">'+demand10+'</div></div>'
+    +'<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 10px">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:3px">10年後の地価予測</div>'
+    +'<div style="font-size:11px;color:var(--text)">'+price10+'</div></div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 12px">'
+    +cautions.map(function(c){ return '<div style="font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:4px">'+c+'</div>'; }).join('')
+    +'</div>';
+}
+(function(){ calcRegionalRisk(); })();
 
 function calcCashVsLoan() {
   var el = document.getElementById('cash-vs-loan-result'); if (!el) return;
