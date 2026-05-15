@@ -1875,6 +1875,31 @@
     <div id="tenant-churn-result"></div>
   </div>
 
+  <!-- 空室時リフォームROI診断カード -->
+  <div class="card" id="card-vacancy-reform-roi">
+    <div class="card-title">🛠️ 空室時リフォーム ROI診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空室中にリフォームをすることで家賃が上がり・入居が早まる効果を試算します。「投資すべきか・見送るべきか」の判断材料に使ってください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">リフォーム費（万円）</label>
+        <input type="number" id="vrr_cost" value="50" min="5" max="500" step="5" oninput="calcVacancyReformROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現在の家賃（万円）</label>
+        <input type="number" id="vrr_rent" value="6" min="1" max="100" step="0.5" oninput="calcVacancyReformROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">リフォーム後の家賃（万円）</label>
+        <input type="number" id="vrr_new_rent" value="6.5" min="1" max="100" step="0.5" oninput="calcVacancyReformROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">入居加速効果（リフォームなしより何ヶ月早まるか）</label>
+        <input type="number" id="vrr_speed" value="2" min="0" max="12" step="1" oninput="calcVacancyReformROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="vacancy-reform-roi-result"></div>
+  </div>
+
   <!-- 設備老朽化リスク判定カード -->
   <div class="card" id="card-equip-age">
     <div class="card-title">🔧 設備老朽化リスク 更新優先度チェック</div>
@@ -8038,6 +8063,41 @@ function calcEquipAgeRisk() {
   el.innerHTML = html;
 }
 (function(){ calcEquipAgeRisk(); })();
+
+function calcVacancyReformROI() {
+  var el = document.getElementById('vacancy-reform-roi-result');
+  if (!el) return;
+  var cost = parseFloat(document.getElementById('vrr_cost').value) || 0;
+  var rent = parseFloat(document.getElementById('vrr_rent').value) || 0;
+  var newRent = parseFloat(document.getElementById('vrr_new_rent').value) || 0;
+  var speed = parseFloat(document.getElementById('vrr_speed').value) || 0;
+  if (cost <= 0 || rent <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">リフォーム費と家賃を入力してください</div>'; return; }
+
+  var rentUp = newRent - rent;
+  var speedGain = speed * rent;
+  var totalAnnualGain = (rentUp * 12) + speedGain;
+  var paybackYears = totalAnnualGain > 0 ? cost / totalAnnualGain : null;
+  var roi10 = totalAnnualGain > 0 ? ((totalAnnualGain * 10 - cost) / cost * 100) : null;
+  var verdict, vColor;
+  if (!paybackYears) { verdict = '家賃UP・速度改善なし → リフォーム効果なし'; vColor = '#888'; }
+  else if (paybackYears <= 3) { verdict = '回収期間3年以内 → リフォーム推奨'; vColor = '#4caf50'; }
+  else if (paybackYears <= 6) { verdict = '回収期間3〜6年 → 物件の将来計画次第'; vColor = '#f9a825'; }
+  else { verdict = '回収期間6年超 → 慎重に検討'; vColor = '#e53935'; }
+
+  var html = '<div style="margin-top:10px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
+  html += '<div style="font-size:14px;font-weight:700;color:' + vColor + ';margin-bottom:12px">' + verdict + '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">家賃UP効果/年</div><div style="font-size:18px;font-weight:900;color:var(--gold)">+' + (rentUp * 12).toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">入居加速効果</div><div style="font-size:18px;font-weight:900;color:var(--gold)">+' + speedGain.toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
+  html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">回収年数</div><div style="font-size:18px;font-weight:900;color:' + vColor + '">' + (paybackYears ? paybackYears.toFixed(1) : '—') + '<span style="font-size:11px">年</span></div></div>';
+  html += '</div>';
+  if (roi10 !== null) {
+    html += '<div style="margin-top:10px;font-size:12px;color:var(--text-muted)">10年後の累積純利益: <strong style="color:var(--text)">' + Math.round(totalAnnualGain * 10 - cost).toLocaleString() + '万円</strong>（リフォーム費差引）　10年ROI: <strong style="color:' + vColor + '">' + roi10.toFixed(0) + '%</strong></div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcVacancyReformROI(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');
