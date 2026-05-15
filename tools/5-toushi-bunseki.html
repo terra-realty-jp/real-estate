@@ -2163,6 +2163,49 @@
     <div id="leverage-effect-result"></div>
   </div>
 
+  <div class="card" id="card-area-diversify">
+    <div class="card-title">🗾 地域分散投資 リスク低減効果</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">1つのエリアに集中投資するリスクと、地域を分散した場合の安定性向上効果を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の主なエリア</div>
+        <select id="ad_area" onchange="calcAreaDiversify()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="city_center" selected>都心（東京23区等）</option>
+          <option value="urban">都市部（政令市・地方中核市）</option>
+          <option value="suburb">郊外（通勤圏・ベッドタウン）</option>
+          <option value="rural">地方（中小都市・地方圏）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の物件数</div>
+        <select id="ad_count" onchange="calcAreaDiversify()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1" selected>1棟（集中リスク最大）</option>
+          <option value="2">2〜3棟</option>
+          <option value="4">4〜6棟</option>
+          <option value="7">7棟以上</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現エリアへの集中度</div>
+        <select id="ad_conc" onchange="calcAreaDiversify()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="100" selected>100%（1エリアのみ）</option>
+          <option value="75">75%（主に1エリア）</option>
+          <option value="50">50%（2エリア均等）</option>
+          <option value="33">33%（3エリア以上分散）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">追加検討エリア</div>
+        <select id="ad_target" onchange="calcAreaDiversify()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="same">同じエリア（更に集中）</option>
+          <option value="adjacent" selected>隣接エリア（近郊に追加）</option>
+          <option value="different">異なるエリア（分散投資）</option>
+        </select>
+      </div>
+    </div>
+    <div id="area-diversify-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -8777,10 +8820,10 @@ function calcIRRCalc() {
 
 function calcLeverageEffect() {
   var el = document.getElementById('leverage-effect-result'); if (!el) return;
-  var price = parseFloat(document.getElementById('lev_price').value) || 3000;
-  var equity = parseFloat(document.getElementById('lev_equity').value) || 1000;
-  var grossYield = parseFloat(document.getElementById('lev_yield').value) || 6;
-  var loanRate = parseFloat(document.getElementById('lev_rate').value) || 2;
+  var price = parseFloat(document.getElementById('le_price').value) || 5000;
+  var equity = parseFloat(document.getElementById('le_equity').value) || 1000;
+  var grossYield = parseFloat(document.getElementById('le_yield').value) || 6;
+  var loanRate = parseFloat(document.getElementById('le_loan_rate').value) || 2;
   var ACCENT = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
   var loan = price - equity;
   var annualRent = price * grossYield / 100;
@@ -8815,6 +8858,50 @@ function calcLeverageEffect() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">※ 実質利回り＝表面利回り×75%（諸経費率25%）で試算。元本返済・税金・空室は含みません。</p></div>';
 }
 (function(){ calcLeverageEffect(); })();
+
+function calcAreaDiversify() {
+  var el = document.getElementById('area-diversify-result'); if (!el) return;
+  var area = document.getElementById('ad_area').value;
+  var count = parseInt(document.getElementById('ad_count').value) || 1;
+  var conc = parseInt(document.getElementById('ad_conc').value) || 100;
+  var target = document.getElementById('ad_target').value;
+  var ACCENT = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var areaRisk = { city_center: 15, urban: 25, suburb: 35, rural: 50 };
+  var baseRisk = areaRisk[area] || 30;
+  var concFactor = conc / 100;
+  var countFactor = count === 1 ? 1.3 : count === 2 ? 1.1 : count === 4 ? 0.9 : 0.75;
+  var currentRisk = Math.min(100, Math.round(baseRisk * concFactor * countFactor));
+  var targetConc = target === 'same' ? conc : target === 'adjacent' ? Math.max(50, conc - 25) : Math.max(33, conc - 40);
+  var newCount = count + 1;
+  var newCountFactor = newCount <= 1 ? 1.3 : newCount <= 3 ? 1.1 : newCount <= 6 ? 0.9 : 0.75;
+  var afterRisk = Math.min(100, Math.round(baseRisk * (targetConc / 100) * newCountFactor));
+  var riskChange = currentRisk - afterRisk;
+  var riskColor = currentRisk >= 60 ? '#f87171' : currentRisk >= 40 ? '#fb923c' : '#4ade80';
+  var afterColor = afterRisk >= 60 ? '#f87171' : afterRisk >= 40 ? '#fb923c' : '#4ade80';
+  var areaLabel = { city_center: '都心', urban: '都市部', suburb: '郊外', rural: '地方' }[area];
+  var targetLabel = { same: '同エリアに集中（リスク増）', adjacent: '隣接エリアに追加', different: '異なるエリアに分散' }[target];
+  var advice = target === 'same'
+    ? '⚠️ 同一エリアへの集中は地域リスクをさらに高めます。空室・地価下落が連動する可能性があります。'
+    : target === 'adjacent'
+    ? '💡 隣接エリアへの追加は適度な分散効果があります。ただし経済圏が重なる場合は注意が必要です。'
+    : '✅ 異なるエリアへの分散は集中リスクを大幅に低減します。管理の手間増加とのバランスを考慮してください。';
+  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+    + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">🗾 エリア集中リスク評価（' + areaLabel + '・' + count + '棟）</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    + '<div style="padding:12px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">現在のリスクスコア</div>'
+    + '<div style="font-size:28px;font-weight:700;color:' + riskColor + '">' + currentRisk + '</div>'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.4)">/ 100（高いほどリスク大）</div></div>'
+    + '<div style="padding:12px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">追加後リスクスコア</div>'
+    + '<div style="font-size:28px;font-weight:700;color:' + afterColor + '">' + afterRisk + '</div>'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.4)">' + (riskChange > 0 ? '▼' + riskChange + ' 低減' : riskChange < 0 ? '▲' + Math.abs(riskChange) + ' 増加' : '変化なし') + '</div></div></div>'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.15);border-radius:8px;font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:8px">'
+    + '<div style="margin-bottom:4px"><span style="color:rgba(255,255,255,0.5)">追加戦略：</span>' + targetLabel + '</div>'
+    + advice + '</div>'
+    + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ リスクスコアはエリア特性・集中度・棟数から試算した独自指標です。実際のリスクは個別物件・経済状況によります。</p></div>';
+}
+(function(){ calcAreaDiversify(); })();
 
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');

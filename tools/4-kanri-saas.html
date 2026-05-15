@@ -2464,6 +2464,34 @@
     <div id="renov-budget-result"></div>
   </div>
 
+  <div class="card" id="card-rent-free-effect">
+    <div class="card-title">🎁 フリーレント 費用対効果診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">フリーレント（入居初月〜数ヶ月の家賃無料）を提供すると空室が早く埋まるか？ コストと効果を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">月額賃料（万円）</div>
+        <input type="number" id="fre_rent" value="7" min="1" max="100" step="0.5" oninput="calcRentFreeEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">フリーレント期間（ヶ月）</div>
+        <select id="fre_months" onchange="calcRentFreeEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1" selected>1ヶ月</option>
+          <option value="2">2ヶ月</option>
+          <option value="3">3ヶ月</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">フリーレントなし時の想定空室日数</div>
+        <input type="number" id="fre_days_without" value="90" min="10" max="365" step="10" oninput="calcRentFreeEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">フリーレントあり時の想定空室日数</div>
+        <input type="number" id="fre_days_with" value="30" min="0" max="365" step="10" oninput="calcRentFreeEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rent-free-effect-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -9433,6 +9461,42 @@ function calcRenovBudget() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">※ 回収年数は家賃上昇分のみで算出。空室率改善・物件価値向上効果は含みません。</p></div>';
 }
 (function(){ calcRenovBudget(); })();
+
+function calcRentFreeEffect() {
+  var el = document.getElementById('rent-free-effect-result'); if (!el) return;
+  var rent = parseFloat(document.getElementById('fre_rent').value) || 7;
+  var freeMonths = parseInt(document.getElementById('fre_months').value) || 1;
+  var daysWithout = parseInt(document.getElementById('fre_days_without').value) || 90;
+  var daysWith = parseInt(document.getElementById('fre_days_with').value) || 30;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var freeCost = Math.round(rent * freeMonths * 10) / 10;
+  var vacancyLossWithout = Math.round(rent / 30 * daysWithout * 10) / 10;
+  var vacancyLossWith = Math.round(rent / 30 * daysWith * 10) / 10;
+  var totalCostWithout = vacancyLossWithout;
+  var totalCostWith = freeCost + vacancyLossWith;
+  var saving = Math.round((totalCostWithout - totalCostWith) * 10) / 10;
+  var effective = saving > 0;
+  var savingColor = effective ? '#4ade80' : '#f87171';
+  var verdict = effective
+    ? '✅ フリーレントは有効！ 通常募集より ' + saving + '万円お得になります'
+    : '⚠️ 空室短縮効果が小さい場合、フリーレントの費用が上回ります（' + Math.abs(saving) + '万円の追加コスト）';
+  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+    + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">🎁 フリーレント費用対効果比較</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    + '<div style="padding:12px;background:rgba(0,0,0,0.2);border-radius:8px">'
+    + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);margin-bottom:8px">通常募集（フリーレントなし）</div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:rgba(255,255,255,0.5)">空室損失（' + daysWithout + '日）</span><span style="color:#f87171">' + vacancyLossWithout + '万円</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>合計コスト</span><span style="color:#f87171">' + totalCostWithout + '万円</span></div></div>'
+    + '<div style="padding:12px;background:rgba(0,0,0,0.2);border-radius:8px">'
+    + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);margin-bottom:8px">フリーレント' + freeMonths + 'ヶ月</div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:rgba(255,255,255,0.5)">空室損失（' + daysWith + '日）</span><span style="color:#fb923c">' + vacancyLossWith + '万円</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:rgba(255,255,255,0.5)">フリーレント費用</span><span style="color:#fb923c">' + freeCost + '万円</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>合計コスト</span><span style="color:#fb923c">' + totalCostWith + '万円</span></div></div></div>'
+    + '<div style="padding:10px;border-radius:8px;background:rgba(0,0,0,0.15);text-align:center">'
+    + '<div style="font-size:13px;font-weight:700;color:' + savingColor + '">' + verdict + '</div></div>'
+    + '<p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">※ 空室期間の短縮日数は入力値に依存します。エリア・物件条件による実際の効果は不動産会社にご確認ください。</p></div>';
+}
+(function(){ calcRentFreeEffect(); })();
 
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');

@@ -2039,6 +2039,41 @@
     <div id="akiya-mgmt-cost-result"></div>
   </div>
 
+  <div class="card" id="card-vacancy-period-cost">
+    <div class="card-title">📅 空き家 月別維持コスト明細</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">空き家を放置したときの月・年間コストを項目別に試算します。「何にいくらかかっているか」を把握することが第一歩。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建物種別</div>
+        <select id="vpc_type" onchange="calcVacancyPeriodCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="wood" selected>木造一戸建て</option>
+          <option value="rc">RC・鉄骨造</option>
+          <option value="condo">マンション（区分）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">所在エリア</div>
+        <select id="vpc_area" onchange="calcVacancyPeriodCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="urban" selected>都市部</option>
+          <option value="suburb">郊外</option>
+          <option value="rural">地方・山間部</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">固定資産税評価額（万円）</div>
+        <input type="number" id="vpc_taxval" value="800" min="50" max="10000" step="50" oninput="calcVacancyPeriodCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">光熱費（待機分）</div>
+        <select id="vpc_util" onchange="calcVacancyPeriodCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="yes" selected>基本料のみ継続（月2,000円程度）</option>
+          <option value="no">全停止（解約済み）</option>
+        </select>
+      </div>
+    </div>
+    <div id="vacancy-period-cost-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -6452,6 +6487,57 @@ function calcAkiyaMgmtCost() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaMgmtCost(); })();
+
+function calcVacancyPeriodCost() {
+  var el = document.getElementById('vacancy-period-cost-result'); if (!el) return;
+  var bType = document.getElementById('vpc_type').value;
+  var area = document.getElementById('vpc_area').value;
+  var taxval = parseInt(document.getElementById('vpc_taxval').value) || 800;
+  var util = document.getElementById('vpc_util').value;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var propTaxRate = bType === 'condo' ? 0.014 : 0.014;
+  var propTax = Math.round(taxval * propTaxRate / 12 * 10) / 10;
+  var insurance = bType === 'wood' ? 0.8 : bType === 'rc' ? 0.5 : 0.3;
+  var maintenance = bType === 'wood' ? (area === 'urban' ? 1.5 : area === 'suburb' ? 1.2 : 0.8)
+    : bType === 'rc' ? (area === 'urban' ? 1.2 : 0.9)
+    : (area === 'urban' ? 0.8 : 0.5);
+  var utilCost = util === 'yes' ? 0.2 : 0;
+  var condoCost = bType === 'condo' ? 1.5 : 0;
+  var monthly = propTax + insurance + maintenance + utilCost + condoCost;
+  var annual = Math.round(monthly * 12 * 10) / 10;
+  var rows = [
+    { name: '固定資産税（月割）', cost: propTax },
+    { name: '火災保険料（月割）', cost: insurance },
+    { name: '維持・管理費用', cost: maintenance },
+  ];
+  if (utilCost > 0) rows.push({ name: '光熱費（基本料のみ）', cost: utilCost });
+  if (condoCost > 0) rows.push({ name: '管理費・修繕積立金', cost: condoCost });
+  var rowHtml = rows.map(function(r) {
+    return '<tr><td style="padding:5px 8px;border-bottom:1px solid rgba(255,255,255,0.06)">' + r.name + '</td>'
+      + '<td style="padding:5px 8px;border-bottom:1px solid rgba(255,255,255,0.06);text-align:right;color:' + ACCENT + '">' + r.cost.toFixed(1) + '万円</td></tr>';
+  }).join('');
+  var typeLabel = bType === 'wood' ? '木造一戸建て' : bType === 'rc' ? 'RC・鉄骨造' : 'マンション';
+  var areaLabel = area === 'urban' ? '都市部' : area === 'suburb' ? '郊外' : '地方';
+  var years5 = Math.round(annual * 5 * 10) / 10;
+  var years10 = Math.round(annual * 10 * 10) / 10;
+  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+    + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">📊 ' + typeLabel + '（' + areaLabel + '）の月別維持コスト</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">'
+    + '<tr style="color:rgba(255,255,255,0.5);font-size:11px"><th style="padding:4px 8px;text-align:left">費用項目</th><th style="padding:4px 8px;text-align:right">月額目安</th></tr>'
+    + rowHtml + '</table>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">月間コスト</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + ACCENT + '">' + monthly.toFixed(1) + '万円</div></div>'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">5年間累計</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + ACCENT + '">' + years5 + '万円</div></div>'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">10年間累計</div>'
+    + '<div style="font-size:18px;font-weight:700;color:#f87171">' + years10 + '万円</div></div></div>'
+    + '<p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">※ 修繕費・草刈り・害虫対策など突発費用は含みません。放置期間が長いほど修繕費は増大する傾向があります。</p></div>';
+}
+(function(){ calcVacancyPeriodCost(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;

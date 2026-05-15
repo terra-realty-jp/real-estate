@@ -2300,6 +2300,39 @@
     <div id="handover-plan-result"></div>
   </div>
 
+  <div class="card" id="card-equity-extract">
+    <div class="card-title">🏦 持ち家 担保価値・活用ローン試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">自宅の評価額とローン残高から「借入余力（担保余力）」を試算します。リフォームや投資の資金調達の参考に。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件の推定評価額（万円）</div>
+        <input type="number" id="eq_value" value="3500" min="100" max="100000" step="100" oninput="calcEquityExtract()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在のローン残高（万円）</div>
+        <input type="number" id="eq_loan" value="1500" min="0" max="100000" step="100" oninput="calcEquityExtract()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">融資希望LTV上限（%）</div>
+        <select id="eq_ltv" onchange="calcEquityExtract()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="60">60%（保守的）</option>
+          <option value="70" selected>70%（標準）</option>
+          <option value="80">80%（積極的）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">活用目的</div>
+        <select id="eq_purpose" onchange="calcEquityExtract()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="reform" selected>リフォーム資金</option>
+          <option value="invest">不動産投資頭金</option>
+          <option value="edu">教育・生活資金</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+    </div>
+    <div id="equity-extract-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7267,6 +7300,43 @@ function calcHandoverPlan() {
   el.innerHTML = html;
 }
 (function(){ calcHandoverPlan(); })();
+
+function calcEquityExtract() {
+  var el = document.getElementById('equity-extract-result'); if (!el) return;
+  var val = parseInt(document.getElementById('eq_value').value) || 3500;
+  var loan = parseInt(document.getElementById('eq_loan').value) || 1500;
+  var ltv = parseInt(document.getElementById('eq_ltv').value) || 70;
+  var purpose = document.getElementById('eq_purpose').value;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var equity = val - loan;
+  var maxBorrow = Math.max(0, Math.round(val * ltv / 100) - loan);
+  var equityRatio = Math.round(equity / val * 100);
+  var purposeLabels = { reform: 'リフォーム資金', invest: '不動産投資頭金', edu: '教育・生活資金', other: 'その他目的' };
+  var purposeLabel = purposeLabels[purpose] || 'その他';
+  var eqColor = equity > 0 ? ACCENT : '#f87171';
+  var borrowColor = maxBorrow > 0 ? ACCENT : '#fb923c';
+  var riskMsg = ltv === 80
+    ? '⚠️ LTV80%は高水準。返済能力と将来の価格下落リスクを十分検討してください。'
+    : ltv === 70
+    ? '💡 LTV70%は標準的な水準です。追加ローンには審査・保証料が別途発生します。'
+    : '✅ LTV60%は保守的で安全性が高い借入水準です。';
+  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">純資産（担保余力）</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + eqColor + '">' + equity.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.4)">評価額の' + equityRatio + '%</div></div>'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">追加借入可能額</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + borrowColor + '">' + maxBorrow.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.4)">LTV' + ltv + '%基準</div></div>'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">活用目的</div>'
+    + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-top:6px">' + purposeLabel + '</div></div></div>'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.15);border-radius:8px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.6">' + riskMsg + '</div>'
+    + '<p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">※ 実際の融資額は金融機関の審査・属性・収入等によります。不動産担保ローン・フラット35リノベ等が主な選択肢です。</p></div>';
+}
+(function(){ calcEquityExtract(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');
