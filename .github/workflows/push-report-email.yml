@@ -1,8 +1,9 @@
-name: Generate Implementation Report
+name: Daily Implementation Report
 
 on:
-  push:
-    branches: [main]
+  schedule:
+    # 毎日 19:00 JST (10:00 UTC) に実行
+    - cron: '0 10 * * *'
   workflow_dispatch:
 
 jobs:
@@ -14,147 +15,201 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 50
+          fetch-depth: 100
 
-      - name: Generate HTML Report
+      - name: Generate Daily HTML Report
         run: |
           python3 << 'PYEOF'
-          import subprocess, datetime, os, re
+          import subprocess, datetime, os, glob
 
           def git(cmd):
               return subprocess.check_output(cmd, shell=True, text=True, errors='replace').strip()
 
           now_jst = datetime.datetime.utcnow() + datetime.timedelta(hours=9)
-          date_str = now_jst.strftime('%Y-%m-%d %H:%M JST')
+          today = now_jst.strftime('%Y-%m-%d')
+          date_label = now_jst.strftime('%Y年%m月%d日')
+          generated_at = now_jst.strftime('%Y-%m-%d %H:%M JST')
 
-          # 直近30件のコミット取得
-          log_raw = git("git log -30 --format='%H|%s|%an|%ad' --date=format:'%Y-%m-%d %H:%M'")
+          # 本日のコミット取得（JST当日分）
+          log_raw = git(f"git log --format='%H|%s|%ad' --date=format:'%Y-%m-%d %H:%M' --after='{today} 00:00' --before='{today} 23:59'")
           commits = []
           for line in log_raw.splitlines():
-              parts = line.split('|', 3)
-              if len(parts) == 4:
-                  commits.append({'sha': parts[0][:7], 'msg': parts[1], 'author': parts[2], 'date': parts[3]})
+              parts = line.split('|', 2)
+              if len(parts) == 3:
+                  commits.append({'sha': parts[0][:7], 'msg': parts[1], 'date': parts[2]})
 
-          # ツール別変更ファイル（最新コミット）
-          changed = git("git diff --name-only HEAD~1 HEAD 2>/dev/null || git show --name-only --format='' HEAD").splitlines()
-
-          # カテゴリ別色分け
-          def tag_color(msg):
+          # カテゴリ判定
+          def categorize(msg):
               m = msg.lower()
-              if 'tool1' in m or '1-ai' in m: return ('#4ade80', '🏠 Tool1 AI査定')
-              if 'tool2' in m or '2-akiya' in m: return ('#fb923c', '🏚️ Tool2 空き家')
-              if 'tool3' in m or '3-owner' in m: return ('#60a5fa', '🤝 Tool3 売買')
-              if 'tool4' in m or '4-kanri' in m: return ('#60a5fa', '🏢 Tool4 管理')
-              if 'tool5' in m or '5-toushi' in m: return ('#d4af37', '📊 Tool5 投資')
-              if 'tool1-5' in m or 'all' in m: return ('#a78bfa', '🛠️ 全ツール')
-              if 'ux:' in m: return ('#34d399', '✨ UX改善')
-              if 'seo:' in m or 'aeo:' in m: return ('#f472b6', '🔍 SEO/AEO')
-              if 'log:' in m: return ('#6b7280', '📝 ログ')
-              if 'index' in m: return ('#fbbf24', '🏠 index')
-              return ('#9ca3af', '⚙️ その他')
+              if 'tool1' in m or '1-ai' in m: return ('#4ade80', 'Tool1 AI査定', '🏠')
+              if 'tool2' in m or '2-akiya' in m: return ('#fb923c', 'Tool2 空き家', '🏚️')
+              if 'tool3' in m or '3-owner' in m: return ('#60a5fa', 'Tool3 売買', '🤝')
+              if 'tool4' in m or '4-kanri' in m: return ('#60a5fa', 'Tool4 管理', '🏢')
+              if 'tool5' in m or '5-toushi' in m: return ('#d4af37', 'Tool5 投資', '📊')
+              if 'tool1-5' in m: return ('#a78bfa', '全ツール', '🛠️')
+              if 'ux:' in m: return ('#34d399', 'UX改善', '✨')
+              if 'ci:' in m or 'report' in m: return ('#f472b6', 'CI/インフラ', '⚙️')
+              if 'log:' in m: return ('#6b7280', 'ログ更新', '📝')
+              return ('#9ca3af', 'その他', '•')
 
-          rows = ''
+          # カード追加数カウント（コミットメッセージから）
+          card_count = 0
           for c in commits:
-              color, label = tag_color(c['msg'])
-              rows += f'''
-              <tr>
-                <td style="padding:10px 14px;white-space:nowrap">
-                  <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:11px;color:#9ca3af">{c['sha']}</code>
-                </td>
-                <td style="padding:10px 8px;white-space:nowrap">
-                  <span style="background:{color}22;color:{color};border:1px solid {color}55;border-radius:12px;padding:2px 10px;font-size:10px;font-weight:700">{label}</span>
-                </td>
-                <td style="padding:10px 14px;color:#e5e7eb;font-size:13px;line-height:1.4">{c['msg']}</td>
-                <td style="padding:10px 14px;white-space:nowrap;color:#6b7280;font-size:11px">{c['date']}</td>
-              </tr>'''
+              import re
+              m = re.search(r'(\d+)枚', c['msg'])
+              if m:
+                  card_count += int(m.group(1))
 
-          changed_rows = ''
-          tool_counts = {'Tool1':0,'Tool2':0,'Tool3':0,'Tool4':0,'Tool5':0,'その他':0}
-          for f in changed:
-              if not f: continue
-              if '1-ai-satei' in f: tool_counts['Tool1'] += 1
-              elif '2-akiya' in f: tool_counts['Tool2'] += 1
-              elif '3-owner' in f: tool_counts['Tool3'] += 1
-              elif '4-kanri' in f: tool_counts['Tool4'] += 1
-              elif '5-toushi' in f: tool_counts['Tool5'] += 1
-              else: tool_counts['その他'] += 1
-              changed_rows += f'<div style="padding:4px 10px;border-left:2px solid #4ade80;margin-bottom:4px;font-family:monospace;font-size:12px;color:#9ca3af">{f}</div>'
+          # コミット行のHTML
+          commit_rows = ''
+          for c in commits:
+              color, label, icon = categorize(c['msg'])
+              commit_rows += f'''
+              <div class="commit-row">
+                <div class="commit-meta">
+                  <code class="sha">{c['sha']}</code>
+                  <span class="tag" style="background:{color}22;color:{color};border-color:{color}44">{icon} {label}</span>
+                  <span class="time">{c['date']}</span>
+                </div>
+                <div class="commit-msg">{c['msg']}</div>
+              </div>'''
 
-          bar_html = ''
-          bar_colors = {'Tool1':'#4ade80','Tool2':'#fb923c','Tool3':'#60a5fa','Tool4':'#60a5fa','Tool5':'#d4af37','その他':'#6b7280'}
-          for k,v in tool_counts.items():
-              if v > 0:
-                  bar_html += f'<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span style="color:#9ca3af">{k}</span><span style="color:{bar_colors[k]}">{v}件</span></div><div style="background:#1f2937;border-radius:4px;height:8px"><div style="background:{bar_colors[k]};width:{min(v*25,100)}%;height:8px;border-radius:4px"></div></div></div>'
+          if not commit_rows:
+              commit_rows = '<div style="padding:20px;color:#6b7280;text-align:center">本日のコミットはありませんでした</div>'
 
+          # カテゴリ別集計
+          cats = {}
+          for c in commits:
+              _, label, icon = categorize(c['msg'])
+              key = f'{icon} {label}'
+              cats[key] = cats.get(key, 0) + 1
+
+          summary_chips = ''.join(
+              f'<span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">{k}: {v}件</span>'
+              for k, v in cats.items()
+          )
+
+          # 本日のHTMLレポート
           html = f"""<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>実装レポート — {date_str}</title>
+<title>実装レポート {today}</title>
 <style>
-  * {{ box-sizing:border-box; margin:0; padding:0; }}
-  body {{ background:#0f172a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; min-height:100vh; }}
-  .header {{ background:linear-gradient(135deg,#1e293b,#0f172a); border-bottom:2px solid #c9a84c; padding:32px 40px; }}
-  .header h1 {{ font-size:24px; font-weight:900; color:#c9a84c; margin-bottom:6px; }}
-  .header .sub {{ font-size:13px; color:#64748b; }}
-  .badge {{ display:inline-block; background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.4); border-radius:20px; padding:5px 16px; font-size:14px; font-weight:700; color:#c9a84c; margin-top:12px; }}
-  .container {{ max-width:1100px; margin:0 auto; padding:28px 24px; }}
-  .grid {{ display:grid; grid-template-columns:1fr 320px; gap:20px; }}
-  .card {{ background:#1e293b; border:1px solid rgba(255,255,255,0.06); border-radius:12px; overflow:hidden; }}
-  .card-header {{ padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.06); font-size:12px; font-weight:700; color:#94a3b8; letter-spacing:0.8px; text-transform:uppercase; }}
-  table {{ width:100%; border-collapse:collapse; }}
-  tr:hover {{ background:rgba(255,255,255,0.03); }}
-  tr + tr {{ border-top:1px solid rgba(255,255,255,0.04); }}
-  @media(max-width:768px){{ .grid{{ grid-template-columns:1fr; }} }}
+* {{ box-sizing:border-box; margin:0; padding:0; }}
+body {{ background:#0f172a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif; min-height:100vh; }}
+.header {{ background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); border-bottom:3px solid #c9a84c; padding:36px 40px; }}
+.header-inner {{ max-width:860px; margin:0 auto; }}
+.header h1 {{ font-size:28px; font-weight:900; color:#c9a84c; margin-bottom:6px; }}
+.header .date {{ font-size:15px; color:#94a3b8; margin-bottom:16px; }}
+.stats {{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; }}
+.stat {{ background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 20px; text-align:center; min-width:100px; }}
+.stat .num {{ font-size:28px; font-weight:900; color:#c9a84c; }}
+.stat .lbl {{ font-size:11px; color:#64748b; margin-top:2px; }}
+.chips {{ display:flex; gap:8px; flex-wrap:wrap; }}
+.body {{ max-width:860px; margin:0 auto; padding:28px 24px; }}
+.section-title {{ font-size:11px; font-weight:700; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }}
+.commit-row {{ background:#1e293b; border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:14px 18px; margin-bottom:10px; transition:background 0.15s; }}
+.commit-row:hover {{ background:#243347; }}
+.commit-meta {{ display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }}
+.sha {{ background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:4px; font-size:11px; color:#64748b; }}
+.tag {{ border:1px solid; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:600; }}
+.time {{ font-size:11px; color:#475569; margin-left:auto; }}
+.commit-msg {{ font-size:13px; color:#cbd5e1; line-height:1.6; }}
+.footer {{ max-width:860px; margin:0 auto; padding:0 24px 32px; display:flex; gap:12px; flex-wrap:wrap; }}
+.btn {{ display:inline-block; border-radius:8px; padding:11px 22px; font-size:13px; font-weight:600; text-decoration:none; cursor:pointer; }}
+.btn-gold {{ background:#c9a84c; color:#000; }}
+.btn-ghost {{ background:rgba(255,255,255,0.06); color:#94a3b8; border:1px solid rgba(255,255,255,0.1); }}
+@media(max-width:600px){{ .header{{ padding:24px 16px; }} .body,.footer{{ padding-left:16px; padding-right:16px; }} .stats{{ gap:8px; }} .stat{{ min-width:80px; padding:10px 14px; }} }}
 </style>
 </head>
 <body>
 <div class="header">
-  <h1>📊 不動産ツール 実装レポート</h1>
-  <div class="sub">最終更新: {date_str}</div>
-  <div class="badge">直近 {len(commits)} コミット</div>
-</div>
-<div class="container">
-<div class="grid">
-  <div>
-    <div class="card">
-      <div class="card-header">コミット履歴</div>
-      <table>{rows}</table>
+  <div class="header-inner">
+    <div class="date">📅 {date_label} の実装レポート</div>
+    <h1>不動産ツール 実装サマリー</h1>
+    <div class="stats">
+      <div class="stat"><div class="num">{len(commits)}</div><div class="lbl">コミット数</div></div>
+      <div class="stat"><div class="num">{card_count or '—'}</div><div class="lbl">追加カード数</div></div>
+      <div class="stat"><div class="num">{len(cats)}</div><div class="lbl">カテゴリ</div></div>
     </div>
-  </div>
-  <div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-header">最新プッシュの変更ファイル</div>
-      <div style="padding:14px">{changed_rows or '<div style="color:#6b7280;font-size:12px">変更なし</div>'}</div>
-    </div>
-    <div class="card">
-      <div class="card-header">ツール別コミット数（最新）</div>
-      <div style="padding:14px">{bar_html or '<div style="color:#6b7280;font-size:12px">データなし</div>'}</div>
-    </div>
-    <div class="card" style="margin-top:16px">
-      <div class="card-header">クイックリンク</div>
-      <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
-        <a href="https://shinji-japaaaan.github.io/real-estate/" style="display:block;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:10px 14px;color:#c9a84c;text-decoration:none;font-size:13px;font-weight:600">🌐 本番サイトを開く</a>
-        <a href="https://github.com/shinji-japaaaan/real-estate/commits/main" style="display:block;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#94a3b8;text-decoration:none;font-size:13px">📜 GitHub コミット一覧</a>
-      </div>
-    </div>
+    <div class="chips">{summary_chips}</div>
   </div>
 </div>
+<div class="body">
+  <div class="section-title">本日のコミット一覧</div>
+  {commit_rows}
 </div>
+<div class="footer">
+  <a class="btn btn-gold" href="https://shinji-japaaaan.github.io/real-estate/" target="_blank">🌐 本番サイトを開く</a>
+  <a class="btn btn-ghost" href="index.html">← レポート一覧へ</a>
+  <a class="btn btn-ghost" href="https://github.com/shinji-japaaaan/real-estate/commits/main" target="_blank">GitHubで確認</a>
+</div>
+<div style="text-align:center;padding:16px;color:#334155;font-size:11px">Generated: {generated_at}</div>
 </body>
 </html>"""
 
           os.makedirs('reports', exist_ok=True)
-          with open('reports/implementation-report.html', 'w', encoding='utf-8') as f:
+          report_path = f'reports/{today}.html'
+          with open(report_path, 'w', encoding='utf-8') as f:
               f.write(html)
-          print("✅ reports/implementation-report.html を生成しました")
+          print(f"✅ {report_path} を生成しました ({len(commits)}件)")
+
+          # index.html（一覧ページ）を更新
+          existing = sorted(glob.glob('reports/????-??-??.html'), reverse=True)
+          index_rows = ''
+          for path in existing:
+              fname = os.path.basename(path)
+              d = fname.replace('.html', '')
+              is_today = d == today
+              border = 'border:1px solid rgba(201,168,76,0.4);' if is_today else 'border:1px solid rgba(255,255,255,0.06);'
+              badge = '<span style="background:#c9a84c;color:#000;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:8px">TODAY</span>' if is_today else ''
+              index_rows += f'''
+              <a href="{fname}" style="display:flex;justify-content:space-between;align-items:center;background:#1e293b;{border}border-radius:10px;padding:14px 18px;margin-bottom:10px;text-decoration:none;color:inherit;transition:background 0.15s" onmouseover="this.style.background='#243347'" onmouseout="this.style.background='#1e293b'">
+                <div>
+                  <span style="font-size:14px;font-weight:700;color:#e2e8f0">{d}</span>{badge}
+                </div>
+                <span style="font-size:12px;color:#64748b">レポートを見る →</span>
+              </a>'''
+
+          index_html = f"""<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>実装レポート 一覧</title>
+<style>
+* {{ box-sizing:border-box; margin:0; padding:0; }}
+body {{ background:#0f172a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif; min-height:100vh; }}
+.header {{ background:linear-gradient(135deg,#1e293b,#0f172a); border-bottom:3px solid #c9a84c; padding:36px 40px; }}
+h1 {{ font-size:24px; font-weight:900; color:#c9a84c; margin-bottom:6px; }}
+.sub {{ font-size:13px; color:#64748b; }}
+.body {{ max-width:600px; margin:0 auto; padding:28px 24px; }}
+.section-title {{ font-size:11px; font-weight:700; color:#64748b; letter-spacing:1px; margin-bottom:12px; }}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>📋 実装レポート 一覧</h1>
+  <div class="sub">最終更新: {generated_at} / {len(existing)}日分</div>
+</div>
+<div class="body">
+  <div class="section-title">日付別レポート（新しい順）</div>
+  {index_rows}
+</div>
+</body>
+</html>"""
+
+          with open('reports/index.html', 'w', encoding='utf-8') as f:
+              f.write(index_html)
+          print(f"✅ reports/index.html を更新しました ({len(existing)}件)")
           PYEOF
 
-      - name: Commit Report
+      - name: Commit Reports
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add reports/implementation-report.html
-          git diff --staged --quiet || git commit -m "report: 実装レポート自動生成 $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+          git add reports/
+          git diff --staged --quiet || git commit -m "report: $(TZ=Asia/Tokyo date '+%Y-%m-%d') 日次実装レポートを生成"
           git push
