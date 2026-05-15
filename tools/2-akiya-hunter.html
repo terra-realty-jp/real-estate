@@ -1633,6 +1633,43 @@
     <div id="minpaku-convert-result"></div>
   </div>
 
+  <!-- 古民家カフェ・シェアオフィス収益試算カード -->
+  <div class="card" id="card-kominka-convert">
+    <div class="card-title">☕ 古民家カフェ・シェアオフィス 収益試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">古民家を飲食店・シェアオフィスなどへ転用した場合の月間売上・固定費・純収益を試算します。同じ物件を普通賃貸に出した場合の収益と比較して活用方法を検討できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">活用タイプ</label>
+        <select id="kc_type" onchange="calcKouminkaConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="cafe">古民家カフェ・飲食店</option>
+          <option value="share">シェアオフィス・コワーキング</option>
+          <option value="gallery">ギャラリー・教室</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">延床面積（㎡）</label>
+        <input type="number" id="kc_area" value="80" min="20" max="500" step="5" oninput="calcKouminkaConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">初期改修費（万円）</label>
+        <input type="number" id="kc_reform" value="500" min="50" max="5000" step="50" oninput="calcKouminkaConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">月間売上見込み（万円）</label>
+        <input type="number" id="kc_sales" value="50" min="5" max="1000" step="5" oninput="calcKouminkaConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">月間固定費（万円）</label>
+        <input type="number" id="kc_fixed" value="20" min="1" max="200" step="1" oninput="calcKouminkaConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">普通賃貸の場合の月額（万円）</label>
+        <input type="number" id="kc_rent" value="8" min="1" max="100" step="0.5" oninput="calcKouminkaConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="kominka-convert-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -5642,6 +5679,53 @@ function calcMinpakuConvert() {
   el.innerHTML = html;
 }
 (function(){ calcMinpakuConvert(); })();
+
+function calcKouminkaConvert() {
+  var el = document.getElementById('kominka-convert-result');
+  if (!el) return;
+  var type   = document.getElementById('kc_type').value;
+  var area   = parseFloat(document.getElementById('kc_area').value) || 0;
+  var reform = parseFloat(document.getElementById('kc_reform').value) * 10000 || 0;
+  var sales  = parseFloat(document.getElementById('kc_sales').value) * 10000 || 0;
+  var fixed  = parseFloat(document.getElementById('kc_fixed').value) * 10000 || 0;
+  var rent   = parseFloat(document.getElementById('kc_rent').value) * 10000 || 0;
+  if (area <= 0 || sales <= 0) { el.innerHTML = '<p style="color:var(--red);font-size:12px">入力値を確認してください。</p>'; return; }
+  var costRatios = { cafe: 0.60, share: 0.25, gallery: 0.30 };
+  var typeName = { cafe: 'カフェ・飲食店', share: 'シェアオフィス', gallery: 'ギャラリー・教室' };
+  var costRatio = costRatios[type] || 0.50;
+  var variableCost = sales * costRatio;
+  var monthlyProfit = sales - variableCost - fixed;
+  var annualProfit = monthlyProfit * 12;
+  var payback = monthlyProfit > 0 ? (reform / (monthlyProfit * 12)).toFixed(1) : '－';
+  var rentAnnual = rent * 12;
+  var diff = annualProfit - rentAnnual;
+  var fmtW = function(v) { return Math.round(v / 10000).toLocaleString() + '万円'; };
+  var profitColor = monthlyProfit >= 0 ? '#4caf50' : 'var(--red)';
+  var diffColor = diff >= 0 ? '#4caf50' : '#f9a825';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted)">月間変動費（原価率' + Math.round(costRatio * 100) + '%）</div>'
+    + '<div style="font-size:15px;font-weight:700;color:var(--text)">' + fmtW(variableCost) + '</div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted)">月間純収益</div>'
+    + '<div style="font-size:15px;font-weight:700;color:' + profitColor + '">' + fmtW(monthlyProfit) + '</div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted)">初期投資回収</div>'
+    + '<div style="font-size:15px;font-weight:700;color:var(--text)">' + payback + '年</div></div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-bottom:8px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">普通賃貸との年間収益比較</div>'
+    + '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
+    + '<div style="text-align:center"><div style="font-size:11px;color:#4db6f5">' + typeName[type] + '</div><div style="font-size:16px;font-weight:900;color:#4db6f5">' + fmtW(annualProfit) + '/年</div></div>'
+    + '<div style="font-size:18px;color:var(--text-muted)">vs</div>'
+    + '<div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">普通賃貸</div><div style="font-size:16px;font-weight:900;color:var(--text-muted)">' + fmtW(rentAnnual) + '/年</div></div>'
+    + '<div style="text-align:center"><div style="font-size:11px;color:var(--text-muted)">差額</div><div style="font-size:16px;font-weight:900;color:' + diffColor + '">' + (diff >= 0 ? '+' : '') + fmtW(diff) + '</div></div>'
+    + '</div></div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '<span style="color:#f9a825">📌 飲食店は食品衛生法の営業許可・消防設備・駐車場が必要。シェアオフィスは改修費が少なく安定収益が見込みやすい。自治体の空き家活用補助金（改修費の1/2まで等）の確認も推奨。</span>'
+    + '</div>';
+}
+(function(){ calcKouminkaConvert(); })();
 
 function filterAkiyaCalcCards(query) {
   var cards = document.querySelectorAll('#akiya-calc-cards .card');
