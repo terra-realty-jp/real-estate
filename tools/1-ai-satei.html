@@ -1783,6 +1783,35 @@
     <div id="demolish-compare-result"></div>
   </div>
 
+  <!-- 将来売却価格予測カード -->
+  <div class="card" id="card-resale-value">
+    <div class="card-title">🔮 将来の売却価格 シナリオ予測</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">現在の物件価格と市場動向から、将来売却した場合の予想価格を3つのシナリオで試算します。売却計画の長期的な見通しを立てるのに役立ちます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現在の物件価格（万円）</label>
+        <input type="number" id="rv_price" value="3000" min="100" max="100000" step="100" oninput="calcResaleValue()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">将来売却までの年数（年）</label>
+        <input type="number" id="rv_years" value="10" min="1" max="30" step="1" oninput="calcResaleValue()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">エリア動向</label>
+        <select id="rv_area" onchange="calcResaleValue()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="growing">都市部・人口増加エリア</option>
+          <option value="stable" selected>住宅地・安定エリア</option>
+          <option value="declining">地方・人口減少エリア</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">築年数（年）</label>
+        <input type="number" id="rv_age" value="20" min="0" max="60" step="1" oninput="calcResaleValue()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="resale-value-result"></div>
+  </div>
+
   <!-- 売却後資金運用プランカード -->
   <div class="card" id="card-proceeds-invest">
     <div class="card-title">💰 売却後の資金 運用シナリオ比較</div>
@@ -6041,6 +6070,48 @@ function calcProceedsInvest() {
   el.innerHTML = html;
 }
 (function(){ calcProceedsInvest(); })();
+
+function calcResaleValue() {
+  var el = document.getElementById('resale-value-result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('rv_price').value) || 0;
+  var years = parseFloat(document.getElementById('rv_years').value) || 0;
+  var area = document.getElementById('rv_area').value;
+  var age = parseFloat(document.getElementById('rv_age').value) || 0;
+  if (price <= 0 || years <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">物件価格と売却年数を入力してください</div>'; return; }
+
+  // エリア別ベース変動率（年率）
+  var areaBase = area === 'growing' ? 0.005 : area === 'stable' ? -0.005 : -0.02;
+  // 建物の経年劣化（土地は変動、建物は逓減）
+  var buildingDepRate = age < 30 ? -0.015 : -0.01;
+
+  var scenarios = [
+    { label: '強気（エリア価値上昇）', yearRate: areaBase + 0.02 + buildingDepRate, color: '#4caf50' },
+    { label: '標準（現状維持）', yearRate: areaBase + buildingDepRate, color: '#d4af37' },
+    { label: '弱気（市況悪化）', yearRate: areaBase - 0.02 + buildingDepRate, color: '#e53935' }
+  ];
+
+  var html = '<div style="margin-top:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+  scenarios.forEach(function(s) {
+    var futurePrice = price * Math.pow(1 + s.yearRate, years);
+    var change = futurePrice - price;
+    html += '<div style="padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;text-align:center">';
+    html += '<div style="font-size:11px;color:' + s.color + ';font-weight:700;margin-bottom:6px">' + s.label + '</div>';
+    html += '<div style="font-size:22px;font-weight:900;color:' + s.color + '">' + Math.round(futurePrice).toLocaleString() + '<span style="font-size:11px">万円</span></div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">' + (change >= 0 ? '+' : '') + Math.round(change).toLocaleString() + '万円</div>';
+    html += '<div style="font-size:10px;color:var(--text-muted)">(年率' + (s.yearRate * 100).toFixed(1) + '%)</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  html += '<div style="padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">';
+  html += '⚠️ 不動産価格は金利・人口・再開発・インフラ整備など多くの要素で変動します。本試算はあくまで参考値です。';
+  if (age + years >= 30) html += ' 築' + (age + years) + '年超になる場合、木造の資産価値は大きく低下する可能性があります。';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcResaleValue(); })();
 
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');
