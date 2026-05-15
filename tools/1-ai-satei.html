@@ -1910,6 +1910,31 @@
     <div id="staging-roi-result"></div>
   </div>
 
+  <!-- 買い替え特例 vs 居住用3,000万控除 比較カード -->
+  <div class="card" id="card-replace-special">
+    <div class="card-title">🔄 買い替え特例 vs 3,000万控除 比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">マイホームを売却して買い替える場合、<strong style="color:var(--text)">居住用3,000万円特別控除</strong>と<strong style="color:var(--text)">買い替え特例（課税繰り延べ）</strong>のどちらが有利か試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却価格（万円）</label>
+        <input type="number" id="rs_sell" value="5000" min="100" max="100000" step="100" oninput="calcReplaceSpecial()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得費（万円）</label>
+        <input type="number" id="rs_cost" value="2000" min="0" max="100000" step="100" oninput="calcReplaceSpecial()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">譲渡費用（万円）</label>
+        <input type="number" id="rs_expense" value="150" min="0" max="2000" step="10" oninput="calcReplaceSpecial()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">新居購入価格（万円）</label>
+        <input type="number" id="rs_buy" value="6000" min="100" max="100000" step="100" oninput="calcReplaceSpecial()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="replace-special-result"></div>
+  </div>
+
   <!-- 売却益 譲渡所得税 試算カード -->
   <div class="card" id="card-capital-gains-tax">
     <div class="card-title">💴 売却益 譲渡所得税 試算</div>
@@ -6484,6 +6509,53 @@ function calcStagingROI() {
     + '</div>';
 }
 (function(){ calcStagingROI(); })();
+
+function calcReplaceSpecial() {
+  var el = document.getElementById('replace-special-result'); if (!el) return;
+  var sell = parseFloat(document.getElementById('rs_sell').value) || 5000;
+  var cost = parseFloat(document.getElementById('rs_cost').value) || 2000;
+  var expense = parseFloat(document.getElementById('rs_expense').value) || 150;
+  var buy = parseFloat(document.getElementById('rs_buy').value) || 6000;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var gain = sell - cost - expense;
+  var TAX_RATE_LONG = 0.20315;
+  var DEDUCT_3000 = Math.min(gain, 3000);
+  var taxable3000 = Math.max(0, gain - DEDUCT_3000);
+  var tax3000 = taxable3000 * 10000 * TAX_RATE_LONG;
+  var replaceTaxable = sell > buy ? (sell - buy) * 10000 * TAX_RATE_LONG * 0 : 0;
+  var replaceBenefit = gain > 0 && buy >= sell ? gain * 10000 * TAX_RATE_LONG : (sell > buy ? (sell - buy) * 10000 * TAX_RATE_LONG : 0);
+  var deferredTax = gain > 0 && buy >= sell ? gain * 10000 * TAX_RATE_LONG : 0;
+  var isReplaceEligible = buy >= sell && gain > 0;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:8px;font-size:13px">📊 2つの特例 今すぐ納税比較</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">売却益: <b style="color:' + (gain > 0 ? '#4ade80' : '#f87171') + '">' + gain.toFixed(0) + '万円</b></div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (tax3000 <= deferredTax || !isReplaceEligible ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">✅ 3,000万円特別控除</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:#4ade80">' + Math.round(tax3000 / 10000).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">今すぐ課税（買い替えなくてもOK）</div>';
+  if (tax3000 <= deferredTax || !isReplaceEligible) html += '<div style="font-size:10px;background:#4ade80;color:#000;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:4px;font-weight:700">有利</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (isReplaceEligible && deferredTax < tax3000 ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🔄 買い替え特例</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:' + (isReplaceEligible ? '#fb923c' : '#f87171') + '">' + (isReplaceEligible ? '0万円' : '非対象') + '</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">' + (isReplaceEligible ? '課税繰り延べ（将来課税あり）' : '新居 < 売却額で適用不可') + '</div>';
+  if (isReplaceEligible && deferredTax < tax3000) html += '<div style="font-size:10px;background:#4ade80;color:#000;border-radius:3px;padding:2px 6px;display:inline-block;margin-top:4px;font-weight:700">今は有利</div>';
+  html += '</div></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">';
+  if (!isReplaceEligible) {
+    html += '⚠️ 買い替え先（' + buy + '万）が売却額（' + sell + '万）未満のため買い替え特例は<b style="color:#f87171">適用不可</b>。3,000万円控除一択です。';
+  } else if (deferredTax < tax3000) {
+    html += '📌 買い替え特例は今すぐの税負担ゼロ。ただし将来売却時に <b style="color:#fb923c">' + Math.round(deferredTax / 10000) + '万円</b> の繰り延べ課税が発生します。長期保有予定なら有利。';
+  } else {
+    html += '✅ 3,000万円控除の方が今すぐ納税額が少ない（または同等）。即時確定申告で節税できます。';
+  }
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 買い替え特例は「10年超保有・売却額1億円以下・新居2年以内購入」などの要件あり。3,000万控除との併用は不可。税理士への確認を推奨します。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcReplaceSpecial(); })();
 
 function calcCapitalGainsTax() {
   var el = document.getElementById('capital-gains-tax-result'); if (!el) return;

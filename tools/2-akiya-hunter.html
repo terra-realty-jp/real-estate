@@ -1745,6 +1745,32 @@
     <div id="neighbor-impact-result"></div>
   </div>
 
+  <!-- 民泊収益 詳細試算カード -->
+  <div class="card" id="card-minpaku-detail">
+    <div class="card-title">🏨 民泊収益 詳細シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">1泊単価・稼働率・ランニングコストから<strong style="color:var(--text)">月次純収益・年間収益・普通賃貸との収益比較</strong>を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">1泊あたり単価（円）</label>
+        <input type="number" id="mpd_rate" value="12000" min="3000" max="100000" step="1000" oninput="calcMinpakuDetail()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月間稼働率（%）</label>
+        <input type="number" id="mpd_occ" value="50" min="10" max="90" step="5" oninput="calcMinpakuDetail()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">地方初心者の目安: 30〜50%</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">清掃代・OTA手数料 等（月 万円）</label>
+        <input type="number" id="mpd_cost" value="3" min="0" max="50" step="0.5" oninput="calcMinpakuDetail()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">比較用 普通賃貸家賃（万円/月）</label>
+        <input type="number" id="mpd_rent" value="5" min="0" max="100" step="0.5" oninput="calcMinpakuDetail()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="minpaku-detail-result"></div>
+  </div>
+
   <!-- 空き家バンク活用シミュレーターカード -->
   <div class="card" id="card-akiya-bank-sim">
     <div class="card-title">🏡 空き家バンク 活用シミュレーター</div>
@@ -5953,6 +5979,59 @@ function calcNeighborImpact() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6">📌 空き家対策特別措置法（2023年改正）により、特定空き家の行政代執行・費用請求が強化されました。早期対処が得策です。</div>';
 }
 (function(){ calcNeighborImpact(); })();
+
+function calcMinpakuDetail() {
+  var el = document.getElementById('minpaku-detail-result'); if (!el) return;
+  var rate = parseFloat(document.getElementById('mpd_rate').value) || 12000;
+  var occ = (parseFloat(document.getElementById('mpd_occ').value) || 50) / 100;
+  var cost = parseFloat(document.getElementById('mpd_cost').value) || 3;
+  var rentComp = parseFloat(document.getElementById('mpd_rent').value) || 5;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var DAYS_MONTH = 30;
+  var OTA_FEE = 0.15;
+  var occupiedDays = Math.round(DAYS_MONTH * occ);
+  var grossRevenue = (rate * occupiedDays * (1 - OTA_FEE)) / 10000;
+  var netRevenue = grossRevenue - cost;
+  var annualNet = netRevenue * 12;
+  var annualRent = rentComp * 12;
+  var minpakuVsRent = annualNet - annualRent;
+  var OCCS = [0.3, 0.4, 0.5, 0.6, 0.7];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  var stats = [
+    ['月間宿泊日数', occupiedDays + '泊', ACCENT],
+    ['月間純収益', netRevenue.toFixed(1) + '万円', netRevenue > rentComp ? '#4ade80' : '#fb923c'],
+    ['年間純収益', annualNet.toFixed(0) + '万円', '#4ade80']
+  ];
+  stats.forEach(function(s) {
+    html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px;text-align:center">';
+    html += '<div style="font-size:10px;color:var(--text-muted)">' + s[0] + '</div>';
+    html += '<div style="font-size:16px;font-weight:900;color:' + s[2] + '">' + s[1] + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">📊 普通賃貸（月' + rentComp + '万）との比較: <b style="color:' + (minpakuVsRent > 0 ? '#4ade80' : '#f87171') + '">' + (minpakuVsRent >= 0 ? '+' : '') + minpakuVsRent.toFixed(0) + '万円/年</b> ' + (minpakuVsRent > 0 ? '民泊が有利' : '賃貸が安定') + '</div>';
+  html += '<div style="font-weight:600;color:' + ACCENT + ';font-size:12px;margin-bottom:6px">稼働率別 月間純収益</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">稼働率</th><th style="text-align:right;padding:4px 6px">宿泊日数</th><th style="text-align:right;padding:4px 6px">売上</th><th style="text-align:right;padding:4px 6px">純収益</th></tr>';
+  OCCS.forEach(function(o) {
+    var days = Math.round(DAYS_MONTH * o);
+    var gross = (rate * days * (1 - OTA_FEE)) / 10000;
+    var net = gross - cost;
+    var isCurrent = Math.abs(o - occ) < 0.01;
+    var bg = isCurrent ? 'background:rgba(251,146,60,0.12);font-weight:700;' : '';
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.06);' + bg + '">';
+    html += '<td style="padding:5px 6px;color:' + ACCENT + '">' + Math.round(o * 100) + '%' + (isCurrent ? ' ◀' : '') + '</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:var(--text)">' + days + '泊</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:var(--text)">' + gross.toFixed(1) + '万</td>';
+    html += '<td style="text-align:right;padding:5px 6px;color:' + (net > rentComp ? '#4ade80' : '#fb923c') + '">' + net.toFixed(1) + '万</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:8px">📌 住宅宿泊事業法（民泊新法）では年間180日の上限あり。自治体ごとに独自規制も。旅館業許可（民泊特区等）があれば上限なし。消防設備・近隣説明も必要です。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMinpakuDetail(); })();
 
 function calcAkiyaBankSim() {
   var el = document.getElementById('akiya-bank-sim-result'); if (!el) return;

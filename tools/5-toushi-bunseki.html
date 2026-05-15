@@ -1858,6 +1858,31 @@
   </div>
 
   <!-- 現金購入 vs 融資活用 投資比較カード -->
+  <!-- 不動産 相続税試算カード -->
+  <div class="card" id="card-inheritance-tax">
+    <div class="card-title">👪 不動産 相続税 概算試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産を含む相続財産の<strong style="color:var(--text)">相続税概算</strong>を試算します。小規模宅地の特例（最大80%評価減）・基礎控除・法定相続分を考慮します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">不動産評価額合計（万円）</label>
+        <input type="number" id="iht_prop" value="5000" min="0" max="100000" step="100" oninput="calcInheritanceTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">その他資産（現金・株等 万円）</label>
+        <input type="number" id="iht_other" value="2000" min="0" max="100000" step="100" oninput="calcInheritanceTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">法定相続人数</label>
+        <input type="number" id="iht_heirs" value="2" min="1" max="10" step="1" oninput="calcInheritanceTax()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">小規模宅地 特例（居住用）</label>
+        <label style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12px;color:var(--text);margin-top:4px"><input type="checkbox" id="iht_tokureig" onchange="calcInheritanceTax()" style="accent-color:#d4af37" checked>330㎡以下 居住用宅地（80%評価減）</label>
+      </div>
+    </div>
+    <div id="inheritance-tax-result"></div>
+  </div>
+
   <!-- サブリース vs 自主管理 収益比較カード -->
   <div class="card" id="card-sublease-vs-self">
     <div class="card-title">🏢 サブリース vs 自主管理 収益比較</div>
@@ -8072,6 +8097,66 @@ function calcCashVsLoan() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px">📌 CF・CCRは満室想定。空室率・税金は含みません。DSCR(返済余裕率)は1.2以上が融資審査の目安。</div>';
 }
 (function(){ calcCashVsLoan(); })();
+
+function calcInheritanceTax() {
+  var el = document.getElementById('inheritance-tax-result'); if (!el) return;
+  var prop = parseFloat(document.getElementById('iht_prop').value) || 5000;
+  var other = parseFloat(document.getElementById('iht_other').value) || 2000;
+  var heirs = parseFloat(document.getElementById('iht_heirs').value) || 2;
+  var tokureig = document.getElementById('iht_tokureig').checked;
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var TOKUREIG_DISC = 0.80;
+  var propTaxable = tokureig ? prop * (1 - TOKUREIG_DISC) : prop;
+  var totalAsset = propTaxable + other;
+  var basicExemption = 3000 + 600 * heirs;
+  var taxableAmt = Math.max(0, totalAsset - basicExemption);
+  function calcTax(base) {
+    var brackets = [
+      [1000, 0.10, 0], [3000, 0.15, 50], [5000, 0.20, 200],
+      [10000, 0.30, 700], [20000, 0.40, 1700], [30000, 0.45, 2700],
+      [60000, 0.50, 4200], [Infinity, 0.55, 7200]
+    ];
+    for (var i = 0; i < brackets.length; i++) {
+      if (base <= brackets[i][0]) return Math.round(base * brackets[i][1] - brackets[i][2]);
+    }
+    return 0;
+  }
+  var perHeirBase = taxableAmt / heirs;
+  var taxPerHeirBase = calcTax(perHeirBase);
+  var totalTaxBase = taxPerHeirBase * heirs;
+  var withoutTokureig = Math.max(0, prop + other - basicExemption);
+  var taxWithout = calcTax(withoutTokureig / heirs) * heirs;
+  var saving = (taxWithout - totalTaxBase);
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  var stats = [
+    ['課税遺産総額', (taxableAmt > 0 ? taxableAmt.toFixed(0) : '0') + '万円', taxableAmt > 0 ? '#fb923c' : '#4ade80'],
+    ['基礎控除', basicExemption + '万円', '#4ade80'],
+    ['相続税総額（概算）', Math.round(totalTaxBase).toFixed(0) + '万円', totalTaxBase > 0 ? '#f87171' : '#4ade80']
+  ];
+  stats.forEach(function(s) {
+    html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px;text-align:center">';
+    html += '<div style="font-size:10px;color:var(--text-muted)">' + s[0] + '</div>';
+    html += '<div style="font-size:15px;font-weight:900;color:' + s[2] + '">' + s[1] + '</div></div>';
+  });
+  html += '</div>';
+  if (totalTaxBase <= 0) {
+    html += '<div style="font-size:13px;font-weight:700;color:#4ade80;margin-bottom:8px">✅ 基礎控除内 — 相続税はかかりません</div>';
+  } else {
+    html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">一人当たり負担目安: <b style="color:#f87171">' + Math.round(totalTaxBase / heirs).toLocaleString() + '万円</b>';
+    if (tokureig && saving > 0) html += ' / 小規模宅地特例による節税: <b style="color:#4ade80">' + Math.round(saving).toLocaleString() + '万円</b>';
+    html += '</div>';
+  }
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;font-size:11px;color:var(--text-muted);line-height:1.8">';
+  html += '🏠 基礎控除 = 3,000万 + 600万 × 法定相続人数（' + heirs + '人 → ' + basicExemption + '万円）<br>';
+  html += '📊 小規模宅地の特例（居住用）: 330㎡以下の土地の評価額を80%減額<br>';
+  html += '⚠️ 配偶者がいる場合は「配偶者の税額軽減」（1億6000万円または法定相続分まで非課税）も活用可能';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 概算試算です。法定相続分での按分・各種控除・債務控除は含んでいません。正確な試算は税理士にご依頼ください。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcInheritanceTax(); })();
 
 function calcSubleaseVsSelf() {
   var el = document.getElementById('sublease-vs-self-result'); if (!el) return;

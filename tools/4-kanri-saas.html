@@ -2154,6 +2154,40 @@
     <div id="fair-rent-check-result"></div>
   </div>
 
+  <!-- 賃貸物件 保険最適化診断カード -->
+  <div class="card" id="card-insurance-opt">
+    <div class="card-title">🛡️ 賃貸物件 保険最適化診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">物件規模・所在地・築年数から<strong style="color:var(--text)">火災保険・地震保険・施設賠償責任保険</strong>の適切な補償額と年間保険料目安を診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物の再調達価額（万円）</label>
+        <input type="number" id="io_rebuild" value="2000" min="100" max="50000" step="100" oninput="calcInsuranceOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">目安: 面積×17〜20万円（木造）</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">築年数</label>
+        <input type="number" id="io_age" value="20" min="0" max="60" step="1" oninput="calcInsuranceOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">構造</label>
+        <select id="io_struct" onchange="calcInsuranceOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="wood">木造（M構造）</option>
+          <option value="light" selected>軽量鉄骨（H構造）</option>
+          <option value="rc">RC・鉄筋（T構造）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">所在エリア</label>
+        <select id="io_area" onchange="calcInsuranceOpt()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="tokyo">東京・大阪（地震リスク高）</option>
+          <option value="mid" selected>中部・東海（リスク中）</option>
+          <option value="other">その他（リスク低）</option>
+        </select>
+      </div>
+    </div>
+    <div id="insurance-opt-result"></div>
+  </div>
+
   <!-- 設備交換タイミング最適化カード -->
   <div class="card" id="card-equip-replace-opt">
     <div class="card-title">🔧 設備交換タイミング最適化</div>
@@ -8701,6 +8735,46 @@ function calcFairRentCheck() {
     +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px;line-height:1.6">📌 推定適正家賃はエリア賃料単価・築年数・駅距離・設備から算出した目安です。実際の相場はSUUMO・at home等で確認してください。</div>';
 }
 (function(){ calcFairRentCheck(); })();
+
+function calcInsuranceOpt() {
+  var el = document.getElementById('insurance-opt-result'); if (!el) return;
+  var rebuild = parseFloat(document.getElementById('io_rebuild').value) || 2000;
+  var age = parseFloat(document.getElementById('io_age').value) || 20;
+  var struct = document.getElementById('io_struct').value;
+  var area = document.getElementById('io_area').value;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var fireRates = { wood: 0.0018, light: 0.0014, rc: 0.0010 };
+  var quakeRates = { tokyo: 0.0015, mid: 0.0012, other: 0.0008 };
+  var ageDis = age >= 30 ? 1.1 : age >= 20 ? 1.0 : 0.95;
+  var fireAmt = rebuild;
+  var fireAnnual = Math.round(rebuild * 10000 * fireRates[struct] * ageDis / 10000);
+  var quakeAmt = Math.round(rebuild * 0.5);
+  var quakeAnnual = Math.round(quakeAmt * 10000 * quakeRates[area] / 10000);
+  var liabAmt = 1000;
+  var liabAnnual = Math.round(5 + (struct === 'wood' ? 2 : 0) + (age >= 30 ? 1 : 0));
+  var totalAnnual = fireAnnual + quakeAnnual + liabAnnual;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">🛡️ 推奨保険と年間保険料目安</div>';
+  var insurances = [
+    { name:'🔥 火災保険', amount: fireAmt + '万円', annual: fireAnnual + '万円/年', must: true, note: '建物の再調達価額を補償額に設定。水災特約の要否はハザードマップで確認。' },
+    { name:'🌍 地震保険', amount: quakeAmt + '万円（火災保険の50%）', annual: quakeAnnual + '万円/年', must: area !== 'other', note: area === 'tokyo' ? '東京・大阪エリアは地震リスクが高く強く推奨。' : '地震での建物損壊に備える。火災保険とセット加入のみ可能。' },
+    { name:'🏢 施設賠償責任保険', amount: liabAmt + '万円', annual: liabAnnual + '万円/年', must: true, note: '共用部での事故（入居者・来訪者が怪我など）でオーナーが損害賠償責任を問われた場合に備える。' }
+  ];
+  insurances.forEach(function(ins) {
+    html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;margin-bottom:8px;border-left:3px solid ' + (ins.must ? ACCENT : 'rgba(255,255,255,0.2)') + '">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+    html += '<span style="font-size:12px;font-weight:700;color:var(--text)">' + ins.name + '</span>';
+    html += '<span style="font-size:11px;color:#4ade80">' + ins.annual + '</span></div>';
+    html += '<div style="font-size:11px;color:var(--text-muted)">補償額目安: ' + ins.amount + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:3px">' + ins.note + '</div>';
+    html += '</div>';
+  });
+  html += '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';border-top:1px solid rgba(255,255,255,0.08);padding-top:8px">合計目安: 年間 <span style="color:#4ade80">' + totalAnnual + '万円</span></div>';
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 保険料は実際の保険会社・地域・物件条件により大きく異なります。複数社の見積もり比較（代理店経由）を推奨します。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcInsuranceOpt(); })();
 
 function calcEquipReplaceOpt() {
   var el = document.getElementById('equip-replace-opt-result'); if (!el) return;

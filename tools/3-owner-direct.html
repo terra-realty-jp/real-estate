@@ -1591,6 +1591,28 @@
     <div id="rate-type-choice-result"></div>
   </div>
 
+  <!-- 抵当権抹消 手続き費用試算カード -->
+  <div class="card" id="card-mortgage-release">
+    <div class="card-title">🔓 抵当権抹消 費用・手続き試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">住宅ローン完済後に必要な<strong style="color:var(--text)">抵当権抹消登記</strong>の費用を試算します。司法書士依頼と自己申請の費用比較も確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">不動産の数（筆数）</label>
+        <input type="number" id="mr_count" value="2" min="1" max="10" step="1" oninput="calcMortgageRelease()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">土地+建物なら通常2筆</div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">都道府県</label>
+        <select id="mr_pref" onchange="calcMortgageRelease()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="metro">東京・大阪・名古屋</option>
+          <option value="other" selected>その他の都市</option>
+          <option value="rural">地方・過疎地域</option>
+        </select>
+      </div>
+    </div>
+    <div id="mortgage-release-result"></div>
+  </div>
+
   <!-- 住宅診断（インスペクション）費用対効果カード -->
   <div class="card" id="card-inspection-roi">
     <div class="card-title">🔍 住宅診断（インスペクション）費用対効果</div>
@@ -5555,6 +5577,52 @@ function calcRateTypeChoice() {
     +'💡 入力した金利シナリオでは <b style="color:#60a5fa">'+bestName+'</b> が総支払い最小。ただし変動は金利上昇リスクあり。金利上昇が遅い場合は変動が有利になる傾向。最終判断は金融機関窓口でご相談ください。</div>';
 }
 (function(){ calcRateTypeChoice(); })();
+
+function calcMortgageRelease() {
+  var el = document.getElementById('mortgage-release-result'); if (!el) return;
+  var count = parseFloat(document.getElementById('mr_count').value) || 2;
+  var pref = document.getElementById('mr_pref').value;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var regFeePerItem = 1000;
+  var totalRegFee = regFeePerItem * count;
+  var certFeePerItem = 600;
+  var totalCertFee = certFeePerItem * count;
+  var scrivenerBase = pref === 'metro' ? 30000 : pref === 'other' ? 20000 : 15000;
+  var scrivenerTotal = scrivenerBase + count * 5000;
+  var selfTotal = totalRegFee + totalCertFee;
+  var scrivenerGrand = totalRegFee + totalCertFee + scrivenerTotal;
+  var STEPS = [
+    { step: '①ローン完済証明書の受領', note: '金融機関から「登記識別情報（権利証）返却」と「弁済証書・解除証書」を受領。完済後2〜4週間かかることが多い。' },
+    { step: '②法務局への申請', note: '「抵当権抹消登記申請書」に印紙を貼付して提出。自己申請は法務局の相談窓口を活用すると安心。' },
+    { step: '③登記完了', note: '申請後1〜2週間で完了。完了後に「登記完了証」を受領し保管。' }
+  ];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">💰 費用比較（' + count + '筆）</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(74,222,128,0.3)">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">✋ 自己申請</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:#4ade80">' + selfTotal.toLocaleString() + '円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">登録免許税+証明書費用のみ</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏢 司法書士依頼</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:#fb923c">' + scrivenerGrand.toLocaleString() + '円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">報酬' + scrivenerTotal.toLocaleString() + '円+実費</div></div>';
+  html += '</div>';
+  var savingAmt = scrivenerGrand - selfTotal;
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.7">';
+  html += '自己申請なら <b style="color:#4ade80">' + savingAmt.toLocaleString() + '円節約</b>。ただし書類準備・法務局への来庁が必要です（半日〜1日）。';
+  html += '</div>';
+  html += '<div style="font-weight:600;color:' + ACCENT + ';font-size:12px;margin-bottom:6px">📋 手続きの流れ</div>';
+  STEPS.forEach(function(s) {
+    html += '<div style="margin-bottom:6px;padding:7px 10px;background:rgba(255,255,255,0.02);border-left:3px solid ' + ACCENT + ';border-radius:0 6px 6px 0">';
+    html += '<div style="font-size:11px;font-weight:700;color:' + ACCENT + '">' + s.step + '</div>';
+    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + s.note + '</div></div>';
+  });
+  html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 抹消登記は完済後5年以内に行うことが推奨されます。放置すると相続登記時や売却時に手続きが複雑化します。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMortgageRelease(); })();
 
 function calcInspectionROI() {
   var el = document.getElementById('inspection-roi-result'); if (!el) return;
