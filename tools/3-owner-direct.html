@@ -1416,6 +1416,35 @@
     <div id="rate-rise-result"></div>
   </div>
 
+  <!-- 土地・建物価格按分計算カード -->
+  <div class="card" id="card-land-build-split">
+    <div class="card-title">📐 土地・建物価格 按分計算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">購入した不動産の土地と建物の割合を計算します。建物部分が減価償却の対象となるため、投資目的の購入者には重要な情報です。固定資産税評価額を使った按分が一般的な方法です。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">物件購入価格（万円）</label>
+        <input type="number" id="lb_price" value="3000" min="100" max="100000" step="100" oninput="calcLandBuildSplit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">土地の固定資産税評価額（万円）</label>
+        <input type="number" id="lb_land_tax" value="800" min="0" max="50000" step="50" oninput="calcLandBuildSplit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">建物の固定資産税評価額（万円）</label>
+        <input type="number" id="lb_build_tax" value="400" min="0" max="50000" step="50" oninput="calcLandBuildSplit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">建物の構造</label>
+        <select id="lb_struct" onchange="calcLandBuildSplit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="22">木造（耐用22年）</option>
+          <option value="34">軽量鉄骨（耐用34年）</option>
+          <option value="47">RC・重量鉄骨（耐用47年）</option>
+        </select>
+      </div>
+    </div>
+    <div id="land-build-split-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -5027,6 +5056,51 @@ function calcRateRise() {
   el.innerHTML = html;
 }
 (function(){ calcRateRise(); })();
+
+function calcLandBuildSplit() {
+  var el = document.getElementById('land-build-split-result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('lb_price').value) || 0;
+  var landTax = parseFloat(document.getElementById('lb_land_tax').value) || 0;
+  var buildTax = parseFloat(document.getElementById('lb_build_tax').value) || 0;
+  var life = parseFloat(document.getElementById('lb_struct').value) || 22;
+  if (price <= 0 || (landTax + buildTax) <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">購入価格と固定資産税評価額を入力してください</div>'; return; }
+
+  var total = landTax + buildTax;
+  var landRatio = landTax / total;
+  var buildRatio = buildTax / total;
+  var landValue = price * landRatio;
+  var buildValue = price * buildRatio;
+
+  // 年間減価償却費（定額法）
+  var annualDepr = buildValue / life;
+  var deprLifePct = Math.min(100, (buildTax / (buildTax + 1)) * 100);
+
+  var html = '<div style="margin-top:10px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
+  html += '<div style="text-align:center;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">土地価格（按分後）</div>';
+  html += '<div style="font-size:24px;font-weight:900;color:var(--gold)">' + Math.round(landValue).toLocaleString() + '<span style="font-size:12px">万円</span></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">土地比率 ' + (landRatio * 100).toFixed(1) + '%</div>';
+  html += '</div>';
+  html += '<div style="text-align:center;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建物価格（按分後）</div>';
+  html += '<div style="font-size:24px;font-weight:900;color:var(--gold)">' + Math.round(buildValue).toLocaleString() + '<span style="font-size:12px">万円</span></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">建物比率 ' + (buildRatio * 100).toFixed(1) + '%</div>';
+  html += '</div></div>';
+
+  html += '<div style="padding:10px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:8px;margin-bottom:10px">';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">📉 年間減価償却費（定額法）</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:var(--gold)">' + Math.round(annualDepr * 10) / 10 + '<span style="font-size:12px">万円/年</span></div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">耐用年数' + life + '年 / 建物価格' + Math.round(buildValue).toLocaleString() + '万円 ÷ ' + life + '年</div>';
+  html += '</div>';
+
+  html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">';
+  html += '💡 土地は減価償却できません。建物部分のみが毎年の経費として計上できます。法人・個人事業主として不動産を取得した場合は税理士に相談し、正確な按分方法を確認してください。';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcLandBuildSplit(); })();
 
 function filterOwnerCalcCards(query) {
   var cards = document.querySelectorAll('#owner-calc-cards > div');
