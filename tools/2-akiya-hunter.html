@@ -2229,6 +2229,44 @@
     <div id="akiya-solar-result"></div>
   </div>
 
+  <div class="card" id="card-akiya-bank-check">
+    <div class="card-title">🏛️ 空き家バンク 登録資格チェック＆補助金試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">自治体の「空き家バンク」に登録すると移住者とのマッチング・解体補助金・改修補助金を受けられる場合があります。あなたの物件が対象になるか診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">所在地エリア</div>
+        <select id="abc_area" onchange="calcAkiyaBankCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="rural">地方・過疎地域（積極支援）</option>
+          <option value="suburb" selected>郊外・中山間地</option>
+          <option value="city">都市近郊（条件あり）</option>
+          <option value="metro">大都市（登録難）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">建物の状態</div>
+        <select id="abc_cond" onchange="calcAkiyaBankCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="good">良好（すぐ住める）</option>
+          <option value="normal" selected>普通（軽リフォームで可）</option>
+          <option value="poor">要大規模改修</option>
+          <option value="demolish">解体が必要なレベル</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件の築年数（年）</div>
+        <input type="number" id="abc_age" value="25" min="0" max="100" step="1" oninput="calcAkiyaBankCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売却 or 賃貸どちらで登録予定？</div>
+        <select id="abc_purpose" onchange="calcAkiyaBankCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="sale" selected>売却（移住者に売りたい）</option>
+          <option value="rent">賃貸（貸したい）</option>
+          <option value="either">どちらでも</option>
+        </select>
+      </div>
+    </div>
+    <div id="akiya-bank-check-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -6975,6 +7013,69 @@ function calcAkiyaValueDecline() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaValueDecline(); })();
+
+function calcAkiyaBankCheck() {
+  var el = document.getElementById('akiya-bank-check-result');
+  var area = document.getElementById('abc_area').value;
+  var cond = document.getElementById('abc_cond').value;
+  var age = parseFloat(document.getElementById('abc_age').value) || 25;
+  var purpose = document.getElementById('abc_purpose').value;
+
+  var eligibility = 0;
+  var areaBonus = { rural: 40, suburb: 25, city: 10, metro: 0 };
+  var condBonus = { good: 30, normal: 20, poor: 8, demolish: 0 };
+  eligibility = areaBonus[area] + condBonus[cond];
+  if (age <= 30) eligibility += 20;
+  else if (age <= 50) eligibility += 10;
+  if (purpose === 'either') eligibility += 10;
+  eligibility = Math.min(100, eligibility);
+
+  var subsidies = [];
+  if (area === 'rural' || area === 'suburb') {
+    subsidies.push({ name: '解体撤去補助金', amount: area === 'rural' ? '最大100万円' : '最大50万円', cond: '自治体指定の解体業者使用' });
+    subsidies.push({ name: '改修・リフォーム補助金', amount: area === 'rural' ? '最大200万円' : '最大100万円', cond: '移住者が入居を前提とする改修' });
+  }
+  if (area !== 'metro') {
+    subsidies.push({ name: '空き家バンク登録奨励金', amount: '1〜10万円（自治体による）', cond: '登録後一定期間内のマッチング成立' });
+  }
+  if (cond !== 'demolish') {
+    subsidies.push({ name: '耐震診断・改修補助', amount: '最大30〜100万円', cond: '旧耐震（1981年以前）の建物のみ' });
+  }
+
+  var grade, gColor, verdict;
+  if (eligibility >= 70) { grade = 'A'; gColor = '#4ade80'; verdict = '空き家バンク登録を強く推奨'; }
+  else if (eligibility >= 45) { grade = 'B'; gColor = '#a3e635'; verdict = '登録可能・補助金の可能性あり'; }
+  else if (eligibility >= 25) { grade = 'C'; gColor = '#fbbf24'; verdict = '条件付きで登録可能'; }
+  else { grade = 'D'; gColor = '#f87171'; verdict = '登録困難 — 他の活用方法を検討'; }
+
+  var html = '<div style="display:grid;gap:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html += '<div style="background:rgba('+gColor.replace('#','')+',0.05);border:1px solid rgba('+gColor.replace('#','')+',0.2);border-radius:10px;padding:14px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">空き家バンク登録適合度</div>';
+  html += '<div style="font-size:44px;font-weight:900;color:'+gColor+';line-height:1">'+grade+'</div>';
+  html += '<div style="font-size:11px;color:'+gColor+';margin-top:4px">'+eligibility+'点 — '+verdict+'</div>';
+  html += '</div>';
+  html += '<div style="background:var(--dark3);border-radius:10px;padding:12px">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">🎁 受けられる可能性のある補助金</div>';
+  if (subsidies.length === 0) {
+    html += '<div style="font-size:11px;color:rgba(255,255,255,0.4)">対象補助金なし（大都市は制度が少ない）</div>';
+  } else {
+    subsidies.forEach(function(s) {
+      html += '<div style="margin-bottom:6px;font-size:11px">';
+      html += '<div style="color:var(--gold);font-weight:700">'+s.name+' <span style="color:#4ade80">'+s.amount+'</span></div>';
+      html += '<div style="color:rgba(255,255,255,0.4)">条件: '+s.cond+'</div>';
+      html += '</div>';
+    });
+  }
+  html += '</div></div>';
+
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:11px;color:rgba(255,255,255,0.6);line-height:1.7">';
+  html += '📋 空き家バンクに登録するには: ①自治体の空き家担当窓口に相談 ②物件調査・登録申請 ③情報公開 ④マッチング交渉 という流れです。登録・仲介は無料の場合が多いです。';
+  html += '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaBankCheck(); })();
 
 function calcGovActionCost() {
   var el = document.getElementById('gov-action-cost-result');
