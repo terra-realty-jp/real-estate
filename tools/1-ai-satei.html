@@ -2996,6 +2996,40 @@
     <div id="vhr_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 賃貸 vs 購入 生涯コスト比較（購入者向け） -->
+  <div class="card" id="card-buy-vs-rent-30yr">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏠 「買う」と「ずっと賃貸」、30年後にどちらが得？生涯コスト比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">住宅ローンで家を購入した場合と、同等の家に賃貸で住み続けた場合の30年間のトータルコストを比較します。「どちらが資産を形成できるか」もわかります。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">購入価格（万円）</label>
+        <input type="number" id="bvr_price" placeholder="例: 4000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">頭金（万円）</label>
+        <input type="number" id="bvr_down" placeholder="例: 400" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">金利（%）</label>
+        <input type="number" id="bvr_rate" placeholder="例: 0.5" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">同等の賃貸の月家賃（万円）</label>
+        <input type="number" id="bvr_rent" placeholder="例: 15" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">30年後の物件売却予想価格（万円）</label>
+        <input type="number" id="bvr_exit" placeholder="例: 2000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間維持費（固定資産税・管理費・万円）</label>
+        <input type="number" id="bvr_annual_cost" placeholder="例: 20" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcBuyVsRent30yr()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">30年後を比較する</button>
+    <div id="bvr_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 解体して更地で売る vs そのまま売る 費用対効果 -->
   <div class="card" id="card-demolish-vs-sell">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏚️→🏗️ 古家を解体して更地で売る？そのまま売る？費用対効果を比較</div>
@@ -8408,6 +8442,72 @@ function calcInheritedPropertySale() {
   el.innerHTML = html;
 }
 (function(){ calcInheritedPropertySale(); })();
+
+function calcBuyVsRent30yr() {
+  var el = document.getElementById('bvr_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('bvr_price').value) || 4000;
+  var down = parseFloat(document.getElementById('bvr_down').value) || 400;
+  var rate = parseFloat(document.getElementById('bvr_rate').value) || 0.5;
+  var rent = parseFloat(document.getElementById('bvr_rent').value) || 15;
+  var exitPrice = parseFloat(document.getElementById('bvr_exit').value) || 2000;
+  var annualCost = parseFloat(document.getElementById('bvr_annual_cost').value) || 20;
+  var years = 30;
+
+  var loan = price - down;
+  var r = rate / 100 / 12;
+  var n = years * 12;
+  var monthly = r > 0 ? loan * 10000 * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1) / 10000 : loan / years / 12;
+
+  // 購入のトータルコスト
+  var buyingCost = price * 0.07; // 諸費用7%
+  var totalLoanPayment = monthly * 12 * years;
+  var totalMaintCost = annualCost * years;
+  var commissionSell = Math.round((exitPrice * 0.03 + 6) * 1.1 * 10) / 10;
+  var buyTotalCost = down + buyingCost + totalLoanPayment + totalMaintCost;
+  var buyNetGain = exitPrice - commissionSell; // 売却による回収
+  var buyNetCost = buyTotalCost - buyNetGain; // 実質負担
+
+  // 賃貸のトータルコスト
+  var rentTotal = rent * 12 * years;
+  var rentUpdateFee = rent * 2 * 5; // 更新料（2年毎）15回分
+  var rentNetCost = rentTotal + rentUpdateFee;
+
+  var diff = rentNetCost - buyNetCost;
+  var winner = diff > 0 ? '購入の方が得' : '賃貸の方が得';
+  var color = diff > 0 ? '#4ade80' : '#fb923c';
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+    '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:14px;text-align:center">' +
+    '<div style="font-size:11px;color:#4ade80;font-weight:700;margin-bottom:6px">🏠 購入した場合（30年後売却）</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">諸費用・ローン・維持費 合計</div>' +
+    '<div style="font-size:20px;font-weight:900">' + buyTotalCost.toFixed(0) + '万円</div>' +
+    '<div style="font-size:11px;color:#4ade80;margin-top:4px">売却回収: -' + buyNetGain.toFixed(0) + '万円</div>' +
+    '<div style="font-size:16px;font-weight:700;color:#4ade80;margin-top:4px">実質負担: ' + buyNetCost.toFixed(0) + '万円</div>' +
+    '</div>' +
+    '<div style="background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.2);border-radius:10px;padding:14px;text-align:center">' +
+    '<div style="font-size:11px;color:#fb923c;font-weight:700;margin-bottom:6px">🏢 賃貸で住み続けた場合</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">家賃・更新料 合計</div>' +
+    '<div style="font-size:20px;font-weight:900">' + rentTotal.toFixed(0) + '万円</div>' +
+    '<div style="font-size:11px;color:#fb923c;margin-top:4px">更新料（概算）: +' + rentUpdateFee.toFixed(0) + '万円</div>' +
+    '<div style="font-size:16px;font-weight:700;color:#fb923c;margin-top:4px">実質負担: ' + rentNetCost.toFixed(0) + '万円</div>' +
+    '</div>' +
+    '</div>' +
+    '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:14px;font-weight:700;color:' + color + '">' + winner + '</div>' +
+    '<div style="font-size:28px;font-weight:900;color:' + color + ';margin-top:4px">' + Math.abs(diff).toFixed(0) + '万円の差</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:12px;font-size:12px">' +
+    '<div style="font-weight:700;color:var(--gold);margin-bottom:6px">結果が変わる主な要因</div>' +
+    '<div style="line-height:1.8;color:var(--text-muted)">' +
+    '・<strong style="color:var(--text)">30年後の売却価格</strong>（上昇すれば購入有利、下落すれば賃貸有利）<br>' +
+    '・<strong style="color:var(--text)">金利の変動</strong>（変動金利は将来リスクあり）<br>' +
+    '・<strong style="color:var(--text)">賃貸の家賃上昇</strong>（値上がりすれば購入有利）<br>' +
+    '・<strong style="color:var(--text)">ライフスタイルの変化</strong>（転勤・離婚・介護は賃貸有利）' +
+    '</div></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5">※ 概算シミュレーションです。税金・インフレ・投資機会コストは考慮していません。</p>';
+}
 
 function calcDemolishVsSell() {
   var el = document.getElementById('dvs_result');
