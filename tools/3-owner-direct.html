@@ -2107,6 +2107,12 @@
     <div id="mortgage-tax-ded-result"></div>
   </div>
 
+  <div class="card" id="card-buy-checklist">
+    <div class="card-title">🏠 マイホーム購入前 後悔しない確認チェックリスト（16項目）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">「資金計画」「物件確認」「契約・法律」「将来性」の4カテゴリ16項目を確認。購入申込前に見落としがないかチェックします。</p>
+    <div id="buy-checklist-content"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -6609,6 +6615,67 @@ function calcRateFixedVsVariable() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ 変動金利は現在の金利が返済期間中変わらない場合の試算です。将来の金利上昇は考慮していません。実際の金利選択は金融機関窓口でご確認ください。</p></div>';
 }
 (function(){ calcRateFixedVsVariable(); })();
+
+function initBuyChecklist() {
+  var el = document.getElementById('buy-checklist-content');
+  var categories = [
+    { name: '💰 資金計画', color: '#4db6f5', items: [
+      { id: 'bc_1', label: '月々のローン返済額が手取り収入の25〜30%以内に収まる' },
+      { id: 'bc_2', label: '頭金・諸費用（購入価格の5〜8%）が用意できている' },
+      { id: 'bc_3', label: '将来の教育費・修繕費・老後資金も考慮した資金計画がある' },
+      { id: 'bc_4', label: '複数の金融機関でローンの事前審査を受けた' }
+    ]},
+    { name: '🏠 物件の確認', color: '#4ade80', items: [
+      { id: 'bc_5', label: '重要事項説明書を事前に受け取り、内容を理解した' },
+      { id: 'bc_6', label: '実際に複数回（昼・夜・雨の日）物件を訪問した' },
+      { id: 'bc_7', label: 'ハザードマップで浸水・土砂災害リスクを確認した' },
+      { id: 'bc_8', label: '建物の耐震性（1981年以降の建築基準法改正）を確認した' }
+    ]},
+    { name: '📋 契約・法律', color: '#fbbf24', items: [
+      { id: 'bc_9', label: '売買契約書の手付金・解除条件・特約を理解している' },
+      { id: 'bc_10', label: 'ローン特約（審査落ちで手付返還）が契約に盛り込まれている' },
+      { id: 'bc_11', label: '土地の境界確認・越境物がないことを確認した' },
+      { id: 'bc_12', label: '管理費・修繕積立金（マンション）の総額・滞納状況を確認した' }
+    ]},
+    { name: '🌏 将来性・周辺環境', color: '#c9a84c', items: [
+      { id: 'bc_13', label: '最寄り駅・学校・病院・スーパーへのアクセスを確認した' },
+      { id: 'bc_14', label: '周辺の将来開発計画（再開発・工場建設等）を調べた' },
+      { id: 'bc_15', label: '近隣住民の様子・マンションの管理状態を確認した' },
+      { id: 'bc_16', label: '将来売却・賃貸に出す場合の資産価値を試算した' }
+    ]}
+  ];
+
+  var html = '';
+  categories.forEach(function(cat) {
+    html += '<div style="margin-bottom:14px">';
+    html += '<div style="font-size:12px;font-weight:700;color:'+cat.color+';margin-bottom:8px">'+cat.name+'</div>';
+    html += '<div style="display:grid;gap:6px">';
+    cat.items.forEach(function(item) {
+      html += '<label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px;border:1px solid rgba(255,255,255,0.06)" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.02)\'">';
+      html += '<input type="checkbox" id="'+item.id+'" onchange="updateBuyChecklist()" style="accent-color:'+cat.color+';width:15px;height:15px;flex-shrink:0;margin-top:1px;cursor:pointer">';
+      html += '<span style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.5">'+item.label+'</span>';
+      html += '</label>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div id="buy-checklist-summary" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;margin-top:8px"><div style="font-size:12px;color:rgba(255,255,255,0.5)">チェックを入れると進捗が表示されます</div></div>';
+  el.innerHTML = html;
+}
+
+function updateBuyChecklist() {
+  var total = 16;
+  var checked = document.querySelectorAll('#buy-checklist-content input[type=checkbox]:checked').length;
+  var pct = Math.round((checked / total) * 100);
+  var color = pct >= 80 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#f87171';
+  var msg = pct >= 80 ? '✅ 購入準備が整っています！申込を進めましょう。' : pct >= 50 ? '📋 あと少しです。未確認の項目を見直しましょう。' : '⚠️ 確認が必要な項目が残っています。急がず丁寧に進めましょう。';
+  var el = document.getElementById('buy-checklist-summary');
+  if (!el) return;
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:12px">';
+  el.innerHTML += '<div style="text-align:center;min-width:60px"><div style="font-size:24px;font-weight:900;color:'+color+'">'+pct+'%</div><div style="font-size:10px;color:rgba(255,255,255,0.4)">'+checked+'/'+total+'項目</div></div>';
+  el.innerHTML += '<div style="flex:1"><div style="background:rgba(255,255,255,0.06);border-radius:4px;height:8px;margin-bottom:6px"><div style="width:'+pct+'%;background:'+color+';border-radius:4px;height:8px;transition:width 0.3s"></div></div><div style="font-size:11px;color:rgba(255,255,255,0.6);line-height:1.5">'+msg+'</div></div>';
+  el.innerHTML += '</div>';
+}
+(function(){ initBuyChecklist(); })();
 
 function calcMortgageTaxDed() {
   var el = document.getElementById('mortgage-tax-ded-result');
