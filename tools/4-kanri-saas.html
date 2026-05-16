@@ -3123,6 +3123,39 @@
     <div id="rent-arrear-loss-result"></div>
   </div>
 
+  <!-- 火災保険 見直し節約診断 -->
+  <div class="card" id="card-fire-insurance-review">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔥 火災保険の見直しで年間いくら節約できる？賃貸物件の保険最適化診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">賃貸物件オーナーの火災保険は補償内容・保険期間・掛け方によって大きく保険料が変わります。現在の保険料と適正水準を比較して節約余地を診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の年間保険料（万円）</label>
+        <input type="number" id="fir_premium" placeholder="例: 8" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の建物構造</label>
+        <select id="fir_structure" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="rc">RC造・鉄筋コンクリート（最安）</option>
+          <option value="steel" selected>鉄骨造（中間）</option>
+          <option value="wood">木造（最高）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">建物の再調達価額（万円）</label>
+        <input type="number" id="fir_value" placeholder="例: 2000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">保険契約の期間</label>
+        <select id="fir_period" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="1">1年毎（短期）</option>
+          <option value="5" selected>5年一括（割引あり）</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcFireInsuranceReview()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">節約余地を診断する</button>
+    <div id="fir_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- マンション管理費・修繕積立金値上げ影響試算 -->
   <div class="card" id="card-condo-fee-impact">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏢 管理費・修繕積立金が値上がりしたら？賃料・利回りへの影響試算</div>
@@ -10573,6 +10606,63 @@ function calcParkingRevenue() {
   el.innerHTML = html;
 }
 (function(){ calcParkingRevenue(); })();
+
+function calcFireInsuranceReview() {
+  var el = document.getElementById('fir_result');
+  if (!el) return;
+  var premium = parseFloat(document.getElementById('fir_premium').value) || 8;
+  var structure = document.getElementById('fir_structure').value;
+  var value = parseFloat(document.getElementById('fir_value').value) || 2000;
+  var period = document.getElementById('fir_period').value;
+
+  // 適正保険料の目安（再調達価額×料率）
+  var rateMap = { rc: 0.0015, steel: 0.002, wood: 0.004 };
+  var baseRate = rateMap[structure] || 0.002;
+  var appropriatePremium = value * baseRate; // 年額
+  if (period === '5') appropriatePremium *= 0.88; // 5年一括で12%割引目安
+
+  var diff = premium - appropriatePremium;
+  var save5 = diff * 5;
+  var overPaying = diff > 0;
+
+  var coverageCheck = [
+    { item: '火災・落雷・爆発', status: '必須', note: '賃貸オーナーには必ず必要' },
+    { item: '風災・水災・雹', status: '推奨', note: '台風・豪雨が多いエリアは特に重要' },
+    { item: '水漏れ（給排水設備）', status: '推奨', note: '入居者への弁償責任が発生することも' },
+    { item: '家主費用特約', status: '推奨', note: '火災後の家賃収入喪失を補償' },
+    { item: '地震保険', status: '任意', note: '地震大国・建物構造・立地で判断' },
+    { item: '建物外の設備', status: '任意', note: '駐車場・フェンス等の補償' },
+  ];
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:' + (overPaying ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.08)') + ';border:1px solid ' + (overPaying ? 'rgba(248,113,113,0.3)' : 'rgba(74,222,128,0.3)') + ';border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="font-size:12px;font-weight:700;color:' + (overPaying ? '#f87171' : '#4ade80') + ';margin-bottom:8px">' +
+    (overPaying ? '⚠️ 適正より高い可能性あり — 見直しで節約できるかも' : '✅ 保険料は適正水準です') + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">現在の年間保険料</span><br><strong>' + premium + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">適正水準の目安</span><br><strong style="color:' + (overPaying ? '#4ade80' : 'var(--text)') + '">' + appropriatePremium.toFixed(1) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">5年間の節約余地</span><br><strong style="color:' + (overPaying ? '#f87171' : '#4ade80') + '">' + (overPaying ? save5.toFixed(0) + '万円' : '適正範囲') + '</strong></div>' +
+    '</div></div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">補償内容チェックリスト</div>' +
+    coverageCheck.map(function(c) {
+      var statusColor = c.status === '必須' ? '#f87171' : c.status === '推奨' ? '#facc15' : '#94a3b8';
+      return '<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">' +
+        '<span style="background:' + statusColor + ';color:#000;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;flex-shrink:0;margin-top:1px">' + c.status + '</span>' +
+        '<div><div>' + c.item + '</div><div style="font-size:10px;color:var(--text-muted)">' + c.note + '</div></div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:8px;padding:12px;font-size:12px">' +
+    '<div style="font-weight:700;color:var(--gold);margin-bottom:6px">節約のポイント</div>' +
+    '<div style="line-height:1.8;color:var(--text-muted)">' +
+    '1. <strong style="color:var(--text)">複数の保険会社を比較</strong>（一括見積もりサービスを活用）<br>' +
+    '2. <strong style="color:var(--text)">5年一括払い</strong>に変更（約10〜15%割引）<br>' +
+    '3. <strong style="color:var(--text)">不要な特約を外す</strong>（家財保険は入居者に任せる）<br>' +
+    '4. <strong style="color:var(--text)">免責金額を設定</strong>（小さな損害は自己負担で保険料削減）' +
+    '</div></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5">※ 適正保険料は目安です。保険料は物件の所在地・築年数・補償内容によって大きく異なります。保険会社への見積もりで正確な金額を確認してください。</p>';
+}
 
 function calcCondoFeeImpact() {
   var el = document.getElementById('cfi_result');

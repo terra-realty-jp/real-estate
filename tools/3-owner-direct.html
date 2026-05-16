@@ -2526,6 +2526,44 @@
     <div id="future-value-estimate-result"></div>
   </div>
 
+  <!-- 住宅ローン控除 13年間の恩恵試算 -->
+  <div class="card" id="card-home-loan-deduction">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💰 住宅ローン控除で13年間にいくら税金が戻る？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">住宅ローン控除（年末残高の0.7%を所得税から控除）で、13年間にどれだけの税額が減るかを試算します。年収別・残高推移で確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">購入価格（万円）</label>
+        <input type="number" id="hld_price" placeholder="例: 4000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">頭金（万円）</label>
+        <input type="number" id="hld_down" placeholder="例: 400" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">金利（%）</label>
+        <input type="number" id="hld_rate" placeholder="例: 0.5" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">返済期間（年）</label>
+        <input type="number" id="hld_years" placeholder="例: 35" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年収（万円）</label>
+        <input type="number" id="hld_income" placeholder="例: 600" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件種別</label>
+        <select id="hld_type" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="new">新築（上限4,500万円・ZEH3,000万円）</option>
+          <option value="used" selected>中古（上限2,000万円）</option>
+          <option value="reform">リノベ認定（上限3,000万円）</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcHomeLoanDeduction()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">控除額を計算する</button>
+    <div id="hld_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 老後の年金でローンを払えるか確認 -->
   <div class="card" id="card-pension-loan-check">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">👴 老後に住宅ローンは払い続けられる？年金との余裕チェック</div>
@@ -7426,6 +7464,88 @@ function calcLandAcquisitionCost() {
   el.innerHTML = html;
 }
 (function(){ calcLandAcquisitionCost(); })();
+
+function calcHomeLoanDeduction() {
+  var el = document.getElementById('hld_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('hld_price').value) || 4000;
+  var down = parseFloat(document.getElementById('hld_down').value) || 400;
+  var rate = parseFloat(document.getElementById('hld_rate').value) || 0.5;
+  var years = parseInt(document.getElementById('hld_years').value) || 35;
+  var income = parseFloat(document.getElementById('hld_income').value) || 600;
+  var propType = document.getElementById('hld_type').value;
+
+  var loanAmount = price - down;
+  var limitMap = { new: 4500, used: 2000, reform: 3000 };
+  var limit = limitMap[propType] || 2000;
+
+  // 月返済額
+  var r = rate / 100 / 12;
+  var n = years * 12;
+  var monthly = r > 0 ? loanAmount * 10000 * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1) / 10000 : loanAmount / years / 12;
+
+  // 所得税概算（給与所得控除・基礎控除・社会保険料概算）
+  var salaryDeduction = income <= 162.5 ? 55 : income <= 180 ? income * 0.4 - 10 : income <= 360 ? income * 0.3 + 8 : income <= 660 ? income * 0.2 + 44 : income * 0.1 + 110;
+  var socialInsurance = income * 0.15; // 概算15%
+  var taxableIncome = income - salaryDeduction - socialInsurance - 48; // 基礎控除48万
+  var incomeTax;
+  if (taxableIncome <= 195) incomeTax = taxableIncome * 0.05;
+  else if (taxableIncome <= 330) incomeTax = taxableIncome * 0.10 - 9.75;
+  else if (taxableIncome <= 695) incomeTax = taxableIncome * 0.20 - 42.75;
+  else if (taxableIncome <= 900) incomeTax = taxableIncome * 0.23 - 63.6;
+  else if (taxableIncome <= 1800) incomeTax = taxableIncome * 0.33 - 153.6;
+  else incomeTax = taxableIncome * 0.40 - 279.6;
+  incomeTax = Math.max(0, incomeTax) * 1.021; // 復興特別所得税
+
+  // 13年間の控除額
+  var totalDeduction = 0;
+  var rows = '';
+  var balance = loanAmount;
+  var repayPrincipal = monthly - balance * 10000 * rate / 100 / 12 / 10000;
+
+  for (var yr = 1; yr <= 13; yr++) {
+    // 年末ローン残高の概算
+    var endBalance = Math.max(0, loanAmount * Math.pow(1 + rate / 100 / 12, -(yr) * 12) * Math.pow(1 + rate / 100, yr) + loanAmount * (Math.pow(1 + rate / 100 / 12, (years - yr) * 12) - 1) / (Math.pow(1 + rate / 100 / 12, years * 12) - 1));
+    // 簡易計算: 残高 = 借入×(1 - yr/years)
+    endBalance = loanAmount * (1 - yr / years);
+
+    var eligibleBalance = Math.min(endBalance, limit);
+    var deduction = eligibleBalance * 0.007; // 0.7%
+    var actualDeduction = Math.min(deduction, incomeTax + taxableIncome * 0.06); // 所得税+住民税(6%)上限
+    actualDeduction = Math.max(0, actualDeduction);
+    totalDeduction += actualDeduction;
+
+    if (yr <= 5 || yr === 10 || yr === 13) {
+      rows += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)">' +
+        '<td style="padding:5px 8px;font-size:12px">' + yr + '年目</td>' +
+        '<td style="padding:5px 8px;font-size:12px;text-align:right">' + endBalance.toFixed(0) + '万円</td>' +
+        '<td style="padding:5px 8px;font-size:12px;text-align:right;color:#4ade80">' + actualDeduction.toFixed(1) + '万円</td>' +
+        '</tr>';
+    }
+  }
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:11px;color:#4ade80;margin-bottom:4px">13年間で還付される税金の合計（概算）</div>' +
+    '<div style="font-size:40px;font-weight:900;color:#4ade80">' + totalDeduction.toFixed(0) + '<span style="font-size:16px">万円</span></div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">借入' + loanAmount + '万円 × 0.7%を最大13年間控除</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;margin-bottom:10px">' +
+    '<div><span style="color:var(--text-muted)">借入額</span><br><strong>' + loanAmount + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">月返済額</span><br><strong>' + monthly.toFixed(1) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">控除上限残高</span><br><strong>' + limit + '万円</strong></div>' +
+    '</div>' +
+    '<table style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">' +
+    '<th style="padding:5px 8px;font-size:11px;color:var(--text-muted);text-align:left">年次</th>' +
+    '<th style="padding:5px 8px;font-size:11px;color:var(--text-muted);text-align:right">年末残高</th>' +
+    '<th style="padding:5px 8px;font-size:11px;color:#4ade80;text-align:right">控除額</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '</table></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);line-height:1.5">※ 2024年以降の控除率0.7%・最長13年で試算。年収や物件によって実際の控除額は異なります。確定申告が必要です。</p>';
+}
 
 function calcPensionLoanCheck() {
   var el = document.getElementById('plc_result');

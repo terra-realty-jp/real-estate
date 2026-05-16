@@ -2707,6 +2707,56 @@
     <div id="akiya-coworking-result"></div>
   </div>
 
+  <!-- 空き家危険度スコア診断 -->
+  <div class="card" id="card-akiya-risk-score">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🚨 あなたの空き家の「危険度スコア」診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家の管理状態・立地・築年数・近隣状況から「危険度スコア」を算出します。行政指導・特定空家認定・近隣トラブルのリスクを可視化します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">築年数（年）</label>
+        <input type="number" id="ars_age" placeholder="例: 35" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">空き家になってから（年）</label>
+        <input type="number" id="ars_vacant_years" placeholder="例: 5" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">管理頻度</label>
+        <select id="ars_mgmt" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="regular">月1回以上管理している</option>
+          <option value="few" selected>年数回程度</option>
+          <option value="none">ほぼ管理していない</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">建物の外観・状態</label>
+        <select id="ars_condition" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="good">良好（外観に問題なし）</option>
+          <option value="fair" selected>やや劣化（外壁の剥がれ等）</option>
+          <option value="bad">著しく劣化（傾き・破損が目立つ）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">草木・ゴミの状況</label>
+        <select id="ars_garden" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="clean">きれいに管理されている</option>
+          <option value="growing" selected>草が伸びている</option>
+          <option value="wild">荒れ放題・ゴミが散乱</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">近隣からの苦情</label>
+        <select id="ars_complaint" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="none" selected>苦情なし</option>
+          <option value="some">過去に苦情があった</option>
+          <option value="active">現在も苦情が来ている</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcAkiyaRiskScore()" style="width:100%;padding:10px;background:linear-gradient(90deg,#f87171,#fb923c);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">危険度を診断する</button>
+    <div id="ars_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 相続実家・兄弟間売却収益分配シミュレーション -->
   <div class="card" id="card-inheritance-split">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">👨‍👩‍👧‍👦 相続した実家を兄弟で分ける。売却手取りの分配シミュレーション</div>
@@ -7566,6 +7616,81 @@ function calcAkiyaSolarPanel() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaSolarPanel(); })();
+
+function calcAkiyaRiskScore() {
+  var el = document.getElementById('ars_result');
+  if (!el) return;
+  var age = parseInt(document.getElementById('ars_age').value) || 35;
+  var vacantYears = parseInt(document.getElementById('ars_vacant_years').value) || 5;
+  var mgmt = document.getElementById('ars_mgmt').value;
+  var condition = document.getElementById('ars_condition').value;
+  var garden = document.getElementById('ars_garden').value;
+  var complaint = document.getElementById('ars_complaint').value;
+
+  var score = 0;
+
+  // 築年数
+  if (age >= 40) score += 25;
+  else if (age >= 30) score += 18;
+  else if (age >= 20) score += 10;
+  else score += 3;
+
+  // 空き家期間
+  if (vacantYears >= 10) score += 25;
+  else if (vacantYears >= 5) score += 18;
+  else if (vacantYears >= 2) score += 10;
+  else score += 3;
+
+  // 管理頻度
+  var mgmtScore = { regular: 0, few: 15, none: 25 };
+  score += mgmtScore[mgmt] || 0;
+
+  // 外観
+  var condScore = { good: 0, fair: 10, bad: 20 };
+  score += condScore[condition] || 0;
+
+  // 草木
+  var gardenScore = { clean: 0, growing: 8, wild: 15 };
+  score += gardenScore[garden] || 0;
+
+  // 苦情
+  var complaintScore = { none: 0, some: 10, active: 20 };
+  score += complaintScore[complaint] || 0;
+
+  score = Math.min(100, score);
+
+  var level, color, label, actions;
+  if (score >= 80) {
+    level = 'D'; color = '#f87171'; label = '極めて危険 — 行政指導・強制代執行のリスクあり';
+    actions = ['今すぐ専門家（不動産会社・弁護士）に相談', '管理業者への委託または売却処分を検討', '近隣への謝罪・草刈り等の緊急対応'];
+  } else if (score >= 60) {
+    level = 'C'; color = '#fb923c'; label = '要注意 — 特定空家認定リスクあり';
+    actions = ['最低限の草刈り・清掃を実施', '建物の安全点検（屋根・壁の崩落確認）', '活用方法（売却・賃貸・解体）を検討開始'];
+  } else if (score >= 40) {
+    level = 'B'; color = '#facc15'; label = '注意が必要 — 早期に対策を';
+    actions = ['管理頻度を上げる（最低月1回）', '草刈り・ポスト撤去等の外観整備', '3ヶ月以内に活用方針を決める'];
+  } else {
+    level = 'A'; color = '#4ade80'; label = '現状は問題なし — 維持を続けること';
+    actions = ['現在の管理を継続', '年1回は建物点検を実施', '5年以内の活用方針を考えておく'];
+  }
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">危険度スコア</div>' +
+    '<div style="font-size:40px;font-weight:900;color:' + color + '">' + score + '<span style="font-size:18px">/100</span></div>' +
+    '<div style="background:' + color + ';color:#000;font-weight:700;font-size:13px;padding:4px 12px;border-radius:20px;display:inline-block;margin-top:6px">ランク ' + level + '</div>' +
+    '<div style="font-size:13px;color:' + color + ';margin-top:8px;font-weight:700">' + label + '</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">今すぐやること（優先度順）</div>' +
+    actions.map(function(a, i) {
+      return '<div style="display:flex;gap:8px;padding:5px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.05)">' +
+        '<span style="color:' + color + ';font-weight:700;flex-shrink:0">' + (i + 1) + '.</span>' +
+        '<span>' + a + '</span></div>';
+    }).join('') +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);line-height:1.6">※ 特定空家に認定されると市区町村から改善命令が届き、従わない場合は行政代執行（強制解体）が行われ費用を請求されます。</p>';
+}
 
 function calcInheritanceSplit() {
   var el = document.getElementById('is_result');
