@@ -2078,6 +2078,35 @@
     <div id="max-purchase-result"></div>
   </div>
 
+  <div class="card" id="card-mortgage-tax-ded">
+    <div class="card-title">🏦 住宅ローン控除（減税）10年間 節税効果試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">住宅ローン控除（住宅借入金等特別控除）で実際に何円返ってくるかを試算します。所得税・住民税の控除上限を考慮した正確な節税額を年別に表示します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件価格（万円）</div>
+        <input type="number" id="mtd_price" value="4000" min="500" max="100000" step="100" oninput="calcMortgageTaxDed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">頭金（万円）</div>
+        <input type="number" id="mtd_down" value="400" min="0" max="50000" step="100" oninput="calcMortgageTaxDed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間給与収入（万円）</div>
+        <input type="number" id="mtd_income" value="700" min="200" max="5000" step="50" oninput="calcMortgageTaxDed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">物件の種類</div>
+        <select id="mtd_type" onchange="calcMortgageTaxDed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="new_zeh">新築（ZEH水準等）</option>
+          <option value="new_std" selected>新築（一般住宅）</option>
+          <option value="used_cert">中古（認定住宅）</option>
+          <option value="used_gen">中古（一般）</option>
+        </select>
+      </div>
+    </div>
+    <div id="mortgage-tax-ded-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -6580,6 +6609,75 @@ function calcRateFixedVsVariable() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ 変動金利は現在の金利が返済期間中変わらない場合の試算です。将来の金利上昇は考慮していません。実際の金利選択は金融機関窓口でご確認ください。</p></div>';
 }
 (function(){ calcRateFixedVsVariable(); })();
+
+function calcMortgageTaxDed() {
+  var el = document.getElementById('mortgage-tax-ded-result');
+  var price = parseFloat(document.getElementById('mtd_price').value) || 4000;
+  var down = parseFloat(document.getElementById('mtd_down').value) || 0;
+  var income = parseFloat(document.getElementById('mtd_income').value) || 700;
+  var type = document.getElementById('mtd_type').value;
+
+  var loanCeilings = { new_zeh: 4500, new_std: 3000, used_cert: 3000, used_gen: 2000 };
+  var rate = 0.007;
+  var years = 13;
+  var loanAmt = price - down;
+  var dedBase = Math.min(loanAmt, loanCeilings[type]);
+
+  function incomeTax(inc) {
+    var taxable = inc - 550;
+    if (taxable <= 0) return 0;
+    if (taxable <= 195) return taxable * 0.05;
+    if (taxable <= 330) return 195 * 0.05 + (taxable - 195) * 0.10;
+    if (taxable <= 695) return 195 * 0.05 + 135 * 0.10 + (taxable - 330) * 0.20;
+    if (taxable <= 900) return 195 * 0.05 + 135 * 0.10 + 365 * 0.20 + (taxable - 695) * 0.23;
+    if (taxable <= 1800) return 195 * 0.05 + 135 * 0.10 + 365 * 0.20 + 205 * 0.23 + (taxable - 900) * 0.33;
+    return 195 * 0.05 + 135 * 0.10 + 365 * 0.20 + 205 * 0.23 + 900 * 0.33 + (taxable - 1800) * 0.40;
+  }
+
+  var itax = incomeTax(income);
+  var住民税上限 = income * 0.05 * 0.1;
+  var totalTaxRoom = itax + 住民税上限;
+
+  var totalSaving = 0;
+  var yearRows = [];
+  for (var y = 1; y <= years; y++) {
+    var remainRatio = Math.max(0, (30 - y) / 30);
+    var balance = Math.round(loanAmt * remainRatio);
+    var deductBase = Math.min(balance, dedBase);
+    var dedAmt = Math.round(deductBase * rate);
+    var actual = Math.min(dedAmt, totalTaxRoom);
+    totalSaving += actual;
+    if (y <= 3 || y === 7 || y === 10 || y === 13) yearRows.push({ y: y, ded: dedAmt, actual: actual });
+  }
+
+  var html = '<div style="display:grid;gap:10px">';
+  html += '<div style="background:rgba(77,182,245,0.06);border:1px solid rgba(77,182,245,0.2);border-radius:10px;padding:14px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">13年間の総節税効果（概算）</div>';
+  html += '<div style="font-size:34px;font-weight:900;color:#4db6f5">'+Math.round(totalSaving)+'<span style="font-size:14px">万円</span></div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px">控除率0.7%・借入上限'+loanCeilings[type]+'万円</div>';
+  html += '</div>';
+
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<thead><tr><th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.08)">年目</th><th style="text-align:right;padding:6px 8px;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.08)">控除額（計算）</th><th style="text-align:right;padding:6px 8px;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.08)">実際の節税額</th></tr></thead>';
+  html += '<tbody>';
+  yearRows.forEach(function(r) {
+    var isFull = r.actual >= r.ded;
+    html += '<tr>';
+    html += '<td style="padding:6px 8px;color:rgba(255,255,255,0.6);border-bottom:1px solid rgba(255,255,255,0.05)">'+r.y+'年目</td>';
+    html += '<td style="text-align:right;padding:6px 8px;color:rgba(255,255,255,0.5);border-bottom:1px solid rgba(255,255,255,0.05)">'+r.ded+'万円</td>';
+    html += '<td style="text-align:right;padding:6px 8px;font-weight:700;color:'+(isFull?'#4ade80':'#fbbf24')+';border-bottom:1px solid rgba(255,255,255,0.05)">'+r.actual+'万円'+(isFull?'':' ⚠')+'</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  if (totalSaving < Math.round(dedBase * rate * years * 0.8)) {
+    html += '<div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;font-size:11px;color:rgba(255,255,255,0.6)">⚠️ 所得税・住民税の上限により控除を満額受け取れない年があります。年収を上げるか借入額・物件価格を調整すると節税効果が最大化されます。</div>';
+  }
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6">※概算です。実際の控除額は確定申告・年末調整の内容により異なります。所得控除前の税額で計算しています。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMortgageTaxDed(); })();
 
 function calcMaxPurchase() {
   var el = document.getElementById('max-purchase-result');
