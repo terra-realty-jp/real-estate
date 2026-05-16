@@ -2359,6 +2359,36 @@
     <button class="btn btn-outline btn-sm" onclick="exportDealsCSV()">CSVエクスポート</button>
   </div>
 
+  <!-- 空き家 小規模ワークスペース・アトリエ転用試算カード -->
+  <div class="card" id="card-small-workspace">
+    <div class="card-title">🎨 空き家をアトリエ・工房・サテライトオフィスに転用したら収益は？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">近年、地方移住者やフリーランスに向けた小規模ワークスペース・アトリエ・スモールオフィスとして空き家を活用するケースが増えています。初期投資と月間収益・回収年数を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">活用タイプ</label>
+        <select id="sw_type" onchange="calcSmallWorkspace()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="studio">アーティスト・陶芸アトリエ（月2〜5万円）</option>
+          <option value="office">サテライトオフィス・テレワーク拠点（月5〜10万円）</option>
+          <option value="workshop">料理教室・ヨガ・習い事スペース（月8〜15万円）</option>
+          <option value="cowork">コワーキングスペース（ドロップイン収入）（月10〜20万円）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物の延床面積（㎡）</label>
+        <input type="number" id="sw_area" value="60" min="15" max="500" step="5" oninput="calcSmallWorkspace()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">改修費用（万円）</label>
+        <input type="number" id="sw_cost" value="150" min="0" max="5000" step="10" oninput="calcSmallWorkspace()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月間管理・光熱費（万円）</label>
+        <input type="number" id="sw_running" value="2" min="0" max="30" step="0.5" oninput="calcSmallWorkspace()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="small-workspace-result"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -6868,6 +6898,40 @@ function calcAkiyaSolar() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ FIT認定・系統連系申請が必要です。空き家への常時送電・受電可能かも要確認。設置は専門業者にご相談ください。</p></div>';
 }
 (function(){ calcAkiyaSolar(); })();
+
+function calcSmallWorkspace() {
+  var el = document.getElementById('small-workspace-result'); if (!el) return;
+  var type = document.getElementById('sw_type').value;
+  var area = parseFloat(document.getElementById('sw_area').value) || 60;
+  var cost = parseFloat(document.getElementById('sw_cost').value) || 150;
+  var running = parseFloat(document.getElementById('sw_running').value) || 2;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var rentMap = { studio: 3.5, office: 7.5, workshop: 11, cowork: 15 };
+  var occupancyMap = { studio: 0.85, office: 0.90, workshop: 0.75, cowork: 0.70 };
+  var typeLabel = { studio: 'アトリエ', office: 'サテライトオフィス', workshop: '習い事スペース', cowork: 'コワーキング' };
+  var rent = rentMap[type];
+  var occ = occupancyMap[type];
+  var monthlyNet = Math.round((rent * occ - running) * 10) / 10;
+  var yearlyNet = Math.round(monthlyNet * 12 * 10) / 10;
+  var payback = monthlyNet > 0 ? Math.ceil(cost / monthlyNet) : 999;
+  var ordinaryRent = Math.round(area * 0.12 * 10) / 10;
+  var ordinaryNet = Math.round((ordinaryRent * 0.85 - running) * 10) / 10;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;font-size:13px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:18px;font-weight:900;color:' + ACCENT + '">' + monthlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間純収益</div></div>';
+  html += '<div><div style="font-size:18px;font-weight:900;color:' + ACCENT + '">' + yearlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間純収益</div></div>';
+  html += '<div><div style="font-size:18px;font-weight:900;color:' + (payback <= 60 ? '#4ade80' : '#facc15') + '">' + (payback >= 999 ? '赤字' : payback + 'ヶ月') + '</div><div style="font-size:10px;color:var(--text-muted)">初期費用回収期間</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">普通賃貸（月' + ordinaryRent.toFixed(1) + '万円想定）との純収益比較: <b style="color:var(--text)">' + (monthlyNet - ordinaryNet).toFixed(1) + '万円/月の差</b></div>';
+  if (monthlyNet > ordinaryNet) {
+    html += '<div style="font-size:12px;color:#4ade80">✅ 普通賃貸よりも収益が見込めます。改修費用の回収後は安定した収入源になります。</div>';
+  } else {
+    html += '<div style="font-size:12px;color:#facc15">⚠️ 普通賃貸の方が安定収益です。集客コスト・稼働率の管理が課題になります。</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSmallWorkspace(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;

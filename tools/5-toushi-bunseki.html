@@ -2490,6 +2490,31 @@
     <div id="stress-test-result"></div>
   </div>
 
+  <!-- 不動産FIREシミュレーターカード -->
+  <div class="card" id="card-fire-target">
+    <div class="card-title">🔥 不動産家賃収入で仕事を辞められる水準に達するまでに何棟必要？（FIREシミュレーター）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">FIRE（経済的自立・早期退職）とは、家賃収入など不労所得で生活費をまかない、働く必要がない状態のことです。月の生活費・物件の平均収益・自己資金から、FIREに必要な物件数・総資産額・達成年数を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月の生活費（万円）</label>
+        <input type="number" id="ft_living" value="25" min="10" max="200" step="1" oninput="calcFIRETarget()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件1棟あたりの月間手残り（万円）</label>
+        <input type="number" id="ft_cf" value="5" min="0.5" max="100" step="0.5" oninput="calcFIRETarget()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件1棟の購入価格（万円）</label>
+        <input type="number" id="ft_price" value="2000" min="100" max="50000" step="100" oninput="calcFIRETarget()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の自己資金・月間貯金（万円）</label>
+        <input type="number" id="ft_saving" value="10" min="0" max="500" step="1" oninput="calcFIRETarget()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="fire-target-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -9257,6 +9282,43 @@ function calcMortgageConstant() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px">※ 元利均等返済方式で試算。実質利回りは諸経費考慮後の利回りを入力してください（表面利回りは過大評価になります）。</p></div>';
 }
 (function(){ calcMortgageConstant(); })();
+
+function calcFIRETarget() {
+  var el = document.getElementById('fire-target-result'); if (!el) return;
+  var living = parseFloat(document.getElementById('ft_living').value) || 25;
+  var cf = parseFloat(document.getElementById('ft_cf').value) || 5;
+  var price = parseFloat(document.getElementById('ft_price').value) || 2000;
+  var saving = parseFloat(document.getElementById('ft_saving').value) || 10;
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.08)', BDR = 'rgba(212,175,55,0.25)';
+  if (cf <= 0) { el.innerHTML = '<div style="color:#f87171;font-size:12px">1棟あたりの手残りを入力してください。</div>'; return; }
+  var neededUnits = Math.ceil(living / cf);
+  var totalAssets = neededUnits * price;
+  var monthlyIncome = neededUnits * cf;
+  var downPctPerUnit = 0.2;
+  var downPerUnit = price * downPctPerUnit;
+  var unitsOwned = 0; var accrued = 0; var monthsElapsed = 0; var maxMonths = 600;
+  while (unitsOwned < neededUnits && monthsElapsed < maxMonths) {
+    accrued += saving + (unitsOwned * cf);
+    if (accrued >= downPerUnit) { accrued -= downPerUnit; unitsOwned++; }
+    monthsElapsed++;
+  }
+  var yearsNeeded = monthsElapsed < maxMonths ? Math.round(monthsElapsed / 12 * 10) / 10 : null;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px"><div style="font-size:20px;font-weight:900;color:' + GOLD + '">' + neededUnits + '棟</div><div style="font-size:10px;color:var(--text-muted)">FIRE達成に必要な物件数</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px"><div style="font-size:20px;font-weight:900;color:#4ade80">' + monthlyIncome + '万円/月</div><div style="font-size:10px;color:var(--text-muted)">達成後の月間家賃収入</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px"><div style="font-size:20px;font-weight:900;color:#60a5fa">' + totalAssets.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">必要総資産額（目安）</div></div>';
+  html += '</div>';
+  if (yearsNeeded) {
+    html += '<div style="font-size:13px;color:var(--text);margin-bottom:6px">⏱️ 現在の積立ペースでFIRE達成まで: <b style="color:' + GOLD + '">' + yearsNeeded + '年</b>（月々' + saving + '万円+収益再投資で複利計算）</div>';
+  } else {
+    html += '<div style="font-size:13px;color:#f87171;margin-bottom:6px">⚠️ 現在の積立ペースでは50年以内に達成困難。積立額の増加・手残り改善が必要です。</div>';
+  }
+  html += '<div style="font-size:11px;color:var(--text-muted)">※頭金20%ずつ順次購入・家賃収入を再投資する試算。実際の融資条件・空室率により変動します。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcFIRETarget(); })();
 
 function calcExitTiming() {
   var el = document.getElementById('exit-timing-result');

@@ -2556,6 +2556,40 @@
     <div id="agency-fee-calc-result"></div>
   </div>
 
+  <!-- 物件タイプ別 売却スピード比較カード -->
+  <div class="card" id="card-sale-type-speed">
+    <div class="card-title">📊 マンション・一戸建て・土地、どれが一番売れやすい？ タイプ別比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">物件の種類によって売れるまでの期間や値下げ率が異なります。あなたの物件タイプ・立地・築年数を入力すると、平均成約期間・値下がりリスク・売却成功率の目安が確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件タイプ</label>
+        <select id="sts_type" onchange="calcSaleTypeSpeed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="mansion">マンション（区分）</option>
+          <option value="house">一戸建て</option>
+          <option value="land">土地（更地）</option>
+          <option value="old_house">築古一戸建て（30年超）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">エリア</label>
+        <select id="sts_area" onchange="calcSaleTypeSpeed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="urban">都市部（東京23区・大阪市内等）</option>
+          <option value="suburb">郊外（政令市の外縁・地方中核市）</option>
+          <option value="rural">地方・田舎（過疎エリア）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">築年数（年）</label>
+        <input type="number" id="sts_age" value="20" min="0" max="80" step="1" oninput="calcSaleTypeSpeed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売出価格（万円）</label>
+        <input type="number" id="sts_price" value="3000" min="100" max="100000" step="100" oninput="calcSaleTypeSpeed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="sale-type-speed-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7627,6 +7661,43 @@ function calcTaxHarvest() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ 居住用財産の損益通算・繰越控除には要件があります（3,000万円控除・居住期間等）。必ず税理士にご相談ください。</p></div>';
 }
 (function(){ calcTaxHarvest(); })();
+
+function calcSaleTypeSpeed() {
+  var type = document.getElementById('sts_type').value;
+  var area = document.getElementById('sts_area').value;
+  var age = parseFloat(document.getElementById('sts_age').value) || 0;
+  var price = parseFloat(document.getElementById('sts_price').value) || 3000;
+  var el = document.getElementById('sale-type-speed-result');
+  if (!el) return;
+  var baseMonths = { mansion: 3.5, house: 4.5, land: 5.0, old_house: 7.0 };
+  var areaFactor = { urban: 0.7, suburb: 1.0, rural: 1.8 };
+  var ageFactor = age <= 10 ? 0.8 : age <= 20 ? 1.0 : age <= 30 ? 1.2 : age <= 40 ? 1.6 : 2.2;
+  var months = Math.round(baseMonths[type] * areaFactor[area] * ageFactor * 10) / 10;
+  var markdown = { mansion: 3, house: 5, land: 4, old_house: 12 };
+  var markdownRate = markdown[type] * (areaFactor[area] > 1 ? areaFactor[area] * 0.8 : 1);
+  var successRate = Math.max(30, Math.min(92, 85 - (months - 3) * 5));
+  var priceAfterMD = Math.round(price * (1 - markdownRate / 100));
+  var typeLabels = { mansion: 'マンション', house: '一戸建て', land: '土地（更地）', old_house: '築古一戸建て' };
+  var areaLabels = { urban: '都市部', suburb: '郊外', rural: '地方・田舎' };
+  var riskColor = months <= 3 ? '#4ade80' : months <= 6 ? '#facc15' : '#f87171';
+  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">' + typeLabels[type] + ' / ' + areaLabels[area] + ' / 築' + age + '年</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px"><div style="font-size:20px;font-weight:900;color:' + riskColor + '">' + months + '</div><div style="font-size:10px;color:var(--text-muted)">平均成約期間（ヶ月）</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px"><div style="font-size:20px;font-weight:900;color:#fb923c">' + markdownRate.toFixed(1) + '%</div><div style="font-size:10px;color:var(--text-muted)">平均値下げ率</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px"><div style="font-size:20px;font-weight:900;color:#4ade80">' + successRate + '%</div><div style="font-size:10px;color:var(--text-muted)">成約成功率の目安</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-top:10px">値下げ後の想定手取り価格: <b style="color:var(--text)">' + priceAfterMD.toLocaleString() + '万円</b>（' + price.toLocaleString() + '万円から約' + Math.round(price - priceAfterMD) + '万円減）</div>';
+  html += '</div>';
+  var tips = '';
+  if (months > 6) tips = '⚠️ 売却完了まで時間がかかる傾向があります。価格設定を周辺相場より5〜10%低めにするか、早期の媒介契約開始を検討してください。';
+  else if (months > 3) tips = '📌 標準的な売却期間です。売出価格を相場通りにすれば、3〜6ヶ月以内の成約が見込めます。';
+  else tips = '✅ 売却しやすい物件タイプです。焦らず相場通りの価格で売出を開始できます。';
+  html += '<div style="font-size:12px;color:var(--text-sub);background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">' + tips + '</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-top:8px">※参考値です。実際の成約期間・値下げ率はエリアや物件状態によって大きく異なります。</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSaleTypeSpeed(); })();
 
 function initSellReadiness() {
   var el = document.getElementById('sell-readiness-content');

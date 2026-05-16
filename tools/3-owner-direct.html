@@ -2197,6 +2197,31 @@
     <div id="property-tax-result"></div>
   </div>
 
+  <!-- 今すぐ買うべきか？ vs 賃貸を続けるか？ 判断カード -->
+  <div class="card" id="card-buy-or-rent">
+    <div class="card-title">🏠 今すぐ家を買うべき？ 賃貸を続けるべき？ 10年トータルコスト比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「今すぐ買う」と「あと数年賃貸を続けながら頭金を貯めてから買う」どちらが10年後の支出が少ないかを比較します。家賃・ローン返済・購入タイミングの3パターンで判断できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">購入希望物件価格（万円）</label>
+        <input type="number" id="bor_price" value="3500" min="500" max="100000" step="100" oninput="calcBuyOrRent()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の頭金（万円）</label>
+        <input type="number" id="bor_down" value="300" min="0" max="50000" step="100" oninput="calcBuyOrRent()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月額家賃（万円）</label>
+        <input type="number" id="bor_rent" value="12" min="3" max="100" step="0.5" oninput="calcBuyOrRent()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">毎月貯金できる額（万円）</label>
+        <input type="number" id="bor_saving" value="5" min="0" max="100" step="1" oninput="calcBuyOrRent()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="buy-or-rent-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -6699,6 +6724,50 @@ function calcRateFixedVsVariable() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ 変動金利は現在の金利が返済期間中変わらない場合の試算です。将来の金利上昇は考慮していません。実際の金利選択は金融機関窓口でご確認ください。</p></div>';
 }
 (function(){ calcRateFixedVsVariable(); })();
+
+function calcBuyOrRent() {
+  var el = document.getElementById('buy-or-rent-result'); if (!el) return;
+  var price = parseFloat(document.getElementById('bor_price').value) || 3500;
+  var down = parseFloat(document.getElementById('bor_down').value) || 300;
+  var rentMonth = parseFloat(document.getElementById('bor_rent').value) || 12;
+  var saving = parseFloat(document.getElementById('bor_saving').value) || 5;
+  var YEARS = 10; var RATE = 0.007; var TERM = 35;
+  function monthly(loanAmt, r, t) { var mr = r / 12; return Math.round(loanAmt * mr * Math.pow(1 + mr, t * 12) / (Math.pow(1 + mr, t * 12) - 1) * 10) / 10; }
+  var loan1 = price - down;
+  var m1 = monthly(loan1, RATE, TERM);
+  var misc1 = Math.round(price * 0.07);
+  var buying1Cost = misc1 + m1 * YEARS * 12;
+  var rentingCost = rentMonth * YEARS * 12;
+  var accrued = down + saving * YEARS * 12;
+  var loan2 = Math.max(0, price - accrued);
+  var m2 = monthly(loan2, RATE, TERM);
+  var misc2 = Math.round(price * 0.07);
+  var buyLater = misc2 + m2 * YEARS * 12 + rentingCost;
+  var label1color = buying1Cost < buyLater ? '#4ade80' : '#fb923c';
+  var label2color = buyLater <= buying1Cost ? '#4ade80' : '#fb923c';
+  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px;text-align:center">';
+  html += '<div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:6px">【今すぐ購入】</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:' + label1color + '">' + Math.round(buying1Cost).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted)">10年間の総支出目安</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">月返済' + m1 + '万円 / 諸費用' + misc1 + '万円</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px;text-align:center">';
+  html += '<div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:6px">【賃貸継続→後で購入】</div>';
+  html += '<div style="font-size:18px;font-weight:900;color:' + label2color + '">' + Math.round(buyLater).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted)">10年間の総支出目安</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">家賃' + Math.round(rentingCost) + '万円 + 後の諸費用' + misc2 + '万円</div>';
+  html += '</div>';
+  html += '</div>';
+  var diff = Math.abs(Math.round(buying1Cost - buyLater));
+  var winner = buying1Cost < buyLater ? '今すぐ購入の方が' + diff + '万円お得' : '賃貸継続→後で購入の方が' + diff + '万円お得';
+  html += '<div style="font-size:13px;font-weight:700;color:#4ade80;text-align:center;margin-bottom:8px">📊 ' + winner + '（10年間）</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">※金利0.7%・35年ローン・諸費用7%・貯金月' + saving + '万円で試算。実際の条件で大きく変わります。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcBuyOrRent(); })();
 
 function initBuyChecklist() {
   var el = document.getElementById('buy-checklist-content');
