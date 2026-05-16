@@ -2389,6 +2389,34 @@
     <div id="small-workspace-result"></div>
   </div>
 
+  <div class="card" id="card-akiya-heatpump">
+    <div class="card-title">🌿 断熱改修・省エネ設備への投資で空き家の賃料UP・光熱費削減はどれくらい？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">断熱強化・ヒートポンプ型エアコン・給湯器の交換などの「省エネリフォーム」は、賃料アップと光熱費節約の両方が期待できます。政府補助金も活用した場合の実質コストと回収期間を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物面積（㎡）（例: 80）</label>
+        <input type="number" id="ahp_area" value="80" min="20" max="500" step="5" oninput="calcAkiyaHeatPump()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">省エネリフォーム予算（万円）（例: 150）</label>
+        <input type="number" id="ahp_budget" value="150" min="30" max="3000" step="10" oninput="calcAkiyaHeatPump()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">活用目的</label>
+        <select id="ahp_usage" onchange="calcAkiyaHeatPump()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="rent">賃貸に出す</option>
+          <option value="minpaku">民泊・短期貸し</option>
+          <option value="sale">リフォームして売却</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定月額賃料（万円）（例: 7）</label>
+        <input type="number" id="ahp_rent" value="7" min="1" max="100" step="0.5" oninput="calcAkiyaHeatPump()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="akiya-heatpump-result"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -6932,6 +6960,36 @@ function calcSmallWorkspace() {
   el.innerHTML = html;
 }
 (function(){ calcSmallWorkspace(); })();
+
+function calcAkiyaHeatPump() {
+  var el = document.getElementById('akiya-heatpump-result'); if (!el) return;
+  var area = parseFloat(document.getElementById('ahp_area').value) || 80;
+  var budget = parseFloat(document.getElementById('ahp_budget').value) || 150;
+  var usage = document.getElementById('ahp_usage').value;
+  var rent = parseFloat(document.getElementById('ahp_rent').value) || 7;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var energySaving = Math.round(area * 0.008 * 10) / 10;
+  var rentUp = usage === 'rent' ? Math.round(rent * 0.07 * 10) / 10 : usage === 'minpaku' ? Math.round(rent * 0.15 * 10) / 10 : 0;
+  var saleUp = usage === 'sale' ? Math.round(area * 6) : 0;
+  var subsidy = Math.min(Math.round(budget * 0.4), 100);
+  var netCost = budget - subsidy;
+  var monthlyBenefit = energySaving + rentUp;
+  var payback = monthlyBenefit > 0 ? Math.ceil(netCost / monthlyBenefit) : 999;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">+' + rentUp.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間賃料UP効果</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:#4ade80">+' + energySaving.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間省エネ節約</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (payback <= 60 ? '#4ade80' : '#facc15') + '">' + (payback >= 999 ? '要確認' : payback + 'ヶ月') + '</div><div style="font-size:10px;color:var(--text-muted)">費用回収期間</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '💰 省エネ補助金の目安: <b style="color:var(--text)">約' + subsidy + '万円</b>（省エネ・ZEH支援補助金）<br>';
+  html += '💸 実質リフォームコスト: <b style="color:var(--text)">' + netCost + '万円</b>（補助金控除後）<br>';
+  if (usage === 'sale') html += '🏠 売却時の価値UP見込み: <b style="color:' + ACCENT + '">+' + saleUp + '万円</b>（省エネ性能が評価される）<br>';
+  html += '<span style="font-size:10px">⚠️ 補助金額・賃料上昇効果は地域・工事内容によって異なります。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaHeatPump(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;

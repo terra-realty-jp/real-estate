@@ -2813,6 +2813,34 @@
     <div id="repair-fund-check-result"></div>
   </div>
 
+  <div class="card" id="card-rent-increase-history">
+    <div class="card-title">📈 家賃の更新時、今の相場と比べて値上げ交渉の余地はどれくらいある？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">長期入居者の家賃は相場より低くなっていることがあります。現在の家賃・入居年数・立地・面積を入力すると、周辺相場との差額・値上げ交渉の目安と成功率を診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の家賃（万円）（例: 8）</label>
+        <input type="number" id="rih_current" value="8" min="1" max="100" step="0.5" oninput="calcRentIncreaseHistory()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">入居年数（年）（例: 5）</label>
+        <input type="number" id="rih_years" value="5" min="0" max="50" step="1" oninput="calcRentIncreaseHistory()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件の立地</label>
+        <select id="rih_area" onchange="calcRentIncreaseHistory()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="urban">都市部（東京23区・大阪市内等）</option>
+          <option value="suburb">郊外（政令市周辺・地方中核市）</option>
+          <option value="rural">地方・田舎</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">専有面積（㎡）（例: 55）</label>
+        <input type="number" id="rih_size" value="55" min="10" max="500" step="5" oninput="calcRentIncreaseHistory()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rent-increase-history-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -9924,6 +9952,42 @@ function calcRepairFundCheck() {
   el.innerHTML = html;
 }
 (function(){ calcRepairFundCheck(); })();
+
+function calcRentIncreaseHistory() {
+  var el = document.getElementById('rent-increase-history-result'); if (!el) return;
+  var current = parseFloat(document.getElementById('rih_current').value) || 8;
+  var years = parseInt(document.getElementById('rih_years').value) || 5;
+  var area = document.getElementById('rih_area').value;
+  var size = parseFloat(document.getElementById('rih_size').value) || 55;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var unitRent = area === 'urban' ? 0.22 : area === 'suburb' ? 0.13 : 0.085;
+  var marketRent = Math.round(size * unitRent * 10) / 10;
+  var gap = Math.round((marketRent - current) * 10) / 10;
+  var gapPct = Math.round((gap / current) * 1000) / 10;
+  var negotiable = gap > 0 ? Math.min(Math.round(gap * 0.6 * 10) / 10, 2) : 0;
+  var successRate = gapPct > 15 ? 75 : gapPct > 10 ? 60 : gapPct > 5 ? 45 : gapPct > 0 ? 30 : 10;
+  successRate += years >= 5 ? 10 : years >= 3 ? 5 : 0;
+  successRate = Math.min(successRate, 85);
+  var rankColor = gapPct > 10 ? '#4ade80' : gapPct > 0 ? '#facc15' : '#fb923c';
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:var(--text)">' + marketRent.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">周辺の相場家賃（推定）</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + rankColor + '">' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">相場との差額</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">+' + negotiable.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">交渉の目安UP幅</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '📊 値上げ交渉の成功率目安: <b style="color:' + rankColor + '">' + successRate + '%</b><br>';
+  if (gap > 0) {
+    html += '✅ 現在の家賃は相場より <b style="color:var(--text)">' + gapPct.toFixed(1) + '%（' + gap.toFixed(1) + '万円）</b> 低い水準です<br>';
+    html += '💡 更新時に <b style="color:' + ACCENT + '">+' + negotiable.toFixed(1) + '万円</b> の値上げ交渉が現実的です（入居' + years + '年で交渉しやすい状況）';
+  } else {
+    html += '⚠️ 現在の家賃は相場水準か高め。値上げ交渉は難しい可能性があります<br>';
+    html += '💡 まずは設備更新・管理改善で入居者満足度を高めることを優先しましょう';
+  }
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcRentIncreaseHistory(); })();
 
 function calcTenantScreening() {
   var el = document.getElementById('tenant-screening-result');

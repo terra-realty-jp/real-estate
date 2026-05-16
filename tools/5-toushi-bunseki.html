@@ -2515,6 +2515,35 @@
     <div id="fire-target-result"></div>
   </div>
 
+  <div class="card" id="card-area-pop-trend">
+    <div class="card-title">📉 このエリアの人口が減ると、10年後の空室率・家賃はどうなる？ リスク予測</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">人口が減っているエリアでは、長期保有するほど空室が増え家賃が下がるリスクがあります。エリアの種類・保有年数・現在の賃料から将来の空室率悪化と賃料下落リスクを予測します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件のエリア</label>
+        <select id="apt_area" onchange="calcAreaPopTrend()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="tokyo">東京23区・大阪市内（人口増加傾向）</option>
+          <option value="metro">政令市・中核市（横ばい〜微減）</option>
+          <option value="local">地方都市（人口減少傾向）</option>
+          <option value="sparse">過疎地域（急速な人口減少）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">保有予定年数（年）（例: 15）</label>
+        <input type="number" id="apt_hold" value="15" min="1" max="40" step="1" oninput="calcAreaPopTrend()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月額賃料（万円）（例: 8）</label>
+        <input type="number" id="apt_rent" value="8" min="1" max="200" step="0.5" oninput="calcAreaPopTrend()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の空室率（%）（例: 5）</label>
+        <input type="number" id="apt_vacancy" value="5" min="0" max="100" step="1" oninput="calcAreaPopTrend()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="area-pop-trend-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -9319,6 +9348,46 @@ function calcFIRETarget() {
   el.innerHTML = html;
 }
 (function(){ calcFIRETarget(); })();
+
+function calcAreaPopTrend() {
+  var el = document.getElementById('area-pop-trend-result'); if (!el) return;
+  var area = document.getElementById('apt_area').value;
+  var hold = parseInt(document.getElementById('apt_hold').value) || 15;
+  var rent = parseFloat(document.getElementById('apt_rent').value) || 8;
+  var vacancy = parseFloat(document.getElementById('apt_vacancy').value) || 5;
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var popChange10Y = area === 'tokyo' ? 2 : area === 'metro' ? -5 : area === 'local' ? -12 : -25;
+  var popChangeHold = Math.round(popChange10Y * hold / 10 * 10) / 10;
+  var futureVacancy = Math.max(0, Math.min(100, Math.round((vacancy + (popChangeHold < 0 ? Math.abs(popChangeHold) * 0.6 : 0)) * 10) / 10));
+  var rentDecline = popChangeHold < 0 ? Math.round(Math.abs(popChangeHold) * 0.4 * 10) / 10 : 0;
+  var futureRent = Math.max(0.5, Math.round((rent * (1 - rentDecline / 100)) * 10) / 10);
+  var riskScore = Math.min(100, Math.max(0, Math.round(
+    (popChangeHold < 0 ? Math.abs(popChangeHold) * 1.5 : 0) +
+    (vacancy > 10 ? 20 : vacancy > 5 ? 10 : 0) +
+    (hold > 20 ? 15 : hold > 10 ? 8 : 3)
+  )));
+  var riskLevel = riskScore >= 60 ? '高リスク' : riskScore >= 35 ? '中リスク' : '低リスク';
+  var riskColor = riskScore >= 60 ? '#fb923c' : riskScore >= 35 ? '#facc15' : '#4ade80';
+  var areaLabel = { tokyo: '東京23区・大阪市内', metro: '政令市・中核市', local: '地方都市', sparse: '過疎地域' }[area];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (popChangeHold >= 0 ? '#4ade80' : '#fb923c') + '">' + (popChangeHold >= 0 ? '+' : '') + popChangeHold + '%</div><div style="font-size:10px;color:var(--text-muted)">' + hold + '年後の人口変化（推定）</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (futureVacancy > 20 ? '#fb923c' : futureVacancy > 10 ? '#facc15' : '#4ade80') + '">' + futureVacancy.toFixed(0) + '%</div><div style="font-size:10px;color:var(--text-muted)">将来の空室率（推定）</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + riskColor + '">' + riskLevel + '</div><div style="font-size:10px;color:var(--text-muted)">空室リスク判定</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '📍 エリア: <b style="color:var(--text)">' + areaLabel + '</b>（' + (popChangeHold >= 0 ? '人口増加傾向' : '人口減少傾向') + '）<br>';
+  if (rentDecline > 0) {
+    html += '📉 ' + hold + '年後の家賃水準: ' + rent + '万円 → <b style="color:#fb923c">' + futureRent.toFixed(1) + '万円</b>（約' + rentDecline.toFixed(0) + '%下落リスク）<br>';
+  } else {
+    html += '📈 人口が増えるエリアのため、家賃水準は維持または上昇が期待できます<br>';
+  }
+  var advice = riskScore >= 60 ? '早期の出口戦略（売却・用途変更）を検討することをお勧めします' : riskScore >= 35 ? '設備更新・賃料競争力の維持が重要です' : '安定したエリアです。長期保有・追加投資も検討できます';
+  html += '💡 <b style="color:var(--text)">対策アドバイス:</b> ' + advice;
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcAreaPopTrend(); })();
 
 function calcExitTiming() {
   var el = document.getElementById('exit-timing-result');

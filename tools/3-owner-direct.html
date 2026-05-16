@@ -2222,6 +2222,30 @@
     <div id="buy-or-rent-result"></div>
   </div>
 
+  <div class="card" id="card-new-home-deduction">
+    <div class="card-title">🏦 マイホーム購入後13年間の住宅ローン控除で税金はいくら戻ってくる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">住宅ローンを組んでマイホームを購入すると、毎年の税金から一定額が戻ってくる「住宅ローン控除（減税）」が使えます。購入価格・頭金・年収・金利から13年間の節税総額を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">購入価格（万円）（例: 4000）</label>
+        <input type="number" id="nhd_price" value="4000" min="500" max="200000" step="100" oninput="calcNewHomeDeduction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">頭金（万円）（例: 400）</label>
+        <input type="number" id="nhd_down" value="400" min="0" max="50000" step="100" oninput="calcNewHomeDeduction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年収（万円）（例: 600）</label>
+        <input type="number" id="nhd_income" value="600" min="200" max="10000" step="50" oninput="calcNewHomeDeduction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">住宅ローン金利（%）（例: 0.6）</label>
+        <input type="number" id="nhd_rate" value="0.6" min="0.1" max="5" step="0.1" oninput="calcNewHomeDeduction()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="new-home-deduction-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -6768,6 +6792,47 @@ function calcBuyOrRent() {
   el.innerHTML = html;
 }
 (function(){ calcBuyOrRent(); })();
+
+function calcNewHomeDeduction() {
+  var el = document.getElementById('new-home-deduction-result'); if (!el) return;
+  var price = parseFloat(document.getElementById('nhd_price').value) || 4000;
+  var down = parseFloat(document.getElementById('nhd_down').value) || 400;
+  var income = parseFloat(document.getElementById('nhd_income').value) || 600;
+  var rate = (parseFloat(document.getElementById('nhd_rate').value) || 0.6) / 100;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var loan = Math.max(0, price - down);
+  var loanBase = Math.min(loan, 4000);
+  var monthlyR = rate / 12;
+  var months = 35 * 12;
+  var monthlyPmt = monthlyR > 0 ? loan * monthlyR * Math.pow(1 + monthlyR, months) / (Math.pow(1 + monthlyR, months) - 1) : loan / months;
+  var balance = loan;
+  var totalDeduction = 0;
+  for (var y = 1; y <= 13; y++) {
+    for (var m = 0; m < 12; m++) {
+      var interest = balance * monthlyR;
+      var principal = monthlyPmt - interest;
+      balance = Math.max(0, balance - principal);
+    }
+    var deduction = Math.round(Math.min(loanBase, balance) * 0.007 * 10) / 10;
+    var taxCap = income > 800 ? 28 : income > 600 ? 22 : income > 450 ? 15 : income > 350 ? 10 : 7;
+    totalDeduction += Math.min(deduction, taxCap);
+  }
+  totalDeduction = Math.round(totalDeduction * 10) / 10;
+  var avgYearly = Math.round(totalDeduction / 13 * 10) / 10;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:18px;font-weight:900;color:' + ACCENT + '">' + totalDeduction.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">13年間の節税総額</div></div>';
+  html += '<div><div style="font-size:18px;font-weight:900;color:' + ACCENT + '">' + avgYearly.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間平均節税額</div></div>';
+  html += '<div><div style="font-size:18px;font-weight:900;color:#4ade80">' + loan.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">借入額（参考）</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '📋 控除の仕組み: 年末ローン残高 × <b style="color:var(--text)">0.7%</b> が所得税・住民税から差し引かれます<br>';
+  html += '⏳ 控除期間: <b style="color:var(--text)">13年間</b>（2022年〜2025年入居の場合）<br>';
+  html += '<span style="font-size:10px">⚠️ 年収が低いほど控除しきれない場合があります。初年度は確定申告が必要です。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcNewHomeDeduction(); })();
 
 function initBuyChecklist() {
   var el = document.getElementById('buy-checklist-content');

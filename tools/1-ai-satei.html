@@ -2590,6 +2590,39 @@
     <div id="sale-type-speed-result"></div>
   </div>
 
+  <div class="card" id="card-condition-premium">
+    <div class="card-title">🏷️ 「駅近」「南向き」などの条件が売却価格にいくら上乗せされる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">物件の立地・向き・種別によって実際の売却価格は大きく変わります。あなたの物件の条件を入力すると、各条件が価格に与えるプレミアム（上乗せ額）を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件種別</label>
+        <select id="cp_type" onchange="calcConditionPremium()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="mansion">マンション（区分）</option>
+          <option value="house">一戸建て</option>
+          <option value="land">土地</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売出価格の目安（万円）（例: 3000）</label>
+        <input type="number" id="cp_base" value="3000" min="100" max="200000" step="100" oninput="calcConditionPremium()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">最寄り駅まで徒歩（分）（例: 8）</label>
+        <input type="number" id="cp_station" value="8" min="1" max="60" step="1" oninput="calcConditionPremium()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">向き</label>
+        <select id="cp_direction" onchange="calcConditionPremium()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="south">南向き</option>
+          <option value="southeast">東南・西南向き</option>
+          <option value="east">東・西向き</option>
+          <option value="north">北向き</option>
+        </select>
+      </div>
+    </div>
+    <div id="condition-premium-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7698,6 +7731,42 @@ function calcSaleTypeSpeed() {
   el.innerHTML = html;
 }
 (function(){ calcSaleTypeSpeed(); })();
+
+function calcConditionPremium() {
+  var el = document.getElementById('condition-premium-result'); if (!el) return;
+  var type = document.getElementById('cp_type').value;
+  var base = parseFloat(document.getElementById('cp_base').value) || 3000;
+  var station = parseInt(document.getElementById('cp_station').value) || 8;
+  var dir = document.getElementById('cp_direction').value;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var stationPct = station <= 3 ? 8 : station <= 5 ? 5 : station <= 8 ? 2 : station <= 10 ? 0 : station <= 15 ? -3 : -7;
+  if (type === 'house') stationPct = Math.round(stationPct * 0.8);
+  if (type === 'land') stationPct = Math.round(stationPct * 0.6);
+  var dirPct = dir === 'south' ? 4 : dir === 'southeast' ? 2 : dir === 'east' ? 0 : -2;
+  if (type === 'land') dirPct = 0;
+  if (type === 'house') dirPct = Math.round(dirPct * 0.7);
+  var totalPct = stationPct + dirPct;
+  var adjustedPrice = Math.round(base * (1 + totalPct / 100));
+  var dirLabel = { south: '南向き', southeast: '東南・西南向き', east: '東・西向き', north: '北向き' }[dir];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (stationPct >= 0 ? ACCENT : '#fb923c') + '">' + (stationPct >= 0 ? '+' : '') + stationPct + '%</div><div style="font-size:10px;color:var(--text-muted)">駅距離プレミアム</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (dirPct >= 0 ? ACCENT : '#fb923c') + '">' + (type === 'land' ? '―' : (dirPct >= 0 ? '+' : '') + dirPct + '%') + '</div><div style="font-size:10px;color:var(--text-muted)">向きプレミアム</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (totalPct >= 0 ? ACCENT : '#fb923c') + '">' + (totalPct >= 0 ? '+' : '') + totalPct + '%</div><div style="font-size:10px;color:var(--text-muted)">合計効果</div></div>';
+  html += '</div>';
+  html += '<div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;margin-bottom:10px">';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">基準価格 ' + base.toLocaleString() + '万円 → 条件調整後の推定価格</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:' + ACCENT + '">' + adjustedPrice.toLocaleString() + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted)">（' + (totalPct >= 0 ? '+' : '') + (adjustedPrice - base).toLocaleString() + '万円）</div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8">';
+  html += '📍 駅距離プレミアム: <b style="color:var(--text)">' + (stationPct >= 0 ? '+' : '') + stationPct + '%</b>　';
+  if (type !== 'land') html += '🧭 向きプレミアム（' + dirLabel + '）: <b style="color:var(--text)">' + (dirPct >= 0 ? '+' : '') + dirPct + '%</b><br>';
+  html += '<span style="font-size:10px">⚠️ 上記は平均的な傾向の目安です。実際の価格は周辺成約事例・物件状態・時期によって異なります。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcConditionPremium(); })();
 
 function initSellReadiness() {
   var el = document.getElementById('sell-readiness-content');
