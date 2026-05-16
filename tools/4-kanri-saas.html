@@ -2610,6 +2610,50 @@
     <div id="occupancy-break-even-result"></div>
   </div>
 
+  <div class="card" id="card-rent-hike-score">
+    <div class="card-title">📈 家賃値上げ交渉 必要性スコア診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">現在の家賃と市場相場の乖離・入居期間・更新時期をもとに、今すぐ値上げ交渉すべきかどうかをスコアリングし、交渉可能な増額幅を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の家賃（万円）</div>
+        <input type="number" id="rhs_current" value="7" min="1" max="100" step="0.5" oninput="calcRentHikeScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">周辺市場の相場家賃（万円）</div>
+        <input type="number" id="rhs_market" value="8" min="1" max="100" step="0.5" oninput="calcRentHikeScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">入居期間（年）</div>
+        <input type="number" id="rhs_tenure" value="5" min="0" max="30" step="1" oninput="calcRentHikeScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">次の更新まで（ヶ月）</div>
+        <select id="rhs_renewal" onchange="calcRentHikeScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1">1〜3ヶ月（更新直前）</option>
+          <option value="6" selected>4〜6ヶ月</option>
+          <option value="12">7〜12ヶ月</option>
+          <option value="24">13ヶ月以上</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">入居者の退去しやすさ</div>
+        <select id="rhs_exit" onchange="calcRentHikeScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="low">退去しにくい（高齢・長期・近隣に物件少ない）</option>
+          <option value="mid" selected>普通</option>
+          <option value="high">退去しやすい（若年・競合物件多い）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">リフォーム・設備更新実績</div>
+        <select id="rhs_reform" onchange="calcRentHikeScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="yes">最近リフォーム・設備更新あり</option>
+          <option value="no" selected>なし</option>
+        </select>
+      </div>
+    </div>
+    <div id="rent-hike-score-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -9687,6 +9731,67 @@ function calcOccupancyBreakEven() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ 変動費には修繕費・固定資産税・保険料等を含む想定です。固定費（ローン返済等）は変動しない前提で試算しています。</p></div>';
 }
 (function(){ calcOccupancyBreakEven(); })();
+
+function calcRentHikeScore() {
+  var el = document.getElementById('rent-hike-score-result');
+  var current = parseFloat(document.getElementById('rhs_current').value) || 7;
+  var market = parseFloat(document.getElementById('rhs_market').value) || 8;
+  var tenure = parseFloat(document.getElementById('rhs_tenure').value) || 5;
+  var renewal = parseInt(document.getElementById('rhs_renewal').value) || 6;
+  var exit = document.getElementById('rhs_exit').value;
+  var reform = document.getElementById('rhs_reform').value;
+
+  var gap = market - current;
+  var gapPct = market > 0 ? (gap / market) * 100 : 0;
+
+  var score = 0;
+  if (gapPct >= 20) score += 35;
+  else if (gapPct >= 10) score += 25;
+  else if (gapPct >= 5) score += 10;
+  if (tenure >= 10) score += 20;
+  else if (tenure >= 5) score += 15;
+  else if (tenure >= 3) score += 8;
+  if (renewal <= 3) score += 25;
+  else if (renewal <= 6) score += 15;
+  else if (renewal <= 12) score += 5;
+  if (exit === 'low') score += 15;
+  else if (exit === 'mid') score += 5;
+  if (reform === 'yes') score += 10;
+  score = Math.min(100, score);
+
+  var proposedHike = gap >= 0 ? Math.min(gap, market * 0.1) : 0;
+  var proposedNew = Math.round((current + proposedHike) * 10) / 10;
+  var yearlyGain = Math.round(proposedHike * 12 * 10) / 10;
+
+  var grade, gColor, timing, advice;
+  if (score >= 70) { grade = 'A'; gColor = '#4ade80'; timing = '今が交渉のベストタイミング'; advice = '市場相場との乖離が大きく、更新時期も近い。法的に正当な理由がある値上げとして提案できます。'; }
+  else if (score >= 50) { grade = 'B'; gColor = '#a3e635'; timing = '交渉可能な状況'; advice = '相場との差が開いてきています。更新時期に合わせて丁寧に交渉を開始しましょう。'; }
+  else if (score >= 30) { grade = 'C'; gColor = '#fbbf24'; timing = '様子見を推奨'; advice = '現時点では交渉の根拠がやや弱い状況です。市場動向を観察し、相場差が広がってから交渉を。'; }
+  else { grade = 'D'; gColor = '#f87171'; timing = '現時点では見送り'; advice = '現在の家賃は市場相場以上か同水準です。値上げよりも入居者の継続・満足度を優先してください。'; }
+
+  var html = '<div style="display:grid;gap:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html += '<div style="background:rgba('+gColor.replace('#','')+',0.05);border:1px solid rgba('+gColor.replace('#','')+',0.2);border-radius:10px;padding:14px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">値上げ交渉スコア</div>';
+  html += '<div style="font-size:44px;font-weight:900;color:'+gColor+';line-height:1">'+grade+'</div>';
+  html += '<div style="font-size:11px;font-weight:700;color:'+gColor+';margin-top:4px">'+score+'点 — '+timing+'</div>';
+  html += '</div>';
+  html += '<div style="background:var(--dark3);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:6px">交渉シミュレーション</div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:3px">現在: <strong style="color:var(--text)">'+current+'万円/月</strong></div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:3px">市場相場: <strong style="color:var(--text)">'+market+'万円/月</strong></div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:3px">相場との差: <strong style="color:'+(gap > 0 ? '#4ade80' : '#f87171')+'">'+Math.round(gap*10)/10+'万円</strong></div>';
+  html += '<div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;margin-top:6px">';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.6)">提案増額幅: <strong style="color:#93c5fd">+'+Math.round(proposedHike*10)/10+'万円</strong></div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.6)">新家賃案: <strong style="color:#93c5fd">'+proposedNew+'万円</strong></div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.6)">年間増収: <strong style="color:#4ade80">+'+yearlyGain+'万円</strong></div>';
+  html += '</div></div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">💡 '+advice+'</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6">借地借家法では「経済事情の変動」「近傍類似物件との比較」を理由に家賃増額を請求できます。増額幅は月額の5〜10%以内が交渉しやすい目安です。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcRentHikeScore(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
