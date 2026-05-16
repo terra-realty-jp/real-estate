@@ -2324,6 +2324,34 @@
     <div id="first-home-benefit-result"></div>
   </div>
 
+  <div class="card" id="card-shared-purchase">
+    <div class="card-title">👫 夫婦・兄弟・親子で一緒に不動産を購入するとどれだけ借入可能額が増える？（共有名義診断）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">2人以上でローンを組む「ペアローン」や「収入合算」では、一人では買えなかった物件が購入できる場合があります。借入可能額のUP効果・持分・将来の注意点を確認します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">本人の年収（万円）（例: 450）</label>
+        <input type="number" id="shp_income1" value="450" min="100" max="5000" step="50" oninput="calcSharedPurchase()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">共有者の年収（万円）（例: 350）</label>
+        <input type="number" id="shp_income2" value="350" min="0" max="5000" step="50" oninput="calcSharedPurchase()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">購入希望価格（万円）（例: 5000）</label>
+        <input type="number" id="shp_price" value="5000" min="500" max="200000" step="100" oninput="calcSharedPurchase()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">共有の関係</label>
+        <select id="shp_rel" onchange="calcSharedPurchase()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="couple">夫婦（ペアローン）</option>
+          <option value="parent">親子（親子ローン）</option>
+          <option value="sibling">兄弟・共同購入</option>
+        </select>
+      </div>
+    </div>
+    <div id="shared-purchase-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -7006,6 +7034,38 @@ function calcFirstHomeBenefit() {
   el.innerHTML = html;
 }
 (function(){ calcFirstHomeBenefit(); })();
+
+function calcSharedPurchase() {
+  var el = document.getElementById('shared-purchase-result'); if (!el) return;
+  var inc1 = parseFloat(document.getElementById('shp_income1').value) || 450;
+  var inc2 = parseFloat(document.getElementById('shp_income2').value) || 350;
+  var price = parseFloat(document.getElementById('shp_price').value) || 5000;
+  var rel = document.getElementById('shp_rel').value;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var loanRatioSingle = 7;
+  var loanRatioJoint = rel === 'couple' ? 7 : rel === 'parent' ? 6.5 : 6;
+  var loanSingle = Math.round(inc1 * loanRatioSingle);
+  var loanJoint = Math.round((inc1 + inc2) * loanRatioJoint);
+  var loanUp = loanJoint - loanSingle;
+  var canAfford = loanJoint >= price ? '購入可能' : '購入には頭金が必要';
+  var share1 = Math.round(inc1 / (inc1 + inc2) * 100);
+  var share2 = 100 - share1;
+  var relLabel = { couple: 'ペアローン（夫婦）', parent: '親子ローン', sibling: '兄弟共有ローン' }[rel];
+  var caution = rel === 'couple' ? '離婚時の名義・ローン負担の問題が生じる可能性があります' : rel === 'parent' ? '親の年齢によって借入期間が制限される場合があります' : '意見が合わない場合の売却・改修が困難になるリスクがあります';
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:var(--text)">' + loanSingle.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">1人での借入上限</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + loanJoint.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">共有での借入上限</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:#4ade80">+' + loanUp.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">借入可能額のUP分</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '👥 【' + relLabel + '】 持分の目安: <b style="color:var(--text)">本人' + share1 + '% / 共有者' + share2 + '%</b>（収入比例）<br>';
+  html += '📋 購入価格 ' + price.toLocaleString() + '万円に対して: <b style="color:' + (loanJoint >= price ? '#4ade80' : '#facc15') + '">' + canAfford + '</b>（頭金除く）<br>';
+  html += '<span style="font-size:10px">⚠️ 注意点: ' + caution + '。契約前に十分な話し合いが必要です。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcSharedPurchase(); })();
 
 function initBuyChecklist() {
   var el = document.getElementById('buy-checklist-content');

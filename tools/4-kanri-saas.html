@@ -2935,6 +2935,38 @@
     <div id="pet-friendly-rent-result"></div>
   </div>
 
+  <div class="card" id="card-water-leak-cost">
+    <div class="card-title">💧 水漏れ・給排水トラブルが発生した場合の修理コストと保険でカバーできる範囲を確認する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">賃貸物件での水漏れ・給排水トラブルは突然発生し、修理コストが大きくなることがあります。トラブルの種類・築年数・階数から修理費の目安と火災保険・賠償責任保険でカバーできる範囲を確認します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">トラブルの種類</label>
+        <select id="wlc_type" onchange="calcWaterLeakCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="faucet">蛇口・シャワーの水漏れ（軽微）</option>
+          <option value="pipe">排水管・給水管の破裂（中程度）</option>
+          <option value="roof">屋根・外壁からの雨漏り（重大）</option>
+          <option value="flood">下階への浸水・漏水（最重大）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件の築年数（年）</label>
+        <input type="number" id="wlc_age" value="20" min="0" max="80" step="1" oninput="calcWaterLeakCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在、火災保険に加入している</label>
+        <select id="wlc_ins" onchange="calcWaterLeakCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="yes">加入している</option>
+          <option value="no">未加入・不明</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件の延床面積（㎡）</label>
+        <input type="number" id="wlc_area" value="100" min="20" max="2000" step="10" oninput="calcWaterLeakCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="water-leak-cost-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -10181,6 +10213,42 @@ function calcPetFriendlyRent() {
   el.innerHTML = html;
 }
 (function(){ calcPetFriendlyRent(); })();
+
+function calcWaterLeakCost() {
+  var el = document.getElementById('water-leak-cost-result'); if (!el) return;
+  var type = document.getElementById('wlc_type').value;
+  var age = parseInt(document.getElementById('wlc_age').value) || 20;
+  var ins = document.getElementById('wlc_ins').value;
+  var area = parseFloat(document.getElementById('wlc_area').value) || 100;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var baseCostMap = { faucet: 3, pipe: 30, roof: 80, flood: 150 };
+  var ageMult = age <= 10 ? 0.8 : age <= 20 ? 1.0 : age <= 30 ? 1.3 : 1.7;
+  var baseCost = Math.round(baseCostMap[type] * ageMult);
+  var additionalCost = type === 'flood' ? Math.round(area * 0.5) : type === 'roof' ? Math.round(area * 0.2) : 0;
+  var totalCost = baseCost + additionalCost;
+  var insRatio = ins === 'yes' ? (type === 'faucet' ? 0.5 : type === 'pipe' ? 0.7 : type === 'roof' ? 0.6 : 0.5) : 0;
+  var insCoverage = Math.round(totalCost * insRatio);
+  var outOfPocket = totalCost - insCoverage;
+  var typeLabel = { faucet: '蛇口・シャワー水漏れ', pipe: '配管破裂', roof: '雨漏り', flood: '下階浸水' }[type];
+  var riskColor = type === 'faucet' ? '#4ade80' : type === 'pipe' ? '#facc15' : '#fb923c';
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + riskColor + '">' + totalCost + '万円</div><div style="font-size:10px;color:var(--text-muted)">修理費の目安</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:#4ade80">' + insCoverage + '万円</div><div style="font-size:10px;color:var(--text-muted)">保険でカバーできる額</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + riskColor + '">' + outOfPocket + '万円</div><div style="font-size:10px;color:var(--text-muted)">自己負担額</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '💧 【' + typeLabel + '】 築' + age + '年: 修理費目安 <b style="color:var(--text)">' + totalCost + '万円</b><br>';
+  if (ins === 'yes') {
+    html += '🛡️ 火災保険（建物+賠償責任特約）でカバー見込み: <b style="color:#4ade80">' + insCoverage + '万円</b>（自己負担: ' + outOfPocket + '万円）<br>';
+  } else {
+    html += '⚠️ 火災保険未加入の場合、修理費用の <b style="color:#fb923c">' + totalCost + '万円が全額自己負担</b> になります。今すぐ加入を検討してください<br>';
+  }
+  html += '<span style="font-size:10px">⚠️ 築' + age + '年の物件では配管の定期点検（5〜10年ごと）を実施すると大きなトラブルを防げます。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcWaterLeakCost(); })();
 
 function calcTenantScreening() {
   var el = document.getElementById('tenant-screening-result');

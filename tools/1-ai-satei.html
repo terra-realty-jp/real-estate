@@ -2699,6 +2699,34 @@
     <div id="tax-free-gift-result"></div>
   </div>
 
+  <div class="card" id="card-diy-vs-pro-renovate">
+    <div class="card-title">🔨 売却前のリフォームはDIY（自分でやる）とプロ依頼でどれだけ売却価格と手取りが変わる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">軽微なクロス・フローリングの補修であればDIYで費用を抑えられますが、購入者の印象・価格UPの確実性ではプロのリフォームが優れています。どちらが手取りを最大化するかを試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の売却想定価格（万円）（例: 2500）</label>
+        <input type="number" id="dvp_base" value="2500" min="100" max="200000" step="100" oninput="calcDIYvsProRenovate()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">DIYリフォーム費用（万円）（例: 15）</label>
+        <input type="number" id="dvp_diy" value="15" min="1" max="500" step="5" oninput="calcDIYvsProRenovate()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">プロへの依頼費用（万円）（例: 60）</label>
+        <input type="number" id="dvp_pro" value="60" min="10" max="3000" step="10" oninput="calcDIYvsProRenovate()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リフォームの規模</label>
+        <select id="dvp_scale" onchange="calcDIYvsProRenovate()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="small">軽微（クロス・クリーニング程度）</option>
+          <option value="mid">中規模（水回り・床）</option>
+          <option value="large">大規模（キッチン・浴室含む）</option>
+        </select>
+      </div>
+    </div>
+    <div id="diy-vs-pro-renovate-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7943,6 +7971,39 @@ function calcTaxFreeGift() {
   el.innerHTML = html;
 }
 (function(){ calcTaxFreeGift(); })();
+
+function calcDIYvsProRenovate() {
+  var el = document.getElementById('diy-vs-pro-renovate-result'); if (!el) return;
+  var base = parseFloat(document.getElementById('dvp_base').value) || 2500;
+  var diy = parseFloat(document.getElementById('dvp_diy').value) || 15;
+  var pro = parseFloat(document.getElementById('dvp_pro').value) || 60;
+  var scale = document.getElementById('dvp_scale').value;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var diyUpMap = { small: 0.015, mid: 0.025, large: 0.03 };
+  var proUpMap = { small: 0.03, mid: 0.06, large: 0.09 };
+  var diyUpRate = diyUpMap[scale], proUpRate = proUpMap[scale];
+  var diyPriceUp = Math.round(base * diyUpRate);
+  var proPriceUp = Math.round(base * proUpRate);
+  var diyNet = diyPriceUp - diy;
+  var proNet = proPriceUp - pro;
+  var better = diyNet >= proNet ? 'DIY' : 'プロ依頼';
+  var betterNet = Math.max(diyNet, proNet);
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">🔨 DIY（' + diy + '万円）</div>';
+  html += '<div style="font-size:14px;font-weight:700;color:var(--text)">価格UP: +' + diyPriceUp + '万円</div>';
+  html += '<div style="font-size:15px;font-weight:900;color:' + (diyNet >= 0 ? ACCENT : '#fb923c') + '">純利益: ' + (diyNet >= 0 ? '+' : '') + diyNet + '万円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">🏗️ プロ依頼（' + pro + '万円）</div>';
+  html += '<div style="font-size:14px;font-weight:700;color:var(--text)">価格UP: +' + proPriceUp + '万円</div>';
+  html += '<div style="font-size:15px;font-weight:900;color:' + (proNet >= 0 ? ACCENT : '#fb923c') + '">純利益: ' + (proNet >= 0 ? '+' : '') + proNet + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '🏆 より有利なのは: <b style="color:' + ACCENT + '">' + better + '（純利益+' + betterNet + '万円）</b><br>';
+  html += '💡 ' + (scale === 'small' ? 'DIYは軽微なクロス貼りや清掃では十分な効果があります。大規模になるほどプロの品質保証が有利になります' : scale === 'mid' ? '水回りはDIYでは品質リスクがあります。プロの方が価格UP効果・買い手の安心感が高いケースが多いです' : '大規模リフォームはプロへの依頼が基本です。DIYでは品質面で購入者に不安を与える可能性があります');
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcDIYvsProRenovate(); })();
 
 function initSellReadiness() {
   var el = document.getElementById('sell-readiness-content');

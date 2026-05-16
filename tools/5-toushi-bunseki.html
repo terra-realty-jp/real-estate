@@ -2624,6 +2624,30 @@
     <div id="land-value-up-result"></div>
   </div>
 
+  <div class="card" id="card-investor-expenses">
+    <div class="card-title">🧾 不動産投資の確定申告で「経費にできるもの」を一覧でチェックして節税額を試算する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産投資では、減価償却費・ローン利息・管理費・固定資産税・修繕費などを経費として申告することで税負担を大きく減らせます。年間の家賃収入・主な経費を入力して節税可能額を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間家賃収入（万円）（例: 150）</label>
+        <input type="number" id="ie_income" value="150" min="10" max="10000" step="10" oninput="calcInvestorExpenses()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">ローン年間利息（万円）（例: 30）</label>
+        <input type="number" id="ie_interest" value="30" min="0" max="1000" step="5" oninput="calcInvestorExpenses()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">建物の取得費（万円）（例: 1500）</label>
+        <input type="number" id="ie_building" value="1500" min="100" max="100000" step="100" oninput="calcInvestorExpenses()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">給与等の年収（万円）（例: 600）</label>
+        <input type="number" id="ie_salary" value="600" min="0" max="10000" step="50" oninput="calcInvestorExpenses()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="investor-expenses-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -9573,6 +9597,44 @@ function calcLandValueUp() {
   el.innerHTML = html;
 }
 (function(){ calcLandValueUp(); })();
+
+function calcInvestorExpenses() {
+  var el = document.getElementById('investor-expenses-result'); if (!el) return;
+  var income = parseFloat(document.getElementById('ie_income').value) || 150;
+  var interest = parseFloat(document.getElementById('ie_interest').value) || 30;
+  var building = parseFloat(document.getElementById('ie_building').value) || 1500;
+  var salary = parseFloat(document.getElementById('ie_salary').value) || 600;
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var deprYears = 22;
+  var depreciation = Math.round(building / deprYears * 10) / 10;
+  var mgmt = Math.round(income * 0.05 * 10) / 10;
+  var tax = Math.round(income * 0.04 * 10) / 10;
+  var repair = Math.round(income * 0.05 * 10) / 10;
+  var misc = Math.round(income * 0.02 * 10) / 10;
+  var totalExpense = Math.round((interest + depreciation + mgmt + tax + repair + misc) * 10) / 10;
+  var netIncome = Math.round((income - totalExpense) * 10) / 10;
+  var taxRate = salary > 1000 ? 0.33 : salary > 700 ? 0.23 : salary > 500 ? 0.20 : 0.10;
+  var taxSaving = netIncome < 0 ? Math.round(Math.abs(netIncome) * taxRate * 10) / 10 : 0;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:var(--text)">' + income + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間家賃収入</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:#fb923c">' + totalExpense.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">申告できる経費合計</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (taxSaving > 0 ? GOLD : (netIncome >= 0 ? '#facc15' : '#4ade80')) + '">' + (taxSaving > 0 ? '節税' + taxSaving.toFixed(0) + '万円' : '課税所得+' + netIncome.toFixed(0) + '万円') + '</div><div style="font-size:10px;color:var(--text-muted)">' + (taxSaving > 0 ? '損益通算効果' : '追加課税対象') + '</div></div>';
+  html += '</div>';
+  var expItems = [
+    ['ローン利息', interest, '全額経費OK'],
+    ['減価償却費（木造22年）', depreciation.toFixed(0), '建物' + building + '万円÷22年'],
+    ['管理費・修繕費', (mgmt + repair).toFixed(0), '収入の約10%'],
+    ['固定資産税', tax.toFixed(0), '収入の約4%'],
+    ['その他（通信・交通等）', misc.toFixed(0), '収入の2%程度'],
+  ];
+  html += '<div style="font-size:12px;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;line-height:2">';
+  expItems.forEach(function(e) { html += '✅ <b style="color:var(--text)">' + e[0] + '</b>: <b style="color:' + GOLD + '">' + e[1] + '万円</b>（' + e[2] + '）<br>'; });
+  html += '<span style="font-size:10px">⚠️ 減価償却費の計上年数・経費区分は税理士の確認を推奨します。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcInvestorExpenses(); })();
 
 function calcExitTiming() {
   var el = document.getElementById('exit-timing-result');
