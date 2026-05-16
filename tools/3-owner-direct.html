@@ -1471,7 +1471,7 @@
         <input type="number" id="pg_bid" value="3400" min="100" max="100000" step="100" oninput="calcPriceGap()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">売主のローン残高（万円）</label>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">売主のローン残高（完済済みなら0と入力）</label>
         <input type="number" id="pg_loan" value="2000" min="0" max="100000" step="100" oninput="calcPriceGap()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
@@ -1521,7 +1521,7 @@
         <input type="number" id="rr_balance" value="3000" min="100" max="50000" step="100" oninput="calcRateRise()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現在の金利（%）</label>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">現在の金利（例: 変動なら0.4〜0.6、固定なら1.5〜2.0）</label>
         <input type="number" id="rr_rate" value="0.5" min="0.1" max="8" step="0.1" oninput="calcRateRise()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
@@ -1529,7 +1529,7 @@
         <input type="number" id="rr_term" value="25" min="1" max="50" step="1" oninput="calcRateRise()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">月収（収支の安全確認用・万円）</label>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">月収（例: 手取り35万円なら35と入力）</label>
         <input type="number" id="rr_income" value="35" min="10" max="300" step="1" oninput="calcRateRise()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
     </div>
@@ -6366,7 +6366,7 @@ function calcPriceGap() {
   html += '<div style="font-size:18px;font-weight:900;color:' + probColor + '">' + prob + '%</div>';
   html += '</div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
-  html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">買主手取り（概算）</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">売主の手取り概算</div>';
   html += '<div style="font-size:18px;font-weight:900;color:' + (netAtBid >= 0 ? 'var(--green)' : 'var(--red)') + '">' + Math.round(netAtBid).toLocaleString() + '万</div>';
   html += '</div>';
   html += '</div>';
@@ -6435,6 +6435,9 @@ function calcRateRise() {
   var riseAmt = monthlyPayment(balance, rate + 2.0, term) - current;
   html += '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">';
   html += '💡 +2%シナリオで月' + Math.round(riseAmt / 10000 * 10) / 10 + '万円の増加。変動金利の5年ルール・125%ルールにより即時に上昇しない場合もありますが、長期的な上昇リスクに備えて毎月の余裕資金を確認しておきましょう。';
+  html += '</div>';
+  html += '<div style="margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:11px;line-height:1.7">';
+  html += '<span style="color:var(--green);font-weight:700">●25%未満</span>＝安全圏　<span style="color:#f9a825;font-weight:700">●25〜35%</span>＝注意が必要　<span style="color:var(--red);font-weight:700">●35%超</span>＝返済が家計を圧迫しやすい　（返済比率の目安）';
   html += '</div></div>';
   el.innerHTML = html;
 }
