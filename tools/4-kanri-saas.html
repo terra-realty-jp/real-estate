@@ -3366,6 +3366,32 @@
     <div id="ris_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 設備修理vs交換コスト比較カード -->
+  <div class="card" id="card-repair-vs-replace">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔧 エアコン・給湯器が壊れた！修理するか新品に交換するか、どちらが得か比較する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">設備が故障したとき「修理 vs 交換」の判断に悩む大家さんが多いです。修理後の想定寿命と交換後の耐用年数を比べ、10年間あたりのコストで「どちらが得か」を判定します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">修理費用（万円）（例: 3）</label>
+        <input type="number" id="rv_repair_cost" placeholder="例: 3" step="0.1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">修理後に使える年数（年）（例: 3）</label>
+        <input type="number" id="rv_repair_life" placeholder="例: 3" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">新品交換費用（万円）（例: 15）</label>
+        <input type="number" id="rv_replace_cost" placeholder="例: 15" step="0.1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">新品の想定耐用年数（年）（例: 10）</label>
+        <input type="number" id="rv_replace_life" placeholder="例: 10" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcRepairVsReplace()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">修理 vs 交換 どちらが得か判定する</button>
+    <div id="rv_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -11565,6 +11591,54 @@ function calcSubleaseVsSelf() {
   el.innerHTML = html;
 }
 (function(){ calcSubleaseVsSelf(); })();
+
+function calcRepairVsReplace() {
+  var el = document.getElementById('rv_result');
+  var repairCost = parseFloat(document.getElementById('rv_repair_cost').value);
+  var repairLife = parseFloat(document.getElementById('rv_repair_life').value);
+  var replaceCost = parseFloat(document.getElementById('rv_replace_cost').value);
+  var replaceLife = parseFloat(document.getElementById('rv_replace_life').value);
+  if (!repairCost || !repairLife || !replaceCost || !replaceLife) {
+    el.style.display = 'block';
+    el.innerHTML = '<div style="color:#f87171;font-size:13px">すべての項目を入力してください</div>';
+    return;
+  }
+  var repairPerYear = repairCost / repairLife;
+  var replacePerYear = replaceCost / replaceLife;
+  var compareYears = 10;
+  var repairTotal10 = repairCost * Math.ceil(compareYears / repairLife);
+  var replaceTotal10 = replaceCost * Math.ceil(compareYears / replaceLife);
+  var diff = repairTotal10 - replaceTotal10;
+  var betterOption, betterColor, advice;
+  if (diff > 0) {
+    betterOption = '新品交換の方が得';
+    betterColor = '#4ade80';
+    advice = '10年間で修理を繰り返すより、今すぐ新品に交換した方が' + Math.round(diff * 10) / 10 + '万円お得です。長期コストを考えると交換をおすすめします。';
+  } else if (diff < 0) {
+    betterOption = '修理の方が得';
+    betterColor = '#93c5fd';
+    advice = '今は修理で対応する方が' + Math.round(Math.abs(diff) * 10) / 10 + '万円お得です。ただし修理後の信頼性や入居者への印象も考慮して判断してください。';
+  } else {
+    betterOption = '10年コストはほぼ同等';
+    betterColor = '#fbbf24';
+    advice = '10年間のコストはほぼ同じです。設備の信頼性・入居者への印象を考えると交換をおすすめします。';
+  }
+  var html = '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:14px;font-weight:900;color:' + betterColor + ';margin-bottom:12px">\ud83d\udd0d 判定：' + betterOption + '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+  html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">修理（10年コスト）</div><div style="font-size:18px;font-weight:900;color:#93c5fd">' + Math.round(repairTotal10 * 10) / 10 + '万円</div><div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">' + Math.ceil(compareYears / repairLife) + '回修理×' + repairCost + '万円</div></div>';
+  html += '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">交換（10年コスト）</div><div style="font-size:18px;font-weight:900;color:#4ade80">' + Math.round(replaceTotal10 * 10) / 10 + '万円</div><div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">' + Math.ceil(compareYears / replaceLife) + '回交換×' + replaceCost + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+  html += '<div style="text-align:center;padding:6px;background:rgba(255,255,255,0.03);border-radius:6px"><div style="font-size:10px;color:rgba(255,255,255,0.4)">修理の年平均コスト</div><div style="font-size:14px;font-weight:700;color:#93c5fd">' + Math.round(repairPerYear * 10) / 10 + '万円/年</div></div>';
+  html += '<div style="text-align:center;padding:6px;background:rgba(255,255,255,0.03);border-radius:6px"><div style="font-size:10px;color:rgba(255,255,255,0.4)">交換の年平均コスト</div><div style="font-size:14px;font-weight:700;color:#4ade80">' + Math.round(replacePerYear * 10) / 10 + '万円/年</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.7;padding:10px;background:rgba(255,255,255,0.03);border-radius:6px">' + advice + '</div>';
+  html += '<div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.4)">※ 故障後の信頼性・入居者への印象・省エネ性能なども考慮して最終判断してください</div>';
+  html += '</div>';
+  el.style.display = 'block';
+  el.innerHTML = html;
+}
 
 var _kanriCat = '';
 var _kanriCatKw = {
