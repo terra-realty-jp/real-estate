@@ -2455,6 +2455,35 @@
     <div id="price-fair-check-result"></div>
   </div>
 
+  <!-- 金利上昇・家賃下落 ストレステストカード -->
+  <div class="card" id="card-stress-test">
+    <div class="card-title">⚠️ 金利上昇・家賃下落 ストレステスト</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">金利が上がり家賃が下がった場合、月次CF・年間収益がどう変化するかを9シナリオで確認します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">借入残高（万円）</div>
+        <input id="st2_loan" type="number" value="5000" min="100" max="500000" step="100" oninput="calcStressTest()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の金利（%）</div>
+        <input id="st2_rate" type="number" value="0.5" min="0.1" max="8" step="0.1" oninput="calcStressTest()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">残ローン期間（年）</div>
+        <input id="st2_term" type="number" value="25" min="1" max="35" step="1" oninput="calcStressTest()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の月間家賃収入（万円）</div>
+        <input id="st2_rent" type="number" value="25" min="1" max="5000" step="0.5" oninput="calcStressTest()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div style="grid-column:1/-1">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">月間運営費（管理費・固定資産税等・万円）</div>
+        <input id="st2_opex" type="number" value="5" min="0" max="500" step="0.5" oninput="calcStressTest()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="stress-test-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -9369,6 +9398,67 @@ function calcPropertyMatrixCF() {
   el.innerHTML = html;
 }
 (function(){ calcPropertyMatrixCF(); })();
+
+function calcStressTest() {
+  var el = document.getElementById('stress-test-result');
+  var loan = parseFloat(document.getElementById('st2_loan').value) || 5000;
+  var rate = parseFloat(document.getElementById('st2_rate').value) || 0.5;
+  var term = parseInt(document.getElementById('st2_term').value) || 25;
+  var rent = parseFloat(document.getElementById('st2_rent').value) || 25;
+  var opex = parseFloat(document.getElementById('st2_opex').value) || 5;
+
+  function monthPay(principal, annualRate, years) {
+    var mr = annualRate / 100 / 12;
+    var n = years * 12;
+    if (mr === 0) return principal / n;
+    return principal * mr * Math.pow(1 + mr, n) / (Math.pow(1 + mr, n) - 1);
+  }
+
+  var rateDeltas = [0, 1, 2];
+  var rentDeltas = [0, -10, -20];
+
+  var basePayment = monthPay(loan, rate, term);
+  var baseCF = rent - basePayment - opex;
+
+  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:13px;font-weight:900;color:#fbbf24;margin-bottom:10px">⚠️ 月次CF ストレステスト（9シナリオ）</div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px">現在の月次CF: <strong style="color:' + (baseCF >= 0 ? '#4ade80' : '#f87171') + '">' + Math.round(baseCF * 10) / 10 + '万円</strong>　月返済: ' + Math.round(basePayment * 10) / 10 + '万円</div>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>'
+    + '<th style="padding:5px 6px;text-align:left;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.1);min-width:70px">金利変化 →<br>家賃変化 ↓</th>';
+  rateDeltas.forEach(function(rd) {
+    html += '<th style="padding:5px 6px;text-align:center;color:' + (rd === 0 ? '#93c5fd' : '#f87171') + ';border-bottom:1px solid rgba(255,255,255,0.1)">' + (rd === 0 ? '現在' : '+' + rd + '%') + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  rentDeltas.forEach(function(rentD) {
+    html += '<tr><td style="padding:5px 6px;border-bottom:1px solid rgba(255,255,255,0.05);color:' + (rentD === 0 ? '#93c5fd' : '#f87171') + ';white-space:nowrap">' + (rentD === 0 ? '現在' : rentD + '%') + '</td>';
+    rateDeltas.forEach(function(rd) {
+      var newRate = rate + rd;
+      var newRent = rent * (1 + rentD / 100);
+      var newPay = monthPay(loan, newRate, term);
+      var cf = newRent - newPay - opex;
+      var isBase = rd === 0 && rentD === 0;
+      var color = cf >= 0 ? '#4ade80' : cf >= -5 ? '#fbbf24' : '#f87171';
+      var bg = isBase ? 'rgba(147,197,253,0.1)' : cf < 0 ? 'rgba(248,113,113,0.08)' : '';
+      html += '<td style="padding:5px 6px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);' + (bg ? 'background:' + bg + ';' : '') + 'font-weight:' + (isBase ? '700' : '400') + ';color:' + color + '">'
+        + (cf >= 0 ? '+' : '') + Math.round(cf * 10) / 10 + '万円</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  var worstCF = rent * 0.8 - monthPay(loan, rate + 2, term) - opex;
+  html += '<div style="margin-top:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">';
+  html += '💡 最悪シナリオ（金利+2%・家賃−20%）の月次CF: <strong style="color:' + (worstCF >= 0 ? '#4ade80' : '#f87171') + '">' + (worstCF >= 0 ? '+' : '') + Math.round(worstCF * 10) / 10 + '万円</strong>。';
+  if (worstCF < 0) {
+    html += '赤字になります。繰上げ返済・修繕積立の見直し、追加担保の確保を検討してください。';
+  } else {
+    html += '最悪シナリオでも黒字を維持できます。現在の財務体力は比較的安定しています。';
+  }
+  html += '</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;line-height:1.6">※ 変動金利は5年ごとに見直しが多い。金利上昇幅は概算。運営費は固定と仮定。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcStressTest(); })();
 
 function calcPriceFairCheck() {
   var el = document.getElementById('price-fair-check-result');
