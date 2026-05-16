@@ -2384,6 +2384,36 @@
     <div id="akiya-rent-income-result"></div>
   </div>
 
+
+  <!-- 空き家賃貸の確定申告・税金試算 -->
+  <div class="card" id="card-rental-income-tax">
+    <div class="card-title">📝 空き家を人に貸すと、年間の税金はいくら？ 確定申告の概算試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家を賃貸に出すと年間の家賃収入が発生し、確定申告が必要になります。年間家賃収入・経費（修繕費・管理費・減価償却など）・本業の年収から概算税額を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間家賃収入（万円）<br><span style="color:rgba(255,255,255,0.35)">月額×12ヶ月の合計（例: 月6万円なら72）</span></label>
+        <input type="number" id="rit_income" placeholder="例: 72" step="1" oninput="calcRentalIncomeTax()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間の必要経費（万円）<br><span style="color:rgba(255,255,255,0.35)">管理費・修繕費・固定資産税など（不明なら収入の30〜50%）</span></label>
+        <input type="number" id="rit_expense" placeholder="例: 30" step="1" oninput="calcRentalIncomeTax()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">本業の年収（万円）<br><span style="color:rgba(255,255,255,0.35)">会社員の場合は源泉徴収票の「支払金額」</span></label>
+        <input type="number" id="rit_salary" placeholder="例: 500" step="10" oninput="calcRentalIncomeTax()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">建物の築年数（年）<br><span style="color:rgba(255,255,255,0.35)">減価償却費の計算に使用（わからなければ30と入力）</span></label>
+        <input type="number" id="rit_age" placeholder="例: 30" value="30" step="1" oninput="calcRentalIncomeTax()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">建物の固定資産税評価額（万円）<br><span style="color:rgba(255,255,255,0.35)">市区町村から届く固定資産税通知書に記載（わからなければ500と入力）</span></label>
+        <input type="number" id="rit_eval" placeholder="例: 500" value="500" step="10" oninput="calcRentalIncomeTax()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="rit_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -8802,6 +8832,97 @@ function calcAkiyaManageCost() {
 
   el.style.display = 'block';
   el.innerHTML = html;
+}
+
+
+function calcRentalIncomeTax() {
+  var el = document.getElementById('rit_result');
+  if (!el) return;
+  var income = parseFloat(document.getElementById('rit_income').value) || 0;
+  var expense = parseFloat(document.getElementById('rit_expense').value) || 0;
+  var salary = parseFloat(document.getElementById('rit_salary').value) || 0;
+  var age = parseInt(document.getElementById('rit_age').value) || 30;
+  var eval_ = parseFloat(document.getElementById('rit_eval').value) || 500;
+
+  if (income <= 0) { el.style.display='none'; return; }
+
+  // 減価償却費計算（木造: 耐用年数22年、築年数考慮）
+  var usefulLife = Math.max(4, Math.floor(22 - age * 0.8));
+  var depreciationRate = 1 / usefulLife;
+  var depreciation = Math.round(eval_ * depreciationRate * 10) / 10;
+
+  // 課税対象の不動産所得
+  var totalExpense = expense + depreciation;
+  var rentalProfit = income - totalExpense;
+  if (rentalProfit < 0) rentalProfit = 0;
+
+  // 給与所得（簡易：給与所得控除後）
+  var salaryAfterDeduction;
+  if (salary <= 162.5) salaryAfterDeduction = salary - 55;
+  else if (salary <= 180) salaryAfterDeduction = salary * 0.6 - 8;
+  else if (salary <= 360) salaryAfterDeduction = salary * 0.7 - 26;
+  else if (salary <= 660) salaryAfterDeduction = salary * 0.8 - 62;
+  else if (salary <= 850) salaryAfterDeduction = salary * 0.9 - 128;
+  else salaryAfterDeduction = salary - 195;
+  if (salaryAfterDeduction < 0) salaryAfterDeduction = 0;
+
+  // 合計所得（簡易：基礎控除48万円のみ）
+  var totalIncome = salaryAfterDeduction + rentalProfit - 48;
+  if (totalIncome < 0) totalIncome = 0;
+
+  // 所得税（超過累進課税 簡易）
+  var incomeTax;
+  if (totalIncome <= 195) incomeTax = totalIncome * 0.05;
+  else if (totalIncome <= 330) incomeTax = totalIncome * 0.10 - 9.75;
+  else if (totalIncome <= 695) incomeTax = totalIncome * 0.20 - 42.75;
+  else if (totalIncome <= 900) incomeTax = totalIncome * 0.23 - 63.6;
+  else if (totalIncome <= 1800) incomeTax = totalIncome * 0.33 - 153.6;
+  else if (totalIncome <= 4000) incomeTax = totalIncome * 0.40 - 279.6;
+  else incomeTax = totalIncome * 0.45 - 479.6;
+
+  // 不動産所得に対する追加税（限界税率×不動産所得）
+  var marginalRate;
+  if (totalIncome <= 195) marginalRate = 0.05;
+  else if (totalIncome <= 330) marginalRate = 0.10;
+  else if (totalIncome <= 695) marginalRate = 0.20;
+  else if (totalIncome <= 900) marginalRate = 0.23;
+  else if (totalIncome <= 1800) marginalRate = 0.33;
+  else marginalRate = 0.40;
+
+  var extraTaxFromRental = rentalProfit * marginalRate;
+  var住民税 = rentalProfit * 0.10;
+  var復興税 = extraTaxFromRental * 0.021;
+  var totalRentalTax = Math.round(extraTaxFromRental + 住民税 + 復興税);
+  var netRentalIncome = Math.round(rentalProfit - totalRentalTax);
+
+  var taxRate = rentalProfit > 0 ? Math.round(totalRentalTax / rentalProfit * 100) : 0;
+  var color = taxRate >= 40 ? '#f87171' : taxRate >= 25 ? '#fb923c' : '#4ade80';
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+    '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;text-align:center">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">不動産所得（課税対象）</div>' +
+    '<div style="font-size:22px;font-weight:900;color:var(--text)">' + rentalProfit.toFixed(1) + '<span style="font-size:12px">万円</span></div>' +
+    '<div style="font-size:10px;color:var(--text-muted)">収入-経費-減価償却費</div>' +
+    '</div>' +
+    '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:12px;text-align:center">' +
+    '<div style="font-size:11px;color:' + color + ';font-weight:700;margin-bottom:3px">追加税負担の合計</div>' +
+    '<div style="font-size:22px;font-weight:900;color:' + color + '">' + totalRentalTax.toFixed(0) + '<span style="font-size:12px">万円</span></div>' +
+    '<div style="font-size:10px;color:var(--text-muted)">実効税率 約' + taxRate + '%</div>' +
+    '</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:12px;margin-bottom:10px;font-size:12px">' +
+    '<div style="font-weight:700;color:var(--gold);margin-bottom:8px">税金の内訳</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    '<div><span style="color:var(--text-muted)">減価償却費（経費）</span><br><strong>' + depreciation.toFixed(1) + '万円/年</strong></div>' +
+    '<div><span style="color:var(--text-muted)">所得税の追加分</span><br><strong>' + extraTaxFromRental.toFixed(1) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">住民税の追加分</span><br><strong>' + 住民税.toFixed(1) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">手取り不動産収入</span><br><strong style="color:#4ade80">' + netRentalIncome.toFixed(0) + '万円/年</strong></div>' +
+    '</div></div>' +
+    '<div style="background:rgba(245,158,11,0.08);border-radius:8px;padding:10px;font-size:12px;line-height:1.7">' +
+    '💡 年間家賃収入が<strong>20万円を超える</strong>と確定申告が必要です。管理費・固定資産税・修繕費は経費として控除できます。減価償却費は現金支出なしで節税できるお得な仕組みです。' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 税額は概算です。実際の税額は各種控除・社会保険料等で変わります。確定申告前に税理士にご相談ください。</p>';
 }
 
 (function(){ calcAkiyaThreeChoices(); })();
