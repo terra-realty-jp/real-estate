@@ -2845,6 +2845,65 @@
     <div id="aac_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 空き家を収益化するまでの手順・期間・費用シミュレーション -->
+  <div class="card" id="card-akiya-monetize-timeline">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📅 空き家を賃貸に出すまで何ヶ月・いくらかかる？ステップ別試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">相続・引き継いだ空き家を賃貸活用するまでの「典型的なステップ・期間・費用」を入力条件に合わせて試算します。いつから家賃収入が入るか、収支がプラスに転じるのはいつかを確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">建物の築年数（年）</label>
+        <input type="number" id="amt_age" placeholder="例: 30" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">想定月家賃（万円）</label>
+        <input type="number" id="amt_rent" placeholder="例: 8" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">リフォーム規模</label>
+        <select id="amt_reno" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="light">軽微（クリーニング・壁紙程度）</option>
+          <option value="medium" selected>中程度（水回り・内装）</option>
+          <option value="heavy">大規模（全面改修・耐震補強も）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">相続登記は完了していますか？</label>
+        <select id="amt_registry" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="done">完了している</option>
+          <option value="pending" selected>まだ（これから手続き）</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcAkiyaMonetizeTimeline()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">収益化タイムラインを試算する</button>
+    <div id="amt_result" style="display:none;margin-top:14px"></div>
+  </div>
+
+  <!-- インフレが空き家放置vs賃貸活用に与える影響比較 -->
+  <div class="card" id="card-inflation-akiya-compare">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📈 インフレが続くと空き家放置はどれだけ損？賃貸活用との比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">物価上昇（インフレ）が続く場合、空き家を放置し続けることで実質的に損する金額を試算します。賃貸に出した場合と比較し、インフレ時代に行動することの意味を数字で確認します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の現在の市場価値（万円）</label>
+        <input type="number" id="iac_value" placeholder="例: 2000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間維持コスト（固定資産税+管理費・万円）</label>
+        <input type="number" id="iac_cost" placeholder="例: 25" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">賃貸に出した場合の月家賃（万円）</label>
+        <input type="number" id="iac_rent" placeholder="例: 8" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">想定インフレ率（年%）</label>
+        <input type="number" id="iac_inflation" placeholder="例: 2" step="0.1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcInflationAkiyaCompare()" style="width:100%;padding:10px;background:linear-gradient(90deg,#f87171,#fb923c);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">インフレ影響を比較する</button>
+    <div id="iac_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -7889,6 +7948,145 @@ function calcAkiyaAbandonCost() {
     '</tr></thead><tbody>' + rows + '</tbody></table>' +
     '</div>' +
     '<p style="font-size:11px;color:var(--text-muted);line-height:1.6">※ 修繕費は5年目・10年目に発生するとして計算。機会損失は空室なしで試算した上限値です。実際の状況によって異なります。</p>';
+}
+
+function calcAkiyaMonetizeTimeline() {
+  var el = document.getElementById('amt_result');
+  if (!el) return;
+  var age = parseFloat(document.getElementById('amt_age').value) || 30;
+  var rent = parseFloat(document.getElementById('amt_rent').value) || 8;
+  var reno = document.getElementById('amt_reno').value || 'medium';
+  var registry = document.getElementById('amt_registry').value || 'pending';
+
+  var renoCost = reno === 'light' ? 80 : reno === 'medium' ? 250 : 600;
+  var renoMonths = reno === 'light' ? 2 : reno === 'medium' ? 3 : 5;
+  var registryMonths = registry === 'pending' ? 2 : 0;
+  var registryCost = registry === 'pending' ? 15 : 0;
+
+  // 築年数が25年超なら耐震診断を推奨
+  var quakeCheck = age > 25;
+  var quakeMonths = quakeCheck ? 1 : 0;
+  var quakeCost = quakeCheck ? 20 : 0;
+
+  var totalMonths = registryMonths + quakeMonths + 1 + renoMonths + 1; // 各手続き + 仲介 + 工事 + 入居者探し
+  var totalCost = registryCost + quakeCost + renoCost + 10; // 仲介手数料相当
+
+  // 収益回収シミュレーション
+  var monthlyProfit = rent - (rent * 0.1); // 管理費10%差し引き
+  var breakEvenMonths = Math.ceil(totalCost / monthlyProfit);
+  var income3yr = monthlyProfit * 12 * 3 - totalCost;
+  var income5yr = monthlyProfit * 12 * 5 - totalCost;
+
+  var steps = [
+    {icon:'📋', name:'相続登記', months: registryMonths, cost: registryCost, note: registry === 'pending' ? '司法書士費用含む。2024年より義務化' : '完了済み'},
+    {icon:'🔍', name:'耐震診断（推奨）', months: quakeMonths, cost: quakeCost, note: quakeCheck ? '築25年超のため推奨。補助金対象になる場合あり' : '新耐震基準（1981年以降）のため省略可'},
+    {icon:'🔑', name:'不動産会社との媒介契約', months: 1, cost: 0, note: '複数社への査定・比較がおすすめ'},
+    {icon:'🔨', name:'リフォーム・清掃工事', months: renoMonths, cost: renoCost, note: reno === 'light' ? 'クリーニング・壁紙張替程度' : reno === 'medium' ? 'キッチン・浴室・内装の更新' : '耐震補強・全面改装'},
+    {icon:'🏠', name:'入居者募集・契約', months: 1, cost: 10, note: '仲介手数料（家賃1ヶ月分）含む'}
+  ];
+
+  var stepsHtml = '';
+  var cumMonths = 0;
+  steps.forEach(function(s) {
+    if (s.months === 0 && s.cost === 0) return;
+    cumMonths += s.months;
+    stepsHtml += '<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)">' +
+      '<div style="font-size:20px;min-width:28px">' + s.icon + '</div>' +
+      '<div style="flex:1">' +
+      '<div style="font-size:13px;font-weight:700;color:var(--text)">' + s.name + '</div>' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + s.note + '</div>' +
+      '</div>' +
+      '<div style="text-align:right;white-space:nowrap">' +
+      '<div style="font-size:12px;color:var(--gold)">約' + s.months + 'ヶ月</div>' +
+      (s.cost > 0 ? '<div style="font-size:11px;color:var(--text-muted)">' + s.cost + '万円</div>' : '') +
+      '</div></div>';
+  });
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">' +
+    '<div><div style="font-size:11px;color:var(--text-muted)">収益化まで</div><div style="font-size:26px;font-weight:900;color:var(--gold)">' + totalMonths + '<span style="font-size:14px">ヶ月</span></div></div>' +
+    '<div><div style="font-size:11px;color:var(--text-muted)">初期費用合計</div><div style="font-size:26px;font-weight:900;color:#f87171">' + totalCost + '<span style="font-size:14px">万円</span></div></div>' +
+    '<div><div style="font-size:11px;color:var(--text-muted)">回収まで</div><div style="font-size:26px;font-weight:900;color:#60a5fa">' + breakEvenMonths + '<span style="font-size:14px">ヶ月</span></div></div>' +
+    '</div></div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px">📋 ステップ別タイムライン</div>' +
+    stepsHtml + '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">💰 収益シミュレーション（初期費用回収後）</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">3年間の手取り収益</span><br><strong style="color:' + (income3yr >= 0 ? '#4ade80' : '#f87171') + ';font-size:16px">' + (income3yr >= 0 ? '+' : '') + income3yr.toFixed(0) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">5年間の手取り収益</span><br><strong style="color:#4ade80;font-size:16px">+' + income5yr.toFixed(0) + '万円</strong></div>' +
+    '</div></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);line-height:1.6">※ 手取り収益は管理費10%を差し引いた概算。空室リスク・修繕費は含まず。実際の状況によって期間・費用は変動します。</p>';
+}
+
+function calcInflationAkiyaCompare() {
+  var el = document.getElementById('iac_result');
+  if (!el) return;
+  var value = parseFloat(document.getElementById('iac_value').value) || 2000;
+  var cost = parseFloat(document.getElementById('iac_cost').value) || 25;
+  var rent = parseFloat(document.getElementById('iac_rent').value) || 8;
+  var inflation = parseFloat(document.getElementById('iac_inflation').value) || 2;
+
+  var inf = inflation / 100;
+  var years = 10;
+
+  var rows = '';
+  var totalRentIncome = 0;
+  var totalCostInflated = 0;
+  for (var y = 1; y <= years; y++) {
+    var inflFactor = Math.pow(1 + inf, y);
+    var rentIncome = rent * 12 * inflFactor; // 家賃収入もインフレ連動で上昇
+    var annualCostInflated = cost * inflFactor; // 維持コストもインフレで上昇
+    var netIfRent = rentIncome - annualCostInflated;
+    var netIfAbandon = -annualCostInflated;
+    totalRentIncome += rentIncome;
+    totalCostInflated += annualCostInflated;
+    if (y === 1 || y === 3 || y === 5 || y === 7 || y === 10) {
+      rows += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)">' +
+        '<td style="padding:5px 6px;font-size:11px">' + y + '年後</td>' +
+        '<td style="padding:5px 6px;font-size:11px;text-align:right;color:#f87171">' + (-annualCostInflated).toFixed(0) + '万/年</td>' +
+        '<td style="padding:5px 6px;font-size:11px;text-align:right;color:#4ade80">+' + netIfRent.toFixed(0) + '万/年</td>' +
+        '<td style="padding:5px 6px;font-size:11px;text-align:right;color:var(--gold)">' + (rentIncome / 12 * inflFactor / inflFactor).toFixed(1) + '%</td>' +
+        '</tr>';
+    }
+  }
+
+  var totalDiff = totalRentIncome; // 機会損失
+  var realValueLoss = value - value / Math.pow(1 + inf, years); // インフレによる現金価値減少相当分
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;text-align:center">インフレ' + inflation + '%が続いた場合の10年間の差（放置vs賃貸）</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">' +
+    '<div style="text-align:center;background:rgba(248,113,113,0.1);border-radius:8px;padding:10px">' +
+    '<div style="font-size:11px;color:var(--text-muted)">放置し続けた場合の損失</div>' +
+    '<div style="font-size:22px;font-weight:900;color:#f87171">▼' + totalCostInflated.toFixed(0) + '万円</div>' +
+    '<div style="font-size:10px;color:var(--text-muted)">（維持コスト累計）</div>' +
+    '</div>' +
+    '<div style="text-align:center;background:rgba(74,222,128,0.1);border-radius:8px;padding:10px">' +
+    '<div style="font-size:11px;color:var(--text-muted)">賃貸に出した場合の収益</div>' +
+    '<div style="font-size:22px;font-weight:900;color:#4ade80">+' + (totalRentIncome - totalCostInflated).toFixed(0) + '万円</div>' +
+    '<div style="font-size:10px;color:var(--text-muted)">（家賃収入－維持コスト）</div>' +
+    '</div>' +
+    '</div>' +
+    '<div style="text-align:center;margin-top:10px;font-size:13px;font-weight:700;color:#facc15">10年間の差額：' + totalRentIncome.toFixed(0) + '万円</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">📊 インフレ複利でコスト・収益がどう変わるか</div>' +
+    '<table style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">' +
+    '<th style="padding:5px 6px;font-size:10px;color:var(--text-muted);text-align:left">年</th>' +
+    '<th style="padding:5px 6px;font-size:10px;color:var(--text-muted);text-align:right">放置（損）</th>' +
+    '<th style="padding:5px 6px;font-size:10px;color:var(--text-muted);text-align:right">賃貸（益）</th>' +
+    '<th style="padding:5px 6px;font-size:10px;color:var(--text-muted);text-align:right">想定利回り</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>' +
+    '</div>' +
+    '<div style="background:rgba(245,158,11,0.08);border-radius:8px;padding:10px;font-size:12px;line-height:1.7">' +
+    '💡 <strong>インフレ時代の空き家放置リスク：</strong>物価が上がると維持費も上昇し、放置の実質コストは年々増加します。一方で家賃収入はインフレに連動して上がる傾向があるため、賃貸活用の優位性は時間とともに大きくなります。' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);line-height:1.6;margin-top:8px">※ 家賃・維持コストともにインフレ率で複利上昇すると仮定した概算。実際の変動は異なります。</p>';
 }
 
 function calcAkiyaCoworking() {
