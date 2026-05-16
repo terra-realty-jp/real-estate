@@ -2904,6 +2904,56 @@
     <div id="iac_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 特定空家 固定資産税6倍リスク診断 -->
+  <div class="card" id="card-akiya-tax-6x">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏛️ 「特定空家」に指定されると固定資産税が最大6倍に！ 今の税額と指定後の差額を確認する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家を放置して「特定空家」に指定されると、土地の固定資産税の優遇（1/6特例）が外れ、税負担が最大6倍に跳ね上がります。現在の税額と指定後の増加額を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">土地の固定資産税評価額（万円）<br><span style="color:rgba(255,255,255,0.35)">※ 固定資産税の納税通知書に記載</span></label>
+        <input type="number" id="at6_land" placeholder="例: 1500" oninput="calcAkiyaTax6x()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">土地の面積（㎡）<br><span style="color:rgba(255,255,255,0.35)">※ 登記簿や固定資産税通知書で確認</span></label>
+        <input type="number" id="at6_area" placeholder="例: 120" oninput="calcAkiyaTax6x()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">建物の固定資産税評価額（万円）<br><span style="color:rgba(255,255,255,0.35)">※ 不明な場合は0のまま計算できます</span></label>
+        <input type="number" id="at6_building" placeholder="例: 300" value="0" oninput="calcAkiyaTax6x()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="at6_result" style="display:none;margin-top:14px"></div>
+  </div>
+
+  <!-- 空き家管理：自主管理 vs 管理会社コスト比較 -->
+  <div class="card" id="card-akiya-manage-cost">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🚗 空き家を自分で管理するのと管理会社に任せるのは、どちらが安い？ 年間コスト比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「自分で行ったほうが安い」と思いがちですが、交通費・時間コストを加えると管理会社に任せたほうが得なケースも多くあります。年間コストを比較しましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現地への往復交通費（円）<br><span style="color:rgba(255,255,255,0.35)">例: 電車2,000円、ガソリン代3,000円など</span></label>
+        <input type="number" id="amc_transport" placeholder="例: 3000" oninput="calcAkiyaManageCost()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">月に何回行きますか？</label>
+        <select id="amc_freq" onchange="calcAkiyaManageCost()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="1">月1回（年12回）</option>
+          <option value="2" selected>月2回（年24回）</option>
+          <option value="4">週1回（年48回）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">往復にかかる時間（時間）<br><span style="color:rgba(255,255,255,0.35)">例: 片道1時間なら往復2と入力</span></label>
+        <input type="number" id="amc_travel_time" placeholder="例: 2" value="2" step="0.5" oninput="calcAkiyaManageCost()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">管理会社の月額料金（万円）<br><span style="color:rgba(255,255,255,0.35)">相場は月0.5〜1.5万円（5,000〜15,000円）</span></label>
+        <input type="number" id="amc_mgmt_fee" placeholder="例: 1" step="0.1" oninput="calcAkiyaManageCost()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="amc_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -8647,6 +8697,113 @@ function calcAkiyaThreeChoices() {
   html += '</div>';
   el.innerHTML = html;
 }
+
+function calcAkiyaTax6x() {
+  var land = parseFloat(document.getElementById('at6_land').value)||0;
+  var area = parseFloat(document.getElementById('at6_area').value)||0;
+  var building = parseFloat(document.getElementById('at6_building').value)||0;
+  var el = document.getElementById('at6_result');
+  if (!land || !area) { el.style.display='none'; return; }
+
+  var smallArea = Math.min(area, 200);
+  var generalArea = Math.max(0, area - 200);
+  var smallLandValue = land * smallArea / area;
+  var generalLandValue = land * generalArea / area;
+  var currentLandTax = (smallLandValue / 6 + generalLandValue / 3) * 0.014;
+  var afterLandTax = land * 0.014;
+  var buildingTax = building * 0.014;
+  var currentTotal = currentLandTax + buildingTax;
+  var afterTotal = afterLandTax + buildingTax;
+  var yearlyIncrease = afterTotal - currentTotal;
+  var tenYearLoss = yearlyIncrease * 10;
+  var ratio = currentLandTax > 0 ? (afterLandTax / currentLandTax).toFixed(1) : '-';
+
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  html += '<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">現在の年間固定資産税（概算）</div>';
+  html += '<div style="font-size:22px;font-weight:700;color:#4ade80">' + currentTotal.toFixed(1) + '<span style="font-size:12px">万円</span></div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px">住宅用地特例が適用中</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.4);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">特定空家指定後の年間税額</div>';
+  html += '<div style="font-size:22px;font-weight:700;color:#f87171">' + afterTotal.toFixed(1) + '<span style="font-size:12px">万円</span></div>';
+  html += '<div style="font-size:10px;color:#fb923c;margin-top:4px;font-weight:700">土地税が約' + ratio + '倍に跳ね上がる！</div>';
+  html += '</div></div>';
+
+  html += '<div style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:8px;padding:12px;margin-bottom:10px">';
+  html += '<div style="font-size:12px;font-weight:700;color:#fb923c;margin-bottom:8px">⚠️ 「特定空家」に指定されたときの追加負担</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html += '<div style="text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5)">年間の税額増加</div><div style="font-size:18px;font-weight:700;color:#fb923c">+' + yearlyIncrease.toFixed(1) + '万円</div></div>';
+  html += '<div style="text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5)">10年間の累積損失</div><div style="font-size:18px;font-weight:700;color:#f87171">+' + tenYearLoss.toFixed(0) + '万円</div></div>';
+  html += '</div></div>';
+
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.8">';
+  html += '<strong>「特定空家」とは？</strong><br>';
+  html += '倒壊の恐れ・衛生上の問題・景観を著しく損なう空き家を市区町村が指定。勧告→命令→代執行の段階で対処されます。<br>';
+  html += '指定されると「小規模住宅用地の1/6特例」が失われ、<strong>土地の固定資産税が一気に増加</strong>します。<br>';
+  html += '定期的な清掃・巡回・修繕を続けるか、<strong>早めに売却・賃貸活用する</strong>ことがリスク回避の最善策です。';
+  html += '</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px">※ 税率1.4%（標準税率）で計算。都市計画税（最大0.3%）は含まず。評価額は毎年変動するため概算です。</div>';
+
+  el.style.display = 'block';
+  el.innerHTML = html;
+}
+
+function calcAkiyaManageCost() {
+  var transport = parseFloat(document.getElementById('amc_transport').value)||0;
+  var freq = parseInt(document.getElementById('amc_freq').value)||1;
+  var travelTime = parseFloat(document.getElementById('amc_travel_time').value)||2;
+  var mgmtFee = parseFloat(document.getElementById('amc_mgmt_fee').value)||0;
+  var el = document.getElementById('amc_result');
+  if (!transport || !mgmtFee) { el.style.display='none'; return; }
+
+  var yearlyVisits = freq * 12;
+  var yearlyTransportYen = transport * yearlyVisits;
+  var hourlyRate = 1500;
+  var yearlyTimeYen = travelTime * yearlyVisits * hourlyRate;
+  var selfTotal = (yearlyTransportYen + yearlyTimeYen) / 10000;
+  var mgmtTotal = mgmtFee * 12;
+  var diff = selfTotal - mgmtTotal;
+  var isSelfCheaper = diff < 0;
+
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  html += '<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">自分で管理（年間）</div>';
+  html += '<div style="font-size:22px;font-weight:700;color:#4ade80">' + selfTotal.toFixed(1) + '<span style="font-size:12px">万円</span></div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px">交通費 + 時間コスト計</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:10px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">管理会社に任せる（年間）</div>';
+  html += '<div style="font-size:22px;font-weight:700;color:#818cf8">' + mgmtTotal.toFixed(1) + '<span style="font-size:12px">万円</span></div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px">月' + mgmtFee + '万円 × 12ヶ月</div>';
+  html += '</div></div>';
+
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px">';
+  html += '<div style="font-weight:700;color:var(--gold);margin-bottom:8px">自主管理の内訳（年間）</div>';
+  html += '<div style="display:flex;justify-content:space-between;color:rgba(255,255,255,0.7)"><span>交通費（往復' + transport.toLocaleString() + '円 × 年' + yearlyVisits + '回）</span><span>' + (yearlyTransportYen/10000).toFixed(1) + '万円</span></div>';
+  html += '<div style="display:flex;justify-content:space-between;color:rgba(255,255,255,0.7);margin-top:4px"><span>時間コスト（往復' + travelTime + '時間 × 時給1,500円 × 年' + yearlyVisits + '回）</span><span>' + (yearlyTimeYen/10000).toFixed(1) + '万円</span></div>';
+  html += '</div>';
+
+  if (isSelfCheaper) {
+    html += '<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px;color:#4ade80;font-weight:700">';
+    html += '✅ 自主管理の方が年間 ' + Math.abs(diff).toFixed(1) + ' 万円お得です（時間コスト込み）';
+    html += '</div>';
+  } else {
+    html += '<div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px;color:#818cf8;font-weight:700">';
+    html += '💡 管理会社の方が年間 ' + Math.abs(diff).toFixed(1) + ' 万円お得（時間と労力も節約できます）';
+    html += '</div>';
+  }
+
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.8">';
+  html += '💡 <strong>管理会社に任せる主なサービス：</strong>月1〜2回の巡回・通風換気・郵便物確認・緊急時対応・草木管理。<br>';
+  html += '遠方（片道1時間以上）の方や忙しい方には、時間・精神的な安心感も含めると管理委託が有利なケースが多いです。<br>';
+  html += '空き家の管理費用は<strong>確定申告で経費として計上</strong>できる可能性があります（税理士にご確認を）。';
+  html += '</div>';
+
+  el.style.display = 'block';
+  el.innerHTML = html;
+}
+
 (function(){ calcAkiyaThreeChoices(); })();
 
 var _akiyaCat = '';
