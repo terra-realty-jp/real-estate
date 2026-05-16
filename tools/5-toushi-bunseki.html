@@ -2843,6 +2843,40 @@
     <div id="ps2_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- スクラップ＆ビルド 収益改善効果試算 -->
+  <div class="card" id="card-scrap-rebuild">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏗️ 古い賃貸を解体して建て替えると収益はどう変わる？スクラップ＆ビルド試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">築古アパート・マンションを解体・建て替えた場合の家賃収入増加・費用・回収期間・利回り改善効果を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の月間家賃収入（万円）</label>
+        <input type="number" id="srb_rent_now" placeholder="例: 30" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">建て替え後の月間家賃収入（万円）</label>
+        <input type="number" id="srb_rent_new" placeholder="例: 55" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">解体費用（万円）</label>
+        <input type="number" id="srb_demo_cost" placeholder="例: 300" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">新築建築費（万円）</label>
+        <input type="number" id="srb_build_cost" placeholder="例: 8000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">土地の現在価値（万円）</label>
+        <input type="number" id="srb_land_value" placeholder="例: 5000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">工事期間中の機会損失（ヶ月）</label>
+        <input type="number" id="srb_vacancy_months" placeholder="例: 12" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcScrapRebuild()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">建て替え効果を試算する</button>
+    <div id="srb_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- NISA vs 不動産投資 比較カード -->
   <div class="card" id="card-nisa-vs-realestate">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📊 NISA（投資信託）vs 不動産投資 — 同じ1,000万円で20年後はどちらが得？</div>
@@ -10010,6 +10044,72 @@ function calcBreakevenYield() {
   el.innerHTML = html;
 }
 (function(){ calcBreakevenYield(); })();
+
+function calcScrapRebuild() {
+  var el = document.getElementById('srb_result');
+  if (!el) return;
+  var rentNow = parseFloat(document.getElementById('srb_rent_now').value) || 30;
+  var rentNew = parseFloat(document.getElementById('srb_rent_new').value) || 55;
+  var demoCost = parseFloat(document.getElementById('srb_demo_cost').value) || 300;
+  var buildCost = parseFloat(document.getElementById('srb_build_cost').value) || 8000;
+  var landValue = parseFloat(document.getElementById('srb_land_value').value) || 5000;
+  var vacancyMonths = parseInt(document.getElementById('srb_vacancy_months').value) || 12;
+
+  var totalCost = demoCost + buildCost + rentNow * vacancyMonths; // 建設費+機会損失
+  var rentIncrease = rentNew - rentNow; // 月間収入増加
+  var annualRentIncrease = rentIncrease * 12;
+  var annualNetIncrease = annualRentIncrease * 0.75; // 経費率25%
+
+  // 回収期間
+  var recoupYears = totalCost / (annualNetIncrease > 0 ? annualNetIncrease : 1);
+
+  // 利回り
+  var totalAsset = landValue + buildCost;
+  var yieldNow = rentNow * 12 / (landValue + demoCost * 0.5) * 100; // 現在の簡易利回り
+  var yieldNew = rentNew * 12 * 0.75 / totalAsset * 100; // 新築の実質利回り
+
+  // 資産価値変化
+  var assetNow = landValue; // 古建物の価値はほぼゼロ
+  var assetNew = totalAsset;
+  var assetUp = assetNew - assetNow - demoCost;
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:12px;text-align:center">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の利回り（概算）</div>' +
+    '<div style="font-size:28px;font-weight:900;color:#fb923c">' + yieldNow.toFixed(1) + '<span style="font-size:14px">%</span></div>' +
+    '<div style="font-size:11px;color:var(--text-muted)">月収' + rentNow + '万円（築古）</div>' +
+    '</div>' +
+    '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:12px;text-align:center">' +
+    '<div style="font-size:11px;color:#4ade80;margin-bottom:4px">建て替え後の利回り</div>' +
+    '<div style="font-size:28px;font-weight:900;color:#4ade80">' + yieldNew.toFixed(1) + '<span style="font-size:14px">%</span></div>' +
+    '<div style="font-size:11px;color:var(--text-muted)">月収' + rentNew + '万円（新築）</div>' +
+    '</div>' +
+    '</div>' +
+    '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">建て替えコストと回収期間</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">解体費用</span><br><strong>' + demoCost + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">新築工事費</span><br><strong>' + buildCost + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">工事中の機会損失</span><br><strong>' + (rentNow * vacancyMonths).toFixed(0) + '万円（' + vacancyMonths + 'ヶ月）</strong></div>' +
+    '<div style="background:rgba(201,168,76,0.1);border-radius:6px;padding:8px">' +
+    '<span style="color:var(--gold)">投資総額</span><br><strong style="font-size:16px;color:var(--gold)">' + totalCost.toFixed(0) + '万円</strong>' +
+    '</div>' +
+    '<div><span style="color:var(--text-muted)">年間収入増加（経費後）</span><br><strong style="color:#4ade80">+' + annualNetIncrease.toFixed(0) + '万円/年</strong></div>' +
+    '<div style="background:rgba(74,222,128,0.1);border-radius:6px;padding:8px">' +
+    '<span style="color:#4ade80">投資回収期間</span><br><strong style="font-size:16px;color:' + (recoupYears <= 20 ? '#4ade80' : recoupYears <= 30 ? '#facc15' : '#f87171') + '">' + recoupYears.toFixed(0) + '年</strong>' +
+    '</div>' +
+    '</div></div>' +
+    '<div style="background:var(--dark3);border-radius:8px;padding:12px;font-size:12px">' +
+    '<div style="font-weight:700;color:var(--gold);margin-bottom:6px">建て替えで変わること</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    '<div><span style="color:var(--text-muted)">資産価値（概算）</span><br>+' + assetUp.toFixed(0) + '万円</div>' +
+    '<div><span style="color:var(--text-muted)">月間収入増加</span><br>+<strong style="color:#4ade80">' + rentIncrease + '万円</strong></div>' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:8px">建て替え後は修繕費が大幅に低下し、入居率・賃料水準も上昇しやすくなります。資産の長期価値を重視するなら検討する価値があります。</p>' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5">※ 建設費・利回り・資産価値は概算です。建設会社・不動産会社への相談をおすすめします。</p>';
+}
 
 function calcNisaVsRealestate() {
   var el = document.getElementById('nvr_result');

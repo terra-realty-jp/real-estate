@@ -3123,6 +3123,32 @@
     <div id="rent-arrear-loss-result"></div>
   </div>
 
+  <!-- 複数物件オーナー 確定申告 節税シミュレーション -->
+  <div class="card" id="card-tax-blue-return">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📋 賃貸オーナーの確定申告、青色申告で実際にいくら節税できる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">賃貸収入がある方が青色申告特別控除（65万円）を使うと、白色申告と比べてどれだけ税金が安くなるかを試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間家賃収入（万円）</label>
+        <input type="number" id="tbr_income" placeholder="例: 300" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間経費合計（万円）</label>
+        <input type="number" id="tbr_expense" placeholder="例: 120" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">給与所得（本業・万円、なければ0）</label>
+        <input type="number" id="tbr_salary" placeholder="例: 500" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">青色申告ソフト費用（年・万円）</label>
+        <input type="number" id="tbr_software" placeholder="例: 3" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcTaxBlueReturn()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">節税額を計算する</button>
+    <div id="tbr_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 火災保険 見直し節約診断 -->
   <div class="card" id="card-fire-insurance-review">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔥 火災保険の見直しで年間いくら節約できる？賃貸物件の保険最適化診断</div>
@@ -10606,6 +10632,78 @@ function calcParkingRevenue() {
   el.innerHTML = html;
 }
 (function(){ calcParkingRevenue(); })();
+
+function calcTaxBlueReturn() {
+  var el = document.getElementById('tbr_result');
+  if (!el) return;
+  var rentalIncome = parseFloat(document.getElementById('tbr_income').value) || 300;
+  var expense = parseFloat(document.getElementById('tbr_expense').value) || 120;
+  var salary = parseFloat(document.getElementById('tbr_salary').value) || 0;
+  var software = parseFloat(document.getElementById('tbr_software').value) || 3;
+
+  // 不動産所得
+  var rentalProfit = rentalIncome - expense;
+
+  // 給与所得控除
+  var salaryDeduction = salary <= 0 ? 0 : salary <= 162.5 ? 55 : salary <= 180 ? salary * 0.4 - 10 : salary <= 360 ? salary * 0.3 + 8 : salary <= 660 ? salary * 0.2 + 44 : salary * 0.1 + 110;
+  var salaryNet = Math.max(0, salary - salaryDeduction);
+
+  // 白色申告の所得税
+  var whiteBase = salaryNet + rentalProfit;
+  var whiteDeduct = 48; // 基礎控除のみ
+  var whiteTaxable = Math.max(0, whiteBase - whiteDeduct);
+  var whiteTax = calcIncomeTaxSimple(whiteTaxable);
+
+  // 青色申告の所得税（65万円控除）
+  var blueDeduct = 48 + 65; // 基礎+青色
+  var blueTaxable = Math.max(0, whiteBase - blueDeduct);
+  var blueTax = calcIncomeTaxSimple(blueTaxable);
+
+  var taxSave = whiteTax - blueTax;
+  var netSave = taxSave - software; // ソフト費用差引
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:11px;color:#4ade80;margin-bottom:4px">青色申告に切り替えると年間で節税できる額（概算）</div>' +
+    '<div style="font-size:40px;font-weight:900;color:#4ade80">' + taxSave.toFixed(1) + '<span style="font-size:16px">万円</span></div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">ソフト費用' + software + '万円を差し引くと実質 <strong style="color:#4ade80">' + netSave.toFixed(1) + '万円</strong> の節約</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:12px">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:700">白色申告</div>' +
+    '<div style="font-size:12px;display:grid;gap:4px">' +
+    '<div>課税所得: <strong>' + whiteTaxable.toFixed(0) + '万円</strong></div>' +
+    '<div>所得税: <strong style="color:#f87171">' + whiteTax.toFixed(1) + '万円</strong></div>' +
+    '</div></div>' +
+    '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:12px">' +
+    '<div style="font-size:11px;color:#4ade80;margin-bottom:6px;font-weight:700">青色申告（65万円控除）</div>' +
+    '<div style="font-size:12px;display:grid;gap:4px">' +
+    '<div>課税所得: <strong>' + blueTaxable.toFixed(0) + '万円</strong></div>' +
+    '<div>所得税: <strong style="color:#4ade80">' + blueTax.toFixed(1) + '万円</strong></div>' +
+    '</div></div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:8px;padding:12px;font-size:12px">' +
+    '<div style="font-weight:700;color:var(--gold);margin-bottom:6px">青色申告のメリット</div>' +
+    '<div style="line-height:1.8;color:var(--text-muted)">' +
+    '・<strong style="color:var(--text)">65万円控除</strong>（e-Tax申告・複式簿記の場合）<br>' +
+    '・<strong style="color:var(--text)">赤字の繰越</strong>（最長3年間・損益通算）<br>' +
+    '・<strong style="color:var(--text)">専従者給与</strong>の必要経費算入（家族が手伝う場合）<br>' +
+    '・<strong style="color:var(--text)">少額減価償却</strong>（30万円未満を一括経費化）' +
+    '</div></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5">※ 青色申告の65万円控除はe-Tax（電子申告）または電子帳簿保存が条件。10戸未満の場合は10万円控除になります。</p>';
+}
+
+function calcIncomeTaxSimple(taxable) {
+  if (taxable <= 0) return 0;
+  var tax;
+  if (taxable <= 195) tax = taxable * 0.05;
+  else if (taxable <= 330) tax = taxable * 0.10 - 9.75;
+  else if (taxable <= 695) tax = taxable * 0.20 - 42.75;
+  else if (taxable <= 900) tax = taxable * 0.23 - 63.6;
+  else if (taxable <= 1800) tax = taxable * 0.33 - 153.6;
+  else tax = taxable * 0.40 - 279.6;
+  return Math.round(Math.max(0, tax) * 1.021 * 10) / 10;
+}
 
 function calcFireInsuranceReview() {
   var el = document.getElementById('fir_result');

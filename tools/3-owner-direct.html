@@ -2526,6 +2526,45 @@
     <div id="future-value-estimate-result"></div>
   </div>
 
+  <!-- 中古マンション 値引き交渉余地診断 -->
+  <div class="card" id="card-price-negotiation">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💬 中古マンション・一戸建てで「いくら値引きできそう？」を診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">物件の掲載期間・売主の状況・市場の需給から、値引き交渉の余地と交渉後の適正価格を診断します。「いくらで申し込めばいい？」の目安がわかります。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">売り出し価格（万円）</label>
+        <input type="number" id="pn_list" placeholder="例: 3500" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">掲載からの経過期間</label>
+        <select id="pn_days" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="1">掲載後1ヶ月以内（新着）</option>
+          <option value="3" selected>1〜3ヶ月</option>
+          <option value="6">3〜6ヶ月</option>
+          <option value="12">6ヶ月以上（長期在庫）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">売主の状況</label>
+        <select id="pn_seller" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="no_hurry">急いでいない（希望価格優先）</option>
+          <option value="mild" selected>ある程度急いでいる</option>
+          <option value="urgent">転勤・離婚等で早急に売りたい</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">市場の状況</label>
+        <select id="pn_market" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="hot">売り手有利（人気エリア・競争あり）</option>
+          <option value="normal" selected>標準（普通のエリア）</option>
+          <option value="soft">買い手有利（供給過多・地方）</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcPriceNegotiation()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">値引き余地を診断する</button>
+    <div id="pn_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 住宅ローン控除 13年間の恩恵試算 -->
   <div class="card" id="card-home-loan-deduction">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💰 住宅ローン控除で13年間にいくら税金が戻る？</div>
@@ -7464,6 +7503,76 @@ function calcLandAcquisitionCost() {
   el.innerHTML = html;
 }
 (function(){ calcLandAcquisitionCost(); })();
+
+function calcPriceNegotiation() {
+  var el = document.getElementById('pn_result');
+  if (!el) return;
+  var listPrice = parseFloat(document.getElementById('pn_list').value) || 3500;
+  var days = parseInt(document.getElementById('pn_days').value) || 3;
+  var seller = document.getElementById('pn_seller').value;
+  var market = document.getElementById('pn_market').value;
+
+  // 値引き可能率の計算
+  var baseRate = 0; // 基本値引き率
+
+  // 掲載期間
+  var daysRate = { 1: 0, 3: 0.02, 6: 0.03, 12: 0.05 };
+  baseRate += daysRate[days] || 0.02;
+
+  // 売主の事情
+  var sellerRate = { no_hurry: -0.01, mild: 0.02, urgent: 0.05 };
+  baseRate += sellerRate[seller] || 0;
+
+  // 市場状況
+  var marketRate = { hot: -0.02, normal: 0, soft: 0.03 };
+  baseRate += marketRate[market] || 0;
+
+  baseRate = Math.max(0, Math.min(0.12, baseRate));
+
+  // 値引き額の目安（下限・中間・上限）
+  var discountMin = Math.round(listPrice * Math.max(0, baseRate - 0.01));
+  var discountMid = Math.round(listPrice * baseRate);
+  var discountMax = Math.round(listPrice * Math.min(0.15, baseRate + 0.02));
+
+  var offerMin = listPrice - discountMax;
+  var offerRecommend = listPrice - discountMid;
+
+  var chanceLabel, color;
+  if (baseRate >= 0.06) { chanceLabel = '交渉の余地あり（積極的に交渉を）'; color = '#4ade80'; }
+  else if (baseRate >= 0.03) { chanceLabel = 'ある程度の値引きが見込める'; color = '#facc15'; }
+  else if (baseRate >= 0.01) { chanceLabel = '少額の値引きが限界かも'; color = '#fb923c'; }
+  else { chanceLabel = '値引きは難しい（市場価格が適正）'; color = '#f87171'; }
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:12px;font-weight:700;color:' + color + '">' + chanceLabel + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px;margin-top:10px">' +
+    '<div><span style="color:var(--text-muted)">値引きの下限</span><br><strong>-' + discountMin + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">値引きの中心</span><br><strong style="font-size:16px;color:' + color + '">-' + discountMid + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">値引き可能な上限</span><br><strong>-' + discountMax + '万円</strong></div>' +
+    '</div></div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">おすすめ申し込み価格</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div style="background:rgba(74,222,128,0.1);border-radius:8px;padding:10px;text-align:center">' +
+    '<span style="color:var(--text-muted)">成功率重視（小幅値引き）</span><br>' +
+    '<strong style="font-size:18px;color:#4ade80">' + offerRecommend.toLocaleString() + '万円</strong>' +
+    '</div>' +
+    '<div style="background:rgba(250,204,21,0.1);border-radius:8px;padding:10px;text-align:center">' +
+    '<span style="color:var(--text-muted)">交渉上限（断られる可能性あり）</span><br>' +
+    '<strong style="font-size:18px;color:#facc15">' + offerMin.toLocaleString() + '万円</strong>' +
+    '</div>' +
+    '</div></div>' +
+    '<div style="background:var(--dark3);border-radius:8px;padding:12px;font-size:12px">' +
+    '<div style="font-weight:700;color:var(--gold);margin-bottom:6px">交渉のコツ</div>' +
+    '<div style="line-height:1.8;color:var(--text-muted)">' +
+    '・<strong style="color:var(--text)">現金・ローン審査済み</strong>を示すと売主の信頼度UP<br>' +
+    '・<strong style="color:var(--text)">端数を切る</strong>形（3480万→3400万）が印象よい<br>' +
+    '・<strong style="color:var(--text)">修繕が必要な箇所</strong>を根拠に値引き交渉する<br>' +
+    '・一度断られても<strong style="color:var(--text)">1〜2ヶ月後に再交渉</strong>する手もある' +
+    '</div></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5">※ 実際の交渉余地は物件の人気度・売主の個人事情・競合買い手の有無によって大きく異なります。不動産エージェントを通じた交渉が効果的です。</p>';
+}
 
 function calcHomeLoanDeduction() {
   var el = document.getElementById('hld_result');
