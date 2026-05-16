@@ -2246,6 +2246,33 @@
     <div id="new-home-deduction-result"></div>
   </div>
 
+  <div class="card" id="card-buyer-inspection">
+    <div class="card-title">🔍 購入前の建物検査（ホームインスペクション）費用と、発見できるリスクの価値は？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">ホームインスペクション（住宅診断）とは、建物の劣化・雨漏り・構造上の問題を専門家が調べる検査です。費用は5〜10万円程度ですが、見逃した場合の修繕費と比較してどれだけの価値があるかを試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">購入物件の価格（万円）（例: 3000）</label>
+        <input type="number" id="bi_price" value="3000" min="100" max="200000" step="100" oninput="calcBuyerInspection()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">築年数（年）（例: 20）</label>
+        <input type="number" id="bi_age" value="20" min="0" max="80" step="1" oninput="calcBuyerInspection()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件種別</label>
+        <select id="bi_type" onchange="calcBuyerInspection()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="house">一戸建て</option>
+          <option value="mansion">マンション（区分）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">インスペクション費用（万円）（例: 6）</label>
+        <input type="number" id="bi_cost" value="6" min="3" max="30" step="0.5" oninput="calcBuyerInspection()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="buyer-inspection-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -6833,6 +6860,37 @@ function calcNewHomeDeduction() {
   el.innerHTML = html;
 }
 (function(){ calcNewHomeDeduction(); })();
+
+function calcBuyerInspection() {
+  var el = document.getElementById('buyer-inspection-result'); if (!el) return;
+  var price = parseFloat(document.getElementById('bi_price').value) || 3000;
+  var age = parseInt(document.getElementById('bi_age').value) || 20;
+  var type = document.getElementById('bi_type').value;
+  var cost = parseFloat(document.getElementById('bi_cost').value) || 6;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  // 築年数・種別によるリスク係数
+  var riskRate = age <= 10 ? 0.003 : age <= 20 ? 0.008 : age <= 30 ? 0.018 : 0.03;
+  if (type === 'house') riskRate *= 1.5;
+  var expectedRepair = Math.round(price * riskRate * 10) / 10;
+  var detectionRate = type === 'house' ? 0.70 : 0.55;
+  var preventedCost = Math.round(expectedRepair * detectionRate * 10) / 10;
+  var roi = Math.round((preventedCost / cost) * 10) / 10;
+  var riskLevel = age <= 10 ? '低い' : age <= 20 ? 'やや低い' : age <= 30 ? '中程度' : '高い';
+  var riskColor = age <= 10 ? '#4ade80' : age <= 20 ? '#a3e635' : age <= 30 ? '#facc15' : '#fb923c';
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + riskColor + '">' + riskLevel + '</div><div style="font-size:10px;color:var(--text-muted)">潜在リスク水準</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:#fb923c">' + expectedRepair.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">見逃した場合の修繕費（推定）</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + roi.toFixed(0) + '倍</div><div style="font-size:10px;color:var(--text-muted)">検査費用に対する費用対効果</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '🔍 検査で発見できると見込まれる修繕コスト: <b style="color:' + ACCENT + '">' + preventedCost.toFixed(0) + '万円</b>（検査費 ' + cost + '万円の ' + roi.toFixed(0) + '倍）<br>';
+  html += '✅ 特に <b style="color:var(--text)">雨漏り・白アリ・基礎ひび割れ</b> は後から発覚すると100〜500万円の出費になります<br>';
+  html += '<span style="font-size:10px">⚠️ 築' + age + '年・' + (type === 'house' ? '一戸建て' : 'マンション') + 'への検査は' + (age >= 25 ? '特に強くお勧めします' : 'お勧めします') + '。検査後に価格交渉に使えることもあります。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcBuyerInspection(); })();
 
 function initBuyChecklist() {
   var el = document.getElementById('buy-checklist-content');

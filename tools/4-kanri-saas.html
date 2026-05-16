@@ -2841,6 +2841,43 @@
     <div id="rent-increase-history-result"></div>
   </div>
 
+  <div class="card" id="card-seasonal-vacancy">
+    <div class="card-title">🌸 3月の引越し繁忙期を逃した！ 閑散期の空室コストと対策を試算する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産の空室率は季節によって大きく変わります。3月は引越し最需要期ですが、4月〜12月は成約が難しくなります。閑散期に空室が長引いた場合の損失と、対策（家賃調整・フリーレント）の効果を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額家賃（万円）（例: 8）</label>
+        <input type="number" id="sv_rent" value="8" min="1" max="100" step="0.5" oninput="calcSeasonalVacancy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在空室になっている月数</label>
+        <input type="number" id="sv_empty" value="3" min="0" max="24" step="1" oninput="calcSeasonalVacancy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月（何月？）</label>
+        <select id="sv_month" onchange="calcSeasonalVacancy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="3">3月（最繁忙期）</option>
+          <option value="4">4月</option>
+          <option value="5" selected>5月</option>
+          <option value="6">6月</option>
+          <option value="7">7月</option>
+          <option value="8">8月</option>
+          <option value="9">9月（第2繁忙期）</option>
+          <option value="10">10月</option>
+          <option value="11">11月</option>
+          <option value="12">12月</option>
+          <option value="1">1月（次の繁忙期前）</option>
+          <option value="2">2月（繁忙期直前）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">フリーレント（家賃無料期間）を提供できる月数</label>
+        <input type="number" id="sv_free" value="1" min="0" max="6" step="1" oninput="calcSeasonalVacancy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="seasonal-vacancy-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -9988,6 +10025,39 @@ function calcRentIncreaseHistory() {
   el.innerHTML = html;
 }
 (function(){ calcRentIncreaseHistory(); })();
+
+function calcSeasonalVacancy() {
+  var el = document.getElementById('seasonal-vacancy-result'); if (!el) return;
+  var rent = parseFloat(document.getElementById('sv_rent').value) || 8;
+  var empty = parseInt(document.getElementById('sv_empty').value) || 3;
+  var month = parseInt(document.getElementById('sv_month').value) || 5;
+  var free = parseInt(document.getElementById('sv_free').value) || 1;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var monthsToNext = month <= 3 ? 0 : month <= 9 ? (9 - month) : (14 - month);
+  var vacancy3 = month === 3 ? 2 : month === 2 ? 3 : month >= 9 && month <= 10 ? 3 : 5;
+  var currentLoss = empty * rent;
+  var expectedMoreMonths = Math.max(0, vacancy3 - empty);
+  var withFreeLease = Math.max(0, expectedMoreMonths - 1.5);
+  var freeLeaseCost = free * rent;
+  var freeLeaseSaving = Math.max(0, (expectedMoreMonths - withFreeLease) * rent - freeLeaseCost);
+  var discountPct = 5;
+  var discountedRent = Math.round(rent * (1 - discountPct / 100) * 10) / 10;
+  var withDiscountMonths = Math.max(0, expectedMoreMonths * 0.55);
+  var discountSaving = Math.round(((expectedMoreMonths - withDiscountMonths) * rent - (expectedMoreMonths - withDiscountMonths) * (rent - discountedRent)) * 10) / 10;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:#fb923c">' + currentLoss.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">現在の空室損失額</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:#facc15">' + expectedMoreMonths.toFixed(1) + 'ヶ月</div><div style="font-size:10px;color:var(--text-muted)">さらに空室が続く見込み</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + (monthsToNext === 0 ? '今が繁忙期' : monthsToNext + 'ヶ月後') + '</div><div style="font-size:10px;color:var(--text-muted)">次の繁忙期まで</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '💡 <b style="color:var(--text)">フリーレント' + free + 'ヶ月</b>を提供する場合のコスト: <b>' + freeLeaseCost.toFixed(1) + '万円</b>（早期成約で' + Math.max(0, Math.round(freeLeaseSaving * 10) / 10).toFixed(1) + '万円節約できる可能性）<br>';
+  html += '📉 <b style="color:var(--text)">家賃を' + discountPct + '%下げる</b>（' + discountedRent.toFixed(1) + '万円）ことで成約スピードが1.8倍になる傾向があります<br>';
+  html += '<span style="font-size:10px">⚠️ 閑散期に強引に家賃を維持するより、フリーレント・値下げで早期入居させた方が年間収益が高くなるケースが多いです。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcSeasonalVacancy(); })();
 
 function calcTenantScreening() {
   var el = document.getElementById('tenant-screening-result');

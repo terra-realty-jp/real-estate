@@ -2544,6 +2544,30 @@
     <div id="area-pop-trend-result"></div>
   </div>
 
+  <div class="card" id="card-multi-unit-mix">
+    <div class="card-title">🏢 1K・1LDK・2LDKが混在するアパートの間取り比率を変えると収益はどう変わる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">複数の間取りタイプが混在する物件では、どの間取りを増やすかで収益が大きく変わります。総戸数・各タイプの比率・家賃・空室率を設定して、最も収益の高い間取り構成を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">総戸数</label>
+        <input type="number" id="mum_total" value="12" min="2" max="100" step="1" oninput="calcMultiUnitMix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">1K・ワンルームの割合（%）</label>
+        <input type="number" id="mum_1k_pct" value="50" min="0" max="100" step="10" oninput="calcMultiUnitMix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">1K家賃（万円）（例: 6）</label>
+        <input type="number" id="mum_1k_rent" value="6" min="1" max="50" step="0.5" oninput="calcMultiUnitMix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">2LDK以上の家賃（万円）（例: 11）</label>
+        <input type="number" id="mum_2ldk_rent" value="11" min="1" max="100" step="0.5" oninput="calcMultiUnitMix()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="multi-unit-mix-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -9388,6 +9412,37 @@ function calcAreaPopTrend() {
   el.innerHTML = html;
 }
 (function(){ calcAreaPopTrend(); })();
+
+function calcMultiUnitMix() {
+  var el = document.getElementById('multi-unit-mix-result'); if (!el) return;
+  var total = parseInt(document.getElementById('mum_total').value) || 12;
+  var pct1k = Math.min(100, Math.max(0, parseFloat(document.getElementById('mum_1k_pct').value) || 50));
+  var rent1k = parseFloat(document.getElementById('mum_1k_rent').value) || 6;
+  var rent2ldk = parseFloat(document.getElementById('mum_2ldk_rent').value) || 11;
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var units1k = Math.round(total * pct1k / 100);
+  var units2ldk = total - units1k;
+  var occ1k = 0.90, occ2ldk = 0.82;
+  var monthly = Math.round((units1k * rent1k * occ1k + units2ldk * rent2ldk * occ2ldk) * 10) / 10;
+  var yearly = Math.round(monthly * 12 * 10) / 10;
+  var monthly100 = Math.round(total * rent1k * occ1k * 10) / 10;
+  var monthly0 = Math.round(total * rent2ldk * occ2ldk * 10) / 10;
+  var best = monthly100 > monthly0 ? '1K・ワンルーム100%' : '2LDK以上100%';
+  var bestVal = Math.max(monthly100, monthly0);
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:18px;font-weight:900;color:' + GOLD + '">' + monthly.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">現在の間取り比率での月間収益</div></div>';
+  html += '<div><div style="font-size:18px;font-weight:900;color:#4ade80">' + yearly.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間収益（目安）</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;margin-bottom:8px">';
+  html += '🏢 1K ' + units1k + '戸（月収入: ' + (units1k * rent1k * occ1k).toFixed(1) + '万円）　2LDK以上 ' + units2ldk + '戸（月収入: ' + (units2ldk * rent2ldk * occ2ldk).toFixed(1) + '万円）<br>';
+  html += '📊 比較: 1K全室なら<b style="color:var(--text)"> ' + monthly100.toFixed(1) + '万円/月</b>　2LDK全室なら<b style="color:var(--text)"> ' + monthly0.toFixed(1) + '万円/月</b><br>';
+  html += '🏆 月間収益が最大になる構成: <b style="color:' + GOLD + '">' + best + '（' + bestVal.toFixed(1) + '万円/月）</b><br>';
+  html += '<span style="font-size:10px">💡 1Kは空室リスクが低く回転が早い。2LDKは単価が高いが長期入居しやすい傾向があります。エリアの需要特性によって最適な比率が変わります。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcMultiUnitMix(); })();
 
 function calcExitTiming() {
   var el = document.getElementById('exit-timing-result');

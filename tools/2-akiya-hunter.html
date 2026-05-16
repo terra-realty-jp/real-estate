@@ -2417,6 +2417,38 @@
     <div id="akiya-heatpump-result"></div>
   </div>
 
+  <div class="card" id="card-akiya-storage-convert">
+    <div class="card-title">📦 空き家をトランクルーム・コンテナ倉庫に転用すると月いくら稼げる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">近年、空き家や遊休地をトランクルームやコンテナ倉庫として貸し出す活用方法が増えています。初期投資が少なく管理の手間も少ない活用方法の収益と回収期間を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">転用タイプ</label>
+        <select id="asc_type" onchange="calcAkiyaStorageConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="indoor">屋内トランクルーム（月5,000〜20,000円/区画）</option>
+          <option value="container">屋外コンテナ倉庫（月3,000〜8,000円/区画）</option>
+          <option value="garage">ガレージ・車庫（月15,000〜30,000円/台）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">区画数（台数）</label>
+        <input type="number" id="asc_units" value="10" min="1" max="100" step="1" oninput="calcAkiyaStorageConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">初期投資・改修費用（万円）</label>
+        <input type="number" id="asc_cost" value="80" min="0" max="2000" step="10" oninput="calcAkiyaStorageConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">エリア（需要の強さ）</label>
+        <select id="asc_demand" onchange="calcAkiyaStorageConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="high">都市部・住宅密集地（稼働率80%以上）</option>
+          <option value="mid">郊外・地方中核市（稼働率60%程度）</option>
+          <option value="low">地方・田舎（稼働率40%程度）</option>
+        </select>
+      </div>
+    </div>
+    <div id="akiya-storage-convert-result"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -6990,6 +7022,40 @@ function calcAkiyaHeatPump() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaHeatPump(); })();
+
+function calcAkiyaStorageConvert() {
+  var el = document.getElementById('akiya-storage-convert-result'); if (!el) return;
+  var type = document.getElementById('asc_type').value;
+  var units = parseInt(document.getElementById('asc_units').value) || 10;
+  var cost = parseFloat(document.getElementById('asc_cost').value) || 80;
+  var demand = document.getElementById('asc_demand').value;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var unitRentMap = { indoor: 1.0, container: 0.5, garage: 2.2 };
+  var unitRent = unitRentMap[type];
+  var occupancyMap = { high: 0.82, mid: 0.62, low: 0.42 };
+  var occ = occupancyMap[demand];
+  var typeLabel = { indoor: '屋内トランクルーム', container: '屋外コンテナ倉庫', garage: 'ガレージ' }[type];
+  var monthlyGross = Math.round(units * unitRent * occ * 10) / 10;
+  var running = Math.round(monthlyGross * 0.12 * 10) / 10;
+  var monthlyNet = Math.round((monthlyGross - running) * 10) / 10;
+  var yearlyNet = Math.round(monthlyNet * 12 * 10) / 10;
+  var payback = monthlyNet > 0 ? Math.ceil(cost / monthlyNet) : 999;
+  var ordinaryRent = Math.round(units * 0.5 * occ * 10) / 10;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + monthlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間純収益</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + yearlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間純収益</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (payback <= 60 ? '#4ade80' : '#facc15') + '">' + (payback >= 999 ? '赤字' : payback + 'ヶ月') + '</div><div style="font-size:10px;color:var(--text-muted)">初期費用回収期間</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '📊 ' + typeLabel + ' × ' + units + '区画（稼働率' + Math.round(occ * 100) + '%）の月間収入: <b style="color:var(--text)">' + monthlyGross.toFixed(1) + '万円</b><br>';
+  html += '🔑 管理・維持費（12%）: <b style="color:var(--text)">-' + running.toFixed(1) + '万円</b><br>';
+  var merit = typeLabel === 'ガレージ' ? '近隣住民のニーズが高く稼働率が安定しやすい' : typeLabel === '屋内トランクルーム' ? '単価が高く需要は安定。防犯・空調設備の初期投資が必要' : '初期投資が少なく撤退も容易。ただし単価は低め';
+  html += '💡 ' + merit;
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaStorageConvert(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;
