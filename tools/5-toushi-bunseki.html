@@ -206,7 +206,7 @@
   <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.7">
     <strong style="color:#fde68a">このツールでできること：</strong>
     購入価格・家賃・ローン条件を入力するだけで、利回り・年間キャッシュフロー・10年シミュレーション・感度分析を自動計算します。<br>
-    <span style="color:rgba(255,255,255,0.6);font-size:12px">📖 目安：表面利回り5%以上・実質利回り3%以上・年間CFがプラスなら手元にお金が残ります。複数物件の比較履歴も保存できます。</span>
+    <span style="color:rgba(255,255,255,0.6);font-size:12px">📖 目安：表面利回り5%以上・実質利回り3%以上・年間の手残りがプラスなら手元にお金が残ります。複数物件の比較履歴も保存できます。</span>
   </div>
 </div>
 
@@ -214,7 +214,7 @@
 <div class="tabs" id="tabs-scroll">
   <button class="tab-btn active" onclick="switchTab('input')">📋 物件入力</button>
   <button class="tab-btn" onclick="switchTab('result')">📊 分析結果</button>
-  <button class="tab-btn" onclick="switchTab('cashflow')">💹 CF予測</button>
+  <button class="tab-btn" onclick="switchTab('cashflow')">💹 収益予測</button>
   <button class="tab-btn" onclick="switchTab('sensitivity')">🎯 感度分析</button>
   <button class="tab-btn" onclick="switchTab('exit')">🏠 出口戦略</button>
   <button class="tab-btn" onclick="switchTab('history')">🗂️ 分析履歴</button>
@@ -702,7 +702,7 @@
         <input type="number" id="irr_equity" value="600" min="0" max="200000" step="100" oninput="calcIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間CF（万円）</label>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間の手残り（万円）（例: ローン返済後で月10万円なら120）</label>
         <input type="number" id="irr_cf" value="120" min="-1000" max="10000" step="10" oninput="calcIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
@@ -728,7 +728,7 @@
 <div id="tab-sensitivity" class="tab-content">
 <div class="main">
   <h1 class="page-title">感度<span>分析</span></h1>
-  <p class="page-desc">空室率と利回りの変化に対するNOI・実質利回りの変化を表形式で確認します。</p>
+  <p class="page-desc">空室率と利回りが変わったとき、純収益（家賃−経費）と実質利回りがどう変わるかを表形式で確認します。</p>
   <div id="sensitivity-content">
     <div class="empty-state"><div class="empty-icon">🎯</div><p>物件入力タブで分析を実行してください</p></div>
   </div>
@@ -790,7 +790,7 @@
   <!-- 金利上昇リスクシミュレーターカード -->
   <div class="card" style="margin-top:16px">
     <div class="card-title">📈 金利上昇リスク シミュレーター</div>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">変動金利型ローン利用中の方向け。金利が上昇した場合の月次返済額・年間CF・DSCRへの影響を5段階でシミュレーションします。</p>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">変動金利型ローン利用中の方向け。金利が上昇した場合の月次返済額・年間の手残り・ローン返済の安全余裕への影響を5段階でシミュレーションします。</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div>
         <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">借入残高（万円）</label>
@@ -999,7 +999,7 @@
   </div>
   <div id="toushi-cat-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
     <button class="toushi-cat-btn" onclick="setToushiCat(this,'')" style="background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);border-radius:20px;padding:4px 12px;color:#c9a84c;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">すべて</button>
-    <button class="toushi-cat-btn" onclick="setToushiCat(this,'cf')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">CF計算</button>
+    <button class="toushi-cat-btn" onclick="setToushiCat(this,'cf')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">収益・手残り計算</button>
     <button class="toushi-cat-btn" onclick="setToushiCat(this,'risk')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">リスク分析</button>
     <button class="toushi-cat-btn" onclick="setToushiCat(this,'loan')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">融資・税金</button>
     <button class="toushi-cat-btn" onclick="setToushiCat(this,'exit')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">出口・比較</button>
