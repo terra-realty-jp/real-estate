@@ -2300,6 +2300,33 @@
     <div id="akiya-three-choices-result"></div>
   </div>
 
+  <!-- 相続空き家 3000万円特別控除 適用チェックカード -->
+  <div class="card" id="card-inheritance-3000">
+    <div class="card-title">🏛️ 相続空き家 3,000万円特別控除 適用チェック</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">相続した空き家を売却する際の「3,000万円特別控除（空き家特例）」の適用要件を確認し、節税可能額を試算します</div>
+    <div style="display:grid;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売却価格（万円）</div>
+          <input id="inh3_sell" type="number" value="2500" min="100" max="100000" step="100" oninput="calcInheritance3000()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">取得費（相続時の評価額・万円）</div>
+          <input id="inh3_cost" type="number" value="500" min="0" max="50000" step="100" oninput="calcInheritance3000()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:8px">適用要件チェック（すべて該当すれば控除可能）</div>
+        <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer"><input type="checkbox" id="inh3_q1" onchange="calcInheritance3000()" style="margin-top:2px;flex-shrink:0"> 昭和56年5月31日以前に建築された家屋である</label>
+        <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer"><input type="checkbox" id="inh3_q2" onchange="calcInheritance3000()" style="margin-top:2px;flex-shrink:0"> 相続開始直前まで被相続人が1人で居住していた（区分所有建物は対象外）</label>
+        <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer"><input type="checkbox" id="inh3_q3" onchange="calcInheritance3000()" style="margin-top:2px;flex-shrink:0"> 相続日から3年後の12月31日までに売却する（2023年以降は建物を取り壊すか耐震改修後に売却）</label>
+        <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer"><input type="checkbox" id="inh3_q4" onchange="calcInheritance3000()" style="margin-top:2px;flex-shrink:0"> 相続から売却までの間、居住・賃貸・事業用に使っていない（空き家のままにしていた）</label>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer"><input type="checkbox" id="inh3_q5" onchange="calcInheritance3000()" style="margin-top:2px;flex-shrink:0"> 売却価格が1億円以下</label>
+      </div>
+    </div>
+    <div id="inheritance-3000-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -7177,6 +7204,61 @@ function calcGovActionCost() {
   el.innerHTML = html;
 }
 (function(){ calcGovActionCost(); })();
+
+function calcInheritance3000() {
+  var el = document.getElementById('inheritance-3000-result');
+  var sell = parseFloat(document.getElementById('inh3_sell').value) || 2500;
+  var cost = parseFloat(document.getElementById('inh3_cost').value) || 500;
+  var q1 = document.getElementById('inh3_q1').checked;
+  var q2 = document.getElementById('inh3_q2').checked;
+  var q3 = document.getElementById('inh3_q3').checked;
+  var q4 = document.getElementById('inh3_q4').checked;
+  var q5 = document.getElementById('inh3_q5').checked;
+
+  var allOk = q1 && q2 && q3 && q4 && q5;
+  var checkedCount = [q1,q2,q3,q4,q5].filter(Boolean).length;
+
+  var transferIncome = Math.max(0, sell - cost);
+  var deduction = Math.min(3000, transferIncome);
+  var taxableWith = Math.max(0, transferIncome - (allOk ? deduction : 0));
+  var taxableWithout = transferIncome;
+
+  var calcTax = function(taxable) {
+    if (taxable <= 0) return 0;
+    return taxable * 0.20315;
+  };
+  var taxWith = allOk ? calcTax(taxableWith) : calcTax(taxableWithout);
+  var taxWithout = calcTax(taxableWithout);
+  var saving = allOk ? (taxWithout - taxWith) : 0;
+
+  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+
+  if (allOk) {
+    html += '<div style="font-size:13px;font-weight:900;color:#4ade80;margin-bottom:10px">✅ 適用可能 — 特別控除が使えます！</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+    html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">譲渡所得</div><div style="font-size:16px;font-weight:900;color:#93c5fd">' + Math.round(transferIncome) + '万円</div></div>';
+    html += '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">特例控除後 課税所得</div><div style="font-size:16px;font-weight:900;color:#4ade80">' + Math.round(taxableWith) + '万円</div></div>';
+    html += '<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">節税額（概算）</div><div style="font-size:16px;font-weight:900;color:#fbbf24">' + Math.round(saving) + '万円</div></div>';
+    html += '</div>';
+    html += '<div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;margin-bottom:8px">';
+    html += '<div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:4px">この特例による節税効果</div>';
+    html += '<div style="font-size:22px;font-weight:900;color:#4ade80">約 ' + Math.round(saving) + '万円 節税</div>';
+    html += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px">（特例なし: 約' + Math.round(taxWithout) + '万円 → 特例あり: 約' + Math.round(taxWith) + '万円）</div>';
+    html += '</div>';
+    html += '<div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">💡 5要件すべて該当。売却確定前に必ず税理士・税務署に最終確認してください。確定申告で「被相続人の居住用財産（空き家）に係る譲渡所得の特別控除の特例」を適用します。</div>';
+  } else {
+    var missing = 5 - checkedCount;
+    html += '<div style="font-size:13px;font-weight:900;color:#f87171;margin-bottom:10px">⚠️ 未確認 ' + missing + '件あり — 全5要件の確認が必要です</div>';
+    html += '<div style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px;margin-bottom:10px">';
+    html += '<div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">すべての要件に✓が入ると、<strong style="color:#4ade80">最大3,000万円の控除</strong>が適用され、約<strong style="color:#4ade80">' + Math.round(calcTax(Math.min(3000, transferIncome))) + '万円の節税</strong>が可能になります。</div>';
+    html += '</div>';
+    html += '<div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">💡 チェックできない項目は、税理士または市区町村の固定資産税担当窓口に相談しましょう。昭和56年以前建築かどうかは登記簿謄本や固定資産税通知書で確認できます。</div>';
+  }
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;line-height:1.6">※ 税率20.315%（長期譲渡所得）で概算。取得費不明の場合は売却価格の5%で計算。実際の税額は税理士にご確認ください。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcInheritance3000(); })();
 
 function calcAkiyaThreeChoices() {
   var el = document.getElementById('akiya-three-choices-result');
