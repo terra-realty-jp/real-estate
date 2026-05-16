@@ -2758,6 +2758,38 @@
     <div id="curb-appeal-result"></div>
   </div>
 
+  <div class="card" id="card-sale-readiness">
+    <div class="card-label">売却準備</div>
+    <div class="card-title">売る前の準備費用を見積もる</div>
+    <div class="card-desc">引越し・清掃・測量・書類取得・小修繕など、売り出す前にかかる費用をまとめて概算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">物件タイプ</div>
+        <select id="sr_type" onchange="calcSaleReadiness()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="mansion">マンション</option>
+          <option value="kodate">戸建て</option>
+          <option value="land">土地（建物なし）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">専有面積・延床面積（㎡）</div>
+        <input type="number" id="sr_area" value="70" min="20" max="500" step="5" oninput="calcSaleReadiness()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">現在も居住中？</div>
+        <select id="sr_live" onchange="calcSaleReadiness()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="yes">居住中（引越し必要）</option>
+          <option value="no">空き家・空室</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">築年数（年）</div>
+        <input type="number" id="sr_age" value="20" min="0" max="80" step="1" oninput="calcSaleReadiness()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="sale-readiness-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -8065,6 +8097,43 @@ function calcCurbAppeal() {
   el.innerHTML = html;
 }
 (function(){ calcCurbAppeal(); })();
+
+function calcSaleReadiness() {
+  var el = document.getElementById('sale-readiness-result');
+  if (!el) return;
+  var type = document.getElementById('sr_type').value;
+  var area = parseFloat(document.getElementById('sr_area').value) || 70;
+  var live = document.getElementById('sr_live').value;
+  var age = parseFloat(document.getElementById('sr_age').value) || 20;
+  var moving = live === 'yes' ? (type === 'mansion' ? 15 : 25) : 0;
+  var cleaning = type === 'land' ? 0 : Math.round(area * 0.15 * 10) / 10;
+  var survey = type !== 'mansion' ? 50 : 0;
+  var docFee = 3;
+  var minorRepair = type === 'land' ? 0 : (age > 20 ? 20 : age > 10 ? 10 : 5);
+  var total = Math.round((moving + cleaning + survey + docFee + minorRepair) * 10) / 10;
+  var html = '<div style="display:grid;gap:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+  var items = [
+    ['引越し費用', moving > 0 ? moving + '万円' : '不要（空室）'],
+    ['室内清掃', cleaning > 0 ? '約' + cleaning.toFixed(1) + '万円' : '対象外'],
+    ['境界測量', survey > 0 ? '約' + survey + '万円' : 'マンション：不要'],
+    ['書類取得費', '約' + docFee + '万円'],
+    ['小修繕・補修', '約' + minorRepair + '万円']
+  ];
+  items.forEach(function(it) {
+    html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">' + it[0] + '</div><div style="font-size:13px;font-weight:600;color:#e2e8f0">' + it[1] + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="background:rgba(74,222,128,0.1);border-radius:8px;padding:12px;text-align:center">';
+  html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">売り出す前の準備費用 合計</div>';
+  html += '<div style="font-size:26px;font-weight:700;color:#4ade80">約' + total.toFixed(1) + '<span style="font-size:14px;color:#94a3b8">万円</span></div>';
+  html += '<div style="font-size:10px;color:#94a3b8;margin-top:4px">※ 仲介手数料（売却価格の約3%）は別途必要です</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(251,191,36,0.08);border-radius:6px;padding:8px;font-size:10px;color:#fbbf24">💡 準備費用は売却益から差し引くことができます。先に費用を把握しておくと、価格交渉の際に余裕が生まれます</div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcSaleReadiness(); })();
 
 function initSellReadiness() {
   var el = document.getElementById('sell-readiness-content');

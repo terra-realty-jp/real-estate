@@ -2991,6 +2991,35 @@
     <div id="turnover-cost-full-result"></div>
   </div>
 
+  <div class="card" id="card-contract-renewal-profit">
+    <div class="card-label">収益管理</div>
+    <div class="card-title">更新料でどれだけ収入が増える？年間収益を計算する</div>
+    <div class="card-desc">入居戸数・更新料月数・平均入居年数から、更新料収入の年間期待値と賃料収入への上乗せ効果を計算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">平均家賃（万円/月・例:7）</div>
+        <input type="number" id="crp_rent" value="7" min="1" max="100" step="0.5" oninput="calcContractRenewalProfit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">入居戸数（戸）</div>
+        <input type="number" id="crp_units" value="10" min="1" max="200" step="1" oninput="calcContractRenewalProfit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">更新料（家賃の何ヶ月分）</div>
+        <select id="crp_fee" onchange="calcContractRenewalProfit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="0.5">0.5ヶ月分</option>
+          <option value="1" selected>1ヶ月分</option>
+          <option value="2">2ヶ月分</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">平均入居年数（年・例:4）</div>
+        <input type="number" id="crp_years" value="4" min="1" max="20" step="1" oninput="calcContractRenewalProfit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="contract-renewal-profit-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -10314,6 +10343,34 @@ function calcTurnoverCostFull() {
   el.innerHTML = html;
 }
 (function(){ calcTurnoverCostFull(); })();
+
+function calcContractRenewalProfit() {
+  var el = document.getElementById('contract-renewal-profit-result');
+  if (!el) return;
+  var rent = parseFloat(document.getElementById('crp_rent').value) || 7;
+  var units = parseInt(document.getElementById('crp_units').value) || 10;
+  var fee = parseFloat(document.getElementById('crp_fee').value) || 1;
+  var years = parseFloat(document.getElementById('crp_years').value) || 4;
+  var renewalFeePerUnit = rent * fee;
+  var renewalsPerYear = units / years;
+  var annualRenewalIncome = Math.round(renewalFeePerUnit * renewalsPerYear * 10) / 10;
+  var monthlyEquiv = Math.round(annualRenewalIncome / 12 * 10) / 10;
+  var totalRentMonthly = rent * units;
+  var upliftPct = Math.round(monthlyEquiv / totalRentMonthly * 100 * 10) / 10;
+  var html = '<div style="display:grid;gap:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html += '<div style="background:rgba(96,165,250,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">年間更新料収入</div><div style="font-size:24px;font-weight:700;color:#60a5fa">' + annualRenewalIncome.toFixed(1) + '<span style="font-size:12px;color:#94a3b8">万円/年</span></div></div>';
+  html += '<div style="background:rgba(96,165,250,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">月換算</div><div style="font-size:24px;font-weight:700;color:#60a5fa">' + monthlyEquiv.toFixed(1) + '<span style="font-size:12px;color:#94a3b8">万円/月</span></div></div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">賃料収入への上乗せ率</div><div style="font-size:16px;font-weight:600;color:#4ade80">+' + upliftPct.toFixed(1) + '%</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">1戸あたり更新料</div><div style="font-size:16px;font-weight:600;color:#e2e8f0">' + renewalFeePerUnit.toFixed(1) + '万円/回</div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(96,165,250,0.08);border-radius:6px;padding:8px;font-size:10px;color:#93c5fd">💡 更新料は合法ですが、2024年以降の消費者契約法の動向により無効とされる例も出ています。適正水準（1ヶ月分）を維持し、入居者との信頼関係を優先しましょう</div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcContractRenewalProfit(); })();
 
 function calcTenantScreening() {
   var el = document.getElementById('tenant-screening-result');

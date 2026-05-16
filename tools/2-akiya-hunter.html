@@ -2573,6 +2573,31 @@
     <div id="akiya-vending-result"></div>
   </div>
 
+  <div class="card" id="card-akiya-sharehouse">
+    <div class="card-label">空き家活用</div>
+    <div class="card-title">シェアハウスに転用すると月いくら稼げる？</div>
+    <div class="card-desc">空き家をシェアハウスにした場合の月収・初期費用・回収期間を試算します。複数人で一棟を共有するため、普通賃貸より高い賃料収入が期待できます</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">個室数（部屋）</div>
+        <input type="number" id="ash_rooms" value="5" min="2" max="30" step="1" oninput="calcAkiyaSharehouse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">1部屋あたり賃料（万円/月・例:5）</div>
+        <input type="number" id="ash_rent" value="5" min="1" max="30" step="0.5" oninput="calcAkiyaSharehouse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">改装工事費（万円・例:500）</div>
+        <input type="number" id="ash_cost" value="500" min="50" max="5000" step="50" oninput="calcAkiyaSharehouse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">平均入居率（%・例:80）</div>
+        <input type="number" id="ash_occ" value="80" min="30" max="100" step="5" oninput="calcAkiyaSharehouse()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="akiya-sharehouse-result"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -7310,6 +7335,37 @@ function calcAkiyaVending() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaVending(); })();
+
+function calcAkiyaSharehouse() {
+  var el = document.getElementById('akiya-sharehouse-result');
+  if (!el) return;
+  var rooms = parseInt(document.getElementById('ash_rooms').value) || 5;
+  var rent = parseFloat(document.getElementById('ash_rent').value) || 5;
+  var cost = parseFloat(document.getElementById('ash_cost').value) || 500;
+  var occ = parseFloat(document.getElementById('ash_occ').value) || 80;
+  var grossMonthly = rooms * rent * (occ / 100);
+  var expenseRate = 0.25;
+  var netMonthly = Math.round(grossMonthly * (1 - expenseRate) * 10) / 10;
+  var netAnnual = Math.round(netMonthly * 12 * 10) / 10;
+  var paybackYears = cost > 0 ? Math.round(cost / netAnnual * 10) / 10 : 0;
+  var normalRent = rent * 0.7;
+  var normalNet = Math.round(normalRent * rooms * (1 - expenseRate) * 10) / 10;
+  var uplift = Math.round((netMonthly - normalNet) * 10) / 10;
+  var html = '<div style="display:grid;gap:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html += '<div style="background:rgba(251,146,60,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">月間純収益</div><div style="font-size:24px;font-weight:700;color:#fb923c">' + netMonthly.toFixed(1) + '<span style="font-size:12px;color:#94a3b8">万円</span></div></div>';
+  html += '<div style="background:rgba(251,146,60,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">年間純収益</div><div style="font-size:24px;font-weight:700;color:#fb923c">' + netAnnual.toFixed(1) + '<span style="font-size:12px;color:#94a3b8">万円</span></div></div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">初期費用回収</div><div style="font-size:16px;font-weight:600;color:#e2e8f0">約' + paybackYears.toFixed(1) + '年</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">普通賃貸比 収益UP</div><div style="font-size:16px;font-weight:600;color:' + (uplift > 0 ? '#4ade80' : '#ef4444') + '">+' + uplift.toFixed(1) + '万円/月</div></div>';
+  html += '</div>';
+  var advice = paybackYears <= 5 ? '初期費用の回収が早く、シェアハウス転用は高い収益性を見込めます' : paybackYears <= 10 ? '回収に10年以内であれば長期的に見て採算が合います' : '回収期間が長め。改装コストの削減や賃料見直しを検討してください';
+  html += '<div style="background:rgba(251,146,60,0.08);border-radius:6px;padding:8px;font-size:10px;color:#fb923c">' + advice + '</div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaSharehouse(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;
