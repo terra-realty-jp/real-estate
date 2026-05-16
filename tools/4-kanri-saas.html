@@ -2719,6 +2719,44 @@
     <div id="tenant-screening-result"></div>
   </div>
 
+  <!-- サブリース vs 自主管理 10年収益比較カード -->
+  <div class="card" id="card-sublease-vs-self">
+    <div class="card-title">🔄 サブリース vs 自主管理 10年収益比較</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">同じ物件でサブリースと自主管理（+管理委託）の10年間手取り収益を比較します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">設定家賃（月額・万円）</div>
+        <input id="svs_rent" type="number" value="8" min="1" max="100" step="0.5" onchange="calcSubleaseVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">部屋数（戸）</div>
+        <input id="svs_rooms" type="number" value="4" min="1" max="50" step="1" onchange="calcSubleaseVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">サブリース保証率（%）</div>
+        <input id="svs_sub_rate" type="number" value="85" min="50" max="99" step="1" onchange="calcSubleaseVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">空室率・自主管理時（%）</div>
+        <input id="svs_vacancy" type="number" value="10" min="0" max="60" step="1" onchange="calcSubleaseVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">管理委託費（家賃の%）</div>
+        <input id="svs_mgmt" type="number" value="5" min="0" max="20" step="0.5" onchange="calcSubleaseVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">家賃下落率（年%）</div>
+        <select id="svs_decline" onchange="calcSubleaseVsSelf()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="0">0% （都市部・需要安定）</option>
+          <option value="0.5" selected>0.5%/年 （標準）</option>
+          <option value="1">1%/年 （地方・築古）</option>
+          <option value="2">2%/年 （過疎地・老朽）</option>
+        </select>
+      </div>
+    </div>
+    <div id="sublease-vs-self-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -9910,6 +9948,57 @@ function calcRentHikeScore() {
   el.innerHTML = html;
 }
 (function(){ calcRentHikeScore(); })();
+
+function calcSubleaseVsSelf() {
+  var el = document.getElementById('sublease-vs-self-result');
+  var rent = parseFloat(document.getElementById('svs_rent').value) || 8;
+  var rooms = parseInt(document.getElementById('svs_rooms').value) || 4;
+  var subRate = parseFloat(document.getElementById('svs_sub_rate').value) || 85;
+  var vacancy = parseFloat(document.getElementById('svs_vacancy').value) || 10;
+  var mgmt = parseFloat(document.getElementById('svs_mgmt').value) || 5;
+  var decline = parseFloat(document.getElementById('svs_decline').value) || 0.5;
+
+  var subTotal = 0, selfTotal = 0;
+  var rows = '';
+  for (var y = 1; y <= 10; y++) {
+    var r = rent * Math.pow(1 - decline / 100, y - 1);
+    var subYear = r * rooms * 12 * (subRate / 100);
+    var selfYear = r * rooms * 12 * (1 - vacancy / 100) * (1 - mgmt / 100);
+    subTotal += subYear;
+    selfTotal += selfYear;
+    rows += '<tr><td style="padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.05);color:rgba(255,255,255,0.55)">' + y + '年目</td>'
+      + '<td style="padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:right;color:#93c5fd">' + Math.round(subYear * 10) / 10 + '万円</td>'
+      + '<td style="padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:right;color:#4ade80">' + Math.round(selfYear * 10) / 10 + '万円</td>'
+      + '<td style="padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:right;color:' + (selfYear >= subYear ? '#4ade80' : '#f87171') + '">'
+      + (selfYear >= subYear ? '+' : '') + Math.round((selfYear - subYear) * 10) / 10 + '万円</td></tr>';
+  }
+  var diff = selfTotal - subTotal;
+  var grade, advice, gradeColor;
+  if (diff > 300) { grade = '自主管理が圧倒的に有利'; gradeColor = '#4ade80'; advice = '10年で' + Math.round(diff) + '万円の差。自主管理 + 管理委託への切替えを強く推奨します。サブリース解約には違約金が発生する場合があるため契約書を確認してください。'; }
+  else if (diff > 100) { grade = '自主管理がやや有利'; gradeColor = '#86efac'; advice = '自主管理の方が有利ですが、空室リスク・手間を考慮した判断を。管理会社への委託で安定収益を狙えます。'; }
+  else if (diff > -50) { grade = 'ほぼ同等'; gradeColor = '#fbbf24'; advice = '収益差は小さい。手間・リスク許容度で判断を。空室が続く懸念があればサブリース、安定稼働見込みなら自主管理。'; }
+  else { grade = 'サブリースが有利な可能性'; gradeColor = '#f87171'; advice = '空室率が高い市場では、サブリースの安定収益メリットが上回ります。ただしサブリース会社の財務健全性も確認してください。'; }
+
+  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:13px;font-weight:900;color:' + gradeColor + ';margin-bottom:10px">📊 10年収益比較：' + grade + '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">サブリース10年</div><div style="font-size:17px;font-weight:900;color:#93c5fd">' + Math.round(subTotal) + '万円</div></div>';
+  html += '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">自主管理10年</div><div style="font-size:17px;font-weight:900;color:#4ade80">' + Math.round(selfTotal) + '万円</div></div>';
+  html += '<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">10年差額</div><div style="font-size:17px;font-weight:900;color:' + gradeColor + '">' + (diff >= 0 ? '+' : '') + Math.round(diff) + '万円</div></div>';
+  html += '</div>';
+  html += '<details style="margin-bottom:10px"><summary style="font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer;list-style:none">▶ 年別詳細を見る</summary>';
+  html += '<div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>'
+    + '<th style="padding:4px 6px;text-align:left;color:rgba(255,255,255,0.4);font-weight:600">年</th>'
+    + '<th style="padding:4px 6px;text-align:right;color:#93c5fd;font-weight:600">サブリース</th>'
+    + '<th style="padding:4px 6px;text-align:right;color:#4ade80;font-weight:600">自主管理</th>'
+    + '<th style="padding:4px 6px;text-align:right;color:rgba(255,255,255,0.4);font-weight:600">差額</th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table></div></details>';
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">💡 ' + advice + '</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;line-height:1.6">※ 自主管理は空室率・管理委託費のみ控除。修繕費・固定資産税等は含みません。家賃下落は各年に複利適用。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSubleaseVsSelf(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
