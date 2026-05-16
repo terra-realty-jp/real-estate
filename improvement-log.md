@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-16 （セッション継続70）
+
+- **対象**: 全5ツール + index.html
+- **フェーズ**: Phase 1 UX完了 → Phase 2 ラウンド18（計算カード5枚追加）
+- **Phase 1 完了作業**:
+  - Tool4・Tool5: 「初めての方へ」バナー追加・TOP3ラベルをユーザー言語に書き換え
+  - index.html: 状況別入口を3→5ツール全対応に拡張（実家・空き家、家を買いたい状況を追加）
+  - index.html: ツールカード名を悩みベース言語に書き換え（AI物件査定 → 家の売却価格をすぐに確認など）
+- **ラウンド18 計算カード追加**:
+  - Tool1: `card-neighbor-price-compare` — 近隣坪単価と比較してあなたの家の価格ポジションを診断（上位10%〜下位10%）
+  - Tool2: `card-akiya-quick-sale` — 空き家即売却試算（売却手取り・維持費5/10年累計と比較）
+  - Tool3: `card-rate-type-switch` — 変動→固定金利切替シミュレーター（月返済差・総支払差・金利2%上昇時比較）
+  - Tool4: `card-ideal-rent-calc` — 物件価格と目標利回りから適正家賃を逆算・値上げ余地を診断
+  - Tool5: `card-total-return-10yr` — 10年間トータルリターン計算（家賃CF合計・売却手取り・自己資金ROI）
+- **理由**: 「あなたの家は近隣より15%高い」「放置より○○万円手取りになる」「固定に切り替えると月2,300円UP」など、数字の意外性・比較が「誰かに話したい」感情を生む設計を継続
+
+---
+
 ## 2026-05-16 セッション継続63（Phase 2-B: llms.txt刷新 + ラウンド9 計算カード5枚追加）
 
 - **対象**: llms.txt / 全5ツール
@@ -1828,3 +1846,39 @@
   4. **Tool4: 水漏れ・給排水トラブル修繕コスト（card-water-leak-cost）** — 蛇口/配管/雨漏り/浸水タイプ別の修繕費目安・保険カバー額・自己負担額
   5. **Tool5: 投資経費の節税シミュレーション（card-investor-expenses）** — 家賃収入・利息・減価償却・管理費・固定資産税から経費合計と損益通算による節税額を算出
 - **理由**: 意外な数字・比較発見・「自分もできる節税」が一目でわかるカードを継続追加し、PLG的なシェア誘発を狙う。
+
+## 2026-05-16 （セッション継続67）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 2 新機能追加
+- **改善内容**:
+  - Tool1: `card-curb-appeal` + `calcCurbAppeal()` — 外構・外観リフォームの査定UP効果（タイプ別価格上昇率・ROI・工期短縮）
+  - Tool2: `card-akiya-vending` + `calcAkiyaVending()` — 自動販売機設置収益試算（借上型/自社設置、通行量・機種別）
+  - Tool3: `card-title-transfer-cost` + `calcTitleTransferCost()` — 不動産名義変更費用（登録免許税・司法書士・書類取得・抵当権）
+  - Tool4: `card-turnover-cost-full` + `calcTurnoverCostFull()` — 退去から次入居までの全費用（原状回復・クリーニング・広告費・空室損失）
+  - Tool5: `card-portfolio-ltv` + `calcPortfolioLTV()` — 保有物件全体のLTV・DSCR・純資産・財務健全度診断
+- **理由**: 空き家・名義変更・退去コスト・ポートフォリオ管理は一般オーナーが必ず直面する課題。数値の見える化で「また来たい」動機を強化
+
+## 2026-05-16 （セッション継続68）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 2 新機能追加
+- **改善内容**:
+  - Tool1: `card-sale-readiness` + `calcSaleReadiness()` — 売却前の準備費用一覧（引越し・清掃・測量・書類・修繕）
+  - Tool2: `card-akiya-sharehouse` + `calcAkiyaSharehouse()` — シェアハウス転用の月収・回収年数・普通賃貸比収益UP
+  - Tool3: `card-down-payment-plan` + `calcDownPaymentPlan()` — 頭金積立計画（達成期間・借入額・月返済額）
+  - Tool4: `card-contract-renewal-profit` + `calcContractRenewalProfit()` — 更新料収入の年間期待値・賃料上乗せ率
+  - Tool5: `card-mortgage-refi` + `calcMortgageRefi()` — 借り換えメリット（月削減・総節約額・費用回収期間）
+- **理由**: 「売る前にいくら必要？」「いつ家が買える？」「借り換えは得か？」は一般ユーザーの最頻質問。シンプルな入力で即回答
+
+## 2026-05-16 （セッション継続69）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 2 新機能追加
+- **改善内容**:
+  - Tool1: `card-inherited-property-sale` + `calcInheritedPropertySale()` — 相続物件売却の譲渡税・3,000万円控除・手取り利益
+  - Tool2: `card-akiya-solar-panel` + `calcAkiyaSolarPanel()` — ソーラーパネル設置の発電量・月収・回収期間
+  - Tool3: `card-land-acquisition-cost` + `calcLandAcquisitionCost()` — 土地購入の全諸費用（登記・取得税・仲介・測量）
+  - Tool4: `card-parking-revenue` + `calcParkingRevenue()` — 駐車場の月収・空車損失・収益効率診断
+  - Tool5: `card-breakeven-yield` + `calcBreakevenYield()` — 損益分岐利回り（最低限必要な利回りの逆算）
+- **理由**: 「相続した家を売ると税金いくら？」「ソーラーパネルで副収入？」「土地購入の隠れコストは？」一般ユーザーが実際に直面する疑問に即答
