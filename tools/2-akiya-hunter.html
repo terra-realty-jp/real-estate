@@ -1368,6 +1368,13 @@
       <input type="text" id="akiya-calc-search" placeholder="🔍 計算ツールを検索（例: 解体・相続・農地）" oninput="filterAkiyaCalcCards(this.value)" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:11px 40px 11px 16px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
       <span id="akiya-calc-count" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
     </div>
+    <div id="akiya-cat-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="akiya-cat-btn active-cat" onclick="setAkiyaCat(this,'')" style="background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);border-radius:20px;padding:4px 12px;color:#fb923c;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">すべて</button>
+      <button class="akiya-cat-btn" onclick="setAkiyaCat(this,'katsu')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">活用診断</button>
+      <button class="akiya-cat-btn" onclick="setAkiyaCat(this,'cost')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">費用・補助金</button>
+      <button class="akiya-cat-btn" onclick="setAkiyaCat(this,'sozoku')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">相続・登記</button>
+      <button class="akiya-cat-btn" onclick="setAkiyaCat(this,'renov')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">リノベ・転用</button>
+    </div>
     <div id="akiya-calc-noresult" style="display:none;padding:20px;text-align:center;color:var(--text-muted);font-size:13px;background:var(--dark2);border-radius:10px;margin-bottom:16px">
       該当するツールが見つかりませんでした
     </div>
@@ -6892,20 +6899,41 @@ function calcAkiyaValueDecline() {
 }
 (function(){ calcAkiyaValueDecline(); })();
 
+var _akiyaCat = '';
+var _akiyaCatKw = {
+  katsu:  ['活用','民泊','シェアハウス','カフェ','シェアオフィス','賃貸','収益','転用','古民家','農地','空き家バンク','3択'],
+  cost:   ['費用','補助金','解体','保険','コスト','リフォーム','修繕','DIY','セキュリティ','管理費','清掃'],
+  sozoku: ['相続','登記','共有','特定空き家','固定資産税','名義','評価額','贈与','手続き'],
+  renov:  ['リノベ','建替え','改修','フルリノベ','断熱','耐震','改装','リフォーム','スペック']
+};
+function setAkiyaCat(btn, cat) {
+  _akiyaCat = cat;
+  document.querySelectorAll('.akiya-cat-btn').forEach(function(b) {
+    var isActive = b === btn;
+    b.style.background = isActive ? 'rgba(249,115,22,0.12)' : 'rgba(255,255,255,0.03)';
+    b.style.borderColor = isActive ? 'rgba(249,115,22,0.3)' : 'rgba(255,255,255,0.1)';
+    b.style.color = isActive ? '#fb923c' : 'rgba(255,255,255,0.5)';
+    b.style.fontWeight = isActive ? '700' : '400';
+  });
+  filterAkiyaCalcCards(document.getElementById('akiya-calc-search').value);
+}
 function filterAkiyaCalcCards(query) {
   var cards = document.querySelectorAll('#akiya-calc-cards .card');
   var q = query.trim().toLowerCase();
+  var kws = _akiyaCat ? _akiyaCatKw[_akiyaCat] : null;
   var shown = 0;
   cards.forEach(function(card) {
     var text = card.textContent.toLowerCase();
-    var match = !q || text.indexOf(q) !== -1;
+    var matchQ = !q || text.indexOf(q) !== -1;
+    var matchC = !kws || kws.some(function(k) { return text.indexOf(k) !== -1; });
+    var match = matchQ && matchC;
     card.style.display = match ? '' : 'none';
     if (match) shown++;
   });
   var countEl = document.getElementById('akiya-calc-count');
   var noResult = document.getElementById('akiya-calc-noresult');
-  if (countEl) countEl.textContent = q ? shown + '件' : '';
-  if (noResult) noResult.style.display = (q && shown === 0) ? '' : 'none';
+  if (countEl) countEl.textContent = (q || _akiyaCat) ? shown + '件' : '';
+  if (noResult) noResult.style.display = ((q || _akiyaCat) && shown === 0) ? '' : 'none';
 }
 
 // 初期化

@@ -662,9 +662,16 @@
     <button onclick="document.getElementById('card-deposit-risk').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">🤝 手付金リスク</button>
     <button onclick="document.getElementById('card-bridge-loan').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">🔗 つなぎ融資試算</button>
   </div>
-  <div style="margin-bottom:16px;position:relative">
+  <div style="margin-bottom:8px;position:relative">
     <input type="text" id="owner-calc-search" placeholder="🔍 計算カードを検索..." oninput="filterOwnerCalcCards(this.value)" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
     <span id="owner-calc-count" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
+  </div>
+  <div id="owner-cat-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="owner-cat-btn" onclick="setOwnerCat(this,'')" style="background:rgba(77,182,245,0.12);border:1px solid rgba(77,182,245,0.3);border-radius:20px;padding:4px 12px;color:#4db6f5;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">すべて</button>
+    <button class="owner-cat-btn" onclick="setOwnerCat(this,'nego')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">価格交渉</button>
+    <button class="owner-cat-btn" onclick="setOwnerCat(this,'loan')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">ローン計算</button>
+    <button class="owner-cat-btn" onclick="setOwnerCat(this,'cost')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">諸費用</button>
+    <button class="owner-cat-btn" onclick="setOwnerCat(this,'proc')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">手続き確認</button>
   </div>
   <div id="owner-calc-noresult" style="display:none;text-align:center;padding:20px;color:var(--text-muted);font-size:13px">該当する計算カードが見つかりません</div>
 
@@ -6479,20 +6486,41 @@ function calcRateFixedVsVariable() {
 }
 (function(){ calcRateFixedVsVariable(); })();
 
+var _ownerCat = '';
+var _ownerCatKw = {
+  nego: ['交渉','価格ギャップ','乖離','成立','値引き','売出価格','ギャップ','指値'],
+  loan: ['ローン','金利','返済','繰上げ','借換え','つなぎ','借入','フラット','変動','固定'],
+  cost: ['費用','諸費用','手数料','印紙','登記','取得税','保険','リフォーム','建築','按分','減価償却'],
+  proc: ['チェック','確認','手続き','書類','引渡し','登記','スケジュール','告知','重要事項','エスクロー']
+};
+function setOwnerCat(btn, cat) {
+  _ownerCat = cat;
+  document.querySelectorAll('.owner-cat-btn').forEach(function(b) {
+    var isActive = b === btn;
+    b.style.background = isActive ? 'rgba(77,182,245,0.12)' : 'rgba(255,255,255,0.03)';
+    b.style.borderColor = isActive ? 'rgba(77,182,245,0.3)' : 'rgba(255,255,255,0.1)';
+    b.style.color = isActive ? '#4db6f5' : 'rgba(255,255,255,0.5)';
+    b.style.fontWeight = isActive ? '700' : '400';
+  });
+  filterOwnerCalcCards(document.getElementById('owner-calc-search').value);
+}
 function filterOwnerCalcCards(query) {
   var cards = document.querySelectorAll('#owner-calc-cards > div');
   var q = query.trim().toLowerCase();
+  var kws = _ownerCat ? _ownerCatKw[_ownerCat] : null;
   var shown = 0;
   cards.forEach(function(card) {
     var text = card.textContent.toLowerCase();
-    var match = !q || text.indexOf(q) !== -1;
+    var matchQ = !q || text.indexOf(q) !== -1;
+    var matchC = !kws || kws.some(function(k) { return text.indexOf(k) !== -1; });
+    var match = matchQ && matchC;
     card.style.display = match ? '' : 'none';
     if (match) shown++;
   });
   var countEl = document.getElementById('owner-calc-count');
   var noResult = document.getElementById('owner-calc-noresult');
-  if (countEl) countEl.textContent = q ? shown + '件' : '';
-  if (noResult) noResult.style.display = (q && shown === 0) ? '' : 'none';
+  if (countEl) countEl.textContent = (q || _ownerCat) ? shown + '件' : '';
+  if (noResult) noResult.style.display = ((q || _ownerCat) && shown === 0) ? '' : 'none';
 }
 
 // 初期化

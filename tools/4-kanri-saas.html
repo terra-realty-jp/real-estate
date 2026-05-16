@@ -1661,9 +1661,16 @@
     <button onclick="document.getElementById('card-applicant-risk').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">👤 滞納リスク診断</button>
     <button onclick="document.getElementById('card-arrears-loss').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">💸 滞納損失試算</button>
   </div>
-  <div style="margin-bottom:16px;position:relative">
+  <div style="margin-bottom:8px;position:relative">
     <input type="text" id="kanri-calc-search" placeholder="🔍 計算カードを検索..." oninput="filterKanriCalcCards(this.value)" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
     <span id="kanri-calc-count" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
+  </div>
+  <div id="kanri-cat-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="kanri-cat-btn" onclick="setKanriCat(this,'')" style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:20px;padding:4px 12px;color:#93c5fd;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">すべて</button>
+    <button class="kanri-cat-btn" onclick="setKanriCat(this,'rent')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">収支・家賃</button>
+    <button class="kanri-cat-btn" onclick="setKanriCat(this,'tenant')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">入居管理</button>
+    <button class="kanri-cat-btn" onclick="setKanriCat(this,'equip')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">設備・修繕</button>
+    <button class="kanri-cat-btn" onclick="setKanriCat(this,'vacancy')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">審査・空室</button>
   </div>
   <div id="kanri-calc-noresult" style="display:none;text-align:center;padding:20px;color:var(--text-muted);font-size:13px">該当する計算カードが見つかりません</div>
 
@@ -9627,20 +9634,41 @@ function calcOccupancyBreakEven() {
 }
 (function(){ calcOccupancyBreakEven(); })();
 
+var _kanriCat = '';
+var _kanriCatKw = {
+  rent:    ['収支','家賃','損益','収益','CF','キャッシュ','月次','ヘルス','税','節税','確定申告','空室損失','満室','ROI','修繕積立'],
+  tenant:  ['入居','退去','更新','審査','スコア','満足度','リスク','滞納','保証','申込','チェック','退去予測','更新スケジュール'],
+  equip:   ['設備','修繕','老朽化','交換','リフォーム','原状回復','修繕計画','長期修繕','耐用年数','工事','ウォーターサーバー'],
+  vacancy: ['空室','空き','募集','広告','フリーレント','礼金','敷金','仲介','客付け','稼働率','リフォームROI']
+};
+function setKanriCat(btn, cat) {
+  _kanriCat = cat;
+  document.querySelectorAll('.kanri-cat-btn').forEach(function(b) {
+    var isActive = b === btn;
+    b.style.background = isActive ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.03)';
+    b.style.borderColor = isActive ? 'rgba(59,130,246,0.3)' : 'rgba(255,255,255,0.1)';
+    b.style.color = isActive ? '#93c5fd' : 'rgba(255,255,255,0.5)';
+    b.style.fontWeight = isActive ? '700' : '400';
+  });
+  filterKanriCalcCards(document.getElementById('kanri-calc-search').value);
+}
 function filterKanriCalcCards(query) {
   var cards = document.querySelectorAll('#kanri-calc-cards .card');
   var q = query.trim().toLowerCase();
+  var kws = _kanriCat ? _kanriCatKw[_kanriCat] : null;
   var shown = 0;
   cards.forEach(function(card) {
     var text = card.textContent.toLowerCase();
-    var match = !q || text.indexOf(q) !== -1;
+    var matchQ = !q || text.indexOf(q) !== -1;
+    var matchC = !kws || kws.some(function(k) { return text.indexOf(k) !== -1; });
+    var match = matchQ && matchC;
     card.style.display = match ? '' : 'none';
     if (match) shown++;
   });
   var countEl = document.getElementById('kanri-calc-count');
   var noResult = document.getElementById('kanri-calc-noresult');
-  if (countEl) countEl.textContent = q ? shown + '件' : '';
-  if (noResult) noResult.style.display = (q && shown === 0) ? '' : 'none';
+  if (countEl) countEl.textContent = (q || _kanriCat) ? shown + '件' : '';
+  if (noResult) noResult.style.display = ((q || _kanriCat) && shown === 0) ? '' : 'none';
 }
 
 initApp();

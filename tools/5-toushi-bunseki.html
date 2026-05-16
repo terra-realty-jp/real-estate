@@ -938,9 +938,16 @@
     <button onclick="document.getElementById('card-property-tax').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">🏛️ 固定資産税試算</button>
     <button onclick="document.getElementById('card-reit-comp').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">🏦 REIT比較</button>
   </div>
-  <div style="margin-bottom:16px;position:relative">
+  <div style="margin-bottom:8px;position:relative">
     <input type="text" id="toushi-calc-search" placeholder="🔍 計算カードを検索..." oninput="filterToushiCalcCards(this.value)" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
     <span id="toushi-calc-count" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
+  </div>
+  <div id="toushi-cat-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="toushi-cat-btn" onclick="setToushiCat(this,'')" style="background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);border-radius:20px;padding:4px 12px;color:#c9a84c;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">すべて</button>
+    <button class="toushi-cat-btn" onclick="setToushiCat(this,'cf')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">CF計算</button>
+    <button class="toushi-cat-btn" onclick="setToushiCat(this,'risk')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">リスク分析</button>
+    <button class="toushi-cat-btn" onclick="setToushiCat(this,'loan')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">融資・税金</button>
+    <button class="toushi-cat-btn" onclick="setToushiCat(this,'exit')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">出口・比較</button>
   </div>
   <div id="toushi-calc-noresult" style="display:none;text-align:center;padding:20px;color:var(--text-muted);font-size:13px">該当する計算カードが見つかりません</div>
 
@@ -9032,20 +9039,41 @@ function calcMortgageConstant() {
 }
 (function(){ calcMortgageConstant(); })();
 
+var _toushiCat = '';
+var _toushiCatKw = {
+  cf:   ['CF','キャッシュフロー','利回り','収益','月次','年間','NOI','空室率','稼働','実質利回り','ポートフォリオ','合算'],
+  risk: ['リスク','スコア','診断','チェック','安定性','DSCR','LTV','ローン比率','デッド','デフォルト','フルローン','地域','人口'],
+  loan: ['ローン','融資','金利','返済','借入','レバレッジ','CCR','期間','減価償却','税','節税','IRR','期間別'],
+  exit: ['出口','売却','売り時','タイミング','比較','現金','REIT','REITvsReal','保有','ホールド','シナリオ','マトリックス','種別別']
+};
+function setToushiCat(btn, cat) {
+  _toushiCat = cat;
+  document.querySelectorAll('.toushi-cat-btn').forEach(function(b) {
+    var isActive = b === btn;
+    b.style.background = isActive ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.03)';
+    b.style.borderColor = isActive ? 'rgba(201,168,76,0.3)' : 'rgba(255,255,255,0.1)';
+    b.style.color = isActive ? '#c9a84c' : 'rgba(255,255,255,0.5)';
+    b.style.fontWeight = isActive ? '700' : '400';
+  });
+  filterToushiCalcCards(document.getElementById('toushi-calc-search').value);
+}
 function filterToushiCalcCards(query) {
   var cards = document.querySelectorAll('#toushi-calc-cards > div');
   var q = query.trim().toLowerCase();
+  var kws = _toushiCat ? _toushiCatKw[_toushiCat] : null;
   var shown = 0;
   cards.forEach(function(card) {
     var text = card.textContent.toLowerCase();
-    var match = !q || text.indexOf(q) !== -1;
+    var matchQ = !q || text.indexOf(q) !== -1;
+    var matchC = !kws || kws.some(function(k) { return text.indexOf(k) !== -1; });
+    var match = matchQ && matchC;
     card.style.display = match ? '' : 'none';
     if (match) shown++;
   });
   var countEl = document.getElementById('toushi-calc-count');
   var noResult = document.getElementById('toushi-calc-noresult');
-  if (countEl) countEl.textContent = q ? shown + '件' : '';
-  if (noResult) noResult.style.display = (q && shown === 0) ? '' : 'none';
+  if (countEl) countEl.textContent = (q || _toushiCat) ? shown + '件' : '';
+  if (noResult) noResult.style.display = ((q || _toushiCat) && shown === 0) ? '' : 'none';
 }
 
 // 初期化

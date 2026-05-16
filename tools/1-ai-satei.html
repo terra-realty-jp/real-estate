@@ -861,9 +861,16 @@
     <button onclick="document.getElementById('card-capital-gains').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">📋 譲渡所得税試算</button>
     <button onclick="document.getElementById('card-inheritance-reg').scrollIntoView({behavior:'smooth'})" style="background:var(--dark3);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap">📝 相続登記チェック</button>
   </div>
-  <div style="margin-bottom:16px;position:relative;max-width:800px;margin-left:auto;margin-right:auto">
+  <div style="margin-bottom:8px;position:relative;max-width:800px;margin-left:auto;margin-right:auto">
     <input type="text" id="satei-calc-search" placeholder="🔍 計算カードを検索..." oninput="filterSateiCalcCards(this.value)" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
     <span id="satei-calc-count" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
+  </div>
+  <div id="satei-cat-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;max-width:800px;margin-left:auto;margin-right:auto">
+    <button class="satei-cat-btn active-cat" data-cat="" onclick="setSateiCat(this,'')" style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:20px;padding:4px 12px;color:#4ade80;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">すべて</button>
+    <button class="satei-cat-btn" data-cat="price" onclick="setSateiCat(this,'price')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">価格・相場</button>
+    <button class="satei-cat-btn" data-cat="tax" onclick="setSateiCat(this,'tax')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">ローン・税金</button>
+    <button class="satei-cat-btn" data-cat="proc" onclick="setSateiCat(this,'proc')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">売却手続き</button>
+    <button class="satei-cat-btn" data-cat="invest" onclick="setSateiCat(this,'invest')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;font-family:inherit">投資・リノベ</button>
   </div>
   <div id="satei-calc-noresult" style="display:none;text-align:center;padding:20px;color:var(--text-muted);font-size:13px">該当する計算カードが見つかりません</div>
 
@@ -7466,20 +7473,41 @@ function calcTaxHarvest() {
 }
 (function(){ calcTaxHarvest(); })();
 
+var _sateiCat = '';
+var _sateiCatKw = {
+  price:  ['査定','価格','相場','市場','坪単価','成約','売出','推定','目安','比較分析','シナリオ','予測'],
+  tax:    ['ローン','税','減税','控除','費用','手数料','諸費用','節税','譲渡','相続','固定資産'],
+  proc:   ['媒介','書類','告知','手続き','チェック','準備','仲介','タイミング','広告','スケジュール','重要事項','ステージング'],
+  invest: ['投資','リフォーム','運用','リノベ','改修','ホームステージング','再投資','住み替え']
+};
+function setSateiCat(btn, cat) {
+  _sateiCat = cat;
+  document.querySelectorAll('.satei-cat-btn').forEach(function(b) {
+    var isActive = b === btn;
+    b.style.background = isActive ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.03)';
+    b.style.borderColor = isActive ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)';
+    b.style.color = isActive ? '#4ade80' : 'rgba(255,255,255,0.5)';
+    b.style.fontWeight = isActive ? '700' : '400';
+  });
+  filterSateiCalcCards(document.getElementById('satei-calc-search').value);
+}
 function filterSateiCalcCards(query) {
   var cards = document.querySelectorAll('#satei-calc-cards > div');
   var q = query.trim().toLowerCase();
+  var kws = _sateiCat ? _sateiCatKw[_sateiCat] : null;
   var shown = 0;
   cards.forEach(function(card) {
     var text = card.textContent.toLowerCase();
-    var match = !q || text.indexOf(q) !== -1;
+    var matchQ = !q || text.indexOf(q) !== -1;
+    var matchC = !kws || kws.some(function(k) { return text.indexOf(k) !== -1; });
+    var match = matchQ && matchC;
     card.style.display = match ? '' : 'none';
     if (match) shown++;
   });
   var countEl = document.getElementById('satei-calc-count');
   var noResult = document.getElementById('satei-calc-noresult');
-  if (countEl) countEl.textContent = q ? shown + '件' : '';
-  if (noResult) noResult.style.display = (q && shown === 0) ? '' : 'none';
+  if (countEl) countEl.textContent = (q || _sateiCat) ? shown + '件' : '';
+  if (noResult) noResult.style.display = ((q || _sateiCat) && shown === 0) ? '' : 'none';
 }
 
 // 初期化
