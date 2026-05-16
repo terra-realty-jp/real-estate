@@ -2647,6 +2647,34 @@
     <div id="sell-lease-back-result"></div>
   </div>
 
+  <div class="card" id="card-floor-plan-effect">
+    <div class="card-title">🏗️ 間取り変更リノベで売却価格はどれだけ上がる？ 費用対効果を診断する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「4LDK→3LDK+広いリビング」「和室を洋室に変更」などの間取りリノベは、売却価格を押し上げる効果があります。リノベ費用・売却価格UP額・工事期間中の維持コストを比較して、実施すべきか判断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の売却想定価格（万円）（例: 3000）</label>
+        <input type="number" id="fpe_base" value="3000" min="100" max="200000" step="100" oninput="calcFloorPlanEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">間取り変更リノベ費用（万円）（例: 200）</label>
+        <input type="number" id="fpe_cost" value="200" min="30" max="3000" step="10" oninput="calcFloorPlanEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">工事期間中の維持コスト（万円/月）（例: 3）</label>
+        <input type="number" id="fpe_running" value="3" min="0" max="30" step="0.5" oninput="calcFloorPlanEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">リノベの内容</label>
+        <select id="fpe_type" onchange="calcFloorPlanEffect()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="open">和室→洋室・リビング拡大（需要UP高）</option>
+          <option value="merge">部屋数を減らして広いLDK（需要UP中）</option>
+          <option value="add">部屋数を増やす（需要UP低）</option>
+        </select>
+      </div>
+    </div>
+    <div id="floor-plan-effect-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7818,6 +7846,41 @@ function calcSellLeaseBack() {
   el.innerHTML = html;
 }
 (function(){ calcSellLeaseBack(); })();
+
+function calcFloorPlanEffect() {
+  var el = document.getElementById('floor-plan-effect-result'); if (!el) return;
+  var base = parseFloat(document.getElementById('fpe_base').value) || 3000;
+  var cost = parseFloat(document.getElementById('fpe_cost').value) || 200;
+  var running = parseFloat(document.getElementById('fpe_running').value) || 3;
+  var type = document.getElementById('fpe_type').value;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var upRateMap = { open: 0.08, merge: 0.05, add: 0.02 };
+  var upRate = upRateMap[type];
+  var workMonths = type === 'open' ? 2 : type === 'merge' ? 3 : 4;
+  var priceUp = Math.round(base * upRate);
+  var holdCost = Math.round(running * workMonths);
+  var totalCost = cost + holdCost;
+  var netGain = priceUp - totalCost;
+  var roi = Math.round((netGain / totalCost) * 100);
+  var typeLabel = { open: '和室→洋室・リビング拡大', merge: '部屋数を減らして広いLDK', add: '部屋数を増やす' }[type];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">+' + priceUp.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">推定価格UP効果</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:#fb923c">' + totalCost.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">総コスト（工事+維持）</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (netGain >= 0 ? ACCENT : '#fb923c') + '">' + (netGain >= 0 ? '+' : '') + netGain.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">差引き純利益</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '🏗️ 【' + typeLabel + '】 工事期間目安: ' + workMonths + 'ヶ月<br>';
+  html += '📊 投資対効果（ROI）: <b style="color:' + (roi >= 0 ? ACCENT : '#fb923c') + '">' + (roi >= 0 ? '+' : '') + roi + '%</b>（コストに対してプラスに回るか）<br>';
+  if (netGain > 0) {
+    html += '✅ リノベは経済的に有利です。次の繁忙期（3月）の前に完成させることで成約スピードUPも期待できます';
+  } else {
+    html += '⚠️ リノベコストが価格UP効果を上回ります。現状渡しでの売却か、より低コストな内装改善を検討してください';
+  }
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcFloorPlanEffect(); })();
 
 function initSellReadiness() {
   var el = document.getElementById('sell-readiness-content');

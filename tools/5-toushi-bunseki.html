@@ -2568,6 +2568,30 @@
     <div id="multi-unit-mix-result"></div>
   </div>
 
+  <div class="card" id="card-second-property">
+    <div class="card-title">🏘️ 2棟目の投資物件を買い増しすると収益・融資・リスクはどう変わる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">1棟目の実績をもとに2棟目を購入すると、融資評価・キャッシュフロー・リスク分散がどう変化するかを試算します。買い増しの適切なタイミングの目安も確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">1棟目の月間手残り（万円）（例: 5）</label>
+        <input type="number" id="sp_cf1" value="5" min="-5" max="100" step="0.5" oninput="calcSecondProperty()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">2棟目の購入価格（万円）（例: 3000）</label>
+        <input type="number" id="sp_price2" value="3000" min="100" max="100000" step="100" oninput="calcSecondProperty()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">2棟目の表面利回り（%）（例: 7）</label>
+        <input type="number" id="sp_yield2" value="7" min="1" max="30" step="0.1" oninput="calcSecondProperty()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">自己資金（頭金）（万円）（例: 400）</label>
+        <input type="number" id="sp_down2" value="400" min="0" max="10000" step="100" oninput="calcSecondProperty()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="second-property-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -9443,6 +9467,40 @@ function calcMultiUnitMix() {
   el.innerHTML = html;
 }
 (function(){ calcMultiUnitMix(); })();
+
+function calcSecondProperty() {
+  var el = document.getElementById('second-property-result'); if (!el) return;
+  var cf1 = parseFloat(document.getElementById('sp_cf1').value) || 5;
+  var price2 = parseFloat(document.getElementById('sp_price2').value) || 3000;
+  var yield2 = (parseFloat(document.getElementById('sp_yield2').value) || 7) / 100;
+  var down2 = parseFloat(document.getElementById('sp_down2').value) || 400;
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var rent2 = Math.round(price2 * yield2 / 12 * 10) / 10;
+  var loan2 = price2 - down2;
+  var rate = 0.02;
+  var months = 30 * 12;
+  var mr = rate / 12;
+  var pmt = loan2 * mr * Math.pow(1 + mr, months) / (Math.pow(1 + mr, months) - 1);
+  var pmtM = Math.round(pmt / 10000 * 10) / 10;
+  var expenseRate = 0.20;
+  var cf2 = Math.round((rent2 * (1 - expenseRate) - pmtM) * 10) / 10;
+  var totalCF = cf1 + cf2;
+  var ccr = down2 > 0 ? Math.round((cf2 * 12 / down2) * 1000) / 10 : 0;
+  var readyOk = cf1 >= 3 && down2 >= price2 * 0.1;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (cf2 >= 0 ? GOLD : '#fb923c') + '">' + cf2.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">2棟目の月間手残り</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (totalCF >= 0 ? '#4ade80' : '#fb923c') + '">' + totalCF.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">合算の月間手残り</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + GOLD + '">' + ccr.toFixed(1) + '%</div><div style="font-size:10px;color:var(--text-muted)">自己資金収益率（CCR）</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '🏦 2棟目の借入額: <b style="color:var(--text)">' + loan2.toLocaleString() + '万円</b>　月返済目安: <b style="color:var(--text)">' + pmtM.toFixed(1) + '万円</b>（金利2%・30年想定）<br>';
+  html += '📊 月間家賃収入（2棟目）: ' + rent2.toFixed(1) + '万円 → 経費20%・返済控除後の手残り: <b style="color:' + (cf2 >= 0 ? GOLD : '#fb923c') + '">' + cf2.toFixed(1) + '万円</b><br>';
+  html += readyOk ? '✅ 1棟目の実績・頭金の条件から、2棟目購入の基本的な条件を満たしています' : '⚠️ 1棟目のCFがまだ小さい、または頭金が不足しています。1〜2年実績を積んでから検討することをお勧めします';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcSecondProperty(); })();
 
 function calcExitTiming() {
   var el = document.getElementById('exit-timing-result');

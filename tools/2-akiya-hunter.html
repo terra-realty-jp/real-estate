@@ -2449,6 +2449,34 @@
     <div id="akiya-storage-convert-result"></div>
   </div>
 
+  <div class="card" id="card-akiya-rent-park">
+    <div class="card-title">🚗 空き家の庭・敷地を月極駐車場として貸し出すと月いくら稼げる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家の庭や空いた敷地を月極駐車場として貸し出す方法は、建物を改修せずに低コストで収益化できます。台数・エリア・初期整備費用から月間収益・回収期間を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">駐車可能台数</label>
+        <input type="number" id="arp_units" value="4" min="1" max="50" step="1" oninput="calcAkiyaRentPark()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額駐車料金（万円/台）（例: 1.5）</label>
+        <input type="number" id="arp_rent" value="1.5" min="0.3" max="10" step="0.1" oninput="calcAkiyaRentPark()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">整備費（舗装・区画線・照明など）（万円）</label>
+        <input type="number" id="arp_cost" value="30" min="0" max="500" step="5" oninput="calcAkiyaRentPark()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">エリア（需要の強さ）</label>
+        <select id="arp_demand" onchange="calcAkiyaRentPark()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="high">都市部・駅近・商業地（稼働率90%以上）</option>
+          <option value="mid">郊外住宅地（稼働率75%程度）</option>
+          <option value="low">地方・田舎（稼働率50%程度）</option>
+        </select>
+      </div>
+    </div>
+    <div id="akiya-rent-park-result"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -7056,6 +7084,35 @@ function calcAkiyaStorageConvert() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaStorageConvert(); })();
+
+function calcAkiyaRentPark() {
+  var el = document.getElementById('akiya-rent-park-result'); if (!el) return;
+  var units = parseInt(document.getElementById('arp_units').value) || 4;
+  var rent = parseFloat(document.getElementById('arp_rent').value) || 1.5;
+  var cost = parseFloat(document.getElementById('arp_cost').value) || 30;
+  var demand = document.getElementById('arp_demand').value;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var occMap = { high: 0.90, mid: 0.75, low: 0.50 };
+  var occ = occMap[demand];
+  var monthlyGross = Math.round(units * rent * occ * 10) / 10;
+  var managing = Math.round(monthlyGross * 0.10 * 10) / 10;
+  var monthlyNet = Math.round((monthlyGross - managing) * 10) / 10;
+  var yearlyNet = Math.round(monthlyNet * 12 * 10) / 10;
+  var payback = monthlyNet > 0 ? Math.ceil(cost / monthlyNet) : 999;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + monthlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間純収益</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + yearlyNet.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間純収益</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (payback <= 36 ? '#4ade80' : '#facc15') + '">' + (payback >= 999 ? '赤字' : payback + 'ヶ月') + '</div><div style="font-size:10px;color:var(--text-muted)">初期費用の回収期間</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '🚗 ' + units + '台 × 月額' + rent + '万円 × 稼働率' + Math.round(occ * 100) + '% = 月収入 <b style="color:var(--text)">' + monthlyGross.toFixed(1) + '万円</b><br>';
+  html += '💡 <b style="color:var(--text)">月極駐車場のメリット:</b> 建物改修なし・撤退容易・管理コスト最小・固定資産税の節税効果（住宅用地特例が外れる可能性に注意）<br>';
+  html += '<span style="font-size:10px">⚠️ 住宅用地からの変更で固定資産税が増額する場合があります。事前に市区町村に確認してください。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaRentPark(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;
