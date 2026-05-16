@@ -2450,6 +2450,46 @@
     <div id="tax-harvest-result"></div>
   </div>
 
+  <div class="card" id="card-sumai-timing">
+    <div class="card-title">🏡 住み替え 適正タイミング総合診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">今の家を売って新しい家を買う「住み替え」のベストタイミングを5軸スコアリングで診断します。売り時・買い時・資金状況を総合判定します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の住宅ローン残高（万円）</div>
+        <input type="number" id="st_loan" value="2000" min="0" max="50000" step="100" oninput="calcSumaiTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の物件の売却見込み額（万円）</div>
+        <input type="number" id="st_sell" value="3200" min="0" max="100000" step="100" oninput="calcSumaiTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の家の築年数（年）</div>
+        <input type="number" id="st_age" value="15" min="0" max="60" step="1" oninput="calcSumaiTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">購入予定の物件の価格（万円）</div>
+        <input type="number" id="st_buy" value="4500" min="0" max="200000" step="100" oninput="calcSumaiTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">金利の見通し</div>
+        <select id="st_rate" onchange="calcSumaiTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="down">低下傾向（借りやすい）</option>
+          <option value="stable" selected>横ばい</option>
+          <option value="up">上昇傾向（借りにくい）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">お住まいのエリアの不動産相場</div>
+        <select id="st_market" onchange="calcSumaiTiming()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="up">上昇中（売り時）</option>
+          <option value="stable" selected>横ばい</option>
+          <option value="down">下落中（買い時）</option>
+        </select>
+      </div>
+    </div>
+    <div id="sumai-timing-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7521,6 +7561,75 @@ function calcTaxHarvest() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ 居住用財産の損益通算・繰越控除には要件があります（3,000万円控除・居住期間等）。必ず税理士にご相談ください。</p></div>';
 }
 (function(){ calcTaxHarvest(); })();
+
+function calcSumaiTiming() {
+  var el = document.getElementById('sumai-timing-result');
+  var loan = parseFloat(document.getElementById('st_loan').value) || 0;
+  var sell = parseFloat(document.getElementById('st_sell').value) || 0;
+  var age = parseFloat(document.getElementById('st_age').value) || 0;
+  var buy = parseFloat(document.getElementById('st_buy').value) || 0;
+  var rate = document.getElementById('st_rate').value;
+  var market = document.getElementById('st_market').value;
+
+  var equity = Math.max(0, sell - loan);
+  var gap = buy - equity;
+  var equityRatio = sell > 0 ? (equity / sell) * 100 : 0;
+
+  var scores = {
+    equity: equityRatio >= 50 ? 25 : equityRatio >= 20 ? 15 : equityRatio >= 0 ? 5 : 0,
+    age: age >= 20 ? 25 : age >= 10 ? 20 : age >= 5 ? 10 : 5,
+    rate: rate === 'down' ? 25 : rate === 'stable' ? 15 : 5,
+    market: market === 'up' ? 25 : market === 'stable' ? 15 : 5
+  };
+  var total = scores.equity + scores.age + scores.rate + scores.market;
+
+  var grade, gColor, advice;
+  if (total >= 80) { grade = 'A'; gColor = '#4ade80'; advice = '今が住み替えのベストタイミングです。売却益が見込め、金利・市場環境も追い風。早めの行動をおすすめします。'; }
+  else if (total >= 60) { grade = 'B'; gColor = '#a3e635'; advice = '住み替えに適した条件が揃ってきています。資金計画を整えながら具体的に動き始めましょう。'; }
+  else if (total >= 40) { grade = 'C'; gColor = '#fbbf24'; advice = '一部の条件が整っていません。ローン返済を進めるか市場回復を待つ選択肢も検討してください。'; }
+  else { grade = 'D'; gColor = '#f87171'; advice = '現時点での住み替えはリスクが高い状況です。まず自己資金の増強と市場環境の改善を待ちましょう。'; }
+
+  var axes = [
+    { label: '自己資金（エクイティ）', score: scores.equity, max: 25, val: Math.round(equity) + '万円（売却益）' },
+    { label: '築年数（売りやすさ）', score: scores.age, max: 25, val: age + '年（' + (age >= 20 ? '売り時' : age >= 10 ? '適正' : 'まだ早め') + '）' },
+    { label: '金利環境', score: scores.rate, max: 25, val: rate === 'down' ? '低下中（借りやすい）' : rate === 'stable' ? '横ばい' : '上昇中（要注意）' },
+    { label: '市場相場', score: scores.market, max: 25, val: market === 'up' ? '上昇中（売り有利）' : market === 'stable' ? '横ばい' : '下落中（買い有利）' }
+  ];
+
+  var html = '<div style="display:grid;gap:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  html += '<div style="background:rgba('+gColor.replace('#','')+',0.05);border:1px solid rgba('+gColor.replace('#','')+',0.2);border-radius:10px;padding:14px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">住み替えタイミング診断</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:'+gColor+';line-height:1">'+grade+'</div>';
+  html += '<div style="font-size:13px;font-weight:700;color:'+gColor+';margin-top:4px">総合スコア '+total+'/100</div>';
+  html += '</div>';
+  html += '<div style="background:var(--dark3);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:6px">資金シミュレーション</div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:3px">売却見込み: <strong style="color:var(--text)">'+sell+'万円</strong></div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:3px">ローン残高: <strong style="color:var(--text)">'+loan+'万円</strong></div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:3px">売却後手取り: <strong style="color:#4ade80">'+Math.round(equity)+'万円</strong></div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.6);border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;margin-top:4px">新物件購入: <strong style="color:var(--text)">'+buy+'万円</strong></div>';
+  html += '<div style="font-size:12px;margin-top:3px">'+(gap > 0 ? '<span style="color:#f87171">追加ローン必要: '+Math.round(gap)+'万円</span>' : '<span style="color:#4ade80">余剰資金: '+Math.round(-gap)+'万円</span>')+'</div>';
+  html += '</div>';
+  html += '</div>';
+
+  axes.forEach(function(a) {
+    var pct = (a.score / a.max) * 100;
+    var aColor = pct >= 80 ? '#4ade80' : pct >= 60 ? '#a3e635' : pct >= 40 ? '#fbbf24' : '#f87171';
+    html += '<div style="display:flex;align-items:center;gap:8px;font-size:11px">';
+    html += '<div style="flex:1;min-width:0"><div style="color:rgba(255,255,255,0.55);margin-bottom:3px">'+a.label+'</div>';
+    html += '<div style="background:rgba(255,255,255,0.06);border-radius:4px;height:6px"><div style="width:'+pct+'%;background:'+aColor+';border-radius:4px;height:6px"></div></div></div>';
+    html += '<div style="text-align:right;white-space:nowrap;color:rgba(255,255,255,0.4)">'+a.val+'</div>';
+    html += '</div>';
+  });
+
+  html += '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">';
+  html += '💡 '+advice;
+  html += '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcSumaiTiming(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
