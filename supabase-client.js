@@ -118,6 +118,39 @@ async function sbDelete(table, id) {
 }
 
 // ─────────────────────────────────────────────
+// 匿名利用ログ（Phase 3 データ蓄積）
+// ─────────────────────────────────────────────
+// localStorage: re_usage_stats → { cardId: count, ... } per tool
+const _USAGE_LS_PREFIX = 're_usage_';
+
+function sbLogCardUsage(toolId, cardId) {
+  if (!cardId) return;
+  const key = _USAGE_LS_PREFIX + toolId;
+  let stats = {};
+  try { stats = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e) {}
+  stats[cardId] = (stats[cardId] || 0) + 1;
+  try { localStorage.setItem(key, JSON.stringify(stats)); } catch(e) {}
+  // 非同期でSupabaseにも記録（テーブルがなければ静かに失敗）
+  if (_sbOK) {
+    _db.from('tool_events').insert({
+      tool_id: toolId,
+      card_id: cardId,
+      created_at: new Date().toISOString()
+    }).then(function() {}).catch(function() {});
+  }
+}
+
+function sbGetTopCards(toolId, limit) {
+  const key = _USAGE_LS_PREFIX + toolId;
+  let stats = {};
+  try { stats = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e) {}
+  return Object.entries(stats)
+    .sort(function(a, b) { return b[1] - a[1]; })
+    .slice(0, limit || 3)
+    .map(function(e) { return { cardId: e[0], count: e[1] }; });
+}
+
+// ─────────────────────────────────────────────
 // 認証ヘッダーバーのレンダリング
 // ─────────────────────────────────────────────
 function sbRenderAuthBar(containerId) {
