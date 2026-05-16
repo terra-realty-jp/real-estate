@@ -2113,6 +2113,47 @@
     <div id="buy-checklist-content"></div>
   </div>
 
+  <!-- 新築 vs 中古 トータルコスト比較カード -->
+  <div class="card" id="card-new-vs-used">
+    <div class="card-title">🏗️ 新築 vs 中古（リノベ済み）トータルコスト比較</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">同エリアで「新築」と「中古」を購入した場合の住居コストを総合比較します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">新築購入価格（万円）</div>
+        <input id="nvu_new_price" type="number" value="5000" min="500" max="200000" step="100" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">中古購入価格（万円）</div>
+        <input id="nvu_used_price" type="number" value="3500" min="500" max="200000" step="100" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">頭金（万円）</div>
+        <input id="nvu_down" type="number" value="500" min="0" max="50000" step="50" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ローン金利（%）</div>
+        <input id="nvu_rate" type="number" value="0.5" min="0.1" max="5" step="0.1" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">新築 管理費等（月・万円）</div>
+        <input id="nvu_new_mgmt" type="number" value="3" min="0" max="30" step="0.5" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">中古 管理費等（月・万円）</div>
+        <input id="nvu_used_mgmt" type="number" value="2" min="0" max="30" step="0.5" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">中古 リフォーム費用（万円）</div>
+        <input id="nvu_reform" type="number" value="200" min="0" max="5000" step="50" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">比較期間（年）</div>
+        <input id="nvu_years" type="number" value="20" min="5" max="35" step="1" oninput="calcNewVsUsed()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="new-vs-used-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -6804,6 +6845,76 @@ function calcMaxPurchase() {
   el.innerHTML = html;
 }
 (function(){ calcMaxPurchase(); })();
+
+function calcNewVsUsed() {
+  var el = document.getElementById('new-vs-used-result');
+  var newPrice = parseFloat(document.getElementById('nvu_new_price').value) || 5000;
+  var usedPrice = parseFloat(document.getElementById('nvu_used_price').value) || 3500;
+  var down = parseFloat(document.getElementById('nvu_down').value) || 500;
+  var rate = parseFloat(document.getElementById('nvu_rate').value) || 0.5;
+  var newMgmt = parseFloat(document.getElementById('nvu_new_mgmt').value) || 3;
+  var usedMgmt = parseFloat(document.getElementById('nvu_used_mgmt').value) || 2;
+  var reform = parseFloat(document.getElementById('nvu_reform').value) || 200;
+  var years = parseInt(document.getElementById('nvu_years').value) || 20;
+
+  function loanMonthly(principal, annualRate, termYears) {
+    var mr = annualRate / 100 / 12;
+    var n = termYears * 12;
+    if (mr === 0) return principal / n;
+    return principal * mr * Math.pow(1 + mr, n) / (Math.pow(1 + mr, n) - 1);
+  }
+  function loanDeductionTotal(loanAmount, ceiling) {
+    var base = Math.min(loanAmount, ceiling);
+    return base * 0.007 * 10;
+  }
+
+  var newLoan = Math.max(0, newPrice - down);
+  var usedLoan = Math.max(0, usedPrice + reform - down);
+  var loanTerm = 35;
+  var newMonthly = loanMonthly(newLoan, rate, loanTerm);
+  var usedMonthly = loanMonthly(usedLoan, rate, loanTerm);
+
+  var newDed = loanDeductionTotal(newLoan, 3000);
+  var usedDed = loanDeductionTotal(usedLoan, 2000);
+
+  var months = Math.min(years * 12, loanTerm * 12);
+  var newLoanTotal = newMonthly * months;
+  var usedLoanTotal = usedMonthly * months;
+
+  var newInitCost = newLoan * 0.03 + newPrice * 0.01;
+  var usedInitCost = usedLoan * 0.05 + usedPrice * 0.02 + reform;
+
+  var newMgmtTotal = newMgmt * 12 * years;
+  var usedMgmtTotal = usedMgmt * 12 * years;
+
+  var newTotal = down + newInitCost + newLoanTotal + newMgmtTotal - newDed;
+  var usedTotal = down + usedInitCost + usedLoanTotal + usedMgmtTotal - usedDed;
+  var diff = usedTotal - newTotal;
+
+  var winner, winnerColor, advice;
+  if (diff > 300) { winner = '新築が有利'; winnerColor = '#93c5fd'; advice = '中古は購入価格が安くても、リフォーム費用・修繕積立増加・ローン控除上限の差で' + Math.round(diff) + '万円割高になる場合があります。'; }
+  else if (diff > 0) { winner = '新築がやや有利'; winnerColor = '#bfdbfe'; advice = 'コスト差は' + Math.round(diff) + '万円。新築の設備保証・ローン控除メリットが拮抗しています。立地・間取りも含めて比較を。'; }
+  else if (diff > -300) { winner = '中古がやや有利'; winnerColor = '#86efac'; advice = '中古の価格差がコスト優位を生んでいます（' + Math.round(-diff) + '万円）。リフォーム箇所の状態を現地確認した上で決断を。'; }
+  else { winner = '中古が有利'; winnerColor = '#4ade80'; advice = '中古の方が' + Math.round(-diff) + '万円お得です。インスペクション（住宅診断）を活用し、隠れた欠陥リスクを事前に把握することをお勧めします。'; }
+
+  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:13px;font-weight:900;color:' + winnerColor + ';margin-bottom:10px">🏗️ ' + years + '年間トータルコスト比較：' + winner + '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">新築 総コスト</div><div style="font-size:17px;font-weight:900;color:#93c5fd">' + Math.round(newTotal) + '万円</div></div>';
+  html += '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">中古 総コスト</div><div style="font-size:17px;font-weight:900;color:#4ade80">' + Math.round(usedTotal) + '万円</div></div>';
+  html += '<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">差額（中古−新築）</div><div style="font-size:17px;font-weight:900;color:' + winnerColor + '">' + (diff >= 0 ? '+' : '') + Math.round(diff) + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:8px;line-height:1.8">';
+  html += '新築ローン控除（10年）: <strong style="color:#4ade80">−' + Math.round(newDed) + '万円</strong>　';
+  html += '中古ローン控除（10年）: <strong style="color:#4ade80">−' + Math.round(usedDed) + '万円</strong>　';
+  html += '控除差: <strong style="color:#fbbf24">' + Math.round(newDed - usedDed) + '万円</strong>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">💡 ' + advice + '</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;line-height:1.6">※ 新築ローン控除上限3000万円・中古2000万円（0.7%×10年）で試算。固定資産税・光熱費差は含みません。実際の控除額は年末残高に依存します。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcNewVsUsed(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
