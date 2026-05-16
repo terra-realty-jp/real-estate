@@ -2654,6 +2654,71 @@
     <div id="rent-hike-score-result"></div>
   </div>
 
+  <div class="card" id="card-tenant-screening">
+    <div class="card-title">👤 入居者スクリーニング 採点カード</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">入居申込者の審査ポイントを7項目で採点し、家賃滞納リスクと入居可否の参考判断を提示します。最終判断は保証会社審査を参考にしてください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">雇用形態</div>
+        <select id="ts_employ" onchange="calcTenantScreening()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="30">正社員（大企業）</option>
+          <option value="25" selected>正社員（中小）</option>
+          <option value="20">公務員・教員</option>
+          <option value="15">契約・派遣社員</option>
+          <option value="10">自営業・フリーランス</option>
+          <option value="5">アルバイト・パート</option>
+          <option value="0">無職・年金のみ</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">家賃/収入 比率（入居者の月収比）</div>
+        <select id="ts_ratio" onchange="calcTenantScreening()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="25">25%以下（余裕あり）</option>
+          <option value="20" selected>26〜33%（標準）</option>
+          <option value="12">34〜40%（やや高め）</option>
+          <option value="5">41〜50%（高リスク）</option>
+          <option value="0">50%超（極めて高リスク）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">連帯保証人の有無</div>
+        <select id="ts_guarantor" onchange="calcTenantScreening()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="10">保証会社＋連帯保証人あり</option>
+          <option value="8" selected>保証会社のみ</option>
+          <option value="5">連帯保証人のみ</option>
+          <option value="0">なし</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">居住歴（前の家賃支払い状況）</div>
+        <select id="ts_history" onchange="calcTenantScreening()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="15">問題なし（確認済み）</option>
+          <option value="10" selected>問題なし（自己申告）</option>
+          <option value="3">遅延あり（軽微）</option>
+          <option value="0">不明・確認不可</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">申込書の記載内容</div>
+        <select id="ts_docs" onchange="calcTenantScreening()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="10">完全・整合している</option>
+          <option value="6" selected>おおむね問題なし</option>
+          <option value="2">一部不備・矛盾あり</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">入居目的・ライフスタイル</div>
+        <select id="ts_lifestyle" onchange="calcTenantScreening()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="10">単身・ファミリー（長期想定）</option>
+          <option value="8" selected>転勤・転職者（中期）</option>
+          <option value="5">学生（卒業後退去の可能性）</option>
+          <option value="3">外国人（言語・慣習の懸念）</option>
+        </select>
+      </div>
+    </div>
+    <div id="tenant-screening-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -9731,6 +9796,59 @@ function calcOccupancyBreakEven() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ 変動費には修繕費・固定資産税・保険料等を含む想定です。固定費（ローン返済等）は変動しない前提で試算しています。</p></div>';
 }
 (function(){ calcOccupancyBreakEven(); })();
+
+function calcTenantScreening() {
+  var el = document.getElementById('tenant-screening-result');
+  var employ = parseInt(document.getElementById('ts_employ').value) || 25;
+  var ratio = parseInt(document.getElementById('ts_ratio').value) || 20;
+  var guarantor = parseInt(document.getElementById('ts_guarantor').value) || 8;
+  var history = parseInt(document.getElementById('ts_history').value) || 10;
+  var docs = parseInt(document.getElementById('ts_docs').value) || 6;
+  var lifestyle = parseInt(document.getElementById('ts_lifestyle').value) || 8;
+
+  var total = employ + ratio + guarantor + history + docs + lifestyle;
+  var maxScore = 30 + 25 + 10 + 15 + 10 + 10;
+
+  var pct = Math.round((total / maxScore) * 100);
+  var grade, gColor, verdict, advice;
+  if (pct >= 80) { grade = 'A'; gColor = '#4ade80'; verdict = '入居承認を推奨'; advice = '総合的に優良な申込者です。安心して入居を進めましょう。'; }
+  else if (pct >= 65) { grade = 'B'; gColor = '#a3e635'; verdict = 'おおむね問題なし'; advice = '標準的な申込者です。保証会社の審査通過を確認後に進めましょう。'; }
+  else if (pct >= 50) { grade = 'C'; gColor = '#fbbf24'; verdict = '要注意 — 追加確認を推奨'; advice = '一部リスクがあります。在籍確認・口座振替同意・前払い家賃交渉を検討してください。'; }
+  else { grade = 'D'; gColor = '#f87171'; verdict = '入居見送りを推奨'; advice = '複数のリスク要因があります。他の申込者を優先するか、追加保証を求めることを強くお勧めします。'; }
+
+  var items = [
+    { label: '雇用形態', score: employ, max: 30 },
+    { label: '家賃/収入比率', score: ratio, max: 25 },
+    { label: '保証人・保証会社', score: guarantor, max: 10 },
+    { label: '居住歴', score: history, max: 15 },
+    { label: '申込書の完全性', score: docs, max: 10 },
+    { label: '入居目的・属性', score: lifestyle, max: 10 }
+  ];
+
+  var html = '<div style="display:grid;gap:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html += '<div style="background:rgba('+gColor.replace('#','')+',0.05);border:1px solid rgba('+gColor.replace('#','')+',0.2);border-radius:10px;padding:14px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">スクリーニングスコア</div>';
+  html += '<div style="font-size:44px;font-weight:900;color:'+gColor+';line-height:1">'+grade+'</div>';
+  html += '<div style="font-size:13px;font-weight:700;color:'+gColor+';margin-top:4px">'+total+'/'+maxScore+'点 ('+pct+'%)</div>';
+  html += '<div style="font-size:11px;color:'+gColor+';margin-top:4px">'+verdict+'</div>';
+  html += '</div>';
+  html += '<div style="background:var(--dark3);border-radius:10px;padding:12px">';
+  items.forEach(function(item) {
+    var ipct = (item.score / item.max) * 100;
+    var ic = ipct >= 80 ? '#4ade80' : ipct >= 60 ? '#fbbf24' : '#f87171';
+    html += '<div style="margin-bottom:5px">';
+    html += '<div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:2px"><span>'+item.label+'</span><span>'+item.score+'/'+item.max+'</span></div>';
+    html += '<div style="background:rgba(255,255,255,0.06);border-radius:3px;height:4px"><div style="width:'+ipct+'%;background:'+ic+';border-radius:3px;height:4px"></div></div>';
+    html += '</div>';
+  });
+  html += '</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7)">💡 '+advice+'</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6">※参考診断です。最終判断は保証会社の審査結果・在籍確認・口座振替登録を確認の上で行ってください。差別的な審査は禁止されています。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcTenantScreening(); })();
 
 function calcRentHikeScore() {
   var el = document.getElementById('rent-hike-score-result');
