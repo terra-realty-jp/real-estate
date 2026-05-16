@@ -3284,6 +3284,62 @@
     <div id="fof_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 家賃値上げの収益インパクト試算 -->
+  <div class="card" id="card-rent-raise-impact">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📈 家賃を5,000円上げると年間収益はいくら増える？値上げ効果と入居者離脱リスク試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">家賃を値上げした場合の年間収益増加額と、空室が増えた場合のリスクをシミュレーションします。「値上げしても得か、このままの方が安全か」を数字で確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">総室数（戸）</label>
+        <input type="number" id="rri_units" placeholder="例: 6" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の月家賃（1室・万円）</label>
+        <input type="number" id="rri_rent" placeholder="例: 6" step="0.5" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">値上げ幅（1室・万円）</label>
+        <input type="number" id="rri_raise" placeholder="例: 0.5" step="0.1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の空室数（戸）</label>
+        <input type="number" id="rri_vacant" placeholder="例: 1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcRentRaiseImpact()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">値上げ効果を試算する</button>
+    <div id="rri_result" style="display:none;margin-top:14px"></div>
+  </div>
+
+  <!-- 長期空室の回復コスト診断 -->
+  <div class="card" id="card-vacancy-recovery">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔑 長期空室の部屋、いくらかければ入居者が決まる？回復コストと回収期間を診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空室が続く部屋を復活させるための「リフォーム・家賃見直し・フリーレント提供」などの費用と、元の収益に戻るまでの回収期間を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">空室期間（ヶ月）</label>
+        <input type="number" id="vrc_vacant_months" placeholder="例: 6" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の月家賃（万円）</label>
+        <input type="number" id="vrc_rent" placeholder="例: 7" step="0.5" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">対策のリフォーム費用（万円）</label>
+        <input type="number" id="vrc_reno" placeholder="例: 80" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">家賃を下げる予定（万円）</label>
+        <input type="number" id="vrc_down" placeholder="例: 0.5" step="0.1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">フリーレント（入居者に提供する無料期間・ヶ月）</label>
+        <input type="number" id="vrc_free" placeholder="例: 1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcVacancyRecovery()" style="width:100%;padding:10px;background:linear-gradient(90deg,#f87171,#fb923c);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">回復コストと回収期間を診断する</button>
+    <div id="vrc_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -10731,6 +10787,117 @@ function calcFullOccupancyFuture() {
     '<tbody>' + rows + '</tbody>' +
     '</table></div>' +
     '<p style="font-size:11px;color:var(--text-muted);line-height:1.5">※ 物件価値は横ばい、金利は固定、満室を維持と仮定した概算です。実際は修繕・賃料変動・空室発生があります。</p>';
+}
+
+function calcRentRaiseImpact() {
+  var el = document.getElementById('rri_result');
+  if (!el) return;
+  var units = parseInt(document.getElementById('rri_units').value) || 6;
+  var rent = parseFloat(document.getElementById('rri_rent').value) || 6;
+  var raise = parseFloat(document.getElementById('rri_raise').value) || 0.5;
+  var vacant = parseInt(document.getElementById('rri_vacant').value) || 1;
+
+  var occupied = units - vacant;
+  var currentAnnual = occupied * rent * 12;
+  var newRent = rent + raise;
+
+  // 全員値上げ受け入れ時
+  var newAnnualFull = occupied * newRent * 12;
+  var gainFull = newAnnualFull - currentAnnual;
+
+  // 1戸が退去した場合
+  var newAnnualMinus1 = (occupied - 1) * newRent * 12;
+  var gainMinus1 = newAnnualMinus1 - currentAnnual;
+
+  // 何戸退去したら値上げの意味がなくなるか
+  var breakEvenRetired = Math.floor(gainFull / (newRent * 12));
+
+  // 値上げ後の空き期間損失（退去→次入居まで平均3ヶ月）
+  var vacancyLoss = 3; // ヶ月
+  var turnoverCostPerUnit = newRent * vacancyLoss + 30; // 原状回復費用概算30万
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;text-align:center">値上げ後・全員が受け入れた場合の年間収益増加</div>' +
+    '<div style="text-align:center"><span style="font-size:36px;font-weight:900;color:#4ade80">+' + gainFull.toFixed(0) + '</span><span style="font-size:16px;color:#4ade80">万円/年</span></div>' +
+    '<div style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:4px">月額+' + (gainFull / 12).toFixed(1) + '万円の改善</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">📊 退去者が出た場合のシナリオ比較</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px;text-align:center">' +
+    '<div style="background:rgba(74,222,128,0.08);border-radius:8px;padding:10px">' +
+    '<div style="color:var(--text-muted);margin-bottom:4px">退去0戸</div>' +
+    '<div style="font-size:18px;font-weight:900;color:#4ade80">+' + gainFull.toFixed(0) + '万円</div>' +
+    '<div style="color:var(--text-muted);font-size:10px">全員受け入れ</div>' +
+    '</div>' +
+    '<div style="background:rgba(250,204,21,0.08);border-radius:8px;padding:10px">' +
+    '<div style="color:var(--text-muted);margin-bottom:4px">退去1戸</div>' +
+    '<div style="font-size:18px;font-weight:900;color:' + (gainMinus1 >= 0 ? '#facc15' : '#f87171') + '">' + (gainMinus1 >= 0 ? '+' : '') + gainMinus1.toFixed(0) + '万円</div>' +
+    '<div style="color:var(--text-muted);font-size:10px">1戸分は空室損失</div>' +
+    '</div>' +
+    '<div style="background:rgba(248,113,113,0.08);border-radius:8px;padding:10px">' +
+    '<div style="color:var(--text-muted);margin-bottom:4px">退去' + (breakEvenRetired + 1) + '戸以上</div>' +
+    '<div style="font-size:18px;font-weight:900;color:#f87171">赤字転落</div>' +
+    '<div style="color:var(--text-muted);font-size:10px">値上げが裏目に</div>' +
+    '</div></div></div>' +
+    '<div style="background:rgba(245,158,11,0.08);border-radius:8px;padding:10px;font-size:12px;line-height:1.7">' +
+    '💡 <strong>判断のポイント：</strong>' + units + '戸中' + breakEvenRetired + '戸以上が退去すると値上げの効果がなくなります。値上げ後に1戸退去した場合、退去コスト（原状回復+空室期間損失）の目安は約<strong>' + turnoverCostPerUnit.toFixed(0) + '万円</strong>です。周辺相場と空室状況を確認してから判断しましょう。' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 空室3ヶ月・原状回復費30万円を仮定した概算です。実際の状況によって異なります。</p>';
+}
+
+function calcVacancyRecovery() {
+  var el = document.getElementById('vrc_result');
+  if (!el) return;
+  var vacantMonths = parseInt(document.getElementById('vrc_vacant_months').value) || 6;
+  var rent = parseFloat(document.getElementById('vrc_rent').value) || 7;
+  var reno = parseFloat(document.getElementById('vrc_reno').value) || 80;
+  var down = parseFloat(document.getElementById('vrc_down').value) || 0.5;
+  var freeRent = parseInt(document.getElementById('vrc_free').value) || 1;
+
+  var newRent = rent - down;
+
+  // 既に発生している空室損失
+  var alreadyLost = rent * vacantMonths;
+
+  // 対策コスト
+  var freeRentCost = newRent * freeRent;
+  var totalCost = reno + freeRentCost;
+
+  // 新家賃での月収入
+  var monthlyIncome = newRent;
+
+  // 回収期間（対策コスト ÷ 月収入）
+  var breakEvenMonths = Math.ceil(totalCost / monthlyIncome);
+
+  // 対策しなかった場合との比較（さらに6ヶ月空室続けた場合）
+  var noActionLoss = rent * 6; // 追加6ヶ月の損失
+
+  // IRR相当の年間収益
+  var annual = monthlyIncome * 12;
+
+  // ROI
+  var roi = ((annual - rent * 12) / totalCost * 100); // 値下げ分のマイナスを考慮しない
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">' +
+    '<div><div style="font-size:11px;color:var(--text-muted)">すでに失った家賃</div><div style="font-size:22px;font-weight:900;color:#f87171">' + alreadyLost.toFixed(0) + '<span style="font-size:12px">万円</span></div></div>' +
+    '<div><div style="font-size:11px;color:var(--text-muted)">対策の総コスト</div><div style="font-size:22px;font-weight:900;color:#fb923c">' + totalCost.toFixed(0) + '<span style="font-size:12px">万円</span></div></div>' +
+    '<div><div style="font-size:11px;color:var(--text-muted)">コスト回収期間</div><div style="font-size:22px;font-weight:900;color:#4ade80">' + breakEvenMonths + '<span style="font-size:12px">ヶ月</span></div></div>' +
+    '</div></div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">📋 対策の内訳と効果</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">リフォーム費用</span><br><strong>' + reno.toFixed(0) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">フリーレント損失</span><br><strong>' + freeRentCost.toFixed(1) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">値下げ後の月家賃</span><br><strong>' + newRent.toFixed(1) + '万円/月</strong></div>' +
+    '<div><span style="color:var(--text-muted)">値下げ後の年収入</span><br><strong>' + (newRent * 12).toFixed(0) + '万円/年</strong></div>' +
+    '</div></div>' +
+    '<div style="background:rgba(74,222,128,0.08);border-radius:8px;padding:10px;font-size:12px;line-height:1.7">' +
+    '💡 <strong>対策しないリスク：</strong>このまま放置するとさらに6ヶ月で約<strong style="color:#f87171">' + noActionLoss.toFixed(0) + '万円</strong>の損失が追加されます。リフォーム費用' + totalCost.toFixed(0) + '万円を投じることで<strong>' + breakEvenMonths + 'ヶ月後には収益がプラス</strong>に転じます。' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 入居後すぐに満室になると仮定した概算です。実際の入居付けには仲介会社との連携が重要です。</p>';
 }
 
 function calcTaxBlueReturn() {
