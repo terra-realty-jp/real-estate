@@ -2526,6 +2526,40 @@
     <div id="future-value-estimate-result"></div>
   </div>
 
+  <!-- 老後の年金でローンを払えるか確認 -->
+  <div class="card" id="card-pension-loan-check">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">👴 老後に住宅ローンは払い続けられる？年金との余裕チェック</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">定年後・年金生活になってもローン返済が残る場合、毎月の収支がどうなるかを確認します。「退職までに完済できるか」も計算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の年齢（歳）</label>
+        <input type="number" id="plc_age" placeholder="例: 45" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">退職予定年齢（歳）</label>
+        <input type="number" id="plc_retire" placeholder="例: 65" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">ローン残年数（年）</label>
+        <input type="number" id="plc_loan_years" placeholder="例: 25" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">月々の返済額（万円）</label>
+        <input type="number" id="plc_monthly" placeholder="例: 9" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年金見込み月額（万円）</label>
+        <input type="number" id="plc_pension" placeholder="例: 16" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">老後の月生活費（ローン除く・万円）</label>
+        <input type="number" id="plc_living" placeholder="例: 18" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcPensionLoanCheck()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">老後の収支を確認する</button>
+    <div id="plc_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 住宅ローン審査通過率簡易診断 -->
   <div class="card" id="card-loan-approval-rate">
     <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏦 住宅ローン「審査が通るか」簡易診断</div>
@@ -7392,6 +7426,82 @@ function calcLandAcquisitionCost() {
   el.innerHTML = html;
 }
 (function(){ calcLandAcquisitionCost(); })();
+
+function calcPensionLoanCheck() {
+  var el = document.getElementById('plc_result');
+  if (!el) return;
+  var age = parseInt(document.getElementById('plc_age').value) || 45;
+  var retire = parseInt(document.getElementById('plc_retire').value) || 65;
+  var loanYears = parseInt(document.getElementById('plc_loan_years').value) || 25;
+  var monthly = parseFloat(document.getElementById('plc_monthly').value) || 9;
+  var pension = parseFloat(document.getElementById('plc_pension').value) || 16;
+  var living = parseFloat(document.getElementById('plc_living').value) || 18;
+
+  var yearsToRetire = Math.max(0, retire - age);
+  var loanAfterRetire = Math.max(0, loanYears - yearsToRetire);
+
+  // 退職後の月収支
+  var monthlyIncome = pension;
+  var totalExpense = living + (loanAfterRetire > 0 ? monthly : 0);
+  var balance = monthlyIncome - totalExpense;
+  var annualBalance = balance * 12;
+
+  // 完済年齢
+  var completeAge = age + loanYears;
+
+  // 10年後の累積赤字/黒字
+  var balance10 = annualBalance * Math.min(10, loanAfterRetire);
+
+  var verdict, color;
+  if (loanAfterRetire === 0) {
+    verdict = '退職前に完済予定';
+    color = '#4ade80';
+  } else if (balance >= 2) {
+    verdict = '年金でも余裕あり';
+    color = '#4ade80';
+  } else if (balance >= 0) {
+    verdict = 'ギリギリ払える';
+    color = '#facc15';
+  } else if (balance >= -3) {
+    verdict = '毎月の赤字 要対策';
+    color = '#fb923c';
+  } else {
+    verdict = '老後破綻リスクあり 早急に対策を';
+    color = '#f87171';
+  }
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:13px;font-weight:700;color:' + color + '">' + verdict + '</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">ローン完済予定: ' + completeAge + '歳 ／ 退職後のローン残年数: ' + loanAfterRetire + '年</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">退職後の月収支シミュレーション</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div style="background:rgba(74,222,128,0.1);border-radius:6px;padding:8px">' +
+    '<span style="color:#4ade80">月収入（年金）</span><br><strong style="font-size:18px;color:#4ade80">+' + pension + '万円</strong>' +
+    '</div>' +
+    '<div style="background:rgba(248,113,113,0.1);border-radius:6px;padding:8px">' +
+    '<span style="color:#f87171">月支出合計</span><br>' +
+    '<div style="font-size:11px;color:var(--text-muted)">生活費' + living + '万＋ローン' + (loanAfterRetire > 0 ? monthly + '万' : '0万（完済）') + '</div>' +
+    '<strong style="font-size:18px;color:#f87171">-' + totalExpense + '万円</strong>' +
+    '</div>' +
+    '<div style="grid-column:1/-1;background:rgba(0,0,0,0.2);border-radius:6px;padding:10px;text-align:center">' +
+    '<span style="color:var(--text-muted)">毎月の手残り</span><br>' +
+    '<strong style="font-size:24px;color:' + color + '">' + (balance >= 0 ? '+' : '') + balance.toFixed(1) + '万円</strong>' +
+    (loanAfterRetire > 0 ? '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">退職後' + loanAfterRetire + '年間のローン期間中</div>' : '') +
+    '</div>' +
+    '</div></div>' +
+    (balance < 0 && loanAfterRetire > 0 ? '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:12px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:#f87171;margin-bottom:6px">💡 対策の選択肢</div>' +
+    '<div style="font-size:12px;line-height:1.8">' +
+    '1. <strong>繰り上げ返済</strong>で退職前に完済を目指す<br>' +
+    '2. <strong>退職金の一部</strong>をローン一括返済に充てる<br>' +
+    '3. <strong>リバースモーゲージ</strong>（自宅担保に老後資金を調達）を検討する<br>' +
+    '4. <strong>住み替え</strong>でダウンサイズしてローンを減らす' +
+    '</div></div>' : '') +
+    '<p style="font-size:11px;color:var(--text-muted);line-height:1.5">※ 年金額は日本年金機構のねんきんネットで確認できます。退職金・配偶者収入は含んでいません。</p>';
+}
 
 function calcLoanApprovalRate() {
   var el = document.getElementById('lar_result');

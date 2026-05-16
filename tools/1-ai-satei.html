@@ -2902,6 +2902,32 @@
     <div id="move-timing-result"></div>
   </div>
 
+  <!-- 離婚時の不動産どうする診断 -->
+  <div class="card" id="card-divorce-property">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💔 離婚で家はどうなる？売却・どちらかが住む・賃貸化の比較診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">離婚時の不動産は「売却して分ける」「どちらかが住んで相手に補償」「賃貸に出して家賃を分ける」の3択が一般的です。それぞれの手取りを比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の現在価値（万円）</label>
+        <input type="number" id="dp_price" placeholder="例: 3500" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">住宅ローン残高（万円）</label>
+        <input type="number" id="dp_loan" placeholder="例: 2500" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">月の返済額（万円）</label>
+        <input type="number" id="dp_monthly" placeholder="例: 9" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">賃貸に出した場合の月家賃（万円）</label>
+        <input type="number" id="dp_rent" placeholder="例: 12" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcDivorceProperty()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">3択を比較する</button>
+    <div id="dp_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 空家特措法リスク診断 -->
   <div class="card" id="card-vacant-house-risk">
     <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">⚠️ 空き家のまま放置したら「固定資産税6倍」になる？リスク診断</div>
@@ -8314,6 +8340,70 @@ function calcInheritedPropertySale() {
   el.innerHTML = html;
 }
 (function(){ calcInheritedPropertySale(); })();
+
+function calcDivorceProperty() {
+  var el = document.getElementById('dp_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('dp_price').value) || 3500;
+  var loan = parseFloat(document.getElementById('dp_loan').value) || 2500;
+  var monthly = parseFloat(document.getElementById('dp_monthly').value) || 9;
+  var rent = parseFloat(document.getElementById('dp_rent').value) || 12;
+
+  var equity = price - loan; // 純資産
+  var commission = Math.round((price * 0.03 + 6) * 1.1 * 10) / 10;
+  var taxCost = 15; // 印紙・登記等概算
+  var netSale = price - loan - commission - taxCost;
+  var perPerson = netSale / 2;
+
+  // 片方が住む場合（相手に補償）
+  var compensate = equity / 2;
+  // 自分がローンを引き継ぎ払い続ける
+  var remaningMonthly = monthly;
+
+  // 賃貸に出して家賃折半
+  var netRent = rent - monthly; // 家賃 - ローン返済
+  var perPersonRent = netRent / 2;
+  var annualPerPerson = perPersonRent * 12;
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">物件の現状</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">時価</span><br><strong>' + price + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">ローン残高</span><br><strong>' + loan + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">純資産（含み益）</span><br><strong style="color:' + (equity >= 0 ? '#4ade80' : '#f87171') + '">' + equity + '万円</strong></div>' +
+    '</div></div>' +
+    '<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px">' +
+    // 選択肢1
+    '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);border-radius:10px;padding:12px">' +
+    '<div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:6px">① 売却して2人で分ける（最もシンプル）</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">仲介手数料</span><br>' + commission.toFixed(0) + '万円</div>' +
+    '<div><span style="color:var(--text-muted)">売却手取り合計</span><br><strong>' + netSale.toFixed(0) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">1人あたり</span><br><strong style="font-size:16px;color:#4ade80">' + perPerson.toFixed(0) + '万円</strong></div>' +
+    '</div>' +
+    (netSale < 0 ? '<p style="font-size:11px;color:#f87171;margin-top:6px">⚠️ オーバーローン（ローンが価値を超えている）ため、売却には注意が必要です。</p>' : '') +
+    '</div>' +
+    // 選択肢2
+    '<div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:12px">' +
+    '<div style="font-size:12px;font-weight:700;color:#60a5fa;margin-bottom:6px">② どちらかが住む（相手に含み益の半分を補償）</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">相手への補償額</span><br><strong>' + compensate.toFixed(0) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">住み続ける側の月返済</span><br><strong>' + remaningMonthly + '万円/月</strong></div>' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:6px">住み続ける場合はローンの名義変更・借り換えが必要なことがあります。</p>' +
+    '</div>' +
+    // 選択肢3
+    '<div style="background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.25);border-radius:10px;padding:12px">' +
+    '<div style="font-size:12px;font-weight:700;color:#facc15;margin-bottom:6px">③ 賃貸に出して家賃を折半（関係が続く）</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">月家賃収入</span><br><strong>' + rent + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">ローン返済後の手残り</span><br><strong>' + netRent.toFixed(1) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">1人あたり/月</span><br><strong style="font-size:16px;color:' + (perPersonRent >= 0 ? '#facc15' : '#f87171') + '">' + perPersonRent.toFixed(1) + '万円</strong></div>' +
+    '</div>' +
+    '</div></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);line-height:1.6">※ 概算です。実際には財産分与の交渉・税務・ローンの引き継ぎ条件によって異なります。専門家（弁護士・税理士・不動産会社）への相談をおすすめします。</p>';
+}
 
 function calcVacantHouseRisk() {
   var el = document.getElementById('vhr_result');

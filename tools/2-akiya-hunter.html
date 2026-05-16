@@ -2707,6 +2707,39 @@
     <div id="akiya-coworking-result"></div>
   </div>
 
+  <!-- 相続実家・兄弟間売却収益分配シミュレーション -->
+  <div class="card" id="card-inheritance-split">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">👨‍👩‍👧‍👦 相続した実家を兄弟で分ける。売却手取りの分配シミュレーション</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">相続した不動産を売却したとき、各相続人が実際にいくら受け取れるかを試算します。税金・手数料を引いた「実際の手取り」を持分比率で計算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">売却価格（万円）</label>
+        <input type="number" id="is_price" placeholder="例: 2000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">取得費（買った時の価格・不明なら0）</label>
+        <input type="number" id="is_cost" placeholder="例: 1500" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">相続人の人数（人）</label>
+        <input type="number" id="is_heirs" placeholder="例: 3" min="1" max="10" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">自分の持分（%）</label>
+        <input type="number" id="is_my_share" placeholder="例: 33" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">保有期間（売った年の1月1日時点での所有年数）</label>
+        <select id="is_period" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="short">5年以下（短期譲渡・税率39.63%）</option>
+          <option value="long" selected>5年超（長期譲渡・税率20.315%）</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcInheritanceSplit()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">分配額を試算する</button>
+    <div id="is_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 空き家放置コスト10年累積試算 -->
   <div class="card" id="card-akiya-abandon-cost">
     <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">😱 放置したら10年でいくら損する？空き家コスト累積試算</div>
@@ -7533,6 +7566,63 @@ function calcAkiyaSolarPanel() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaSolarPanel(); })();
+
+function calcInheritanceSplit() {
+  var el = document.getElementById('is_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('is_price').value) || 2000;
+  var cost = parseFloat(document.getElementById('is_cost').value) || 0;
+  var heirs = parseInt(document.getElementById('is_heirs').value) || 3;
+  var myShare = parseFloat(document.getElementById('is_my_share').value) || 33.3;
+  var period = document.getElementById('is_period').value;
+
+  // コストが0の場合は概算取得費（売却額の5%）を使用
+  if (cost === 0) cost = price * 0.05;
+
+  var commission = Math.round((price * 0.03 + 6) * 1.1 * 10) / 10;
+  var registerCost = 15; // 登記費用等概算
+  var totalCost = commission + registerCost;
+  var netBeforeTax = price - totalCost;
+
+  // 譲渡所得
+  var gain = price - cost - totalCost;
+  var taxRate = period === 'short' ? 0.3963 : 0.20315;
+  var tax = gain > 0 ? Math.round(gain * taxRate * 10) / 10 : 0;
+  var netAfterTax = netBeforeTax - tax;
+
+  // 自分の取り分
+  var myRatio = myShare / 100;
+  var myNet = netAfterTax * myRatio;
+  var myTax = tax * myRatio;
+  var othersShare = (100 - myShare) / 100;
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">売却全体の内訳</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">売却価格</span><br><strong>' + price + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">諸費用（手数料・登記）</span><br><strong>' + totalCost.toFixed(0) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">譲渡所得（利益）</span><br><strong>' + (gain > 0 ? gain.toFixed(0) : '0（損なし）') + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">税金合計（' + (period === 'long' ? '20.315%' : '39.63%') + '）</span><br><strong style="color:#f87171">' + tax.toFixed(0) + '万円</strong></div>' +
+    '</div></div>' +
+    '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:14px;margin-bottom:10px;text-align:center">' +
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">あなたの受取額（持分' + myShare + '%）</div>' +
+    '<div style="font-size:36px;font-weight:900;color:var(--gold)">' + myNet.toFixed(0) + '<span style="font-size:16px">万円</span></div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">税引き後の手取り</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">相続人別の分配（持分均等の場合の参考）</div>' +
+    '<div style="font-size:12px">' +
+    Array.from({ length: Math.min(heirs, 6) }, function(_, i) {
+      var shareR = i === 0 ? myRatio : (1 - myRatio) / (heirs - 1);
+      var nameStr = i === 0 ? 'あなた（' + myShare + '%）' : '相続人' + (i + 1) + '（' + ((1 - myRatio) / (heirs - 1) * 100).toFixed(1) + '%）';
+      return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)">' +
+        '<span>' + nameStr + '</span>' +
+        '<strong>' + (netAfterTax * shareR).toFixed(0) + '万円</strong></div>';
+    }).join('') +
+    '</div></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);line-height:1.6">※ 相続税・空き家の3,000万円特別控除（被相続人が一人で居住していた場合等に適用可能）は別途試算が必要です。税理士への相談を強くお勧めします。</p>';
+}
 
 function calcAkiyaAbandonCost() {
   var el = document.getElementById('aac_result');
