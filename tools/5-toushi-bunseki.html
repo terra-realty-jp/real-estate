@@ -2911,6 +2911,66 @@
     <div id="nvr_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- インフレが現金保有と不動産投資に与える影響比較 -->
+  <div class="card" id="card-inflation-vs-cash">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💴 インフレが続くと現金1,000万円はいくらになる？不動産との比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">物価上昇（インフレ）が続くと、銀行に預けた現金の実質的な価値は年々目減りします。同じ資金を不動産投資に回した場合と比較し、インフレ時代の資産選択を数字で確認します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">手持ち資金（万円）</label>
+        <input type="number" id="ivc_capital" placeholder="例: 1000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">想定インフレ率（年%）</label>
+        <input type="number" id="ivc_inflation" placeholder="例: 2" step="0.1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">預金金利（年%）</label>
+        <input type="number" id="ivc_bank_rate" placeholder="例: 0.1" step="0.01" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">不動産の実質利回り（年%）</label>
+        <input type="number" id="ivc_re_yield" placeholder="例: 5" step="0.1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcInflationVsCash()" style="width:100%;padding:10px;background:linear-gradient(90deg,#f87171,#fb923c);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">インフレ影響を比較する</button>
+    <div id="ivc_result" style="display:none;margin-top:14px"></div>
+  </div>
+
+  <!-- 賃貸物件の出口戦略シミュレーション -->
+  <div class="card" id="card-exit-strategy">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🚪 今の賃貸物件、いつ・どう出口を取るべき？売却・継続・建て替えを比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">所有している賃貸物件について「今売る」「賃貸を続ける」「建て替える」の3つの選択肢を10年間の収支で比較します。築年数・空室率・売却価格の変化を踏まえた出口戦略の判断に役立ててください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の現在の売却価格（万円）</label>
+        <input type="number" id="es_sale_price" placeholder="例: 5000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間家賃収入（万円）</label>
+        <input type="number" id="es_rent_income" placeholder="例: 360" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間経費（管理費・修繕等・万円）</label>
+        <input type="number" id="es_expenses" placeholder="例: 80" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">築年数（年）</label>
+        <input type="number" id="es_age" placeholder="例: 20" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の空室率（%）</label>
+        <input type="number" id="es_vacancy" placeholder="例: 10" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">建て替え工事費（万円）</label>
+        <input type="number" id="es_rebuild_cost" placeholder="例: 6000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcExitStrategy()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">3つの選択肢を比較する</button>
+    <div id="es_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 3指標同時計算カード -->
   <div class="card" id="card-yield-triple">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📐 表面利回り・実質利回り・CCR を一発で計算する</div>
@@ -10183,6 +10243,146 @@ function calcNisaVsRealestate() {
     }).join('') +
     '</tbody></table></div>' +
     '<p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5">※ 不動産の価格横ばい・空室なし・金利1.5%で計算。実際は変動します。NISAは運用リターンが保証されません。</p>';
+}
+
+function calcInflationVsCash() {
+  var el = document.getElementById('ivc_result');
+  if (!el) return;
+  var capital = parseFloat(document.getElementById('ivc_capital').value) || 1000;
+  var inflation = parseFloat(document.getElementById('ivc_inflation').value) || 2;
+  var bankRate = parseFloat(document.getElementById('ivc_bank_rate').value) || 0.1;
+  var reYield = parseFloat(document.getElementById('ivc_re_yield').value) || 5;
+
+  var inf = inflation / 100;
+  var bank = bankRate / 100;
+  var re = reYield / 100;
+  var years = 10;
+
+  var rows = '';
+  for (var y = 1; y <= years; y++) {
+    if (y === 1 || y === 3 || y === 5 || y === 7 || y === 10) {
+      var bankNominal = capital * Math.pow(1 + bank, y);
+      var bankReal = bankNominal / Math.pow(1 + inf, y); // 実質価値
+      var reNominal = capital * Math.pow(1 + re, y); // 不動産：収益再投資
+      var reReal = reNominal / Math.pow(1 + inf, y);
+      rows += '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)">' +
+        '<td style="padding:5px 6px;font-size:11px">' + y + '年後</td>' +
+        '<td style="padding:5px 6px;font-size:11px;text-align:right">' + bankNominal.toFixed(0) + '万円</td>' +
+        '<td style="padding:5px 6px;font-size:11px;text-align:right;color:#f87171">' + bankReal.toFixed(0) + '万円</td>' +
+        '<td style="padding:5px 6px;font-size:11px;text-align:right;color:#4ade80">' + reNominal.toFixed(0) + '万円</td>' +
+        '<td style="padding:5px 6px;font-size:11px;text-align:right;color:#4ade80">' + reReal.toFixed(0) + '万円</td>' +
+        '</tr>';
+    }
+  }
+
+  var bank10Nominal = capital * Math.pow(1 + bank, years);
+  var bank10Real = bank10Nominal / Math.pow(1 + inf, years);
+  var re10Nominal = capital * Math.pow(1 + re, years);
+  var re10Real = re10Nominal / Math.pow(1 + inf, years);
+  var lossRealValue = capital - bank10Real;
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;text-align:center">インフレ' + inflation + '%が続くと10年後…</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">' +
+    '<div style="text-align:center;background:rgba(248,113,113,0.1);border-radius:8px;padding:10px">' +
+    '<div style="font-size:11px;color:#f87171;font-weight:700">💴 預金（金利' + bankRate + '%）</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">残高は増えても実質価値は…</div>' +
+    '<div style="font-size:22px;font-weight:900;color:#f87171;margin-top:4px">' + bank10Real.toFixed(0) + '<span style="font-size:12px">万円</span></div>' +
+    '<div style="font-size:10px;color:var(--text-muted)">（元本' + capital + '万円が実質' + lossRealValue.toFixed(0) + '万円目減り）</div>' +
+    '</div>' +
+    '<div style="text-align:center;background:rgba(74,222,128,0.1);border-radius:8px;padding:10px">' +
+    '<div style="font-size:11px;color:#4ade80;font-weight:700">🏢 不動産投資（実質利回り' + reYield + '%）</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">インフレに乗って資産価値は…</div>' +
+    '<div style="font-size:22px;font-weight:900;color:#4ade80;margin-top:4px">' + re10Real.toFixed(0) + '<span style="font-size:12px">万円</span></div>' +
+    '<div style="font-size:10px;color:var(--text-muted)">（10年間で' + (re10Real - capital).toFixed(0) + '万円増加）</div>' +
+    '</div>' +
+    '</div></div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">📊 年別：名目残高 vs 実質価値の変化</div>' +
+    '<table style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">' +
+    '<th style="padding:5px 6px;font-size:10px;color:var(--text-muted);text-align:left">年</th>' +
+    '<th style="padding:5px 6px;font-size:10px;color:var(--text-muted);text-align:right">預金残高</th>' +
+    '<th style="padding:5px 6px;font-size:10px;color:#f87171;text-align:right">預金実質値</th>' +
+    '<th style="padding:5px 6px;font-size:10px;color:#4ade80;text-align:right">不動産残高</th>' +
+    '<th style="padding:5px 6px;font-size:10px;color:#4ade80;text-align:right">不動産実質値</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>' +
+    '</div>' +
+    '<div style="background:rgba(245,158,11,0.08);border-radius:8px;padding:10px;font-size:12px;line-height:1.7">' +
+    '💡 <strong>ポイント：</strong>インフレ時代、現金は名目上変わらなくても「買える量（実質価値）」が年々減少します。不動産はインフレに連動して家賃・物件価格が上がる傾向があるため、インフレヘッジ効果が期待されます。ただし空室リスク・流動性の低さも踏まえた判断が重要です。' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 預金金利・インフレ率・不動産利回りはすべて仮定値。実際の運用結果を保証するものではありません。</p>';
+}
+
+function calcExitStrategy() {
+  var el = document.getElementById('es_result');
+  if (!el) return;
+  var salePrice = parseFloat(document.getElementById('es_sale_price').value) || 5000;
+  var rentIncome = parseFloat(document.getElementById('es_rent_income').value) || 360;
+  var expenses = parseFloat(document.getElementById('es_expenses').value) || 80;
+  var age = parseFloat(document.getElementById('es_age').value) || 20;
+  var vacancy = parseFloat(document.getElementById('es_vacancy').value) || 10;
+  var rebuildCost = parseFloat(document.getElementById('es_rebuild_cost').value) || 6000;
+
+  var years = 10;
+  // 築年数が進むと空室率・修繕費が上昇と想定
+  var vacancyIncrease = age > 25 ? 1.5 : age > 15 ? 1.0 : 0.5; // 毎年%増加
+  var repairEscalation = age > 25 ? 15 : age > 15 ? 8 : 3; // 年間修繕費追加万円
+
+  // 選択肢A: 今すぐ売却
+  var commissionRate = 0.03 + (3 / 10000) + 0.06; // 仲介手数料+消費税
+  var sellNow = salePrice * (1 - commissionRate);
+
+  // 選択肢B: 賃貸を10年間続ける
+  var totalRentNet = 0;
+  var sale10Price = salePrice; // 10年後の売却価格
+  var vacRate = vacancy;
+  var yearlyExpenses = expenses;
+  for (var y = 1; y <= years; y++) {
+    vacRate = Math.min(vacRate + vacancyIncrease, 50);
+    yearlyExpenses += repairEscalation;
+    var effectiveRent = rentIncome * (1 - vacRate / 100);
+    totalRentNet += effectiveRent - yearlyExpenses;
+    if (y === 5) sale10Price = salePrice * 0.85; // 5年後は15%下落想定
+    if (y === 10) sale10Price = salePrice * 0.7; // 10年後は30%下落想定
+  }
+  var continueTotal = totalRentNet + sale10Price * (1 - commissionRate);
+
+  // 選択肢C: 建て替えて10年
+  var buildRentIncome = rentIncome * 1.4; // 新築で家賃40%増
+  var buildNetRent = (buildRentIncome - expenses * 0.8) * years; // 経費は0.8倍
+  var loanRepay = rebuildCost * 0.0657; // 金利1.5% 30年ローン概算年払い
+  var buildCF = buildNetRent - loanRepay * years;
+  var buildAsset = (salePrice * 0.3 + rebuildCost) * 1.05; // 土地+新築建物
+  var rebuildTotal = buildCF + buildAsset * (1 - commissionRate) - rebuildCost * 0.1; // 諸費用10%
+
+  var options = [
+    {name:'🏷️ 今すぐ売却', value: sellNow, note: '手間ゼロ・即現金化。でも将来の値上がりを取れない'},
+    {name:'🏠 賃貸を10年継続', value: continueTotal, note: '築年数増加で空室率・修繕費が上昇。売却価格は下落傾向'},
+    {name:'🏗️ 建て替えて10年運用', value: rebuildTotal, note: '大規模投資が必要。成功すれば家賃・資産価値ともに向上'}
+  ].sort(function(a, b) { return b.value - a.value; });
+
+  var optHtml = options.map(function(o, i) {
+    var color = i === 0 ? '#4ade80' : i === 1 ? 'var(--gold)' : 'var(--text-muted)';
+    var badge = i === 0 ? '🏆 最大リターン' : i === 1 ? '2位' : '3位';
+    return '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid ' + color + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+      '<div style="font-size:13px;font-weight:700;color:' + color + '">' + o.name + '</div>' +
+      '<div style="font-size:11px;color:' + color + ';background:rgba(255,255,255,0.05);padding:2px 8px;border-radius:10px">' + badge + '</div>' +
+      '</div>' +
+      '<div style="font-size:24px;font-weight:900;color:' + color + ';margin-bottom:4px">' + (o.value >= 0 ? '' : '▼') + Math.abs(Math.round(o.value)).toLocaleString() + '万円</div>' +
+      '<div style="font-size:11px;color:var(--text-muted)">' + o.note + '</div>' +
+      '</div>';
+  }).join('');
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px">10年間のトータルリターン比較（手取り概算）</div>' +
+    optHtml +
+    '<div style="background:rgba(245,158,11,0.08);border-radius:8px;padding:10px;font-size:12px;line-height:1.7">' +
+    '💡 <strong>判断のポイント：</strong>どの選択肢が最良かは市場環境・立地・資金力によって変わります。空室率が今後も上がる見込みなら早期売却も有力な選択肢です。まず現在の利回りと築年数の関係を確認することをおすすめします。' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 仲介手数料3.3%+6万円+消費税を考慮。建て替えは金利1.5%・30年ローン・空室なしの仮定。実際の条件によって大きく変動します。</p>';
 }
 
 function calcPensionSupplement() {
