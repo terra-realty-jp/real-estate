@@ -1882,3 +1882,20 @@
   - Tool4: `card-parking-revenue` + `calcParkingRevenue()` — 駐車場の月収・空車損失・収益効率診断
   - Tool5: `card-breakeven-yield` + `calcBreakevenYield()` — 損益分岐利回り（最低限必要な利回りの逆算）
 - **理由**: 「相続した家を売ると税金いくら？」「ソーラーパネルで副収入？」「土地購入の隠れコストは？」一般ユーザーが実際に直面する疑問に即答
+
+## 2026-05-16 （セッション継続70）
+
+- **対象**: scripts/fetch-area-prices.js, .github/workflows/update-area-prices.yml, data/area-prices.json, tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 2 データ基盤整備 + 新カード追加（ラウンド20）
+- **改善内容**:
+  1. **データ基盤: 国土交通省 WebLand API 月次自動更新システム構築**
+     - `scripts/fetch-area-prices.js`: 26エリアの市区町村コードからマンション実取引の中央値単価を取得しdata/area-prices.jsonを更新するNode.jsスクリプト
+     - `.github/workflows/update-area-prices.yml`: 毎月1日11:00 JSTに自動実行するGitHub Actionsワークフロー
+     - `data/area-prices.json`: 初期フォールバック値（API未実行時の静的データ）
+     - `tools/1-ai-satei.html`: 起動時にarea-prices.jsonを取得しAREA_UNITを実データで上書き（AREA_UNITをletに変更）
+  2. **Tool1: 空家特措法リスク診断（card-vacant-house-risk）** — 固定資産税6倍になるリスクを診断し、放置コストvs売却コストを比較
+  3. **Tool2: 空き家放置コスト10年累積試算（card-akiya-abandon-cost）** — 固定資産税・維持費・修繕費・機会損失の合計を年別テーブルで可視化（「何もしないは無料ではない」）
+  4. **Tool3: 住宅ローン審査通過率簡易診断（card-loan-approval-rate）** — 年収・借入額・雇用形態・返済比率から審査通過スコアを算出
+  5. **Tool4: 原状回復・敷金充当ガイドライン試算（card-deposit-guide）** — 国交省ガイドライン準拠で大家/借主の負担割合と敷金返金額を試算
+  6. **Tool5: 表面/実質/CCR 3指標同時計算（card-yield-triple）** — 投資判断の3指標を一括表示、利回りの落とし穴も警告
+- **理由**: 「固定資産税6倍」「10年で○○万円損」「審査通過率○%」など衝撃的・発見的な数字が出るカードを中心に追加。ユーザーが思わず家族・知人に共有したくなる設計。
