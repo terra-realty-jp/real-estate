@@ -2267,6 +2267,39 @@
     <div id="akiya-bank-check-result"></div>
   </div>
 
+  <!-- 空き家 売却 vs 賃貸 vs 補助金リノベ 3択比較カード -->
+  <div class="card" id="card-akiya-three-choices">
+    <div class="card-title">⚖️ 空き家 売却 vs 賃貸 vs 補助金リノベ 3択比較</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">空き家を「今すぐ売る」「賃貸に出す」「補助金でリノベ後に貸す」の3択で5年・10年後の手取りを比較します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の売却見込み価格（万円）</div>
+        <input id="atc_sell" type="number" value="800" min="50" max="50000" step="50" oninput="calcAkiyaThreeChoices()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">月間賃料見込み（万円）</div>
+        <input id="atc_rent" type="number" value="5" min="1" max="100" step="0.5" oninput="calcAkiyaThreeChoices()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">空室率・維持費率（%）</div>
+        <input id="atc_vacancy" type="number" value="15" min="0" max="50" step="5" oninput="calcAkiyaThreeChoices()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">リノベ費用（万円）</div>
+        <input id="atc_reno" type="number" value="300" min="0" max="5000" step="50" oninput="calcAkiyaThreeChoices()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">補助金受給見込み額（万円）</div>
+        <input id="atc_grant" type="number" value="100" min="0" max="1000" step="10" oninput="calcAkiyaThreeChoices()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">リノベ後 家賃アップ率（%）</div>
+        <input id="atc_rent_up" type="number" value="20" min="0" max="100" step="5" oninput="calcAkiyaThreeChoices()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="akiya-three-choices-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -7144,6 +7177,72 @@ function calcGovActionCost() {
   el.innerHTML = html;
 }
 (function(){ calcGovActionCost(); })();
+
+function calcAkiyaThreeChoices() {
+  var el = document.getElementById('akiya-three-choices-result');
+  var sell = parseFloat(document.getElementById('atc_sell').value) || 800;
+  var rent = parseFloat(document.getElementById('atc_rent').value) || 5;
+  var vacancy = parseFloat(document.getElementById('atc_vacancy').value) || 15;
+  var reno = parseFloat(document.getElementById('atc_reno').value) || 300;
+  var grant = parseFloat(document.getElementById('atc_grant').value) || 100;
+  var rentUp = parseFloat(document.getElementById('atc_rent_up').value) || 20;
+
+  var netRent = rent * 12 * (1 - vacancy / 100);
+  var renoRent = rent * (1 + rentUp / 100) * 12 * (1 - Math.max(0, vacancy - 5) / 100);
+  var renoInitCost = reno - grant;
+
+  var sellNet5 = sell;
+  var sellNet10 = sell;
+
+  var rentNet5 = netRent * 5;
+  var rentNet10 = netRent * 10;
+
+  var renoNet5 = -renoInitCost + renoRent * 5;
+  var renoNet10 = -renoInitCost + renoRent * 10;
+
+  var results = [
+    { label: '今すぐ売却', icon: '💴', net5: sellNet5, net10: sellNet10, color: '#93c5fd' },
+    { label: '現状で賃貸', icon: '🏚️', net5: rentNet5, net10: rentNet10, color: '#fb923c' },
+    { label: '補助金リノベ→賃貸', icon: '🔨', net5: renoNet5, net10: renoNet10, color: '#4ade80' }
+  ];
+
+  var best10 = results.reduce(function(a, b) { return b.net10 > a.net10 ? b : a; });
+  var best5 = results.reduce(function(a, b) { return b.net5 > a.net5 ? b : a; });
+
+  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:13px;font-weight:900;color:' + best10.color + ';margin-bottom:10px">⚖️ 10年後の手取り最大：' + best10.icon + ' ' + best10.label + '</div>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>'
+    + '<th style="padding:6px 8px;text-align:left;color:rgba(255,255,255,0.4);font-weight:600;border-bottom:1px solid rgba(255,255,255,0.1)">選択肢</th>'
+    + '<th style="padding:6px 8px;text-align:right;color:rgba(255,255,255,0.4);font-weight:600;border-bottom:1px solid rgba(255,255,255,0.1)">5年後</th>'
+    + '<th style="padding:6px 8px;text-align:right;color:rgba(255,255,255,0.4);font-weight:600;border-bottom:1px solid rgba(255,255,255,0.1)">10年後</th>'
+    + '</tr></thead><tbody>';
+  results.forEach(function(r) {
+    var isBest10 = r.label === best10.label;
+    html += '<tr style="' + (isBest10 ? 'background:rgba(255,255,255,0.04)' : '') + '">'
+      + '<td style="padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.05);color:' + r.color + ';font-weight:' + (isBest10 ? '700' : '400') + '">' + r.icon + ' ' + r.label + (isBest10 ? ' ★' : '') + '</td>'
+      + '<td style="padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:right;color:' + (r.label === best5.label ? '#fbbf24' : 'rgba(255,255,255,0.7)') + '">' + Math.round(r.net5) + '万円</td>'
+      + '<td style="padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:right;color:' + (isBest10 ? r.color : 'rgba(255,255,255,0.7)') + ';font-weight:' + (isBest10 ? '700' : '400') + '">' + Math.round(r.net10) + '万円</td>'
+      + '</tr>';
+  });
+  html += '</tbody></table></div>';
+  var rentBreak = renoInitCost > 0 ? Math.ceil(renoInitCost / (renoRent - netRent)) : 0;
+  if (renoRent > netRent && rentBreak > 0 && rentBreak <= 30) {
+    html += '<div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.55)">💡 補助金リノベの損益分岐点：約 <strong style="color:#4ade80">' + rentBreak + '年後</strong>（リノベ後の追加家賃収入で初期費用を回収）</div>';
+  }
+  html += '<div style="margin-top:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">';
+  if (best10.label === '今すぐ売却') {
+    html += '💡 賃料水準が低い・空室リスクが高い地域では早期売却が合理的。売却益を他の投資に回すことも検討できます。';
+  } else if (best10.label === '現状で賃貸') {
+    html += '💡 現状のまま賃貸に出す方が有利です。リノベ費用の回収年数が長い場合は、小規模な修繕のみで募集するのが現実的です。';
+  } else {
+    html += '💡 補助金を活用したリノベ後賃貸が最も有利。自治体の「空き家活用補助金」「移住促進補助金」を確認し、申請タイミングを逃さないようにしましょう。';
+  }
+  html += '</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;line-height:1.6">※ 売却は仲介手数料・税金を含まない概算。賃貸は年間純収入。リノベは初期費用（リノベ費−補助金）を控除した累計収益。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaThreeChoices(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
