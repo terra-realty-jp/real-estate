@@ -3067,6 +3067,39 @@
     <div id="lo_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 投資スタートを遅らせると機会損失はいくら？カード -->
+  <div class="card" id="card-start-delay">
+    <div class="card-title">⏳ 投資スタートを○年後にすると、いくら損をする？機会損失シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「もう少し情報を集めてから…」「来年から始めよう…」と先延ばしにすると、その間に得られたはずの家賃収入と資産形成の機会が失われます。先延ばしのコストを数字で確認しましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間の家賃収入見込み（万円）（例: 月20万円なら240）</label>
+        <input type="number" id="sd_rent" placeholder="例: 240" min="10" max="10000" step="10" oninput="calcStartDelay()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">空室率（%）（例: 10）</label>
+        <input type="number" id="sd_vacancy" value="10" min="0" max="50" step="1" oninput="calcStartDelay()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">ローン返済後の月間手残り（万円）（例: 月3万円なら3）</label>
+        <input type="number" id="sd_cf" placeholder="例: 3" min="-50" max="500" step="1" oninput="calcStartDelay()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">先延ばしにする年数（年）（例: 3）</label>
+        <input type="number" id="sd_delay" value="3" min="1" max="20" step="1" oninput="calcStartDelay()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の年齢（歳）</label>
+        <input type="number" id="sd_age" value="40" min="20" max="70" step="1" oninput="calcStartDelay()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">目標引退年齢（歳）（例: 65）</label>
+        <input type="number" id="sd_retire" value="65" min="50" max="80" step="1" oninput="calcStartDelay()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="sd_result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -10675,6 +10708,78 @@ function calcLossOffsetTax() {
       </div>
     </div>`;
   if (typeof saveCardResult === 'function') saveCardResult('損益通算節税', '節税額' + Math.round(totalSaving) + '万円/年', 'card-loss-offset-tax');
+}
+
+function calcStartDelay() {
+  var el = document.getElementById('sd_result');
+  if (!el) return;
+  var rentYear = parseFloat(document.getElementById('sd_rent').value) || 0;
+  var vacancyRate = parseFloat(document.getElementById('sd_vacancy').value) || 10;
+  var cfMonth = parseFloat(document.getElementById('sd_cf').value) || 0;
+  var delayYears = parseFloat(document.getElementById('sd_delay').value) || 3;
+  var age = parseFloat(document.getElementById('sd_age').value) || 40;
+  var retireAge = parseFloat(document.getElementById('sd_retire').value) || 65;
+
+  if (rentYear <= 0 || cfMonth === 0) { el.innerHTML = ''; return; }
+
+  // 機会損失計算
+  var effectiveRent = rentYear * (1 - vacancyRate / 100);
+  var rentLoss = Math.round(effectiveRent * delayYears);
+  var cfYearLoss = Math.round(cfMonth * 12 * delayYears);
+  var totalLoss = rentLoss + (cfYearLoss < 0 ? 0 : cfYearLoss);
+
+  // 運用期間比較
+  var yearsNow = Math.max(0, retireAge - age);
+  var yearsDelayed = Math.max(0, retireAge - age - delayYears);
+
+  // 今すぐ始めた場合の累積手残り（目標年齢まで）
+  var totalCFNow = Math.round(cfMonth * 12 * yearsNow);
+  var totalCFDelayed = Math.round(cfMonth * 12 * yearsDelayed);
+  var lifetimeDiff = totalCFNow - totalCFDelayed;
+
+  var urgency = delayYears >= 5 ? '🔴 非常に高い' : delayYears >= 3 ? '🟠 高い' : '🟡 中程度';
+  var startAge = age + delayYears;
+
+  el.innerHTML = `
+    <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:14px;margin-top:10px">
+      <div style="font-size:13px;font-weight:700;color:#f87171;margin-bottom:12px">⏳ ${delayYears}年間先延ばしにした場合の機会損失</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#f87171">${rentLoss.toLocaleString()}万円</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px">${delayYears}年間の家賃収入機会損失<br>（空室率${vacancyRate}%考慮済み）</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#fb923c">${cfYearLoss.toLocaleString()}万円</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px">${delayYears}年間の手残り機会損失<br>（ローン返済後）</div>
+        </div>
+      </div>
+      <div style="background:rgba(201,168,76,0.1);border-radius:8px;padding:12px;margin-bottom:10px;text-align:center">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">目標年齢（${retireAge}歳）までの累積手残り比較</div>
+        <div style="display:flex;justify-content:space-around;align-items:center;gap:8px">
+          <div style="text-align:center">
+            <div style="font-size:13px;font-weight:700;color:#4ade80">${totalCFNow.toLocaleString()}万円</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4)">今すぐ始めた場合<br>（${yearsNow}年間）</div>
+          </div>
+          <div style="font-size:18px;color:rgba(255,255,255,0.3)">→</div>
+          <div style="text-align:center">
+            <div style="font-size:13px;font-weight:700;color:#f87171">${totalCFDelayed.toLocaleString()}万円</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4)">${startAge}歳から始めた場合<br>（${yearsDelayed}年間）</div>
+          </div>
+          <div style="font-size:18px;color:rgba(255,255,255,0.3)">=</div>
+          <div style="text-align:center">
+            <div style="font-size:13px;font-weight:700;color:var(--gold)">${lifetimeDiff.toLocaleString()}万円の差</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.4)">生涯の機会損失</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.45);line-height:1.8">
+        先延ばしリスク: ${urgency}<br>
+        ・今すぐ始めると${age}歳〜${retireAge}歳の${yearsNow}年間運用できます<br>
+        ・${delayYears}年後に始めると${startAge}歳〜${retireAge}歳の${yearsDelayed}年間しか運用できません<br>
+        ※簡易計算です。物件価値の変動・税金・空室率変化は含みません。あくまで目安としてご活用ください。
+      </div>
+    </div>`;
+  if (typeof saveCardResult === 'function') saveCardResult('投資スタート遅延機会損失', '機会損失' + rentLoss + '万円（' + delayYears + '年分家賃）', 'card-start-delay');
 }
 
 function calcYieldTriple() {
