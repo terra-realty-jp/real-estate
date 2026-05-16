@@ -2414,6 +2414,37 @@
     <div id="rit_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 国庫帰属制度診断カード -->
+  <div class="card" id="card-kokko-kizoku">
+    <div class="card-title">🏛️ 相続した土地を国に返したい！費用と放置コストを比べる（国庫帰属制度）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">2023年4月に施行された「相続土地国庫帰属法」で、条件を満たす相続した土地を国に返せるようになりました。申請費用・負担金と放置し続けた場合の10年コストを比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">土地面積（㎡）（例: 200）</label>
+        <input type="number" id="kk_area" placeholder="例: 200" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">土地の種別</label>
+        <select id="kk_type" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="urban">宅地（市街化区域内）</option>
+          <option value="other">宅地（市街化区域外）</option>
+          <option value="farm">農地・原野</option>
+          <option value="forest">山林</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間の固定資産税（万円）（例: 3）</label>
+        <input type="number" id="kk_tax" placeholder="例: 3" step="0.1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間の管理費・草刈り費用（万円）（例: 2）</label>
+        <input type="number" id="kk_mgmt" placeholder="例: 2" step="0.1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcKokkoKizoku()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">国に返す費用 vs 放置コストを比較する</button>
+    <div id="kk_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -8834,6 +8865,64 @@ function calcAkiyaManageCost() {
   el.innerHTML = html;
 }
 
+
+function calcKokkoKizoku() {
+  const area = parseFloat(document.getElementById('kk_area').value);
+  const landType = document.getElementById('kk_type').value;
+  const annualTax = parseFloat(document.getElementById('kk_tax').value) || 0;
+  const annualMgmt = parseFloat(document.getElementById('kk_mgmt').value) || 0;
+  const el = document.getElementById('kk_result');
+  if (!area || area <= 0) {
+    el.style.display = 'block';
+    el.innerHTML = '<p style="color:var(--red);font-size:13px">土地面積を入力してください。</p>';
+    return;
+  }
+  // 申請手数料（一律）
+  const appFee = 1.4; // 万円
+  // 負担金（土地種別ごとの概算単価 円/m²）
+  const rates = { urban: 5000, other: 2000, farm: 500, forest: 500 };
+  const rateLabels = { urban: '宅地（市街化区域）', other: '宅地（その他）', farm: '農地・原野', forest: '山林' };
+  const futan = area * rates[landType] / 10000; // 万円
+  const totalKokko = appFee + futan;
+  const hold10 = (annualTax + annualMgmt) * 10;
+  const hold20 = (annualTax + annualMgmt) * 20;
+  const saving10 = hold10 - totalKokko;
+  const saving20 = hold20 - totalKokko;
+  const winner = saving10 > 0 ? '国庫帰属' : '放置（10年以内に売却等ができる場合）';
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:10px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">🏛️ 国庫帰属 vs 放置コスト比較</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-muted)">国に返す総費用</div>
+          <div style="font-size:20px;font-weight:900;color:var(--gold)">${totalKokko.toFixed(1)}万円</div>
+          <div style="font-size:10px;color:var(--text-muted)">申請料1.4万+負担金${futan.toFixed(1)}万</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-muted)">10年間の放置コスト</div>
+          <div style="font-size:20px;font-weight:900;color:var(--red)">${hold10.toFixed(1)}万円</div>
+          <div style="font-size:10px;color:var(--text-muted)">固定資産税+管理費×10年</div>
+        </div>
+      </div>
+      <div style="background:rgba(201,168,76,0.15);border-radius:8px;padding:14px;text-align:center;margin-bottom:10px">
+        <div style="font-size:12px;color:var(--text-muted)">10年間で節約できる金額</div>
+        <div style="font-size:28px;font-weight:900;color:${saving10 > 0 ? 'var(--gold)' : 'var(--red)'}">
+          ${saving10 > 0 ? '+' : ''}${Math.round(saving10)}万円
+        </div>
+        <div style="font-size:11px;color:var(--text-muted)">${saving10 > 0 ? '国庫帰属の方が得（10年放置より' + Math.round(saving10) + '万円節約）' : '放置の方が短期的には安い（ただし管理負担は続く）'}</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;line-height:1.8">
+        <b>試算内訳：</b><br>
+        ・土地種別: ${rateLabels[landType]}（${area}㎡）<br>
+        ・申請手数料: 1.4万円（一律）<br>
+        ・負担金（概算）: ${futan.toFixed(1)}万円（@${rates[landType].toLocaleString()}円/㎡）<br>
+        ・20年間放置コスト: ${hold20.toFixed(1)}万円 → 国庫帰属なら${Math.round(hold20 - totalKokko)}万円の節約<br>
+        ⚠️ 負担金は土地の現況・場所によって異なります。詳細は法務局または専門家にご確認ください。
+      </div>
+    </div>`;
+  if (typeof saveCardResult === 'function') saveCardResult('国庫帰属診断', '国庫帰属費用' + totalKokko.toFixed(1) + '万円vs放置10年' + hold10.toFixed(1) + '万円', 'card-kokko-kizoku');
+}
 
 function calcRentalIncomeTax() {
   var el = document.getElementById('rit_result');
