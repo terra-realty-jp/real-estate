@@ -2109,6 +2109,42 @@
     <div id="akiya-carport-result"></div>
   </div>
 
+  <div class="card" id="card-akiya-solar">
+    <div class="card-title">☀️ 空き家屋根 太陽光発電転用試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">空き家の屋根に太陽光パネルを設置した場合の売電収入・回収期間・FIT終了後の自家消費を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">屋根面積（㎡）</div>
+        <input type="number" id="sol_roof" value="50" min="10" max="500" step="5" oninput="calcAkiyaSolar()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">設置地域（日射量目安）</div>
+        <select id="sol_region" onchange="calcAkiyaSolar()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="south" selected>南日本・太平洋側（日射量多）</option>
+          <option value="middle">関東・東海・近畿</option>
+          <option value="north">東北・北海道・日本海側</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">FIT売電単価（円/kWh）</div>
+        <select id="sol_fit" onchange="calcAkiyaSolar()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="16" selected>16円（2024年度・10kW未満）</option>
+          <option value="12">12円（卒FIT・市場連動）</option>
+          <option value="9">9円（低圧・2025年度以降）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">設置費用</div>
+        <select id="sol_cost" onchange="calcAkiyaSolar()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="standard" selected>標準工事込み（18万円/kW）</option>
+          <option value="low">割安工事（14万円/kW）</option>
+          <option value="high">高品質工事（22万円/kW）</option>
+        </select>
+      </div>
+    </div>
+    <div id="akiya-solar-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -6611,6 +6647,39 @@ function calcAkiyaCarport() {
 }
 (function(){ calcAkiyaCarport(); })();
 
+function calcAkiyaSolar() {
+  var el = document.getElementById('akiya-solar-result'); if (!el) return;
+  var roof = parseInt(document.getElementById('sol_roof').value) || 50;
+  var region = document.getElementById('sol_region').value;
+  var fitRate = parseInt(document.getElementById('sol_fit').value) || 16;
+  var costType = document.getElementById('sol_cost').value;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var efficiency = 0.15;
+  var kw = Math.floor(roof * efficiency * 10) / 10;
+  var peakHours = { south: 1350, middle: 1200, north: 1050 }[region] || 1200;
+  var annualKwh = Math.round(kw * peakHours);
+  var annualSale = Math.round(annualKwh * fitRate / 10000 * 10) / 10;
+  var costPerKw = { standard: 18, low: 14, high: 22 }[costType] || 18;
+  var initCost = Math.round(kw * costPerKw * 10) / 10;
+  var maintenance = Math.round(initCost * 0.01 * 10) / 10;
+  var annualNet = Math.round((annualSale - maintenance) * 10) / 10;
+  var payback = annualNet > 0 ? Math.round(initCost / annualNet * 10) / 10 : 0;
+  var regionLabel = { south: '南日本・太平洋側', middle: '関東・東海・近畿', north: '東北・北海道・日本海側' }[region];
+  var postFitNet = Math.round(annualKwh * 11 / 10000 * 10) / 10;
+  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+    + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">☀️ 太陽光発電試算（' + regionLabel + '・' + kw + 'kW）</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.5)">設置費用目安</div><div style="font-size:16px;font-weight:700;color:#f87171">' + initCost + '万円</div></div>'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.5)">年間売電収入</div><div style="font-size:16px;font-weight:700;color:' + ACCENT + '">' + annualSale + '万円</div></div>'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.5)">回収年数</div><div style="font-size:16px;font-weight:700;color:' + ACCENT + '">' + (payback > 0 ? payback + '年' : '—') + '</div></div></div>'
+    + '<div style="padding:10px;background:rgba(0,0,0,0.15);border-radius:8px;margin-bottom:8px">'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:rgba(255,255,255,0.6)">年間発電量</span><span style="font-size:12px;color:' + ACCENT + '">' + annualKwh.toLocaleString() + 'kWh</span></div>'
+    + '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:rgba(255,255,255,0.6)">年間保守費用</span><span style="font-size:12px;color:rgba(255,255,255,0.7)">' + maintenance + '万円</span></div>'
+    + '<div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:rgba(255,255,255,0.6)">FIT後（自家消費・卒FIT売電）年間価値</span><span style="font-size:12px;color:' + ACCENT + '">' + postFitNet + '万円</span></div></div>'
+    + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ FIT認定・系統連系申請が必要です。空き家への常時送電・受電可能かも要確認。設置は専門業者にご相談ください。</p></div>';
+}
+(function(){ calcAkiyaSolar(); })();
+
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;
   var rate = parseFloat(document.getElementById('mpd_rate').value) || 12000;
@@ -6987,6 +7056,29 @@ renderPipeline();
           +'</div>';
       }).join('');
   }
+  function genShareImg(title,text){
+    var W=600,PAD=28,GOLD='#c9a84c',BG='#0e0e0e',BG2='#161616';
+    var lines=text.replace(/\s+/g,' ').trim().split(/(?<=[。！？\n])|(?<=\d万円)|(?<=\d%)|(?<=\d円)/).filter(function(s){return s.trim().length>2;}).slice(0,6);
+    var lineH=22,headerH=80,footerH=48,bodyH=Math.max(120,lines.length*lineH+60);
+    var H=headerH+bodyH+footerH;
+    var cvs=document.createElement('canvas');cvs.width=W;cvs.height=H;
+    var ctx=cvs.getContext('2d');
+    ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle=GOLD;ctx.fillRect(0,0,W,4);
+    ctx.fillStyle=BG2;ctx.fillRect(0,4,W,headerH-4);
+    ctx.font='bold 14px sans-serif';ctx.fillStyle=GOLD;ctx.fillText('不動産かんたんツール — TERRA REALTY',PAD,30);
+    ctx.font='bold 18px sans-serif';ctx.fillStyle='#f0ede8';
+    var t=title.replace(/^[^\w぀-鿿]+/,'');ctx.fillText(t.length>26?t.slice(0,26)+'…':t,PAD,58);
+    ctx.fillStyle=BG;ctx.fillRect(0,headerH,W,bodyH);
+    ctx.font='13px sans-serif';ctx.fillStyle='#ccc';
+    lines.forEach(function(l,i){ctx.fillText(l.trim().slice(0,42),PAD,headerH+32+i*lineH);});
+    ctx.fillStyle='rgba(201,168,76,0.15)';ctx.fillRect(0,headerH+bodyH,W,footerH);
+    ctx.font='11px sans-serif';ctx.fillStyle='rgba(201,168,76,0.7)';ctx.textAlign='left';
+    ctx.fillText('shinji-japaaaan.github.io/real-estate/',PAD,headerH+bodyH+30);
+    var now=new Date();ctx.fillStyle='rgba(255,255,255,0.3)';ctx.textAlign='right';
+    ctx.fillText((now.getMonth()+1)+'/'+now.getDate()+' 計算',W-PAD,headerH+bodyH+30);
+    var a=document.createElement('a');a.download='terra-realty-result.png';a.href=cvs.toDataURL('image/png');a.click();
+  }
   function watchDiv(div){
     var obs=new MutationObserver(function(){
       if(!div.innerHTML.trim()||div.querySelector('.re-save-btn'))return;
@@ -6995,10 +7087,12 @@ renderPipeline();
       var title=titleEl?titleEl.textContent.replace(/[★☆]/g,'').trim():'計算結果';
       var cid=card?(card.id||div.id):div.id;
       var rawText=div.textContent.replace(/\s+/g,' ').trim();
+      var wrap=document.createElement('div');
+      wrap.style.cssText='display:flex;gap:6px;margin-top:10px;flex-wrap:wrap';
       var btn=document.createElement('button');
       btn.className='re-save-btn';
       btn.innerHTML='📌 この結果を保存';
-      btn.style.cssText='display:block;margin-top:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:5px 12px;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;font-family:inherit;transition:all 0.15s';
+      btn.style.cssText='background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:5px 12px;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;font-family:inherit;transition:all 0.15s';
       btn.onmouseover=function(){this.style.background=ACCENT;this.style.color=ACCTXT;this.style.borderColor=ACCBDR;};
       btn.onmouseout=function(){this.style.background='rgba(255,255,255,0.03)';this.style.color='rgba(255,255,255,0.35)';this.style.borderColor='rgba(255,255,255,0.08)';};
       btn.onclick=function(){
@@ -7006,7 +7100,14 @@ renderPipeline();
         btn.innerHTML='✅ 保存しました';btn.style.color=ACCTXT;btn.style.borderColor=ACCBDR;btn.disabled=true;
         setTimeout(function(){btn.innerHTML='📌 もう一度保存';btn.disabled=false;btn.style.color='rgba(255,255,255,0.35)';btn.style.borderColor='rgba(255,255,255,0.08)';},1800);
       };
-      div.appendChild(btn);
+      var imgBtn=document.createElement('button');
+      imgBtn.innerHTML='📸 画像で保存';
+      imgBtn.style.cssText='background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:5px 12px;color:rgba(255,255,255,0.35);font-size:11px;cursor:pointer;font-family:inherit;transition:all 0.15s';
+      imgBtn.onmouseover=function(){this.style.background='rgba(201,168,76,0.1)';this.style.color='#c9a84c';this.style.borderColor='rgba(201,168,76,0.3)';};
+      imgBtn.onmouseout=function(){this.style.background='rgba(255,255,255,0.03)';this.style.color='rgba(255,255,255,0.35)';this.style.borderColor='rgba(255,255,255,0.08)';};
+      imgBtn.onclick=function(){genShareImg(title,rawText);};
+      wrap.appendChild(btn);wrap.appendChild(imgBtn);
+      div.appendChild(wrap);
     });
     obs.observe(div,{childList:true,subtree:true});
   }
