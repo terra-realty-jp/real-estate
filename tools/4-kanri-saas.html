@@ -2757,6 +2757,31 @@
     <div id="sublease-vs-self-result"></div>
   </div>
 
+  <!-- 青色申告 vs 白色申告 節税メリット比較カード -->
+  <div class="card" id="card-blue-return">
+    <div class="card-title">📋 青色申告 vs 白色申告 節税メリット比較</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">不動産所得に対して青色申告（65万円控除）と白色申告での所得税・住民税の差を試算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間家賃収入（万円）</div>
+        <input id="br_income" type="number" value="200" min="0" max="10000" step="10" oninput="calcBlueReturn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年間必要経費（万円）</div>
+        <input id="br_cost" type="number" value="60" min="0" max="5000" step="10" oninput="calcBlueReturn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">給与所得等（万円・兼業の場合）</div>
+        <input id="br_salary" type="number" value="500" min="0" max="10000" step="50" oninput="calcBlueReturn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">記帳ソフト年間費用（万円）</div>
+        <input id="br_software" type="number" value="3" min="0" max="50" step="0.5" oninput="calcBlueReturn()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="blue-return-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -9948,6 +9973,77 @@ function calcRentHikeScore() {
   el.innerHTML = html;
 }
 (function(){ calcRentHikeScore(); })();
+
+function calcBlueReturn() {
+  var el = document.getElementById('blue-return-result');
+  var income = parseFloat(document.getElementById('br_income').value) || 200;
+  var cost = parseFloat(document.getElementById('br_cost').value) || 60;
+  var salary = parseFloat(document.getElementById('br_salary').value) || 500;
+  var software = parseFloat(document.getElementById('br_software').value) || 3;
+
+  function taxRate(taxable) {
+    if (taxable <= 0) return 0;
+    if (taxable <= 195) return taxable * 0.05;
+    if (taxable <= 330) return taxable * 0.10 - 9.75;
+    if (taxable <= 695) return taxable * 0.20 - 42.75;
+    if (taxable <= 900) return taxable * 0.23 - 63.6;
+    if (taxable <= 1800) return taxable * 0.33 - 153.6;
+    if (taxable <= 4000) return taxable * 0.40 - 279.6;
+    return taxable * 0.45 - 479.6;
+  }
+
+  var salaryDed = salary <= 162.5 ? 55 : salary <= 180 ? salary * 0.4 - 10 : salary <= 360 ? salary * 0.3 + 8 : salary <= 660 ? salary * 0.2 + 44 : salary <= 850 ? salary * 0.1 + 110 : 195;
+  var salaryBase = Math.max(0, salary - salaryDed);
+  var baseIncome = income - cost;
+
+  var whiteIncome = Math.max(0, baseIncome);
+  var blueIncome65 = Math.max(0, baseIncome - 65);
+  var blue10Income = Math.max(0, baseIncome - 10);
+
+  var whiteTax = taxRate(salaryBase + whiteIncome) - taxRate(salaryBase);
+  var blue65Tax = taxRate(salaryBase + blueIncome65) - taxRate(salaryBase);
+  var blue10Tax = taxRate(salaryBase + blue10Income) - taxRate(salaryBase);
+
+  var住民税Rate = 0.10;
+  var whiteLiv = whiteIncome * 住民税Rate;
+  var blue65Liv = blueIncome65 * 住民税Rate;
+  var blue10Liv = blue10Income * 住民税Rate;
+
+  var whiteTotalTax = Math.max(0, whiteTax + whiteLiv);
+  var blue65TotalTax = Math.max(0, blue65Tax + blue65Liv);
+  var blue10TotalTax = Math.max(0, blue10Tax + blue10Liv);
+
+  var saving65 = whiteTotalTax - blue65TotalTax;
+  var netSaving65 = saving65 - software;
+  var saving10 = whiteTotalTax - blue10TotalTax;
+
+  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:13px;font-weight:900;color:#4ade80;margin-bottom:10px">📋 年間節税メリット比較</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">白色申告</div><div style="font-size:17px;font-weight:900;color:#f87171">' + Math.round(whiteTotalTax * 10) / 10 + '万円</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">所得税+住民税</div></div>';
+  html += '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">青色（65万控除）</div><div style="font-size:17px;font-weight:900;color:#4ade80">' + Math.round(blue65TotalTax * 10) / 10 + '万円</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">所得税+住民税</div></div>';
+  html += '<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">青色（10万控除）</div><div style="font-size:17px;font-weight:900;color:#fbbf24">' + Math.round(blue10TotalTax * 10) / 10 + '万円</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">所得税+住民税</div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);border-radius:8px;padding:10px;margin-bottom:10px">';
+  html += '<div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:4px">青色65万控除（電子申告）の節税額</div>';
+  html += '<div style="font-size:20px;font-weight:900;color:#4ade80">年間 ' + Math.round(saving65 * 10) / 10 + '万円 節税</div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px">ソフト費用差引後：<strong style="color:' + (netSaving65 > 0 ? '#4ade80' : '#f87171') + '">' + Math.round(netSaving65 * 10) / 10 + '万円</strong>の実質節税効果</div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,0.5)">10万控除（簡易簿記）との差：<strong style="color:#fbbf24">' + Math.round((saving65 - saving10) * 10) / 10 + '万円</strong></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">💡 ';
+  if (netSaving65 > 5) {
+    html += '青色申告（65万円控除）への切替えで実質 ' + Math.round(netSaving65) + '万円/年の節税が見込めます。e-Taxとfreee/マネーフォワードを使えば記帳負担も最小化できます。';
+  } else if (netSaving65 > 0) {
+    html += '節税効果はあります（' + Math.round(netSaving65 * 10) / 10 + '万円/年）。記帳の手間と税理士費用を考慮の上、切替えを検討してください。';
+  } else {
+    html += '現状の所得水準では節税効果がソフト費用を下回る可能性があります。所得が増えてから切替えを検討するのも一つの方法です。';
+  }
+  html += '</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;line-height:1.6">※ 概算試算。社会保険料控除・医療費控除・住宅ローン控除等は含みません。実際の税額は税理士にご確認ください。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcBlueReturn(); })();
 
 function calcSubleaseVsSelf() {
   var el = document.getElementById('sublease-vs-self-result');
