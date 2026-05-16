@@ -3049,6 +3049,24 @@
     <div id="yt_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 損益通算節税シミュレーターカード -->
+  <div class="card" id="card-loss-offset-tax">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💰 不動産の赤字で会社員の税金はいくら戻る？（損益通算）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">給与収入がある方は、不動産投資の赤字を給与収入と「相殺（損益通算）」することで所得税・住民税を節税できます。年間いくら返ってくるか試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">給与年収（万円）（例: 700）</label>
+        <input type="number" id="lo_salary" placeholder="例: 700" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">不動産の年間赤字額（万円）（例: 80）</label>
+        <input type="number" id="lo_loss" placeholder="例: 80" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcLossOffsetTax()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">節税額を試算する</button>
+    <div id="lo_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -10586,6 +10604,77 @@ function calcPensionSupplement() {
     '<div><span style="color:var(--text-muted)">月々の積立目標</span><br><strong style="color:#facc15">' + monthlyTarget.toFixed(1) + '万円/月</strong></div>' +
     '</div></div>' +
     '<p style="font-size:11px;color:var(--text-muted);line-height:1.5">※ 融資なし・現金購入の場合は総投資額が必要資金になります。実際の融資条件・税金・将来の家賃変動によって異なります。</p>';
+}
+
+function calcLossOffsetTax() {
+  const salary = parseFloat(document.getElementById('lo_salary').value);
+  const loss = parseFloat(document.getElementById('lo_loss').value);
+  const el = document.getElementById('lo_result');
+  if (!salary || !loss || salary <= 0 || loss <= 0) {
+    el.style.display = 'block';
+    el.innerHTML = '<p style="color:var(--red);font-size:13px">給与年収と不動産赤字額を入力してください。</p>';
+    return;
+  }
+  function salaryDeduction(s) {
+    if (s <= 162.5) return 55;
+    if (s <= 180) return s * 0.4 - 10;
+    if (s <= 360) return s * 0.3 + 8;
+    if (s <= 660) return s * 0.2 + 44;
+    if (s <= 850) return s * 0.1 + 110;
+    return 195;
+  }
+  function incomeTaxCalc(t) {
+    if (t <= 0) return 0;
+    if (t <= 195) return t * 0.05;
+    if (t <= 330) return t * 0.10 - 9.75;
+    if (t <= 695) return t * 0.20 - 42.75;
+    if (t <= 900) return t * 0.23 - 63.6;
+    if (t <= 1800) return t * 0.33 - 153.6;
+    if (t <= 4000) return t * 0.40 - 279.6;
+    return t * 0.45 - 479.6;
+  }
+  const deduction = salaryDeduction(salary);
+  const basic = 48;
+  const taxableBase = Math.max(0, salary - deduction - basic);
+  const taxableAfter = Math.max(0, taxableBase - loss);
+  const itBefore = incomeTaxCalc(taxableBase) * 1.021;
+  const itAfter = incomeTaxCalc(taxableAfter) * 1.021;
+  const itSaving = itBefore - itAfter;
+  const jitBefore = taxableBase * 0.10;
+  const jitAfter = taxableAfter * 0.10;
+  const jitSaving = jitBefore - jitAfter;
+  const totalSaving = itSaving + jitSaving;
+  const effectiveRate = loss > 0 ? (totalSaving / loss * 100) : 0;
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:10px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 損益通算の節税効果</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-muted)">所得税の節税額</div>
+          <div style="font-size:20px;font-weight:900;color:var(--gold)">${Math.round(itSaving)}万円</div>
+          <div style="font-size:10px;color:var(--text-muted)">（復興特別税込み）</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-muted)">住民税の節税額</div>
+          <div style="font-size:20px;font-weight:900;color:var(--gold)">${Math.round(jitSaving)}万円</div>
+          <div style="font-size:10px;color:var(--text-muted)">（税率10%固定）</div>
+        </div>
+      </div>
+      <div style="background:rgba(201,168,76,0.15);border-radius:8px;padding:14px;text-align:center;margin-bottom:10px">
+        <div style="font-size:12px;color:var(--text-muted)">年間合計節税額</div>
+        <div style="font-size:32px;font-weight:900;color:var(--gold)">${Math.round(totalSaving)}万円</div>
+        <div style="font-size:11px;color:var(--text-muted)">実効節税率 ${effectiveRate.toFixed(1)}%（赤字${loss}万円に対して${Math.round(totalSaving)}万円節税）</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;line-height:1.8">
+        <b>損益通算のしくみ：</b><br>
+        ・損益通算前 課税所得：${Math.round(taxableBase)}万円（税合計：${Math.round(itBefore + jitBefore)}万円）<br>
+        ・損益通算後 課税所得：${Math.round(taxableAfter)}万円（税合計：${Math.round(itAfter + jitAfter)}万円）<br>
+        ・差額（節税額）：${Math.round(totalSaving)}万円<br>
+        ※簡易計算です。実際の税額は社会保険料控除等により異なります。確定申告は税理士にご相談ください。
+      </div>
+    </div>`;
+  if (typeof saveCardResult === 'function') saveCardResult('損益通算節税', '節税額' + Math.round(totalSaving) + '万円/年', 'card-loss-offset-tax');
 }
 
 function calcYieldTriple() {
