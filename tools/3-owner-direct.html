@@ -2352,6 +2352,41 @@
     <div id="shared-purchase-result"></div>
   </div>
 
+  <div class="card" id="card-title-transfer-cost">
+    <div class="card-title">📋 不動産の名義変更にかかる費用の合計を試算する（登記費用・司法書士・税金）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売買・相続・贈与で不動産の名義を変える際は、登録免許税・司法書士報酬・書類取得費などがかかります。変更の理由・物件価格を入力して費用の合計目安を確認します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件の固定資産税評価額（万円）（例: 2000）</label>
+        <input type="number" id="ttc_value" value="2000" min="100" max="100000" step="100" oninput="calcTitleTransferCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">名義変更の理由</label>
+        <select id="ttc_reason" onchange="calcTitleTransferCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="sale">売買による名義変更</option>
+          <option value="inh">相続（亡くなった方から引き継ぎ）</option>
+          <option value="gift">贈与（生前に親から子どもへ）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">土地・建物の別</label>
+        <select id="ttc_ptype" onchange="calcTitleTransferCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="both">土地+建物両方</option>
+          <option value="land">土地のみ</option>
+          <option value="building">建物のみ</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">住宅ローン（抵当権設定あり）</label>
+        <select id="ttc_loan" onchange="calcTitleTransferCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="yes">あり（抵当権設定・移転の費用も含む）</option>
+          <option value="no">なし（ローン完済・現金購入等）</option>
+        </select>
+      </div>
+    </div>
+    <div id="title-transfer-cost-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -7066,6 +7101,45 @@ function calcSharedPurchase() {
   el.innerHTML = html;
 }
 (function(){ calcSharedPurchase(); })();
+
+function calcTitleTransferCost() {
+  var el = document.getElementById('title-transfer-cost-result');
+  if (!el) return;
+  var val = parseFloat(document.getElementById('ttc_value').value) || 2000;
+  var reason = document.getElementById('ttc_reason').value;
+  var ptype = document.getElementById('ttc_ptype').value;
+  var loan = document.getElementById('ttc_loan').value;
+  var rateMap = { sale: 0.02, inherit: 0.004, gift: 0.02 };
+  var rate = rateMap[reason] || 0.02;
+  if (reason === 'sale' && ptype !== 'land') rate = 0.003;
+  var regTax = Math.round(val * rate);
+  var scrivener = ptype === 'both' ? 15 : 10;
+  var docCost = 3;
+  var mortgage = loan === 'yes' ? 4 : 0;
+  var total = regTax + scrivener + docCost + mortgage;
+  var reasonLabel = { sale: '売買（所有権移転）', inherit: '相続（所有権移転）', gift: '贈与（所有権移転）' }[reason];
+  var rateDisp = reason === 'sale' && ptype !== 'land' ? '0.3%（軽減税率）' : (rate * 100).toFixed(1) + '%';
+  var html = '<div style="display:grid;gap:8px">';
+  html += '<div style="background:rgba(96,165,250,0.08);border-radius:8px;padding:12px">';
+  html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">登録免許税（' + rateDisp + '）</div>';
+  html += '<div style="font-size:20px;font-weight:700;color:#60a5fa">' + regTax.toLocaleString() + '<span style="font-size:12px;color:#94a3b8">万円</span></div>';
+  html += '<div style="font-size:10px;color:#94a3b8;margin-top:2px">評価額 ' + val.toLocaleString() + '万円 × ' + rateDisp + '</div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">司法書士報酬</div><div style="font-size:16px;font-weight:600;color:#e2e8f0">約' + scrivener + '万円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">書類取得費</div><div style="font-size:16px;font-weight:600;color:#e2e8f0">約' + docCost + '万円</div></div>';
+  if (loan === 'yes') html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center;grid-column:span 2"><div style="font-size:10px;color:#94a3b8">抵当権設定登記（ローンあり）</div><div style="font-size:16px;font-weight:600;color:#e2e8f0">約' + mortgage + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(96,165,250,0.15);border-radius:8px;padding:12px;text-align:center">';
+  html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">名義変更の合計費用目安</div>';
+  html += '<div style="font-size:26px;font-weight:700;color:#60a5fa">約' + total.toLocaleString() + '<span style="font-size:14px;color:#94a3b8">万円</span></div>';
+  html += '<div style="font-size:10px;color:#94a3b8;margin-top:4px">※ ' + reasonLabel + ' / 固定資産税評価額 ' + val.toLocaleString() + '万円</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(251,191,36,0.08);border-radius:6px;padding:8px;font-size:10px;color:#fbbf24">💡 登録免許税は固定資産税評価額をもとに計算されます。売買の建物は2024年3月まで0.3%の軽減税率が適用されます</div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcTitleTransferCost(); })();
 
 function initBuyChecklist() {
   var el = document.getElementById('buy-checklist-content');

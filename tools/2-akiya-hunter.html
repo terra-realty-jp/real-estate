@@ -2542,6 +2542,37 @@
     <div id="akiya-popup-shop-result"></div>
   </div>
 
+  <div class="card" id="card-akiya-vending">
+    <div class="card-title">🥤 空き家の敷地に自動販売機を設置するだけで月いくら稼げる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">自販機の設置は初期費用ゼロ・管理ほぼなし・メーカーが全て対応してくれるため、空き家の最も手軽な活用法の一つです。設置台数・立地・売上から月間収益を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">自販機の台数</label>
+        <input type="number" id="avd_units" value="2" min="1" max="20" step="1" oninput="calcAkiyaVending()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">立地の人通り</label>
+        <select id="avd_traffic" onchange="calcAkiyaVending()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="high">多い（駅前・商業施設・幹線道路沿い）</option>
+          <option value="mid">中程度（住宅街・学校近く）</option>
+          <option value="low">少ない（閑静な住宅地・田舎）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">設置方式</label>
+        <select id="avd_type" onchange="calcAkiyaVending()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="lease">場所貸し（メーカー運営・収益の10〜25%を受取）</option>
+          <option value="own">自社運営（機器購入・補充・売上全額受取）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">電気代負担（月/台）（万円・場所貸しなら0）</label>
+        <input type="number" id="avd_elec" value="0" min="0" max="5" step="0.1" oninput="calcAkiyaVending()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="akiya-vending-result"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -7241,6 +7272,44 @@ function calcAkiyaPopupShop() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaPopupShop(); })();
+
+function calcAkiyaVending() {
+  var el = document.getElementById('akiya-vending-result'); if (!el) return;
+  var units = parseInt(document.getElementById('avd_units').value) || 2;
+  var traffic = document.getElementById('avd_traffic').value;
+  var type = document.getElementById('avd_type').value;
+  var elec = parseFloat(document.getElementById('avd_elec').value) || 0;
+  var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
+  var salesMap = { high: 15, mid: 7, low: 3 };
+  var monthlySales = salesMap[traffic];
+  var monthlyIncome, monthlyRunning;
+  if (type === 'lease') {
+    var commissionRate = 0.18;
+    monthlyIncome = Math.round(units * monthlySales * commissionRate * 10) / 10;
+    monthlyRunning = elec * units;
+  } else {
+    var costRate = 0.55;
+    monthlyIncome = Math.round(units * monthlySales * (1 - costRate) * 10) / 10;
+    monthlyRunning = elec * units + Math.round(units * 0.5 * 10) / 10;
+  }
+  var monthlyNet = Math.round((monthlyIncome - monthlyRunning) * 10) / 10;
+  var yearlyNet = Math.round(monthlyNet * 12 * 10) / 10;
+  var trafficLabel = { high: '多い（月' + monthlySales + '万円/台）', mid: '中程度（月' + monthlySales + '万円/台）', low: '少ない（月' + monthlySales + '万円/台）' }[traffic];
+  var typeLabel = type === 'lease' ? '場所貸し（収益の18%受取）' : '自社運営（全収益受取・コスト55%）';
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + monthlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間純収益</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + yearlyNet.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間純収益</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:#4ade80">' + (type === 'lease' ? '0円' : units * 80 + '万円') + '</div><div style="font-size:10px;color:var(--text-muted)">初期費用目安</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '🥤 【' + typeLabel + '】 人通り ' + trafficLabel + ' × ' + units + '台<br>';
+  html += type === 'lease' ? '✅ 場所貸しは初期費用ゼロ・管理不要。メーカー（ダイドー・コカ・コーラ等）に相談するだけで始められます<br>' : '⚠️ 自社運営は収益が高いが、在庫補充・故障対応・集金の手間が必要です<br>';
+  html += '<span style="font-size:10px">💡 電気代はオーナー負担が多いですが、場所貸し契約によっては業者負担になる場合があります。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaVending(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;
