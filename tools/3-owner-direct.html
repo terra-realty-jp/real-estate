@@ -2703,6 +2703,71 @@
     <div id="lar_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 物件価格以外にかかる諸費用の完全内訳 -->
+  <div class="card" id="card-purchase-extra-costs">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💸 「物件価格3,000万円」の他に実際いくら用意すればいい？諸費用の全内訳</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">住宅購入では物件価格以外に「仲介手数料・登記費用・火災保険・引越し代」など様々な費用がかかります。見落としがちな諸費用の合計額を一気に試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の購入価格（万円）</label>
+        <input type="number" id="pec_price" placeholder="例: 3000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の種類</label>
+        <select id="pec_type" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="new_condo">新築マンション</option>
+          <option value="used_condo" selected>中古マンション</option>
+          <option value="new_house">新築一戸建て</option>
+          <option value="used_house">中古一戸建て</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">ローン借入額（万円）</label>
+        <input type="number" id="pec_loan" placeholder="例: 2700" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">引越し距離の目安</label>
+        <select id="pec_moving" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="near">近距離（同市区内）</option>
+          <option value="mid" selected>中距離（隣の市区町村程度）</option>
+          <option value="far">遠距離（県外・引越し業者を複数日）</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcPurchaseExtraCosts()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">諸費用の合計を試算する</button>
+    <div id="pec_result" style="display:none;margin-top:14px"></div>
+  </div>
+
+  <!-- マンションvs一戸建て 20年総コスト比較 -->
+  <div class="card" id="card-condo-vs-house">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏢vs🏠 マンションと一戸建て、同じ価格なら20年後にどちらが得？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">購入価格が同じマンションと一戸建てを比べると、管理費・修繕積立金・固定資産税などが異なります。20年間の総負担額と資産価値の推移を比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">購入価格（共通・万円）</label>
+        <input type="number" id="cvh_price" placeholder="例: 4000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">エリア</label>
+        <select id="cvh_area" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="urban">都市部（東京・大阪・名古屋等）</option>
+          <option value="suburb" selected>郊外（都市部近郊）</option>
+          <option value="rural">地方・郊外</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">マンションの月間管理費・修繕積立（万円）</label>
+        <input type="number" id="cvh_mf" placeholder="例: 3" step="0.1" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の年齢（歳）</label>
+        <input type="number" id="cvh_age" placeholder="例: 40" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcCondoVsHouse()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">20年間の総コストを比較する</button>
+    <div id="cvh_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -7921,6 +7986,173 @@ function calcLoanApprovalRate() {
     '<p style="font-size:11px;color:var(--text-muted);margin-top:6px">返済比率35%以内にするには、月返済額を <strong>' + safeMaxRepay.toFixed(0) + '万円以下</strong> に抑えるのが目安です。</p>' +
     '</div>' +
     '<p style="font-size:10px;color:var(--text-muted);line-height:1.5">※ この診断は簡易シミュレーションです。実際の審査は金融機関が信用情報・勤務先・物件条件なども総合判断します。</p>';
+}
+
+function calcPurchaseExtraCosts() {
+  var el = document.getElementById('pec_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('pec_price').value) || 3000;
+  var loan = parseFloat(document.getElementById('pec_loan').value) || price * 0.9;
+  var type = document.getElementById('pec_type').value;
+  var moving = document.getElementById('pec_moving').value;
+
+  var isNew = type === 'new_condo' || type === 'new_house';
+  var isCondo = type === 'new_condo' || type === 'used_condo';
+
+  // 仲介手数料
+  var commission = isNew ? 0 : (price <= 200 ? price * 0.05 + 2 : price <= 400 ? price * 0.04 + 2 : price * 0.03 + 6) * 1.1;
+
+  // 登録免許税（所有権移転）
+  var regTax = isNew ? price * 0.003 : price * 0.002; // 土地0.015/建物0.003、ただし特例あり
+  var regFee = price * 0.001 + 5; // 司法書士費用概算
+
+  // 消費税（新築のみ建物部分）
+  var consumptionTax = isNew ? price * 0.6 * 0.1 : 0; // 建物価格は物件価格の60%と仮定
+
+  // 不動産取得税（新築軽減あり）
+  var acquisitionTax = isNew ? Math.max(0, price * 0.6 * 0.03 - 120) : price * 0.6 * 0.03;
+
+  // ローン関係費用
+  var loanCost = loan * 0.001 + 5; // 手数料・保証料概算
+  var fireInsurance = isCondo ? 15 : 25; // 火災保険（10年）
+
+  // 修繕積立基金（マンション新築のみ）
+  var repairFund = type === 'new_condo' ? price * 0.006 : 0;
+
+  // 引越し費用
+  var movingCost = { near: 8, mid: 15, far: 30 }[moving] || 15;
+
+  // 家具・家電（省略: ユーザーが任意に考慮）
+  var total = commission + regTax + regFee + consumptionTax + acquisitionTax + loanCost + fireInsurance + repairFund + movingCost;
+
+  var items = [
+    { name: '仲介手数料', val: commission, note: isNew ? '新築は仲介手数料ゼロの場合が多い' : '法律で上限が定められています' },
+    { name: '登記費用（所有権移転・抵当権）', val: regTax + regFee, note: '司法書士に依頼します' },
+    { name: '消費税（建物部分）', val: consumptionTax, note: isNew ? '新築の場合のみかかります' : '中古は個人間売買のため非課税' },
+    { name: '不動産取得税', val: acquisitionTax, note: '購入後3〜6ヶ月後に請求が届きます' },
+    { name: 'ローン関連費用（手数料・保証料）', val: loanCost, note: '金融機関によって大きく異なります' },
+    { name: '火災保険料（10年分）', val: fireInsurance, note: isCondo ? 'マンションは金額が抑えやすい' : '一戸建ては建物補償が必要' },
+    { name: '修繕積立基金', val: repairFund, note: type === 'new_condo' ? '新築マンションのみ購入時に一括支払い' : null },
+    { name: '引越し費用', val: movingCost, note: '時期・距離・荷物量で変動します' }
+  ].filter(function(i) { return i.val > 0 && i.note !== null; });
+
+  var itemHtml = items.map(function(item) {
+    return '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)">' +
+      '<td style="padding:6px 8px;font-size:12px">' + item.name + '</td>' +
+      '<td style="padding:6px 8px;font-size:12px;text-align:right;font-weight:700;color:var(--gold)">' + item.val.toFixed(0) + '万円</td>' +
+      '<td style="padding:6px 8px;font-size:10px;color:var(--text-muted)">' + item.note + '</td>' +
+      '</tr>';
+  }).join('');
+
+  var totalBudget = price + total;
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center">' +
+    '<div><div style="font-size:11px;color:var(--text-muted)">諸費用合計（物件価格に加えて）</div><div style="font-size:28px;font-weight:900;color:#f87171">' + total.toFixed(0) + '<span style="font-size:14px">万円</span></div></div>' +
+    '<div><div style="font-size:11px;color:var(--text-muted)">必要な総予算（物件価格込み）</div><div style="font-size:28px;font-weight:900;color:var(--gold)">' + totalBudget.toFixed(0) + '<span style="font-size:14px">万円</span></div></div>' +
+    '</div>' +
+    '<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--text-muted)">諸費用の目安：物件価格の <strong style="color:var(--gold)">' + (total / price * 100).toFixed(1) + '%</strong> 相当</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">📋 費用の内訳</div>' +
+    '<table style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">' +
+    '<th style="padding:6px 8px;font-size:11px;color:var(--text-muted);text-align:left">費用の種類</th>' +
+    '<th style="padding:6px 8px;font-size:11px;color:var(--text-muted);text-align:right">概算</th>' +
+    '<th style="padding:6px 8px;font-size:11px;color:var(--text-muted);text-align:left">備考</th>' +
+    '</tr></thead><tbody>' + itemHtml + '</tbody></table>' +
+    '</div>' +
+    '<div style="background:rgba(245,158,11,0.08);border-radius:8px;padding:10px;font-size:12px;line-height:1.7">' +
+    '💡 <strong>用意すべき手持ち資金の目安：</strong>頭金 + 諸費用 ＝ 合計 <strong style="color:#facc15">' + (price - loan + total).toFixed(0) + '万円</strong>。このほか引越し後の家具・家電代も別途ご用意ください。' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 各費用は概算値です。物件の詳細・金融機関・自治体の補助制度によって大きく変わります。必ず事前に担当者に確認してください。</p>';
+}
+
+function calcCondoVsHouse() {
+  var el = document.getElementById('cvh_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('cvh_price').value) || 4000;
+  var area = document.getElementById('cvh_area').value;
+  var mf = parseFloat(document.getElementById('cvh_mf').value) || 3;
+  var age = parseFloat(document.getElementById('cvh_age').value) || 40;
+
+  var years = 20;
+
+  // マンションのコスト
+  var condoMgmtFee = mf * 12 * years; // 管理費・修繕積立
+  var condoFixedTax = (price * 0.7 * 0.6) * 0.014 * years; // 固定資産税（建物評価+軽減）
+  var condoRepair = 0; // 個人負担は修繕積立に含む
+  // 20年後の価値
+  var condoValueFactor = { urban: 0.85, suburb: 0.70, rural: 0.55 }[area] || 0.70;
+  var condoFutureValue = price * condoValueFactor;
+
+  // 一戸建てのコスト
+  var houseFixedTax = (price * 0.8 * 0.6) * 0.014 * years; // 固定資産税（土地+建物）
+  var houseRepair = 300 + years * 20; // 外壁・屋根等の修繕費（20年累計）
+  // 20年後の価値
+  var houseValueFactor = { urban: 0.90, suburb: 0.75, rural: 0.55 }[area] || 0.75; // 土地価値が残る分高め
+  var houseFutureValue = price * houseValueFactor;
+
+  // 総コスト（購入費 + ランニングコスト - 将来売却価格）
+  var condoTotalCost = price + condoMgmtFee + condoFixedTax - condoFutureValue;
+  var houseTotalCost = price + houseFixedTax + houseRepair - houseFutureValue;
+
+  var condoWins = condoTotalCost < houseTotalCost;
+  var diff = Math.abs(condoTotalCost - houseTotalCost);
+  var winner = condoWins ? 'マンション' : '一戸建て';
+  var winColor = condoWins ? '#60a5fa' : '#4ade80';
+
+  var features = [
+    { name: '🔑 管理・維持の手間', condo: '少ない（管理組合に任せる）', house: '多い（自分で業者手配）' },
+    { name: '🔒 セキュリティ', condo: '高い（オートロック・管理人）', house: '自己対応（防犯設備が必要）' },
+    { name: '🌳 駐車・庭', condo: '駐車場は別途費用', house: '自家用駐車・庭がある' },
+    { name: '📐 リフォーム自由度', condo: '制限あり（管理規約）', house: '比較的自由' },
+    { name: '🏡 土地資産', condo: '持分のみ（土地単独で残らない）', house: '土地価値が残る' },
+    { name: '👴 老後の住み替え', condo: '売りやすい・住み替えやすい', house: '維持・管理の負担が増える' }
+  ];
+
+  var featureHtml = features.map(function(f) {
+    return '<tr style="border-bottom:1px solid rgba(255,255,255,0.05)">' +
+      '<td style="padding:5px 6px;font-size:11px;font-weight:700;color:var(--gold)">' + f.name + '</td>' +
+      '<td style="padding:5px 6px;font-size:11px;color:#60a5fa">' + f.condo + '</td>' +
+      '<td style="padding:5px 6px;font-size:11px;color:#4ade80">' + f.house + '</td>' +
+      '</tr>';
+  }).join('');
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + winColor + ';border-radius:10px;padding:12px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:11px;color:var(--text-muted)">20年間の総コスト（購入費＋維持費－将来売却価格）で比べると</div>' +
+    '<div style="font-size:16px;font-weight:900;color:' + winColor + ';margin-top:4px">「' + winner + '」の方が約 ' + diff.toFixed(0) + ' 万円お得</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">※ エリア・管理費水準・修繕状況によって大きく変わります</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+    '<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.25);border-radius:10px;padding:12px">' +
+    '<div style="font-size:12px;font-weight:700;color:#60a5fa;margin-bottom:8px">🏢 マンション（20年）</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);line-height:1.8">' +
+    '管理費・積立：' + condoMgmtFee.toFixed(0) + '万円<br>' +
+    '固定資産税：' + condoFixedTax.toFixed(0) + '万円<br>' +
+    '20年後の価値：' + condoFutureValue.toFixed(0) + '万円<br>' +
+    '<strong style="color:#60a5fa;font-size:13px">正味コスト：' + condoTotalCost.toFixed(0) + '万円</strong>' +
+    '</div></div>' +
+    '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);border-radius:10px;padding:12px">' +
+    '<div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:8px">🏠 一戸建て（20年）</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);line-height:1.8">' +
+    '固定資産税：' + houseFixedTax.toFixed(0) + '万円<br>' +
+    '修繕費累計：' + houseRepair.toFixed(0) + '万円<br>' +
+    '20年後の価値：' + houseFutureValue.toFixed(0) + '万円<br>' +
+    '<strong style="color:#4ade80;font-size:13px">正味コスト：' + houseTotalCost.toFixed(0) + '万円</strong>' +
+    '</div></div></div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:12px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">📋 マンションvs一戸建て 特徴比較</div>' +
+    '<table style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">' +
+    '<th style="padding:5px 6px;font-size:10px;color:var(--text-muted);text-align:left">項目</th>' +
+    '<th style="padding:5px 6px;font-size:10px;color:#60a5fa;text-align:left">マンション</th>' +
+    '<th style="padding:5px 6px;font-size:10px;color:#4ade80;text-align:left">一戸建て</th>' +
+    '</tr></thead><tbody>' + featureHtml + '</tbody></table>' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);line-height:1.6">※ 20年後の売却価格はエリア推定値。実際の資産価値は立地・管理状態・市場状況によって大きく変わります。</p>';
 }
 
 function calcFutureValueEstimate() {
