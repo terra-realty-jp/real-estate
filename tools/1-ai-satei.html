@@ -2496,6 +2496,39 @@
     <div id="sell-readiness-content"></div>
   </div>
 
+  <!-- 売却前リフォーム vs 現状渡し 比較診断カード -->
+  <div class="card" id="card-reform-vs-asis">
+    <div class="card-title">🔨 売却前リフォーム vs 現状渡し 比較診断</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">「リフォームして高く売る」vs「そのまま売る」どちらが手取りで得かを比較します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現状渡し 売出価格（万円）</div>
+        <input id="rva_price" type="number" value="2800" min="100" max="100000" step="50" oninput="calcReformVsAsIs()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">リフォーム費用（万円）</div>
+        <input id="rva_cost" type="number" value="150" min="0" max="5000" step="10" oninput="calcReformVsAsIs()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">リフォーム後 価格上乗せ額（万円）</div>
+        <input id="rva_uplift" type="number" value="100" min="0" max="3000" step="10" oninput="calcReformVsAsIs()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">リフォームで増える販売期間（ヶ月）</div>
+        <input id="rva_months" type="number" value="3" min="0" max="24" step="1" oninput="calcReformVsAsIs()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">保有中コスト（月額・万円）</div>
+        <input id="rva_hold" type="number" value="3" min="0" max="50" step="0.5" oninput="calcReformVsAsIs()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">仲介手数料率（%）</div>
+        <input id="rva_fee" type="number" value="3" min="0" max="5" step="0.1" oninput="calcReformVsAsIs()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="reform-vs-asis-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7700,6 +7733,52 @@ function calcSumaiTiming() {
   el.innerHTML = html;
 }
 (function(){ calcSumaiTiming(); })();
+
+function calcReformVsAsIs() {
+  var el = document.getElementById('reform-vs-asis-result');
+  var price = parseFloat(document.getElementById('rva_price').value) || 2800;
+  var cost = parseFloat(document.getElementById('rva_cost').value) || 150;
+  var uplift = parseFloat(document.getElementById('rva_uplift').value) || 100;
+  var months = parseFloat(document.getElementById('rva_months').value) || 3;
+  var hold = parseFloat(document.getElementById('rva_hold').value) || 3;
+  var feeRate = parseFloat(document.getElementById('rva_fee').value) || 3;
+
+  var feeConst = 6;
+  var feeAsIs = price * feeRate / 100 + feeConst;
+  var reformPrice = price + uplift;
+  var feeReform = reformPrice * feeRate / 100 + feeConst;
+  var holdCost = hold * months;
+
+  var netAsIs = price - feeAsIs * 1.1;
+  var netReform = reformPrice - feeReform * 1.1 - cost - holdCost;
+  var diff = netReform - netAsIs;
+  var roi = cost > 0 ? diff / cost * 100 : 0;
+
+  var winner, winnerColor, advice;
+  if (diff > 100) { winner = 'リフォームが有利'; winnerColor = '#4ade80'; advice = 'リフォームすることで手取りが' + Math.round(diff) + '万円増えます。ROI ' + Math.round(roi) + '%。費用対効果が高い改装（水回り・クロス張替）に絞るとさらに効果的です。'; }
+  else if (diff > 0) { winner = 'リフォームがわずかに有利'; winnerColor = '#86efac'; advice = '手取り差は' + Math.round(diff) + '万円。体感的には同等レベルです。期間延長リスクや手間を考えると、現状渡しも十分な選択肢です。'; }
+  else if (diff > -50) { winner = 'ほぼ同等'; winnerColor = '#fbbf24'; advice = '手取り差は小さい（' + Math.round(Math.abs(diff)) + '万円）。販売期間の短縮を優先するなら現状渡し、バイヤー層を広げたいならリフォームを選択。'; }
+  else { winner = '現状渡しが有利'; winnerColor = '#f87171'; advice = 'リフォームすると手取りが' + Math.round(-diff) + '万円減ります。費用・保有期間を考慮すると「現状渡し＋値下げ交渉余地確保」が合理的です。'; }
+
+  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:13px;font-weight:900;color:' + winnerColor + ';margin-bottom:10px">🔨 比較結果：' + winner + '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">現状渡し 手取り</div><div style="font-size:17px;font-weight:900;color:#93c5fd">' + Math.round(netAsIs) + '万円</div></div>';
+  html += '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">リフォーム後 手取り</div><div style="font-size:17px;font-weight:900;color:#4ade80">' + Math.round(netReform) + '万円</div></div>';
+  html += '<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">差額（リフォーム増分）</div><div style="font-size:17px;font-weight:900;color:' + winnerColor + '">' + (diff >= 0 ? '+' : '') + Math.round(diff) + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,0.55);margin-bottom:8px;line-height:1.8">';
+  html += 'リフォーム費用: <strong style="color:#f87171">' + cost + '万円</strong>　';
+  html += '保有コスト増加: <strong style="color:#f87171">' + Math.round(holdCost * 10) / 10 + '万円</strong>　';
+  html += '販売価格アップ: <strong style="color:#4ade80">+' + uplift + '万円</strong>　';
+  html += 'リフォームROI: <strong style="color:' + winnerColor + '">' + Math.round(roi) + '%</strong>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">💡 ' + advice + '</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;line-height:1.6">※ 仲介手数料は（売出価格×手数料率+6万円）×1.1（税込）で計算。譲渡所得税は含みません。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcReformVsAsIs(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
