@@ -2902,6 +2902,36 @@
     <div id="move-timing-result"></div>
   </div>
 
+  <!-- 空家特措法リスク診断 -->
+  <div class="card" id="card-vacant-house-risk">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">⚠️ 空き家のまま放置したら「固定資産税6倍」になる？リスク診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空家特措法の「特定空家」に認定されると、固定資産税の住宅用地特例（6分の1軽減）が外れ、最大6倍になります。現在の税額・認定リスク・売却コストを比べて「どうすべきか」を診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の固定資産税（年額・万円）</label>
+        <input type="number" id="vhr_tax" placeholder="例: 12" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">空き家の売却想定価格（万円）</label>
+        <input type="number" id="vhr_price" placeholder="例: 1500" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間維持費（草刈り・修繕など・万円）</label>
+        <input type="number" id="vhr_maint" placeholder="例: 20" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">認定リスク（管理状態）</label>
+        <select id="vhr_risk" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="low">良好（定期的に管理している）</option>
+          <option value="mid" selected>やや放置（年数回程度しか行っていない）</option>
+          <option value="high">かなり放置（ほぼ手つかず）</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcVacantHouseRisk()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">リスク診断する</button>
+    <div id="vhr_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -8284,6 +8314,61 @@ function calcInheritedPropertySale() {
   el.innerHTML = html;
 }
 (function(){ calcInheritedPropertySale(); })();
+
+function calcVacantHouseRisk() {
+  var el = document.getElementById('vhr_result');
+  if (!el) return;
+  var tax = parseFloat(document.getElementById('vhr_tax').value) || 12;
+  var price = parseFloat(document.getElementById('vhr_price').value) || 1500;
+  var maint = parseFloat(document.getElementById('vhr_maint').value) || 20;
+  var risk = document.getElementById('vhr_risk').value;
+
+  var riskLabel = { low: '低（適正管理済み）', mid: '中（要注意）', high: '高（認定の恐れあり）' };
+  var riskColor = { low: '#4ade80', mid: '#facc15', high: '#f87171' };
+  var riskPct = { low: 5, mid: 30, high: 75 };
+
+  var taxNow = tax; // 現在（軽減あり）
+  var taxSix = tax * 6; // 軽減外れた場合
+  var taxDiff = taxSix - taxNow;
+  var costPerYear = taxNow + maint;
+  var costSixPerYear = taxSix + maint;
+
+  // 売却コスト（仲介手数料3%+6万円×1.1）
+  var commission = Math.round((price * 0.03 + 6) * 1.1 * 10) / 10;
+  var netSale = price - commission;
+
+  // 認定された場合の累積損失（5年・10年）
+  var extraTax5 = taxDiff * 5;
+  var extraTax10 = taxDiff * 10;
+
+  // 維持コスト5年・10年
+  var maintain5 = costPerYear * 5;
+  var maintain10 = costPerYear * 10;
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="font-size:13px;font-weight:700;color:' + riskColor[risk] + ';margin-bottom:8px">認定リスク: ' + riskLabel[risk] + '（推定確率 ' + riskPct[risk] + '%）</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">現在の固定資産税</span><br><strong>' + taxNow + '万円/年</strong></div>' +
+    '<div><span style="color:var(--text-muted)">認定後の固定資産税（最大）</span><br><strong style="color:#f87171">' + taxSix.toFixed(1) + '万円/年（+' + taxDiff.toFixed(1) + '万円）</strong></div>' +
+    '<div><span style="color:var(--text-muted)">認定で増える税額（5年）</span><br><strong style="color:#f87171">' + extraTax5.toFixed(0) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">認定で増える税額（10年）</span><br><strong style="color:#f87171">' + extraTax10.toFixed(0) + '万円</strong></div>' +
+    '</div></div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">このまま保有した場合のコスト</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">維持コスト合計（5年）</span><br><strong>' + maintain5.toFixed(0) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">維持コスト合計（10年）</span><br><strong>' + maintain10.toFixed(0) + '万円</strong></div>' +
+    '</div></div>' +
+    '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);border-radius:10px;padding:14px">' +
+    '<div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:6px">今すぐ売却した場合</div>' +
+    '<div style="font-size:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    '<div><span style="color:var(--text-muted)">売却手取り概算</span><br><strong style="font-size:16px">' + netSale.toFixed(0) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">仲介手数料（目安）</span><br><strong>' + commission.toFixed(1) + '万円</strong></div>' +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.6">空き家を売却すると維持費・増税リスクをゼロにできます。認定リスクが中〜高の場合は早期売却が有利になる可能性があります。</p>' +
+    '</div>';
+}
 
 function calcMoveTiming() {
   var el = document.getElementById('move-timing-result');

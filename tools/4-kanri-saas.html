@@ -3123,6 +3123,40 @@
     <div id="rent-arrear-loss-result"></div>
   </div>
 
+  <!-- 原状回復・敷金充当ガイドライン試算 -->
+  <div class="card" id="card-deposit-guide">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔑 退去時の原状回復、大家・借主どちらが負担？敷金充当シミュレーター</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">国土交通省の「原状回復をめぐるトラブルとガイドライン」に基づき、大家さんの請求可能額と借主の負担割合の目安を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">月額家賃（万円）</label>
+        <input type="number" id="dg_rent" placeholder="例: 8" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">敷金（万円）</label>
+        <input type="number" id="dg_deposit" placeholder="例: 16" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">居住年数（年）</label>
+        <input type="number" id="dg_years" placeholder="例: 3" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">修繕工事費用（見積り・万円）</label>
+        <input type="number" id="dg_repair_cost" placeholder="例: 25" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">損傷の主な原因</label>
+        <select id="dg_cause" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="normal">通常の使用・経年劣化のみ</option>
+          <option value="mild">軽微な傷・汚れ（クギ穴・タバコ臭なし）</option>
+          <option value="heavy">借主の故意・過失による損傷（タバコ・ペット・大きな傷）</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcDepositGuide()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">負担割合を試算する</button>
+    <div id="dg_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -10505,6 +10539,70 @@ function calcParkingRevenue() {
   el.innerHTML = html;
 }
 (function(){ calcParkingRevenue(); })();
+
+function calcDepositGuide() {
+  var el = document.getElementById('dg_result');
+  if (!el) return;
+  var rent = parseFloat(document.getElementById('dg_rent').value) || 8;
+  var deposit = parseFloat(document.getElementById('dg_deposit').value) || 16;
+  var years = parseFloat(document.getElementById('dg_years').value) || 3;
+  var repairCost = parseFloat(document.getElementById('dg_repair_cost').value) || 25;
+  var cause = document.getElementById('dg_cause').value;
+
+  // 経年劣化率（ガイドライン準拠）
+  // クロス: 6年で残存価値1円（耐用年数6年）
+  var wallpaperResidual = Math.max(0.05, 1 - years / 6);
+  // フローリング: 耐用年数30年
+  var flooringResidual = Math.max(0.2, 1 - years / 30);
+
+  // 借主負担割合
+  var tenantRatio;
+  var causeLabel;
+  if (cause === 'normal') {
+    tenantRatio = 0; // 通常使用は大家負担
+    causeLabel = '通常使用・経年劣化 → 大家さん負担が原則';
+  } else if (cause === 'mild') {
+    tenantRatio = wallpaperResidual * 0.5; // 軽微は残存価値の50%
+    causeLabel = '軽微な損傷 → 残存価値の一部を借主負担';
+  } else {
+    tenantRatio = Math.min(1, wallpaperResidual * 1.0); // 故意・過失は残存価値全額
+    causeLabel = '故意・過失による損傷 → 残存価値を借主負担';
+  }
+
+  var tenantCharge = Math.round(repairCost * tenantRatio * 10) / 10;
+  var landlordCharge = Math.round((repairCost - tenantCharge) * 10) / 10;
+  var depositReturn = Math.max(0, deposit - tenantCharge);
+  var additionalCharge = Math.max(0, tenantCharge - deposit);
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">ガイドライン判定: ' + esc(causeLabel) + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:10px">' +
+    '<div><span style="color:var(--text-muted)">修繕費総額</span><br><strong>' + repairCost + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">経年劣化後の残存価値率</span><br><strong>' + (wallpaperResidual * 100).toFixed(0) + '%（居住' + years + '年）</strong></div>' +
+    '<div style="background:rgba(248,113,113,0.1);border-radius:6px;padding:8px">' +
+    '<span style="color:#f87171;font-weight:700">借主負担（目安）</span><br>' +
+    '<strong style="font-size:18px;color:#f87171">' + tenantCharge.toFixed(1) + '万円</strong>' +
+    '</div>' +
+    '<div style="background:rgba(74,222,128,0.1);border-radius:6px;padding:8px">' +
+    '<span style="color:#4ade80;font-weight:700">大家負担（目安）</span><br>' +
+    '<strong style="font-size:18px;color:#4ade80">' + landlordCharge.toFixed(1) + '万円</strong>' +
+    '</div>' +
+    '</div></div>' +
+    '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">敷金の精算</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">敷金合計</span><br><strong>' + deposit + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">借主負担額</span><br><strong>' + tenantCharge.toFixed(1) + '万円</strong></div>' +
+    '<div style="background:rgba(74,222,128,0.1);border-radius:6px;padding:8px">' +
+    '<span style="color:#4ade80">借主への返金額</span><br><strong style="color:#4ade80">' + depositReturn.toFixed(1) + '万円</strong>' +
+    '</div>' +
+    (additionalCharge > 0 ?
+      '<div style="background:rgba(248,113,113,0.1);border-radius:6px;padding:8px"><span style="color:#f87171">追加請求額</span><br><strong style="color:#f87171">' + additionalCharge.toFixed(1) + '万円</strong></div>' :
+      '<div style="background:rgba(74,222,128,0.1);border-radius:6px;padding:8px"><span style="color:#4ade80">追加請求</span><br><strong style="color:#4ade80">なし</strong></div>') +
+    '</div></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);line-height:1.6">※ 国交省ガイドラインに基づく目安です。特約・契約書の内容や損傷の程度によって実際の負担額は異なります。トラブル防止のため、入退去時の写真記録が重要です。</p>';
+}
 
 function calcRentArrearLoss() {
   var el = document.getElementById('rent-arrear-loss-result');

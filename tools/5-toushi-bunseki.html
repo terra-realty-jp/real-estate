@@ -2809,6 +2809,40 @@
     <div id="property-score-result"></div>
   </div>
 
+  <!-- 3指標同時計算カード -->
+  <div class="card" id="card-yield-triple">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📐 表面利回り・実質利回り・CCR を一発で計算する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">投資判断に必要な3つの利回り指標を同時に算出します。「表面は高いのに実質は低い」という落とし穴も一目で発見できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件購入価格（万円）</label>
+        <input type="number" id="yt_price" placeholder="例: 5000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間家賃収入（満室時・万円）</label>
+        <input type="number" id="yt_rent_year" placeholder="例: 360" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間経費（管理費・修繕積立・固定資産税・万円）</label>
+        <input type="number" id="yt_expense" placeholder="例: 60" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間ローン返済額（万円）</label>
+        <input type="number" id="yt_loan_repay" placeholder="例: 240" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">自己資金（頭金＋諸費用・万円）</label>
+        <input type="number" id="yt_equity" placeholder="例: 1000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">空室率（%・通常5〜15%）</label>
+        <input type="number" id="yt_vacancy" placeholder="例: 10" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcYieldTriple()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">3指標を一括計算する</button>
+    <div id="yt_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -9908,6 +9942,73 @@ function calcBreakevenYield() {
   el.innerHTML = html;
 }
 (function(){ calcBreakevenYield(); })();
+
+function calcYieldTriple() {
+  var el = document.getElementById('yt_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('yt_price').value) || 5000;
+  var rentYear = parseFloat(document.getElementById('yt_rent_year').value) || 360;
+  var expense = parseFloat(document.getElementById('yt_expense').value) || 60;
+  var loanRepay = parseFloat(document.getElementById('yt_loan_repay').value) || 240;
+  var equity = parseFloat(document.getElementById('yt_equity').value) || 1000;
+  var vacancy = parseFloat(document.getElementById('yt_vacancy').value) || 10;
+
+  // 表面利回り（グロス）
+  var grossYield = rentYear / price * 100;
+
+  // 実質利回り（ネット）= (年家賃収入×(1-空室率) - 経費) / 購入価格
+  var effectiveRent = rentYear * (1 - vacancy / 100);
+  var netIncome = effectiveRent - expense;
+  var netYield = netIncome / price * 100;
+
+  // CCR（自己資本収益率）= (年間CF) / 自己資金
+  var annualCF = netIncome - loanRepay;
+  var ccr = equity > 0 ? annualCF / equity * 100 : 0;
+
+  // 月間手残り
+  var monthlyCF = annualCF / 12;
+
+  // 判定
+  function grade(v, thresholds, labels) {
+    for (var i = 0; i < thresholds.length; i++) {
+      if (v >= thresholds[i]) return labels[i];
+    }
+    return labels[labels.length - 1];
+  }
+  var grossGrade = grade(grossYield, [10, 8, 6, 4], ['優秀', '良好', '標準', '低め', '要検討']);
+  var netGrade = grade(netYield, [8, 6, 4, 2], ['優秀', '良好', '標準', '低め', '要検討']);
+  var ccrGrade = grade(ccr, [15, 10, 8, 5], ['優秀', '良好', '標準', '低め', '要検討']);
+  var colors = { '優秀': '#4ade80', '良好': '#86efac', '標準': '#facc15', '低め': '#fb923c', '要検討': '#f87171' };
+
+  var diff = grossYield - netYield;
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">' +
+    ['表面利回り（グロス）', '実質利回り（ネット）', 'CCR（自己資本収益率）'].map(function(label, i) {
+      var vals = [grossYield, netYield, ccr];
+      var grades = [grossGrade, netGrade, ccrGrade];
+      var color = colors[grades[i]] || '#94a3b8';
+      return '<div style="background:var(--dark3);border-radius:10px;padding:12px;text-align:center">' +
+        '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">' + label + '</div>' +
+        '<div style="font-size:28px;font-weight:900;color:' + color + '">' + vals[i].toFixed(1) + '<span style="font-size:13px">%</span></div>' +
+        '<div style="font-size:11px;margin-top:4px;color:' + color + ';font-weight:700">' + grades[i] + '</div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">詳細内訳</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">実質年間収入（空室控除後）</span><br><strong>' + effectiveRent.toFixed(0) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">年間経費（管理・修繕・税）</span><br><strong>' + expense + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">年間ローン返済</span><br><strong>' + loanRepay + '万円</strong></div>' +
+    '<div><span style="color:' + (monthlyCF >= 0 ? '#4ade80' : '#f87171') + '">' + (monthlyCF >= 0 ? '月間手残り' : '月間赤字') + '</span><br>' +
+    '<strong style="color:' + (monthlyCF >= 0 ? '#4ade80' : '#f87171') + ';font-size:16px">' + monthlyCF.toFixed(1) + '万円/月</strong></div>' +
+    '</div></div>' +
+    (diff > 2 ? '<div style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:8px;padding:10px;margin-bottom:10px">' +
+    '<div style="font-size:12px;color:#fb923c;font-weight:700">⚠️ 表面利回りと実質利回りの乖離: ' + diff.toFixed(1) + '%</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:4px">経費・空室の影響で実質利回りが大きく下がっています。購入前に経費の内訳をしっかり確認しましょう。</p></div>' : '') +
+    '<p style="font-size:11px;color:var(--text-muted);line-height:1.5">表面利回りは広告で使われる数字。実質利回りが投資の本当の収益力。CCRは自己資金に対するリターンで10%以上が目安です。</p>';
+}
 
 function calcPropertyScore() {
   var el = document.getElementById('property-score-result');

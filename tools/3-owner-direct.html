@@ -2526,6 +2526,42 @@
     <div id="future-value-estimate-result"></div>
   </div>
 
+  <!-- 住宅ローン審査通過率簡易診断 -->
+  <div class="card" id="card-loan-approval-rate">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏦 住宅ローン「審査が通るか」簡易診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">年収・雇用形態・借入希望額をもとに、住宅ローン審査の通過しやすさを簡易診断します。返済比率・収入倍率の目安と改善アドバイスも確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年収（万円）</label>
+        <input type="number" id="lar_income" placeholder="例: 500" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">借入希望額（万円）</label>
+        <input type="number" id="lar_loan" placeholder="例: 3000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">返済期間（年）</label>
+        <input type="number" id="lar_years" placeholder="例: 35" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">他のローン残高（万円、なければ0）</label>
+        <input type="number" id="lar_other" placeholder="例: 50" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">雇用形態</label>
+        <select id="lar_employment" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="seiki">正社員（勤続3年以上）</option>
+          <option value="seiki_short">正社員（勤続3年未満）</option>
+          <option value="keiyaku">契約・派遣社員</option>
+          <option value="jieigy">自営業・フリーランス</option>
+          <option value="other">パート・アルバイト</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcLoanApprovalRate()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">審査通過率を診断する</button>
+    <div id="lar_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -7356,6 +7392,85 @@ function calcLandAcquisitionCost() {
   el.innerHTML = html;
 }
 (function(){ calcLandAcquisitionCost(); })();
+
+function calcLoanApprovalRate() {
+  var el = document.getElementById('lar_result');
+  if (!el) return;
+  var income = parseFloat(document.getElementById('lar_income').value) || 500;
+  var loan = parseFloat(document.getElementById('lar_loan').value) || 3000;
+  var years = parseInt(document.getElementById('lar_years').value) || 35;
+  var other = parseFloat(document.getElementById('lar_other').value) || 0;
+  var emp = document.getElementById('lar_employment').value;
+
+  // 年間返済額の概算（金利1.5%変動）
+  var r = 0.015 / 12;
+  var n = years * 12;
+  var monthly = loan * 10000 * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+  var annualRepay = monthly * 12 / 10000; // 万円
+  var otherAnnual = other * 0.05; // 他ローンの年間返済（残高の5%目安）
+
+  // 総返済比率
+  var totalRepayRatio = (annualRepay + otherAnnual) / income * 100;
+  // 収入倍率
+  var incomeRatio = loan / income;
+
+  // 雇用形態スコア
+  var empScore = { seiki: 100, seiki_short: 75, keiyaku: 55, jieigy: 50, other: 30 };
+  var empLabel = { seiki: '正社員（勤続3年以上）', seiki_short: '正社員（勤続3年未満）', keiyaku: '契約・派遣社員', jieigy: '自営業・フリーランス', other: 'パート・アルバイト' };
+  var eScore = empScore[emp] || 70;
+
+  // 返済比率スコア（フラット35基準: 35%以下）
+  var ratioScore = totalRepayRatio <= 25 ? 100 : totalRepayRatio <= 30 ? 85 : totalRepayRatio <= 35 ? 65 : totalRepayRatio <= 40 ? 40 : 15;
+
+  // 収入倍率スコア（一般的な上限: 7〜8倍）
+  var irScore = incomeRatio <= 5 ? 100 : incomeRatio <= 6 ? 85 : incomeRatio <= 7 ? 65 : incomeRatio <= 8 ? 45 : 20;
+
+  // 総合スコア（加重平均）
+  var totalScore = Math.round(eScore * 0.35 + ratioScore * 0.40 + irScore * 0.25);
+
+  var verdict, color, advice;
+  if (totalScore >= 80) {
+    verdict = '審査通過の可能性 高（通りやすい）';
+    color = '#4ade80';
+    advice = '返済比率・倍率ともに良好です。複数の金融機関に申し込んで好条件を比較しましょう。';
+  } else if (totalScore >= 60) {
+    verdict = '審査通過の可能性 中（通る可能性あり）';
+    color = '#facc15';
+    advice = '通過の可能性はありますが、金融機関によって判断が分かれます。フラット35や地方銀行も検討してみましょう。';
+  } else if (totalScore >= 40) {
+    verdict = '審査通過の可能性 低（慎重に検討を）';
+    color = '#fb923c';
+    advice = '返済比率または倍率が高めです。頭金を増やす・借入額を減らす・他ローンを完済してから申し込むと改善します。';
+  } else {
+    verdict = '審査通過が難しい状況';
+    color = '#f87171';
+    advice = '現時点での審査通過は難しい可能性があります。頭金の積み増し、他ローン完済、勤続年数の増加を優先しましょう。';
+  }
+
+  // 返済比率の安全ライン
+  var safeMaxRepay = income * 0.35 / 12;
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">審査通過見込みスコア</div>' +
+    '<div style="font-size:40px;font-weight:900;color:' + color + '">' + totalScore + '<span style="font-size:18px">/100</span></div>' +
+    '<div style="font-size:13px;font-weight:700;color:' + color + ';margin-top:4px">' + verdict + '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;font-size:12px">' +
+    '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center">' +
+    '<div style="color:var(--text-muted);margin-bottom:4px">年間返済額</div><div style="font-weight:700;font-size:15px">' + annualRepay.toFixed(0) + '万円</div></div>' +
+    '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center">' +
+    '<div style="color:var(--text-muted);margin-bottom:4px">返済比率</div><div style="font-weight:700;font-size:15px;color:' + (totalRepayRatio > 35 ? '#f87171' : '#4ade80') + '">' + totalRepayRatio.toFixed(1) + '%</div></div>' +
+    '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center">' +
+    '<div style="color:var(--text-muted);margin-bottom:4px">収入倍率</div><div style="font-weight:700;font-size:15px;color:' + (incomeRatio > 7 ? '#f87171' : '#4ade80') + '">' + incomeRatio.toFixed(1) + '倍</div></div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:12px;margin-bottom:10px">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:6px">改善アドバイス</div>' +
+    '<p style="font-size:12px;color:var(--text);line-height:1.7">' + esc(advice) + '</p>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:6px">返済比率35%以内にするには、月返済額を <strong>' + safeMaxRepay.toFixed(0) + '万円以下</strong> に抑えるのが目安です。</p>' +
+    '</div>' +
+    '<p style="font-size:10px;color:var(--text-muted);line-height:1.5">※ この診断は簡易シミュレーションです。実際の審査は金融機関が信用情報・勤務先・物件条件なども総合判断します。</p>';
+}
 
 function calcFutureValueEstimate() {
   var el = document.getElementById('future-value-estimate-result');
