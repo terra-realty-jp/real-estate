@@ -2722,6 +2722,64 @@
     <div id="breakeven-yield-result"></div>
   </div>
 
+  <div class="card" id="card-simple-irr">
+    <div class="card-label">投資効率</div>
+    <div class="card-title">この物件に投資すると年間何%の儲けになる？（IRR計算）</div>
+    <div class="card-desc">投資額・毎年の家賃収益・売却想定価格から「年率何%の投資効率か」（IRR：内部収益率）を計算します。銀行利息や株式投資と比較できます</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">投資総額（万円・例:2000）</div>
+        <input type="number" id="sirr_invest" value="2000" min="100" max="500000" step="100" oninput="calcSimpleIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">年間純収益（万円・例:120）</div>
+        <input type="number" id="sirr_income" value="120" min="1" max="10000" step="10" oninput="calcSimpleIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">保有年数（年・例:10）</div>
+        <input type="number" id="sirr_years" value="10" min="1" max="40" step="1" oninput="calcSimpleIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">売却予想価格（万円・例:1800）</div>
+        <input type="number" id="sirr_exit" value="1800" min="0" max="500000" step="100" oninput="calcSimpleIRR()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="simple-irr-result"></div>
+  </div>
+
+  <!-- 10年間の投資、トータルでいくら儲かる？ -->
+  <div class="card" id="card-total-return-10yr">
+    <div class="card-title">📈 10年間の投資、トータルでいくら儲かる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">10年間の家賃収入合計と売却益（または損）を合算して、投資全体のトータルリターンを計算します。「本当に得だったか」を数字で確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">購入価格（万円）</div>
+        <input type="number" id="tr10_buy" value="3000" min="100" max="100000" step="100" oninput="calcTotalReturn10yr()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">頭金（万円・例:600）</div>
+        <input type="number" id="tr10_down" value="600" min="0" max="50000" step="100" oninput="calcTotalReturn10yr()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">月間家賃収入（万円・例:15）</div>
+        <input type="number" id="tr10_rent" value="15" min="1" max="1000" step="0.5" oninput="calcTotalReturn10yr()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">ローン月返済（万円・例:12）</div>
+        <input type="number" id="tr10_loan" value="12" min="0" max="500" step="0.5" oninput="calcTotalReturn10yr()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">管理費・固定費（万円/月・例:2）</div>
+        <input type="number" id="tr10_fixed" value="2" min="0" max="100" step="0.5" oninput="calcTotalReturn10yr()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">10年後の売却予想価格（万円）</div>
+        <input type="number" id="tr10_exit" value="2500" min="0" max="100000" step="100" oninput="calcTotalReturn10yr()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="total-return-10yr-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -9821,6 +9879,78 @@ function calcBreakevenYield() {
   el.innerHTML = html;
 }
 (function(){ calcBreakevenYield(); })();
+
+function calcTotalReturn10yr() {
+  var el = document.getElementById('total-return-10yr-result');
+  if (!el) return;
+  var buy = parseFloat(document.getElementById('tr10_buy').value) || 3000;
+  var down = parseFloat(document.getElementById('tr10_down').value) || 600;
+  var rent = parseFloat(document.getElementById('tr10_rent').value) || 15;
+  var loanPay = parseFloat(document.getElementById('tr10_loan').value) || 12;
+  var fixed = parseFloat(document.getElementById('tr10_fixed').value) || 2;
+  var exit = parseFloat(document.getElementById('tr10_exit').value) || 2500;
+  var monthlyNet = rent - loanPay - fixed;
+  var cfTotal = Math.round(monthlyNet * 12 * 10);
+  var loanBalance = Math.round((buy - down) * 0.75);
+  var saleCommission = Math.round((exit * 0.03 + 6) * 1.1);
+  var saleNet = exit - loanBalance - saleCommission;
+  var totalReturn = cfTotal + saleNet;
+  var roiOnDown = down > 0 ? Math.round(totalReturn / down * 100) : 0;
+  var annualCF = Math.round(monthlyNet * 12);
+  var color = totalReturn >= 0 ? '#4ade80' : '#f87171';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">10年間の家賃収入合計</div><div style="font-size:15px;font-weight:700;color:#93c5fd">+' + cfTotal + '万円</div><div style="font-size:10px;color:var(--text-muted)">（月' + monthlyNet.toFixed(1) + '万円×120か月）</div></div>'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">売却後の手取り</div><div style="font-size:15px;font-weight:700;color:' + (saleNet >= 0 ? '#a3e635' : '#f87171') + '">' + (saleNet >= 0 ? '+' : '') + saleNet + '万円</div><div style="font-size:10px;color:var(--text-muted)">（残債・仲介費控除後）</div></div>'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">10年トータルリターン</div><div style="font-size:17px;font-weight:900;color:' + color + '">' + (totalReturn >= 0 ? '+' : '') + totalReturn + '万円</div></div>'
+    + '</div>'
+    + '<div style="background:var(--dark3);border-radius:8px;padding:12px;margin-bottom:10px">'
+    + '<div style="display:flex;gap:16px">'
+    + '<div><div style="font-size:10px;color:var(--text-muted)">自己資金ROI（頭金対比）</div><div style="font-size:18px;font-weight:700;color:' + color + '">' + roiOnDown + '%</div></div>'
+    + '<div><div style="font-size:10px;color:var(--text-muted)">年間キャッシュフロー</div><div style="font-size:18px;font-weight:700;color:#93c5fd">' + (annualCF >= 0 ? '+' : '') + annualCF + '万円/年</div></div>'
+    + '</div></div>'
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">※ローン残高はざっくり75%残と仮定。実際の残高・売却税は異なります。目安として参考にしてください。</div>';
+}
+function calcSimpleIRR() {
+  var el = document.getElementById('simple-irr-result');
+  if (!el) return;
+  var invest = parseFloat(document.getElementById('sirr_invest').value) || 2000;
+  var income = parseFloat(document.getElementById('sirr_income').value) || 120;
+  var years = parseInt(document.getElementById('sirr_years').value) || 10;
+  var exitVal = parseFloat(document.getElementById('sirr_exit').value) || 1800;
+  function npv(rate, cashflows) {
+    return cashflows.reduce(function(acc, cf, t) { return acc + cf / Math.pow(1 + rate, t); }, 0);
+  }
+  var cashflows = [-invest];
+  for (var i = 1; i <= years; i++) {
+    cashflows.push(i === years ? income + exitVal : income);
+  }
+  var lo = -0.5, hi = 10.0, mid = 0, iter = 0;
+  while (hi - lo > 0.0001 && iter < 100) {
+    mid = (lo + hi) / 2;
+    if (npv(mid, cashflows) > 0) lo = mid; else hi = mid;
+    iter++;
+  }
+  var irr = Math.round(mid * 10000) / 100;
+  var totalIncome = income * years;
+  var totalReturn = Math.round((totalIncome + exitVal - invest) * 10) / 10;
+  var simpleYield = Math.round(income / invest * 100 * 100) / 100;
+  var html = '<div style="display:grid;gap:8px">';
+  html += '<div style="background:rgba(212,175,55,0.12);border-radius:8px;padding:14px;text-align:center">';
+  html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">IRR（内部収益率）</div>';
+  html += '<div style="font-size:32px;font-weight:700;color:' + (irr >= 5 ? '#4ade80' : irr >= 3 ? '#d4af37' : '#ef4444') + '">' + irr.toFixed(2) + '<span style="font-size:16px">%</span></div>';
+  html += '<div style="font-size:10px;color:#94a3b8;margin-top:4px">' + (irr >= 5 ? '優良投資' : irr >= 3 ? '標準的な水準' : '利回りが低め') + '</div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">単純利回り</div><div style="font-size:14px;font-weight:600;color:#e2e8f0">' + simpleYield.toFixed(2) + '%</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">総収益（' + years + '年）</div><div style="font-size:14px;font-weight:600;color:' + (totalReturn > 0 ? '#4ade80' : '#ef4444') + '">' + (totalReturn > 0 ? '+' : '') + totalReturn.toFixed(1) + '万円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">家賃収入合計</div><div style="font-size:14px;font-weight:600;color:#e2e8f0">' + totalIncome.toLocaleString() + '万円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">売却想定価格</div><div style="font-size:14px;font-weight:600;color:#e2e8f0">' + exitVal.toLocaleString() + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(212,175,55,0.08);border-radius:6px;padding:8px;font-size:10px;color:#d4af37">💡 IRRが銀行の借入金利（例:2%）より高ければ投資意義があります。IRR5%以上が優良不動産投資の目安とされています</div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcSimpleIRR(); })();
 
 function calcExitTiming() {
   var el = document.getElementById('exit-timing-result');
