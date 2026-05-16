@@ -2389,6 +2389,47 @@
     <div id="exit-timing-result"></div>
   </div>
 
+  <!-- 賃貸 vs 購入 トータルコスト比較カード -->
+  <div class="card" id="card-rent-vs-buy">
+    <div class="card-title">🏠 賃貸 vs 購入 トータルコスト比較</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">同じ期間住み続けた場合の「賃貸」と「購入」の総コストを比較します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">家賃（月額・万円）</div>
+        <input id="rvb_rent" type="number" value="8" min="1" max="100" step="0.5" oninput="calcRentVsBuy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">比較期間（年）</div>
+        <input id="rvb_years" type="number" value="15" min="5" max="35" step="1" oninput="calcRentVsBuy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">購入価格（万円）</div>
+        <input id="rvb_price" type="number" value="3500" min="500" max="100000" step="100" oninput="calcRentVsBuy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">頭金（万円）</div>
+        <input id="rvb_down" type="number" value="500" min="0" max="50000" step="50" oninput="calcRentVsBuy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ローン金利（%）</div>
+        <input id="rvb_rate" type="number" value="0.5" min="0.1" max="5" step="0.1" oninput="calcRentVsBuy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ローン期間（年）</div>
+        <input id="rvb_term" type="number" value="35" min="10" max="35" step="1" oninput="calcRentVsBuy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">管理費＋修繕積立（月額・万円）</div>
+        <input id="rvb_mgmt" type="number" value="2.5" min="0" max="20" step="0.5" oninput="calcRentVsBuy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売却時の価格下落率（%）</div>
+        <input id="rvb_decline" type="number" value="15" min="0" max="60" step="5" oninput="calcRentVsBuy()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="rent-vs-buy-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -9303,6 +9344,66 @@ function calcPropertyMatrixCF() {
   el.innerHTML = html;
 }
 (function(){ calcPropertyMatrixCF(); })();
+
+function calcRentVsBuy() {
+  var el = document.getElementById('rent-vs-buy-result');
+  var rentMo = parseFloat(document.getElementById('rvb_rent').value) || 8;
+  var years = parseInt(document.getElementById('rvb_years').value) || 15;
+  var price = parseFloat(document.getElementById('rvb_price').value) || 3500;
+  var down = parseFloat(document.getElementById('rvb_down').value) || 500;
+  var rate = parseFloat(document.getElementById('rvb_rate').value) || 0.5;
+  var term = parseInt(document.getElementById('rvb_term').value) || 35;
+  var mgmt = parseFloat(document.getElementById('rvb_mgmt').value) || 2.5;
+  var decline = parseFloat(document.getElementById('rvb_decline').value) || 15;
+
+  var loan = price - down;
+  var mr = rate / 100 / 12;
+  var n = term * 12;
+  var monthPay = mr > 0 ? loan * mr * Math.pow(1 + mr, n) / (Math.pow(1 + mr, n) - 1) : loan / n;
+
+  var rentTotal = rentMo * 12 * years + rentMo * 2;
+  var rentInit = rentMo * 2;
+
+  var payMonths = Math.min(years * 12, n);
+  var buyLoanTotal = monthPay * payMonths;
+  var buyMgmtTotal = mgmt * 12 * years;
+  var buyTax = price * 0.012 * years;
+  var buyInitCost = loan * 0.035 + price * 0.03;
+  var sellPrice = price * (1 - decline / 100);
+  var remainLoan = 0;
+  if (years * 12 < n) {
+    var k = years * 12;
+    remainLoan = loan * Math.pow(1 + mr, k) - monthPay * (Math.pow(1 + mr, k) - 1) / mr;
+    if (remainLoan < 0) remainLoan = 0;
+  }
+  var sellGain = sellPrice - remainLoan;
+  var buyNet = down + buyInitCost + buyLoanTotal + buyMgmtTotal + buyTax - sellGain;
+
+  var diff = rentTotal - buyNet;
+  var winner, winnerColor, advice;
+  if (diff > 200) { winner = '購入が有利'; winnerColor = '#4ade80'; advice = '賃貸より購入の方が' + Math.round(diff) + '万円お得。ただし転勤・転職リスクがある場合は流動性を優先してください。'; }
+  else if (diff > 0) { winner = '購入がやや有利'; winnerColor = '#86efac'; advice = '購入の方が' + Math.round(diff) + '万円程度お得ですが、差は小さい。ライフスタイルの自由度も考慮して判断を。'; }
+  else if (diff > -200) { winner = 'ほぼ同等'; winnerColor = '#fbbf24'; advice = '賃貸と購入の差は小さい。転勤・転職・家族構成変化の可能性を優先して検討してください。'; }
+  else { winner = '賃貸が有利'; winnerColor = '#f87171'; advice = '賃貸より購入の方が' + Math.round(-diff) + '万円多くかかります。価格・金利・売却価格の条件を変えて再検討を。'; }
+
+  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:13px;font-weight:900;color:' + winnerColor + ';margin-bottom:10px">🏠 ' + years + '年間コスト比較：' + winner + '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">賃貸 総コスト</div><div style="font-size:17px;font-weight:900;color:#93c5fd">' + Math.round(rentTotal) + '万円</div></div>';
+  html += '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">購入 実質コスト</div><div style="font-size:17px;font-weight:900;color:#4ade80">' + Math.round(buyNet) + '万円</div></div>';
+  html += '<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">差額</div><div style="font-size:17px;font-weight:900;color:' + winnerColor + '">' + (diff >= 0 ? '+' : '') + Math.round(diff) + '万円</div></div>';
+  html += '</div>';
+  html += '<details style="margin-bottom:10px"><summary style="font-size:11px;color:rgba(255,255,255,0.5);cursor:pointer;list-style:none">▶ コスト内訳を見る</summary>';
+  html += '<div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.6);line-height:2">';
+  html += '【賃貸】家賃 ' + Math.round(rentMo * 12 * years) + '万円 ＋ 初期費用（礼金等）' + Math.round(rentInit) + '万円<br>';
+  html += '【購入】頭金 ' + down + '万円 ＋ 初期費用 ' + Math.round(buyInitCost) + '万円 ＋ ローン返済 ' + Math.round(buyLoanTotal) + '万円 ＋ 管理費等 ' + Math.round(buyMgmtTotal) + '万円 ＋ 固定資産税 ' + Math.round(buyTax) + '万円 − 売却収益 ' + Math.round(sellGain) + '万円';
+  html += '</div></details>';
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">💡 ' + advice + '</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px;line-height:1.6">※ 購入の実質コスト＝総支払額 − 売却収益（残債控除後）。住宅ローン控除・リフォーム費用・管理費変動は含みません。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcRentVsBuy(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
