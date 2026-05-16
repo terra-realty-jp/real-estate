@@ -2297,6 +2297,33 @@
     <div id="sell-then-rent-result"></div>
   </div>
 
+  <div class="card" id="card-first-home-benefit">
+    <div class="card-title">🏠 初めてマイホームを購入する人が使える税優遇・補助金を一覧で確認する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">初めての住宅購入者が使える優遇制度は複数あります。住宅ローン控除・すまい給付金・子育て支援補助金など、あなたの状況に合う制度と概算受取額を確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">購入価格（万円）（例: 4000）</label>
+        <input type="number" id="fhb_price" value="4000" min="500" max="200000" step="100" oninput="calcFirstHomeBenefit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年収（万円）（例: 550）</label>
+        <input type="number" id="fhb_income" value="550" min="100" max="10000" step="50" oninput="calcFirstHomeBenefit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件の種類</label>
+        <select id="fhb_type" onchange="calcFirstHomeBenefit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="new">新築住宅</option>
+          <option value="used">中古住宅（リノベ済み含む）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">子どもの人数（0でも可）</label>
+        <input type="number" id="fhb_child" value="1" min="0" max="10" step="1" oninput="calcFirstHomeBenefit()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="first-home-benefit-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -6947,6 +6974,38 @@ function calcSellThenRent() {
   el.innerHTML = html;
 }
 (function(){ calcSellThenRent(); })();
+
+function calcFirstHomeBenefit() {
+  var el = document.getElementById('first-home-benefit-result'); if (!el) return;
+  var price = parseFloat(document.getElementById('fhb_price').value) || 4000;
+  var income = parseFloat(document.getElementById('fhb_income').value) || 550;
+  var type = document.getElementById('fhb_type').value;
+  var child = parseInt(document.getElementById('fhb_child').value) || 0;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var loanBase = Math.min(price * 0.9, type === 'new' ? 4000 : 3000);
+  var deduction13y = Math.round(loanBase * 0.007 * 13 * (income > 600 ? 1 : income > 400 ? 0.85 : 0.65));
+  var childBonus = child > 0 ? (child >= 2 ? 100 : 50) : 0;
+  var subsidyNew = type === 'new' ? Math.min(60, price * 0.01) : 0;
+  var registerDiscount = type === 'new' ? Math.round(loanBase * 0.004 * 10) / 10 : Math.round(loanBase * 0.001 * 10) / 10;
+  var total = Math.round(deduction13y + childBonus + subsidyNew + registerDiscount);
+  var benefits = [
+    { name: '住宅ローン控除（13年間）', value: Math.round(deduction13y) + '万円', note: '毎年確定申告・年末調整で還付', show: true },
+    { name: '子育て支援補助金', value: childBonus + '万円', note: '子ども' + child + '人・要件確認必要', show: child > 0 },
+    { name: '新築取得補助金', value: Math.round(subsidyNew) + '万円', note: 'すまい給付金・地域補助金', show: type === 'new' },
+    { name: '登録免許税の軽減', value: registerDiscount.toFixed(0) + '万円', note: '一般住宅は0.4%→0.1%等', show: true },
+  ];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="text-align:center;margin-bottom:12px"><div style="font-size:22px;font-weight:900;color:' + ACCENT + '">' + total.toLocaleString() + '万円</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted)">合計の優遇・給付金目安（条件充足時）</div></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:2;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  benefits.forEach(function(b) {
+    if (b.show) html += '✅ <b style="color:var(--text)">' + b.name + '</b>: <b style="color:' + ACCENT + '">' + b.value + '</b>（' + b.note + '）<br>';
+  });
+  html += '<span style="font-size:10px">⚠️ 制度は年度ごとに変更される場合があります。申請に期限があるものもあるため、購入前にTERRA REALTYへご確認ください。</span>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcFirstHomeBenefit(); })();
 
 function initBuyChecklist() {
   var el = document.getElementById('buy-checklist-content');

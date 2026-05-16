@@ -2675,6 +2675,30 @@
     <div id="floor-plan-effect-result"></div>
   </div>
 
+  <div class="card" id="card-tax-free-gift">
+    <div class="card-title">🎁 毎年110万円ずつ子どもに贈与すると相続税をいくら節税できる？（生前贈与シミュレーション）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">年間110万円以下の贈与は「贈与税がかからない」非課税枠があります。この枠を毎年活用し続けると、将来の相続税をどれだけ減らせるかを試算します。不動産の名義変更と組み合わせることもできます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の総資産額（万円）（例: 8000）</label>
+        <input type="number" id="tfg_asset" value="8000" min="500" max="500000" step="500" oninput="calcTaxFreeGift()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">法定相続人の人数（人）（例: 2）</label>
+        <input type="number" id="tfg_heirs" value="2" min="1" max="10" step="1" oninput="calcTaxFreeGift()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">毎年贈与する金額（万円）（例: 110）</label>
+        <input type="number" id="tfg_annual" value="110" min="10" max="500" step="10" oninput="calcTaxFreeGift()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">贈与を続ける年数（年）（例: 10）</label>
+        <input type="number" id="tfg_years" value="10" min="1" max="30" step="1" oninput="calcTaxFreeGift()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="tax-free-gift-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7881,6 +7905,44 @@ function calcFloorPlanEffect() {
   el.innerHTML = html;
 }
 (function(){ calcFloorPlanEffect(); })();
+
+function calcTaxFreeGift() {
+  var el = document.getElementById('tax-free-gift-result'); if (!el) return;
+  var asset = parseFloat(document.getElementById('tfg_asset').value) || 8000;
+  var heirs = parseInt(document.getElementById('tfg_heirs').value) || 2;
+  var annual = parseFloat(document.getElementById('tfg_annual').value) || 110;
+  var years = parseInt(document.getElementById('tfg_years').value) || 10;
+  var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
+  var totalGift = annual * years;
+  var assetAfter = Math.max(0, asset - totalGift);
+  var basicExempt = 3000 + 600 * heirs;
+  var taxBefore = asset > basicExempt ? calcInheritanceTaxSimple(asset - basicExempt) : 0;
+  var taxAfter = assetAfter > basicExempt ? calcInheritanceTaxSimple(assetAfter - basicExempt) : 0;
+  var saving = Math.max(0, taxBefore - taxAfter);
+  function calcInheritanceTaxSimple(taxable) {
+    var t = taxable;
+    if (t <= 1000) return t * 0.10;
+    if (t <= 3000) return 100 + (t - 1000) * 0.15;
+    if (t <= 5000) return 400 + (t - 3000) * 0.20;
+    if (t <= 10000) return 800 + (t - 5000) * 0.30;
+    if (t <= 20000) return 2300 + (t - 10000) * 0.40;
+    return 6300 + (t - 20000) * 0.45;
+  }
+  var giftTax = annual > 110 ? Math.max(0, (annual - 110) * 0.10) : 0;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + totalGift.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">' + years + '年間の贈与総額</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + Math.round(saving).toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">推定節税額（相続税ベース）</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (giftTax > 0 ? '#facc15' : ACCENT) + '">' + (giftTax > 0 ? '毎年+' + giftTax.toFixed(0) + '万円' : '非課税') + '</div><div style="font-size:10px;color:var(--text-muted)">贈与税</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '📋 基礎控除: <b style="color:var(--text)">' + basicExempt.toLocaleString() + '万円</b>（3,000万円 + 600万円 × ' + heirs + '人）<br>';
+  html += '💰 贈与前の推定相続税: <b style="color:var(--text)">' + Math.round(taxBefore).toLocaleString() + '万円</b> → 贈与後: <b style="color:' + ACCENT + '">' + Math.round(taxAfter).toLocaleString() + '万円</b><br>';
+  html += annual > 110 ? '<span style="color:#facc15">⚠️ 年間贈与が110万円超のため贈与税（年' + giftTax.toFixed(0) + '万円）が発生します。110万円以下にすると非課税になります。</span>' : '✅ 年間110万円以内なので贈与税はかかりません';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcTaxFreeGift(); })();
 
 function initSellReadiness() {
   var el = document.getElementById('sell-readiness-content');

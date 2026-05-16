@@ -2592,6 +2592,38 @@
     <div id="second-property-result"></div>
   </div>
 
+  <div class="card" id="card-land-value-up">
+    <div class="card-title">📐 土地を「分筆」「合筆」「区画変更」すると資産価値はどれだけ変わる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">一つの土地を複数に分ける（分筆）または複数の土地を一つにまとめる（合筆）ことで、売却しやすさや評価額が変わります。どちらが有利かを費用・価値変化・税金から試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の土地の広さ（㎡）（例: 300）</label>
+        <input type="number" id="lvu_area" value="300" min="30" max="10000" step="10" oninput="calcLandValueUp()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">路線価・公示地価の坪単価（万円/坪）（例: 40）</label>
+        <input type="number" id="lvu_unit" value="40" min="5" max="1000" step="5" oninput="calcLandValueUp()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">活用方針</label>
+        <select id="lvu_plan" onchange="calcLandValueUp()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="split">分筆して複数の宅地として売却</option>
+          <option value="sell">そのまま一括で売却</option>
+          <option value="build">アパート・住宅を建てて収益化</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">エリア</label>
+        <select id="lvu_area_type" onchange="calcLandValueUp()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="urban">都市部（分筆プレミアムあり）</option>
+          <option value="suburb">郊外（標準的）</option>
+          <option value="rural">地方（分筆デメリットの可能性あり）</option>
+        </select>
+      </div>
+    </div>
+    <div id="land-value-up-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -9501,6 +9533,46 @@ function calcSecondProperty() {
   el.innerHTML = html;
 }
 (function(){ calcSecondProperty(); })();
+
+function calcLandValueUp() {
+  var el = document.getElementById('land-value-up-result'); if (!el) return;
+  var area = parseFloat(document.getElementById('lvu_area').value) || 300;
+  var unitPrice = parseFloat(document.getElementById('lvu_unit').value) || 40;
+  var plan = document.getElementById('lvu_plan').value;
+  var areaType = document.getElementById('lvu_area_type').value;
+  var GOLD = '#d4af37', BG = 'rgba(212,175,55,0.07)', BDR = 'rgba(212,175,55,0.2)';
+  var tsubo = area / 3.305;
+  var currentValue = Math.round(tsubo * unitPrice);
+  var splitUnits = Math.floor(tsubo / 20);
+  var splitPremiumMap = { urban: 0.15, suburb: 0.05, rural: -0.10 };
+  var splitPremium = splitPremiumMap[areaType];
+  var splitValue = plan === 'split' ? Math.round(splitUnits * 20 * unitPrice * (1 + splitPremium)) : currentValue;
+  var splitCost = plan === 'split' ? Math.round(splitUnits * 15) : 0;
+  var buildValue = plan === 'build' ? Math.round(currentValue * 1.20) : currentValue;
+  var compareValue = plan === 'split' ? splitValue - splitCost : plan === 'build' ? buildValue : currentValue;
+  var gain = compareValue - currentValue;
+  var planLabel = { split: '分筆して複数区画で売却', sell: 'そのまま一括売却', build: '建物を建てて収益化' }[plan];
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:var(--text)">' + currentValue.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">現状の土地評価額（目安）</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + GOLD + '">' + compareValue.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">【' + planLabel + '】の手取り</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (gain >= 0 ? '#4ade80' : '#fb923c') + '">' + (gain >= 0 ? '+' : '') + gain.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">現状との差</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '📐 土地面積: <b style="color:var(--text)">' + Math.round(tsubo) + '坪（' + area + '㎡）</b>　坪単価: <b style="color:var(--text)">' + unitPrice + '万円</b><br>';
+  if (plan === 'split') {
+    html += '🔀 分筆後の区画数: <b style="color:var(--text)">' + splitUnits + '区画</b>（各20坪程度）　分筆・測量費用: <b style="color:#fb923c">約' + splitCost + '万円</b><br>';
+    html += areaType === 'urban' ? '✅ 都市部では分筆すると各区画の需要が増し、合計価格が上がる傾向があります' : areaType === 'rural' ? '⚠️ 地方では分筆しても各区画の需要が少なく、価値が下がることがあります' : '💡 郊外では分筆の効果は標準的です。周辺の取引事例を確認してください';
+  } else if (plan === 'build') {
+    html += '🏗️ 建物建設による収益化で土地の資産価値が約20%UP（収益還元価値として）と推定<br>';
+    html += '💡 アパートや戸建てを建てると相続税評価額が大幅に下がる節税効果もあります';
+  } else {
+    html += '💡 一括売却は手続きが最も簡単。広い土地は法人・開発業者への売却も候補に入れると有利です';
+  }
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcLandValueUp(); })();
 
 function calcExitTiming() {
   var el = document.getElementById('exit-timing-result');

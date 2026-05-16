@@ -2907,6 +2907,34 @@
     <div id="green-rent-result"></div>
   </div>
 
+  <div class="card" id="card-pet-friendly-rent">
+    <div class="card-title">🐾 ペット可にすると家賃をいくら上げられる？ 床・壁の修繕リスクと収益効果を比較する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">ペット可物件は需要が多く、相場より高い家賃設定が可能ですが、退去後の原状回復コストも増えます。家賃UP効果・原状回復コスト・空室期間の短縮を総合的に判断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月額家賃（万円）（例: 8）</label>
+        <input type="number" id="pfr_rent" value="8" min="1" max="100" step="0.5" oninput="calcPetFriendlyRent()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件の専有面積（㎡）（例: 55）</label>
+        <input type="number" id="pfr_area" value="55" min="15" max="300" step="5" oninput="calcPetFriendlyRent()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定入居年数（年）（例: 4）</label>
+        <input type="number" id="pfr_years" value="4" min="1" max="20" step="1" oninput="calcPetFriendlyRent()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">ペットの種類（リスク度）</label>
+        <select id="pfr_type" onchange="calcPetFriendlyRent()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="small">小型犬・猫（リスク中）</option>
+          <option value="large">大型犬（リスク高）</option>
+          <option value="bird">小鳥・爬虫類（リスク低）</option>
+        </select>
+      </div>
+    </div>
+    <div id="pet-friendly-rent-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -10120,6 +10148,39 @@ function calcGreenRent() {
   el.innerHTML = html;
 }
 (function(){ calcGreenRent(); })();
+
+function calcPetFriendlyRent() {
+  var el = document.getElementById('pet-friendly-rent-result'); if (!el) return;
+  var rent = parseFloat(document.getElementById('pfr_rent').value) || 8;
+  var area = parseFloat(document.getElementById('pfr_area').value) || 55;
+  var years = parseInt(document.getElementById('pfr_years').value) || 4;
+  var type = document.getElementById('pfr_type').value;
+  var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
+  var rentUpMap = { small: 0.07, large: 0.10, bird: 0.03 };
+  var repairMap = { small: area * 0.6, large: area * 1.0, bird: area * 0.2 };
+  var vacancyReduce = { small: 1.5, large: 1.8, bird: 0.5 };
+  var typeLabel = { small: '小型犬・猫', large: '大型犬', bird: '小鳥・爬虫類' }[type];
+  var rentUp = Math.round(rent * rentUpMap[type] * 10) / 10;
+  var repairCost = Math.round(repairMap[type]);
+  var extraRepair = Math.round(repairCost * 0.4);
+  var totalRentUp = Math.round(rentUp * 12 * years * 10) / 10;
+  var vacancyMonths = vacancyReduce[type];
+  var vacancySaving = Math.round(rent * vacancyMonths * 10) / 10;
+  var netGain = Math.round((totalRentUp + vacancySaving - extraRepair) * 10) / 10;
+  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">+' + rentUp.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間家賃UP額</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:#fb923c">' + extraRepair + '万円</div><div style="font-size:10px;color:var(--text-muted)">退去時の追加修繕費</div></div>';
+  html += '<div><div style="font-size:16px;font-weight:900;color:' + (netGain >= 0 ? ACCENT : '#fb923c') + '">' + (netGain >= 0 ? '+' : '') + netGain.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">' + years + '年間の純利益</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);line-height:1.8;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
+  html += '🐾 【' + typeLabel + '】 ' + years + '年間の家賃UP収益: <b style="color:' + ACCENT + '">+' + totalRentUp.toFixed(0) + '万円</b><br>';
+  html += '✅ 空室期間の短縮メリット: <b style="color:' + ACCENT + '">+' + vacancySaving.toFixed(1) + '万円</b>（平均' + vacancyMonths + 'ヶ月早く入居成約）<br>';
+  html += netGain > 0 ? '🟢 総合的にペット可にする方が有利です。ペット専用の特約・礼金設定でリスクを管理しましょう' : '🟡 追加修繕リスクが高め。ペット礼金（1〜2ヶ月分）を設定してリスクをヘッジすることをお勧めします';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcPetFriendlyRent(); })();
 
 function calcTenantScreening() {
   var el = document.getElementById('tenant-screening-result');
