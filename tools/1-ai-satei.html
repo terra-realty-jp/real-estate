@@ -3177,6 +3177,38 @@
     <div id="rf_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 遺産分割シミュレーターカード -->
+  <div class="card" id="card-inheritance-split">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">👨‍👩‍👧‍👦 親から相続した家を売ったら、家族で何円ずつ分けられる？（法定相続分 試算）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">相続した不動産を売却して分配するとき、法律で決まった取り分（法定相続分）に基づいて各相続人の受取額を試算します。「いくら受け取れるか」を先に確認しておくと話し合いがスムーズです。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">家の売却予定価格（万円）（例: 3000）</label>
+        <input type="number" id="is_price" placeholder="例: 3000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">差し引く費用合計（ローン残債・諸費用・万円）（例: 500）</label>
+        <input type="number" id="is_costs" placeholder="例: 500" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">相続人の家族構成</label>
+        <select id="is_family" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="sp_only">配偶者（妻or夫）のみ</option>
+          <option value="sp_c1" selected>配偶者 + 子ども1人</option>
+          <option value="sp_c2">配偶者 + 子ども2人</option>
+          <option value="sp_c3">配偶者 + 子ども3人</option>
+          <option value="c1">子どもだけ 1人</option>
+          <option value="c2">子どもだけ 2人</option>
+          <option value="c3">子どもだけ 3人</option>
+          <option value="sp_p">配偶者 + 親（親2名）</option>
+          <option value="p2">親だけ（父母2名）</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcInheritanceSplit()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">各自の受取額を試算する</button>
+    <div id="is_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -8978,6 +9010,57 @@ function calcRetirementFund() {
     '家の売却益がその大部分をカバーできるかどうか、この診断でご確認ください。' +
     '</div>' +
     '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 平均寿命を90歳として試算。医療費・介護費は含みません。実際の状況に応じてご調整ください。</p>';
+}
+
+function calcInheritanceSplit() {
+  const price = parseFloat(document.getElementById('is_price').value);
+  const costs = parseFloat(document.getElementById('is_costs').value) || 0;
+  const family = document.getElementById('is_family').value;
+  const el = document.getElementById('is_result');
+  if (!price || price <= 0) {
+    el.style.display = 'block';
+    el.innerHTML = '<p style="color:var(--red);font-size:13px">売却予定価格を入力してください。</p>';
+    return;
+  }
+  const net = Math.max(0, price - costs);
+  // 法定相続分テーブル {name, ratio}[]
+  const splits = {
+    sp_only: [{name:'配偶者', r:1}],
+    sp_c1: [{name:'配偶者', r:0.5},{name:'子ども1', r:0.5}],
+    sp_c2: [{name:'配偶者', r:0.5},{name:'子ども1', r:0.25},{name:'子ども2', r:0.25}],
+    sp_c3: [{name:'配偶者', r:0.5},{name:'子ども1', r:1/6},{name:'子ども2', r:1/6},{name:'子ども3', r:1/6}],
+    c1: [{name:'子ども1', r:1}],
+    c2: [{name:'子ども1', r:0.5},{name:'子ども2', r:0.5}],
+    c3: [{name:'子ども1', r:1/3},{name:'子ども2', r:1/3},{name:'子ども3', r:1/3}],
+    sp_p: [{name:'配偶者', r:2/3},{name:'父', r:1/6},{name:'母', r:1/6}],
+    p2: [{name:'父', r:0.5},{name:'母', r:0.5}],
+  };
+  const heirs = splits[family];
+  const rows = heirs.map(h => {
+    const amt = Math.round(net * h.r);
+    const pct = (h.r * 100).toFixed(1);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:6px">
+      <div>
+        <span style="font-size:13px;font-weight:700;color:var(--text)">${h.name}</span>
+        <span style="font-size:11px;color:var(--text-muted);margin-left:8px">法定相続分 ${pct}%</span>
+      </div>
+      <div style="font-size:20px;font-weight:900;color:var(--gold)">${amt.toLocaleString()}万円</div>
+    </div>`;
+  }).join('');
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:10px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 法定相続分による分配試算</div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text-muted)">手取り分配総額（売却額 − 費用）</div>
+        <div style="font-size:28px;font-weight:900;color:var(--gold)">${net.toLocaleString()}万円</div>
+      </div>
+      ${rows}
+      <div style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;margin-top:8px;line-height:1.8">
+        ⚠️ 上記は「法定相続分」による概算です。実際の分配額は遺言書・遺産分割協議によって変わります。相続に関わる費用（登録免許税・相続税・司法書士費用など）は別途かかる場合があります。正確な計算は専門家にご相談ください。
+      </div>
+    </div>`;
+  if (typeof saveCardResult === 'function') saveCardResult('遺産分割試算', '手取り' + net + '万円を' + heirs.length + '名で分配', 'card-inheritance-split');
 }
 
 function calcSellTiming() {
