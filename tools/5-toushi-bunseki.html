@@ -2967,8 +2967,52 @@
         <input type="number" id="es_rebuild_cost" placeholder="例: 6000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
       </div>
     </div>
-    <button onclick="calcExitStrategy()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">3つの選択肢を比較する</button>
+    <button onclick="calcExitStrategy3Way()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">3つの選択肢を比較する</button>
     <div id="es_result" style="display:none;margin-top:14px"></div>
+  </div>
+
+  <!-- 不動産投資デビュー診断 -->
+  <div class="card" id="card-invest-debut">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🚀 不動産投資を始めたい！どんな物件から始めればいい？入門診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「不動産投資を始めたいが何から手をつければ？」という方向けの初心者診断です。自己資金・リスク許容度・目的を入力すると、あなたに合った物件タイプと注意点をご案内します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">手持ちの自己資金（万円）</label>
+        <input type="number" id="id_capital" placeholder="例: 500" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年収（万円）</label>
+        <input type="number" id="id_income" placeholder="例: 600" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">不動産投資の目的</label>
+        <select id="id_goal" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="income">毎月の収入を増やしたい</option>
+          <option value="pension" selected>老後の年金代わりにしたい</option>
+          <option value="tax">節税効果を得たい</option>
+          <option value="asset">資産を増やして将来に備えたい</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">リスクへの考え方</label>
+        <select id="id_risk" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="low">なるべく安全・手堅く</option>
+          <option value="mid" selected>ある程度のリスクは取れる</option>
+          <option value="high">積極的に利益を追いたい</option>
+        </select>
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">現在の不動産経験</label>
+        <select id="id_exp" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="zero" selected>まったく初めて（知識ゼロ）</option>
+          <option value="study">本・セミナーで勉強中</option>
+          <option value="owned">自宅購入の経験あり</option>
+          <option value="experienced">すでに投資物件を所有している</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcInvestDebut()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">あなたに向いた物件タイプを診断する</button>
+    <div id="id_result" style="display:none;margin-top:14px"></div>
   </div>
 
   <!-- 3指標同時計算カード -->
@@ -10315,7 +10359,114 @@ function calcInflationVsCash() {
     '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 預金金利・インフレ率・不動産利回りはすべて仮定値。実際の運用結果を保証するものではありません。</p>';
 }
 
-function calcExitStrategy() {
+function calcInvestDebut() {
+  var el = document.getElementById('id_result');
+  if (!el) return;
+  var capital = parseFloat(document.getElementById('id_capital').value) || 500;
+  var income = parseFloat(document.getElementById('id_income').value) || 600;
+  var goal = document.getElementById('id_goal').value;
+  var risk = document.getElementById('id_risk').value;
+  var exp = document.getElementById('id_exp').value;
+
+  // 借入可能額の目安（年収×8倍、ただし自己資金比率考慮）
+  var maxLoan = income * 8;
+  var totalBudget = capital + maxLoan;
+
+  // 物件タイプの推奨
+  var recommendations = [];
+
+  if (capital < 200) {
+    recommendations.push({
+      type: '区分マンション（1室）', icon: '🏢',
+      desc: '自己資金が少ない場合に最も始めやすい選択肢。都市部の中古ワンルームなら300〜500万円から始められます。',
+      pros: ['少額から始められる', '管理会社に委託できる', '流動性が比較的高い'],
+      cons: ['収益が小さく規模拡大に時間がかかる', '管理組合の決定に従う必要がある'],
+      yield: '年間表面利回り4〜7%が目安'
+    });
+  }
+
+  if (capital >= 300 && income >= 500) {
+    recommendations.push({
+      type: '中古アパート（一棟）', icon: '🏘️',
+      desc: '複数戸を一度に保有でき、収益規模を一気に拡大できます。地方の中古アパートなら2,000〜5,000万円から購入可能です。',
+      pros: ['収益規模が大きい', '土地も保有できる', '入居率が一部下がっても収入が途切れない'],
+      cons: ['修繕コストが大きい', '空室対策の責任が重い', '購入・管理に専門知識が必要'],
+      yield: '年間表面利回り7〜12%が目安（地方）'
+    });
+  }
+
+  if (risk === 'low' || exp === 'zero') {
+    recommendations.push({
+      type: 'J-REIT（不動産投資信託）', icon: '📊',
+      desc: 'まずリスクを抑えて始めたい方に。証券口座から1万円〜投資でき、専門家が物件を管理します。実物投資の勉強をしながら分配金を受け取れます。',
+      pros: ['少額から始められる（1万円〜）', '専門家が管理するため手間なし', 'いつでも売却可能（流動性が高い）'],
+      cons: ['実物不動産に比べレバレッジ効果が低い', '株式と同様に価格変動がある'],
+      yield: '年間分配利回り3〜5%が目安'
+    });
+  }
+
+  if (goal === 'tax' && income >= 700) {
+    recommendations.push({
+      type: '新築マンション（節税目的）', icon: '💰',
+      desc: '高収入の方向けの節税スキーム。減価償却費を活用して課税所得を減らす効果があります。ただし節税目的だけで購入すると収益性が低くなる場合があります。',
+      pros: ['初年度から節税効果が出やすい', '建物の減価償却を最大化できる'],
+      cons: ['物件価格が高く利回りが低い', '節税が終わった後の出口戦略が重要', '税制改正リスクがある'],
+      yield: '節税効果込みで実質利回り2〜4%'
+    });
+  }
+
+  if (recommendations.length === 0) {
+    recommendations.push({
+      type: '区分マンション（1室）', icon: '🏢',
+      desc: 'まず1室から始めて経験を積むことをおすすめします。',
+      pros: ['始めやすい', '管理委託が可能'],
+      cons: ['収益規模は小さい'],
+      yield: '年間表面利回り4〜7%が目安'
+    });
+  }
+
+  var budgetNote = capital < 300
+    ? '自己資金が300万円未満の場合、まずは区分マンション1室かJ-REITから始めることをおすすめします。'
+    : capital < 1000
+    ? '自己資金' + capital + '万円＋融資を使うと、合計' + Math.min(totalBudget, capital * 10).toFixed(0) + '万円規模の物件を検討できます。'
+    : '十分な自己資金があります。一棟アパートや複数戸の区分投資も視野に入れられます。';
+
+  var recoHtml = recommendations.map(function(r, i) {
+    return '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px' + (i === 0 ? ';border:1px solid rgba(201,168,76,0.4)' : '') + '">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+      '<span style="font-size:22px">' + r.icon + '</span>' +
+      '<div>' +
+      '<div style="font-size:13px;font-weight:700;color:var(--gold)">' + r.type + (i === 0 ? ' ← おすすめ' : '') + '</div>' +
+      '<div style="font-size:11px;color:#4ade80">' + r.yield + '</div>' +
+      '</div></div>' +
+      '<div style="font-size:12px;color:var(--text);line-height:1.7;margin-bottom:8px">' + r.desc + '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">' +
+      '<div><div style="color:#4ade80;font-weight:700;margin-bottom:4px">✅ メリット</div>' + r.pros.map(function(p) { return '<div style="color:var(--text-muted)">・' + p + '</div>'; }).join('') + '</div>' +
+      '<div><div style="color:#f87171;font-weight:700;margin-bottom:4px">⚠️ 注意点</div>' + r.cons.map(function(c) { return '<div style="color:var(--text-muted)">・' + c + '</div>'; }).join('') + '</div>' +
+      '</div></div>';
+  }).join('');
+
+  var firstSteps = exp === 'zero'
+    ? ['不動産投資の入門書を1〜2冊読む', '気になるエリアの物件を10〜20件見てみる', 'TERRA REALTYなど信頼できる会社に相談する']
+    : exp === 'study'
+    ? ['実際に物件の内覧に行き、現地感覚をつかむ', '収支シミュレーションをこのツールで練習する', '金融機関に事前相談して借入可能額を確認する']
+    : ['次の物件購入に向けて自己資金計画を立てる', 'ポートフォリオの分散（エリア・物件タイプ）を検討する', 'このツールでキャッシュフロー分析を繰り返す'];
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">💡 あなたの状況</div>' +
+    '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">' + budgetNote + '</div>' +
+    '</div>' +
+    '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">🏆 おすすめ物件タイプ（' + recommendations.length + '案）</div>' +
+    recoHtml +
+    '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:12px;margin-top:12px">' +
+    '<div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:8px">📋 今すぐできる次のステップ</div>' +
+    firstSteps.map(function(s, i) { return '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">' + (i + 1) + '. ' + s + '</div>'; }).join('') +
+    '</div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.6">※ これは入門的な診断です。実際の投資判断は、物件の詳細・税務・融資条件を専門家とご相談の上で行ってください。</p>';
+}
+
+function calcExitStrategy3Way() {
   var el = document.getElementById('es_result');
   if (!el) return;
   var salePrice = parseFloat(document.getElementById('es_sale_price').value) || 5000;
