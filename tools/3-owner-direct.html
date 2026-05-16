@@ -2526,6 +2526,36 @@
     <div id="future-value-estimate-result"></div>
   </div>
 
+  <!-- 住みたい家に必要な年収 逆算診断 -->
+  <div class="card" id="card-income-needed">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💭 「この家を買うには年収いくら必要？」逆算診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">気になる物件の価格を入力すると、ローン審査が通る「必要な年収」と「頭金の目安」を逆算します。「今の年収ではあと何年後に買えるか」も確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の購入価格（万円）</label>
+        <input type="number" id="inc_price" placeholder="例: 5000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">手持ちの頭金（万円）</label>
+        <input type="number" id="inc_down" placeholder="例: 500" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">返済期間（年）</label>
+        <input type="number" id="inc_years" placeholder="例: 35" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の年収（万円）</label>
+        <input type="number" id="inc_current" placeholder="例: 450" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">金利（%）</label>
+        <input type="number" id="inc_rate" placeholder="例: 0.5" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcIncomeNeeded()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">必要な年収を逆算する</button>
+    <div id="inc_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 中古マンション 値引き交渉余地診断 -->
   <div class="card" id="card-price-negotiation">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💬 中古マンション・一戸建てで「いくら値引きできそう？」を診断</div>
@@ -7503,6 +7533,88 @@ function calcLandAcquisitionCost() {
   el.innerHTML = html;
 }
 (function(){ calcLandAcquisitionCost(); })();
+
+function calcIncomeNeeded() {
+  var el = document.getElementById('inc_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('inc_price').value) || 5000;
+  var down = parseFloat(document.getElementById('inc_down').value) || 500;
+  var years = parseInt(document.getElementById('inc_years').value) || 35;
+  var currentIncome = parseFloat(document.getElementById('inc_current').value) || 450;
+  var rate = parseFloat(document.getElementById('inc_rate').value) || 0.5;
+
+  var loanAmount = price - down;
+
+  // 月返済額
+  var r = rate / 100 / 12;
+  var n = years * 12;
+  var monthly = r > 0 ? loanAmount * 10000 * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1) / 10000 : loanAmount / years / 12;
+  var annualRepay = monthly * 12;
+
+  // 返済比率35%以内から必要年収を逆算
+  var neededIncome35 = annualRepay / 0.35;
+  var neededIncome30 = annualRepay / 0.30;
+  var neededIncome25 = annualRepay / 0.25;
+
+  // 収入倍率（一般的に7〜8倍以内）
+  var incomeRatio = loanAmount / currentIncome;
+
+  // 今の年収でいつ買えるか（年3%の昇給想定）
+  var yearsToReach = 0;
+  var projectedIncome = currentIncome;
+  while (projectedIncome < neededIncome35 && yearsToReach < 30) {
+    projectedIncome *= 1.03;
+    yearsToReach++;
+  }
+
+  // 頭金の推奨
+  var recommendedDown = price * 0.1; // 一般的に10%
+  var downShortfall = Math.max(0, recommendedDown - down);
+
+  var verdict, color;
+  if (currentIncome >= neededIncome35) {
+    verdict = '現在の年収で購入可能な範囲';
+    color = '#4ade80';
+  } else if (currentIncome >= neededIncome35 * 0.8) {
+    verdict = 'もう少しで届く！頭金を増やすと有利';
+    color = '#facc15';
+  } else if (yearsToReach <= 5) {
+    verdict = '昇給を続ければ' + yearsToReach + '年後に手が届く';
+    color = '#fb923c';
+  } else {
+    verdict = '現状のままでは厳しい — 物件価格・頭金を見直しましょう';
+    color = '#f87171';
+  }
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:13px;font-weight:700;color:' + color + '">' + verdict + '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">' +
+    ['返済比率25%以内\n（余裕あり）', '返済比率30%以内\n（標準）', '返済比率35%以内\n（上限目安）'].map(function(label, i) {
+      var needed = [neededIncome25, neededIncome30, neededIncome35][i];
+      var c = currentIncome >= needed ? '#4ade80' : '#f87171';
+      return '<div style="background:var(--dark3);border-radius:10px;padding:10px;text-align:center">' +
+        '<div style="font-size:10px;color:var(--text-muted);white-space:pre-line;margin-bottom:4px">' + label + '</div>' +
+        '<div style="font-size:20px;font-weight:900;color:' + c + '">' + Math.ceil(needed / 50) * 50 + '万円</div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">詳細シミュレーション</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+    '<div><span style="color:var(--text-muted)">借入額</span><br><strong>' + loanAmount + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">月返済額</span><br><strong>' + monthly.toFixed(1) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted)">収入倍率</span><br><strong style="color:' + (incomeRatio <= 7 ? '#4ade80' : '#f87171') + '">' + incomeRatio.toFixed(1) + '倍（目安は7倍以内）</strong></div>' +
+    '<div><span style="color:var(--text-muted)">現在の返済比率</span><br><strong style="color:' + (annualRepay / currentIncome <= 0.35 ? '#4ade80' : '#f87171') + '">' + (annualRepay / currentIncome * 100).toFixed(1) + '%</strong></div>' +
+    '</div></div>' +
+    (downShortfall > 0 ? '<div style="background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.2);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px">' +
+    '<div style="color:#facc15;font-weight:700;margin-bottom:4px">💡 頭金を増やすと有利になります</div>' +
+    '推奨頭金（物件価格の10%）: <strong>' + recommendedDown.toFixed(0) + '万円</strong><br>' +
+    '現在の頭金との差額: <strong style="color:#facc15">' + downShortfall.toFixed(0) + '万円</strong>を貯めると借入が減り審査も通りやすくなります。' +
+    '</div>' : '') +
+    (yearsToReach > 0 && currentIncome < neededIncome35 ? '<p style="font-size:12px;color:var(--text-muted);line-height:1.6">年3%昇給を続けると約<strong style="color:var(--gold)">' + yearsToReach + '年後</strong>（' + (2026 + yearsToReach) + '年頃）に審査圏内の年収に到達する見込みです。</p>' : '');
+}
 
 function calcPriceNegotiation() {
   var el = document.getElementById('pn_result');
