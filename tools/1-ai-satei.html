@@ -2902,6 +2902,44 @@
     <div id="move-timing-result"></div>
   </div>
 
+  <!-- 売り時タイミング診断 -->
+  <div class="card" id="card-sell-timing">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">⏰ 今すぐ売るべき？1〜2年待つ？売り時タイミング診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">金利・物件の築年数・市場動向・税制を踏まえて「今すぐ売る」「待って売る」「賃貸に出して様子を見る」のどれが有利かを診断します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の築年数（年）</label>
+        <input type="number" id="st_age" placeholder="例: 18" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の推定売却価格（万円）</label>
+        <input type="number" id="st_price" placeholder="例: 3200" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">ローン残高（万円・なければ0）</label>
+        <input type="number" id="st_loan" placeholder="例: 1800" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件種別</label>
+        <select id="st_type" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="mansion">マンション</option>
+          <option value="house">一戸建て</option>
+          <option value="land">土地</option>
+        </select>
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">エリアの将来性</label>
+        <select id="st_area" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="up">都心・再開発予定・値上がり傾向</option>
+          <option value="flat" selected>横ばい・安定したエリア</option>
+          <option value="down">郊外・人口減少エリア・値下がり傾向</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="calcSellTiming()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">売り時を診断する</button>
+    <div id="st_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 離婚時の不動産どうする診断 -->
   <div class="card" id="card-divorce-property">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">💔 離婚で家はどうなる？売却・どちらかが住む・賃貸化の比較診断</div>
@@ -8340,6 +8378,90 @@ function calcInheritedPropertySale() {
   el.innerHTML = html;
 }
 (function(){ calcInheritedPropertySale(); })();
+
+function calcSellTiming() {
+  var el = document.getElementById('st_result');
+  if (!el) return;
+  var age = parseInt(document.getElementById('st_age').value) || 18;
+  var price = parseFloat(document.getElementById('st_price').value) || 3200;
+  var loan = parseFloat(document.getElementById('st_loan').value) || 0;
+  var propType = document.getElementById('st_type').value;
+  var area = document.getElementById('st_area').value;
+
+  // スコアリング（100点満点）: 高いほど「今すぐ売る」が有利
+  var score = 0;
+  var reasons = [];
+
+  // 築年数スコア（マンション: 25年以上で急落）
+  if (propType === 'mansion') {
+    if (age >= 25) { score += 30; reasons.push({ text: '築' + age + '年 → 25年超でマンションは減価が加速します', color: '#f87171' }); }
+    else if (age >= 20) { score += 20; reasons.push({ text: '築20年超 → 今後も価値低下が続く可能性があります', color: '#fb923c' }); }
+    else if (age >= 15) { score += 10; reasons.push({ text: '築15年 → まだ市場性は十分です', color: '#facc15' }); }
+    else { score -= 5; reasons.push({ text: '築年数が浅い → 値下がりが緩やか。急がなくてもよい', color: '#4ade80' }); }
+  } else {
+    if (age >= 30) { score += 25; reasons.push({ text: '築' + age + '年 → 一戸建ては建物価値がほぼゼロに', color: '#f87171' }); }
+    else if (age >= 20) { score += 15; reasons.push({ text: '築20年超 → 建物価値は残り少ない', color: '#fb923c' }); }
+    else { score += 0; reasons.push({ text: '築年数的にはまだ余裕あり', color: '#4ade80' }); }
+  }
+
+  // エリアスコア
+  if (area === 'up') { score -= 15; reasons.push({ text: '値上がりエリア → 待てば高く売れる可能性', color: '#4ade80' }); }
+  else if (area === 'flat') { score += 5; reasons.push({ text: '横ばいエリア → 今と将来の価格差は小さい', color: '#facc15' }); }
+  else { score += 25; reasons.push({ text: '値下がりエリア → 早期売却で損失を最小化すべき', color: '#f87171' }); }
+
+  // 金利上昇環境（2026年: 日銀利上げ継続局面）
+  score += 10;
+  reasons.push({ text: '金利上昇局面 → 買い手の借入力低下で需要が徐々に減少', color: '#fb923c' });
+
+  // 純資産
+  var equity = price - loan;
+  if (equity < 0) { score += 15; reasons.push({ text: 'オーバーローン状態 → 早期に整理が必要', color: '#f87171' }); }
+
+  score = Math.max(0, Math.min(100, score));
+
+  var verdict, color, advice;
+  if (score >= 70) {
+    verdict = '今すぐ売るのがおすすめ';
+    color = '#f87171';
+    advice = '複数の要因が「早期売却有利」を示しています。今の価格が将来より高い可能性が高いです。';
+  } else if (score >= 50) {
+    verdict = '早めに動いた方が賢明';
+    color = '#fb923c';
+    advice = '価値は緩やかに下がる可能性があります。1年以内の売却を検討しましょう。';
+  } else if (score >= 30) {
+    verdict = '今すぐでも1〜2年後でも差は小さい';
+    color = '#facc15';
+    advice = '急ぐ必要はないですが、早めに不動産会社の査定を受けて相場感をつかんでおきましょう。';
+  } else {
+    verdict = 'まだ待てる（値上がりに期待）';
+    color = '#4ade80';
+    advice = '今は価値が上昇中か下がりにくい状況です。市場の変化を見ながらタイミングを見計らいましょう。';
+  }
+
+  var commission = Math.round((price * 0.03 + 6) * 1.1 * 10) / 10;
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売り時スコア（高いほど今すぐ売るのが有利）</div>' +
+    '<div style="font-size:40px;font-weight:900;color:' + color + '">' + score + '<span style="font-size:18px">/100</span></div>' +
+    '<div style="font-size:14px;font-weight:700;color:' + color + ';margin-top:4px">' + verdict + '</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">スコアの根拠</div>' +
+    reasons.map(function(r) {
+      return '<div style="display:flex;align-items:flex-start;gap:6px;padding:4px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.04)">' +
+        '<span style="color:' + r.color + ';flex-shrink:0">●</span>' +
+        '<span>' + r.text + '</span></div>';
+    }).join('') +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:12px;margin-bottom:10px">' +
+    '<div style="font-size:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    '<div><span style="color:var(--text-muted);font-size:11px">今売った場合の手取り</span><br><strong style="font-size:16px">' + Math.max(0, price - loan - commission).toFixed(0) + '万円</strong></div>' +
+    '<div><span style="color:var(--text-muted);font-size:11px">仲介手数料目安</span><br><strong>' + commission.toFixed(1) + '万円</strong></div>' +
+    '</div></div>' +
+    '<p style="font-size:12px;color:var(--text);line-height:1.7;background:rgba(255,255,255,0.03);padding:10px;border-radius:8px">' + esc(advice) + '</p>' +
+    '<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 市場予測は簡易診断です。実際の売却価格・タイミングは不動産会社の査定と合わせてご判断ください。</p>';
+}
 
 function calcDivorceProperty() {
   var el = document.getElementById('dp_result');

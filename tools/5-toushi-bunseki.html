@@ -2843,6 +2843,40 @@
     <div id="ps2_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- NISA vs 不動産投資 比較カード -->
+  <div class="card" id="card-nisa-vs-realestate">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📊 NISA（投資信託）vs 不動産投資 — 同じ1,000万円で20年後はどちらが得？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">つみたてNISA・不動産投資のそれぞれで同額を運用した場合の20年後の資産を比較します。税制・リスク・流動性の違いも解説します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">投資元本（万円）</label>
+        <input type="number" id="nvr_capital" placeholder="例: 1000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">運用期間（年）</label>
+        <input type="number" id="nvr_years" placeholder="例: 20" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">NISA想定年利回り（%）</label>
+        <input type="number" id="nvr_nisa_rate" placeholder="例: 5" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">不動産の表面利回り（%）</label>
+        <input type="number" id="nvr_re_yield" placeholder="例: 7" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">不動産の経費率（%）</label>
+        <input type="number" id="nvr_re_exp" placeholder="例: 30" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">不動産のLTV（借入比率・%）</label>
+        <input type="number" id="nvr_re_ltv" placeholder="例: 70" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcNisaVsRealestate()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">20年後を比較する</button>
+    <div id="nvr_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- 3指標同時計算カード -->
   <div class="card" id="card-yield-triple">
     <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📐 表面利回り・実質利回り・CCR を一発で計算する</div>
@@ -9976,6 +10010,80 @@ function calcBreakevenYield() {
   el.innerHTML = html;
 }
 (function(){ calcBreakevenYield(); })();
+
+function calcNisaVsRealestate() {
+  var el = document.getElementById('nvr_result');
+  if (!el) return;
+  var capital = parseFloat(document.getElementById('nvr_capital').value) || 1000;
+  var years = parseInt(document.getElementById('nvr_years').value) || 20;
+  var nisaRate = parseFloat(document.getElementById('nvr_nisa_rate').value) || 5;
+  var reYield = parseFloat(document.getElementById('nvr_re_yield').value) || 7;
+  var reExp = parseFloat(document.getElementById('nvr_re_exp').value) || 30;
+  var reLtv = parseFloat(document.getElementById('nvr_re_ltv').value) || 70;
+
+  // NISA: 複利運用（非課税）
+  var nisaFinal = capital * Math.pow(1 + nisaRate / 100, years);
+  var nisaProfit = nisaFinal - capital;
+
+  // 不動産: レバレッジ効果込み
+  var ownCapital = capital; // 自己資本
+  var totalProperty = ownCapital / (1 - reLtv / 100); // 物件総額 = 自己資本/(1-LTV)
+  var loanAmount = totalProperty - ownCapital;
+  var loanRate = 1.5; // 金利1.5%想定
+  var annualLoanRepay = loanAmount * 10000 * (loanRate / 100 + 1 / years) / 10000; // 简易返済額
+  var grossIncome = totalProperty * reYield / 100;
+  var netIncome = grossIncome * (1 - reExp / 100);
+  var annualCF = netIncome - annualLoanRepay;
+  var cf20 = annualCF * years;
+  // 20年後の残債
+  var loanBalance20 = loanAmount * 0.3; // 30%残想定
+  // 不動産の資産価値変化（横ばい想定）
+  var reAssetValue = totalProperty;
+  var reFinalEquity = reAssetValue - loanBalance20;
+  var reTotalReturn = cf20 + reFinalEquity;
+  var reProfitOnCapital = reTotalReturn - capital;
+
+  var winner = nisaFinal > reTotalReturn ? 'NISA' : '不動産投資';
+  var diff = Math.abs(nisaFinal - reTotalReturn);
+
+  el.style.display = 'block';
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+    '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:14px;text-align:center">' +
+    '<div style="font-size:11px;color:#4ade80;font-weight:700;margin-bottom:6px">📈 NISA（投資信託）' + years + '年後</div>' +
+    '<div style="font-size:11px;color:var(--text-muted)">年利' + nisaRate + '%・非課税・複利</div>' +
+    '<div style="font-size:28px;font-weight:900;color:#4ade80;margin:6px 0">' + Math.round(nisaFinal).toLocaleString() + '<span style="font-size:13px">万円</span></div>' +
+    '<div style="font-size:11px;color:var(--text-muted)">元本' + capital + '万円 → 利益+' + Math.round(nisaProfit).toLocaleString() + '万円</div>' +
+    '</div>' +
+    '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px;text-align:center">' +
+    '<div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px">🏢 不動産投資（レバレッジ）' + years + '年後</div>' +
+    '<div style="font-size:11px;color:var(--text-muted)">LTV' + reLtv + '%・実質利回り' + (reYield * (1 - reExp / 100)).toFixed(1) + '%</div>' +
+    '<div style="font-size:28px;font-weight:900;color:var(--gold);margin:6px 0">' + Math.round(reTotalReturn).toLocaleString() + '<span style="font-size:13px">万円</span></div>' +
+    '<div style="font-size:11px;color:var(--text-muted)">CF+' + Math.round(cf20) + '万＋資産' + Math.round(reFinalEquity) + '万</div>' +
+    '</div></div>' +
+    '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">' +
+    '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px">この条件では「' + winner + '」が<br><span style="font-size:22px">' + Math.round(diff).toLocaleString() + '万円</span>多い結果</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:12px;font-size:12px">' +
+    '<div style="font-weight:700;color:var(--gold);margin-bottom:8px">比較ポイント</div>' +
+    '<table style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">' +
+    '<th style="padding:5px 8px;font-size:11px;color:var(--text-muted);text-align:left">項目</th>' +
+    '<th style="padding:5px 8px;font-size:11px;color:#4ade80;text-align:center">NISA</th>' +
+    '<th style="padding:5px 8px;font-size:11px;color:var(--gold);text-align:center">不動産</th>' +
+    '</tr></thead>' +
+    '<tbody>' +
+    ['流動性（すぐ現金化）', '管理の手間', 'リスクの種類', '月収入'].map(function(item, i) {
+      var nisa = ['高い（翌日）', 'ほぼゼロ', '価格変動', 'なし'][i];
+      var re = ['低い（数ヶ月）', '必要', '空室・修繕', 'あり'][i];
+      return '<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">' +
+        '<td style="padding:5px 8px;color:var(--text-muted)">' + item + '</td>' +
+        '<td style="padding:5px 8px;text-align:center">' + nisa + '</td>' +
+        '<td style="padding:5px 8px;text-align:center">' + re + '</td>' +
+        '</tr>';
+    }).join('') +
+    '</tbody></table></div>' +
+    '<p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5">※ 不動産の価格横ばい・空室なし・金利1.5%で計算。実際は変動します。NISAは運用リターンが保証されません。</p>';
+}
 
 function calcPensionSupplement() {
   var el = document.getElementById('ps2_result');
