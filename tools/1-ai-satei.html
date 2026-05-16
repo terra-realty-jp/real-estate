@@ -2529,6 +2529,26 @@
     <div id="reform-vs-asis-result"></div>
   </div>
 
+  <!-- 仲介手数料 節約診断カード -->
+  <div class="card" id="card-agency-fee-calc">
+    <div class="card-title">💸 仲介手数料 節約診断カード</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">法定上限手数料を計算し、値引き交渉・売主直接取引での節約可能額を試算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売却価格（万円）</div>
+        <input id="afc_price" type="number" value="3500" min="100" max="200000" step="100" oninput="calcAgencyFeeCalc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">仲介タイプ</div>
+        <select id="afc_type" onchange="calcAgencyFeeCalc()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="both">両手仲介（売主・買主とも同一業者）</option>
+          <option value="seller">片手仲介（売主側のみ）</option>
+        </select>
+      </div>
+    </div>
+    <div id="agency-fee-calc-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7733,6 +7753,44 @@ function calcSumaiTiming() {
   el.innerHTML = html;
 }
 (function(){ calcSumaiTiming(); })();
+
+function calcAgencyFeeCalc() {
+  var el = document.getElementById('agency-fee-calc-result');
+  var price = parseFloat(document.getElementById('afc_price').value) || 3500;
+  var type = document.getElementById('afc_type').value;
+
+  var feeLegal = (price * 0.03 + 6) * 1.1;
+  var feeSeller = type === 'both' ? feeLegal * 2 : feeLegal;
+  var feeHalf = feeSeller / 2;
+  var feeZero = 0;
+
+  var patterns = [
+    { label: '法定上限（通常）', fee: feeSeller, color: '#f87171', note: type === 'both' ? '両手仲介の場合、業者は売主・買主両方から手数料を得ます' : '売主側手数料のみ' },
+    { label: '手数料半額交渉', fee: feeHalf, color: '#fbbf24', note: '「半額でお願いしたい」と交渉するだけで試みる価値あり' },
+    { label: '売主直接取引', fee: feeZero, color: '#4ade80', note: '仲介業者なしの場合。契約書作成・司法書士費用は別途必要' }
+  ];
+
+  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:13px;font-weight:900;color:#fbbf24;margin-bottom:10px">💸 仲介手数料 パターン別 試算</div>';
+  html += '<div style="margin-bottom:10px">';
+  patterns.forEach(function(p) {
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;margin-bottom:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07)">';
+    html += '<div><div style="font-size:12px;font-weight:700;color:' + p.color + '">' + p.label + '</div><div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">' + p.note + '</div></div>';
+    html += '<div style="font-size:18px;font-weight:900;color:' + p.color + ';text-align:right;white-space:nowrap;margin-left:8px">' + Math.round(p.fee) + '万円</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  var saving = feeSeller - feeHalf;
+  html += '<div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;margin-bottom:10px">';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px">半額交渉成功時の節約額</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:#4ade80">' + Math.round(saving) + '万円 節約</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7">💡 法定上限手数料は「(売却価格 × 3% + 6万円) × 1.1（税込）」。この金額は上限であり、値引き交渉は合法です。「専任媒介契約」より「一般媒介契約」の方が交渉しやすい場合があります。</div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:6px">※ 400万円超の物件の計算式。低価格物件は別途計算が必要な場合があります。</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcAgencyFeeCalc(); })();
 
 function calcReformVsAsIs() {
   var el = document.getElementById('reform-vs-asis-result');
