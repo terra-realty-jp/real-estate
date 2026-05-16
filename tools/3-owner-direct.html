@@ -2798,6 +2798,36 @@
     <div id="mfc_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 住宅ローン借換えシミュレーターカード -->
+  <div class="card" id="card-mortgage-refinance">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔄 住宅ローンの借換えで毎月の返済と総支払いはいくら変わる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">現在の金利より低い金利に借換えると、毎月の返済額と30年トータルの支払い利息をどれだけ減らせるか試算します。費用を差し引いた実質的な節約額と「何年で元を取れるか」も確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在のローン残高（万円）（例: 3000）</label>
+        <input type="number" id="re_balance" placeholder="例: 3000" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">残返済年数（年）（例: 25）</label>
+        <input type="number" id="re_remaining" placeholder="例: 25" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の金利（%）（例: 1.5）</label>
+        <input type="number" id="re_old_rate" placeholder="例: 1.5" step="0.01" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">借換え後の金利（%）（例: 0.5）</label>
+        <input type="number" id="re_new_rate" placeholder="例: 0.5" step="0.01" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">借換え費用合計（万円・目安: 20〜50万円）（例: 30）</label>
+        <input type="number" id="re_costs" placeholder="例: 30" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcMortgageRefinance()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">借換えの節約効果を試算する</button>
+    <div id="re_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -8099,6 +8129,78 @@ function calcPurchaseExtraCosts() {
     '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 各費用は概算値です。物件の詳細・金融機関・自治体の補助制度によって大きく変わります。必ず事前に担当者に確認してください。</p>';
 }
 
+
+function calcMortgageRefinance() {
+  const balance = parseFloat(document.getElementById('re_balance').value);
+  const years = parseFloat(document.getElementById('re_remaining').value);
+  const oldRate = parseFloat(document.getElementById('re_old_rate').value);
+  const newRate = parseFloat(document.getElementById('re_new_rate').value);
+  const costs = parseFloat(document.getElementById('re_costs').value) || 0;
+  const el = document.getElementById('re_result');
+  if (!balance || !years || !oldRate || !newRate || balance <= 0 || years <= 0) {
+    el.style.display = 'block';
+    el.innerHTML = '<p style="color:var(--red);font-size:13px">必須項目（残高・年数・現在金利・借換え後金利）を入力してください。</p>';
+    return;
+  }
+  const n = Math.round(years * 12);
+  function monthlyPmt(principal, annualRate) {
+    if (annualRate <= 0) return principal / n;
+    const r = annualRate / 100 / 12;
+    return principal * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
+  }
+  const oldPmt = Math.round(monthlyPmt(balance * 10000, oldRate) / 10000 * 100) / 100;
+  const newPmt = Math.round(monthlyPmt(balance * 10000, newRate) / 10000 * 100) / 100;
+  const oldTotal = Math.round(oldPmt * n);
+  const newTotal = Math.round(newPmt * n) + costs;
+  const monthSaving = Math.round((oldPmt - newPmt) * 10) / 10;
+  const totalSaving = Math.round(oldTotal - newTotal);
+  const breakEven = monthSaving > 0 ? Math.ceil(costs / monthSaving) : null;
+  const isWorth = totalSaving > 0;
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:10px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 借換えシミュレーション結果</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-muted)">現在の月返済額</div>
+          <div style="font-size:18px;font-weight:900;color:var(--text)">${oldPmt.toLocaleString()}万円</div>
+          <div style="font-size:10px;color:var(--text-muted)">金利${oldRate}%</div>
+        </div>
+        <div style="background:rgba(201,168,76,0.1);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-muted)">借換え後の月返済額</div>
+          <div style="font-size:18px;font-weight:900;color:var(--gold)">${newPmt.toLocaleString()}万円</div>
+          <div style="font-size:10px;color:var(--text-muted)">金利${newRate}%</div>
+        </div>
+      </div>
+      <div style="background:rgba(201,168,76,0.15);border-radius:8px;padding:14px;text-align:center;margin-bottom:10px">
+        <div style="font-size:12px;color:var(--text-muted)">毎月の節約額</div>
+        <div style="font-size:28px;font-weight:900;color:${monthSaving > 0 ? 'var(--gold)' : 'var(--red)'}">
+          ${monthSaving > 0 ? '-' : '+'}${Math.abs(monthSaving).toLocaleString()}万円/月
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-muted)">残期間の総節約額</div>
+          <div style="font-size:16px;font-weight:900;color:${isWorth ? 'var(--gold)' : 'var(--red)'}">
+            ${isWorth ? '+' : ''}${totalSaving.toLocaleString()}万円
+          </div>
+          <div style="font-size:10px;color:var(--text-muted)">借換え費用${costs}万円差引後</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-muted)">費用回収（損益分岐）</div>
+          <div style="font-size:16px;font-weight:900;color:${breakEven && breakEven <= n ? 'var(--gold)' : 'var(--red)'}">
+            ${breakEven ? breakEven + 'ヶ月後' : '回収不可'}
+          </div>
+          <div style="font-size:10px;color:var(--text-muted)">${breakEven && breakEven <= n ? '★ 借換えは得' : '借換えは損'}</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;line-height:1.8">
+        💡 <b>一般的な借換えが有利な目安</b>: 残高1000万円以上・残期間10年以上・金利差1%以上<br>
+        ※借換え費用の主な内訳: 抵当権抹消・設定費用・事務手数料・保証料・保険料 など
+      </div>
+    </div>`;
+  if (typeof saveCardResult === 'function') saveCardResult('借換えシミュレーション', '月${monthSaving}万円節約・総節約${totalSaving}万円', 'card-mortgage-refinance');
+}
 
 function calcMonthlyFixedCosts() {
   var el = document.getElementById('mfc_result');
