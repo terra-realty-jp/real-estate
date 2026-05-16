@@ -2490,6 +2490,12 @@
     <div id="sumai-timing-result"></div>
   </div>
 
+  <div class="card" id="card-sell-readiness">
+    <div class="card-title">✅ 不動産売却 準備完了チェックリスト（16項目）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">「書類」「物件状態」「税務・法律」「市場・資金」の4カテゴリ16項目を確認。売却活動を始める前に何が揃っていて何が足りないかを可視化します。</p>
+    <div id="sell-readiness-content"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -7561,6 +7567,70 @@ function calcTaxHarvest() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ 居住用財産の損益通算・繰越控除には要件があります（3,000万円控除・居住期間等）。必ず税理士にご相談ください。</p></div>';
 }
 (function(){ calcTaxHarvest(); })();
+
+function initSellReadiness() {
+  var el = document.getElementById('sell-readiness-content');
+  var categories = [
+    { name: '📄 書類・権利関係', color: '#4db6f5', items: [
+      { id: 'sr_1', label: '登記済証（権利証）または登記識別情報がある' },
+      { id: 'sr_2', label: '固定資産税・都市計画税の納税通知書がある' },
+      { id: 'sr_3', label: '購入時の売買契約書・重要事項説明書がある' },
+      { id: 'sr_4', label: '間取り図・建築確認済証がある' }
+    ]},
+    { name: '🏠 物件の状態', color: '#4ade80', items: [
+      { id: 'sr_5', label: 'リフォームや補修が必要な箇所を把握している' },
+      { id: 'sr_6', label: '境界確定測量が済んでいる（隣地との境界が明確）' },
+      { id: 'sr_7', label: '付帯設備（エアコン・給湯器等）の状態を確認済み' },
+      { id: 'sr_8', label: '近隣との騒音・越境などのトラブルがない' }
+    ]},
+    { name: '💴 税務・法律', color: '#fbbf24', items: [
+      { id: 'sr_9', label: '売却時の譲渡所得税を概算で把握している' },
+      { id: 'sr_10', label: '住宅ローン残高を確認し、完済の目処が立っている' },
+      { id: 'sr_11', label: '3,000万円特別控除・軽減税率の適用条件を確認した' },
+      { id: 'sr_12', label: '相続物件の場合、名義変更（相続登記）が完了している' }
+    ]},
+    { name: '📊 市場・資金計画', color: '#c9a84c', items: [
+      { id: 'sr_13', label: '近隣の成約事例や相場価格を調べた' },
+      { id: 'sr_14', label: '売却後の資金の使い道（住み替え・運用等）を決めている' },
+      { id: 'sr_15', label: '引越し先・仮住まいの目処が立っている' },
+      { id: 'sr_16', label: '売却にかかる費用（仲介手数料・引越し費用等）を試算した' }
+    ]}
+  ];
+
+  var html = '';
+  categories.forEach(function(cat) {
+    html += '<div style="margin-bottom:14px">';
+    html += '<div style="font-size:12px;font-weight:700;color:'+cat.color+';margin-bottom:8px">'+cat.name+'</div>';
+    html += '<div style="display:grid;gap:6px">';
+    cat.items.forEach(function(item) {
+      html += '<label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px;border:1px solid rgba(255,255,255,0.06)" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.02)\'">';
+      html += '<input type="checkbox" id="'+item.id+'" onchange="updateSellReadiness()" style="accent-color:'+cat.color+';width:15px;height:15px;flex-shrink:0;margin-top:1px;cursor:pointer">';
+      html += '<span style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.5">'+item.label+'</span>';
+      html += '</label>';
+    });
+    html += '</div></div>';
+  });
+
+  html += '<div id="sell-readiness-summary" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;margin-top:8px">';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.5)">チェックを入れると進捗が表示されます</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function updateSellReadiness() {
+  var total = 16;
+  var checked = document.querySelectorAll('#sell-readiness-content input[type=checkbox]:checked').length;
+  var pct = Math.round((checked / total) * 100);
+  var color = pct >= 80 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#f87171';
+  var msg = pct >= 80 ? '✅ 売却準備がほぼ完了しています！不動産会社に査定を依頼しましょう。' : pct >= 50 ? '📋 あと少しで準備完了です。未チェック項目を確認してください。' : '🔧 まだ準備が必要な項目があります。焦らず一つずつ整えましょう。';
+  var el = document.getElementById('sell-readiness-summary');
+  if (!el) return;
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:12px">';
+  el.innerHTML += '<div style="text-align:center;min-width:60px"><div style="font-size:24px;font-weight:900;color:'+color+'">'+pct+'%</div><div style="font-size:10px;color:rgba(255,255,255,0.4)">'+checked+'/'+total+'項目</div></div>';
+  el.innerHTML += '<div style="flex:1"><div style="background:rgba(255,255,255,0.06);border-radius:4px;height:8px;margin-bottom:6px"><div style="width:'+pct+'%;background:'+color+';border-radius:4px;height:8px;transition:width 0.3s"></div></div><div style="font-size:11px;color:rgba(255,255,255,0.6);line-height:1.5">'+msg+'</div></div>';
+  el.innerHTML += '</div>';
+}
+(function(){ initSellReadiness(); })();
 
 function calcSumaiTiming() {
   var el = document.getElementById('sumai-timing-result');
