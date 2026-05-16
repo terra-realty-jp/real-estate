@@ -2037,6 +2037,47 @@
     <div id="rate-fixed-vs-variable-result"></div>
   </div>
 
+  <div class="card" id="card-max-purchase">
+    <div class="card-title">💰 年収別 最大購入可能価格シミュレーション</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">年収・頭金・ローン期間・金利をもとに、銀行が融資できる上限額（返済比率35%基準）と実際に無理なく購入できる推奨価格を試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">世帯年収（万円）</div>
+        <input type="number" id="mp_income" value="700" min="100" max="5000" step="50" oninput="calcMaxPurchase()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">頭金（万円）</div>
+        <input type="number" id="mp_down" value="300" min="0" max="50000" step="50" oninput="calcMaxPurchase()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ローン金利（%）</div>
+        <input type="number" id="mp_rate" value="0.5" min="0.1" max="6" step="0.1" oninput="calcMaxPurchase()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">返済期間（年）</div>
+        <select id="mp_term" onchange="calcMaxPurchase()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="20">20年</option>
+          <option value="25">25年</option>
+          <option value="30" selected>30年</option>
+          <option value="35">35年</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">他のローン（年間返済額 / 万円）</div>
+        <input type="number" id="mp_other" value="0" min="0" max="500" step="10" oninput="calcMaxPurchase()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">無理なく返せる返済比率（%）</div>
+        <select id="mp_ratio" onchange="calcMaxPurchase()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="20">20%（余裕あり）</option>
+          <option value="25" selected>25%（標準）</option>
+          <option value="30">30%（やや高め）</option>
+        </select>
+      </div>
+    </div>
+    <div id="max-purchase-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -6539,6 +6580,65 @@ function calcRateFixedVsVariable() {
     + '<p style="font-size:11px;color:rgba(255,255,255,0.4)">※ 変動金利は現在の金利が返済期間中変わらない場合の試算です。将来の金利上昇は考慮していません。実際の金利選択は金融機関窓口でご確認ください。</p></div>';
 }
 (function(){ calcRateFixedVsVariable(); })();
+
+function calcMaxPurchase() {
+  var el = document.getElementById('max-purchase-result');
+  var income = parseFloat(document.getElementById('mp_income').value) || 700;
+  var down = parseFloat(document.getElementById('mp_down').value) || 0;
+  var rate = parseFloat(document.getElementById('mp_rate').value) || 0.5;
+  var term = parseInt(document.getElementById('mp_term').value) || 30;
+  var other = parseFloat(document.getElementById('mp_other').value) || 0;
+  var ratio = parseInt(document.getElementById('mp_ratio').value) || 25;
+
+  var maxMonthly35 = (income * 10000 * 0.35 / 12) - (other * 10000 / 12);
+  var recMonthly = (income * 10000 * ratio / 100 / 12) - (other * 10000 / 12);
+
+  function loanFromPayment(monthly) {
+    var r = rate / 100 / 12;
+    var n = term * 12;
+    if (r === 0) return monthly * n;
+    return monthly / (r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1));
+  }
+
+  var maxLoan35 = Math.round(loanFromPayment(maxMonthly35) / 10000);
+  var recLoan = Math.round(loanFromPayment(recMonthly) / 10000);
+  var maxPrice35 = maxLoan35 + down;
+  var recPrice = recLoan + down;
+
+  var monthlyRec = Math.round(recMonthly / 10000 * 10) / 10;
+  var yearlyRec = Math.round(monthlyRec * 12 * 10) / 10;
+
+  var html = '<div style="display:grid;gap:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html += '<div style="background:rgba(77,182,245,0.06);border:1px solid rgba(77,182,245,0.2);border-radius:10px;padding:14px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">無理のない購入価格</div>';
+  html += '<div style="font-size:26px;font-weight:900;color:#4db6f5">'+recPrice+'<span style="font-size:13px">万円</span></div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:3px">返済比率'+ratio+'%・月返済'+monthlyRec+'万円</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:14px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">銀行審査の最大融資額上限</div>';
+  html += '<div style="font-size:26px;font-weight:900;color:#fbbf24">'+maxPrice35+'<span style="font-size:13px">万円</span></div>';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:3px">返済比率35%上限基準</div>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '<div style="background:var(--dark3);border-radius:8px;padding:12px">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px">資金内訳</div>';
+  html += '<div style="display:grid;gap:4px;font-size:12px;color:rgba(255,255,255,0.6)">';
+  html += '<div style="display:flex;justify-content:space-between"><span>世帯年収</span><span style="color:var(--text)">'+income+'万円</span></div>';
+  html += '<div style="display:flex;justify-content:space-between"><span>頭金</span><span style="color:var(--text)">'+down+'万円</span></div>';
+  html += '<div style="display:flex;justify-content:space-between"><span>借入額（推奨）</span><span style="color:#4db6f5">'+recLoan+'万円</span></div>';
+  html += '<div style="display:flex;justify-content:space-between"><span>年間返済額（推奨）</span><span style="color:#4db6f5">'+yearlyRec+'万円</span></div>';
+  html += '<div style="display:flex;justify-content:space-between"><span>年収倍率（推奨）</span><span style="color:'+(recPrice/income >= 8 ? '#f87171' : recPrice/income >= 5 ? '#fbbf24' : '#4ade80')+'">'+Math.round(recPrice/income*10)/10+'倍</span></div>';
+  html += '</div></div>';
+
+  var multiplier = recPrice / income;
+  var advice = multiplier <= 5 ? '✅ 年収倍率5倍以下で健全な借入範囲です。' : multiplier <= 7 ? '⚠️ 年収倍率7倍以内。ギリギリ許容範囲ですが生活費のゆとりを確認を。' : '🔴 年収倍率'+Math.round(multiplier*10)/10+'倍は高めです。購入価格を下げるか頭金を増やすことを検討してください。';
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(255,255,255,0.7)">'+advice+'</div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+(function(){ calcMaxPurchase(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
