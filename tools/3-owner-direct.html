@@ -2412,6 +2412,37 @@
     <div id="down-payment-plan-result"></div>
   </div>
 
+  <div class="card" id="card-land-acquisition-cost">
+    <div class="card-label">土地購入</div>
+    <div class="card-title">土地を買うと追加でいくらかかる？全費用を計算する</div>
+    <div class="card-desc">土地の購入価格に加えて必ずかかる不動産取得税・登録免許税・仲介手数料・測量費などの諸費用をまとめて試算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">土地の購入価格（万円・例:2000）</div>
+        <input type="number" id="lac_price" value="2000" min="100" max="200000" step="100" oninput="calcLandAcquisitionCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">固定資産税評価額（万円・例:1400）</div>
+        <input type="number" id="lac_assessed" value="1400" min="100" max="200000" step="100" oninput="calcLandAcquisitionCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">仲介業者あり？</div>
+        <select id="lac_agent" onchange="calcLandAcquisitionCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="yes" selected>あり（仲介手数料が発生）</option>
+          <option value="no">なし（直接取引）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">測量が必要？</div>
+        <select id="lac_survey" onchange="calcLandAcquisitionCost()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="yes" selected>必要（境界未確定）</option>
+          <option value="no">不要（境界確定済み）</option>
+        </select>
+      </div>
+    </div>
+    <div id="land-acquisition-cost-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -7202,6 +7233,46 @@ function calcDownPaymentPlan() {
   el.innerHTML = html;
 }
 (function(){ calcDownPaymentPlan(); })();
+
+function calcLandAcquisitionCost() {
+  var el = document.getElementById('land-acquisition-cost-result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('lac_price').value) || 2000;
+  var assessed = parseFloat(document.getElementById('lac_assessed').value) || 1400;
+  var agent = document.getElementById('lac_agent').value;
+  var survey = document.getElementById('lac_survey').value;
+  var agentFee = agent === 'yes' ? Math.round((price * 0.03 + 6) * 11) / 10 : 0;
+  var regTax = Math.round(assessed * 0.015 * 10) / 10;
+  var acquisitionTax = Math.round(assessed * 0.5 * 0.03 * 10) / 10;
+  var scrivener = 8;
+  var surveyFee = survey === 'yes' ? 50 : 0;
+  var misc = 5;
+  var total = Math.round((agentFee + regTax + acquisitionTax + scrivener + surveyFee + misc) * 10) / 10;
+  var pct = Math.round(total / price * 100 * 10) / 10;
+  var html = '<div style="display:grid;gap:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+  var items = [
+    ['仲介手数料', agentFee > 0 ? '約' + agentFee.toFixed(1) + '万円' : '直接取引：0円'],
+    ['登録免許税（1.5%）', '約' + regTax.toFixed(1) + '万円'],
+    ['不動産取得税（3%×1/2）', '約' + acquisitionTax.toFixed(1) + '万円'],
+    ['司法書士報酬', '約' + scrivener + '万円'],
+    ['境界測量費', survey === 'yes' ? '約' + surveyFee + '万円' : '不要（0円）'],
+    ['その他諸費用', '約' + misc + '万円']
+  ];
+  items.forEach(function(it) {
+    html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">' + it[0] + '</div><div style="font-size:13px;font-weight:600;color:#e2e8f0">' + it[1] + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="background:rgba(96,165,250,0.1);border-radius:8px;padding:12px;text-align:center">';
+  html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">購入価格 ' + price.toLocaleString() + '万円に加えて必要な諸費用</div>';
+  html += '<div style="font-size:26px;font-weight:700;color:#60a5fa">約' + total.toFixed(1) + '<span style="font-size:14px;color:#94a3b8">万円</span></div>';
+  html += '<div style="font-size:10px;color:#94a3b8;margin-top:4px">購入価格の約<span style="color:#fb923c;font-weight:600">' + pct.toFixed(1) + '%</span>相当</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(251,191,36,0.08);border-radius:6px;padding:8px;font-size:10px;color:#fbbf24">💡 不動産取得税は取得後3〜6ヶ月後に納付書が届きます。購入時の出費と別に現金を準備しておきましょう</div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcLandAcquisitionCost(); })();
 
 function initBuyChecklist() {
   var el = document.getElementById('buy-checklist-content');

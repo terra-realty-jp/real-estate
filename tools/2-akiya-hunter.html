@@ -2598,6 +2598,40 @@
     <div id="akiya-sharehouse-result"></div>
   </div>
 
+  <div class="card" id="card-akiya-solar-panel">
+    <div class="card-label">空き家活用</div>
+    <div class="card-title">ソーラーパネルを設置すると毎月いくら入る？</div>
+    <div class="card-desc">空き家の屋根や土地にソーラーパネルを設置した場合の発電量・売電収入・初期費用の回収期間を試算します</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">設置場所・規模</div>
+        <select id="asp_scale" onchange="calcAkiyaSolarPanel()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="small">屋根設置・小（4kW）</option>
+          <option value="mid" selected>屋根設置・中（10kW）</option>
+          <option value="large">土地・野立て（50kW）</option>
+          <option value="mega">土地・野立て（100kW）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">地域の日射量</div>
+        <select id="asp_region" onchange="calcAkiyaSolarPanel()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="high">良好（九州・四国・東海）</option>
+          <option value="mid" selected>標準（関東・近畿）</option>
+          <option value="low">少ない（東北・北海道・日本海側）</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">設置費用（万円・例:150）</div>
+        <input type="number" id="asp_cost" value="150" min="50" max="5000" step="50" oninput="calcAkiyaSolarPanel()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">売電単価（円/kWh・例:12）</div>
+        <input type="number" id="asp_price" value="12" min="8" max="30" step="1" oninput="calcAkiyaSolarPanel()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="akiya-solar-panel-result"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -7366,6 +7400,38 @@ function calcAkiyaSharehouse() {
   el.innerHTML = html;
 }
 (function(){ calcAkiyaSharehouse(); })();
+
+function calcAkiyaSolarPanel() {
+  var el = document.getElementById('akiya-solar-panel-result');
+  if (!el) return;
+  var scale = document.getElementById('asp_scale').value;
+  var region = document.getElementById('asp_region').value;
+  var cost = parseFloat(document.getElementById('asp_cost').value) || 150;
+  var price = parseFloat(document.getElementById('asp_price').value) || 12;
+  var kwMap = { small: 4, mid: 10, large: 50, mega: 100 };
+  var kw = kwMap[scale] || 10;
+  var hMap = { high: 1200, mid: 1050, low: 900 };
+  var annualHours = hMap[region] || 1050;
+  var annualKwh = Math.round(kw * annualHours);
+  var annualIncome = Math.round(annualKwh * price / 10000 * 10) / 10;
+  var monthlyIncome = Math.round(annualIncome / 12 * 10) / 10;
+  var maintenanceCostAnnual = Math.round(cost * 0.01 * 10) / 10;
+  var netAnnual = Math.round((annualIncome - maintenanceCostAnnual) * 10) / 10;
+  var paybackYears = netAnnual > 0 ? Math.round(cost / netAnnual * 10) / 10 : 9999;
+  var html = '<div style="display:grid;gap:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html += '<div style="background:rgba(251,146,60,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">月間売電収入</div><div style="font-size:22px;font-weight:700;color:#fb923c">' + monthlyIncome.toFixed(1) + '<span style="font-size:11px;color:#94a3b8">万円</span></div></div>';
+  html += '<div style="background:rgba(251,146,60,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">年間発電量</div><div style="font-size:22px;font-weight:700;color:#fb923c">' + annualKwh.toLocaleString() + '<span style="font-size:11px;color:#94a3b8">kWh</span></div></div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">年間純収益</div><div style="font-size:15px;font-weight:600;color:#e2e8f0">' + netAnnual.toFixed(1) + '万円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">初期費用回収</div><div style="font-size:15px;font-weight:600;color:' + (paybackYears <= 12 ? '#4ade80' : '#fb923c') + '">' + (paybackYears >= 9999 ? '回収不可' : '約' + paybackYears.toFixed(1) + '年') + '</div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(251,146,60,0.08);border-radius:6px;padding:8px;font-size:10px;color:#fb923c">💡 FIT（固定価格買取制度）の売電単価は規模・申請年度により異なります。10kW以上は産業用（20年契約）として安定収益が見込めます</div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcAkiyaSolarPanel(); })();
 
 function calcMinpakuDetail() {
   var el = document.getElementById('minpaku-detail-result'); if (!el) return;

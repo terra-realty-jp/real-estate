@@ -2790,6 +2790,34 @@
     <div id="sale-readiness-result"></div>
   </div>
 
+  <div class="card" id="card-inherited-property-sale">
+    <div class="card-label">相続・節税</div>
+    <div class="card-title">相続で受け取った家を売るとき、税金はいくら？</div>
+    <div class="card-desc">相続した不動産を売却する場合の譲渡所得税と、3,000万円特別控除などの優遇制度を確認できます</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">売却価格（万円・例:3500）</div>
+        <input type="number" id="ips_sell" value="3500" min="100" max="200000" step="100" oninput="calcInheritedPropertySale()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">相続時の評価額（万円・例:2000）</div>
+        <input type="number" id="ips_base" value="2000" min="100" max="200000" step="100" oninput="calcInheritedPropertySale()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">3,000万円特別控除は使える？</div>
+        <select id="ips_deduct" onchange="calcInheritedPropertySale()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="yes">使える（相続後3年以内の空き家売却等）</option>
+          <option value="no">使えない</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">売却仲介手数料（万円・例:120）</div>
+        <input type="number" id="ips_fee" value="120" min="0" max="1000" step="10" oninput="calcInheritedPropertySale()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="inherited-property-sale-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -8134,6 +8162,37 @@ function calcSaleReadiness() {
   el.innerHTML = html;
 }
 (function(){ calcSaleReadiness(); })();
+
+function calcInheritedPropertySale() {
+  var el = document.getElementById('inherited-property-sale-result');
+  if (!el) return;
+  var sell = parseFloat(document.getElementById('ips_sell').value) || 3500;
+  var base = parseFloat(document.getElementById('ips_base').value) || 2000;
+  var deduct = document.getElementById('ips_deduct').value;
+  var fee = parseFloat(document.getElementById('ips_fee').value) || 120;
+  var expense = fee + Math.round(sell * 0.005);
+  var gain = sell - base - expense;
+  var deduction = deduct === 'yes' ? Math.min(3000, gain) : 0;
+  var taxableGain = Math.max(0, gain - deduction);
+  var taxRate = 0.2315;
+  var tax = Math.round(taxableGain * taxRate);
+  var netProfit = sell - base - expense - tax;
+  var html = '<div style="display:grid;gap:8px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">売却益（粗）</div><div style="font-size:14px;font-weight:600;color:#e2e8f0">' + gain.toLocaleString() + '万円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">3,000万円控除</div><div style="font-size:14px;font-weight:600;color:#4ade80">-' + deduction.toLocaleString() + '万円</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">課税対象</div><div style="font-size:14px;font-weight:600;color:#fb923c">' + taxableGain.toLocaleString() + '万円</div></div>';
+  html += '<div style="background:rgba(239,68,68,0.1);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">譲渡所得税（20.315%）</div><div style="font-size:14px;font-weight:600;color:#ef4444">' + tax.toLocaleString() + '万円</div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(74,222,128,0.1);border-radius:8px;padding:12px;text-align:center">';
+  html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">手取り利益（税・費用後）</div>';
+  html += '<div style="font-size:26px;font-weight:700;color:#4ade80">' + netProfit.toLocaleString() + '<span style="font-size:14px;color:#94a3b8">万円</span></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(251,191,36,0.08);border-radius:6px;padding:8px;font-size:10px;color:#fbbf24">💡 相続後3年10ヶ月以内の空き家売却は3,000万円特別控除の適用を検討できます。要件の確認は税理士へ</div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+(function(){ calcInheritedPropertySale(); })();
 
 function initSellReadiness() {
   var el = document.getElementById('sell-readiness-content');
