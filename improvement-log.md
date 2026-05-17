@@ -2302,3 +2302,20 @@
   - Tool1 **calcHomeLoanTax**（住宅ローン控除）: 「{period}年間で合計{totalDeduction}万円が戻る！」
   - Tool4 **calcRenoROI**（リノベーションROI）: 「投資回収{paybackYears}年・10年後ROI{roi10y}%」
   - Tool4 **calcArrearsLoss**（家賃滞納損失）: 「純損失{totalLoss}万円！保証会社加入で抑制可能」
+
+## 2026-05-17 （ラウンド66〜70）
+
+- **対象**: tools/5-toushi-bunseki.html, tools/3-owner-direct.html, tools/2-akiya-hunter.html, tools/4-kanri-saas.html, tools/1-ai-satei.html
+- **フェーズ**: Phase 2-A（高インパクト非TOP3カードへのLINEシェアボタン追加・継続）
+- **改善内容**: さらに多数の高インパクトカードにLINEシェアボタンを追加（計55ボタンに到達）
+  - Tool5 **calcRefi**（住宅ローン借り換え）: 「月々▲{saveMon}円削減 → 総節約額約{saveTotal}万円！」
+  - Tool3 **calcBuyVsSell**（買取vs仲介売却）: 「仲介売却の方が+{diff}万円多い！でも買取は2〜4週間で現金化」
+  - Tool5 **calcCorpVsPersonal**（法人化vs個人 税負担比較）: 「法人化で年間+{saving}万円の節税！」
+  - Tool2 **calcRentBreakeven**（リフォーム賃貸採算）: 「実質利回り{yieldRate}%・損益分岐点{breakYears}年」
+  - Tool3 **calcSumiKae**（住み替えシミュレーション）: 「売却手取り{netFromSell}万円・新規ローン{newLoan}万円」
+  - Tool3 **calcNego**（値引き交渉手取り）: 「7%値引きすると▲{change}万円減！値引き応じすぎ注意」
+  - Tool4 **calcRentRevision**（家賃値上げシミュレーション）: 「累計増収効果+{gain}万円！」
+  - Tool4 **calcVacancyReformROI**（空室リフォームROI）: 「回収期間{paybackYears}年・{verdict}」
+  - Tool1 **calcSwitchResident**（住み替え資金シミュレーション）: 「資金余裕+{balance}万円」
+  - Tool5 **calcExitTax**（売却タイミング別税金比較）: 「5年待つと{taxDiff}万円節税！」
+  - Tool5 **calcIRR**（IRR内部収益率）: 「IRR{irrPct}% vs ローン金利{loanRate}%・投資効率判定」
