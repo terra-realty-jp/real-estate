@@ -3999,7 +3999,14 @@ function calcSaleGain() {
     + '<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:7px;font-size:11px;color:#888;line-height:1.7">'
     + '※ 取得費が不明な場合、売却価格の5%（概算取得費）を適用することができます。<br>'
     + '※ 実際の税額は取得費の証明・特別控除の適用可否・諸控除により異なります。税理士・税務署にご確認ください。'
-    + '</div>';
+    + '</div>'
+    + (function(){
+        var sgUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
+        var sgBase = '🏠 家・空き家の売却 譲渡所得税シミュレーション\n\n売却' + sell + '万円（所有' + years + '年）\n利益（課税対象）: ' + Math.round(gain).toLocaleString() + '万円\n税金（推定）: ▲' + Math.round(taxWithSpecial).toLocaleString() + '万円\n→ 税引後の手取り: ' + Math.round(netWithSpecial).toLocaleString() + '万円';
+        var sgBonus = (special && saving > 0) ? '\n（3000万円控除で▲' + Math.round(saving).toLocaleString() + '万円節税！）' : '';
+        var sgText = encodeURIComponent(sgBase + sgBonus + '\n\n▶ あなたの売却でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+        return '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + sgUrl + '&text=' + sgText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+      })();
 }
 
 function renderEcoReformCard(score) {
@@ -5692,6 +5699,9 @@ function calcAkiyaTax() {
   html += '<ul style="font-size:12px;color:var(--text-muted);line-height:1.8;padding-left:16px;margin:0">' + actions.map(function(a){ return '<li>' + a + '</li>'; }).join('') + '</ul>';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 税額は概算です。実際の税額は市区町村の課税明細でご確認ください。</div>';
   html += '</div>';
+  var aktUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
+  var aktText = encodeURIComponent('⚠️ 空き家を放置すると固定資産税がこんなに変わる！\n\n現在の税額: ' + Math.round(normalTotal/10000*10)/10 + '万円/年\n特定空き家指定後: ' + Math.round(designatedTotal/10000*10)/10 + '万円/年\n→ 年間' + Math.round(taxIncrease/10000*10)/10 + '万円も増える！\nリスク判定: 【' + riskLabels[riskLevel] + '】\n\n▶ あなたの空き家でも無料診断\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + aktUrl + '&text=' + aktText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
   el.innerHTML = html;
 }
 (function(){ calcAkiyaTax(); })();
