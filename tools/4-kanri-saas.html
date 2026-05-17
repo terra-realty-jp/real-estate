@@ -7737,7 +7737,12 @@ function calcRenoROI() {
   el.innerHTML = kpiHtml
     + breakdownHtml
     + '<div style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.04);font-size:12px;font-weight:700;color:' + verdictColor + '">' + verdict + '</div>'
-    + '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.6">&#8251; 家賃増額・空室改善効果は物件・地域・施工品質により大きく変わります。実際は業者の見積もりと賃貸需要の調査をあわせて判断してください。</div>';
+    + '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.6">&#8251; 家賃増額・空室改善効果は物件・地域・施工品質により大きく変わります。実際は業者の見積もりと賃貸需要の調査をあわせて判断してください。</div>'
+    + (function(){
+        var rnoUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html');
+        var rnoText = encodeURIComponent('🏠 リノベーション投資ROI試算\n\nリノベーション費用: ' + cost + '万円\n年間収益増加: +' + Math.round(totalAnnualGain/10000).toLocaleString() + '万円\n投資回収期間: ' + (paybackYears !== null ? Math.round(paybackYears*10)/10 + '年' : '—') + '\n10年後ROI: ' + (roi10y !== null ? (roi10y>0?'+':'')+roi10y.toFixed(0)+'%' : '—') + '\n→ 判定: ' + verdict + '\n\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+        return '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + rnoUrl + '&text=' + rnoText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+      })();
 }
 
 // ===== 家賃値上げ通知文テンプレート =====
@@ -9241,6 +9246,7 @@ function calcArrearsLoss() {
       <div style="font-size:13px;font-weight:700;color:${grade.col};margin-top:4px">${grade.label}</div>
     </div>
     <div style="font-size:11px;color:var(--text-muted)">※法的費用・回収率は一般的な目安です。実際は弁護士にご相談ください。家賃保証会社加入で損失を大幅に抑制できます。</div>
+    <div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=${encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html')}&text=${encodeURIComponent('⚠️ 家賃滞納の損失シミュレーション\n\n滞納家賃: ' + arrears.toFixed(1) + '万円\n空室損失: ' + vacancyLoss.toFixed(1) + '万円\n→ 推定純損失: ' + totalLoss.toFixed(1) + '万円（' + grade.label + '）！\n\n家賃保証会社加入で損失を大幅に抑制できます\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）')}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>
   </div>`;
 }
 (function(){ calcArrearsLoss(); })();
