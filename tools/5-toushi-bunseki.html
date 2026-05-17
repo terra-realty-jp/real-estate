@@ -6730,6 +6730,9 @@ function calcHoldVsSell() {
   html += '<strong style="color:var(--gold)">' + (holdWins ? 'ホールド継続' : '今すぐ売却') + '</strong>の方が' + years + '年後に約<strong style="color:var(--text)">' + Math.round(diff).toLocaleString() + '万円</strong>有利な試算です。価格下落率・CF・再投資利回りの前提を変えて複数シナリオで確認してください。';
   html += '</div>';
   html += '</div>';
+  var hvsUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html');
+  var hvsText = encodeURIComponent('🏢 不動産：ホールド継続 vs 今すぐ売却 比較\n\nホールド継続（' + years + '年後）: ' + (holdTotal >= 0 ? '+' : '') + Math.round(holdTotal).toLocaleString() + '万円\n今すぐ売却（再投資後）: ' + (sellGrow >= 0 ? '+' : '') + Math.round(sellGrow).toLocaleString() + '万円\n→「' + (holdWins ? 'ホールド継続' : '今すぐ売却') + '」の方が' + Math.round(diff).toLocaleString() + '万円有利！\n\n▶ あなたの物件でも無料比較\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + hvsUrl + '&text=' + hvsText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
   el.innerHTML = html;
 }
 (function(){ calcHoldVsSell(); })();
@@ -8068,12 +8071,15 @@ function calcExitScenario5Y() {
 
   const bestScenario = cols[0].totalReturn >= 0 ? '楽観シナリオでも十分なリターンが見込めます。' : cols[1].totalReturn >= 0 ? '標準シナリオではプラスですが、悲観シナリオでは注意が必要です。' : '地価下落リスクが高い場合は5年以内の売却で損失になる可能性があります。長期保有か購入価格の再検討を。';
 
+  const es5Url = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html');
+  const es5Text = encodeURIComponent('📈 5年後出口シナリオ試算（自己資金' + equityInit.toLocaleString() + '万円）\n\n楽観（地価+10%）: 総合リターン' + (cols[0].totalReturn >= 0 ? '+' : '') + Math.round(cols[0].totalReturn).toLocaleString() + '万円（ROI' + cols[0].roiPct + '%）\n標準（地価±0%）: ' + (cols[1].totalReturn >= 0 ? '+' : '') + Math.round(cols[1].totalReturn).toLocaleString() + '万円\n悲観（地価-15%）: ' + (cols[2].totalReturn >= 0 ? '+' : '') + Math.round(cols[2].totalReturn).toLocaleString() + '万円\n\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
   el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">' + cardRows + '</div>'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
     + '<span style="font-size:12px;color:var(--text-muted)">自己資金（頭金） </span><strong>' + equityInit.toLocaleString() + '万円</strong>'
     + '<span style="font-size:12px;color:var(--text-muted);margin-left:12px">5年後残債 </span><strong style="color:#f87171">' + Math.round(remaining).toLocaleString() + '万円</strong>'
     + '<span style="font-size:12px;color:var(--text-muted);margin-left:12px">年間CF </span><strong style="color:' + (annualCF >= 0 ? '#4ade80' : '#f87171') + '">' + (annualCF >= 0 ? '+' : '') + Math.round(annualCF).toLocaleString() + '万円</strong></div>'
-    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:13px;line-height:1.7">💡 ' + bestScenario + '</div>';
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:13px;line-height:1.7">💡 ' + bestScenario + '</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + es5Url + '&text=' + es5Text + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcExitScenario5Y(); })();
 
