@@ -4000,6 +4000,11 @@ function calcSaleGain() {
     + '※ 取得費が不明な場合、売却価格の5%（概算取得費）を適用することができます。<br>'
     + '※ 実際の税額は取得費の証明・特別控除の適用可否・諸控除により異なります。税理士・税務署にご確認ください。'
     + '</div>'
+    + (!isLong && gain > 0
+      ? '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">⚠️ <strong>短期譲渡（所有5年以下）は税率が約2倍：</strong> 所有から5年を超えると税率が約20%に下がります（今は約40%）。急がず1〜2年待てる場合は、5年超になるタイミングを計るだけで税金が大幅に減ることがあります。</div>'
+      : (gain > 0 && !special
+        ? '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>節税チェック:</strong> マイホームとして住んでいた家なら「3,000万円特別控除」が使えます。上の「マイホームだった」をONにすると多くの場合に税金がゼロになります。また購入時の領収書・登記費用・リフォーム費用が取得費として差し引けます。</div>'
+        : ''))
     + (function(){
         var sgUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
         var sgBase = '🏠 家・空き家の売却 譲渡所得税シミュレーション\n\n売却' + sell + '万円（所有' + years + '年）\n利益（課税対象）: ' + Math.round(gain).toLocaleString() + '万円\n税金（推定）: ▲' + Math.round(taxWithSpecial).toLocaleString() + '万円\n→ 税引後の手取り: ' + Math.round(netWithSpecial).toLocaleString() + '万円';
@@ -6019,6 +6024,7 @@ function calcSozokuHyouka() {
   html += '📐 路線価方式: ' + rosenka + '千円/㎡ × ' + area + '㎡ = ' + Math.round(landVal).toLocaleString() + '万円　建物: ' + bldg + '万円（固定資産税評価額）<br>';
   html += '📌 小規模宅地特例: ' + tokureiLabel + '　適用面積: ' + appliedArea.toFixed(0) + '㎡';
   html += '</div>';
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>この評価額の使い方:</strong> 相続財産（現金・株式・その他不動産）の合計から「基礎控除（3,000万円＋600万円×法定相続人数）」を差し引いた残りに課税されます。この評価額だけで税額は決まりません。相続税がゼロかどうかは全財産の合計で判断が必要です。</div>';
   html += '</div>';
   el.innerHTML = html;
 }
