@@ -2282,3 +2282,23 @@
   - Tool3 **calcHLTax**（住宅ローン減税）: 「借入{loan}万円で{cfg.years}年間に合計{totalDeduct}万円が戻る！」
   - Tool1 **calcNetProceeds**（売却手取り額）: 「売却後手取り{net}万円（費用・税金全部引き後）」
   - Tool1 **calcInhTax**（相続税評価額）: 「評価額は時価の{ratio}%（差額{diff}万円分節税）」
+
+## 2026-05-17 （ラウンド58〜65）
+
+- **対象**: tools/5-toushi-bunseki.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/1-ai-satei.html
+- **フェーズ**: Phase 2-A（高インパクト非TOP3カードへのLINEシェアボタン追加・継続）
+- **改善内容**: さらに多数の高インパクトカードにLINEシェアボタンを追加（計44ボタンに到達）
+  - Tool5 **calcHoldVsSell**（ホールドvs売却比較）: 「{years}年後{winner}が{diff}万円有利」
+  - Tool5 **calcExitScenario5Y**（5年後出口シナリオ）: 「楽観/標準/悲観の3シナリオ別リターン表示」
+  - Tool5 **calcLeverage**（レバレッジ効果）: 「ROA{roa}% vs ROE{roe}%・正/逆レバレッジ判定」
+  - Tool5 **calcDeadCross**（デッドクロス診断）: 「{dcYear}年目にデッドクロス発生！税負担増加の警告」
+  - Tool5 **calcDepreciation**（減価償却スケジュール）: 「年間節税{taxSave}万円・全期間合計{total}万円」
+  - Tool5 **calcSublease**（サブリースvs自己管理）: 「10年差額{diff}万円・{winner}が有利」
+  - Tool2 **calcScenario3**（活用3択シナリオ）: 「売却/賃貸/維持の3択で最有利は{bestLabel}！」
+  - Tool2 **calcAkiyaMethod**（空き家活用方式比較）: 「4択（通常賃貸/民泊/DIY/売却）で最有利判定」
+  - Tool3 **calcNewVsUsed**（新築vs中古比較）: 「{years}年トータルで{winner}が{diff}万円お得！」
+  - Tool3 **calcLoanPlan**（住宅ローン返済プラン）: 「変動と固定で総利息差{interestDiff}万円！」
+  - Tool1 **calcSellCosts**（売却諸費用一覧）: 「費用合計{totalMin}〜{totalMax}万円、手取り{netMin}〜{netMax}万円」
+  - Tool1 **calcHomeLoanTax**（住宅ローン控除）: 「{period}年間で合計{totalDeduction}万円が戻る！」
+  - Tool4 **calcRenoROI**（リノベーションROI）: 「投資回収{paybackYears}年・10年後ROI{roi10y}%」
+  - Tool4 **calcArrearsLoss**（家賃滞納損失）: 「純損失{totalLoss}万円！保証会社加入で抑制可能」
