@@ -2256,3 +2256,29 @@
   - **card-comparable-sales（近隣成約価格比較）**: 「自物件坪単価〇〇万円 vs 近隣平均〇〇万円、相場より〇%（〇〇な評価）」の文言
   - **card-capital-gains（売却税金試算）**: 「5年超保有すると〇〇万円も節税！」の衝撃的な節税額提示（売却益がある場合のみ表示）
 - **マイルストーン**: 全5ツール×TOP3カード（計15カード）へのLINEシェアボタン追加完了。Phase 2-A（シェアしたくなるデザイン）の主要タスク達成
+
+## 2026-05-17 （ラウンド51〜52）
+
+- **対象**: tools/1-ai-satei.html, tools/3-owner-direct.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 2-A（高インパクト非TOP3カードへのLINEシェアボタン追加）
+- **改善内容**: 高インパクトな非TOP3カードにLINEシェアボタンを追加
+  - Tool1 **calcReformVsAsIs**（リフォームvs現状売却）: 現状手取り・リフォーム後手取り・差額を提示
+  - Tool1 **calcRetirementFund**（老後資金診断）: 「〇〇判定」「家を売ると老後〇年間生活できる」
+  - Tool3 **calcEarlyRepay**（繰上返済シミュレーション）: 「繰上返済で利息〇〇万円・期間〇ヶ月短縮」
+  - Tool5 **calcLossOffsetTax**（損益通算節税）: 「赤字で給与から年間〇万円節税！実効節税率〇%」
+
+## 2026-05-17 （ラウンド53〜57）
+
+- **対象**: tools/5-toushi-bunseki.html, tools/2-akiya-hunter.html, tools/4-kanri-saas.html, tools/3-owner-direct.html, tools/1-ai-satei.html
+- **フェーズ**: Phase 2-A（高インパクト非TOP3カードへのLINEシェアボタン追加・継続）
+- **改善内容**: さらに多数の高インパクトカードにLINEシェアボタンを追加
+  - Tool5 **calcNisaVsRealestate**（NISAvs不動産投資比較）: 「{capital}万円・{years}年で{winner}が{diff}万円多い」
+  - Tool2 **calcSaleGain**（売却譲渡所得税）: 「売却手取り{netWithSpecial}万円、節税効果{saving}万円」
+  - Tool2 **calcAkiyaTax**（空き家固定資産税）: 「放置で固定資産税が{taxIncrease}万円/年増える！」
+  - Tool4 **calcTenantChurn**（退去リスク診断）: 「判定{grade}・リスクスコア{score}/100」
+  - Tool4 **calcTaxSummary**（税務サマリー）: 「課税所得{taxableIncome}万円・節税{dep+blue}万円」
+  - Tool4 **calcMgmtVsSelf**（管理委託vs自主管理比較）: 「{winner}が年間{diff}万円お得」
+  - Tool3 **calcFee**（仲介手数料）: 「{p}万円の物件、手数料{feeWithTax}万円」
+  - Tool3 **calcHLTax**（住宅ローン減税）: 「借入{loan}万円で{cfg.years}年間に合計{totalDeduct}万円が戻る！」
+  - Tool1 **calcNetProceeds**（売却手取り額）: 「売却後手取り{net}万円（費用・税金全部引き後）」
+  - Tool1 **calcInhTax**（相続税評価額）: 「評価額は時価の{ratio}%（差額{diff}万円分節税）」
