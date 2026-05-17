@@ -4729,7 +4729,12 @@ function calcNewVsUsed() {
     + '</div>'
     + '<div style="padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px">'
     + (winner==='new' ? '🏗 新築の方が'+diff.toLocaleString()+'万円（'+years+'年トータル）安い見込みです。' : '🏚 中古＋リフォームの方が'+diff.toLocaleString()+'万円（'+years+'年トータル）安い見込みです。')
-    + '<span style="color:var(--text-muted);font-size:10px"> ※ 資産価値の減少率は概算です。</span></div>';
+    + '<span style="color:var(--text-muted);font-size:10px"> ※ 資産価値の減少率は概算です。</span></div>'
+    + (function(){
+        var nvuUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
+        var nvuText = encodeURIComponent('🏡 新築 vs 中古＋リフォーム ' + years + '年間コスト比較\n\n🏗新築: 正味コスト' + Math.round(newNetCost).toLocaleString() + '万円\n🏚中古＋リフォーム: ' + Math.round(usedNetCost).toLocaleString() + '万円\n→「' + (winner === 'new' ? '新築' : '中古＋リフォーム') + '」の方が' + diff.toLocaleString() + '万円お得！\n\n▶ あなたの条件でも無料比較\n不動産かんたんツール（TERRA REALTY）');
+        return '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + nvuUrl + '&text=' + nvuText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+      })();
 }
 (function(){ calcNewVsUsed(); })();
 
@@ -5037,8 +5042,12 @@ function calcLoanPlan() {
       +'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">'+p.note+'</div>'
       +'</div>';
   }).join('');
+  var interestDiff = Math.round((plans[2].interest - plans[0].interest)/10000);
+  var lpUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
+  var lpText = encodeURIComponent('🏠 住宅ローン 返済プラン比較\n\n借入' + loanMan + '万円・' + term + '年返済\n\n変動金利（' + varR + '%）: 月' + Math.round(plans[0].monthly/10000*10)/10 + '万円、総利息' + Math.round(plans[0].interest/10000) + '万円\n全期固定（' + fullR + '%）: 月' + Math.round(plans[2].monthly/10000*10)/10 + '万円、総利息' + Math.round(plans[2].interest/10000) + '万円\n→ 変動と固定で総利息差が' + interestDiff + '万円！\n\n▶ あなたのローンでも無料比較\n不動産かんたんツール（TERRA REALTY）');
   el.innerHTML = '<div style="display:grid;gap:10px;margin-bottom:10px">'+cards+'</div>'
-    +'<p style="font-size:10px;color:var(--text-muted)">※ 元利均等返済で計算。固定10年は11年目以降も同金利で試算。実際の返済額は金融機関にご確認ください。</p>';
+    +'<p style="font-size:10px;color:var(--text-muted)">※ 元利均等返済で計算。固定10年は11年目以降も同金利で試算。実際の返済額は金融機関にご確認ください。</p>'
+    +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + lpUrl + '&text=' + lpText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcLoanPlan(); })();
 
