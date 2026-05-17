@@ -5306,6 +5306,7 @@ function calcSaleSchedule() {
   });
   html += '</div>';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 日程は目安です。市場状況・物件条件によって大きく変動します。</div>';
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('📅 不動産売却スケジュール診断\n\n引渡し予定まで: あと' + diffDays + '日\n売却方法: ' + (stype==='agency'?'仲介売却':'買取') + '\n\n「いつまでに何をすべきか」を自動でスケジュール生成！\n▶ あなたの売却スケジュールを無料作成\n不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
   html += '</div>';
   el.innerHTML = html;
 }
@@ -6086,6 +6087,7 @@ function calcBridgeLoan() {
     + '<div style="font-size:12px;margin-top:4px;line-height:1.5">旧居売却前に新居の購入代金を銀行が一時的に立て替える短期融資。利息のみ支払い、旧居売却後に一括返済します。金利は通常の住宅ローンより高く（年2.5〜5%程度）、早期売却が重要です。</div>'
     + '</div>'
     + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">※手数料は金融機関によって異なります。事前に担当行へご確認ください。</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏦 つなぎ融資（ブリッジローン）試算\n\n融資額' + amount + '万円・金利' + rate + '%・' + months + 'ヶ月\nつなぎ融資総コスト: ' + totalCost.toLocaleString() + '万円\n二重ローン期間の月次負担: ' + doubleMonthly.toLocaleString() + '万円/月\n\n住み替えの際のつなぎローンコストを事前に把握！\n▶ あなたの住み替えでも無料試算\n不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>'
     + '</div>';
 }
 (function(){ calcBridgeLoan(); })();
@@ -6285,6 +6287,9 @@ function calcFutureValue() {
   const total0 = price;
   const structName = lifespan === 22 ? '木造' : lifespan === 27 ? '軽量鉄骨' : 'RC造';
   const landChgLabel = landChg >= 0 ? `+${landChg}%/年` : `${landChg}%/年`;
+  const fv20 = Math.round(projectLand(20) + projectBuild(20));
+  const fv20diff = fv20 - price;
+  const fv20pct = price > 0 ? (fv20diff / price * 100).toFixed(1) : 0;
 
   r.innerHTML = `<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">構造: ${structName}（耐用年数${lifespan}年）／築${age}年／地価変動: ${landChgLabel}</div>
@@ -6308,6 +6313,7 @@ function calcFutureValue() {
       </tbody>
     </table>
     <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">※建物は残存耐用年数による直線償却で試算。土地は複利で変動。概算値のため参考程度にご利用ください。</div>
+    <div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=${encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html')}&text=${encodeURIComponent('📉 不動産の将来価値シミュレーション\n\n購入価格: ' + price + '万円（' + structName + '・築' + age + '年）\n地価変動: ' + landChgLabel + '\n20年後の想定価値: ' + fv20.toLocaleString() + '万円（' + (fv20diff>=0?'+':'') + fv20pct + '%）\n\n「この家、20年後にいくらになる？」を今すぐ試算\n▶ あなたの不動産でも無料試算\n不動産かんたんツール（TERRA REALTY）')}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>
   </div>`;
 }
 (function(){ calcFutureValue(); })();
