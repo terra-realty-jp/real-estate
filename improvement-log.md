@@ -2319,3 +2319,19 @@
   - Tool1 **calcSwitchResident**（住み替え資金シミュレーション）: 「資金余裕+{balance}万円」
   - Tool5 **calcExitTax**（売却タイミング別税金比較）: 「5年待つと{taxDiff}万円節税！」
   - Tool5 **calcIRR**（IRR内部収益率）: 「IRR{irrPct}% vs ローン金利{loanRate}%・投資効率判定」
+
+## 2026-05-17 （ラウンド71〜75）
+
+- **対象**: tools/4-kanri-saas.html, tools/2-akiya-hunter.html, tools/1-ai-satei.html, tools/5-toushi-bunseki.html, tools/3-owner-direct.html
+- **フェーズ**: Phase 2-A（高インパクト非TOP3カードへのLINEシェアボタン追加・継続）
+- **改善内容**: さらに多数の高インパクトカードにLINEシェアボタンを追加（計65ボタンに到達）
+  - Tool4 **calcVacancyLoss**（空室損失シミュレーション）: 「既発生損失{alreadyLost}万円・月{monthlyLossOngoing}万円継続」
+  - Tool4 **calcRentNego**（賃料値上げ交渉成功確率）: 「交渉スコア{pct}%・{label}」
+  - Tool2 **calcReformPayback**（空き家リフォーム回収期間）: 「年間収益増加{annualBenefit}万円・回収{paybackLabel}」
+  - Tool2 **calcAkiyaRental**（空き家賃貸化採算）: 「月CF:{monthlyCF}万円・利回り{yield_}%・{verdict}」
+  - Tool1 **calcInhSellVsRent**（相続不動産 売却vs賃貸活用）: 「10年比較で{winner}が{diff}万円有利」
+  - Tool1 **calcBuyVsRent30yr**（持ち家vs賃貸 30年比較）: 「{winner}！差額{diff}万円」
+  - Tool5 **calcRealYield**（インフレ調整後実質利回り）: 「実質{realNet}%・10年後実質ゲイン{realGain10}万円」
+  - Tool5 **calcFIRETarget**（不動産FIREシミュレーション）: 「{neededUnits}棟で{yearsNeeded}年でFIRE達成！」
+  - Tool3 **calcPurchaseCost**（不動産購入諸費用）: 「諸費用{total}万円（物件価格の約{ratio}%）」
+  - Tool3 **calcPreSaleReform**（売却前リフォーム費用対効果）: 「純損益{netGain}万円・ROI{roi}%・{verdict.label}」
