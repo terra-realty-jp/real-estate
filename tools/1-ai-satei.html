@@ -5802,6 +5802,7 @@ function calcDemoVsKeep() {
     + (winner==='demolish'?'<div style="font-size:10px;font-weight:700;color:#4ade80;margin-top:4px">✓ WINNER</div>':'')
     + '</div></div>'
     + '<div style="padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:8px;text-align:center;font-size:13px;font-weight:700;color:' + winnerColor + '">' + winnerLabel + '</div>'
+    + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>判断の目安:</strong> 解体費用が更地での売却価格の上昇額を下回れば解体が有利です。築30年超の木造は解体して更地にした方が買い手がつきやすい傾向があります。ただし需要の少ない農村部・過疎地では更地にしても売れにくいケースがあります。</div>'
     + '<div style="margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.7">&#8251; 仲介手数料は（売却価格×' + Math.round(commRate*100) + '%＋6万円）×1.1で計算。解体費は見積もりにより変動します。アスベスト含有の場合は追加費用が発生します。</div>';
 }
 
@@ -5842,6 +5843,7 @@ function calcTransferTax() {
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="background:rgba(74,222,128,0.08);border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">手取り（特控あり）</div><div style="font-size:22px;font-weight:900;color:var(--green)">'+(sell-expense-tax).toFixed(0)+'万</div></div>'
     +'<div style="background:rgba(255,80,80,0.08);border-radius:8px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">手取り（特控なし）</div><div style="font-size:22px;font-weight:900;color:var(--red)">'+(sell-expense-taxNoSpecial).toFixed(0)+'万</div></div></div>')
     +'<p style="font-size:10px;color:var(--text-muted);margin-top:10px">※ 復興特別所得税(2.1%)含む実効税率。居住用3000万特控は売却年度居住・過去2年未適用など要件あり。実際は税理士への相談を推奨します。</p>'
+    +'<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>節税の3つのポイント:</strong> ①5年超保有で税率がほぼ半分（約40%→約20%）になります。売るタイミングで数百万円の差が出ることも。②マイホームなら3,000万円控除で多くの場合に税金がゼロになります。③購入時の諸費用・リフォーム費の領収書があれば取得費に加算でき節税できます。</div>'
     +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('💰 譲渡所得税 シミュレーション\n\n売却' + sell + '万円（' + exemptionLabel + '）\n譲渡益: ' + gain.toFixed(0) + '万円\n3000万特控あり: 税額' + tax.toFixed(0) + '万円\n3000万特控なし: 税額' + taxNoSpecial.toFixed(0) + '万円\n→ 特控を使うと' + (taxNoSpecial-tax).toFixed(0) + '万円の節税！\n\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcTransferTax(); })();
@@ -5882,6 +5884,9 @@ function calcSellCosts() {
       +'</tr>';
   }).join('');
   var kpiS = 'background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center';
+  var scGuide = netMin < 0
+    ? '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:#f87171;line-height:1.8">⚠️ <strong>手取りがマイナス（オーバーローン）:</strong> ローン残高が売値を上回っています。差額（約'+Math.abs(Math.round(netMin))+'万円）を自己資金で補う必要があります。銀行への相談（任意売却）を検討してください。</div>'
+    : '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>費用率の目安:</strong> 仲介手数料のみなら売却価格の約3〜4%が標準水準。測量・リフォームを含めると5〜8%程度になることも。仲介手数料（上限額）は不動産会社との交渉で減額できる場合があります。</div>';
   el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
     +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:var(--red)">'+totalMin.toFixed(0)+'〜'+totalMax.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">費用合計</div></div>'
     +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:var(--gold)">'+(commission/sell*100).toFixed(1)+'%</div><div style="font-size:10px;color:var(--text-muted)">費用率（概算）</div></div>'
@@ -5891,6 +5896,7 @@ function calcSellCosts() {
     +'<thead><tr style="background:rgba(255,255,255,0.05)"><th style="padding:7px 8px;font-size:11px;text-align:left">費用項目</th><th style="padding:7px 8px;font-size:11px;text-align:right">金額目安</th><th style="padding:7px 8px;font-size:11px;text-align:left">備考</th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table></div>'
     +'<p style="font-size:10px;color:var(--text-muted)">※ 仲介手数料は上限額です。交渉次第で減額可能な場合もあります。実際の費用は担当者にご確認ください。</p>'
+    +scGuide
     +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='
     +encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html')
     +'&text='+encodeURIComponent('🏠 家の売却 諸費用シミュレーション\n\n売却価格: '+sell+'万円\n費用合計目安: '+totalMin.toFixed(0)+'〜'+totalMax.toFixed(0)+'万円\n仲介手数料: '+commission+'万円\n→ 手取り目安: '+netMin.toFixed(0)+'〜'+netMax.toFixed(0)+'万円\n\n思ったより費用がかかる！\n▶ あなたの売却でも無料シミュレーション\n不動産かんたんツール（TERRA REALTY）')
