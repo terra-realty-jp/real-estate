@@ -2359,3 +2359,39 @@
   - Tool3: calcAcqTax, calcNegLimit
   - Tool4: calcEquipReserve, calcTenantTurnover
 - **理由**: 全ツールのLINEシェアボタン設置率を引き上げ、口コミによるPLG（プロダクト主導成長）を促進
+
+## 2026-05-17 （ラウンド88〜99）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 1 UX改善（非TOP3カードへの解釈ガイド拡充）
+- **改善内容**: 多数の非TOP3カードに解釈ガイド（💡ブルーボックス または ⚠️レッドボックス）を追加
+  - Tool2 **calcSaleGain**（売却利益・譲渡税）: 短期/長期譲渡の税率の差・3000万円控除チェック
+  - Tool5 **calcCapRate**（キャップレート診断）: 年平均リターンの判断基準（5%↑優良・3%未満要注意）
+  - Tool3 **calcHLTax**（住宅ローン減税）: 控除の仕組み（年末残高×0.7%・確定申告必要）
+  - Tool1 **calcInhSellVsRent**（相続不動産 売却vs賃貸）: 動的ガイド（賃貸が有利でも注意点・売却有利でも確認点）
+  - Tool2 **calcSozokuHyouka**（相続税評価額）: 基礎控除の仕組み・評価額だけでは税額が分からない旨
+  - Tool5 **calcAssetGoal**（資産目標逆算）: 利回り5%物件の現実的な目安・頭金の壁
+  - Tool5 **calcMatrix**（物件比較マトリックス）: DSCR/表面利回り/年間CFの判断基準
+  - Tool2 **calcScenario3**（活用3択シナリオ）: 数字以外の考慮点（管理の手間・相続登記・維持が最悪）
+  - Tool3 **calcSumiKae**（住み替えシミュレーション）: 月返済額の安全水準（手取りの25%以内）
+  - Tool1 **calcPriceSchedule**（売出価格スケジュール）: 値下げペースの目安・10%超値下げの影響
+  - Tool5 **calcDepreciation**（減価償却スケジュール）: 節税の仕組み・築古物件の節税メリット
+  - Tool2 **calcReformCost**（リフォーム費用推算）: 採算の判断基準・解体vs改修の目安
+  - Tool5 **calcTotalReturn10yr**（10年トータルリターン）: ROI50%以上が優秀・5年超売却の重要性
+  - Tool5 **calcDeadCross**（デッドクロス診断）: 対策3つ（繰上返済・早期売却・法人化）
+  - Tool3 **calcBuyVsSell**（買取vs仲介売却）: 200万円分岐での判断基準
+- **仮ユーザーレビュー**: 田中みちこさん視点 → 「売却したらいくら手取り？」→ calcSaleGainの短期税率警告が特に有効。佐藤健一さん視点 → 「この利回りは良いの？」→ calcCapRateの「5%以上なら優良」基準で迷いが解消
+- **理由**: TOP3以外のカードにも「数字の意味・良い/悪いの判断基準」が不足していたため、CLAUDE.mdの最優先課題として解釈ガイドを順次追加
+
+
+## 2026-05-17 （ラウンド100〜115）
+
+- **対象**: tools/4-kanri-saas.html, tools/1-ai-satei.html, tools/3-owner-direct.html, tools/2-akiya-hunter.html
+- **フェーズ**: Phase 2-A（LINEシェアボタン追加・継続）
+- **改善内容**: 多数の中優先カードにLINEシェアボタンを追加（合計115個に到達）
+  - Tool4: calcRunningCost（コスト率診断）, calcRentCutBreakeven（家賃値下げ損益分岐）, calcKeyMoneyOpt（礼金・AD最適化）, calcRepairTriage（修繕トリアージ）, calcCommonAlloc（共益費按分）, calcRestorationCost（原状回復費試算）, calcGuarantyFee（家賃保証会社費用対効果）
+  - Tool1: calcPropTax（固定資産税試算）, calcDemoVsKeep（解体vs維持）, calcGainTax（売却税額）, calcMgmtUpSim（管理費値上がりシミュレーション）
+  - Tool3: calcSaleSchedule（売却スケジュール）, calcBridgeLoan（つなぎ融資）, calcFutureValue（将来価値）
+  - Tool2: calcAkiyaBEP（損益分岐点）, calcReformCost（リフォーム費用相場）
+- **仮ユーザーレビュー**: 佐藤健一さん視点 → 「この管理費は適正？」→ calcRunningCostのコスト率ガイドが特に有効。田中みちこさん視点 → 「空き家のリフォームいくらかかる？」→ calcReformCostで坪単価まで表示され迷いが解消
+- **理由**: 全ツールのシェアボタン設置率を継続的に引き上げ、口コミによるPLG促進
