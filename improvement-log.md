@@ -2347,3 +2347,15 @@
   - Tool1 **calcSellNowVsWait**（今すぐ売るvs待って売る）: 「{winner}！差額{diff}万円」
   - Tool5 **calcCapRate**（キャップレート診断）: 「年平均リターン{annualReturn}%」
   - Tool5 **calcTotalReturn10yr**（10年間トータルリターン）: 「ROI {roiOnDown}%・総リターン{totalReturn}万円」
+
+## 2026-05-17 (ラウンド79〜86)
+
+- **対象**: tools/5-toushi-bunseki.html, tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html
+- **フェーズ**: Phase 2-A（シェア機能拡充）
+- **改善内容**: LINEシェアボタンを以下の関数に追加（計22個追加、累計93個）
+  - Tool5: calcCFGoal, calcExitStrategy, calcNextTarget, calcPortfolioScale, calcLossCut, calcFullLoanRisk, calcCashVsLoan
+  - Tool1: calcSaleSeason, calcCommissionSave, calcFixedAssetTax, calcPriceDropEffect
+  - Tool2: calcProcrastCost, calcDemoCost
+  - Tool3: calcAcqTax, calcNegLimit
+  - Tool4: calcEquipReserve, calcTenantTurnover
+- **理由**: 全ツールのLINEシェアボタン設置率を引き上げ、口コミによるPLG（プロダクト主導成長）を促進
