@@ -318,6 +318,14 @@
   <!-- 放置リスク試算カード -->
   <div class="card" id="riskCalcCard" style="display:none;">
     <div class="card-title"><span class="icon">💴</span>このまま放置すると…（年間コスト試算）</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:5px">📍 物件の立地（賃貸収入目安の計算に使います）</div>
+      <select id="risk_region" onchange="updateScore()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        <option value="rural">地方・農村・小都市（家賃目安3〜6万円）</option>
+        <option value="local" selected>地方都市・県庁所在地（家賃目安5〜9万円）</option>
+        <option value="urban">首都圏・大都市（東京・大阪など）（家賃目安8〜15万円）</option>
+      </select>
+    </div>
     <div id="riskCalcContent"></div>
   </div>
 
@@ -3212,7 +3220,9 @@ function updateScore() {
     const total = annualTax + maintenance + insurance;
     const total5y = total * 5;
     const inheritancePenalty = hasInheritance ? '＋相続登記義務違反 最大10万円の過料リスク' : '';
-    const rentLow = 60000, rentHigh = 90000;
+    const region = document.getElementById('risk_region')?.value || 'local';
+    const rentLow  = region === 'rural' ? 35000 : region === 'urban' ? 90000 : 60000;
+    const rentHigh = region === 'rural' ? 60000 : region === 'urban' ? 150000 : 90000;
     const annualRentLow = rentLow * 12, annualRentHigh = rentHigh * 12;
     const opportunityLoss5y = annualRentLow * 5;
     document.getElementById('riskCalcContent').innerHTML = `
