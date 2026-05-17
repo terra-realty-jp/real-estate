@@ -6528,7 +6528,12 @@ function calcPriceScenario() {
   var standardSc = scenarios[1];
   var stdPrice = Math.round(ai * standardSc.mult / 100) * 100;
   var stdNet = stdPrice - loan - Math.round((stdPrice * 0.03 + 6) * 1.1 * 10) / 10;
-  var shareText = encodeURIComponent('📊 不動産売却シナリオ試算\n標準価格: ' + stdPrice.toLocaleString() + '万円\n手取り見込み: ' + Math.round(stdNet).toLocaleString() + '万円\n▶ 無料で試算する');
+  var highPrice = Math.round(ai * scenarios[0].mult / 100) * 100;
+  var highNet = Math.round(highPrice - loan - Math.round((highPrice * 0.03 + 6) * 1.1 * 10) / 10);
+  var lowPrice = Math.round(ai * scenarios[2].mult / 100) * 100;
+  var lowNet = Math.round(lowPrice - loan - Math.round((lowPrice * 0.03 + 6) * 1.1 * 10) / 10);
+  var netGap = Math.abs(highNet - lowNet);
+  var shareText = encodeURIComponent('🏠 不動産売却シナリオ試算\n\n【売り方で手取りがこんなに変わる！】\n💰最高（強気）: 手取り' + highNet.toLocaleString() + '万円\n📊標準: 手取り' + Math.round(stdNet).toLocaleString() + '万円\n⚡最速（弱気）: 手取り' + lowNet.toLocaleString() + '万円\n\n→ 売り方次第で最大' + netGap.toLocaleString() + '万円の差！\n\n▶ あなたの家でも無料で試算できます\n不動産かんたんツール（TERRA REALTY）');
   var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html');
   html += '<div style="margin-top:12px;text-align:center">';
   html += '<a href="https://social-plugins.line.me/lineit/share?url=' + shareUrl + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;font-size:12px;font-weight:700;padding:8px 18px;border-radius:8px;text-decoration:none">';
