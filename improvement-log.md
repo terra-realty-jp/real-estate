@@ -2395,3 +2395,35 @@
   - Tool2: calcAkiyaBEP（損益分岐点）, calcReformCost（リフォーム費用相場）
 - **仮ユーザーレビュー**: 佐藤健一さん視点 → 「この管理費は適正？」→ calcRunningCostのコスト率ガイドが特に有効。田中みちこさん視点 → 「空き家のリフォームいくらかかる？」→ calcReformCostで坪単価まで表示され迷いが解消
 - **理由**: 全ツールのシェアボタン設置率を継続的に引き上げ、口コミによるPLG促進
+
+## 2026-05-18（ラウンド232〜384・セッション継続）
+
+- **対象**: tools/5-toushi-bunseki.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/2-akiya-hunter.html
+- **フェーズ**: Phase 2-A（LINEシェアボタン追加・全ツール完了）
+- **改善内容**: 全5ツール × 全405のUI計算関数にLINEシェアボタン追加を完了（100%達成）
+  - Tool5（不動産投資シミュレーター）: 89関数すべてにLINEシェアボタンを追加（ラウンド311-339）
+    - calcAreaScore, calcRateRisk, calcScreening, calcBudgetFit, calcMatrix, calcTaxSaving, calcRevPrice,
+      calcFirstYear, calcKubuIttou, calcFusaiCheck, calcCrowdFundCompare, calcNisaVsProperty,
+      calcValuationCompare, calcREITComp, calcLoanCapacity, calcPortfolioCFSum, calcRegionalRisk,
+      calcIRRCalc, calcLeverageEffect, calcAreaDiversify, calcMortgageConstant, calcBreakevenYield,
+      calcScrapRebuild, calcExitStrategy3Way, calcPensionSupplement, calcStartDelay, calcYieldTriple,
+      calcPropertyScore（28関数追加）
+  - Tool3（売主・買主マッチング）: 75関数すべてにLINEシェアボタンを追加完了（ラウンド340-371）
+    - calcDDCheck, calcMgmtCheck, calcAgencyScore, calcKakutei, calcJuset, calcKessai, calcHikiwatashi,
+      calcKyoyuMeigi, calcLoanPreApproval, calcNewUsedComp, calcDisclosureCheck, calcBuildCost,
+      calcInspectionCost, calcLandBuildSplit, calcMoveOrder, calcMortgageRelease, calcInspectionROI,
+      calcOfferTiming, calcBuyerProfile, calcMoveInReform, calcRenovFinance, calcClosingAdj,
+      calcNewHomeDeduction, calcBuyerInspection, calcSellThenRent, calcTitleTransferCost,
+      calcDownPaymentPlan, calcHomeLoanDeduction, calcPurchaseExtraCosts, calcFutureValueEstimate,
+      calcRentToOwnPlan, calcMaxPurchase（32関数追加）
+  - Tool4（賃貸物件かんたん管理）: 78関数すべてにLINEシェアボタンを追加完了（ラウンド372-382）
+    - calcBusinessScale, calcTenantRisk, calcVacancyCost, calcHealthCheck, calcRestoreCost,
+      calcScreeningScore, calcMonthlyHealth, calcMgmtCompare, calcEquipAgeRisk, calcRentRaiseImpact,
+      calcVacancyRecovery（11関数追加）
+  - Tool2（空き家活用診断）: 82関数すべてにLINEシェアボタンを追加完了（ラウンド383-384）
+    - calcInheritance3000, calcAkiyaTax6x（2関数追加）
+  - Tool1（AI物件査定）: 既に81/81完了済み（変更なし）
+- **最終結果**: 全5ツール × 405関数 = 100%（LINEシェアボタン完全設置達成）
+- **仮ユーザーレビュー**: 佐藤健一さん視点 → 計算結果画面にLINEシェアボタンが常に表示されるようになり、「この計算面白い、友人に送ろう」という動線が全カードで完成
+- **理由**: Phase 2-A（LINEシェアボタン全設置）が完了。PLG戦略のシェア導線が全ツールに整備された
+
