@@ -8208,7 +8208,13 @@ function calcMgmtVsSelf() {
     + '<div style="font-size:12px;color:var(--text-muted);line-height:1.6">'
     + (winner==='delegate' ? '時間コストを含めると自主管理が有利。ただし入居者対応・トラブル対応の負担も考慮してください。' : '戸数・家賃を考えると管理委託の方がコスト効率が良い可能性があります。専門家への委託でトラブル対応も安心。')
     + '</div></div>'
-    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 時間コストは時給2,000円で換算。実際の委託内容・条件は管理会社によって異なります。</div>';
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 時間コストは時給2,000円で換算。実際の委託内容・条件は管理会社によって異なります。</div>'
+    + (function(){
+        var mvUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html');
+        var mvWinnerLabel = winner === 'delegate' ? '自主管理' : '管理委託';
+        var mvText = encodeURIComponent('🏠 管理委託 vs 自主管理 コスト比較\n\n管理委託: 年間' + Math.round(totalDelegate*10)/10 + '万円\n自主管理（時間コスト込み）: 年間' + Math.round(totalSelf*10)/10 + '万円\n→「' + mvWinnerLabel + '」が年間' + Math.round(Math.abs(diff)*10)/10 + '万円お得！\n\n▶ あなたの物件でも無料比較\n不動産かんたんツール（TERRA REALTY）');
+        return '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + mvUrl + '&text=' + mvText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+      })();
 }
 (function(){ calcMgmtVsSelf(); })();
 
@@ -8539,6 +8545,9 @@ function calcTaxSummary() {
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">節税効果（控除分）</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + (dep + blueDeduction).toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
   html += '</div>';
   html += '<div style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.02);border-radius:6px;padding:8px;line-height:1.6">📌 青色申告（65万円控除）は複式簿記・e-Tax申告が条件。减価償却費は実際の支出を伴わない節税効果があります。正確な申告は税理士に相談ください。</div>';
+  var tsUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html');
+  var tsText = encodeURIComponent('📋 賃貸収入の税務サマリー\n\n家賃収入: ' + income.toLocaleString() + '万円/年\n経費合計: ▲' + totalExpense.toLocaleString() + '万円\n課税不動産所得: ' + taxableIncome.toLocaleString() + '万円\n節税効果（控除合計）: ' + (dep + blueDeduction).toLocaleString() + '万円\n\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + tsUrl + '&text=' + tsText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
   el.innerHTML = html;
 }
 (function(){ calcTaxSummary(); })();
@@ -9475,6 +9484,10 @@ function calcTenantChurn() {
   html += '<ul style="margin:0;padding-left:18px;font-size:13px;color:var(--text);line-height:1.8">';
   actions.forEach(function(a) { html += '<li>' + a + '</li>'; });
   html += '</ul></div>';
+
+  var tcUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html');
+  var tcText = encodeURIComponent('🏠 入居者の退去リスク診断結果\n\n判定: 【' + grade + '判定・' + label + '】\nリスクスコア: ' + score + '/100\n\n▶ あなたの物件の入居者でも無料診断\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + tcUrl + '&text=' + tcText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 
   el.innerHTML = html;
 }
