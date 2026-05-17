@@ -2335,3 +2335,15 @@
   - Tool5 **calcFIRETarget**（不動産FIREシミュレーション）: 「{neededUnits}棟で{yearsNeeded}年でFIRE達成！」
   - Tool3 **calcPurchaseCost**（不動産購入諸費用）: 「諸費用{total}万円（物件価格の約{ratio}%）」
   - Tool3 **calcPreSaleReform**（売却前リフォーム費用対効果）: 「純損益{netGain}万円・ROI{roi}%・{verdict.label}」
+
+## 2026-05-17 （ラウンド76〜78）
+
+- **対象**: tools/4-kanri-saas.html, tools/1-ai-satei.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 2-A（LINEシェアボタン追加・継続）
+- **改善内容**: さらに多数の高インパクトカードにLINEシェアボタンを追加（計71ボタンに到達）
+  - Tool4 **calcRepairSavings**（修繕積立必要額）: 「修繕費目安{totalCost}万円・推奨月額{monthly}万円/月」
+  - Tool4 **calcRentalInheritVsSell**（収益物件 売却vs賃貸相続）: 「10年後{winner10}・20年後{winner20}」
+  - Tool1 **calcTransferTax**（譲渡所得税シミュレーション）: 「特控で{taxNoSpecial-tax}万円節税！」
+  - Tool1 **calcSellNowVsWait**（今すぐ売るvs待って売る）: 「{winner}！差額{diff}万円」
+  - Tool5 **calcCapRate**（キャップレート診断）: 「年平均リターン{annualReturn}%」
+  - Tool5 **calcTotalReturn10yr**（10年間トータルリターン）: 「ROI {roiOnDown}%・総リターン{totalReturn}万円」
