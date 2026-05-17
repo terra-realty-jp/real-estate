@@ -1613,7 +1613,26 @@
       </div>
       <div>
         <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">地域の空き家率（%）</label>
-        <input type="number" id="lr_vacancy" value="25" min="0" max="80" step="1" oninput="calcIsolationRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+        <select id="lr_vacancy_pref" onchange="fillVacancyFromPref()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:6px 10px;color:var(--text);font-size:11px;font-family:inherit;outline:none;margin-bottom:4px">
+          <option value="">都道府県を選ぶと自動入力</option>
+          <option value="北海道">北海道 14.9%</option><option value="青森県">青森県 17.0%</option><option value="岩手県">岩手県 16.0%</option>
+          <option value="宮城県">宮城県 9.7%</option><option value="秋田県">秋田県 17.8%</option><option value="山形県">山形県 15.8%</option>
+          <option value="福島県">福島県 15.2%</option><option value="茨城県">茨城県 13.2%</option><option value="栃木県">栃木県 13.9%</option>
+          <option value="群馬県">群馬県 14.1%</option><option value="埼玉県">埼玉県 10.2%</option><option value="千葉県">千葉県 11.4%</option>
+          <option value="東京都">東京都 10.6%</option><option value="神奈川県">神奈川県 10.7%</option><option value="新潟県">新潟県 15.4%</option>
+          <option value="富山県">富山県 14.7%</option><option value="石川県">石川県 13.4%</option><option value="福井県">福井県 14.6%</option>
+          <option value="山梨県">山梨県 21.3%（全国最高）</option><option value="長野県">長野県 19.5%</option><option value="岐阜県">岐阜県 14.2%</option>
+          <option value="静岡県">静岡県 14.3%</option><option value="愛知県">愛知県 11.2%</option><option value="三重県">三重県 14.9%</option>
+          <option value="滋賀県">滋賀県 11.5%</option><option value="京都府">京都府 12.8%</option><option value="大阪府">大阪府 12.5%</option>
+          <option value="兵庫県">兵庫県 12.9%</option><option value="奈良県">奈良県 16.6%</option><option value="和歌山県">和歌山県 20.3%</option>
+          <option value="鳥取県">鳥取県 16.1%</option><option value="島根県">島根県 17.5%</option><option value="岡山県">岡山県 14.4%</option>
+          <option value="広島県">広島県 13.3%</option><option value="山口県">山口県 16.4%</option><option value="徳島県">徳島県 19.0%</option>
+          <option value="香川県">香川県 14.7%</option><option value="愛媛県">愛媛県 16.0%</option><option value="高知県">高知県 18.9%</option>
+          <option value="福岡県">福岡県 12.0%</option><option value="佐賀県">佐賀県 14.8%</option><option value="長崎県">長崎県 16.2%</option>
+          <option value="熊本県">熊本県 14.5%</option><option value="大分県">大分県 16.1%</option><option value="宮崎県">宮崎県 15.6%</option>
+          <option value="鹿児島県">鹿児島県 16.5%</option><option value="沖縄県">沖縄県 10.9%</option>
+        </select>
+        <input type="number" id="lr_vacancy" value="13.8" min="0" max="80" step="0.1" oninput="calcIsolationRisk()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" placeholder="例: 13.8（全国平均）">
       </div>
       <div>
         <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">自治体の活性化施策</label>
@@ -6871,6 +6890,19 @@ function calcFarmlandConvert() {
     + '</div>';
 }
 (function(){ calcFarmlandConvert(); })();
+
+// 都道府県別空き家率（総務省2023年調査）
+var VACANCY_RATE_DATA = {"北海道":14.9,"青森県":17.0,"岩手県":16.0,"宮城県":9.7,"秋田県":17.8,"山形県":15.8,"福島県":15.2,"茨城県":13.2,"栃木県":13.9,"群馬県":14.1,"埼玉県":10.2,"千葉県":11.4,"東京都":10.6,"神奈川県":10.7,"新潟県":15.4,"富山県":14.7,"石川県":13.4,"福井県":14.6,"山梨県":21.3,"長野県":19.5,"岐阜県":14.2,"静岡県":14.3,"愛知県":11.2,"三重県":14.9,"滋賀県":11.5,"京都府":12.8,"大阪府":12.5,"兵庫県":12.9,"奈良県":16.6,"和歌山県":20.3,"鳥取県":16.1,"島根県":17.5,"岡山県":14.4,"広島県":13.3,"山口県":16.4,"徳島県":19.0,"香川県":14.7,"愛媛県":16.0,"高知県":18.9,"福岡県":12.0,"佐賀県":14.8,"長崎県":16.2,"熊本県":14.5,"大分県":16.1,"宮崎県":15.6,"鹿児島県":16.5,"沖縄県":10.9};
+
+function fillVacancyFromPref() {
+  var pref = document.getElementById('lr_vacancy_pref').value;
+  if (!pref) return;
+  var rate = VACANCY_RATE_DATA[pref];
+  if (rate !== undefined) {
+    document.getElementById('lr_vacancy').value = rate;
+    calcIsolationRisk();
+  }
+}
 
 function calcIsolationRisk() {
   const elderly = parseFloat(document.getElementById('lr_elderly').value) || 0;

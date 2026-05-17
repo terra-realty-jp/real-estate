@@ -972,6 +972,9 @@
     <div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.7;margin-bottom:10px">まずは <strong>「この物件、買っていい？」</strong> を5秒で判定するカードだけ試してみてください。<br><span style="color:rgba(255,255,255,0.45);font-size:11px">物件価格・家賃・借入額を入れるだけで即判定できます</span></div>
     <button onclick="document.getElementById('card-quick-check').scrollIntoView({behavior:'smooth',block:'center'})" style="background:rgba(201,168,76,0.25);border:1px solid rgba(201,168,76,0.5);border-radius:8px;padding:8px 16px;color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📊 物件の買い時判定を今すぐ確認する →</button>
   </div>
+  <!-- 参考金利バナー（interest-rates.jsonから動的生成） -->
+  <div id="interest-rate-banner" style="display:none;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:10px 14px;margin-bottom:14px"></div>
+
   <!-- TOP3 ピン留めセクション -->
   <div style="margin-bottom:16px">
     <div style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:700;letter-spacing:0.8px;margin-bottom:8px">⭐ まずはここから — よく使われる機能 TOP3</div>
@@ -3252,6 +3255,48 @@
 <script>
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxLgo-Ghf31C6SyBxh4BiIVC3lz1CfVXplJIqIxoT1-7YDF8T54Uu5IjkcVvU3LQkBglQ/exec';
+
+// 金利参考データ（data/interest-rates.json から起動時ロード）
+var INTEREST_RATE_DATA = null;
+(function loadInterestRates() {
+  fetch('../data/interest-rates.json?v=' + Date.now())
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(d) {
+      if (!d) return;
+      INTEREST_RATE_DATA = d;
+      var apTypical = d.investment && d.investment.apartment_typical;
+      if (apTypical) {
+        ['s_rate','i_rate','lev_rate','cg_rate'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el && !el.dataset.userModified) el.value = apTypical;
+        });
+        var calcAllIds = ['s_rate','i_rate'];
+        calcAllIds.forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) { el.addEventListener('input', function() { el.dataset.userModified = '1'; }); }
+        });
+      }
+      showRateBanner(d);
+    })
+    .catch(function() {});
+})();
+
+function showRateBanner(d) {
+  var banner = document.getElementById('interest-rate-banner');
+  if (!banner || !d) return;
+  var p = d.policy, m = d.mortgage, inv = d.investment;
+  if (!p || !m || !inv) return;
+  banner.innerHTML =
+    '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">' +
+    '<span style="font-size:11px;font-weight:700;color:var(--gold)">📊 参考金利（' + (d.updated||'').slice(0,7) + '時点）</span>' +
+    '<span style="font-size:11px;color:var(--text-muted)">日銀政策金利: <strong style="color:var(--text)">' + p.boj_call_rate + '%</strong></span>' +
+    '<span style="font-size:11px;color:var(--text-muted)">住宅ローン変動: <strong style="color:var(--text)">' + m.variable_low + '〜' + m.variable_high + '%</strong></span>' +
+    '<span style="font-size:11px;color:var(--text-muted)">フラット35: <strong style="color:var(--text)">' + m.flat35_typical + '%</strong></span>' +
+    '<span style="font-size:11px;color:var(--text-muted)">投資ローン目安: <strong style="color:var(--text)">' + inv.apartment_low + '〜' + inv.apartment_high + '%</strong></span>' +
+    '</div>';
+  banner.style.display = 'block';
+}
+
 function sendToGAS(data) {
   if (!GAS_URL) return;
   fetch(GAS_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) }).catch(() => {});
