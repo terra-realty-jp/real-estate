@@ -4213,6 +4213,9 @@ function calcDemolish() {
   const estTaxBase = 15; // 仮定の固定資産税(万円/年) - 全国平均目安
   const taxIncrease = Math.round(estTaxBase * 5); // 5年分の増加 (6倍 - 1倍 = 5倍)
   const breakEvenMonth = midCost > 0 ? Math.ceil(midCost / (20000 / 10000)) : '-'; // 仮定月2万収益
+  const demoShareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
+  const demoShareText = encodeURIComponent('🏚️ 空き家解体費用シミュレーション\n\n' + structLabels[struct] + '・' + tsubo + '坪の場合\n解体費の目安: 約' + minCost + '〜' + maxCost + '万円\n⚠️ 解体後は固定資産税が最大6倍になる可能性！\n\n補助金が使えるかも▶ 無料で確認\n不動産かんたんツール（TERRA REALTY）');
+  const demoShareBtn = '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + demoShareUrl + '&text=' + demoShareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;font-size:12px;font-weight:700;padding:8px 18px;border-radius:8px;text-decoration:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.630 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.630 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.070 9.436-6.969C23.176 14.393 24 12.458 24 10.314"/></svg>LINEでシェア</a></div>';
   el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
     <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px;text-align:center">
       <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">解体費（最低ライン）</div>
@@ -4236,7 +4239,8 @@ function calcDemolish() {
     &#x2022; 解体後は<strong>更地として年間税額が最大6倍</strong>になる可能性があります（地域・評価額により異なります）。<br>
     &#x2022; アスベスト含有建材・地中障害物が見つかると<strong>追加費用</strong>が発生することがあります。
   </div>
-  <p style="font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; ${structLabels[struct]}・${tsubo}坪（約${sqm}㎡）の場合の概算。実際の費用は立地・搬出経路・残置物の量により変動します。解体業者から複数見積りを取ることをお勧めします。</p>`;
+  <p style="font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; ${structLabels[struct]}・${tsubo}坪（約${sqm}㎡）の場合の概算。実際の費用は立地・搬出経路・残置物の量により変動します。解体業者から複数見積りを取ることをお勧めします。</p>
+  ${demoShareBtn}`;
 }
 
 function renderCatBreakdown(score, ids) {
@@ -6722,6 +6726,11 @@ function calcSouzokuTokurei() {
         : unmet + '件の条件が未確認です。特に居住継続・申告書添付は必須要件です。早めに税理士に相談してください。')
     + '</div></div>'
     + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.5">💡 小規模宅地等の特例は相続開始後10ヶ月以内の申告が期限です。適用には複数の要件があり、税理士への相談を強く推奨します。住居用と事業用の特例を併用できる場合があります（限度面積に注意）。</div>'
+    + (function(){
+        var stShareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
+        var stShareText = encodeURIComponent('🏡 相続した土地の「小規模宅地等の特例」試算\n\n評価額: ' + value.toLocaleString() + '万円\n特例（' + cfg.label + '）適用後: ' + afterValue.toLocaleString() + '万円\n→ 評価減額: ▲' + reduction.toLocaleString() + '万円！\n\n条件を満たせば相続税を大幅に節税できます\n▶ あなたの土地でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+        return '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + stShareUrl + '&text=' + stShareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;font-size:12px;font-weight:700;padding:8px 18px;border-radius:8px;text-decoration:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.630 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.630 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.070 9.436-6.969C23.176 14.393 24 12.458 24 10.314"/></svg>LINEでシェア</a></div>';
+      })()
     + '</div>';
 }
 (function(){ calcSouzokuTokurei(); })();
