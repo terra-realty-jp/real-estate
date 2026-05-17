@@ -5697,9 +5697,15 @@ function calcInhTax() {
       + (evalRatioVsMarket < 80 ? '<span style="color:#4ade80"> 評価額が低いほど相続税の節税効果が大きくなります。</span>' : '')
       + '</div></div>';
   }
+  var itUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html');
+  var itShareText = market > 0
+    ? '🏠 相続不動産の評価額シミュレーション\n\n相続税評価額（概算）: ' + totalEval.toLocaleString() + '万円\n時価（参考）: ' + market.toLocaleString() + '万円\n→ 評価額は時価の' + evalRatioVsMarket + '%（差額' + diff.toLocaleString() + '万円分節税できる！）\n\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）'
+    : '🏠 相続不動産の評価額シミュレーション\n\n相続税評価額（概算）: ' + totalEval.toLocaleString() + '万円\n（現金相続より大幅に評価額が低くなる場合があります）\n\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
+  var itShareBtn = '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + itUrl + '&text=' + encodeURIComponent(itShareText) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
   el.innerHTML = kpiHtml + compHtml
     + '<div style="padding:10px 14px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;font-size:11px;color:var(--text-muted);line-height:1.7">'
-    + '&#x1F4A1; 相続税評価額は売却価格より一般的に20〜40%低くなります（路線価は公示地価の約80%水準）。不動産を相続で引き継ぐと、現金より相続税を抑えられる場合があります。詳細は税理士にご確認ください。</div>';
+    + '&#x1F4A1; 相続税評価額は売却価格より一般的に20〜40%低くなります（路線価は公示地価の約80%水準）。不動産を相続で引き継ぐと、現金より相続税を抑えられる場合があります。詳細は税理士にご確認ください。</div>'
+    + itShareBtn;
 }
 
 // ===== 告知義務チェックリスト =====
@@ -6361,6 +6367,9 @@ function calcNetProceeds() {
     html += '<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;color:#34d399">✅ 3,000万円特別控除が適用されるため譲渡税はかかりません</div>';
   }
   html += '<div style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.02);border-radius:6px;padding:8px;line-height:1.6">📌 取得費が不明な場合は売却価格の5%とみなします（概算取得費）。3,000万円特別控除は居住用財産の売却で、売却年・前年・前々年に同特例を使っていないことが条件。正確な税額は税理士に確認ください。</div>';
+  var npUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html');
+  var npText = encodeURIComponent('🏠 家の売却 手取り額シミュレーション\n\n売却価格: ' + price.toLocaleString() + '万円\n費用合計: ▲' + miscFee.toLocaleString() + '万円（手数料・登記費）\nローン返済: ▲' + loan.toLocaleString() + '万円\n譲渡税: ▲' + transferTax.toLocaleString() + '万円\n→ 手取り額: ' + net.toLocaleString() + '万円！\n\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + npUrl + '&text=' + npText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
   el.innerHTML = html;
 }
 (function(){ calcNetProceeds(); })();
