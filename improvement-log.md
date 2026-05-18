@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-18 （非TOP3カード ヒーロー表示強化 第46〜52弾）
+
+- **対象**: Tool1 (1-ai-satei.html)
+- **フェーズ**: Phase 2 ビジュアル強化（非TOP3カード完全網羅）
+- **改善内容（第46〜52弾）**:
+  - 第46弾: `calcInheritedPropertySale`（相続物件手取り）・`calcBuyVsRent30yr`（30年比較）
+  - 第47弾: `calcDemolishVsSell`（解体vs古家）・`calcSellerAllCosts`（売却諸費用）・`calcSellNowVsWait`（今すぐvs待つ）
+  - 第48弾: `calcPostSaleReloc`（売却後賃貸移行）・`calcRetirementFund`（老後資金）・`calcInheritanceSplit`（遺産分割）
+  - 第49弾: `calcSellTiming`（売り時スコア）・`calcDivorceProperty`（離婚財産分与）・`calcVacantHouseRisk`（空き家リスク）
+  - 第50弾: `calcMoveTiming`（住み替え手取り）・`calcNeighborPriceCompare`（近隣比較）・`calcAuctionVsPrivate`（任意売却vs競売）
+  - 第51弾: `calcTaxFreeGift`・`calcDIYvsProRenovate`・`calcCurbAppeal`・`calcSaleReadiness`・`calcAgencyFeeCalc`・`calcReformVsAsIs`
+  - 第52弾: `calcTaxSim`・`calcSaleSeason`（需要%）・`calcMediationType`（媒介契約）・`calcPriceSchedule`（値下げ幅）
+- **完了状況**: Tool1全81関数のうち80/81（97%）が52pxヒーロー対応済み。残1件（calcAndShowResult）はHTML/CSSの.result-priceクラスで既に大型表示済み（TOP3カード）
+- **理由**: 計算結果の数字を一瞬で読み取れるようにすることで、田中みちこさん（52歳・非専門家）でも「これはいい数字か悪い数字か」が即座にわかるUI設計を実現
+
+---
+
 ## 2026-05-18 （非TOP3カード ヒーロー表示強化 第7〜10弾）
 
 - **対象**: Tool1, Tool2, Tool3, Tool4, Tool5
