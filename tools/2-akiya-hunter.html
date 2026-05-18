@@ -8971,7 +8971,13 @@ function calcAkiyaBankSim() {
       desc: '入居者がDIYで改修する代わりに低廉賃料'
     }
   ];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var absBestNet = Math.round(price * 0.8);
+  var html = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.1),rgba(251,146,60,0.03));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">空き家バンク 売却手取り目安</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+absBestNet.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">相場80%目安 · 賃貸年収'+Math.round(price*0.006*12*10)/10+'万円/年</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">🏡 空き家バンク 活用シナリオ比較</div>';
   scenarios.forEach(function(s) {
     var prob = Math.min(0.95, s.baseProb * locMult * condMult);
@@ -9023,7 +9029,13 @@ function calcAkiyaTaxSpecial() {
   var diff = totalAfter - totalNow;
   var ACCENT = '#fb923c', BG = 'rgba(251,146,60,0.07)', BDR = 'rgba(251,146,60,0.2)';
   var fmt = function(v) { return Math.round(v).toLocaleString(); };
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var atsDiff10 = Math.round(diff / 10000 * 10);
+  var html = '<div style="background:linear-gradient(135deg,rgba(248,113,113,0.1),rgba(248,113,113,0.03));border:2px solid rgba(248,113,113,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">特定空き家指定後 年間増税額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#f87171;line-height:1;margin-bottom:4px">+'+fmt(diff / 10000)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">10年累計 +'+atsDiff10+'万円 · 住宅特例が失われる</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
   html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在（住宅特例あり）</div>';
@@ -9066,7 +9078,15 @@ function calcAkiyaValueDecline() {
   var milestones = [5, 10, 20];
   var rows = milestones.map(function(y) { var v = projVal(y); return { years: y, prop: v.prop, cost: v.cost, net: v.net }; });
   var sellNow = price;
-  var html = '<div style="background:' + ACCTXT + ';border:1px solid ' + ACCBDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var loss10Early = sellNow - rows[1].net;
+  var avdHeroRgb = loss10Early > 0 ? '248,113,113' : '74,222,128';
+  var avdHeroColor = loss10Early > 0 ? '#f87171' : '#4ade80';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+avdHeroRgb+',0.1),rgba('+avdHeroRgb+',0.03));border:2px solid rgba('+avdHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+avdHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年放置の実質損失</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+avdHeroColor+';line-height:1;margin-bottom:4px">'+(loss10Early > 0 ? '▲' : '+')+Math.abs(loss10Early).toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+(loss10Early > 0 ? '価値下落＋維持費で損失発生' : '10年保有でも価値維持')+'</div>'
+    +'</div>'
+    +'<div style="background:' + ACCTXT + ';border:1px solid ' + ACCBDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">📊 放置した場合の価値推移</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
   html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">経過年数</th><th style="text-align:right;padding:4px 6px">物件評価額</th><th style="text-align:right;padding:4px 6px">維持費累計</th><th style="text-align:right;padding:4px 6px">実質価値</th><th style="text-align:right;padding:4px 6px">今すぐ売却との差</th></tr>';
@@ -9132,7 +9152,13 @@ function calcAkiyaBankCheck() {
   else if (eligibility >= 25) { grade = 'C'; gColor = '#fbbf24'; verdict = '条件付きで登録可能'; }
   else { grade = 'D'; gColor = '#f87171'; verdict = '登録困難 — 他の活用方法を検討'; }
 
-  var html = '<div style="display:grid;gap:10px">';
+  var abcHeroRgb = grade === 'A' ? '74,222,128' : grade === 'B' ? '163,230,53' : grade === 'C' ? '251,191,36' : '248,113,113';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+abcHeroRgb+',0.1),rgba('+abcHeroRgb+',0.03));border:2px solid rgba('+abcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+gColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">空き家バンク登録適合度</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+gColor+';line-height:1;margin-bottom:4px">'+grade+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+eligibility+'点 — '+verdict+'</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += '<div style="background:rgba('+gColor.replace('#','')+',0.05);border:1px solid rgba('+gColor.replace('#','')+',0.2);border-radius:10px;padding:14px;text-align:center">';
   html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">空き家バンク登録適合度</div>';
@@ -9193,7 +9219,12 @@ function calcGovActionCost() {
   var riskColor = riskScore >= 60 ? '#f87171' : riskScore >= 30 ? '#fbbf24' : '#4ade80';
   var riskLabel = riskScore >= 60 ? '🔴 高リスク — 早急な対処が必要' : riskScore >= 30 ? '🟡 中リスク — 注意が必要' : '🟢 低リスク — 定期的な管理を継続';
 
-  var html = '<div style="display:grid;gap:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(248,113,113,0.1),rgba(248,113,113,0.03));border:2px solid rgba(248,113,113,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">行政代執行 10年間の総負担</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#f87171;line-height:1;margin-bottom:4px">'+noActionTotal+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">固定資産税10年＋解体費 · 指定リスク'+riskScore+'点</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:10px">';
   html += '<div style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:10px;padding:14px">';
   html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:6px;letter-spacing:0.5px">特定空き家 指定リスク</div>';
   html += '<div style="font-size:28px;font-weight:900;color:'+riskColor+';margin-bottom:4px">'+riskScore+'<span style="font-size:14px">点</span></div>';
@@ -9246,7 +9277,13 @@ function calcAkiyaRentIncome() {
   var year10Total = Math.round(annualNet * 10 - reform);
   var verdict = monthlyNet > 0 ? '賃貸に出す価値があります' : '採算が取りにくい可能性';
   var verdictColor = monthlyNet >= 3 ? '#4ade80' : monthlyNet >= 1 ? '#fbbf24' : '#f87171';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'
+  var ariHeroRgb = monthlyNet >= 3 ? '74,222,128' : monthlyNet >= 1 ? '251,191,36' : '248,113,113';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+ariHeroRgb+',0.1),rgba('+ariHeroRgb+',0.03));border:2px solid rgba('+ariHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+verdictColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">実質手取り家賃</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+verdictColor+';line-height:1;margin-bottom:4px">'+monthlyNet.toFixed(1)+'<span style="font-size:20px">万円/月</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">年間純収入 '+annualNet.toFixed(1)+'万円 · リフォーム回収'+recoupYears+'年</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">実質手取り家賃</div><div style="font-size:17px;font-weight:900;color:' + verdictColor + '">' + monthlyNet.toFixed(1) + '万円<span style="font-size:10px">/月</span></div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">リフォーム回収期間</div><div style="font-size:17px;font-weight:700;color:#93c5fd">' + (recoupYears > 0 ? recoupYears + '年' : '-') + '</div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">年間純収入</div><div style="font-size:17px;font-weight:700;color:#a3e635">' + annualNet.toFixed(1) + '万円</div></div>'
@@ -9282,7 +9319,13 @@ function calcAkiyaQuickSale() {
   var breakEven10 = yearlyHold * 10;
   var verdict = handMoney > 0 ? '今売るのが合理的です' : 'ローン残高が多く要注意';
   var verdictColor = handMoney > 0 ? '#4ade80' : '#f87171';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+  var aqsHeroRgb = handMoney > 0 ? '74,222,128' : '248,113,113';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+aqsHeroRgb+',0.1),rgba('+aqsHeroRgb+',0.03));border:2px solid rgba('+aqsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+verdictColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">売却後 手元に残る金額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+verdictColor+';line-height:1;margin-bottom:4px">'+handMoney.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+verdict+'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">売却諸費用合計</div><div style="font-size:16px;font-weight:700;color:#f87171">▲' + totalCost + '万円</div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">譲渡税（概算）</div><div style="font-size:16px;font-weight:700;color:#fb923c">' + (tax > 0 ? '▲' + tax + '万円' : 'なし（損失）') + '</div></div>'
     + '</div>'
@@ -9326,7 +9369,15 @@ function calcInheritance3000() {
   var taxWithout = calcTax(taxableWithout);
   var saving = allOk ? (taxWithout - taxWith) : 0;
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var inh3HeroSaving = allOk ? Math.round(saving) : Math.round(calcTax(Math.min(3000, transferIncome)));
+  var inh3HeroRgb = allOk ? '74,222,128' : '212,175,55';
+  var inh3HeroColor = allOk ? '#4ade80' : '#d4af37';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+inh3HeroRgb+',0.1),rgba('+inh3HeroRgb+',0.03));border:2px solid rgba('+inh3HeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+inh3HeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+(allOk ? '3000万控除 節税額' : '3000万控除 適用可能節税額')+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+inh3HeroColor+';line-height:1;margin-bottom:4px">'+inh3HeroSaving.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+(allOk ? '5要件すべて該当 · 特例適用可能' : '全5要件該当で節税できる概算額')+'</div>'
+    +'</div>'
+    +'<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
 
   if (allOk) {
     html += '<div style="font-size:13px;font-weight:900;color:#4ade80;margin-bottom:10px">✅ 適用可能 — 特別控除が使えます！</div>';
@@ -9387,7 +9438,13 @@ function calcAkiyaThreeChoices() {
   var best10 = results.reduce(function(a, b) { return b.net10 > a.net10 ? b : a; });
   var best5 = results.reduce(function(a, b) { return b.net5 > a.net5 ? b : a; });
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var atcHeroRgb = best10.color === '#4ade80' ? '74,222,128' : best10.color === '#fb923c' ? '251,146,60' : '147,197,253';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+atcHeroRgb+',0.1),rgba('+atcHeroRgb+',0.03));border:2px solid rgba('+atcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+best10.color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年後の最有利選択</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+best10.color+';line-height:1;margin-bottom:4px">'+Math.round(best10.net10).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+best10.icon+' '+best10.label+' · 10年後の手取り</div>'
+    +'</div>'
+    +'<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:13px;font-weight:900;color:' + best10.color + ';margin-bottom:10px">⚖️ 10年後の手取り最大：' + best10.icon + ' ' + best10.label + '</div>';
   html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>'
     + '<th style="padding:6px 8px;text-align:left;color:rgba(255,255,255,0.4);font-weight:600;border-bottom:1px solid rgba(255,255,255,0.1)">選択肢</th>'
@@ -9442,7 +9499,12 @@ function calcAkiyaTax6x() {
   var tenYearLoss = yearlyIncrease * 10;
   var ratio = currentLandTax > 0 ? (afterLandTax / currentLandTax).toFixed(1) : '-';
 
-  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(248,113,113,0.1),rgba(248,113,113,0.03));border:2px solid rgba(248,113,113,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">特定空家指定後 10年間の累積損失</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#f87171;line-height:1;margin-bottom:4px">+'+tenYearLoss.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">年間 +'+yearlyIncrease.toFixed(1)+'万円 · 土地税が約'+ratio+'倍</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
   html += '<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:10px;text-align:center">';
   html += '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">現在の年間固定資産税（概算）</div>';
   html += '<div style="font-size:22px;font-weight:700;color:#4ade80">' + currentTotal.toFixed(1) + '<span style="font-size:12px">万円</span></div>';
@@ -9491,7 +9553,14 @@ function calcAkiyaManageCost() {
   var diff = selfTotal - mgmtTotal;
   var isSelfCheaper = diff < 0;
 
-  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  var amcHeroRgb = isSelfCheaper ? '74,222,128' : '129,140,248';
+  var amcHeroColor = isSelfCheaper ? '#4ade80' : '#818cf8';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+amcHeroRgb+',0.1),rgba('+amcHeroRgb+',0.03));border:2px solid rgba('+amcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+amcHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+(isSelfCheaper ? '自主管理がお得' : '管理委託がお得')+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+amcHeroColor+';line-height:1;margin-bottom:4px">'+Math.abs(diff).toFixed(1)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+(isSelfCheaper ? '自主管理 '+selfTotal.toFixed(1)+'万 vs 委託 '+mgmtTotal.toFixed(1)+'万' : '委託 '+mgmtTotal.toFixed(1)+'万 vs 自主管理 '+selfTotal.toFixed(1)+'万')+'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
   html += '<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:10px;text-align:center">';
   html += '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">自分で管理（年間）</div>';
   html += '<div style="font-size:22px;font-weight:700;color:#4ade80">' + selfTotal.toFixed(1) + '<span style="font-size:12px">万円</span></div>';
@@ -9555,7 +9624,16 @@ function calcKokkoKizoku() {
   const saving20 = hold20 - totalKokko;
   const winner = saving10 > 0 ? '国庫帰属' : '放置（10年以内に売却等ができる場合）';
   el.style.display = 'block';
-  el.innerHTML = `
+  var kkHeroRgb = saving10 > 0 ? '212,175,55' : '248,113,113';
+  var kkHeroColor = saving10 > 0 ? '#d4af37' : '#f87171';
+  var kkHeroLabel = saving10 > 0 ? '国庫帰属で節約できる金額' : '国庫帰属コスト';
+  var kkHeroSub = saving10 > 0 ? '10年放置より国庫帰属が得' : '10年放置の方が安い（管理負担は続く）';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+kkHeroRgb+',0.1),rgba('+kkHeroRgb+',0.03));border:2px solid rgba('+kkHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+kkHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+kkHeroLabel+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+kkHeroColor+';line-height:1;margin-bottom:4px">'+(saving10 > 0 ? '+' : '')+Math.round(saving10)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+kkHeroSub+'</div>'
+    +'</div>'
+    + `
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:10px;padding:14px">
       <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">🏛️ 国庫帰属 vs 放置コスト比較</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -9654,7 +9732,13 @@ function calcRentalIncomeTax() {
   var color = taxRate >= 40 ? '#f87171' : taxRate >= 25 ? '#fb923c' : '#4ade80';
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+  var ritHeroRgb = taxRate >= 40 ? '248,113,113' : taxRate >= 25 ? '251,146,60' : '74,222,128';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+ritHeroRgb+',0.1),rgba('+ritHeroRgb+',0.03));border:2px solid rgba('+ritHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">税引き後 手取り不動産収入</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+netRentalIncome.toFixed(0)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">実効税率 約'+taxRate+'% · 追加税負担 '+totalRentalTax.toFixed(0)+'万円</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
     '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;text-align:center">' +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">不動産所得（課税対象）</div>' +
     '<div style="font-size:22px;font-weight:900;color:var(--text)">' + rentalProfit.toFixed(1) + '<span style="font-size:12px">万円</span></div>' +
