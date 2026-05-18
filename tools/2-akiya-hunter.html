@@ -4293,7 +4293,12 @@ function calcDemolish() {
   const demoShareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
   const demoShareText = encodeURIComponent('🏚️ 空き家解体費用シミュレーション\n\n' + structLabels[struct] + '・' + tsubo + '坪の場合\n解体費の目安: 約' + minCost + '〜' + maxCost + '万円\n⚠️ 解体後は固定資産税が最大6倍になる可能性！\n\n補助金が使えるかも▶ 無料で確認\n不動産かんたんツール（TERRA REALTY）');
   const demoShareBtn = '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + demoShareUrl + '&text=' + demoShareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;font-size:12px;font-weight:700;padding:8px 18px;border-radius:8px;text-decoration:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.630 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.630 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.070 9.436-6.969C23.176 14.393 24 12.458 24 10.314"/></svg>LINEでシェア</a></div>';
-  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+  el.innerHTML = `<div style="background:linear-gradient(135deg,rgba(249,115,22,0.1),rgba(249,115,22,0.03));border:2px solid rgba(249,115,22,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">
+    <div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">解体費 中間目安（${structLabels[struct]}・${tsubo}坪）</div>
+    <div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">約${midCost}<span style="font-size:20px">万円</span></div>
+    <div style="font-size:12px;color:var(--text-muted)">最低${minCost}万円〜最高${maxCost}万円の範囲</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
     <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px;text-align:center">
       <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">解体費（最低ライン）</div>
       <div style="font-size:18px;font-weight:700;color:var(--red)">約${minCost}万円</div>
@@ -5160,7 +5165,13 @@ function calcEstateClear() {
   var diyLow  = Math.round(base.diy[0]  * mul);
   var diyHigh = Math.round(base.diy[1]  * mul);
   var recycleNote = recycle ? '<div style="font-size:11px;color:#4ade80;margin-top:4px">✓ 買取品がある場合、業者によっては費用から差し引いてもらえることがあります</div>' : '';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'
+  var ecMid = Math.round((proLow + proHigh) / 2);
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">業者依頼費用の目安</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">' + ecMid + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">安い場合' + proLow + '万円〜高い場合' + proHigh + '万円</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'
     + '<div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.08)">'
     + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">👔 業者に依頼</div>'
     + '<div style="font-size:20px;font-weight:900;color:var(--gold)">' + proLow + '〜' + proHigh + '<span style="font-size:12px;font-weight:400">万円</span></div>'
@@ -5209,7 +5220,12 @@ function calcSalePrepCost() {
   var totalLo = items.reduce(function(s, x) { return s + x.lo; }, 0);
   var totalHi = items.reduce(function(s, x) { return s + x.hi; }, 0);
 
-  var html = '<div style="margin-top:10px">'
+  var html = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">売却前の準備費用合計（目安）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">' + totalLo + '〜' + totalHi + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">状態・プランによって費用が変わります</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">'
     + '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">'
     + '<div style="font-size:11px;color:var(--text-muted)">準備費用合計（目安）</div>'
     + '<div style="font-size:18px;font-weight:700;color:var(--gold)">' + totalLo + '〜' + totalHi + '<span style="font-size:11px">万円</span></div></div>'
@@ -5328,7 +5344,13 @@ function calcBuildingCheck() {
   var rows = priorities.map(function(r){
     return '<tr><td style="padding:6px 8px;font-size:12px">'+r.p+'</td><td style="padding:6px 8px;font-size:12px">'+r.t+'</td><td style="padding:6px 8px;font-size:12px;color:var(--gold)">'+r.c+'</td><td style="padding:6px 8px;font-size:11px;color:var(--text-muted)">'+r.note+'</td></tr>';
   }).join('');
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+( score>=80?'74,222,128':score>=60?'250,204,21':score>=40?'251,146,60':'239,68,68' )+',0.1),rgba('+( score>=80?'74,222,128':score>=60?'250,204,21':score>=40?'251,146,60':'239,68,68' )+',0.03));border:2px solid rgba('+( score>=80?'74,222,128':score>=60?'250,204,21':score>=40?'251,146,60':'239,68,68' )+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+barColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">建物スコア（満点100点）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+barColor+';line-height:1;margin-bottom:4px">'+score+'<span style="font-size:20px">点</span></div>'
+    +'<div style="font-size:22px;font-weight:700;color:'+barColor+';margin-bottom:4px">評価: '+grade+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+verdict+'</div>'
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">'
     +'<div style="text-align:center;min-width:64px"><div style="font-size:40px;font-weight:900;color:'+barColor+';line-height:1">'+grade+'</div><div style="font-size:11px;color:var(--text-muted)">総合評価</div></div>'
     +'<div style="flex:1"><div style="font-size:14px;font-weight:700;margin-bottom:6px;color:'+barColor+'">スコア '+score+'点</div>'
     +'<div style="background:rgba(255,255,255,0.07);border-radius:4px;height:10px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+barColor+';border-radius:4px;transition:width 0.4s"></div></div>'
@@ -5398,7 +5420,13 @@ function calcAkiyaUse() {
       +'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">'+u.note+'</div>'
       +'</div>';
   }).join('');
-  el.innerHTML = '<div style="display:grid;gap:10px;margin-bottom:10px">'+cards+'</div>'
+  var auHeroRgb = best.color === '#60a5fa' ? '96,165,250' : best.color === 'var(--gold)' ? '212,175,55' : '74,222,128';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+auHeroRgb+',0.1),rgba('+auHeroRgb+',0.03));border:2px solid rgba('+auHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+best.color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">最高収益プラン（'+best.icon+' '+best.name+'）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+best.color+';line-height:1;margin-bottom:4px">'+best.noi.toFixed(0)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">年間収益（NOI）目安・回収期間 '+best.payback+'年</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:10px;margin-bottom:10px">'+cards+'</div>'
     +'<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>活用方法を選ぶポイント:</strong> 回収期間5年以内が高効果・10年超は費用圧縮を検討しましょう。地方・過疎地では賃貸需要が少ないため、解体または売却が現実的な場合があります。民泊は収益が高い反面、許認可・運営管理の手間が大きく、まずは普通賃貸で安定収入を確保してから検討するのが無難です。迷った場合は「売却」がリスクが最も低く、現金化で次の行動の選択肢が広がります。</div>'
     +'<p style="font-size:10px;color:var(--text-muted)">※ 収益は地域・物件状態により大きく変動します。改修費用は床面積×単価で試算。実際の見積もりを取得してください。</p>'
     +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🏠 空き家 活用方法比較\n\n最高収益プラン: 【' + best.name + '】\n年間収益(NOI): ' + best.noi.toFixed(0) + '万円\n回収期間: ' + best.payback + '年\n\n「空き家を賃貸にする？民泊にする？倉庫にする？」を試算！\n▶ あなたの空き家でも無料比較\n不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
@@ -5426,7 +5454,13 @@ function calcReformPayback() {
   var paybackLabel = yr <= 0 ? '売却価値向上で即回収' : yr > 30 ? '30年超（費用対効果低）' : yr.toFixed(1)+'年';
   var paybackColor = yr <= 5 ? 'var(--green)' : yr <= 10 ? '#facc15' : yr <= 20 ? '#fb923c' : 'var(--red)';
   var kpiS = 'background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+  var rpHeroRgb = yr <= 5 ? '74,222,128' : yr <= 10 ? '250,204,21' : yr <= 20 ? '251,146,60' : '239,68,68';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+rpHeroRgb+',0.1),rgba('+rpHeroRgb+',0.03));border:2px solid rgba('+rpHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+paybackColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">リフォーム費用の回収期間（売却効果込）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+paybackColor+';line-height:1;margin-bottom:4px">'+paybackLabel+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">年間収益増加 '+annualBenefit.toFixed(1)+'万円/年</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
     +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:'+paybackColor+'">'+paybackLabel+'</div><div style="font-size:10px;color:var(--text-muted)">回収期間（売却効果込）</div></div>'
     +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:var(--gold)">'+(annualBenefit>0?totalWithoutSale.toFixed(1)+'年':'−')+'</div><div style="font-size:10px;color:var(--text-muted)">回収期間（賃貸収益のみ）</div></div>'
     +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:var(--text)">'+annualBenefit.toFixed(1)+'万/年</div><div style="font-size:10px;color:var(--text-muted)">年間収益増加</div></div>'
