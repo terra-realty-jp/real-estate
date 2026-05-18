@@ -7385,7 +7385,18 @@ function calcNextTarget() {
         + '<div style="font-size:10px;color:var(--text-muted)">'+Math.round(m.amt)+'万円</div></div>';
     }).join('') + '</div>' : '';
 
-  el.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;margin-bottom:10px">'
+  var ntRgb = shortfall === 0 ? '74,222,128' : months !== null && months <= 24 ? '212,175,55' : '239,68,68';
+  var ntMainVal = shortfall === 0 ? '今すぐ' : months !== null ? months+'ヶ月後' : '試算不可';
+  var ntMainUnit = shortfall === 0 ? '' : months !== null ? '' : '';
+  var ntSub = shortfall === 0 ? '頭金'+required+'万円を確保済み！すぐ物件探しに動けます' : months !== null ? '積立合計'+monthlyAdd+'万円/月 ／ 不足額'+shortfall.toLocaleString()+'万円' : '月間CF・積立額を入力してください';
+  var ntGuide = shortfall === 0 ? '準備完了！次は物件探しと融資事前審査を進めましょう' : months !== null && months <= 24 ? '2年以内に購入準備が整います。物件情報の収集を始めましょう' : '積立を増やして期間短縮を検討しましょう';
+  var ntHero = '<div style="background:linear-gradient(135deg,rgba('+ntRgb+',0.1),rgba('+ntRgb+',0.03));border:2px solid rgba('+ntRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:rgba('+ntRgb+',1);font-weight:700;letter-spacing:2px;margin-bottom:6px">次の物件購入まであと</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+ntRgb+',1);line-height:1;margin-bottom:4px">'+ntMainVal+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+ntSub+'</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:rgba('+ntRgb+',1)">'+ntGuide+'</div>'
+    +'</div>';
+  el.innerHTML = ntHero + '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;margin-bottom:10px">'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:10px">'
     + '<div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">必要頭金</div><div style="font-size:16px;font-weight:900;color:var(--text)">'+required.toLocaleString()+'万円</div></div>'
     + '<div><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">現在の蓄積</div><div style="font-size:16px;font-weight:900;color:var(--gold)">'+savings.toLocaleString()+'万円</div></div>'
@@ -8031,15 +8042,19 @@ function calcFusaiCheck() {
   else if (pct >= 25) { grade = 'D'; color = '#fb923c'; label = '通過可能性 低'; }
   else { grade = 'E'; color = '#f87171'; label = '厳しい状況'; }
 
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var faRgb = pct >= 80 ? '74,222,128' : pct >= 60 ? '52,211,153' : pct >= 40 ? '245,158,11' : pct >= 25 ? '251,146,60' : '248,113,113';
+  var faGuide = pct >= 80 ? '融資通過の可能性が高い物件条件です。積極的に交渉を進めましょう' : pct >= 60 ? '概ね良好。LTVか利回りをあと1項目改善すると安心です' : pct >= 40 ? '通過可能性は中程度。改善ポイントを確認して条件交渉を' : '融資条件が厳しい状況。頭金増額か物件価格の見直しを検討してください';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+faRgb+',0.1),rgba('+faRgb+',0.03));border:2px solid rgba('+faRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">融資審査 通過スコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+grade+'</div>'
+    +'<div style="font-size:16px;font-weight:700;color:'+color+';margin-bottom:4px">'+label+'（'+pct+'%）</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+faGuide+'</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">LTV</div><div style="font-size:18px;font-weight:900;color:'+( ltv<=70?'#4ade80':ltv<=80?'#f59e0b':'#f87171')+'">'+ltv.toFixed(0)+'<span style="font-size:11px">%</span></div></div>';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">返済比率</div><div style="font-size:18px;font-weight:900;color:'+( repayRatio<=35?'#4ade80':repayRatio<=45?'#f59e0b':'#f87171')+'">'+repayRatio.toFixed(0)+'<span style="font-size:11px">%</span></div></div>';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">DSCR</div><div style="font-size:18px;font-weight:900;color:'+( dscr>=1.2?'#4ade80':dscr>=1.0?'#f59e0b':'#f87171')+'">'+dscr.toFixed(2)+'</div></div>';
-  html += '</div>';
-  html += '<div style="text-align:center;padding:10px;border-radius:8px;background:'+color+'22;border:1px solid '+color+'44;margin-bottom:10px">';
-  html += '<div style="font-size:28px;font-weight:900;color:'+color+'">'+grade+'</div>';
-  html += '<div style="font-size:13px;font-weight:700;color:'+color+'">'+label+'（スコア'+pct+'%）</div>';
   html += '</div>';
   if (merits.length > 0) {
     html += '<div style="font-size:11px;color:#4ade80;margin-bottom:8px">✅ '+merits.join(' / ')+'</div>';
