@@ -5750,7 +5750,14 @@ function calcTokuteiRisk() {
   var actionsHtml = actions.map(function(a) {
     return '<li style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:4px">' + a + '</li>';
   }).join('');
-  el.innerHTML = '<div style="background:rgba(239,68,68,0.08);border:1px solid ' + levelColor + ';border-radius:10px;padding:14px;margin-bottom:12px">'
+  var tkHeroRgb = score >= 50 ? '248,113,113' : score >= 25 ? '251,146,60' : '250,204,21';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+tkHeroRgb+',0.1),rgba('+tkHeroRgb+',0.03));border:2px solid rgba('+tkHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+levelColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">特定空き家 指定リスクスコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+levelColor+';line-height:1;margin-bottom:4px">'+score+'<span style="font-size:20px">点</span></div>'
+    +'<div style="font-size:16px;font-weight:700;color:'+levelColor+';margin-bottom:4px">'+level+'</div>'
+    +(currentTax>0?'<div style="font-size:12px;color:var(--text-muted)">指定後の固定資産税は最大 '+Math.round(currentTax*6).toLocaleString()+'円/年</div>':'<div style="font-size:12px;color:var(--text-muted)">放置すると固定資産税が最大6倍になるリスクあり</div>')
+    +'</div>'
+    +'<div style="background:rgba(239,68,68,0.08);border:1px solid ' + levelColor + ';border-radius:10px;padding:14px;margin-bottom:12px">'
     + '<div style="font-size:14px;font-weight:900;color:' + levelColor + ';margin-bottom:6px">⚠ ' + level + '</div>'
     + '<div style="font-size:12px;color:var(--text);line-height:1.7">' + levelMsg + '</div></div>'
     + taxHtml
@@ -5792,7 +5799,14 @@ function calcCoOwnerRisk() {
     return '<li style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:6px">'+s+'</li>';
   }).join('');
 
-  el.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-left:3px solid '+level.color+';border-radius:8px;padding:12px 14px;margin-bottom:10px">'
+  var coHeroRgb = pct >= 70 ? '239,68,68' : pct >= 40 ? '251,146,60' : pct > 0 ? '212,175,55' : '74,222,128';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+coHeroRgb+',0.1),rgba('+coHeroRgb+',0.03));border:2px solid rgba('+coHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+level.color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">共有持分リスクスコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+level.color+';line-height:1;margin-bottom:4px">'+pct+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:16px;font-weight:700;color:'+level.color+';margin-bottom:4px">'+level.label+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">チェック項目 '+checks.length+'件 / 7件 該当</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.03);border-left:3px solid '+level.color+';border-radius:8px;padding:12px 14px;margin-bottom:10px">'
     + '<div style="font-size:14px;font-weight:900;color:'+level.color+';margin-bottom:6px">'+level.label+'（リスクスコア: '+pct+'%）</div>'
     + '<div style="font-size:12px;color:var(--text);line-height:1.7">'+level.msg+'</div></div>'
     + '<div style="margin-top:8px"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">💡 推奨される対処法</div>'
