@@ -6799,7 +6799,12 @@ function calcLandBuildSplit() {
   var annualDepr = buildValue / life;
   var deprLifePct = Math.min(100, (buildTax / (buildTax + 1)) * 100);
 
-  var html = '<div style="margin-top:10px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">年間減価償却費（定額法）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+Math.round(annualDepr*10)/10+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">建物価格'+Math.round(buildValue).toLocaleString()+'万円 ÷ 耐用年数'+life+'年</div>'
+    +'</div>'
+    +'<div style="margin-top:10px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
   html += '<div style="text-align:center;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">土地価格（按分後）</div>';
@@ -6983,6 +6988,7 @@ function calcNegoSuccess() {
   var minS = -30 + 1*3 + 1*3 + 1*3; // -21 min
   var prob = Math.min(92, Math.max(5, Math.round((totalScore - minS) / (maxS - minS) * 87 + 5)));
   var gc = prob >= 65 ? '#4ade80' : prob >= 40 ? '#f9a825' : '#f44336';
+  var negoRgb = prob >= 65 ? '74,222,128' : prob >= 40 ? '249,168,37' : '244,67,54';
   var gn = prob >= 65 ? '成功確率 高' : prob >= 40 ? '成功確率 中' : '成功確率 低';
   var strategy, steps;
   if (prob >= 65) {
@@ -6995,7 +7001,12 @@ function calcNegoSuccess() {
     strategy = '大幅な値引きは難しい状況です。価格を引き上げるか、好条件を付けることを検討してください。';
     steps = ['値引き幅を縮小（売出価格の3〜5%以内に調整）', '売主の希望条件（引き渡し時期・家財処分等）に寄り添う', '他物件との比較・代替案も同時に検討する'];
   }
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:14px;border:1px solid '+gc.replace(')',',0.25)').replace('rgb(','rgba(')+';border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+negoRgb+',0.1),rgba('+negoRgb+',0.03));border:2px solid rgba('+negoRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+gc+';font-weight:700;letter-spacing:2px;margin-bottom:6px">交渉成功確率</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+gc+';line-height:1;margin-bottom:4px">'+prob+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+gn+' · 値引き率'+Math.round(diffPct*10)/10+'%（'+Math.round(ask-bid).toLocaleString()+'万円）</div>'
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:14px;border:1px solid '+gc.replace(')',',0.25)').replace('rgb(','rgba(')+';border-radius:10px;padding:12px 14px;margin-bottom:10px">'
     +'<div style="text-align:center;min-width:70px;flex-shrink:0">'
     +'<div style="font-size:32px;font-weight:900;color:'+gc+'">'+prob+'<span style="font-size:14px">%</span></div>'
     +'<div style="font-size:9px;color:rgba(255,255,255,0.4)">交渉成功確率</div>'
@@ -7069,7 +7080,13 @@ function calcRateTypeChoice() {
       +'</div></div>';
   }).join('');
   var bestName = totalA <= totalB && totalA <= totalC ? '全期間固定' : totalB <= totalC ? '10年固定→変動' : '変動金利';
-  el.innerHTML = rows
+  var rtHeroDiff = Math.round((Math.max(totalA,totalB,totalC) - Math.min(totalA,totalB,totalC))/10000);
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(96,165,250,0.03));border:2px solid rgba(96,165,250,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#60a5fa;font-weight:700;letter-spacing:2px;margin-bottom:6px">金利タイプ選択で変わる総支払い差</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#60a5fa;line-height:1;margin-bottom:4px">'+rtHeroDiff.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+bestName+'が最安プラン · 最高額との差額</div>'
+    +'</div>'
+    + rows
     +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 12px;font-size:11px;color:rgba(255,255,255,0.5);line-height:1.7">'
     +'💡 入力した金利シナリオでは <b style="color:#60a5fa">'+bestName+'</b> が総支払い最小。ただし変動は金利上昇リスクあり。金利上昇が遅い場合は変動が有利になる傾向。最終判断は金融機関窓口でご相談ください。</div>'
     +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏦 住宅ローン 金利タイプ比較\n\n借入' + loan + '万円・' + yrs + '年返済\n試算結果: ' + bestName + 'が最安プラン\n固定 vs 変動で総支払いが大きく変わります！\n\n「固定・変動どっちにすべき？」を今すぐ試算\n▶ あなたのローンでも無料比較\n不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
@@ -7100,7 +7117,14 @@ function calcMoveOrder() {
   ];
   var sellScore = AXES.filter(function(a) { return a.better === 'sell'; }).length;
   var buyScore = AXES.filter(function(a) { return a.better === 'buy'; }).length;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var moRec = sellScore >= buyScore ? '売却先行' : '購入先行';
+  var moRecCost = sellScore >= buyScore ? sellFirstCost : buyFirstCost;
+  var html = '<div style="background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(96,165,250,0.03));border:2px solid rgba(96,165,250,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#60a5fa;font-weight:700;letter-spacing:2px;margin-bottom:6px">おすすめ順序</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#60a5fa;line-height:1;margin-bottom:4px">'+moRec+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">追加費用目安 約'+moRecCost.toFixed(0)+'万円</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
   html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (sellScore >= buyScore ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
   html += '<div style="font-size:11px;color:var(--text-muted)">売却先行</div>';
@@ -7149,7 +7173,13 @@ function calcMortgageRelease() {
     { step: '②法務局への申請', note: '「抵当権抹消登記申請書」に印紙を貼付して提出。自己申請は法務局の相談窓口を活用すると安心。' },
     { step: '③登記完了', note: '申請後1〜2週間で完了。完了後に「登記完了証」を受領し保管。' }
   ];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var savingAmtEarly = scrivenerGrand - selfTotal;
+  var html = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">自己申請で節約できる金額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#4ade80;line-height:1;margin-bottom:4px">'+savingAmtEarly.toLocaleString()+'<span style="font-size:20px">円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">司法書士費用'+scrivenerTotal.toLocaleString()+'円 vs 自己申請'+selfTotal.toLocaleString()+'円</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">💰 費用比較（' + count + '筆）</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
   html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(74,222,128,0.3)">';
@@ -7202,7 +7232,14 @@ function calcInspectionROI() {
   }
   var totalBenefit = negotiationBenefit + timeBenefit + trustBenefit + avoidLoss;
   var roi = (totalBenefit / cost - 1) * 100;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var iroiRgb = roi >= 100 ? '74,222,128' : roi >= 0 ? '251,146,60' : '248,113,113';
+  var iroiColor = roi >= 100 ? '#4ade80' : roi >= 0 ? '#fb923c' : '#f87171';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+iroiRgb+',0.1),rgba('+iroiRgb+',0.03));border:2px solid rgba('+iroiRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+iroiColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">インスペクション 費用対効果（ROI）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+iroiColor+';line-height:1;margin-bottom:4px">'+Math.round(roi).toLocaleString()+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">費用'+cost.toFixed(1)+'万円 → 期待リターン'+(totalBenefit-cost).toFixed(0)+'万円</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';font-size:15px;margin-bottom:6px">ROI: <span style="font-size:20px;color:#4ade80">' + Math.round(roi).toLocaleString() + '%</span> （費用対効果）</div>';
   var items;
   if (purpose === 'sell') {
