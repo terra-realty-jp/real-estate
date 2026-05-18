@@ -5576,7 +5576,17 @@ function calcSaleSeason() {
             : cur >= 3 ? { label:'標準期', color:'var(--gold)', note:'需要は平均的。適正価格での売却は問題ありませんが、早期決断が有利です。' }
             : { label:'閑散期', color:'var(--red)', note:'購入検討者が少なく、成約まで時間がかかりやすい時期です。価格設定に注意が必要です。' };
 
-  var html = '<div style="margin-top:12px">'
+  var ssHeroRgbMap = { 'var(--green)': '74,222,128', '#4fc3f7': '79,195,247', 'var(--gold)': '212,175,55', 'var(--red)': '239,68,68' };
+  var ssHeroRgb = ssHeroRgbMap[grade.color] || '212,175,55';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + ssHeroRgb + ',0.1),rgba(' + ssHeroRgb + ',0.03));border:2px solid rgba(' + ssHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + grade.color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + month + '月の売却需要判定（' + typeLabel[type] + '）</div>'
+    + '<div style="font-size:36px;font-weight:900;color:' + grade.color + ';line-height:1;margin-bottom:4px">' + grade.label + '</div>'
+    + '<div style="display:flex;justify-content:center;gap:3px;margin:6px 0">'
+    + [1,2,3,4,5].map(function(i){ return '<span style="font-size:20px;color:' + (i <= cur ? grade.color : 'rgba(255,255,255,0.15)') + '">★</span>'; }).join('')
+    + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">ベストシーズン: ' + peakMonths.map(function(m){ return m + '月'; }).join('・') + '</div>'
+    + '</div>'
+    + '<div style="margin-top:12px">'
     + '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 14px;flex:1;text-align:center">'
     + '<div style="font-size:11px;color:var(--text-muted)">' + month + '月の需要レベル</div>'
