@@ -12323,7 +12323,15 @@ function calcRepairVsReplace() {
     betterColor = '#fbbf24';
     advice = '10年間のコストはほぼ同じです。設備の信頼性・入居者への印象を考えると交換をおすすめします。';
   }
-  var html = '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var rvHexToRgb = {'#4ade80':'74,222,128','#93c5fd':'147,197,253','#fbbf24':'251,191,36'};
+  var rvHeroRgb = rvHexToRgb[betterColor] || '96,165,250';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+rvHeroRgb+',0.12),rgba('+rvHeroRgb+',0.04));border:2px solid rgba('+rvHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:'+betterColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年コスト比較の判定</div>';
+  html += '<div style="font-size:30px;font-weight:900;color:'+betterColor+';line-height:1.2;margin-bottom:4px">' + betterOption + '</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">修理 ' + Math.round(repairTotal10*10)/10 + '万 vs 交換 ' + Math.round(replaceTotal10*10)/10 + '万（10年）</div>';
+  html += '<div style="margin-top:6px;font-size:11px;color:'+betterColor+'">' + (Math.abs(diff) > 0 ? Math.round(Math.abs(diff)*10)/10 + '万円の差があります' : 'どちらも同程度') + '</div>';
+  html += '</div>';
+  html = html + '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:14px;font-weight:900;color:' + betterColor + ';margin-bottom:12px">\ud83d\udd0d 判定：' + betterOption + '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">修理（10年コスト）</div><div style="font-size:18px;font-weight:900;color:#93c5fd">' + Math.round(repairTotal10 * 10) / 10 + '万円</div><div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px">' + Math.ceil(compareYears / repairLife) + '回修理×' + repairCost + '万円</div></div>';
