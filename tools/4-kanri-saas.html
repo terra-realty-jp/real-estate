@@ -10173,7 +10173,16 @@ function calcRentUpSim() {
   var advice = marketPct > 0
     ? '値上げ後の家賃（'+fmt(newRent)+'）は周辺相場より'+Math.round(Math.abs(marketPct)*10)/10+'%高い。退去リスクが高いため、相場に近い水準に調整することを検討してください。'
     : '値上げ後でも周辺相場以下です。退去リスクが低く、合意を得やすい水準です。';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+  var ruHeroRgbMap = { '#60a5fa': '96,165,250', '#f9a825': '249,168,37', '#f44336': '244,67,54' };
+  var ruHeroRgb = ruHeroRgbMap[gc] || '96,165,250';
+  var ruHeroMsg = prob >= 60 ? '合意を得やすい水準です' : prob >= 40 ? '慎重な交渉が必要です' : '退去リスクが高い値上げ幅です';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+ruHeroRgb+',0.12),rgba('+ruHeroRgb+',0.04));border:2px solid rgba('+ruHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+gc+';font-weight:700;letter-spacing:2px;margin-bottom:6px">家賃値上げ交渉 成功確率</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+gc+';line-height:1;margin-bottom:4px">'+prob+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">値上げ'+fmt(raise)+'/月 · 回収期間'+breakEvenMonths+'ヶ月</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:'+gc+'">'+ruHeroMsg+'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
     +'<div style="background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.2);border-radius:8px;padding:10px;text-align:center">'
     +'<div style="font-size:10px;color:rgba(255,255,255,0.4)">交渉成功確率</div>'
     +'<div style="font-size:20px;font-weight:900;color:'+gc+'">'+prob+'%</div>'
@@ -10216,7 +10225,15 @@ function calcFairRentCheck() {
   else if (diffPct >= -8) { verdict = 'やや低め（値上げ余地あり）'; vc = '#22d3ee'; advice = '若干低めの設定です。更新時に3〜5%の値上げ交渉が可能な水準です。'; }
   else { verdict = '設定低すぎ（値上げ強く推奨）'; vc = '#60a5fa'; advice = '市場相場より'+Math.abs(diffPct)+'%低い設定です。年間損失額は'+fmtM(Math.abs(diff)*12)+'。次回更新時に値上げ交渉を強くお勧めします。'; }
   var annualLoss = diff < 0 ? Math.abs(diff) * 12 : 0;
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+  var frHeroRgbMap = { '#f44336': '244,67,54', '#f9a825': '249,168,37', '#4ade80': '74,222,128', '#22d3ee': '34,211,238', '#60a5fa': '96,165,250' };
+  var frHeroRgb = frHeroRgbMap[vc] || '96,165,250';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+frHeroRgb+',0.12),rgba('+frHeroRgb+',0.04));border:2px solid rgba('+frHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+vc+';font-weight:700;letter-spacing:2px;margin-bottom:6px">家賃の相場との差</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+vc+';line-height:1;margin-bottom:4px">'+(diffPct>=0?'+':'')+diffPct+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">推定適正家賃 '+fmtM(fairRent)+'（相場幅 '+fmtM(rangeLow)+'〜'+fmtM(rangeHigh)+'）</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:'+vc+'">'+verdict+'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
     +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
     +'<div style="font-size:10px;color:rgba(255,255,255,0.4)">推定適正家賃</div>'
     +'<div style="font-size:16px;font-weight:900;color:#60a5fa">'+fmtM(fairRent)+'</div>'
@@ -10268,7 +10285,15 @@ function calcArrearResponse() {
       { step: '②連帯保証人への連絡', timing: '同時進行', detail: '契約書記載の連帯保証人（緊急連絡先）に支払い請求。' },
       { step: '③建物明渡し請求訴訟', timing: '3ヶ月未払い以上', detail: '弁護士に依頼し、明渡し訴訟提起。確定まで6ヶ月〜1年程度かかる場合あり。' }
     ];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var arHeroRgb = urgency === 'high' ? '248,113,113' : urgency === 'mid' ? '251,146,60' : '74,222,128';
+  var arHeroColor = urgency === 'high' ? '#f87171' : urgency === 'mid' ? '#fb923c' : '#4ade80';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+arHeroRgb+',0.12),rgba('+arHeroRgb+',0.04));border:2px solid rgba('+arHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+arHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">滞納による損失見込み</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+arHeroColor+';line-height:1;margin-bottom:4px">▲'+expectedLoss.toFixed(1)+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">滞納総額 '+arrearTotal.toFixed(1)+'万円 · 回収見込み '+Math.round(recoverRate*100)+'%</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+arHeroColor+'">'+urgencyLabel+'</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + (urgency === 'high' ? '#f87171' : urgency === 'mid' ? '#fb923c' : '#4ade80') + ';font-size:13px;margin-bottom:10px">' + urgencyLabel + '</div>';
   var items = [
     ['滞納総額', arrearTotal.toFixed(1)+'万円', '#f87171'],
@@ -10312,7 +10337,13 @@ function calcInsuranceOpt() {
   var liabAmt = 1000;
   var liabAnnual = Math.round(5 + (struct === 'wood' ? 2 : 0) + (age >= 30 ? 1 : 0));
   var totalAnnual = fireAnnual + quakeAnnual + liabAnnual;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(96,165,250,0.12),rgba(96,165,250,0.04));border:2px solid rgba(96,165,250,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#60a5fa;font-weight:700;letter-spacing:2px;margin-bottom:6px">年間保険料の目安合計</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#60a5fa;line-height:1;margin-bottom:4px">'+totalAnnual+'<span style="font-size:20px">万円/年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">火災保険'+fireAnnual+'万 · 地震保険'+quakeAnnual+'万 · 賠償責任'+liabAnnual+'万</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#60a5fa">3種類の保険をセットで加入するのが基本です</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">🛡️ 推奨保険と年間保険料目安</div>';
   var insurances = [
     { name:'🔥 火災保険', amount: fireAmt + '万円', annual: fireAnnual + '万円/年', must: true, note: '建物の再調達価額を補償額に設定。水災特約の要否はハザードマップで確認。' },
@@ -10364,7 +10395,15 @@ function calcEquipReplaceOpt() {
   else if (netBenefitNow > 0) { verdict = '✅ 今すぐ交換が有利（期待損失 > 交換費用）'; vcolor = '#4ade80'; }
   else if (ageRatio >= 0.8) { verdict = '⚠️ 1〜2年内に計画的交換を推奨'; vcolor = '#fb923c'; }
   else { verdict = '✅ まだ様子見可能（定期点検は続ける）'; vcolor = '#4ade80'; }
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var eroHeroRgbMap = { '#f87171': '248,113,113', '#4ade80': '74,222,128', '#fb923c': '251,146,60' };
+  var eroHeroRgb = eroHeroRgbMap[vcolor] || '251,146,60';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+eroHeroRgb+',0.12),rgba('+eroHeroRgb+',0.04));border:2px solid rgba('+eroHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+vcolor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">来年中の故障確率（推定）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+vcolor+';line-height:1;margin-bottom:4px">'+Math.round(failProbNext1y*100)+'<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">'+s.name+' · 使用'+age+'年 · 耐用年数消費率 '+Math.round(ageRatio*100)+'%</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+vcolor+'">'+verdict+'</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + vcolor + ';font-size:13px;margin-bottom:10px">' + verdict + '</div>';
   var items = [
     ['現在の耐用年数消費率', Math.round(ageRatio * 100) + '%', ageRatio >= 0.9 ? '#f87171' : ageRatio >= 0.7 ? '#fb923c' : '#4ade80'],
