@@ -8647,7 +8647,14 @@ function calcMgmtCompare() {
   var diff = annualDelegation - annualTimeCost;
   var recommendation = diff < -20 ? '委託が割高：自主管理のほうが経済合理性あり' : diff < 20 ? 'ほぼ同等：手間と安心度で判断を' : '委託が割安：プロに任せてオーナーの時間を確保';
   var recColor = diff < -20 ? '#34d399' : diff < 20 ? '#f59e0b' : 'var(--gold)';
-  var html = '<div style="margin-top:10px">';
+  var cmpHeroRgb = diff < -20 ? '52,211,153' : diff < 20 ? '245,158,11' : '212,175,55';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + cmpHeroRgb + ',0.1),rgba(' + cmpHeroRgb + ',0.03));border:2px solid rgba(' + cmpHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + recColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">委託費 vs 自主管理コスト 年間差額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + recColor + ';line-height:1;margin-bottom:4px">' + (diff >= 0 ? '+' : '') + diff.toFixed(0) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">委託費 ' + annualDelegation.toFixed(0) + '万円 / 年 − 自主管理時間コスト ' + annualSelfTotal.toFixed(0) + '万円 / 年</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + recColor + '">' + recommendation + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px">';
   html += '<div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px;text-align:center">📋 管理委託の場合</div>';
@@ -8702,7 +8709,13 @@ function calcTenantTurnover() {
     { label: '管理手数料', val: fee, color: 'var(--text-muted)' },
     { label: 'その他', val: other, color: 'var(--text-muted)' }
   ];
-  var html = '<div style="margin-top:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.03));border:2px solid rgba(239,68,68,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--red);font-weight:700;letter-spacing:2px;margin-bottom:6px">退去1回あたりの総損失</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--red);line-height:1;margin-bottom:4px">▲' + totalLoss.toFixed(1) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">直接コスト ' + totalCost.toFixed(1) + '万円 ＋ 空室損失 ' + vacantLoss.toFixed(1) + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--red)">家賃 ' + rent + '万円/月 で回収まで ' + recoveryMonths + 'ヶ月かかります</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(239,68,68,0.12);border-radius:8px;padding:10px;text-align:center">';
   html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">総コスト</div>';
