@@ -5474,7 +5474,13 @@ function calcHLTax() {
     totalDeduct += yearlyDeduct;
     rows.push({ year: y, balance: Math.round(balance / 10000), deduct: yearlyDeduct.toFixed(1) });
   }
-  var html = '<div style="margin-top:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">控除期間の累計節税額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">' + totalDeduct.toFixed(0) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">控除率0.7% × ' + cfg.years + '年（' + cfg.label + '）</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--green)">所得税・住民税からこの分が還付されます</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">控除期間</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + cfg.years + '年</div></div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">控除対象借入上限</div><div style="font-size:20px;font-weight:900;color:var(--text)">' + cfg.maxLoan.toLocaleString() + '万円</div></div>';
@@ -5627,7 +5633,15 @@ function calcTesuke() {
     advice = '手付金 ' + tesuke + '万円（' + pct + '%）は残金決済時に売買代金に充当されます。受取後は大切に保管してください。';
   }
   var recPct = pct < 5 ? '5〜10%に引き上げ推奨' : pct > 20 ? '20%以下が一般的' : '適切な手付金率';
-  var html = '<div style="margin-top:10px">';
+  var teHeroRgbMap = { 'var(--green)': '74,222,128', '#f59e0b': '245,158,11', 'var(--red)': '239,68,68' };
+  var teHeroRgb = teHeroRgbMap[riskColor] || '212,175,55';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + teHeroRgb + ',0.1),rgba(' + teHeroRgb + ',0.03));border:2px solid rgba(' + teHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + riskColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">手付金額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + riskColor + ';line-height:1;margin-bottom:4px">' + tesuke.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">売買価格' + price + '万円の' + pct + '%</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + riskColor + '">' + riskLabel + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
   html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">手付金額</div>';
@@ -5680,7 +5694,15 @@ function calcKakutei() {
            : pct >= 40 ? '⚠️ 準備途中です。取得に時間がかかる書類は早めに手配を'
            : '🔴 準備不足です。税理士か税務署に相談しながら進めましょう';
   var msgColor = pct >= 100 ? 'var(--green)' : pct >= 70 ? '#34d399' : pct >= 40 ? '#f59e0b' : 'var(--red)';
-  var html = '<div>';
+  var kktHeroRgbMap = { 'var(--green)': '74,222,128', '#f59e0b': '245,158,11', 'var(--red)': '239,68,68' };
+  var kktHeroRgb = kktHeroRgbMap[barColor] || '212,175,55';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + kktHeroRgb + ',0.1),rgba(' + kktHeroRgb + ',0.03));border:2px solid rgba(' + kktHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + barColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">確定申告書類 準備率</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + barColor + ';line-height:1;margin-bottom:4px">' + pct + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + done + ' / ' + total + '件 準備済み</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + barColor + '">' + msg + '</div>'
+    + '</div>'
+    + '<div>';
   html += '<div style="background:rgba(255,255,255,0.06);border-radius:8px;height:8px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:8px;transition:width 0.4s"></div></div>';
   html += '<div style="font-size:12px;font-weight:700;color:' + msgColor + ';margin-bottom:8px">' + msg + '</div>';
   html += '<div style="font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.03);border-radius:6px;padding:8px;line-height:1.7">📌 申告期限は売却した翌年の<strong style="color:var(--text)">2月16日〜3月15日</strong>。損失が出た場合も申告すると他の所得と損益通算できる場合があります。購入時の契約書が見当たらない場合は司法書士・税理士に相談を。</div>';
