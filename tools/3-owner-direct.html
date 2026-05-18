@@ -7687,7 +7687,14 @@ function calcRenovFinance() {
   var totalInterest = Math.round((totalRepay - loanNeeded) * 10) / 10;
   var interestPct = loanNeeded > 0 ? Math.round(totalInterest / loanNeeded * 100) : 0;
   var selfLabel = selfOnly ? '✅ 手元資金のみで全額賄えます（ローン不要）' : '💡 不足分 ' + loanNeeded + '万円をローンで調達';
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  var rfHeroRgb = selfOnly ? '74,222,128' : '248,113,113';
+  var rfHeroColor = selfOnly ? '#4ade80' : '#f87171';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+rfHeroRgb+',0.1),rgba('+rfHeroRgb+',0.03));border:2px solid rgba('+rfHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+rfHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+(selfOnly?'現金のみで対応可能':'リフォームローン 総利息')+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+rfHeroColor+';line-height:1;margin-bottom:4px">'+(selfOnly?cost:totalInterest)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+(selfOnly?'手元資金'+cash+'万円 ≥ 費用'+cost+'万円（ローン不要）':'借入'+loanNeeded+'万円 · 月'+monthly+'万円×'+term+'年')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:8px">💳 資金調達シミュレーション</div>'
     + '<div style="padding:8px 12px;background:rgba(0,0,0,0.15);border-radius:8px;font-size:12px;color:rgba(255,255,255,0.8);margin-bottom:12px">' + selfLabel + '</div>'
     + (loanNeeded > 0 ? '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
@@ -7723,7 +7730,12 @@ function calcClosingAdj() {
   var mgmtAdj = Math.round(mgmtDailyRate * remainDays * 10) / 10;
   var totalAdj = Math.round((taxAdj + mgmtAdj) * 10) / 10;
   var monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">決済日割精算 合計額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+totalAdj+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">固定資産税'+taxAdj+'万＋管理費'+mgmtAdj+'万 · '+remainDays+'日分</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">📅 ' + monthNames[month - 1] + day + '日決済の日割精算</div>'
     + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;margin-bottom:10px">'
     + '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:rgba(255,255,255,0.6)">決済日以降の日数</span><span style="font-size:12px;color:' + ACCENT + '">' + remainDays + '日</span></div>'
@@ -7763,7 +7775,15 @@ function calcRateFixedVsVariable() {
   var verdict = fixedTotal <= varTotal
     ? '💡 現時点では固定金利の方が有利（変動が' + diff + '万円多い）'
     : '⚠️ 現時点では変動金利の方が有利（固定が' + Math.abs(diff) + '万円多い）ただし金利上昇リスクあり';
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  var rfvHeroRgb = diff > 0 ? '74,222,128' : '248,113,113';
+  var rfvHeroColor = diff > 0 ? '#4ade80' : '#f87171';
+  var rfvHeroLabel = diff > 0 ? '変動より固定が総額で得（差額）' : '固定より変動が総額で得（差額）';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+rfvHeroRgb+',0.1),rgba('+rfvHeroRgb+',0.03));border:2px solid rgba('+rfvHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+rfvHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+rfvHeroLabel+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+rfvHeroColor+';line-height:1;margin-bottom:4px">'+Math.abs(diff).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">固定総額'+fixedTotal+'万 vs 変動総額'+varTotal+'万（'+term+'年間）</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
     + '<div style="padding:12px;background:rgba(0,0,0,0.2);border-radius:8px">'
     + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.8);margin-bottom:8px">固定金利 ' + fixedRate + '%</div>'
@@ -7817,7 +7837,14 @@ function calcBuyOrRent() {
   html += '</div>';
   html += '</div>';
   var diff = Math.abs(Math.round(buying1Cost - buyLater));
+  var borWinner = buying1Cost < buyLater ? '今すぐ購入が有利' : '賃貸継続→後購入が有利';
   var winner = buying1Cost < buyLater ? '今すぐ購入の方が' + diff + '万円お得' : '賃貸継続→後で購入の方が' + diff + '万円お得';
+  html = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">10年間 有利な選択（差額）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#4ade80;line-height:1;margin-bottom:4px">'+diff.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+borWinner+'</div>'
+    +'</div>'
+    + html;
   html += '<div style="font-size:13px;font-weight:700;color:#4ade80;text-align:center;margin-bottom:8px">📊 ' + winner + '（10年間）</div>';
   html += '<div style="font-size:11px;color:var(--text-muted)">※金利0.7%・35年ローン・諸費用7%・貯金月' + saving + '万円で試算。実際の条件で大きく変わります。</div>';
   html += '</div>';
@@ -7852,7 +7879,12 @@ function calcNewHomeDeduction() {
   }
   totalDeduction = Math.round(totalDeduction * 10) / 10;
   var avgYearly = Math.round(totalDeduction / 13 * 10) / 10;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">住宅ローン控除 13年間 節税総額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#4ade80;line-height:1;margin-bottom:4px">'+totalDeduction.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">年間平均'+avgYearly.toFixed(1)+'万円 · 借入'+loan.toLocaleString()+'万円の0.7%控除</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:18px;font-weight:900;color:' + ACCENT + '">' + totalDeduction.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">13年間の節税総額</div></div>';
   html += '<div><div style="font-size:18px;font-weight:900;color:' + ACCENT + '">' + avgYearly.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間平均節税額</div></div>';
