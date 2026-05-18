@@ -6363,7 +6363,12 @@ function calcReformCost() {
     rows += '</tr>';
   });
 
-  var html = '<div style="overflow-x:auto">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">リフォーム費用合計（目安・'+gradeLabel+'）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+total.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">延床'+area+'㎡・坪単価換算'+(total/(area/3.3)).toFixed(0)+'万円/坪</div>'
+    +'</div>'
+    +'<div style="overflow-x:auto">';
   html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">';
   html += '<thead><tr><th style="text-align:left;color:var(--text-muted);padding:4px 6px;font-size:11px">工事内容</th><th style="text-align:right;color:var(--text-muted);padding:4px 6px;font-size:11px">概算費用</th><th style="padding:4px 6px"></th></tr></thead>';
   html += '<tbody>' + rows + '</tbody>';
@@ -6405,8 +6410,9 @@ function calcAkiyaRental() {
   var arHeroRgb = arVerdictRgbMap[verdictColor] || '74,222,128';
   var html = '<div style="background:linear-gradient(135deg,rgba(' + arHeroRgb + ',0.1),rgba(' + arHeroRgb + ',0.03));border:2px solid rgba(' + arHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
     + '<div style="font-size:11px;color:' + verdictColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">賃貸化 採算判定</div>'
-    + '<div style="font-size:36px;font-weight:900;color:' + verdictColor + ';line-height:1;margin-bottom:4px">' + verdict + '</div>'
-    + '<div style="font-size:12px;color:var(--text-muted)">実質月間CF ' + monthlyCF.toFixed(1) + '万円 · 年間収益 ' + annualCF.toFixed(0) + '万円 · 利回り' + (reform > 0 ? yield_.toFixed(1) : '—') + '%</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + verdictColor + ';line-height:1;margin-bottom:4px">' + annualCF.toFixed(0) + '<span style="font-size:20px">万円/年</span></div>'
+    + '<div style="font-size:16px;font-weight:700;color:' + verdictColor + ';margin-bottom:4px">' + verdict + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">実質月間CF ' + monthlyCF.toFixed(1) + '万円 · 利回り' + (reform > 0 ? yield_.toFixed(1) : '—') + '%</div>'
     + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">' + (isFinite(payback) ? 'リフォーム費' + reform + '万円の回収期間: ' + paybackY + '年' + paybackM + 'ヶ月' : '収益プラスでないためリフォーム費の回収計算不可') + '</div>'
     + '</div>'
     + '<div style="margin-top:10px">';
@@ -6472,7 +6478,14 @@ function calcSouzokuToki() {
   var overallColor = maxLevel === 3 ? '#f87171' : maxLevel === 2 ? '#fb923c' : '#facc15';
   var overallLabel = maxLevel === 3 ? '要緊急対応' : maxLevel === 2 ? '要対応' : '確認推奨';
   if (vals[9]) { overallColor = '#4ade80'; overallLabel = '対応済み'; }
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var stHeroRgb = overallColor === '#f87171' ? '248,113,113' : overallColor === '#fb923c' ? '251,146,60' : overallColor === '#facc15' ? '250,204,21' : '74,222,128';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+stHeroRgb+',0.1),rgba('+stHeroRgb+',0.03));border:2px solid rgba('+stHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+overallColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">相続登記 対応ステータス</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+overallColor+';line-height:1;margin-bottom:4px">'+urgency.length+'<span style="font-size:20px">件</span></div>'
+    +'<div style="font-size:18px;font-weight:700;color:'+overallColor+';margin-bottom:4px">'+overallLabel+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">対応が必要な項目が'+urgency.length+'件あります</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="text-align:center;padding:8px;border-radius:6px;background:'+overallColor+'22;border:1px solid '+overallColor+'44;margin-bottom:10px">';
   html += '<span style="font-size:16px;font-weight:900;color:'+overallColor+'">登記対応ステータス：'+overallLabel+'</span>';
   html += '</div>';
@@ -6529,7 +6542,12 @@ function calcDIYCost() {
     items.push({ label: sp.label, diyMat: diyMat, proC: proC, hours: sp.diyHours, diff: sp.diff, note: sp.note });
   });
   var saving = totalPro - totalDIYMaterial;
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">DIYで節約できる金額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">'+saving+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">業者発注'+totalPro+'万円 → DIY'+totalDIYMaterial+'万円（約'+totalDIYHours+'時間の作業）</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">DIY 材料費</div><div style="font-size:18px;font-weight:900;color:#4db6f5">'+totalDIYMaterial+'<span style="font-size:11px">万円</span></div></div>';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">業者発注</div><div style="font-size:18px;font-weight:900;color:#fb923c">'+totalPro+'<span style="font-size:11px">万円</span></div></div>';
