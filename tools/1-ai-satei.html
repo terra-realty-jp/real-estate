@@ -3324,6 +3324,32 @@
     <div id="is_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 住み替え後 手元に残る現金シミュレーター -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏡→🏠 今の家を売って小さい家に住み替えると、手元にいくら残る？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">売却代金からローン残債・諸費用を引いた「手取り額」と、新居の「頭金」を差し引いた残金を試算します。住み替え後に手元にいくら残るかが一目でわかります。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">今の家の売却予定価格（万円）（例: 3500）</label>
+        <input type="number" id="muc_sell" placeholder="例: 3500" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">今の家のローン残債（万円）（完済なら0）</label>
+        <input type="number" id="muc_loan" placeholder="例: 500" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">新しい家の購入予算（万円）（例: 2500）</label>
+        <input type="number" id="muc_buy" placeholder="例: 2500" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">頭金割合（%）（例: 20）</label>
+        <input type="number" id="muc_down" placeholder="例: 20" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcMoveUpCash()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">住み替え後の手元残金を試算する</button>
+    <div id="muc_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -9904,6 +9930,50 @@ function calcInheritanceSplit() {
       <div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=${encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html')}&text=${encodeURIComponent('📊 相続不動産 遺産分割 試算\n\n売却価格: ' + price + '万円\n手取り分配総額: ' + net.toLocaleString() + '万円\n相続人数: ' + heirs.length + '名\n\n相続した家を売ったら各自いくらもらえる？を今すぐ確認\n▶ あなたの場合でも無料試算\n不動産かんたんツール（TERRA REALTY）')}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>
     </div>`;
   if (typeof saveCardResult === 'function') saveCardResult('遺産分割試算', '手取り' + net + '万円を' + heirs.length + '名で分配', 'card-inheritance-split');
+}
+
+function calcMoveUpCash() {
+  var el = document.getElementById('muc_result');
+  if (!el) return;
+  var sell = parseFloat(document.getElementById('muc_sell').value) || 0;
+  var loan = parseFloat(document.getElementById('muc_loan').value) || 0;
+  var buy = parseFloat(document.getElementById('muc_buy').value) || 0;
+  var downPct = parseFloat(document.getElementById('muc_down').value) || 20;
+  if (!sell || !buy) {
+    el.style.display = 'block';
+    el.innerHTML = '<p style="color:var(--red);font-size:13px">売却予定価格と新居購入予算を入力してください。</p>';
+    return;
+  }
+  var sellFee = Math.round(sell * 0.04);
+  var netSell = Math.round(sell - loan - sellFee);
+  var downAmt = Math.round(buy * downPct / 100);
+  var remaining = Math.round(netSell - downAmt);
+  var newLoan = buy - downAmt;
+  var rate = 0.005 / 12;
+  var n = 360;
+  var monthly = newLoan > 0 ? Math.round(newLoan * 10000 * rate * Math.pow(1 + rate, n) / (Math.pow(1 + rate, n) - 1)) : 0;
+  var mucRgb = remaining >= 0 ? '74,222,128' : '248,113,113';
+  var mucColor = remaining >= 0 ? '#4ade80' : '#f87171';
+  var mucLabel = remaining >= 0 ? '住み替え後 手元に残る現金' : '住み替え後 資金不足額';
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+mucRgb+',0.1),rgba('+mucRgb+',0.03));border:2px solid rgba('+mucRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+mucColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+mucLabel+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+mucColor+';line-height:1;margin-bottom:4px">'+(remaining >= 0 ? '+' : '')+remaining.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">新居ローン: 月々約'+monthly.toLocaleString()+'円（金利0.5%・35年）</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin-bottom:10px">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px">💰 住み替えの収支内訳</div>'
+    +'<div style="display:grid;gap:6px;font-size:12px">'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">今の家の売却価格</span><span style="font-weight:700">'+sell.toLocaleString()+'万円</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">ローン残債</span><span style="color:#f87171">−'+loan.toLocaleString()+'万円</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">売却諸費用（目安4%）</span><span style="color:#f87171">−'+sellFee.toLocaleString()+'万円</span></div>'
+    +'<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;margin-top:2px"><span style="color:var(--text)">売却手取り</span><span style="font-weight:900;color:'+mucColor+'">'+netSell.toLocaleString()+'万円</span></div>'
+    +'<div style="display:flex;justify-content:space-between;margin-top:4px"><span style="color:var(--text-muted)">新居頭金（'+downPct+'%）</span><span style="color:#f87171">−'+downAmt.toLocaleString()+'万円</span></div>'
+    +'<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;margin-top:2px;font-size:14px"><span style="font-weight:700;color:var(--text)">住み替え後の手元残金</span><span style="font-weight:900;color:'+mucColor+'">'+(remaining>=0?'+':'')+remaining.toLocaleString()+'万円</span></div>'
+    +'</div></div>'
+    +(remaining < 0 ? '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:8px;padding:10px;font-size:12px;color:#f87171;line-height:1.7">⚠️ 現在の計画では資金が'+Math.abs(remaining).toLocaleString()+'万円不足します。頭金割合を下げる・購入予算を抑える・売却価格を上げるなど調整が必要です。</div>' : '<div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;font-size:12px;color:#4ade80;line-height:1.7">✅ 住み替えの資金計画は成立しています。手元に'+remaining.toLocaleString()+'万円の余裕資金を残せます。</div>')
+    +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html')+'&text='+encodeURIComponent('🏡→🏠 住み替え後の手元残金を試算してみた！\n\n売却手取り: '+netSell.toLocaleString()+'万円\n住み替え後 手元残金: '+(remaining>=0?'+':'')+remaining.toLocaleString()+'万円\n新居ローン月々: 約'+monthly.toLocaleString()+'円\n\n▶ あなたの住み替えでも無料計算\n不動産かんたんツール（TERRA REALTY）')+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  if (typeof saveCardResult === 'function') saveCardResult('住み替え手元残金', '住み替え後'+(remaining>=0?'+':'')+remaining+'万円残', 'muc_result');
 }
 
 function calcSellTiming() {
