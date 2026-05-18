@@ -4996,7 +4996,16 @@ function calcBuyVsSell() {
   var diff = agentNet - buyNet;
   var agentColor = agentNet > buyNet ? 'var(--green)' : 'var(--text)';
   var buyColor   = buyNet > agentNet ? 'var(--green)' : 'var(--text)';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'
+  var bvHeroRgb   = diff >= 200 ? '59,130,246' : diff >= 50 ? '212,175,55' : '251,146,60';
+  var bvHeroColor = diff >= 200 ? '#60a5fa' : diff >= 50 ? 'var(--gold)' : '#fb923c';
+  var bvHeroLabel = diff >= 200 ? '仲介売却が有利（差額大）' : diff >= 50 ? '仲介売却がやや有利' : '差額が小さい — スピード重視なら買取も選択肢';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + bvHeroRgb + ',0.1),rgba(' + bvHeroRgb + ',0.03));border:2px solid rgba(' + bvHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + bvHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + bvHeroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + bvHeroColor + ';line-height:1;margin-bottom:4px">' + (diff >= 0 ? '+' : '') + diff.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">仲介' + agentNet.toLocaleString() + '万円 vs 買取' + buyNet.toLocaleString() + '万円（' + buyRate + '%）</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">' + (diff >= 200 ? '✓ 仲介売却を選ぶべき差額です。3〜6ヶ月待てるなら仲介が有利' : '急ぐ事情（離婚・相続・転勤）があれば2〜4週間で現金化できる買取も合理的') + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'
     + '<div style="padding:14px;background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.25);border-radius:10px">'
     + '<div style="font-size:11px;font-weight:700;color:#60a5fa;margin-bottom:8px;letter-spacing:0.5px">📋 仲介売却</div>'
     + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">売却価格</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">' + price.toLocaleString() + '<span style="font-size:11px">万円</span></div>'
