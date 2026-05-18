@@ -3931,7 +3931,10 @@ function calcTaxSim() {
   const taxRate = isLong ? 0.20315 : 0.3963;
   const tax = Math.round(taxableIncome * taxRate);
   const M = v => Math.round(v/10000).toLocaleString() + '万円';
-  el.innerHTML = `
+  const taxHeroRgb = tax > 0 ? '248,113,113' : '74,222,128';
+  const taxHeroColor = tax > 0 ? '#f87171' : 'var(--green)';
+  const taxHero = `<div style="background:linear-gradient(135deg,rgba(${taxHeroRgb},0.1),rgba(${taxHeroRgb},0.03));border:2px solid rgba(${taxHeroRgb},0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px"><div style="font-size:11px;color:${taxHeroColor};font-weight:700;letter-spacing:2px;margin-bottom:6px">概算税額（譲渡所得税）</div><div style="font-size:52px;font-weight:900;color:${taxHeroColor};line-height:1;margin-bottom:4px">${Math.round(tax/10000).toLocaleString()}<span style="font-size:20px">万円</span></div><div style="font-size:12px;color:var(--text-muted)">${isLong?'長期':'短期'}譲渡 ${isLong?'20.315%':'39.63%'} — 課税所得 ${M(taxableIncome)}</div></div>`;
+  el.innerHTML = taxHero+`
     <div style="display:grid;gap:8px;font-size:13px;margin-bottom:14px">
       <div style="display:flex;justify-content:space-between"><span>売却価格</span><span style="color:var(--gold);font-weight:700">${M(price)}</span></div>
       <div style="display:flex;justify-content:space-between"><span style="color:#999">－ 取得費${costInput>0?'':' (概算5%)'}</span><span style="color:#f59e0b">${M(cost)}</span></div>
@@ -5587,9 +5590,10 @@ function calcSaleSeason() {
   var ssHeroRgb = ssHeroRgbMap[grade.color] || '212,175,55';
   var html = '<div style="background:linear-gradient(135deg,rgba(' + ssHeroRgb + ',0.1),rgba(' + ssHeroRgb + ',0.03));border:2px solid rgba(' + ssHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
     + '<div style="font-size:11px;color:' + grade.color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + month + '月の売却需要判定（' + typeLabel[type] + '）</div>'
-    + '<div style="font-size:36px;font-weight:900;color:' + grade.color + ';line-height:1;margin-bottom:4px">' + grade.label + '</div>'
-    + '<div style="display:flex;justify-content:center;gap:3px;margin:6px 0">'
-    + [1,2,3,4,5].map(function(i){ return '<span style="font-size:20px;color:' + (i <= cur ? grade.color : 'rgba(255,255,255,0.15)') + '">★</span>'; }).join('')
+    + '<div style="font-size:52px;font-weight:900;color:' + grade.color + ';line-height:1;margin-bottom:2px">' + (cur * 20) + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:22px;font-weight:700;color:' + grade.color + ';margin-bottom:4px">' + grade.label + '</div>'
+    + '<div style="display:flex;justify-content:center;gap:3px;margin:4px 0">'
+    + [1,2,3,4,5].map(function(i){ return '<span style="font-size:18px;color:' + (i <= cur ? grade.color : 'rgba(255,255,255,0.15)') + '">★</span>'; }).join('')
     + '</div>'
     + '<div style="font-size:12px;color:var(--text-muted)">ベストシーズン: ' + peakMonths.map(function(m){ return m + '月'; }).join('・') + '</div>'
     + '</div>'
@@ -5753,7 +5757,14 @@ function calcMediationType() {
     }
   };
   var r = recs[v];
-  el.innerHTML = '<div style="padding:12px 14px;border-radius:8px;border:2px solid ' + r.color + ';background:rgba(255,255,255,0.03);margin-bottom:4px">'
+  var mtHeroRgb = {'var(--gold)':'212,175,55','#4ade80':'74,222,128','#60a5fa':'96,165,250'}[r.color] || '212,175,55';
+  var mtHero = '<div style="background:linear-gradient(135deg,rgba('+mtHeroRgb+',0.1),rgba('+mtHeroRgb+',0.03));border:2px solid rgba('+mtHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+r.color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">あなたの状況に最適な媒介契約</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+r.color+';line-height:1;margin-bottom:4px">✅</div>'
+    +'<div style="font-size:20px;font-weight:900;color:'+r.color+';margin-bottom:4px">'+r.type+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">状況に合った契約タイプ</div>'
+    +'</div>';
+  el.innerHTML = mtHero+'<div style="padding:12px 14px;border-radius:8px;border:2px solid ' + r.color + ';background:rgba(255,255,255,0.03);margin-bottom:4px">'
     + '<div style="font-size:13px;font-weight:700;color:' + r.color + ';margin-bottom:6px">✅ おすすめ：' + r.type + '</div>'
     + '<p style="font-size:12px;color:var(--text);line-height:1.7;margin-bottom:6px">' + r.reason + '</p>'
     + '<p style="font-size:11px;color:var(--text-muted);line-height:1.6">⚠️ ' + r.caution + '</p>'
@@ -6312,7 +6323,12 @@ function calcPriceSchedule() {
   var totalReduction = ask - price;
   var totalPct = (totalReduction / ask * 100).toFixed(1);
   var totalMaintCost = (rows[rows.length - 1].week / 4.33 * maint).toFixed(1);
-  var html = '<div style="margin-top:10px">';
+  var pscHero = '<div style="background:linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.03));border:2px solid rgba(239,68,68,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--red);font-weight:700;letter-spacing:2px;margin-bottom:6px">累計値下げ幅</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--red);line-height:1;margin-bottom:4px">▼'+totalReduction.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">値下げ回数: '+(rows.length-1)+'回 / 累計▼'+totalPct+'% / 保有維持費: '+totalMaintCost+'万円</div>'
+    +'</div>';
+  var html = pscHero+'<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">段階値下げ回数</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + (rows.length - 1) + '回</div></div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">累計値下げ幅</div><div style="font-size:20px;font-weight:900;color:var(--red)">▼' + totalPct + '%</div></div>';
