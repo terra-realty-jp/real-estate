@@ -6122,7 +6122,15 @@ function calcQuickTable() {
       + '<td style="padding:8px 10px;border:1px solid rgba(255,255,255,0.06);text-align:right;font-size:14px;font-weight:900;color:'+netColor+'">'+r.net.toLocaleString()+'万</td></tr>';
   }).join('');
 
-  el.innerHTML = '<div style="overflow-x:auto;margin-top:4px">'
+  var qtCenterResult = netCalc(center);
+  var qtHeroRgb = qtCenterResult.net >= 0 ? '74,222,128' : '239,68,68';
+  var qtHeroColor = qtCenterResult.net >= 0 ? 'var(--green)' : 'var(--red)';
+  var qtHero = '<div style="background:linear-gradient(135deg,rgba('+qtHeroRgb+',0.1),rgba('+qtHeroRgb+',0.03));border:2px solid rgba('+qtHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+qtHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">中心値 '+center.toLocaleString()+'万円 での手取り</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+qtHeroColor+';line-height:1;margin-bottom:4px">'+qtCenterResult.net.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">手数料・税・ローン返済後</div>'
+    +'</div>';
+  el.innerHTML = qtHero+'<div style="overflow-x:auto;margin-top:4px">'
     + '<table style="width:100%;border-collapse:collapse;font-size:11px">'
     + '<thead><tr style="background:var(--dark3)">'
     + '<th style="padding:7px 10px;text-align:left;color:var(--text-muted);border:1px solid rgba(255,255,255,0.06)">価格帯</th>'
@@ -6715,7 +6723,14 @@ function calcKokuchi() {
   ];
   var checked = items.filter(function(it){ return document.getElementById(it.id) && document.getElementById(it.id).checked; });
   var highCount = checked.filter(function(it){ return it.risk==='高'; }).length;
-  var html = '';
+  var kkHeroRgb = checked.length === 0 ? '74,222,128' : (highCount >= 2 ? '239,68,68' : highCount === 1 ? '245,158,11' : '250,204,21');
+  var kkHeroColor = checked.length === 0 ? 'var(--green)' : (highCount >= 2 ? 'var(--red)' : '#f59e0b');
+  var kkHero = '<div style="background:linear-gradient(135deg,rgba('+kkHeroRgb+',0.1),rgba('+kkHeroRgb+',0.03));border:2px solid rgba('+kkHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+kkHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">告知義務 該当項目数</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+kkHeroColor+';line-height:1;margin-bottom:4px">'+checked.length+'<span style="font-size:20px">件</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+(checked.length===0?'告知必要事項なし（問題なし）':'うちリスク高: '+highCount+'件 — 早急に確認が必要')+'</div>'
+    +'</div>';
+  var html = kkHero;
   if (checked.length === 0) {
     html = '<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;font-size:12px;color:#34d399;text-align:center">✅ 告知必要な項目が見当たりません。念のため不動産会社に確認しましょう</div>';
   } else {
