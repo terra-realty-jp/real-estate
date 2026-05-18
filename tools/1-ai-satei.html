@@ -6236,7 +6236,14 @@ function calcInternalCheck() {
     + unchecked.map(function(u){ return '<div style="font-size:12px;color:var(--text-muted);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)">▷ '+u+'</div>'; }).join('')
     + '</div>' : '';
 
-  el.innerHTML = '<div style="text-align:center;padding:12px 0">'
+  var icRgbMap = {'var(--gold)':'212,175,55','var(--green)':'74,222,128','#60a5fa':'96,165,250','var(--red)':'239,68,68'};
+  var icHeroRgb = icRgbMap[grade.color] || '212,175,55';
+  var icHero = '<div style="background:linear-gradient(135deg,rgba('+icHeroRgb+',0.1),rgba('+icHeroRgb+',0.03));border:2px solid rgba('+icHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+grade.color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">内覧準備スコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+grade.color+';line-height:1;margin-bottom:4px">'+score+'<span style="font-size:20px">点</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+grade.label+' / 100点満点</div>'
+    +'</div>';
+  el.innerHTML = icHero + '<div style="text-align:center;padding:12px 0">'
     + '<div style="font-size:32px;font-weight:900;color:'+grade.color+'">'+score+'点</div>'
     + '<div style="font-size:14px;font-weight:700;color:'+grade.color+';margin-top:2px">'+grade.label+'</div>'
     + barHtml
@@ -6420,7 +6427,15 @@ function calcFixedAssetTax() {
   var sellerAmount = Math.round(dailyRate * sellerDays / 100) * 100;
   var buyerAmount = Math.round(dailyRate * buyerDays / 100) * 100;
   var settlementDateStr = year + '年' + (settlement.getMonth()+1) + '月' + settlement.getDate() + '日';
-  var html = '<div style="margin-top:10px">';
+  var fatSellerMan = Math.round(sellerAmount/10000*10)/10;
+  var fatBuyerMan = Math.round(buyerAmount/10000*10)/10;
+  var fatHeroRgb = '239,68,68';
+  var fatHero = '<div style="background:linear-gradient(135deg,rgba('+fatHeroRgb+',0.1),rgba('+fatHeroRgb+',0.03));border:2px solid rgba('+fatHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--red);font-weight:700;letter-spacing:2px;margin-bottom:6px">売主負担（'+sellerDays+'日分）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--red);line-height:1;margin-bottom:4px">'+fatSellerMan+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">買主から精算受取: '+fatBuyerMan+'万円（'+buyerDays+'日分）</div>'
+    +'</div>';
+  var html = fatHero+'<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">売主負担（1/1〜決済日前日）</div><div style="font-size:20px;font-weight:900;color:var(--red)">▲' + Math.round(sellerAmount/10000*10)/10 + '万円</div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">' + sellerDays + '日分</div></div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">買主負担（決済日〜12/31）</div><div style="font-size:20px;font-weight:900;color:var(--gold)">▲' + Math.round(buyerAmount/10000*10)/10 + '万円</div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">' + buyerDays + '日分</div></div>';
