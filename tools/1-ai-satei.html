@@ -6367,7 +6367,14 @@ function calcMagnetScore() {
   else if (pct >= 40) { grade = 'B'; gColor = '#fb923c'; gMsg = '競合物件が多い価格帯・改善で成約率を上げられる'; }
   else { grade = 'C'; gColor = 'var(--red)'; gMsg = '課題が多い・価格設定とリフォームの両面から対策を検討'; }
   var barW = Math.round(pct);
-  var html = '<div style="margin-top:10px">';
+  var msRgbMap = {'#4ade80':'74,222,128','var(--gold)':'212,175,55','#fb923c':'251,146,60','var(--red)':'239,68,68'};
+  var msHeroRgb = msRgbMap[gColor] || '212,175,55';
+  var msHero = '<div style="background:linear-gradient(135deg,rgba('+msHeroRgb+',0.1),rgba('+msHeroRgb+',0.03));border:2px solid rgba('+msHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+gColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">物件魅力度スコア（グレード'+grade+'）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+gColor+';line-height:1;margin-bottom:4px">'+pct+'<span style="font-size:20px">点</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+gMsg+'</div>'
+    +'</div>';
+  var html = msHero+'<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:80px 1fr;gap:12px;align-items:center;background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px">';
   html += '<div style="text-align:center"><div style="font-size:48px;font-weight:900;color:' + gColor + ';line-height:1">' + grade + '</div><div style="font-size:10px;color:var(--text-muted)">訴求力</div></div>';
   html += '<div><div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">' + pct + '点 / 100点</div>';
@@ -6405,7 +6412,14 @@ function calcSateiReady() {
   else if (pct >= 70) { stage = 'ほぼ準備OK'; sColor = 'var(--gold)'; sMsg = '残り数項目の確認で査定依頼に進めます'; nextStep = '→ チェックされていない項目を1週間以内に完了しましょう'; }
   else if (pct >= 40) { stage = '準備中'; sColor = '#fb923c'; sMsg = '主要書類の準備が必要です'; nextStep = '→ 登記・固定資産税通知書・ローン残高の確認から始めましょう'; }
   else { stage = '準備が必要'; sColor = 'var(--red)'; sMsg = '査定依頼前に基本的な書類確認を行いましょう'; nextStep = '→ まず固定資産税通知書と権利証（登記識別情報）の場所を確認してください'; }
-  var html = '<div style="margin-top:10px">';
+  var srRgbMap = {'var(--green)':'74,222,128','var(--gold)':'212,175,55','#fb923c':'251,146,60','var(--red)':'239,68,68'};
+  var srHeroRgb = srRgbMap[sColor] || '212,175,55';
+  var srHero = '<div style="background:linear-gradient(135deg,rgba('+srHeroRgb+',0.1),rgba('+srHeroRgb+',0.03));border:2px solid rgba('+srHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+sColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">査定依頼前 準備進捗</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+sColor+';line-height:1;margin-bottom:4px">'+checked+'<span style="font-size:20px">/10項目</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+stage+' — '+pct+'%完了</div>'
+    +'</div>';
+  var html = srHero+'<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px">';
   html += '<div style="text-align:center;min-width:70px"><div style="font-size:28px;font-weight:900;color:' + sColor + '">' + checked + '/10</div><div style="font-size:10px;color:var(--text-muted)">完了</div></div>';
   html += '<div><div style="font-size:13px;font-weight:700;color:' + sColor + ';margin-bottom:4px">' + stage + '</div>';
