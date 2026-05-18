@@ -6062,7 +6062,14 @@ function calcAkiyaBEP() {
   // 現在の希望売出価格との差
   var netAtAsk = ask > 0 ? ask - commission(ask) - loan - 30 : null;
   var gainLoss = ask > 0 ? ask - bepCostRecovery : null;
-  var html = '<div style="margin-top:10px">';
+  var bepHeroRgb = (ask > 0 && gainLoss >= 0) ? '74,222,128' : (ask > 0 && gainLoss < 0) ? '239,68,68' : '212,175,55';
+  var bepHeroColor = (ask > 0 && gainLoss >= 0) ? 'var(--green)' : (ask > 0 && gainLoss < 0) ? 'var(--red)' : 'var(--gold)';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+bepHeroRgb+',0.1),rgba('+bepHeroRgb+',0.03));border:2px solid rgba('+bepHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+bepHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">取得費回収 損益分岐点（BEP）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+bepHeroColor+';line-height:1;margin-bottom:4px">'+bepCostRecovery.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">この価格以上で売れれば取得費を回収できます'+(ask>0?'　希望価格での損益: '+(gainLoss>=0?'+':'')+Math.round(gainLoss).toLocaleString()+'万円':'')+'</div>'
+    +'</div>'
+    +'<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">ローン完済BEP</div><div style="font-size:18px;font-weight:900;color:' + (loan > 0 ? 'var(--gold)' : 'var(--text-muted)') + '">' + (loan > 0 ? bepLoan.toLocaleString() + '万円' : '残債なし') + '</div></div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">取得費回収BEP</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + bepCostRecovery.toLocaleString() + '万円</div></div>';
@@ -6125,7 +6132,12 @@ function calcDemoCost() {
       + '<div style="height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+b.pct+'%;background:'+b.color+';border-radius:4px"></div></div></div>';
   }).join('');
 
-  el.innerHTML = '<div style="margin-top:4px">' + barHtml
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.1),rgba(251,146,60,0.03));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">解体費 中間目安</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">約'+mid+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">低い場合'+low+'万円〜高い場合'+high+'万円</div>'
+    +'</div>'
+    +'<div style="margin-top:4px">' + barHtml
     + '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 12px;margin-top:8px">'
     + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px">💡 費用の目安</div>'
     + '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">'+struct==='wood'?'木造':'鉄骨・RC'+'建物（延床'+area+'㎡）の解体費用は <strong style="color:var(--text)">'+low+'〜'+high+'万円</strong> が目安です。重機の搬入経路・廃棄物の分別・仮設足場の有無で変動します。</div></div>'
@@ -6163,7 +6175,12 @@ function calcSubsidyCheck() {
       + '<div style="font-size:12px;font-weight:900;color:'+s.color+';white-space:nowrap">'+s.range+'</div></div>'
       + '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5">'+s.note+'</div></div>';
   }).join('');
-  el.innerHTML = '<div style="margin-top:4px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">使える補助金の合計上限（目安）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">最大'+total+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">適用可能性がある補助制度 '+subsidies.length+'件</div>'
+    +'</div>'
+    +'<div style="margin-top:4px">'
     + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">✅ 適用可能性がある補助制度（'+subsidies.length+'件）</div>'
     + rows
     + '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:10px 12px;margin-top:8px">'
@@ -6193,7 +6210,12 @@ function calcSozokuHyouka() {
   var totalVal = landAfter + bldg;
   var myShare = totalVal * share / 100;
   var tokureiLabel = { none: '特例なし', resident: '特定居住用（80%減・330㎡限度）', business: '特定事業用（80%減・400㎡限度）', rental: '貸付事業用（50%減・200㎡限度）' }[tokurei];
-  var html = '<div style="margin-top:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">持分('+share+'%)相当 相続税評価額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+Math.round(myShare).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">評価額合計'+Math.round(totalVal).toLocaleString()+'万円 × 持分'+share+'%'+(deduction>0?'　特例減額▲'+Math.round(deduction).toLocaleString()+'万円':'')+'</div>'
+    +'</div>'
+    +'<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
   html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">土地評価額（特例前）</div>';
@@ -6271,8 +6293,15 @@ function calcDispose3() {
   ];
 
   var best = options.slice().sort(function(a,b){ return b.net - a.net; })[0];
+  var d3HeroRgb = best.net >= 0 ? '74,222,128' : '239,68,68';
+  var d3HeroColor = best.net >= 0 ? 'var(--green)' : 'var(--red)';
 
-  var html = '<div style="display:grid;gap:8px;margin-top:10px;margin-bottom:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+d3HeroRgb+',0.1),rgba('+d3HeroRgb+',0.03));border:2px solid rgba('+d3HeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+d3HeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">最も手取りが多い方法: '+best.icon+' '+best.label+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+d3HeroColor+';line-height:1;margin-bottom:4px">'+(best.net>=0?'+':'')+Math.round(best.net).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">手取り概算（仲介手数料・費用差引後）</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:8px;margin-top:10px;margin-bottom:10px">';
   options.forEach(function(o) {
     var isBest = o.label === best.label;
     var border = isBest ? 'border:2px solid ' + o.color : 'border:1px solid rgba(255,255,255,0.08)';
