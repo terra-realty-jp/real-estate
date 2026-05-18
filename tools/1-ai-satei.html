@@ -7936,7 +7936,14 @@ function calcStagingROI() {
   var gainColor = netGain >= 0 ? '#4caf50' : 'var(--red)';
   var verdict = netGain > 0 ? '✅ ステージングに投資する価値あり' : '⚠️ 費用対効果が低い可能性あり';
   var verdictColor = netGain > 0 ? '#4caf50' : '#f9a825';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+  var sgHeroRgb = netGain >= 0 ? '74,222,128' : '239,68,68';
+  var sgHero = '<div style="background:linear-gradient(135deg,rgba('+sgHeroRgb+',0.1),rgba('+sgHeroRgb+',0.03));border:2px solid rgba('+sgHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+gainColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">ステージング 費用対効果</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+gainColor+';line-height:1;margin-bottom:4px">'+roi+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">純利益 '+(netGain>=0?'+':'')+fmtW(netGain)+' / 費用 '+fmtW(cost)+'</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:'+gainColor+'">'+verdict+'</div>'
+    +'</div>';
+  el.innerHTML = sgHero+'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
     + '<div style="font-size:11px;color:var(--text-muted)">売却価格の上乗せ期待</div>'
     + '<div style="font-size:15px;font-weight:700;color:#4db6f5">+' + fmtW(priceUp) + '</div>'
@@ -7974,7 +7981,14 @@ function calcJointOwnership() {
   var DISPUTE_MONTHS = 18;
   var disputeCost = dispute === 'yes' ? DISPUTE_ATTY + DISPUTE_COURT : 0;
   var myNet = myShare - disputeCost;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var joHeroRgb = myNet >= 0 ? '74,222,128' : '239,68,68';
+  var joHeroColor = myNet >= 0 ? 'var(--green)' : 'var(--red)';
+  var joHero = '<div style="background:linear-gradient(135deg,rgba('+joHeroRgb+',0.1),rgba('+joHeroRgb+',0.03));border:2px solid rgba('+joHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+joHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">共有持分（'+Math.round(share*100)+'%）あなたの手取り</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+joHeroColor+';line-height:1;margin-bottom:4px">'+myNet.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">売却 '+price.toLocaleString()+'万 → 持分 '+myShare.toFixed(0)+'万'+(disputeCost>0?' − 紛争費用 '+disputeCost+'万':'')+'</div>'
+    +'</div>';
+  var html = joHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">💰 売却時の手取り分配</div>';
   var items = [
     ['売却価格', price.toLocaleString() + '万円', 'var(--text)'],
