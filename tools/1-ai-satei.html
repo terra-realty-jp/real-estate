@@ -5528,7 +5528,14 @@ function calcInhSellVsRent() {
   var winner = diff > 0 ? '賃貸活用が有利' : '今すぐ売却が有利';
   var winnerColor = diff > 0 ? 'var(--green)' : 'var(--gold)';
   var kpiS = 'border-radius:10px;padding:12px;text-align:center';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+  var heroRgb = diff > 0 ? '74,222,128' : '212,175,55';
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba('+heroRgb+',0.1),rgba('+heroRgb+',0.03));border:2px solid rgba('+heroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+winnerColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年間収益比較</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+winnerColor+';line-height:1;margin-bottom:4px">'+Math.abs(diff).toFixed(0)+'<span style="font-size:20px">万円差</span></div>'
+    +'<div style="font-size:14px;font-weight:700;color:'+winnerColor+';margin-bottom:4px">→ '+winner+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">売却手取り '+sellNet.toFixed(0)+'万 vs 賃貸10年収益 '+rentNet10.toFixed(0)+'万</div>'
+    +'</div>';
+  el.innerHTML = heroHtml+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
     +'<div style="'+kpiS+';background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.3)">'
     +'<div style="font-size:13px;font-weight:700;margin-bottom:6px;color:#facc15">💰 今すぐ売却</div>'
     +'<div style="font-size:22px;font-weight:900;color:#facc15">'+sellNet.toFixed(0)+'万</div>'
@@ -5882,7 +5889,14 @@ function calcDemoVsKeep() {
   var winner      = diff > 0 ? 'demolish' : diff < 0 ? 'keep' : 'tie';
   var winnerLabel = winner === 'demolish' ? '更地にした方が' + Math.round(diff / 10000) + '万円多く手取れます' : winner === 'keep' ? '建物ありの方が' + Math.round(-diff / 10000) + '万円多く手取れます' : '両方の手取りは同じです';
   var winnerColor = winner === 'demolish' ? '#4ade80' : winner === 'keep' ? 'var(--gold)' : 'var(--text-muted)';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'
+  var dvHeroRgb = winner === 'demolish' ? '74,222,128' : winner === 'keep' ? '212,175,55' : '148,163,184';
+  var dvHero = '<div style="background:linear-gradient(135deg,rgba('+dvHeroRgb+',0.1),rgba('+dvHeroRgb+',0.03));border:2px solid rgba('+dvHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+winnerColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">解体 vs そのまま 手取り差額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+winnerColor+';line-height:1;margin-bottom:4px">'+Math.abs(Math.round(diff/10000))+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:13px;font-weight:700;color:'+winnerColor+';margin-bottom:4px">'+winnerLabel+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">建物あり '+Math.round(keepNet/10000).toLocaleString()+'万 vs 更地 '+Math.round(afterNet/10000).toLocaleString()+'万</div>'
+    +'</div>';
+  el.innerHTML = dvHero+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'
     + '<div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid ' + (winner==='keep'?'rgba(201,168,76,0.4)':'rgba(255,255,255,0.08)') + '">'
     + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏠 建物ありのまま売却</div>'
     + '<div style="font-size:14px;font-weight:900;color:' + (winner==='keep'?'var(--gold)':'var(--text)') + '">' + Math.round(keepNet/10000).toLocaleString() + '万円</div>'
