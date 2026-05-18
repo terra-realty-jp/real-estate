@@ -8353,6 +8353,7 @@ function calcSaleSuccessProb() {
   var score = ps * 0.30 + loc * 0.25 + cond * 0.20 + as * 0.15 + urg * 0.10;
   var prob = Math.min(94, Math.max(6, Math.round((score - 0.85) / (4.55 - 0.85) * 88 + 6)));
   var gc = prob >= 75 ? '#4ade80' : prob >= 55 ? '#22d3ee' : prob >= 35 ? '#f9a825' : '#f44336';
+  var sspRgb = prob >= 75 ? '74,222,128' : prob >= 55 ? '34,211,238' : prob >= 35 ? '249,168,37' : '244,67,54';
   var gn = prob >= 75 ? 'A（高確率）' : prob >= 55 ? 'B（良好）' : prob >= 35 ? 'C（要改善）' : 'D（低確率）';
   var adv = prob >= 75 ? '現在の条件で積極的に売り出せます。市場反応を見ながら進めましょう。'
     : prob >= 55 ? '良好な水準です。内覧時の印象アップや問い合わせ対応の迅速化で確率が上がります。'
@@ -8367,7 +8368,13 @@ function calcSaleSuccessProb() {
     return '<div style="margin-bottom:5px"><div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:2px"><span>'+a.n+'</span><span>'+pct+'%</span></div>'
       +'<div style="background:rgba(255,255,255,0.06);border-radius:4px;height:5px"><div style="width:'+pct+'%;background:'+bc+';height:5px;border-radius:4px;transition:width 0.4s"></div></div></div>';
   }).join('');
-  el.innerHTML = '<div style="background:rgba('+gc.replace('#','').replace(/(..)(..)(..)/, function(_,r,g,b){return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16);})+',0.06);border:1px solid '+gc.replace(')',',0.3)').replace('rgb(','rgba(')+';border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start">'
+  var sspHero = '<div style="background:linear-gradient(135deg,rgba('+sspRgb+',0.1),rgba('+sspRgb+',0.03));border:2px solid rgba('+sspRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+gc+';font-weight:700;letter-spacing:2px;margin-bottom:6px">3ヶ月成約確率 診断</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+gc+';line-height:1;margin-bottom:4px">'+prob+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:13px;font-weight:700;color:'+gc+';margin-bottom:4px">'+gn+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+adv+'</div>'
+    +'</div>';
+  el.innerHTML = sspHero+'<div style="background:rgba('+gc.replace('#','').replace(/(..)(..)(..)/, function(_,r,g,b){return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16);})+',0.06);border:1px solid '+gc.replace(')',',0.3)').replace('rgb(','rgba(')+';border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start">'
     +'<div style="text-align:center;min-width:72px;flex-shrink:0">'
     +'<div style="font-size:32px;font-weight:900;color:'+gc+'">'+prob+'<span style="font-size:16px">%</span></div>'
     +'<div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:1px">3ヶ月成約確率</div>'
@@ -8588,7 +8595,14 @@ function calcEquityExtract() {
     : ltv === 70
     ? '💡 LTV70%は標準的な水準です。追加ローンには審査・保証料が別途発生します。'
     : '✅ LTV60%は保守的で安全性が高い借入水準です。';
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  var eqHeroRgb = maxBorrow > 0 ? '74,222,128' : '251,146,60';
+  var eqHero = '<div style="background:linear-gradient(135deg,rgba('+eqHeroRgb+',0.1),rgba('+eqHeroRgb+',0.03));border:2px solid rgba('+eqHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+borrowColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">追加借入可能額（LTV'+ltv+'%基準）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+borrowColor+';line-height:1;margin-bottom:4px">'+maxBorrow.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">純資産 '+equity.toLocaleString()+'万円 / 評価額 '+val.toLocaleString()+'万円の'+equityRatio+'%</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:'+borrowColor+'">活用目的: '+purposeLabel+'</div>'
+    +'</div>';
+  el.innerHTML = eqHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
     + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">純資産（担保余力）</div>'
@@ -8628,7 +8642,14 @@ function calcDemandScore() {
   var days = total >= 85 ? '15〜30日' : total >= 70 ? '30〜60日' : total >= 55 ? '60〜120日' : total >= 40 ? '120〜180日' : '180日以上';
   var areaLabel = { city_center: '都心', major: '主要都市', suburb: '郊外', rural: '地方・郡部' }[area];
   var typeLabel = { condo: 'マンション', house: '一戸建て', land: '土地', invest: '収益物件' }[ptype];
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  var dsHeroRgb = total >= 85 ? '74,222,128' : total >= 70 ? '134,239,172' : total >= 55 ? '74,222,128' : total >= 40 ? '251,146,60' : '248,113,113';
+  var dsHero = '<div style="background:linear-gradient(135deg,rgba('+dsHeroRgb+',0.1),rgba('+dsHeroRgb+',0.03));border:2px solid rgba('+dsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+grade.color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">需要スコア診断（'+typeLabel+' / '+areaLabel+'）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+grade.color+';line-height:1;margin-bottom:4px">'+total+'<span style="font-size:20px">/100点</span></div>'
+    +'<div style="font-size:14px;font-weight:700;color:'+grade.color+';margin-bottom:4px">グレード '+grade.label+'　想定成約期間: '+days+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+grade.comment+'</div>'
+    +'</div>';
+  el.innerHTML = dsHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">'
     + '<div style="width:64px;height:64px;border-radius:50%;border:3px solid ' + grade.color + ';display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">'
     + '<div style="font-size:20px;font-weight:900;color:' + grade.color + '">' + grade.label + '</div>'
