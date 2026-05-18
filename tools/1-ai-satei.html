@@ -8435,7 +8435,13 @@ function calcInheritanceSale() {
   var fmt = function(v) { return Math.round(Math.abs(v) / 10000).toLocaleString() + '万円'; };
   var winner = diff > 0 ? '賃貸活用後売却' : '今すぐ売却';
   var wc = diff > 0 ? '#22d3ee' : '#4ade80';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+  var isHeroRgb = diff > 0 ? '34,211,238' : '74,222,128';
+  var isHero = '<div style="background:linear-gradient(135deg,rgba('+isHeroRgb+',0.1),rgba('+isHeroRgb+',0.03));border:2px solid rgba('+isHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+wc+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+winner+' が有利</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+wc+';line-height:1;margin-bottom:4px">'+Math.round(Math.abs(diff)/10000).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">今すぐ: '+fmt(proceedsA)+' / 10年賃貸後: '+fmt(proceedsB)+'</div>'
+    +'</div>';
+  el.innerHTML = isHero+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
     +'<div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center">'
     +'<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">今すぐ売却</div>'
     +'<div style="font-size:18px;font-weight:900;color:#4ade80">'+fmt(proceedsA)+'</div>'
@@ -8524,7 +8530,12 @@ function calcSaleDocumentCheck() {
   var required = docs.filter(function(d) { return d.req; });
   var optional = docs.filter(function(d) { return !d.req; });
   var pLabel = { house: '一戸建て', condo: 'マンション', land: '土地のみ' }[pType];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var sdcHero = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">必要書類（'+pLabel+'）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+required.length+'<span style="font-size:20px">件</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">売却活動開始の1〜2ヶ月前から準備を</div>'
+    +'</div>';
+  var html = sdcHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">📍 ' + pLabel + ' / ' + (loan === 'active' ? 'ローン残あり' : 'ローンなし') + (inherit === 'yes' ? ' / 相続物件' : '') + (reform === 'yes' ? ' / 増改築あり' : '') + '</div>';
   html += '<div style="font-size:12px;font-weight:700;color:' + ACCENT + ';margin-bottom:6px">✅ 必要な書類（' + required.length + '件）</div>';
   required.forEach(function(d) {
@@ -8682,7 +8693,12 @@ function calcHandoverPlan() {
   totalCostMin += status === 'rental' ? 0 : 0;
   var totalCostMax = furniture === 'full' ? 26 : furniture === 'partial' ? 7 : 1;
   totalCostMax += clean === 'full' ? (pType === 'house' ? 15 : 8) : 0;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var hpHero = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">引き渡し前 概算費用</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+totalCostMin+'〜'+totalCostMax+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+pLabel+' / '+statusLabel+' / タスク '+tasks.length+'件</div>'
+    +'</div>';
+  var html = hpHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">📍 ' + pLabel + ' / ' + statusLabel + '</div>';
   html += '<div style="font-size:12px;margin-bottom:10px">引き渡し前の概算費用: <b style="color:' + ACCENT + '">' + totalCostMin + '〜' + totalCostMax + '万円</b></div>';
   var cats = {};
