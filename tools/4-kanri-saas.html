@@ -12195,7 +12195,15 @@ function calcBlueReturn() {
   var netSaving65 = saving65 - software;
   var saving10 = whiteTotalTax - blue10TotalTax;
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var brHeroRgb = saving65 >= 20 ? '74,222,128' : saving65 >= 10 ? '250,204,21' : '96,165,250';
+  var brHeroColor = saving65 >= 20 ? '#4ade80' : saving65 >= 10 ? '#facc15' : '#60a5fa';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+brHeroRgb+',0.12),rgba('+brHeroRgb+',0.04));border:2px solid rgba('+brHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:'+brHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">青色申告（65万控除）の年間節税効果</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:'+brHeroColor+';line-height:1;margin-bottom:4px">' + Math.round(saving65 * 10) / 10 + '<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">実質節税（ソフト費差引）: ' + Math.round(netSaving65 * 10) / 10 + '万円</div>';
+  html += '<div style="margin-top:6px;font-size:11px;color:'+brHeroColor+'">' + (saving65 >= 20 ? '大きな節税効果！今すぐ切り替えを強く推奨' : saving65 >= 10 ? '十分な節税効果があります' : '所得増加に伴い節税効果が大きくなります') + '</div>';
+  html += '</div>';
+  html += '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:13px;font-weight:900;color:#4ade80;margin-bottom:10px">📋 年間節税メリット比較</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">白色申告</div><div style="font-size:17px;font-weight:900;color:#f87171">' + Math.round(whiteTotalTax * 10) / 10 + '万円</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">所得税+住民税</div></div>';
@@ -12254,7 +12262,15 @@ function calcSubleaseVsSelf() {
   else if (diff > -50) { grade = 'ほぼ同等'; gradeColor = '#fbbf24'; advice = '収益差は小さい。手間・リスク許容度で判断を。空室が続く懸念があればサブリース、安定稼働見込みなら自主管理。'; }
   else { grade = 'サブリースが有利な可能性'; gradeColor = '#f87171'; advice = '空室率が高い市場では、サブリースの安定収益メリットが上回ります。ただしサブリース会社の財務健全性も確認してください。'; }
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var svsHexToRgb = {'#4ade80':'74,222,128','#86efac':'134,239,172','#fbbf24':'251,191,36','#f87171':'248,113,113'};
+  var svsHeroRgb = svsHexToRgb[gradeColor] || '96,165,250';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+svsHeroRgb+',0.12),rgba('+svsHeroRgb+',0.04));border:2px solid rgba('+svsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:'+gradeColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年間の収益差</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:'+gradeColor+';line-height:1;margin-bottom:4px">' + (diff >= 0 ? '+' : '') + Math.round(diff) + '<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">自主管理 ' + Math.round(selfTotal) + '万 vs サブリース ' + Math.round(subTotal) + '万</div>';
+  html += '<div style="margin-top:6px;font-size:11px;color:'+gradeColor+'">' + grade + '</div>';
+  html += '</div>';
+  html += '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:13px;font-weight:900;color:' + gradeColor + ';margin-bottom:10px">📊 10年収益比較：' + grade + '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">サブリース10年</div><div style="font-size:17px;font-weight:900;color:#93c5fd">' + Math.round(subTotal) + '万円</div></div>';
