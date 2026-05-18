@@ -7039,7 +7039,15 @@ function calcLeverage() {
   var leverageLabel = leverage !== null
     ? (isPositive ? '✅ 正のレバレッジ（金利 < ROA）' : '⚠️ 逆レバレッジ発生（金利 > ROA）')
     : '';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">'
+  var levHeroRgb   = isPositive ? '74,222,128' : '239,68,68';
+  var levHeroColor = isPositive ? 'var(--green)' : 'var(--red)';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + levHeroRgb + ',0.1),rgba(' + levHeroRgb + ',0.03));border:2px solid rgba(' + levHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + levHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">ROE（自己資本利回り）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + levHeroColor + ';line-height:1;margin-bottom:4px">' + roe.toFixed(2) + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">ROA ' + roa.toFixed(2) + '% · 金利 ' + rate.toFixed(2) + '% · LTV ' + ltv.toFixed(1) + '%</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + levHeroColor + '">' + leverageLabel + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">'
     + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">ROA（総資産利回り）</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + roa.toFixed(2) + '%</div><div style="font-size:10px;color:var(--text-muted)">NOI÷物件価格</div></div>'
     + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">ROE（自己資本利回り）</div><div style="font-size:18px;font-weight:900;color:' + (roe>roa?'var(--green)':'var(--red)') + '">' + roe.toFixed(2) + '%</div><div style="font-size:10px;color:var(--text-muted)">年間CF÷自己資金</div></div>'
     + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">LTV（借入比率）</div><div style="font-size:18px;font-weight:900;color:var(--text)">' + ltv.toFixed(1) + '%</div><div style="font-size:10px;color:var(--text-muted)">借入÷物件価格</div></div>'
