@@ -11035,7 +11035,15 @@ function calcRentIncreaseHistory() {
   successRate += years >= 5 ? 10 : years >= 3 ? 5 : 0;
   successRate = Math.min(successRate, 85);
   var rankColor = gapPct > 10 ? '#4ade80' : gapPct > 0 ? '#facc15' : '#fb923c';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var rihHeroRgbMap = { '#4ade80': '74,222,128', '#facc15': '250,204,21', '#fb923c': '251,146,60' };
+  var rihHeroRgb = rihHeroRgbMap[rankColor] || '250,204,21';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+rihHeroRgb+',0.12),rgba('+rihHeroRgb+',0.04));border:2px solid rgba('+rihHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+rankColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">値上げ交渉の成功率目安</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+rankColor+';line-height:1;margin-bottom:4px">'+successRate+'<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">相場との差額 '+(gap>=0?'+':'')+gap.toFixed(1)+'万 · 交渉目安 +'+negotiable.toFixed(1)+'万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+rankColor+'">'+(gap>0?'現在の家賃は相場より低め — 値上げ交渉の好機です':'現在の家賃は相場水準 — 設備改善が先決です')+'</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:var(--text)">' + marketRent.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">周辺の相場家賃（推定）</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + rankColor + '">' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">相場との差額</div></div>';
@@ -11074,7 +11082,13 @@ function calcSeasonalVacancy() {
   var discountedRent = Math.round(rent * (1 - discountPct / 100) * 10) / 10;
   var withDiscountMonths = Math.max(0, expectedMoreMonths * 0.55);
   var discountSaving = Math.round(((expectedMoreMonths - withDiscountMonths) * rent - (expectedMoreMonths - withDiscountMonths) * (rent - discountedRent)) * 10) / 10;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.12),rgba(251,146,60,0.04));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">現在の空室損失額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">▲'+currentLoss.toFixed(1)+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">空室'+empty+'ヶ月 · さらに'+expectedMoreMonths.toFixed(1)+'ヶ月続く見込み</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#fb923c">'+(monthsToNext===0?'今が繁忙期 — 早期成約が最重要':'次の繁忙期まで'+monthsToNext+'ヶ月 — 早期対策を')+'</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:#fb923c">' + currentLoss.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">現在の空室損失額</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:#facc15">' + expectedMoreMonths.toFixed(1) + 'ヶ月</div><div style="font-size:10px;color:var(--text-muted)">さらに空室が続く見込み</div></div>';
@@ -11107,7 +11121,15 @@ function calcGreenRent() {
   var tenantSave = type === 'insulation' ? 0.4 : type === 'heatpump' ? 0.3 : type === 'solar' ? 0.8 : 1.2;
   var totalBenefit = Math.round((rentUp * 12 * years) * 10) / 10;
   var roi = Math.round(((totalBenefit - netCost) / netCost) * 100);
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var grHeroRgb = roi >= 0 ? '96,165,250' : '251,146,60';
+  var grHeroColor = roi >= 0 ? '#60a5fa' : '#fb923c';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+grHeroRgb+',0.12),rgba('+grHeroRgb+',0.04));border:2px solid rgba('+grHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+grHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">省エネ改修の'+years+'年間ROI</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+grHeroColor+';line-height:1;margin-bottom:4px">'+(roi>=0?'+':'')+roi+'<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">実質コスト '+netCost+'万 · 家賃UP +'+rentUp.toFixed(1)+'万/月 · 補助金 '+subsidy+'万</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+grHeroColor+'">'+(roi>=0?'投資コストを上回る収益が見込めます':'入居率改善効果を加えると投資判断が変わる可能性あり')+'</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">+' + rentUp.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間賃料UP効果</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:#4ade80">' + subsidy + '万円</div><div style="font-size:10px;color:var(--text-muted)">補助金目安</div></div>';
@@ -11142,7 +11164,15 @@ function calcPetFriendlyRent() {
   var vacancyMonths = vacancyReduce[type];
   var vacancySaving = Math.round(rent * vacancyMonths * 10) / 10;
   var netGain = Math.round((totalRentUp + vacancySaving - extraRepair) * 10) / 10;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var pfrHeroRgb = netGain >= 0 ? '96,165,250' : '251,146,60';
+  var pfrHeroColor = netGain >= 0 ? '#60a5fa' : '#fb923c';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+pfrHeroRgb+',0.12),rgba('+pfrHeroRgb+',0.04));border:2px solid rgba('+pfrHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+pfrHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">ペット可化の'+years+'年間純利益</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+pfrHeroColor+';line-height:1;margin-bottom:4px">'+(netGain>=0?'+':'')+netGain.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">家賃UP +'+rentUp.toFixed(1)+'万/月 · 追加修繕 ▲'+extraRepair+'万 · '+typeLabel+'</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+pfrHeroColor+'">'+(netGain>=0?'ペット可への転換が有利です':'礼金設定でリスクをヘッジすることをお勧めします')+'</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">+' + rentUp.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間家賃UP額</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:#fb923c">' + extraRepair + '万円</div><div style="font-size:10px;color:var(--text-muted)">退去時の追加修繕費</div></div>';
@@ -11175,7 +11205,15 @@ function calcWaterLeakCost() {
   var outOfPocket = totalCost - insCoverage;
   var typeLabel = { faucet: '蛇口・シャワー水漏れ', pipe: '配管破裂', roof: '雨漏り', flood: '下階浸水' }[type];
   var riskColor = type === 'faucet' ? '#4ade80' : type === 'pipe' ? '#facc15' : '#fb923c';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var wlcHeroRgbMap = { '#4ade80': '74,222,128', '#facc15': '250,204,21', '#fb923c': '251,146,60' };
+  var wlcHeroRgb = wlcHeroRgbMap[riskColor] || '251,146,60';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+wlcHeroRgb+',0.12),rgba('+wlcHeroRgb+',0.04));border:2px solid rgba('+wlcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+riskColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">水漏れ・水害の自己負担額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+riskColor+';line-height:1;margin-bottom:4px">'+outOfPocket+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">修理費合計 '+totalCost+'万 · 保険カバー '+insCoverage+'万 · '+typeLabel+'</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+riskColor+'">'+(ins==='yes'?'保険でカバー済み — 申請を忘れずに':'火災保険に今すぐ加入を強くお勧めします')+'</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + riskColor + '">' + totalCost + '万円</div><div style="font-size:10px;color:var(--text-muted)">修理費の目安</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:#4ade80">' + insCoverage + '万円</div><div style="font-size:10px;color:var(--text-muted)">保険でカバーできる額</div></div>';
@@ -11212,6 +11250,14 @@ function calcTurnoverCostFull() {
   var annualRent = rent * 12;
   var lossRate = Math.round(total / annualRent * 100);
   var html = '<div style="display:grid;gap:8px">';
+  var tcfLossRgb = lossRate >= 40 ? '248,113,113' : lossRate >= 25 ? '251,146,60' : '212,175,55';
+  var tcfLossColor = lossRate >= 40 ? '#f87171' : lossRate >= 25 ? '#fb923c' : 'var(--gold)';
+  html += '<div style="background:linear-gradient(135deg,rgba('+tcfLossRgb+',0.12),rgba('+tcfLossRgb+',0.04));border:2px solid rgba('+tcfLossRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:'+tcfLossColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">退去時の総コスト（目安）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:'+tcfLossColor+';line-height:1;margin-bottom:4px">▲' + total.toFixed(1) + '<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">年間賃料の'+lossRate+'%相当 · 空室'+empty+'ヶ月</div>';
+  html += '<div style="margin-top:6px;font-size:11px;color:'+tcfLossColor+'">' + advice + '</div>';
+  html += '</div>';
   html += '<div style="background:rgba(96,165,250,0.08);border-radius:8px;padding:12px">';
   html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">退去から次の入居までの総コスト</div>';
   html += '<div style="font-size:24px;font-weight:700;color:#60a5fa">' + total.toFixed(1) + '<span style="font-size:13px;color:#94a3b8">万円</span></div>';
@@ -11251,6 +11297,12 @@ function calcContractRenewalProfit() {
   var totalRentMonthly = rent * units;
   var upliftPct = Math.round(monthlyEquiv / totalRentMonthly * 100 * 10) / 10;
   var html = '<div style="display:grid;gap:8px">';
+  html += '<div style="background:linear-gradient(135deg,rgba(96,165,250,0.12),rgba(96,165,250,0.04));border:2px solid rgba(96,165,250,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:#60a5fa;font-weight:700;letter-spacing:2px;margin-bottom:6px">年間更新料収入</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:#60a5fa;line-height:1;margin-bottom:4px">+' + annualRenewalIncome.toFixed(1) + '<span style="font-size:20px">万円/年</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">月換算 +'+monthlyEquiv.toFixed(1)+'万 · 賃料収入への上乗せ率 +'+upliftPct.toFixed(1)+'%</div>';
+  html += '<div style="margin-top:6px;font-size:11px;color:#60a5fa">'+units+'戸 · 平均'+years+'年更新 · 更新料'+fee+'ヶ月分</div>';
+  html += '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += '<div style="background:rgba(96,165,250,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">年間更新料収入</div><div style="font-size:24px;font-weight:700;color:#60a5fa">' + annualRenewalIncome.toFixed(1) + '<span style="font-size:12px;color:#94a3b8">万円/年</span></div></div>';
   html += '<div style="background:rgba(96,165,250,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">月換算</div><div style="font-size:24px;font-weight:700;color:#60a5fa">' + monthlyEquiv.toFixed(1) + '<span style="font-size:12px;color:#94a3b8">万円/月</span></div></div>';
