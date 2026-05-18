@@ -6512,7 +6512,14 @@ function calcActivityLog() {
   else if (score >= 4) { grade = '要改善'; color = '#ff9800'; action = '反響数 or 内覧率のどちらかを集中改善する'; }
   else { grade = '要再検討'; color = '#f44336'; action = '価格・写真・間取り図・広告範囲の全面見直しを推奨'; }
 
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var alRgbMap = {'#4caf50':'76,175,80','#ff9800':'255,152,0','#f44336':'244,67,54'};
+  var alHeroRgb = alRgbMap[color] || '255,152,0';
+  var alHero = '<div style="background:linear-gradient(135deg,rgba('+alHeroRgb+',0.1),rgba('+alHeroRgb+',0.03));border:2px solid rgba('+alHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">売却活動 健全度スコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+score+'<span style="font-size:20px">/7点</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">活動状況: '+grade+' — '+action+'</div>'
+    +'</div>';
+  var html = alHero+'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">週平均問合せ</div><div style="font-size:20px;font-weight:900;color:#4db6f5">'+inquiryPerWeek.toFixed(1)+'<span style="font-size:11px">件</span></div></div>';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">内覧転換率</div><div style="font-size:20px;font-weight:900;color:#4db6f5">'+viewRate.toFixed(0)+'<span style="font-size:11px">%</span></div></div>';
@@ -6659,7 +6666,14 @@ function calcBuyerPersona() {
   personas.sort(function(a,b){ return b.score - a.score; });
   var main = personas[0];
 
-  var html = '<div style="margin-top:10px">';
+  var bpRgbMap = {'#34d399':'52,211,153','var(--gold)':'212,175,55','#a78bfa':'167,139,250','#f87171':'248,113,113'};
+  var bpHeroRgb = bpRgbMap[main.color] || '212,175,55';
+  var bpHero = '<div style="background:linear-gradient(135deg,rgba('+bpHeroRgb+',0.1),rgba('+bpHeroRgb+',0.03));border:2px solid rgba('+bpHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+main.color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">最有力ターゲット層 適合度</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+main.color+';line-height:1;margin-bottom:4px">'+main.score+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+main.icon+' '+main.name+' が最有力バイヤー候補</div>'
+    +'</div>';
+  var html = bpHero+'<div style="margin-top:10px">';
   html += '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:10px;padding:12px;margin-bottom:10px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">最も可能性が高い買い手層</div>';
   html += '<div style="font-size:16px;font-weight:900;color:var(--gold);margin-bottom:8px">' + main.icon + ' ' + main.name + '<span style="font-size:12px;font-weight:700;color:' + main.color + ';margin-left:8px">適合度 ' + main.score + '%</span></div>';
