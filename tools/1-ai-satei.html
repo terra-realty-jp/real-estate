@@ -9978,7 +9978,13 @@ function calcMoveTiming() {
     verdict = '今が住み替えの好機です'; verdictColor = '#4ade80';
     advice = '売却益を頭金に充てることで、無理のない資金計画で新居への住み替えが実現できます。';
   }
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'
+  var mtHeroRgb = verdictColor === '#4ade80' ? '74,222,128' : verdictColor === '#fbbf24' ? '251,191,36' : verdictColor === '#fb923c' ? '251,146,60' : '248,113,113';
+  var mtHero = '<div style="background:linear-gradient(135deg,rgba('+mtHeroRgb+',0.1),rgba('+mtHeroRgb+',0.03));border:2px solid rgba('+mtHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+verdictColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">現在の家 売却後の手取り</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+verdictColor+';line-height:1;margin-bottom:4px">'+(saleProceeds>=0?'+':'')+saleProceeds+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+verdict+'</div>'
+    +'</div>';
+  el.innerHTML = mtHero+'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">売却後の手取り</div><div style="font-size:15px;font-weight:700;color:' + (saleProceeds >= 0 ? '#4ade80' : '#f87171') + '">' + (saleProceeds >= 0 ? '+' : '') + saleProceeds + '万円</div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">新居のローン必要額</div><div style="font-size:15px;font-weight:700;color:#93c5fd">' + (newLoan > 0 ? newLoan : 0) + '万円</div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">新居の月返済目安</div><div style="font-size:15px;font-weight:700;color:#fbbf24">' + monthlyNew + '万円</div></div>'
@@ -10009,7 +10015,13 @@ function calcNeighborPriceCompare() {
   else if (ratio >= 0.95) { position = '相場ど真ん中（標準価格帯）'; posColor = '#4ade80'; posMsg = '適正な市場価格です。多くの買主の検索に引っかかりやすい価格帯です。'; }
   else if (ratio >= 0.8) { position = '下位25%（相場より割安）'; posColor = '#60a5fa'; posMsg = '早期売却を優先する場合に有効な価格帯。利益を少し損する可能性があります。'; }
   else { position = '下位10%（かなり割安）'; posColor = '#a78bfa'; posMsg = '急ぎの売却や訳あり物件向けの価格帯。通常は値上げ余地があります。'; }
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+  var npcHeroRgb = posColor === '#4ade80' ? '74,222,128' : posColor === '#fb923c' ? '251,146,60' : posColor === '#60a5fa' ? '96,165,250' : posColor === '#a78bfa' ? '167,139,250' : '248,113,113';
+  var npcHero = '<div style="background:linear-gradient(135deg,rgba('+npcHeroRgb+',0.1),rgba('+npcHeroRgb+',0.03));border:2px solid rgba('+npcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+posColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">あなたの坪単価</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+posColor+';line-height:1;margin-bottom:4px">'+myUnitPrice.toFixed(0)+'<span style="font-size:20px">万円/坪</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+position+' — 相場差額: '+(diffTotal>=0?'+':'')+Math.round(diffTotal)+'万円</div>'
+    +'</div>';
+  el.innerHTML = npcHero+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">あなたの坪単価</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + myUnitPrice.toFixed(0) + '万円<span style="font-size:11px;font-weight:400">/坪</span></div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">近隣の築' + age + '年相場</div><div style="font-size:20px;font-weight:900;color:rgba(255,255,255,0.7)">' + adjustedBase.toFixed(0) + '万円<span style="font-size:11px;font-weight:400">/坪</span></div></div>'
     + '</div>'
@@ -10036,7 +10048,12 @@ function calcAuctionVsPrivate() {
   var privateDebt = Math.max(0, Math.round((loan - privateNet) * 10) / 10);
   var auctionDebt = Math.max(0, auctionNet - loan < 0 ? loan - auctionNet : 0);
   var diff = Math.round((privateNet - auctionNet) * 10) / 10;
-  var html = '<div style="display:grid;gap:8px">';
+  var avpHero = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">任意売却 vs 競売 — 差額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">+'+diff.toFixed(1)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">任意売却: '+privateNet.toFixed(1)+'万 / 競売: '+auctionNet.toLocaleString()+'万</div>'
+    +'</div>';
+  var html = avpHero+'<div style="display:grid;gap:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += '<div style="background:rgba(74,222,128,0.08);border-radius:8px;padding:12px">';
   html += '<div style="font-size:11px;color:#4ade80;font-weight:600;margin-bottom:6px">✅ 任意売却</div>';
