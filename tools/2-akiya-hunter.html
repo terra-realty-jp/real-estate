@@ -6793,7 +6793,14 @@ function calcShareHouseConvert() {
   const pros = ['複数入居者でリスク分散（1部屋退去でも収入ゼロにならない）', '単独賃貸より高い賃料収入が期待できる', '都市部・駅近・若者需要が高いエリアで特に有効'];
   const cons = ['管理の手間が多い（入居者間トラブル・共用部清掃）', '水道光熱費負担（共用部は原則オーナー負担）', '住宅ローンの条件によっては用途変更が必要になる場合あり'];
 
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+  var shHeroRgb = uplift >= 0 ? '74,222,128' : '239,68,68';
+  var shHeroColor = uplift >= 0 ? 'var(--green)' : 'var(--red)';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+shHeroRgb+',0.1),rgba('+shHeroRgb+',0.03));border:2px solid rgba('+shHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+shHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">シェアハウス転用 収益増加額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+shHeroColor+';line-height:1;margin-bottom:4px">'+(uplift>=0?'+':'')+uplift.toFixed(1)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">単独賃貸'+singleAnnual.toFixed(1)+'万円/年 → シェアハウス'+shareNet.toFixed(1)+'万円/年</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
     + '<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:14px">'
     + '<div style="font-size:13px;font-weight:700;color:#4ade80;margin-bottom:8px">🏘 シェアハウス（' + rooms + '室）</div>'
     + '<div style="font-size:11px;color:var(--text-muted)">月額収入（稼働率' + occ + '%）</div>'
@@ -6945,7 +6952,14 @@ function calcAkiyaBank() {
       + '</div>'
     : '';
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+  var abHeroRgb = !ready ? '239,68,68' : (pct >= 80 ? '74,222,128' : '251,146,60');
+  var abHeroColor = !ready ? 'var(--red)' : (pct >= 80 ? 'var(--green)' : 'var(--orange)');
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+abHeroRgb+',0.1),rgba('+abHeroRgb+',0.03));border:2px solid rgba('+abHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+abHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">空き家バンク 登録準備完了度</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+abHeroColor+';line-height:1;margin-bottom:4px">'+pct+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">必須 '+mandatory+'/'+mandatoryTotal+'件 ／ 推奨 '+recommended+'/'+recommendedTotal+'件</div>'
+    +'</div>'
+    +'<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="text-align:center;padding:10px 0">'
     + '<div style="font-size:12px;color:var(--text-muted)">準備完了度</div>'
     + '<div style="font-size:36px;font-weight:900;color:' + barColor + '">' + pct + '<span style="font-size:18px">%</span></div>'
@@ -7129,7 +7143,15 @@ function calcFarmlandConvert() {
     return '<tr><td style="padding:6px 8px;color:var(--text-muted)">' + i[0] + '</td><td style="padding:6px 8px;text-align:right">' + i[1] + '</td></tr>';
   }).join('');
 
-  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+  var faHeroRgb = permit === 'low' ? '239,68,68' : (permit === 'mid' ? '251,146,60' : '74,222,128');
+  var faHeroColor = permit === 'low' ? 'var(--red)' : (permit === 'mid' ? 'var(--orange)' : 'var(--green)');
+  var faCostLabel = (totalCost / 10000).toFixed(0);
+  r.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+faHeroRgb+',0.1),rgba('+faHeroRgb+',0.03));border:2px solid rgba('+faHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+faHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">農地転用 概算費用</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+faHeroColor+';line-height:1;margin-bottom:4px">'+faCostLabel+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">転用可能性: '+fc+' ／ 許可難易度: '+pm.label+'</div>'
+    +'</div>'
+    +'<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center">'
     + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">区域別転用可能性</div>'
@@ -7152,6 +7174,7 @@ function calcFarmlandConvert() {
     + '</div>';
 }
 (function(){ calcFarmlandConvert(); })();
+
 
 // 都道府県別空き家率（総務省2023年調査）
 var VACANCY_RATE_DATA = {"北海道":14.9,"青森県":17.0,"岩手県":16.0,"宮城県":9.7,"秋田県":17.8,"山形県":15.8,"福島県":15.2,"茨城県":13.2,"栃木県":13.9,"群馬県":14.1,"埼玉県":10.2,"千葉県":11.4,"東京都":10.6,"神奈川県":10.7,"新潟県":15.4,"富山県":14.7,"石川県":13.4,"福井県":14.6,"山梨県":21.3,"長野県":19.5,"岐阜県":14.2,"静岡県":14.3,"愛知県":11.2,"三重県":14.9,"滋賀県":11.5,"京都府":12.8,"大阪府":12.5,"兵庫県":12.9,"奈良県":16.6,"和歌山県":20.3,"鳥取県":16.1,"島根県":17.5,"岡山県":14.4,"広島県":13.3,"山口県":16.4,"徳島県":19.0,"香川県":14.7,"愛媛県":16.0,"高知県":18.9,"福岡県":12.0,"佐賀県":14.8,"長崎県":16.2,"熊本県":14.5,"大分県":16.1,"宮崎県":15.6,"鹿児島県":16.5,"沖縄県":10.9};
@@ -7215,7 +7238,14 @@ function calcIsolationRisk() {
       + '</div>';
   }).join('');
 
-  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+  var irHeroRgb = score >= 70 ? '239,68,68' : (score >= 45 ? '251,146,60' : (score >= 25 ? '250,204,21' : '74,222,128'));
+  var irHeroColor = score >= 70 ? 'var(--red)' : (score >= 45 ? 'var(--orange)' : (score >= 25 ? '#facc15' : 'var(--green)'));
+  r.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+irHeroRgb+',0.1),rgba('+irHeroRgb+',0.03));border:2px solid rgba('+irHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+irHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">過疎リスク 総合スコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+irHeroColor+';line-height:1;margin-bottom:4px">'+score+'<span style="font-size:20px">/100点</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">判定: '+grade+'</div>'
+    +'</div>'
+    +'<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:14px;text-align:center;margin-bottom:14px">'
     + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">総合リスクスコア</div>'
     + '<div style="font-size:36px;font-weight:900;color:' + col + '">' + score + '<span style="font-size:14px">/100</span></div>'
@@ -7269,7 +7299,12 @@ function calcAkiyaInsurance() {
   html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>空き家の保険で最重要なこと:</strong> 空き家を相続したら、まず現在の火災保険が「空き家状態」をカバーしているか保険会社に確認してください。居住用として加入した保険は空き家になった時点で保障対象外になる場合があります。火災・落雷・水害による損害だけでなく、「第三者への賠償（建物倒壊で隣家を傷つけた等）」をカバーする賠償責任特約も重要です。</div>';
   html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🔥 空き家の火災保険料を試算！\n\n年間火災保険料（概算）: ' + Math.round(firePremium).toLocaleString() + '万円/年\n地震保険含む合計: ' + Math.round(total).toLocaleString() + '万円/年\n（' + structLabel + '・空き家割増適用）\n\n「空き家の保険って居住用と何が違う？」を解説\n▶ 無料で試算\n不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
   html += '</div>';
-  el.innerHTML = html;
+  var aiHero = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">空き家保険料（年間合計）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+Math.round(total).toLocaleString()+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">火災'+Math.round(firePremium).toLocaleString()+'万円'+(quake==='yes'?' ＋ 地震'+Math.round(quakePremium).toLocaleString()+'万円':'')+'</div>'
+    +'</div>';
+  el.innerHTML = aiHero + html;
 }
 (function(){ calcAkiyaInsurance(); })();
 
@@ -7369,7 +7404,14 @@ function calcMinpakuConvert() {
   var diffColor = diff >= 0 ? 'var(--green)' : 'var(--red)';
   var diffLabel = diff >= 0 ? '民泊の方が有利' : '通常賃貸の方が有利';
 
-  var html = '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  var mpHeroRgb = diff >= 0 ? '74,222,128' : '239,68,68';
+  var mpHeroColor = diff >= 0 ? 'var(--green)' : 'var(--red)';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+mpHeroRgb+',0.1),rgba('+mpHeroRgb+',0.03));border:2px solid rgba('+mpHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+mpHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">民泊 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+mpHeroColor+';line-height:1;margin-bottom:4px">'+Math.round(annualNetMinpaku/10000).toLocaleString()+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+diffLabel+'（通常賃貸比 '+(diff>=0?'+':'')+Math.round(diff/10000).toLocaleString()+'万円/年）</div>'
+    +'</div>'
+    +'<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px">';
   html += '<div style="padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;text-align:center">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">民泊 年間純収益</div>';
   html += '<div style="font-size:22px;font-weight:900;color:var(--gold)">' + Math.round(annualNetMinpaku / 10000).toLocaleString() + '<span style="font-size:13px">万円</span></div>';
@@ -7419,7 +7461,14 @@ function calcKouminkaConvert() {
   var fmtW = function(v) { return Math.round(v / 10000).toLocaleString() + '万円'; };
   var profitColor = monthlyProfit >= 0 ? '#4caf50' : 'var(--red)';
   var diffColor = diff >= 0 ? '#4caf50' : '#f9a825';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
+  var kcHeroRgb = monthlyProfit >= 0 ? '76,175,80' : '239,68,68';
+  var kcHeroColor = monthlyProfit >= 0 ? '#4caf50' : 'var(--red)';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+kcHeroRgb+',0.1),rgba('+kcHeroRgb+',0.03));border:2px solid rgba('+kcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+kcHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">古民家転用 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+kcHeroColor+';line-height:1;margin-bottom:4px">'+fmtW(annualProfit).replace('万円','')+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+typeName[type]+' · 回収'+payback+'年</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
     + '<div style="font-size:11px;color:var(--text-muted)">月間変動費（原価率' + Math.round(costRatio * 100) + '%）</div>'
     + '<div style="font-size:15px;font-weight:700;color:var(--text)">' + fmtW(variableCost) + '</div></div>'
@@ -7464,7 +7513,15 @@ function calcAkiyaKashi() {
   var memos = annualN >= annualT
     ? ['入居者は退去させにくいが、長期安定収益が期待できる', '将来の自己利用や売却前に普通借家では立退き料が必要なケースあり', '更新料（1〜2ヶ月分）の追加収益も期待できる']
     : ['将来の売却・自己利用がしやすい（期間満了で確実に返還）', '入居者が見つかりにくく空室率が高くなる点を考慮', '2年以内の短期利用や将来売却予定の物件に特に有効'];
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+  var akBestAnnual = Math.max(annualN, annualT);
+  var akHeroRgb = annualN >= annualT ? '74,222,128' : '251,146,60';
+  var akHeroColor = annualN >= annualT ? 'var(--green)' : 'var(--orange)';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+akHeroRgb+',0.1),rgba('+akHeroRgb+',0.03));border:2px solid rgba('+akHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+akHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">おすすめ契約: '+winner+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+akHeroColor+';line-height:1;margin-bottom:4px">'+Math.round(akBestAnnual/10000).toLocaleString()+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">10年累計 '+fmt(Math.max(total10N,total10T))+' · 差額 '+fmt(Math.abs(diff))+'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
     +'<div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px;text-align:center">'
     +'<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">普通借家</div>'
     +'<div style="font-size:15px;font-weight:900;color:#4ade80">'+fmtM(annualN/12)+'</div>'
@@ -7499,7 +7556,14 @@ function calcNeighborImpact() {
   else { risk='高リスク（特定空き家指定の可能性）'; rc='#f44336'; rdesc='行政から「特定空き家」に指定されるリスクが高い状態です。指定されると固定資産税の住宅用地特例（1/6軽減）が解除され、税額が最大6倍になります。'; actions=['即時：草刈り・ゴミ撤去・施錠確認','1週間以内：建物の倒壊リスク診断（建築士）','管理委託または売却・解体を決断する']; }
   var items = ['外観荒れ','雑草越境','ゴミ散乱','害虫・害獣','倒壊リスク','不法侵入'];
   var tags = checks.map(function(v,i){ return '<span style="display:inline-block;margin:2px;padding:2px 8px;border-radius:12px;font-size:10px;'+(v?'background:rgba(244,67,54,0.12);color:#f44336;border:1px solid rgba(244,67,54,0.3)':'background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.08)')+'">'+(v?'⚠':'✓')+' '+items[i]+'</span>'; }).join('');
-  el.innerHTML = '<div style="border:1px solid '+rc.replace(')',',0.3)').replace('rgb(','rgba(')+';border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+  var niHeroRgb = score === 0 ? '74,222,128' : (score <= 25 ? '34,211,238' : (score <= 55 ? '249,168,37' : '244,67,54'));
+  var niHeroColor = score === 0 ? 'var(--green)' : (score <= 25 ? '#22d3ee' : (score <= 55 ? '#f9a825' : '#f44336'));
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+niHeroRgb+',0.1),rgba('+niHeroRgb+',0.03));border:2px solid rgba('+niHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+niHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">近隣影響 リスクスコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+niHeroColor+';line-height:1;margin-bottom:4px">'+score+'<span style="font-size:20px">pt</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">判定: '+risk+' ／ チェック'+cnt+'/6件</div>'
+    +'</div>'
+    +'<div style="border:1px solid '+rc.replace(')',',0.3)').replace('rgb(','rgba(')+';border-radius:10px;padding:12px 14px;margin-bottom:10px">'
     +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
     +'<div style="font-size:28px;font-weight:900;color:'+rc+'">'+score+'<span style="font-size:13px">pt</span></div>'
     +'<div><div style="font-size:13px;font-weight:700;color:'+rc+'">'+risk+'</div><div style="font-size:10px;color:rgba(255,255,255,0.35)">チェック '+cnt+'/6件</div></div>'
@@ -7530,7 +7594,14 @@ function calcAkiyaRenovReturn() {
   var net10Base = baseAnnual * YEARS;
   var net10Renov = newAnnual * YEARS - renovCost;
   var extraNet10 = net10Renov - net10Base;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var arrHeroRgb = extraNet10 >= 0 ? '74,222,128' : '239,68,68';
+  var arrHeroColor = extraNet10 >= 0 ? 'var(--green)' : 'var(--red)';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+arrHeroRgb+',0.1),rgba('+arrHeroRgb+',0.03));border:2px solid rgba('+arrHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+arrHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">リノベ 家賃UP効果</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+arrHeroColor+';line-height:1;margin-bottom:4px">'+(extraPerYear>=0?'+':'')+extraPerYear.toFixed(1)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">10年純収益差 '+(extraNet10>=0?'+':'')+extraNet10.toFixed(0)+'万円 · 回収'+(paybackYears<100?paybackYears.toFixed(1)+'年':'不可')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
   var kpis = [
     ['家賃UP効果/年', '+' + extraPerYear.toFixed(1) + '万円', extraPerYear > 0 ? '#4ade80' : '#f87171'],
@@ -7598,7 +7669,14 @@ function calcPostDemoLand() {
   ];
   var bestPlan = parkPayback < apPayback ? plans[0] : plans[1];
   if (saleNet > parkMonthly * 12 * 10 && areaType === 'rural') bestPlan = plans[2];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var pdlHeroColor = '#fb923c';
+  var pdlHeroRgb = '251,146,60';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+pdlHeroRgb+',0.1),rgba('+pdlHeroRgb+',0.03));border:2px solid rgba('+pdlHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+pdlHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">解体後 土地評価額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+pdlHeroColor+';line-height:1;margin-bottom:4px">'+Math.round(landVal).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">おすすめ活用: '+bestPlan.name+' · 解体費'+demoCost+'万円</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">📍 ' + typeName + ' / 土地' + area + 'm² / 路線価' + pricePerM + '万円/m²</div>';
   html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">土地評価額：<span style="color:' + ACCENT + ';font-weight:900">' + Math.round(landVal).toLocaleString() + '万円</span>　解体費：' + demoCost + '万円</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">';
@@ -7650,7 +7728,13 @@ function calcAkiyaGrantSim() {
   }
   var totalMax = grants.reduce(function(s, g) { return s + g.max; }, 0);
   var afterGrant = Math.max(0, renov - totalMax);
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var agsHeroRgb = '251,146,60';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+agsHeroRgb+',0.1),rgba('+agsHeroRgb+',0.03));border:2px solid rgba('+agsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">使える補助金 最大合計</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+totalMax.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+useLabel+' / '+regionLabel+(renov>0?' · 自己負担'+afterGrant.toLocaleString()+'万円':'')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">📍 ' + useLabel + ' / ' + regionLabel + (bank === 'yes' ? ' / 空き家バンク登録' : '') + '</div>';
   html += '<div style="text-align:center;margin-bottom:12px"><span style="font-size:12px;color:var(--text-muted)">最大補助額合計</span><br><span style="font-size:28px;font-weight:900;color:' + ACCENT + '">' + totalMax.toLocaleString() + '万円</span></div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">';
@@ -7690,7 +7774,13 @@ function calcAkiyaEmptyRisk() {
   var riskLevel = totalRisk >= 70 ? '高危険' : totalRisk >= 45 ? '要注意' : totalRisk >= 25 ? '軽度リスク' : '低リスク';
   var riskColor = totalRisk >= 70 ? '#f87171' : totalRisk >= 45 ? '#fb923c' : totalRisk >= 25 ? '#facc15' : '#4ade80';
   var condLabel = { good: '良好', fair: 'やや劣化', poor: '老朽化', critical: '危険' }[condition];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var aerHeroRgb = totalRisk >= 70 ? '248,113,113' : (totalRisk >= 45 ? '251,146,60' : (totalRisk >= 25 ? '250,204,21' : '74,222,128'));
+  var html = '<div style="background:linear-gradient(135deg,rgba('+aerHeroRgb+',0.1),rgba('+aerHeroRgb+',0.03));border:2px solid rgba('+aerHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+riskColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">空き家 総合リスクスコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+riskColor+';line-height:1;margin-bottom:4px">'+totalRisk+'<span style="font-size:20px">/100点</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">判定: '+riskLevel+' ／ 建物状態: '+condLabel+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="text-align:center;margin-bottom:12px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">総合リスクスコア</div>';
   html += '<div style="font-size:32px;font-weight:900;color:' + riskColor + '">' + totalRisk + '<span style="font-size:14px">/100</span></div>';
