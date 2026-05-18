@@ -6993,7 +6993,18 @@ function calcExitTax() {
   var taxDiff   = longTax - shortTax;
   var netDiff   = longNet - shortNet;
 
-  var html = '<div style="margin-top:10px">'
+  var etHeroVal = gainYen > 0 ? Math.round(Math.abs(taxDiff)/10000) : Math.round(gainYen/10000);
+  var etHeroRgb = gainYen > 0 ? '74,222,128' : '248,113,113';
+  var etHeroColor = gainYen > 0 ? '#4ade80' : '#f87171';
+  var html = (gainYen > 0
+    ? '<div style="background:linear-gradient(135deg,rgba('+etHeroRgb+',0.12),rgba('+etHeroRgb+',0.04));border:2px solid rgba('+etHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+      + '<div style="font-size:11px;color:'+etHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">5年超保有で節税できる額</div>'
+      + '<div style="font-size:52px;font-weight:900;color:'+etHeroColor+';line-height:1;margin-bottom:4px">▲'+etHeroVal.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+      + '<div style="font-size:12px;color:var(--text-muted)">売却益 '+Math.round(gainYen/10000).toLocaleString()+'万円 / 短期39.63% → 長期20.315%</div>'
+      + '<div style="margin-top:6px;font-size:11px;color:'+etHeroColor+'">長期保有（5年超）の手取り: '+Math.round(longNet/10000).toLocaleString()+'万円</div>'
+      + '</div>'
+    : '')
+    + '<div style="margin-top:10px">'
     + '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;margin-bottom:10px">'
     + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">売却益（譲渡所得）</div>'
     + '<div style="font-size:18px;font-weight:700;color:' + (gainYen >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (gainYen >= 0 ? '+' : '') + Math.round(gainYen/10000).toLocaleString() + '万円</div></div>';
@@ -7065,7 +7076,15 @@ function calcMatrix() {
   var maxCF    = Math.max.apply(null, props.map(function(p) { return p.annualCF; }));
   function best(val, mx) { return val === mx ? 'color:var(--gold);font-weight:900' : 'color:var(--text)'; }
   var colNames = ['A', 'B', 'C'];
-  var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  var bestProp = props.filter(function(p){return p.totalScore===maxScore;})[0] || props[0];
+  var bestIdx = colNames[ids.indexOf(bestProp.id)];
+  var html = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.04));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#d4af37;font-weight:700;letter-spacing:2px;margin-bottom:6px">最高スコア物件</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#d4af37;line-height:1;margin-bottom:4px">物件' + bestIdx + '<span style="font-size:20px"> ' + bestProp.totalScore + '/12点</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">表面利回り ' + bestProp.grossYield + '% / 年間CF ' + Math.round(bestProp.annualCF).toLocaleString() + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#d4af37">DSCR ' + bestProp.dscr + ' — 利回り・CF・融資力の総合評価</div>'
+    + '</div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<thead><tr style="background:rgba(255,255,255,0.06)">';
   html += '<th style="padding:6px 8px;text-align:left;color:var(--text-muted)">指標</th>';
   props.forEach(function(p, i) {
