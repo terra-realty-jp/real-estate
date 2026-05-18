@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-18 （非TOP3カード ヒーロー表示強化 第1弾）
+
+- **対象**: tools/1-ai-satei.html, tools/3-owner-direct.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 2 ビジュアル強化（非TOP3カード）
+- **改善内容**:
+  - Tool1/`calcSellCosts()`: 売却後手取り概算を52pxヒーローボックスで最上部に表示
+  - Tool3/`calcLoanPlan()`: 最安プランの月返済額を52pxゴールドヒーローボックスで表示
+  - Tool5/`calcDeadCross()`: デッドクロス発生年を52pxレッドヒーローボックスに刷新（旧: 28px flex型）
+  - Tool5/`calcRealYield()`: 実質利回りを52pxヒーローボックスで追加（色は利回り水準で三段階判定）
+- **理由**: TOP3以外のカードも「開いた瞬間に重要な数字が目に飛び込む」デザインに統一し、PLGのシェアしたくなるビジュアルを全カードに拡大。
+
+---
+
 ## 2026-05-18 （Phase 2-C リテンション機能 完了）
 
 - **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html

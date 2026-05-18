@@ -8216,7 +8216,17 @@ function calcMgmtVsSelf() {
       + '<div style="text-align:right;font-size:13px;color:'+(it.self>0?'var(--red)':'var(--text-muted)')+'">'+( it.self>0 ? '▲'+it.self+'万' : '—' )+'</div></div>';
   }).join('');
 
-  el.innerHTML = '<div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;padding:6px 0;margin-bottom:4px">'
+  var mvDiffMan = Math.round(Math.abs(diff)*10)/10;
+  var mvHeroRgb   = winner === 'self' ? '74,222,128' : '212,175,55';
+  var mvHeroColor = winner === 'self' ? 'var(--green)' : 'var(--gold)';
+  var mvWinLabel  = winner === 'self' ? '自主管理が年間お得' : '管理委託が年間お得';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + mvHeroRgb + ',0.08),rgba(' + mvHeroRgb + ',0.03));border:2px solid rgba(' + mvHeroRgb + ',0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:' + mvHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + mvWinLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + mvHeroColor + ';line-height:1;margin-bottom:4px">' + mvDiffMan + '<span style="font-size:20px">万円/年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">委託' + Math.round(totalDelegate*10)/10 + '万円 vs 自主' + Math.round(totalSelf*10)/10 + '万円（時間コスト込み）</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">' + (winner === 'self' ? '✓ 自ら管理できる距離・規模なら自主管理でコスト削減できます' : '✓ 戸数・家賃規模から見ると委託が費用対効果で有利です') + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;padding:6px 0;margin-bottom:4px">'
     + '<div></div>'
     + '<div style="text-align:right;font-size:11px;font-weight:700;color:var(--text-muted)">管理委託</div>'
     + '<div style="text-align:right;font-size:11px;font-weight:700;color:var(--text-muted)">自主管理</div></div>'

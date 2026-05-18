@@ -5221,7 +5221,17 @@ function calcProcrastCost() {
       + '</tr>';
   }).join('');
   var nowNetDisp = nowNet > 0 ? nowNet.toLocaleString()+'万円' : '<span style="color:var(--red)">'+nowNet.toLocaleString()+'万円（赤字）</span>';
-  el.innerHTML = '<div style="padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:10px;font-size:12px">今すぐ売却した場合の手取り概算：<strong style="color:var(--gold);font-size:14px">' + nowNetDisp + '</strong><span style="color:var(--text-muted);font-size:10px">（仲介手数料・ローン返済後）</span></div>'
+  var pc5yr = rows[2].diff;
+  var pcHeroRgb   = pc5yr >= 0 ? '74,222,128' : '239,68,68';
+  var pcHeroColor = pc5yr >= 0 ? 'var(--green)' : 'var(--red)';
+  var pcHeroLabel = pc5yr >= 0 ? '5年待てば得になる額' : '5年放置すると損する額';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + pcHeroRgb + ',0.12),rgba(' + pcHeroRgb + ',0.04));border:2px solid rgba(' + pcHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:' + pcHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + pcHeroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + pcHeroColor + ';line-height:1;margin-bottom:4px">' + (pc5yr >= 0 ? '+' : '') + pc5yr.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">今すぐ売却手取り ' + (nowNet > 0 ? nowNet.toLocaleString() : nowNet.toLocaleString()) + '万円との比較</div>'
+    + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">' + (pc5yr < 0 ? '⚠️ 放置コスト（税・維持費）＋価格下落で損失が拡大しています' : '✓ この物件は時間が経つほど売却有利になる傾向があります') + '</div>'
+    + '</div>'
+    + '<div style="padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:10px;font-size:12px">今すぐ売却した場合の手取り概算：<strong style="color:var(--gold);font-size:14px">' + nowNetDisp + '</strong><span style="color:var(--text-muted);font-size:10px">（仲介手数料・ローン返済後）</span></div>'
     + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">'
     + '<thead><tr style="background:var(--dark3)">'
     + '<th style="padding:8px 10px;border:1px solid rgba(255,255,255,0.06);color:var(--text-muted)">放置期間</th>'
