@@ -7943,7 +7943,15 @@ function calcRentMarket() {
       + '<div style="position:absolute;top:-2px;left:' + barPos + '%;transform:translateX(-50%);width:12px;height:12px;background:' + statusColor + ';border-radius:50%;border:2px solid var(--dark2)"></div></div>'
       + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">' + advice + '</div></div>';
   }
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:' + (compHtml?'0':'10px') + '">'
+  var rmStatusColor = current > 0 ? (Math.round((current-mid)/mid*100) >= 10 ? '#fb923c' : Math.round((current-mid)/mid*100) >= -5 ? '#4ade80' : Math.round((current-mid)/mid*100) >= -15 ? '#facc15' : 'var(--red)') : 'var(--gold)';
+  var rmHeroRgb = current > 0 ? (Math.round((current-mid)/mid*100) >= 10 ? '251,146,60' : Math.round((current-mid)/mid*100) >= -5 ? '74,222,128' : Math.round((current-mid)/mid*100) >= -15 ? '250,204,21' : '239,68,68') : '212,175,55';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + rmHeroRgb + ',0.1),rgba(' + rmHeroRgb + ',0.03));border:2px solid rgba(' + rmHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + rmStatusColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">家賃相場 中央値</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + rmStatusColor + ';line-height:1;margin-bottom:4px">' + (mid/10000).toFixed(1) + '<span style="font-size:20px">万円/月</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">想定レンジ ' + (low/10000).toFixed(1) + '〜' + (high/10000).toFixed(1) + '万円/月' + (current > 0 ? ' · 現在の家賃 ' + (current/10000).toFixed(1) + '万円' : '') + '</div>'
+    + (current > 0 ? '<div style="margin-top:6px;font-size:11px;color:' + rmStatusColor + '">' + (Math.round((current-mid)/mid*100) >= 10 ? '現在の家賃は相場より高め — 値下げ交渉に注意' : Math.round((current-mid)/mid*100) >= -5 ? '現在の家賃は相場並み — 適正水準' : '現在の家賃は相場より低め — 値上げの余地あり') + '</div>' : '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">現在の家賃を入力すると相場との比較ができます</div>')
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:' + (compHtml?'0':'10px') + '">'
     + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">下限目安</div><div style="font-size:16px;font-weight:900;color:var(--text)">' + low.toLocaleString() + '</div><div style="font-size:10px;color:var(--text-muted)">円/月</div></div>'
     + '<div style="text-align:center;padding:10px;background:rgba(201,168,76,0.1);border-radius:8px;border:1px solid rgba(201,168,76,0.25)"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">相場中央値</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + mid.toLocaleString() + '</div><div style="font-size:10px;color:var(--text-muted)">円/月</div></div>'
     + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">上限目安</div><div style="font-size:16px;font-weight:900;color:var(--text)">' + high.toLocaleString() + '</div><div style="font-size:10px;color:var(--text-muted)">円/月</div></div></div>'
@@ -8808,7 +8816,14 @@ function calcRunningCost() {
     { label:'その他', val: other, color:'#6b7280' }
   ];
   var cfColor = netCF >= 0 ? '#4ade80' : '#f87171';
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var cfHeroRgb = netCF >= 0 ? '74,222,128' : '239,68,68';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + cfHeroRgb + ',0.1),rgba(' + cfHeroRgb + ',0.03));border:2px solid rgba(' + cfHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + cfColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">年間 手残りキャッシュフロー</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + cfColor + ';line-height:1;margin-bottom:4px">' + (netCF>=0?'+':'') + netCF + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">年間収入 ' + income + '万円 − コスト計 ' + totalCost + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + cfColor + '">' + (netCF >= 0 ? (costRatio <= 50 ? '✅ 健全 — コスト率' + costRatio.toFixed(0) + '%（良好水準）' : '⚠ コスト率' + costRatio.toFixed(0) + '%（標準〜やや高め）') : '🚨 赤字 — コスト率' + costRatio.toFixed(0) + '% · 収支見直しが必要') + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">年間収入</div><div style="font-size:18px;font-weight:900;color:#4db6f5">'+income+'<span style="font-size:11px">万円</span></div></div>';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">年間コスト計</div><div style="font-size:18px;font-weight:900;color:#fb923c">'+totalCost+'<span style="font-size:11px">万円</span></div></div>';
