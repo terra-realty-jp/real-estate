@@ -11927,9 +11927,11 @@ function calcRentArrearLoss() {
   var guaranteeAnnualCost = Math.round(rent * 0.8 * 10) / 10;
   var guaranteeCoverage = guarantee === 'yes' ? Math.round(rentLoss * 0.9 * 10) / 10 : 0;
   var netLoss = guarantee === 'yes' ? Math.round((totalWithoutGuarantee - guaranteeCoverage) * 10) / 10 : totalWithoutGuarantee;
-  el.innerHTML = '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">'
-    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">1件の滞納で発生する損失合計</div>'
-    + '<div style="font-size:28px;font-weight:900;color:#f87171">▲' + totalWithoutGuarantee + '万円</div>'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(248,113,113,0.12),rgba(248,113,113,0.04));border:2px solid rgba(248,113,113,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">1件の滞納による損失合計</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#f87171;line-height:1;margin-bottom:4px">▲' + totalWithoutGuarantee + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">滞納 ' + months + 'ヶ月 · 法的費用 ' + legal + '万円 · 退去後空室損失含む</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#f87171">' + (guarantee === 'yes' ? '保証会社で ' + guaranteeCoverage + '万円カバー → 実質損失 ' + netLoss + '万円' : '保証会社加入で大幅に損失を軽減できます') + '</div>'
     + '</div>'
     + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">滞納家賃（' + months + 'ヶ月分）</div><div style="font-size:15px;font-weight:700;color:#f87171">▲' + rentLoss + '万円</div></div>'
@@ -11957,7 +11959,15 @@ function calcIdealRentCalc() {
   else if (gap > 5) { verdict = '値上げ余地あり'; verdictColor = '#a3e635'; advice = '賃料改定の余地があります。更新時に交渉を検討してください。'; }
   else if (gap >= -5) { verdict = '適正水準'; verdictColor = '#fbbf24'; advice = 'おおむね適正な賃料設定です。維持でOKです。'; }
   else { verdict = '相場より高め・注意'; verdictColor = '#f87171'; advice = '空室が続く場合、賃料を見直す必要があるかもしれません。'; }
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+  var ircHeroRgb = gap > 5 ? '74,222,128' : gap >= -5 ? '250,204,21' : '248,113,113';
+  var ircHeroColor = gap > 5 ? '#4ade80' : gap >= -5 ? '#facc15' : '#f87171';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+ircHeroRgb+',0.12),rgba('+ircHeroRgb+',0.04));border:2px solid rgba('+ircHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+ircHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">適正家賃（目標利回り基準）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+ircHeroColor+';line-height:1;margin-bottom:4px">' + idealMonthlyPerUnit.toFixed(1) + '<span style="font-size:20px">万円/戸</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">現在家賃 ' + currentRent + '万円 · 差額 ' + (diff >= 0 ? '+' : '') + diff.toFixed(1) + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+ircHeroColor+'">' + verdict + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">目標利回りの適正家賃</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + idealMonthlyPerUnit.toFixed(1) + '万円<span style="font-size:11px;font-weight:400">/戸/月</span></div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">現在の表面利回り</div><div style="font-size:20px;font-weight:900;color:#93c5fd">' + currentYield.toFixed(1) + '<span style="font-size:11px;font-weight:400">%</span></div></div>'
     + '</div>'
@@ -11985,7 +11995,15 @@ function calcLightingUpgrade() {
   var totalCost = Math.round(count * ledCostPer * 1.1 / 10000 * 10) / 10;
   var paybackYears = annualSaving > 0 ? Math.round(totalCost / annualSaving * 10) / 10 : 9999;
   var co2Saved = Math.round(savedWPerYear * 0.00044 * 10) / 10;
+  var luHeroRgb = paybackYears <= 5 ? '74,222,128' : paybackYears <= 10 ? '250,204,21' : '251,146,60';
+  var luHeroColor = paybackYears <= 5 ? '#4ade80' : paybackYears <= 10 ? '#facc15' : '#fb923c';
   var html = '<div style="display:grid;gap:8px">';
+  html += '<div style="background:linear-gradient(135deg,rgba('+luHeroRgb+',0.12),rgba('+luHeroRgb+',0.04));border:2px solid rgba('+luHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:'+luHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">LED化の費用回収期間</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:'+luHeroColor+';line-height:1;margin-bottom:4px">' + paybackYears.toFixed(1) + '<span style="font-size:20px">年</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">年間節約 ' + annualSaving.toFixed(1) + '万円 · 工事費 ' + totalCost.toFixed(1) + '万円</div>';
+  html += '<div style="margin-top:6px;font-size:11px;color:'+luHeroColor+'">' + (paybackYears <= 5 ? '5年以内に回収できます。すぐに実施する価値あり！' : paybackYears <= 10 ? '10年以内に元が取れます。検討する価値あります。' : '回収に時間がかかります。補助金活用を検討しましょう。') + '</div>';
+  html += '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += '<div style="background:rgba(96,165,250,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">年間電気代節約</div><div style="font-size:22px;font-weight:700;color:#60a5fa">' + annualSaving.toFixed(1) + '<span style="font-size:11px;color:#94a3b8">万円/年</span></div></div>';
   html += '<div style="background:rgba(96,165,250,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">費用回収期間</div><div style="font-size:22px;font-weight:700;color:' + (paybackYears <= 5 ? '#4ade80' : '#fb923c') + '">' + paybackYears.toFixed(1) + '<span style="font-size:11px;color:#94a3b8">年</span></div></div>';
@@ -12031,12 +12049,19 @@ function calcTenantScreening() {
     { label: '入居目的・属性', score: lifestyle, max: 10 }
   ];
 
+  var tsHexToRgb = {'#4ade80':'74,222,128','#a3e635':'163,230,53','#fbbf24':'251,191,36','#f87171':'248,113,113'};
+  var tsHeroRgb = tsHexToRgb[gColor] || '96,165,250';
   var html = '<div style="display:grid;gap:10px">';
+  html += '<div style="background:linear-gradient(135deg,rgba('+tsHeroRgb+',0.12),rgba('+tsHeroRgb+',0.04));border:2px solid rgba('+tsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:'+gColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">入居審査スコア</div>';
+  html += '<div style="font-size:72px;font-weight:900;color:'+gColor+';line-height:1;margin-bottom:4px">'+grade+'</div>';
+  html += '<div style="font-size:16px;font-weight:700;color:'+gColor+'">'+total+'/'+maxScore+'点 ('+pct+'%)</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">'+verdict+'</div>';
+  html += '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  html += '<div style="background:rgba('+gColor.replace('#','')+',0.05);border:1px solid rgba('+gColor.replace('#','')+',0.2);border-radius:10px;padding:14px;text-align:center">';
-  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">スクリーニングスコア</div>';
+  html += '<div style="background:rgba('+tsHeroRgb+',0.05);border:1px solid rgba('+tsHeroRgb+',0.2);border-radius:10px;padding:14px;text-align:center">';
+  html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">審査判定</div>';
   html += '<div style="font-size:44px;font-weight:900;color:'+gColor+';line-height:1">'+grade+'</div>';
-  html += '<div style="font-size:13px;font-weight:700;color:'+gColor+';margin-top:4px">'+total+'/'+maxScore+'点 ('+pct+'%)</div>';
   html += '<div style="font-size:11px;color:'+gColor+';margin-top:4px">'+verdict+'</div>';
   html += '</div>';
   html += '<div style="background:var(--dark3);border-radius:10px;padding:12px">';
@@ -12094,9 +12119,17 @@ function calcRentHikeScore() {
   else if (score >= 30) { grade = 'C'; gColor = '#fbbf24'; timing = '様子見を推奨'; advice = '現時点では交渉の根拠がやや弱い状況です。市場動向を観察し、相場差が広がってから交渉を。'; }
   else { grade = 'D'; gColor = '#f87171'; timing = '現時点では見送り'; advice = '現在の家賃は市場相場以上か同水準です。値上げよりも入居者の継続・満足度を優先してください。'; }
 
+  var rhsHexToRgb = {'#4ade80':'74,222,128','#a3e635':'163,230,53','#fbbf24':'251,191,36','#f87171':'248,113,113'};
+  var rhsHeroRgb = rhsHexToRgb[gColor] || '96,165,250';
   var html = '<div style="display:grid;gap:10px">';
+  html += '<div style="background:linear-gradient(135deg,rgba('+rhsHeroRgb+',0.12),rgba('+rhsHeroRgb+',0.04));border:2px solid rgba('+rhsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:'+gColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">値上げ交渉スコア</div>';
+  html += '<div style="font-size:72px;font-weight:900;color:'+gColor+';line-height:1;margin-bottom:4px">'+grade+'</div>';
+  html += '<div style="font-size:16px;font-weight:700;color:'+gColor+'">'+score+'点 — '+timing+'</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">年間増収見込み: +'+yearlyGain+'万円</div>';
+  html += '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  html += '<div style="background:rgba('+gColor.replace('#','')+',0.05);border:1px solid rgba('+gColor.replace('#','')+',0.2);border-radius:10px;padding:14px;text-align:center">';
+  html += '<div style="background:rgba('+rhsHeroRgb+',0.05);border:1px solid rgba('+rhsHeroRgb+',0.2);border-radius:10px;padding:14px;text-align:center">';
   html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">値上げ交渉スコア</div>';
   html += '<div style="font-size:44px;font-weight:900;color:'+gColor+';line-height:1">'+grade+'</div>';
   html += '<div style="font-size:11px;font-weight:700;color:'+gColor+';margin-top:4px">'+score+'点 — '+timing+'</div>';
