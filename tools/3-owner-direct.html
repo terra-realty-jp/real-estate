@@ -6047,10 +6047,13 @@ function calcLoanPreApproval() {
     + '<div style="width:' + Math.round(a.score/a.max*100) + '%;height:6px;background:' + grade.color + ';border-radius:3px;transition:width 0.3s"></div></div></div>'
   ).join('');
 
-  el.innerHTML = '<div style="text-align:center;background:' + grade.color + '22;border:1px solid ' + grade.color + '44;border-radius:12px;padding:16px;margin-bottom:14px">'
-    + '<div style="font-size:36px;font-weight:900;color:' + grade.color + '">' + grade.label + '</div>'
-    + '<div style="font-size:14px;font-weight:700;color:' + grade.color + ';margin-bottom:4px">' + grade.msg + '</div>'
-    + '<div style="font-size:11px;color:var(--text-muted)">総合スコア ' + total + '/100点</div></div>'
+  var lpaRgbMap = {'#4ade80':'74,222,128','#86efac':'134,239,172','#facc15':'250,204,21','#fb923c':'251,146,60','#f87171':'248,113,113'};
+  var lpaRgb = lpaRgbMap[grade.color] || '212,175,55';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + lpaRgb + ',0.1),rgba(' + lpaRgb + ',0.03));border:2px solid rgba(' + lpaRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + grade.color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">融資審査 通過見込みスコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + grade.color + ';line-height:1;margin-bottom:4px">' + total + '<span style="font-size:20px">点</span><span style="font-size:28px;margin-left:8px">' + grade.label + '</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + grade.msg + '</div>'
+    + '</div>'
     + '<div style="margin-bottom:14px">' + barsHtml + '</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px">'
@@ -6111,7 +6114,16 @@ function calcNewUsedComp() {
     ? '🏗 この試算では<strong>新築の方が10年総コストが低い</strong>可能性があります（差: ' + diff.toLocaleString() + '万円）。ただし築年数による価値下落速度は新築の方が大きい場合があります。'
     : '🏠 この試算では<strong>中古＋リフォームの方が10年総コストが低い</strong>可能性があります（差: ' + diff.toLocaleString() + '万円）。価値の下落が比較的緩やかな中古は長期保有でさらに有利になります。';
 
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">'
+  var nucHeroRgb = winner === 'new' ? '96,165,250' : '74,222,128';
+  var nucHeroColor = winner === 'new' ? '#60a5fa' : '#4ade80';
+  var nucLabel = winner === 'new' ? '新築の方が10年トータルコストが有利' : '中古＋リフォームの方が10年トータルコストが有利';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + nucHeroRgb + ',0.1),rgba(' + nucHeroRgb + ',0.03));border:2px solid rgba(' + nucHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + nucHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年総コスト差</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + nucHeroColor + ';line-height:1;margin-bottom:4px">' + diff.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">新築 ' + newTotal.toLocaleString() + '万円 vs 中古+リフォーム ' + usedTotal.toLocaleString() + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + nucHeroColor + '">' + nucLabel + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">'
     + '<div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:10px;padding:14px">'
     + '<div style="font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:10px">🏗 新築</div>'
     + newItems.map(i => buildRow(i.name, i.val)).join('')
@@ -6152,7 +6164,16 @@ function calcDisclosureCheck() {
     + '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:' + (i.level === '必須' ? '#f87171' : '#fb923c') + ';color:#000;white-space:nowrap;flex-shrink:0">' + i.level + '</span>'
     + '<span style="font-size:11px;color:var(--text-muted)">' + i.text + '</span></div>'
   ).join('');
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+  var dcHeroRgb = mandatory > 0 ? '248,113,113' : '251,146,60';
+  var dcHeroColor = mandatory > 0 ? '#f87171' : '#fb923c';
+  var dcLabel = mandatory > 0 ? '必須告知事項あり — 必ず不動産会社に相談してください' : '推奨告知事項のみ — 開示を積極的に検討してください';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + dcHeroRgb + ',0.1),rgba(' + dcHeroRgb + ',0.03));border:2px solid rgba(' + dcHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + dcHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">告知事項 合計</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + dcHeroColor + ';line-height:1;margin-bottom:4px">' + total + '<span style="font-size:20px">件</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">必須 ' + mandatory + '件 ＋ 推奨 ' + recommended + '件</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + dcHeroColor + '">' + dcLabel + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px;text-align:center">'
     + '<div style="font-size:11px;color:#f87171;font-weight:700">必須告知事項</div>'
     + '<div style="font-size:24px;font-weight:900;color:#f87171">' + mandatory + '件</div></div>'
