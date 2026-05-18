@@ -8767,7 +8767,14 @@ function calcConditionPremium() {
   var totalPct = stationPct + dirPct;
   var adjustedPrice = Math.round(base * (1 + totalPct / 100));
   var dirLabel = { south: '南向き', southeast: '東南・西南向き', east: '東・西向き', north: '北向き' }[dir];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var cpHeroRgb = totalPct >= 0 ? '74,222,128' : '251,146,60';
+  var cpHeroColor = totalPct >= 0 ? ACCENT : '#fb923c';
+  var cpHero = '<div style="background:linear-gradient(135deg,rgba('+cpHeroRgb+',0.1),rgba('+cpHeroRgb+',0.03));border:2px solid rgba('+cpHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+cpHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">条件調整後の推定価格</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+cpHeroColor+';line-height:1;margin-bottom:4px">'+adjustedPrice.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">基準 '+base.toLocaleString()+'万円 → '+(totalPct>=0?'+':'')+totalPct+'%補正（'+(adjustedPrice-base>=0?'+':'')+(adjustedPrice-base).toLocaleString()+'万円）</div>'
+    +'</div>';
+  var html = cpHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + (stationPct >= 0 ? ACCENT : '#fb923c') + '">' + (stationPct >= 0 ? '+' : '') + stationPct + '%</div><div style="font-size:10px;color:var(--text-muted)">駅距離プレミアム</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + (dirPct >= 0 ? ACCENT : '#fb923c') + '">' + (type === 'land' ? '―' : (dirPct >= 0 ? '+' : '') + dirPct + '%') + '</div><div style="font-size:10px;color:var(--text-muted)">向きプレミアム</div></div>';
@@ -8801,7 +8808,14 @@ function calcSellLeaseBack() {
   var breakeven = rent > 0 ? Math.ceil(netProceeds / rent) : 999;
   var netAfterRent = netProceeds - totalRent;
   var lbRate = Math.round((rent * 12 / price) * 100 * 10) / 10;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var slbHeroRgb = netAfterRent >= 0 ? '74,222,128' : '251,146,60';
+  var slbHeroColor = netAfterRent >= 0 ? ACCENT : '#fb923c';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+slbHeroRgb+',0.1),rgba('+slbHeroRgb+',0.03));border:2px solid rgba('+slbHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+slbHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">リースバック '+years+'年後の収支</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+slbHeroColor+';line-height:1;margin-bottom:4px">'+(netAfterRent>=0?'+':'')+netAfterRent.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">手取り '+netProceeds.toLocaleString()+'万 − 家賃総額 '+totalRent.toLocaleString()+'万 / 損益分岐: '+(breakeven>=999?'計算不能':Math.ceil(breakeven/12)+'年')+'</div>'
+    +'</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + netProceeds.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">売却時の手取り</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:#fb923c">' + totalRent.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">' + years + '年間の家賃総額</div></div>';
@@ -8834,7 +8848,14 @@ function calcFloorPlanEffect() {
   var netGain = priceUp - totalCost;
   var roi = Math.round((netGain / totalCost) * 100);
   var typeLabel = { open: '和室→洋室・リビング拡大', merge: '部屋数を減らして広いLDK', add: '部屋数を増やす' }[type];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var fpHeroRgb = netGain >= 0 ? '74,222,128' : '251,146,60';
+  var fpHeroColor = netGain >= 0 ? ACCENT : '#fb923c';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+fpHeroRgb+',0.1),rgba('+fpHeroRgb+',0.03));border:2px solid rgba('+fpHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+fpHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">間取り変更リノベ 純利益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+fpHeroColor+';line-height:1;margin-bottom:4px">'+(netGain>=0?'+':'')+netGain.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">ROI '+(roi>=0?'+':'')+roi+'% / コスト '+totalCost.toLocaleString()+'万 → 価格UP +'+priceUp.toLocaleString()+'万</div>'
+    +'</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">+' + priceUp.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">推定価格UP効果</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:#fb923c">' + totalCost.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">総コスト（工事+維持）</div></div>';
