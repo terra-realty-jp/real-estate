@@ -5639,7 +5639,13 @@ function calcPropTax() {
   var totalFixed = fixedLand + fixedBldg;
   var totalCity = cityLand + cityBldg;
   var totalAnnual = totalFixed + totalCity;
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">年間 固定資産税・都市計画税</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">' + (Math.round(totalAnnual/10000*10)/10) + '<span style="font-size:20px">万円/年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">固定資産税 ' + Math.round(totalFixed/1000).toLocaleString() + '千円 ＋ 都市計画税 ' + (city==='yes' ? Math.round(totalCity/1000).toLocaleString()+'千円' : '0円') + '</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--gold)">毎年この金額が課税されます</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">'
     + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">固定資産税</div><div style="font-size:16px;font-weight:700;color:var(--gold)">' + Math.round(totalFixed/1000).toLocaleString() + '千円/年</div></div>'
     + '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">都市計画税</div><div style="font-size:16px;font-weight:700;color:var(--text)">' + (city==='yes' ? Math.round(totalCity/1000).toLocaleString()+'千円/年' : '非対象') + '</div></div>'
     + '<div style="text-align:center;padding:10px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">年間合計</div><div style="font-size:16px;font-weight:700;color:var(--gold)">' + Math.round(totalAnnual/10000*10)/10 + '万円/年</div></div>'
@@ -5673,7 +5679,14 @@ function calcSwitchResident() {
   var balance  = totalIn - totalBuyCash;
   var balColor = balance >= 0 ? 'var(--green)' : 'var(--red)';
   var balLabel = balance >= 0 ? '✅ 資金に余裕があります' : '⚠️ 資金不足 — 追加融資や売却前後の調整が必要です';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+  var balHeroRgb = balance >= 0 ? '74,222,128' : '239,68,68';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + balHeroRgb + ',0.1),rgba(' + balHeroRgb + ',0.03));border:2px solid rgba(' + balHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + balColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">住み替え後の資金余裕</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + balColor + ';line-height:1;margin-bottom:4px">' + (balance>=0?'+':'') + balance.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">売却手取り ＋ 現金貯蓄 − 購入必要額</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + balColor + '">' + balLabel + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
     + '<div style="padding:12px;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:8px">'
     + '<div style="font-size:11px;color:#4ade80;font-weight:700;margin-bottom:6px">💰 売却側（収入）</div>'
     + row2('売却予想額', sell.toLocaleString()+'万円')
