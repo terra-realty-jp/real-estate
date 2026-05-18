@@ -8500,7 +8500,19 @@ function calcMajorRepair() {
       + '<div style="font-size:13px;font-weight:700;color:var(--text)">'+it.val+'</div></div>';
   }).join('');
 
-  el.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+  var mrHeroRgbMap = { 'var(--green)': '74,222,128', 'var(--red)': '239,68,68', 'var(--gold)': '212,175,55' };
+  var mrHeroRgb = mrHeroRgbMap[statusColor] || '212,175,55';
+  var mrHeroNum = isSufficient ? Math.round(-shortage) : Math.round(shortage);
+  var mrHeroLabel = isSufficient ? '余裕額（目安）' : '積立不足額（目安）';
+  var mrHeroPrefix = isSufficient ? '+' : '▲';
+  var mrMsg = isSufficient ? '✅ 次回大規模修繕（約' + yearsToNext + '年後）まで積立が十分です' : '月額+' + additionalNeeded + '万円の追加積立が必要です（次回修繕まで' + yearsToNext + '年）';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + mrHeroRgb + ',0.12),rgba(' + mrHeroRgb + ',0.04));border:2px solid rgba(' + mrHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + statusColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + mrHeroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + statusColor + ';line-height:1;margin-bottom:4px">' + mrHeroPrefix + mrHeroNum + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">修繕費目安' + totalCost + '万円 · 予測積立残高' + Math.round(futureBalance) + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + statusColor + '">' + mrMsg + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
     + '<div style="font-size:14px;font-weight:900;color:'+statusColor+';margin-bottom:8px">'+statusLabel+'</div>'
     + rowHtml + '</div>'
     + (!isSufficient && additionalNeeded > 0 ?
@@ -8542,7 +8554,17 @@ function calcOriginalRestore() {
   var floorClean = Math.round(area * 500 / 1000) * 1000;
   var tenantTotal = tenantWall + tenantDamage;
   var ownerTotal  = ownerWall + floorClean;
-  var html = '<div style="margin-top:10px">';
+  var orTenantMan = Math.round(tenantTotal/10000*10)/10;
+  var orHeroRgb = orTenantMan >= 10 ? '239,68,68' : orTenantMan >= 3 ? '251,146,60' : '212,175,55';
+  var orHeroColor = orTenantMan >= 10 ? 'var(--red)' : orTenantMan >= 3 ? '#fb923c' : 'var(--gold)';
+  var orMsg = '入居者負担割合 ' + Math.round(tenantRatio*100) + '%（在籍' + years + '年・国交省ガイドライン準拠）';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + orHeroRgb + ',0.12),rgba(' + orHeroRgb + ',0.04));border:2px solid rgba(' + orHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + orHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">入居者への請求額（目安）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + orHeroColor + ';line-height:1;margin-bottom:4px">' + orTenantMan + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">オーナー負担（通常損耗）: ' + Math.round(ownerTotal/10000*10)/10 + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">' + orMsg + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">入居者負担（目安）</div><div style="font-size:22px;font-weight:900;color:var(--red)">' + Math.round(tenantTotal/10000*10)/10 + '万円</div></div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">オーナー負担（目安）</div><div style="font-size:22px;font-weight:900;color:var(--gold)">' + Math.round(ownerTotal/10000*10)/10 + '万円</div></div>';
@@ -8606,7 +8628,16 @@ function calcMonthlyHealth() {
   var gradeColor = { S: 'var(--gold)', A: 'var(--green)', B: '#34d399', C: '#f59e0b', D: 'var(--red)' }[grade];
   var gradeMsg = { S: '健全・優秀', A: '良好', B: '標準的', C: '要注意', D: '要改善' }[grade];
 
-  var html = '<div style="margin-top:10px">';
+  var mhHeroRgbMap = { 'var(--gold)': '212,175,55', 'var(--green)': '74,222,128', '#34d399': '52,211,153', '#f59e0b': '245,158,11', 'var(--red)': '239,68,68' };
+  var mhHeroRgb = mhHeroRgbMap[gradeColor] || '212,175,55';
+  var mhMsg = grade === 'S' ? '✅ 物件経営は非常に健全な状態です' : grade === 'A' ? '✅ 良好な状態です — この水準を維持しましょう' : grade === 'B' ? '⚠️ 標準的ですが改善できる指標があります' : grade === 'C' ? '⚠️ 要注意の指標あり — 優先度の高い項目から対策を' : '❌ 複数の指標が要改善 — 早急な見直しが必要です';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + mhHeroRgb + ',0.12),rgba(' + mhHeroRgb + ',0.04));border:2px solid rgba(' + mhHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + gradeColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">月次ヘルスチェック 総合グレード</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + gradeColor + ';line-height:1;margin-bottom:4px">' + grade + '<span style="font-size:20px"> ' + totalScore + '点</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">入居率' + occupancyRate + '% · CF' + cf + '万円 · 未入金' + unpaid + '件 · 更新' + renewal + '件</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + gradeColor + '">' + mhMsg + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;background:rgba(255,255,255,0.04);border-radius:10px;padding:12px">';
   html += '<div style="text-align:center"><div style="font-size:36px;font-weight:900;color:' + gradeColor + '">' + grade + '</div><div style="font-size:10px;color:var(--text-muted)">総合グレード</div></div>';
   html += '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:' + gradeColor + ';margin-bottom:4px">' + gradeMsg + '（' + totalScore + '点）</div>';
