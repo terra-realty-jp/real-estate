@@ -2174,6 +2174,36 @@
     <div id="capital-gains-tax-result"></div>
   </div>
 
+  <!-- 確定申告が必要か診断カード -->
+  <div class="card" data-cat="tax" id="card-tax-filing-check">
+    <div class="card-title">📋 家を売ったら確定申告は必要？必要ない？ 自動診断</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産を売却した翌年、確定申告が必要なケースと不要なケースがあります。売却価格・購入価格・居住状況を入力するだけで「必要・推奨・不要の可能性あり」の3段階で自動判定します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却価格（万円）（例: 3000）</label>
+        <input type="number" id="tfc_sell" value="3000" min="100" max="100000" step="100" oninput="calcTaxFilingCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得費（購入価格 万円）（例: 2500）</label>
+        <input type="number" id="tfc_cost" value="2500" min="0" max="100000" step="100" oninput="calcTaxFilingCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">譲渡費用（仲介手数料等 万円）（例: 100）</label>
+        <input type="number" id="tfc_expense" value="100" min="0" max="2000" step="10" oninput="calcTaxFilingCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件の種類と状況</label>
+        <select id="tfc_type" onchange="calcTaxFilingCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="resident">自分が住んでいたマイホーム</option>
+          <option value="inherit">相続した不動産（居住用ではない）</option>
+          <option value="invest">投資・賃貸用不動産</option>
+          <option value="land">土地のみ</option>
+        </select>
+      </div>
+    </div>
+    <div id="tax-filing-check-result"></div>
+  </div>
+
   <!-- 住宅ローン減税 控除額シミュレーターカード -->
   <div class="card" id="card-mortgage-tax-deduction">
     <div class="card-title">🏦 住宅ローン控除で何年間、いくら節税できるか？</div>
@@ -8344,6 +8374,83 @@ function calcCapitalGainsTax() {
   el.innerHTML = html;
 }
 (function(){ calcCapitalGainsTax(); })();
+
+function calcTaxFilingCheck() {
+  var sell = parseFloat(document.getElementById('tfc_sell').value) || 0;
+  var cost = parseFloat(document.getElementById('tfc_cost').value) || 0;
+  var expense = parseFloat(document.getElementById('tfc_expense').value) || 0;
+  var type = document.getElementById('tfc_type').value;
+  var el = document.getElementById('tax-filing-check-result');
+  if (!el) return;
+
+  var gain = sell - cost - expense; // 万円単位の譲渡益
+  var isResident = type === 'resident';
+  var isInherit = type === 'inherit';
+  var isInvest = type === 'invest';
+
+  // 判定ロジック
+  var verdict, verdictColor, reason, actions;
+
+  if (isInvest) {
+    // 投資・賃貸用は原則申告必要
+    verdict = '確定申告 必要';
+    verdictColor = '248,113,113';
+    reason = '投資・賃貸用不動産の売却は、損益にかかわらず確定申告が必要です。';
+    actions = ['売却翌年の2月16日〜3月15日に申告', '減価償却費・取得費・譲渡費用を必ず計上', '損失が出た場合は給与所得との損益通算で節税可能（ただし居住用以外）'];
+  } else if (isInherit) {
+    verdict = '確定申告 必要（専門家推奨）';
+    verdictColor = '251,146,60';
+    reason = '相続した不動産の売却は、取得費・相続時の評価額など書類が複雑です。税理士への依頼を推奨します。';
+    actions = ['取得費は被相続人の購入時の価格（書類がなければ売却価格×5%の概算取得費）', '相続空き家の3,000万円特別控除の適用条件を確認', '売却翌年の2月16日〜3月15日に申告'];
+  } else if (gain <= 0) {
+    // マイホームで損失
+    verdict = '確定申告 推奨（任意）';
+    verdictColor = '212,175,55';
+    reason = '売却損（▲' + Math.abs(Math.round(gain)).toLocaleString() + '万円）が出ています。申告は義務ではありませんが、給与所得との損益通算で税金が戻る可能性があります。';
+    actions = ['居住用財産の損失は給与所得との損益通算が可能', '翌年以降3年間の繰越控除も活用できる', '税理士に損益通算の可否を確認することを推奨'];
+  } else if (isResident && gain <= 3000) {
+    // 居住用・利益3000万円以下 → 3000万控除でゼロ
+    verdict = '確定申告 必要（納税額ゼロの可能性）';
+    verdictColor = '251,146,60';
+    reason = '居住用マイホームの売却益（' + Math.round(gain).toLocaleString() + '万円）は3,000万円特別控除の適用で課税所得がゼロになる見込みです。ただし控除を受けるには確定申告が必要です。';
+    actions = ['申告しないと控除が受けられず課税される', '売却した翌年の2月16日〜3月15日に申告', '売買契約書・登記関連書類を準備'];
+  } else {
+    // 利益3000万超 または 居住用でない
+    var taxEst = isResident ? Math.round((gain - 3000) * 0.20315) : Math.round(gain * 0.20315);
+    verdict = '確定申告 必要（納税あり）';
+    verdictColor = '248,113,113';
+    reason = '売却益が' + Math.round(gain).toLocaleString() + '万円あり、税金の申告・納付が必要です。概算納税額: 約' + taxEst.toLocaleString() + '万円（長期保有・税率20.315%の場合）。';
+    actions = ['売却翌年の2月16日〜3月15日に申告・3月15日までに納税', '5年超保有なら長期譲渡税率（20.315%）、5年以下は短期（39.63%）', '取得費・譲渡費用の領収書を準備して節税を最大化'];
+  }
+
+  var heroRgb = verdictColor;
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba('+heroRgb+',0.12),rgba('+heroRgb+',0.04));border:2px solid rgba('+heroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:6px">判定結果</div>'
+    + '<div style="font-size:26px;font-weight:900;color:rgb('+heroRgb+');line-height:1.1;margin-bottom:8px">' + verdict + '</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.6">' + reason + '</div>'
+    + '</div>';
+
+  var actHtml = '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">📋 やること・注意点</div>'
+    + actions.map(function(a){ return '<div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:4px">・' + a + '</div>'; }).join('')
+    + '</div>';
+
+  var deadlineHtml = '<div style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:rgba(255,255,255,0.7)">'
+    + '⏰ <strong style="color:#f87171">申告期限</strong>：売却した翌年の <strong>2月16日〜3月15日</strong>'
+    + '</div>';
+
+  var shareTextVal = '📋 不動産売却 確定申告チェック\n\n売却価格: ' + sell.toLocaleString() + '万円\n取得費: ' + cost.toLocaleString() + '万円\n譲渡益: ' + Math.round(gain).toLocaleString() + '万円\n→ 判定: ' + verdict + '\n\n▶ あなたの売却でも無料判定\n不動産かんたんツール（TERRA REALTY）';
+  var lineUrl = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(shareTextVal);
+
+  var html = heroHtml + actHtml + deadlineHtml
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + '<a href="' + lineUrl + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#00B900;color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none">📤 LINEでシェア</a>'
+    + '<a href="mailto:terra.realty.iam@gmail.com?subject=確定申告について相談したい&body=' + encodeURIComponent('不動産売却の確定申告について相談したいです。\n\n売却価格: ' + sell + '万円\n取得費: ' + cost + '万円\n判定結果: ' + verdict) + '" style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);color:var(--green);border:1px solid rgba(34,197,94,0.25);font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none">→ TERRA REALTYに相談</a>'
+    + '</div>';
+
+  el.innerHTML = html;
+}
+(function(){ calcTaxFilingCheck(); })();
 
 function calcMortgageTaxDeduction() {
   var el = document.getElementById('mortgage-tax-deduction-result'); if (!el) return;
