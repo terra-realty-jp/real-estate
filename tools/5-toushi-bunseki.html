@@ -7639,7 +7639,15 @@ function calcIRR() {
   var totalCF = cashflows.slice(1).reduce(function(s, c) { return s + c; }, 0);
   var netGain = (totalCF + cashflows[0]) / 10000;
   var isGood = irr * 100 > loanRate;
-  var html = '<div style="margin-top:10px">';
+  var irrHeroRgb   = isGood ? '74,222,128' : '239,68,68';
+  var irrHeroColor = isGood ? 'var(--green)' : 'var(--red)';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + irrHeroRgb + ',0.1),rgba(' + irrHeroRgb + ',0.03));border:2px solid rgba(' + irrHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + irrHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">IRR（内部収益率・自己資金ベース）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + irrHeroColor + ';line-height:1;margin-bottom:4px">' + irrPct + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">ローン金利' + loanRate.toFixed(1) + '% · ' + years + '年間純利益' + (netGain >= 0 ? '+' : '') + Math.round(netGain).toLocaleString() + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + irrHeroColor + '">' + (isGood ? '✓ IRR > ローン金利 — レバレッジが収益に貢献しています' : '⚠️ IRR < ローン金利 — CF・売却価格の見直しを検討してください') + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">IRR（内部収益率）</div><div style="font-size:22px;font-weight:900;color:' + (isGood ? 'var(--green)' : 'var(--red)') + '">' + irrPct + '%</div></div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">ローン金利</div><div style="font-size:22px;font-weight:900;color:var(--text-muted)">' + loanRate.toFixed(1) + '%</div></div>';

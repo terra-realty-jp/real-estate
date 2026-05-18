@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-18 （非TOP3カード ヒーロー表示強化 第2〜6弾）
+
+- **対象**: 全5ツール
+- **フェーズ**: Phase 2 ビジュアル強化（非TOP3カード拡大）
+- **改善内容（第2〜6弾）**:
+  - Tool2/`calcProcrastCost()`: 5年放置損失額を52px赤ヒーローに
+  - Tool4/`calcMgmtVsSelf()`: 年間コスト差額と「自主/委託どちらがお得」を52pxに
+  - Tool1/`calcNetProceeds()`: 最終手取り額を52pxゴールドヒーローで先頭表示
+  - Tool3/`calcPurchaseCost()`: 購入諸費用合計を52pxヒーローに（旧22px廃止）
+  - Tool2/`calcAkiyaTax()`: 特定空き家リスク判定+税額増加を先頭ヒーローに
+  - Tool4/`calcVacancyLoss()`: 空室既発生損失を52px赤ヒーローで先頭表示
+  - Tool1/`calcTransferTax()`: 譲渡所得税額を52pxで表示（色は税額水準で三段階）
+  - Tool3/`calcNego()`: 希望価格での手取り概算を52pxヒーローで先頭表示
+  - Tool5/`calcRefi()`: 借り換え節約総額（費用差引後）を52pxで
+  - Tool5/`calcReverseYield()`: 利回り達成判定（達成/未達成）を36pxサマリーに
+- **理由**: TOP3以外の重要カードでも「最初に核心の数字が目に入る」デザインを拡大し、PLGのシェアしたくなるビジュアルをサービス全体に統一。
+
 ## 2026-05-18 （非TOP3カード ヒーロー表示強化 第1弾）
 
 - **対象**: tools/1-ai-satei.html, tools/3-owner-direct.html, tools/5-toushi-bunseki.html
