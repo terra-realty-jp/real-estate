@@ -8390,7 +8390,18 @@ function calcNisaVsProperty() {
     ? '💡 この試算では<strong>新NISAの方が20年後の純利益が高い</strong>可能性があります（差: ' + diff.toFixed(0) + '万円）。管理の手間・税金・流動性を考えると、NISAは初心者に特におすすめです。'
     : '💡 この試算では<strong>不動産投資の方が20年後の総リターンが高い</strong>可能性があります（差: ' + diff.toFixed(0) + '万円）。レバレッジ効果と節税が有利に働いています。ただし空室・修繕・金利上昇リスクも考慮してください。';
 
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+  const nvWinColor = winner === 'nisa' ? '#60a5fa' : '#4ade80';
+  const nvWinRgb = winner === 'nisa' ? '96,165,250' : '74,222,128';
+  const nvWinLabel = winner === 'nisa' ? '新NISAが有利' : '不動産投資が有利';
+  const nvWinAmount = winner === 'nisa' ? nisaGain : propTotal;
+  const nvGuide = winner === 'nisa' ? '管理不要・非課税で20年間じっくり資産形成。不動産を持つ前にNISAで基盤を作るのもお勧め' : 'レバレッジ効果で同じ元手でも資産規模を大きくできます。ただしリスク管理が重要です';
+  const nvHero = '<div style="background:linear-gradient(135deg,rgba('+nvWinRgb+',0.1),rgba('+nvWinRgb+',0.03));border:2px solid rgba('+nvWinRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+nvWinColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">20年後の総利益 勝者</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+nvWinColor+';line-height:1;margin-bottom:4px">+'+(nvWinAmount>=0?Math.round(nvWinAmount).toLocaleString():'—')+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:14px;font-weight:700;color:'+nvWinColor+';margin-bottom:4px">'+nvWinLabel+'（差額'+diff.toFixed(0)+'万円）</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+nvGuide+'</div>'
+    +'</div>';
+  el.innerHTML = nvHero + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
     + '<div style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);border-radius:10px;padding:14px">'
     + '<div style="font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:8px">📊 新NISA（インデックス）</div>'
     + '<div style="font-size:11px;color:var(--text-muted)">20年後の資産</div>'
