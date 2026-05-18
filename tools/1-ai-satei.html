@@ -6851,7 +6851,14 @@ function calcMultiSatei() {
   }
   var labels = ['A社','B社','C社'];
   var colors = ['#4db6f5','#4ade80','#f59e0b'];
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var msHeroRgbMap = {'#4ade80':'74,222,128','#f59e0b':'245,158,11','#f87171':'248,113,113'};
+  var msHeroRgb2 = msHeroRgbMap[spreadColor] || '212,175,55';
+  var msHero2 = '<div style="background:linear-gradient(135deg,rgba('+msHeroRgb2+',0.1),rgba('+msHeroRgb2+',0.03));border:2px solid rgba('+msHeroRgb2+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+spreadColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">複数社 平均査定額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+spreadColor+';line-height:1;margin-bottom:4px">'+Math.round(avg).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">査定乖離率 '+spread.toFixed(1)+'% — '+spreadLabel+'</div>'
+    +'</div>';
+  var html = msHero2+'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:grid;grid-template-columns:repeat('+vals.length+',1fr);gap:8px;margin-bottom:12px">';
   vals.forEach(function(v, i) {
     var isMax = v === maxV;
@@ -6895,7 +6902,14 @@ function calcHLControl() {
   var urgencyColor = urgency === 'high' ? '#f87171' : urgency === 'mid' ? '#f59e0b' : '#4ade80';
   var urgencyLabel = urgency === 'high' ? '売却による控除損失が大きい' : urgency === 'mid' ? '控除損失はやや大きい' : '控除残余は少ない';
 
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var hlcRgbMap = {'#f87171':'248,113,113','#f59e0b':'245,158,11','#4ade80':'74,222,128'};
+  var hlcHeroRgb = hlcRgbMap[urgencyColor] || '245,158,11';
+  var hlcHero = '<div style="background:linear-gradient(135deg,rgba('+hlcHeroRgb+',0.1),rgba('+hlcHeroRgb+',0.03));border:2px solid rgba('+hlcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+urgencyColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">今売ると失う住宅ローン控除</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+urgencyColor+';line-height:1;margin-bottom:4px">'+totalLoss+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">残余期間 '+remaining+'年 × 年間控除 '+annualCredit+'万円</div>'
+    +'</div>';
+  var html = hlcHero+'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">経過年数</div><div style="font-size:18px;font-weight:900;color:#aaa">'+elapsed+'<span style="font-size:11px">年</span></div></div>';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">控除 残余期間</div><div style="font-size:18px;font-weight:900;color:'+urgencyColor+'">'+remaining+'<span style="font-size:11px">年</span></div></div>';
