@@ -10443,7 +10443,13 @@ function calcZeroDepositRisk() {
   var vacantLossWith = 0;
   var vacantLossWithout = rent * Math.max(0, vacant - 1.5);
   var netEffect = vacantLossWithout - freeLoss;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.12),rgba(251,146,60,0.04));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">ゼロ条件による損失リスク</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">▲'+totalRisk.toFixed(1)+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">敷金不足'+shortfall.toFixed(1)+'万 · フリーレント'+freeLoss.toFixed(1)+'万</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#fb923c">'+breakeven.toFixed(1)+'ヶ月早く入居が決まれば損失を取り戻せます</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">📊 ゼロ条件設定のリスク試算</div>';
   var items = [
     ['現在の空室損失（' + vacant + 'ヶ月）', '−' + vacantLoss.toFixed(1) + '万', '#f87171'],
@@ -10496,7 +10502,15 @@ function calcEvictionFlow() {
     { phase: '④敷金精算', period: '退去後1ヶ月以内', action: '敷金から修繕費を差し引いた金額を返金。精算明細書を書面で送付。' },
     { phase: '⑤募集開始', period: '退去後すぐ', action: '空室広告を出稿。AD（広告料）は礼金0の場合1〜2ヶ月分が目安。' }
   ];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var efHeroRgb = netCost > 5 ? '248,113,113' : netCost > 0 ? '251,146,60' : '74,222,128';
+  var efHeroColor = netCost > 5 ? '#f87171' : netCost > 0 ? '#fb923c' : '#4ade80';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+efHeroRgb+',0.12),rgba('+efHeroRgb+',0.04));border:2px solid rgba('+efHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+efHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">退去時の実質負担合計</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+efHeroColor+';line-height:1;margin-bottom:4px">'+(netCost>0?'▲':'▽')+Math.abs(netCost).toFixed(1)+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">空室'+vacant+'ヶ月 · 原状回復オーナー負担'+ownerShare.toFixed(1)+'万</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+efHeroColor+'">'+(netCost>0?'退去ごとに確実にコストが発生します':'敷金で費用を上回っています')+'</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:8px;font-size:13px">💰 退去関連コスト試算</div>';
   var items = [
     ['原状回復費（入居者負担）', '+' + tenantShare.toFixed(1) + '万（敷金充当）', '#4ade80'],
@@ -10556,7 +10570,15 @@ function calcRestorationGuide() {
   var totalTenant = Math.round((wallTenant + floorTenant + cleanTenant) * 10) / 10;
   var totalOwner = Math.round((wallOwner + floorOwner + cleanOwner) * 10) / 10;
   var damageLabel = { normal: '通常使用', moderate: 'やや過失あり', heavy: '明らかな過失' }[damage];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var rgHeroRgb = totalTenant >= 5 ? '248,113,113' : totalTenant >= 2 ? '251,146,60' : '212,175,55';
+  var rgHeroColor = totalTenant >= 5 ? '#f87171' : totalTenant >= 2 ? '#fb923c' : 'var(--gold)';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+rgHeroRgb+',0.12),rgba('+rgHeroRgb+',0.04));border:2px solid rgba('+rgHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+rgHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">入居者の原状回復負担額（目安）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+rgHeroColor+';line-height:1;margin-bottom:4px">'+totalTenant+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">オーナー負担 '+totalOwner+'万円 · '+damageLabel+'</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+rgHeroColor+'">敷金との差額を確認して精算してください</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">入居' + years + '年 / ' + area + 'm² / ' + damageLabel + ' / 築' + buildAge + '年</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">';
   html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">項目</th><th style="text-align:right;padding:4px 6px">借主負担</th><th style="text-align:right;padding:4px 6px">貸主負担</th></tr>';
