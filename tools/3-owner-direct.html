@@ -5530,7 +5530,15 @@ function calcSumiKae() {
   var fundStatus = netFromSell < 0 ? 'danger' : selfRatio >= 20 ? 'good' : selfRatio >= 10 ? 'warn' : 'low';
   var statusMap = { good: { label: '自己資金 良好', color: 'var(--green)' }, warn: { label: '自己資金 やや少なめ', color: '#f59e0b' }, low: { label: '自己資金 不足気味', color: 'var(--red)' }, danger: { label: 'ローン残高 > 売却価格（オーバーローン）', color: 'var(--red)' } };
   var st = statusMap[fundStatus];
-  var html = '<div style="margin-top:10px">';
+  var skHeroRgb   = fundStatus === 'good' ? '74,222,128' : fundStatus === 'danger' ? '239,68,68' : '212,175,55';
+  var skHeroColor = st.color;
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + skHeroRgb + ',0.1),rgba(' + skHeroRgb + ',0.03));border:2px solid rgba(' + skHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + skHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">住み替え後の月返済額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + skHeroColor + ';line-height:1;margin-bottom:4px">' + (monthly > 0 ? Math.round(monthly/10000*10)/10 : 0) + '<span style="font-size:20px">万円/月</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">新規ローン' + (newLoan > 0 ? newLoan.toFixed(0) : 0) + '万円 · 諸費用' + miscCost.toFixed(0) + '万円 · 売却手取' + netFromSell.toFixed(0) + '万円</div>'
+    + '<div style="margin-top:6px;font-size:12px;font-weight:700;color:' + skHeroColor + '">' + st.label + (fundStatus !== 'danger' ? '（自己資金比率 ' + selfRatio + '%）' : '') + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
   html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">売却手取り（net）</div>';

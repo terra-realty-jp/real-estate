@@ -6249,7 +6249,15 @@ function calcAkiyaRental() {
   var paybackM = Math.round(payback % 12);
   var verdictColor = payback <= 60 ? 'var(--green)' : payback <= 120 ? '#f59e0b' : 'var(--red)';
   var verdict = payback <= 60 ? '◎ 採算良好（5年以内回収）' : payback <= 120 ? '△ 要検討（10年以内回収）' : '✕ 採算が取りにくい（10年超）';
-  var html = '<div style="margin-top:10px">';
+  var arVerdictRgbMap = { 'var(--green)': '74,222,128', '#f59e0b': '245,158,11', 'var(--red)': '239,68,68' };
+  var arHeroRgb = arVerdictRgbMap[verdictColor] || '74,222,128';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + arHeroRgb + ',0.1),rgba(' + arHeroRgb + ',0.03));border:2px solid rgba(' + arHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + verdictColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">賃貸化 採算判定</div>'
+    + '<div style="font-size:36px;font-weight:900;color:' + verdictColor + ';line-height:1;margin-bottom:4px">' + verdict + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">実質月間CF ' + monthlyCF.toFixed(1) + '万円 · 年間収益 ' + annualCF.toFixed(0) + '万円 · 利回り' + (reform > 0 ? yield_.toFixed(1) : '—') + '%</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">' + (isFinite(payback) ? 'リフォーム費' + reform + '万円の回収期間: ' + paybackY + '年' + paybackM + 'ヶ月' : '収益プラスでないためリフォーム費の回収計算不可') + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">実質月間CF</div><div style="font-size:20px;font-weight:900;color:' + (monthlyCF >= 0 ? 'var(--green)' : 'var(--red)') + '">' + monthlyCF.toFixed(1) + '<span style="font-size:11px">万円</span></div></div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">年間収益</div><div style="font-size:20px;font-weight:900;color:' + (annualCF >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + annualCF.toFixed(0) + '<span style="font-size:11px">万円</span></div></div>';
