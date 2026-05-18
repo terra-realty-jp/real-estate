@@ -5271,7 +5271,15 @@ function calcPreSaleReform() {
       + '<div style="font-size:13px;font-weight:700;color:'+it.color+'">'+it.val+'</div></div>';
   }).join('');
 
-  el.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+  var prHeroRgbMap = { 'var(--green)': '74,222,128', 'var(--gold)': '212,175,55', 'var(--red)': '239,68,68' };
+  var prHeroRgb = prHeroRgbMap[verdict.color] || '212,175,55';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + prHeroRgb + ',0.1),rgba(' + prHeroRgb + ',0.03));border:2px solid rgba(' + prHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + verdict.color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">リフォーム純損益</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + verdict.color + ';line-height:1;margin-bottom:4px">' + (netGain >= 0 ? '+' : '') + (Math.round(netGain*10)/10) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">費用' + cost + '万円 → 効果' + uplift + '万円（ROI ' + roi + '%）</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + verdict.color + '">' + verdict.label + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
     + '<div style="font-size:14px;font-weight:700;color:'+verdict.color+';margin-bottom:8px">'+verdict.label+'（ROI: '+roi+'%）</div>'
     + rowHtml
     + '<div style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6">'+verdict.msg+'</div></div>'
@@ -5320,9 +5328,12 @@ function calcSaleSchedule() {
   }
   var html = '<div style="margin-top:10px">';
   var urgency = diffDays < 90 ? 'var(--red)' : (diffDays < 180 ? '#fb923c' : 'var(--green)');
-  html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;margin-bottom:12px;text-align:center">';
-  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">引渡し日まで</div>';
-  html += '<div style="font-size:24px;font-weight:900;color:' + urgency + '">' + diffDays + '日</div>';
+  var urgencyRgb = diffDays < 90 ? '239,68,68' : (diffDays < 180 ? '251,146,60' : '74,222,128');
+  var urgencyMsg = diffDays < 90 ? '⚠️ 急いで準備を開始してください' : diffDays < 180 ? '計画的に進めましょう' : '✅ 十分な余裕があります';
+  html += '<div style="background:linear-gradient(135deg,rgba(' + urgencyRgb + ',0.1),rgba(' + urgencyRgb + ',0.03));border:2px solid rgba(' + urgencyRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:11px;color:' + urgency + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">引渡し日まで</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + urgency + ';line-height:1;margin-bottom:4px">' + diffDays + '<span style="font-size:20px">日</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">' + urgencyMsg + '</div>';
   html += '</div>';
   html += '<div style="position:relative;padding-left:24px">';
   html += '<div style="position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:rgba(255,255,255,0.1)"></div>';
@@ -5404,7 +5415,13 @@ function calcNegLimit() {
       + '<div style="font-size:10px;color:var(--text-muted)">値引き '+Math.max(0,disc)+'万円</div></div></div></div>';
   }).join('');
 
-  el.innerHTML = '<div style="margin-top:4px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">最大許容値引き幅</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">▲' + Math.max(0,maxDiscount).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">売出し価格' + ask + '万円に対して ' + discountPct + '% まで値引き可能</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--gold)">最低許容価格: ' + safeLimit.toLocaleString() + '万円 — これ以下では損失が発生します</div>'
+    + '</div>'
+    + '<div style="margin-top:4px">'
     + limitHtml
     + '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:10px 12px;margin-top:6px">'
     + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">売出し価格'+ask+'万円に対する最大許容値引き幅</div>'
