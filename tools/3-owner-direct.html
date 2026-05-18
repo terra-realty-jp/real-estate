@@ -2858,6 +2858,32 @@
     <div id="re_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 「やっぱり売りたい」損切り診断カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">😰 買ったばかりの家を「やっぱり売りたい」…いくら損して売ることになる？損失試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">購入直後に売却すると、取得費・仲介手数料・短期譲渡税（39.6%）がかかります。「いくら損するか」を事前に知っておくことで、冷静に判断できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">購入価格（万円）（例: 3500）</label>
+        <input type="number" id="esl_buy" placeholder="例: 3500" oninput="calcEarlyStopLoss()" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">今すぐ売れる価格（万円）（例: 3200）</label>
+        <input type="number" id="esl_sell" placeholder="例: 3200" oninput="calcEarlyStopLoss()" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">住宅ローン残債（万円）（例: 3100）</label>
+        <input type="number" id="esl_loan" placeholder="例: 3100" oninput="calcEarlyStopLoss()" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">保有年数（年）（例: 2）</label>
+        <input type="number" id="esl_years" placeholder="例: 2" min="0" max="30" step="0.5" oninput="calcEarlyStopLoss()" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcEarlyStopLoss()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">損失額を試算する</button>
+    <div id="esl_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -8776,6 +8802,49 @@ function calcMortgageRefinance() {
     </div>`;
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏦 住宅ローン審査通過率を診断してみた！\n\n年収・借入額・職種から審査の可能性を判定\n「審査が通るか不安」という方は事前に確認を！\n\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
   if (typeof saveCardResult === 'function') saveCardResult('借換えシミュレーション', '月${monthSaving}万円節約・総節約${totalSaving}万円', 'card-mortgage-refinance');
+}
+
+function calcEarlyStopLoss() {
+  var el = document.getElementById('esl_result');
+  if (!el) return;
+  var buy = parseFloat(document.getElementById('esl_buy').value) || 0;
+  var sell = parseFloat(document.getElementById('esl_sell').value) || 0;
+  var loan = parseFloat(document.getElementById('esl_loan').value) || 0;
+  var years = parseFloat(document.getElementById('esl_years').value) || 0;
+  if (!buy || !sell) {
+    el.style.display = 'block';
+    el.innerHTML = '<p style="color:var(--red);font-size:13px">購入価格と売却価格を入力してください。</p>';
+    return;
+  }
+  var buyFee = Math.round(buy * 0.07);
+  var sellFee = Math.round(sell * 0.04);
+  var gain = sell - buy;
+  var taxRate = years <= 5 ? 0.3963 : 0.20315;
+  var taxLabel = years <= 5 ? '39.6%（短期）' : '20.3%（長期）';
+  var taxAmt = gain > 0 ? Math.round(gain * taxRate) : 0;
+  var netProceeds = sell - loan - sellFee;
+  var totalLoss = Math.round(buyFee + sellFee + taxAmt + (gain < 0 ? Math.abs(gain) : 0));
+  var isOverLoan = netProceeds < 0;
+  var eslRgb = '248,113,113';
+  var eslColor = '#f87171';
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+eslRgb+',0.1),rgba('+eslRgb+',0.03));border:2px solid rgba('+eslRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+eslColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">今すぐ売却した場合の実質損失（諸費用・税金合計）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+eslColor+';line-height:1;margin-bottom:4px">▲'+totalLoss.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+(isOverLoan ? '⚠️ オーバーローン：売却代金でローンを完済できません' : 'ローン完済後 手元残金: '+(netProceeds).toLocaleString()+'万円')+'</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin-bottom:10px">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px">💸 損失の内訳</div>'
+    +'<div style="display:grid;gap:6px;font-size:12px">'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">購入時の諸費用（仲介・登記等 約7%）</span><span style="color:#f87171">▲'+buyFee.toLocaleString()+'万円</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">売却時の諸費用（仲介・登記等 約4%）</span><span style="color:#f87171">▲'+sellFee.toLocaleString()+'万円</span></div>'
+    +(gain < 0 ? '<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">売却損（購入価格 − 売却価格）</span><span style="color:#f87171">▲'+Math.abs(gain).toLocaleString()+'万円</span></div>' : '')
+    +(gain > 0 ? '<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">譲渡所得税（'+taxLabel+'）</span><span style="color:#f87171">▲'+taxAmt.toLocaleString()+'万円</span></div>' : '')
+    +'<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;margin-top:2px;font-size:14px"><span style="font-weight:700;color:var(--text)">合計損失（目安）</span><span style="font-weight:900;color:#f87171">▲'+totalLoss.toLocaleString()+'万円</span></div>'
+    +'</div></div>'
+    +(isOverLoan ? '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:8px;padding:10px;font-size:12px;color:#f87171;line-height:1.7">⚠️ オーバーローン状態です。売却代金だけではローンを完済できないため、差額を自己資金で補う必要があります。任意売却・金融機関への相談が必要になる場合があります。</div>' : '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">💡 5年以内の売却は「短期譲渡所得」として税率が39.6%と高くなります。5年超えると20.3%に下がるため、可能であれば保有期間を延ばすと税負担が大幅に軽減されます。</div>')
+    +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html')+'&text='+encodeURIComponent('😰 買ったばかりの家をすぐ売ると▲'+totalLoss.toLocaleString()+'万円の損失に！\n\n購入諸費用: ▲'+buyFee.toLocaleString()+'万円\n売却諸費用: ▲'+sellFee.toLocaleString()+'万円\n短期譲渡税: ▲'+taxAmt.toLocaleString()+'万円\n\n「やっぱり売りたい」前に必ず確認！\n▶ 不動産かんたんツール（TERRA REALTY）')+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  if (typeof saveCardResult === 'function') saveCardResult('早期売却損失', '▲'+totalLoss+'万円の損失', 'esl_result');
 }
 
 function calcMonthlyFixedCosts() {
