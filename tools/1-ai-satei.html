@@ -6950,7 +6950,14 @@ function calcFundSim() {
     { label:'投資信託（インデックス）', rate: 5.0, color:'#4ade80', note:'長期分散・中リスク' },
     { label:'不動産投資（表面利回り）', rate: 7.0, color:'var(--gold)', note:'実物資産・管理必要' }
   ];
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var fuBestResult = results[results.length - 1];
+  var fuHeroRgb = '212,175,55';
+  var fuHero = '<div style="background:linear-gradient(135deg,rgba('+fuHeroRgb+',0.1),rgba('+fuHeroRgb+',0.03));border:2px solid rgba('+fuHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">最大利回り（不動産投資7%）'+years+'年後</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+fuBestResult.final.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">元本'+amount.toLocaleString()+'万円 → +'+fuBestResult.gain.toLocaleString()+'万円増加</div>'
+    +'</div>';
+  var html = fuHero+'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="font-size:11px;color:#aaa;margin-bottom:10px">元本 '+amount.toLocaleString()+'万円 × '+years+'年後の試算（複利）</div>';
   html += '<div style="display:flex;flex-direction:column;gap:8px">';
   var maxFinal = 0;
@@ -7050,7 +7057,14 @@ function calcHazardCheck() {
     ? '<div style="margin-top:10px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">該当するハザード要因：</div>'
       + checked.map(t => '<div style="font-size:11px;padding:4px 8px;background:rgba(248,113,113,0.08);border-radius:4px;margin-bottom:3px;color:#fca5a5">' + t + '</div>').join('')
       + '</div>' : '';
-  el.innerHTML = '<div style="background:' + level.color + '22;border:1px solid ' + level.color + '44;border-radius:10px;padding:14px;margin-bottom:12px">'
+  const hzRgbMap = {'#f87171':'248,113,113','#fb923c':'251,146,60','#facc15':'250,204,21','#4ade80':'74,222,128'};
+  const hzHeroRgb = hzRgbMap[level.color] || '250,204,21';
+  const hzHero = '<div style="background:linear-gradient(135deg,rgba('+hzHeroRgb+',0.1),rgba('+hzHeroRgb+',0.03));border:2px solid rgba('+hzHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+level.color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">ハザードリスク判定</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+level.color+';line-height:1;margin-bottom:4px">'+score+'<span style="font-size:20px">pt</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+level.label+' — 売却価格影響: '+level.pctImpact+'</div>'
+    +'</div>';
+  el.innerHTML = hzHero+'<div style="background:' + level.color + '22;border:1px solid ' + level.color + '44;border-radius:10px;padding:14px;margin-bottom:12px">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
     + '<span style="font-size:16px;font-weight:900;color:' + level.color + '">' + level.label + '</span>'
     + '<span style="font-size:13px;font-weight:700;color:' + level.color + '">売却価格への影響: ' + level.pctImpact + '</span></div>'
