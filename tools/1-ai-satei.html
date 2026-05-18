@@ -8685,7 +8685,14 @@ function calcTaxHarvest() {
   var offsetAmt = canOffsetSalary ? Math.min(loss, salaryIncome) : 0;
   var taxSaving = Math.round(offsetAmt * taxRate * 10) / 10;
   var carryOver = Math.max(0, loss - offsetAmt);
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  var thHeroRgb = (canOffsetSalary && taxSaving > 0) ? '74,222,128' : '251,146,60';
+  var thHeroColor = (canOffsetSalary && taxSaving > 0) ? 'var(--green)' : '#fb923c';
+  var thHero = '<div style="background:linear-gradient(135deg,rgba('+thHeroRgb+',0.1),rgba('+thHeroRgb+',0.03));border:2px solid rgba('+thHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+thHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">損益通算による節税効果</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+thHeroColor+';line-height:1;margin-bottom:4px">'+taxSaving.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">売却損失 '+loss+'万円 / 通算額 '+offsetAmt+'万円 / 繰越 '+carryOver+'万円</div>'
+    +'</div>';
+  el.innerHTML = thHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">📉 売却損失: ' + loss + '万円</div>'
     + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;margin-bottom:10px">'
     + (canOffsetSalary
@@ -8718,7 +8725,13 @@ function calcSaleTypeSpeed() {
   var typeLabels = { mansion: 'マンション', house: '一戸建て', land: '土地（更地）', old_house: '築古一戸建て' };
   var areaLabels = { urban: '都市部', suburb: '郊外', rural: '地方・田舎' };
   var riskColor = months <= 3 ? '#4ade80' : months <= 6 ? '#facc15' : '#f87171';
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:10px">';
+  var stsHeroRgb = months <= 3 ? '74,222,128' : months <= 6 ? '250,204,21' : '248,113,113';
+  var stsHero = '<div style="background:linear-gradient(135deg,rgba('+stsHeroRgb+',0.1),rgba('+stsHeroRgb+',0.03));border:2px solid rgba('+stsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+riskColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">平均成約期間（'+typeLabels[type]+'/'+areaLabels[area]+'）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+riskColor+';line-height:1;margin-bottom:4px">'+months+'<span style="font-size:20px">ヶ月</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">平均値下げ率 '+markdownRate.toFixed(1)+'% / 成約率 '+successRate+'%</div>'
+    +'</div>';
+  var html = stsHero+'<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">' + typeLabels[type] + ' / ' + areaLabels[area] + ' / 築' + age + '年</div>';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">';
   html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px"><div style="font-size:20px;font-weight:900;color:' + riskColor + '">' + months + '</div><div style="font-size:10px;color:var(--text-muted)">平均成約期間（ヶ月）</div></div>';
