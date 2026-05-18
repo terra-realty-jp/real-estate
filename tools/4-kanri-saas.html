@@ -7550,7 +7550,15 @@ function calcRepairSavings() {
   var ratio = balance / totalCost;
   var statusColor = ratio >= 1 ? 'var(--green)' : ratio >= 0.5 ? 'var(--gold)' : 'var(--red)';
   var statusLabel = ratio >= 1 ? '✅ 積立十分' : ratio >= 0.5 ? '⚠️ やや不足' : '🚨 積立不足';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">'
+  var rsHeroRgb   = needed === 0 ? '74,222,128' : needed < 50 ? '212,175,55' : '239,68,68';
+  var rsHeroColor = needed === 0 ? 'var(--green)' : needed < 50 ? 'var(--gold)' : 'var(--red)';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + rsHeroRgb + ',0.1),rgba(' + rsHeroRgb + ',0.03));border:2px solid rgba(' + rsHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + rsHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">修繕積立の不足額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + rsHeroColor + ';line-height:1;margin-bottom:4px">' + needed.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">必要額' + totalCost.toLocaleString() + '万円 · 現在残高' + balance.toLocaleString() + '万円 · 推奨月積立' + monthly + '万円/月</div>'
+    + '<div style="margin-top:6px;font-size:12px;font-weight:700;color:' + rsHeroColor + '">' + statusLabel + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">'
     + '<div style="text-align:center;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px">'
     + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">修繕費用目安</div>'
     + '<div style="font-size:20px;font-weight:900;color:var(--text)">' + totalCost.toLocaleString() + '<span style="font-size:11px">万円</span></div>'
@@ -7756,7 +7764,15 @@ function calcRenoROI() {
     + (uplift > 0 ? '<div>・家賃増額効果: <strong style="color:var(--text)">月+' + uplift.toLocaleString() + '円 = 年+' + Math.round(annualUplift/10000) + '万円</strong></div>' : '')
     + (vacancySavingAnn > 0 ? '<div>・空室短縮効果: <strong style="color:var(--text)">年' + vacancyReduce + 'ヶ月分 = +' + Math.round(vacancySavingAnn/10000) + '万円</strong></div>' : '')
     + '</div>';
-  el.innerHTML = kpiHtml
+  var rnHeroRgbMap = { '#4ade80': '74,222,128', 'var(--gold)': '212,175,55', '#fb923c': '251,146,60', '#f87171': '239,68,68', 'var(--text-muted)': '150,150,150' };
+  var rnHeroRgb = rnHeroRgbMap[verdictColor] || '212,175,55';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + rnHeroRgb + ',0.1),rgba(' + rnHeroRgb + ',0.03));border:2px solid rgba(' + rnHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + verdictColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">リノベ費用の投資回収期間</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + verdictColor + ';line-height:1;margin-bottom:4px">' + (paybackYears !== null ? Math.round(paybackYears*10)/10 : '—') + '<span style="font-size:20px">' + (paybackYears !== null ? '年' : '') + '</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">費用' + cost + '万円 · 年間収益増加+' + Math.round(totalAnnualGain/10000).toLocaleString() + '万円 · 10年ROI' + (roi10y !== null ? (roi10y>0?'+':'')+roi10y.toFixed(0)+'%' : '—') + '</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + verdictColor + '">' + verdict + '</div>'
+    + '</div>'
+    + kpiHtml
     + breakdownHtml
     + '<div style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.04);font-size:12px;font-weight:700;color:' + verdictColor + '">' + verdict + '</div>'
     + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>リノベ投資を判断する目安:</strong> 回収期間5年以内は高効果・8年以内は標準的な投資です。10年超は費用圧縮（DIY・部分施工）を検討しましょう。「家賃増額」より「空室短縮」の方が即効性が高いことが多く、空室が3ヶ月以上続いているなら内装リフォームより写真撮り直し・AD増加から試してください。</div>'
