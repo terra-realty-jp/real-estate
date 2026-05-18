@@ -11398,11 +11398,14 @@ function calcFullOccupancyFuture() {
   var netAsset10 = value - loanLeft10;
   var total10 = netAsset10 + cf10;
 
+  var fofHeroRgb = total10 >= 5000 ? '212,175,55' : total10 >= 2000 ? '74,222,128' : '96,165,250';
+  var fofHeroColor = total10 >= 5000 ? '#d4af37' : total10 >= 2000 ? '#4ade80' : '#60a5fa';
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.35);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">' +
-    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">満室経営を維持した場合の10年後の純資産＋累積CF</div>' +
-    '<div style="font-size:36px;font-weight:900;color:var(--gold)">' + total10.toFixed(0) + '<span style="font-size:16px">万円</span></div>' +
-    '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">現在の空室(' + vacancy + '%)を解消すると月 <strong style="color:#4ade80">' + (fullMonthlyCF - currentMonthlyCF).toFixed(1) + '万円</strong> 改善</div>' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+fofHeroRgb+',0.12),rgba('+fofHeroRgb+',0.04));border:2px solid rgba('+fofHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">' +
+    '<div style="font-size:11px;color:'+fofHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年後の純資産＋累積CF</div>' +
+    '<div style="font-size:52px;font-weight:900;color:'+fofHeroColor+';line-height:1;margin-bottom:4px">' + total10.toFixed(0) + '<span style="font-size:20px">万円</span></div>' +
+    '<div style="font-size:12px;color:var(--text-muted)">空室(' + vacancy + '%)解消で月 +' + (fullMonthlyCF - currentMonthlyCF).toFixed(1) + '万円 改善</div>' +
+    '<div style="margin-top:6px;font-size:11px;color:'+fofHeroColor+'">' + (total10 >= 5000 ? '長期的に大きな資産形成ができる物件です' : total10 >= 2000 ? '満室維持で着実に資産が積み上がります' : '満室化と経費削減で収益改善を目指しましょう') + '</div>' +
     '</div>' +
     '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
     '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">満室時の月間CF</div>' +
@@ -11452,11 +11455,14 @@ function calcRentRaiseImpact() {
   var vacancyLoss = 3; // ヶ月
   var turnoverCostPerUnit = newRent * vacancyLoss + 30; // 原状回復費用概算30万
 
+  var rriHeroRgb = gainFull >= 50 ? '74,222,128' : gainFull >= 20 ? '250,204,21' : '96,165,250';
+  var rriHeroColor = gainFull >= 50 ? '#4ade80' : gainFull >= 20 ? '#facc15' : '#60a5fa';
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
-    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;text-align:center">値上げ後・全員が受け入れた場合の年間収益増加</div>' +
-    '<div style="text-align:center"><span style="font-size:36px;font-weight:900;color:#4ade80">+' + gainFull.toFixed(0) + '</span><span style="font-size:16px;color:#4ade80">万円/年</span></div>' +
-    '<div style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:4px">月額+' + (gainFull / 12).toFixed(1) + '万円の改善</div>' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+rriHeroRgb+',0.12),rgba('+rriHeroRgb+',0.04));border:2px solid rgba('+rriHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">' +
+    '<div style="font-size:11px;color:'+rriHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">値上げ後の年間収益増加</div>' +
+    '<div style="font-size:52px;font-weight:900;color:'+rriHeroColor+';line-height:1;margin-bottom:4px">+' + gainFull.toFixed(0) + '<span style="font-size:20px">万円/年</span></div>' +
+    '<div style="font-size:12px;color:var(--text-muted)">月額 +' + (gainFull / 12).toFixed(1) + '万円の改善（全戸受け入れ時）</div>' +
+    '<div style="margin-top:6px;font-size:11px;color:'+rriHeroColor+'">' + (gainFull >= 50 ? '大きな収益改善効果があります' : gainFull >= 20 ? '着実な収益アップが期待できます' : '少額でも積み上げで効果が出ます') + '</div>' +
     '</div>' +
     '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
     '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">📊 退去者が出た場合のシナリオ比較</div>' +
@@ -11516,8 +11522,16 @@ function calcVacancyRecovery() {
   // ROI
   var roi = ((annual - rent * 12) / totalCost * 100); // 値下げ分のマイナスを考慮しない
 
+  var vrcHeroRgb = breakEvenMonths <= 12 ? '74,222,128' : breakEvenMonths <= 24 ? '250,204,21' : '251,146,60';
+  var vrcHeroColor = breakEvenMonths <= 12 ? '#4ade80' : breakEvenMonths <= 24 ? '#facc15' : '#fb923c';
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+vrcHeroRgb+',0.12),rgba('+vrcHeroRgb+',0.04));border:2px solid rgba('+vrcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">' +
+    '<div style="font-size:11px;color:'+vrcHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">対策コスト回収期間</div>' +
+    '<div style="font-size:52px;font-weight:900;color:'+vrcHeroColor+';line-height:1;margin-bottom:4px">' + breakEvenMonths + '<span style="font-size:20px">ヶ月</span></div>' +
+    '<div style="font-size:12px;color:var(--text-muted)">対策コスト ' + totalCost.toFixed(0) + '万円 · 既存損失 ' + alreadyLost.toFixed(0) + '万円</div>' +
+    '<div style="margin-top:6px;font-size:11px;color:'+vrcHeroColor+'">' + (breakEvenMonths <= 12 ? '1年以内に回収できます。早めの対策が正解！' : breakEvenMonths <= 24 ? '2年以内に回収できます。検討する価値あり。' : '回収に時間がかかります。コスト削減を検討しましょう。') + '</div>' +
+    '</div>' +
+    '<div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">' +
     '<div><div style="font-size:11px;color:var(--text-muted)">すでに失った家賃</div><div style="font-size:22px;font-weight:900;color:#f87171">' + alreadyLost.toFixed(0) + '<span style="font-size:12px">万円</span></div></div>' +
     '<div><div style="font-size:11px;color:var(--text-muted)">対策の総コスト</div><div style="font-size:22px;font-weight:900;color:#fb923c">' + totalCost.toFixed(0) + '<span style="font-size:12px">万円</span></div></div>' +
@@ -11566,8 +11580,19 @@ function calcRentalInheritVsSell() {
   var color10 = cashAfter10 > inheritTotal10 ? '#4ade80' : '#facc15';
   var color20 = cashAfter20 > inheritTotal20 ? '#4ade80' : '#facc15';
 
+  var diff20 = cashAfter20 - inheritTotal20;
+  var risHeroRgb = diff20 > 0 ? '74,222,128' : '212,175,55';
+  var risHeroColor = diff20 > 0 ? '#4ade80' : '#d4af37';
+  var risLabel = diff20 > 0 ? '売却・運用が有利' : '賃貸相続が有利';
+  var risMsg = diff20 > 0 ? '売って現金運用する方が20年後に有利です' : '物件を持ち続ける方が20年後に有利です';
   el.style.display = 'block';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+risHeroRgb+',0.12),rgba('+risHeroRgb+',0.04));border:2px solid rgba('+risHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">' +
+    '<div style="font-size:11px;color:'+risHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">20年後の結論</div>' +
+    '<div style="font-size:36px;font-weight:900;color:'+risHeroColor+';line-height:1;margin-bottom:4px">' + risLabel + '</div>' +
+    '<div style="font-size:12px;color:var(--text-muted)">差額 ' + Math.abs(Math.round(diff20)) + '万円</div>' +
+    '<div style="margin-top:6px;font-size:11px;color:'+risHeroColor+'">' + risMsg + '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
     '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:14px">' +
     '<div style="font-size:11px;color:#4ade80;font-weight:700;margin-bottom:8px">💰 今すぐ売って現金を渡す</div>' +
     '<div style="font-size:12px;margin-bottom:4px;color:var(--text-muted)">10年後（年' + yield_.toFixed(1) + '%運用）</div>' +
@@ -11630,11 +11655,14 @@ function calcTaxBlueReturn() {
   var taxSave = whiteTax - blueTax;
   var netSave = taxSave - software; // ソフト費用差引
 
+  var tbrHeroRgb = taxSave >= 20 ? '74,222,128' : taxSave >= 10 ? '250,204,21' : '96,165,250';
+  var tbrHeroColor = taxSave >= 20 ? '#4ade80' : taxSave >= 10 ? '#facc15' : '#60a5fa';
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
-    '<div style="font-size:11px;color:#4ade80;margin-bottom:4px">青色申告に切り替えると年間で節税できる額（概算）</div>' +
-    '<div style="font-size:40px;font-weight:900;color:#4ade80">' + taxSave.toFixed(1) + '<span style="font-size:16px">万円</span></div>' +
-    '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">ソフト費用' + software + '万円を差し引くと実質 <strong style="color:#4ade80">' + netSave.toFixed(1) + '万円</strong> の節約</div>' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+tbrHeroRgb+',0.12),rgba('+tbrHeroRgb+',0.04));border:2px solid rgba('+tbrHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">' +
+    '<div style="font-size:11px;color:'+tbrHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">青色申告で年間節税額</div>' +
+    '<div style="font-size:52px;font-weight:900;color:'+tbrHeroColor+';line-height:1;margin-bottom:4px">' + taxSave.toFixed(1) + '<span style="font-size:20px">万円</span></div>' +
+    '<div style="font-size:12px;color:var(--text-muted)">実質節約（ソフト費用差引）: ' + netSave.toFixed(1) + '万円</div>' +
+    '<div style="margin-top:6px;font-size:11px;color:'+tbrHeroColor+'">' + (taxSave >= 20 ? '大きな節税効果あり！今すぐ切り替えを検討しましょう' : taxSave >= 10 ? '十分な節税効果があります' : '少額でも毎年の積み上げが大切です') + '</div>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
     '<div style="background:var(--dark3);border-radius:10px;padding:12px">' +
@@ -11701,8 +11729,17 @@ function calcFireInsuranceReview() {
     { item: '建物外の設備', status: '任意', note: '駐車場・フェンス等の補償' },
   ];
 
+  var firHeroRgb = overPaying ? '248,113,113' : '74,222,128';
+  var firHeroColor = overPaying ? '#f87171' : '#4ade80';
+  var firSaveLabel = overPaying ? '▲' + save5.toFixed(0) + '万円' : '適正水準';
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:' + (overPaying ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.08)') + ';border:1px solid ' + (overPaying ? 'rgba(248,113,113,0.3)' : 'rgba(74,222,128,0.3)') + ';border-radius:10px;padding:14px;margin-bottom:12px">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+firHeroRgb+',0.12),rgba('+firHeroRgb+',0.04));border:2px solid rgba('+firHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">' +
+    '<div style="font-size:11px;color:'+firHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + (overPaying ? '5年間の節約余地' : '保険料の診断結果') + '</div>' +
+    '<div style="font-size:52px;font-weight:900;color:'+firHeroColor+';line-height:1;margin-bottom:4px">' + firSaveLabel + '</div>' +
+    '<div style="font-size:12px;color:var(--text-muted)">現在 ' + premium + '万円/年 · 適正目安 ' + appropriatePremium.toFixed(1) + '万円/年</div>' +
+    '<div style="margin-top:6px;font-size:11px;color:'+firHeroColor+'">' + (overPaying ? '見直しで節約できる可能性があります' : '補償内容も定期的に確認しましょう') + '</div>' +
+    '</div>' +
+    '<div style="background:' + (overPaying ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.08)') + ';border:1px solid ' + (overPaying ? 'rgba(248,113,113,0.3)' : 'rgba(74,222,128,0.3)') + ';border-radius:10px;padding:14px;margin-bottom:12px">' +
     '<div style="font-size:12px;font-weight:700;color:' + (overPaying ? '#f87171' : '#4ade80') + ';margin-bottom:8px">' +
     (overPaying ? '⚠️ 適正より高い可能性あり — 見直しで節約できるかも' : '✅ 保険料は適正水準です') + '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:12px">' +
@@ -11763,8 +11800,16 @@ function calcCondoFeeImpact() {
   // 賃料UP必要額
   var rentUpNeeded = diff;
 
+  var cfiHeroRgb = annualDiff >= 0 ? '74,222,128' : Math.abs(annualDiff) <= 10 ? '250,204,21' : '248,113,113';
+  var cfiHeroColor = annualDiff >= 0 ? '#4ade80' : Math.abs(annualDiff) <= 10 ? '#facc15' : '#f87171';
   el.style.display = 'block';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+cfiHeroRgb+',0.12),rgba('+cfiHeroRgb+',0.04));border:2px solid rgba('+cfiHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">' +
+    '<div style="font-size:11px;color:'+cfiHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">値上げによる年間手取り変化</div>' +
+    '<div style="font-size:52px;font-weight:900;color:'+cfiHeroColor+';line-height:1;margin-bottom:4px">' + annualDiff.toFixed(0) + '<span style="font-size:20px">万円/年</span></div>' +
+    '<div style="font-size:12px;color:var(--text-muted)">値上げ前 ' + annualNetNow.toFixed(0) + '万円 → 値上げ後 ' + annualNetNew.toFixed(0) + '万円</div>' +
+    '<div style="margin-top:6px;font-size:11px;color:'+cfiHeroColor+'">' + (annualDiff >= 0 ? '手取りへの影響は軽微です' : Math.abs(annualDiff) <= 10 ? '家賃転嫁できれば影響を吸収できます' : '収益への影響が大きいです。対策を検討しましょう') + '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
     '<div style="background:var(--dark3);border-radius:10px;padding:12px">' +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:700">値上げ前</div>' +
     '<div style="font-size:12px;display:grid;gap:4px">' +
@@ -11829,8 +11874,16 @@ function calcDepositGuide() {
   var depositReturn = Math.max(0, deposit - tenantCharge);
   var additionalCharge = Math.max(0, tenantCharge - deposit);
 
+  var dgHeroRgb = depositReturn >= deposit * 0.8 ? '74,222,128' : depositReturn >= deposit * 0.4 ? '250,204,21' : '248,113,113';
+  var dgHeroColor = depositReturn >= deposit * 0.8 ? '#4ade80' : depositReturn >= deposit * 0.4 ? '#facc15' : '#f87171';
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+dgHeroRgb+',0.12),rgba('+dgHeroRgb+',0.04));border:2px solid rgba('+dgHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">' +
+    '<div style="font-size:11px;color:'+dgHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">敷金の返金額（目安）</div>' +
+    '<div style="font-size:52px;font-weight:900;color:'+dgHeroColor+';line-height:1;margin-bottom:4px">' + depositReturn.toFixed(1) + '<span style="font-size:20px">万円</span></div>' +
+    '<div style="font-size:12px;color:var(--text-muted)">敷金 ' + deposit + '万円 - 借主負担 ' + tenantCharge.toFixed(1) + '万円</div>' +
+    '<div style="margin-top:6px;font-size:11px;color:'+dgHeroColor+'">' + (depositReturn >= deposit * 0.8 ? 'ほぼ全額返金される計算です' : depositReturn >= deposit * 0.4 ? '一部返金の見込みです' : '借主負担が多いため返金は少なくなります') + '</div>' +
+    '</div>' +
+    '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:12px">' +
     '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">ガイドライン判定: ' + esc(causeLabel) + '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:10px">' +
     '<div><span style="color:var(--text-muted)">修繕費総額</span><br><strong>' + repairCost + '万円</strong></div>' +
