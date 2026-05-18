@@ -9424,10 +9424,15 @@ function calcVacancyLossSim() {
 
   var rows = [1, 2, 3, 6, 9, 12];
   var loss3mHero = rent * 3 + fixed * 3;
+  var pVLS = parseFloat(localStorage.getItem('terra_prev_vacancyLoss_3m') || '');
+  var diffBadgeVLS = '';
+  if (!isNaN(pVLS) && pVLS !== loss3mHero) { var dvVLS = loss3mHero - pVLS; diffBadgeVLS = '<div style="font-size:11px;color:' + (dvVLS>0?'var(--red)':'var(--green)') + ';margin-top:2px">' + (dvVLS>0?'▲':'▽') + ' 前回比 ' + Math.abs(Math.round(dvVLS*10)/10) + '万円</div>'; }
+  localStorage.setItem('terra_prev_vacancyLoss_3m', loss3mHero);
   var html = '<div style="margin-top:10px">';
   html += '<div style="background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(239,68,68,0.03));border:2px solid rgba(239,68,68,0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
   html += '<div style="font-size:11px;color:var(--red);font-weight:700;letter-spacing:2px;margin-bottom:6px">空室3ヶ月の損失シミュレーション</div>';
   html += '<div style="font-size:52px;font-weight:900;color:var(--red);line-height:1;margin-bottom:4px">▲' + loss3mHero.toLocaleString() + '<span style="font-size:20px">万円</span></div>';
+  html += diffBadgeVLS;
   html += '<div style="font-size:12px;color:var(--text-muted)">機会損失＋固定費負担の合計（3ヶ月空室の場合）</div>';
   html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;display:inline-block">';
   html += '<span style="font-size:13px;font-weight:700;color:var(--red)">' + (totalCost > 0 ? '対策コスト' + totalCost + '万円は空室' + breakeven + 'ヶ月以内で回収可能' : '空室が長引くほど損失は拡大します') + '</span>';
@@ -9683,10 +9688,15 @@ function calcLongRepairPlan() {
   });
 
   var monthlyReserveHero = Math.round(total30 / 30 / 12 * 10) / 10;
+  var pLRP = parseFloat(localStorage.getItem('terra_prev_longRepair_30') || '');
+  var diffBadgeLRP = '';
+  if (!isNaN(pLRP) && pLRP !== total30) { var dvLRP = total30 - pLRP; diffBadgeLRP = '<div style="font-size:11px;color:' + (dvLRP>0?'var(--red)':'var(--green)') + ';margin-top:2px">' + (dvLRP>0?'▲':'▽') + ' 前回比 ' + Math.abs(dvLRP).toLocaleString() + '万円</div>'; }
+  localStorage.setItem('terra_prev_longRepair_30', total30);
   var html = '<div style="margin-top:10px">';
   html += '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
   html += '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">今後30年間の修繕費合計（概算）</div>';
   html += '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">' + total30.toLocaleString() + '<span style="font-size:20px">万円</span></div>';
+  html += diffBadgeLRP;
   html += '<div style="font-size:12px;color:var(--text-muted)">外壁・屋根・設備・大規模修繕を含む概算費用</div>';
   html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);border-radius:8px;display:inline-block">';
   html += '<span style="font-size:13px;font-weight:700;color:var(--gold)">毎月の積立目安: ' + monthlyReserveHero + '万円/月</span>';
@@ -9842,9 +9852,14 @@ function calcRenewalSchedule() {
   var urgentCount = rows.filter(function(r) { return r.remaining <= 3; }).length;
   var heroRgbRnw = urgentCount > 0 ? '239,68,68' : '212,175,55';
   var heroColorRnw = urgentCount > 0 ? 'var(--red)' : 'var(--gold)';
+  var pRNW = parseFloat(localStorage.getItem('terra_prev_renewal_urgent') || '');
+  var diffBadgeRNW = '';
+  if (!isNaN(pRNW) && pRNW !== urgentCount) { var dvRNW = urgentCount - pRNW; diffBadgeRNW = '<div style="font-size:11px;color:' + (dvRNW>0?'var(--red)':'var(--green)') + ';margin-top:2px">' + (dvRNW>0?'▲':'▽') + ' 前回比 ' + Math.abs(dvRNW) + '件</div>'; }
+  localStorage.setItem('terra_prev_renewal_urgent', urgentCount);
   var html = '<div style="background:linear-gradient(135deg,rgba(' + heroRgbRnw + ',0.08),rgba(' + heroRgbRnw + ',0.03));border:2px solid rgba(' + heroRgbRnw + ',0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
   html += '<div style="font-size:11px;color:' + heroColorRnw + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + (urgentCount > 0 ? '⚠️ 3ヶ月以内に更新が必要' : '更新スケジュール管理') + '</div>';
   html += '<div style="font-size:52px;font-weight:900;color:' + heroColorRnw + ';line-height:1;margin-bottom:4px">' + (urgentCount > 0 ? urgentCount : rows.length) + '<span style="font-size:20px">' + (urgentCount > 0 ? '件' : '室') + '</span></div>';
+  html += diffBadgeRNW;
   html += '<div style="font-size:12px;color:var(--text-muted)">' + (urgentCount > 0 ? '更新交渉の機会を見逃さないでください' : '全室の更新タイミングを把握できています') + '</div>';
   if (feeMonths > 0 && totalFee > 0) { html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(' + heroRgbRnw + ',0.1);border:1px solid rgba(' + heroRgbRnw + ',0.25);border-radius:8px;display:inline-block"><span style="font-size:13px;font-weight:700;color:' + heroColorRnw + '">次回更新料合計: ' + Math.round(totalFee / 10000) + '万円</span></div>'; }
   html += '</div>';

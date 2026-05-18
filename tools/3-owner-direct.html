@@ -6177,9 +6177,14 @@ function calcPurchaseFees() {
     + (it.val > 0 ? it.val.toLocaleString() + '万円' : '—') + '</span>'
     + '</div>').join('');
 
+  var pPF = parseFloat(localStorage.getItem('terra_prev_purchaseFees_total') || '');
+  var diffBadgePF = '';
+  if (!isNaN(pPF) && pPF !== Math.round(total)) { var dvPF = Math.round(total) - pPF; diffBadgePF = '<div style="font-size:11px;color:' + (dvPF>0?'#f87171':'#4ade80') + ';margin-top:2px">' + (dvPF>0?'▲':'▽') + ' 前回比 ' + Math.abs(dvPF).toLocaleString() + '万円</div>'; }
+  localStorage.setItem('terra_prev_purchaseFees_total', Math.round(total));
   el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(239,68,68,0.03));border:2px solid rgba(239,68,68,0.35);border-radius:14px;padding:20px;text-align:center;margin-top:12px;margin-bottom:12px">'
     + '<div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">物件価格以外に必要な諸費用（概算）</div>'
     + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">' + Math.round(total).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + diffBadgePF
     + '<div style="font-size:12px;color:var(--text-muted)">物件価格 ' + price.toLocaleString() + '万円 の約 ' + pct + '%</div>'
     + '<div style="margin-top:10px;padding:8px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;display:inline-block">'
     + '<span style="font-size:13px;font-weight:700;color:#f87171">⚠️ 物件価格 + 諸費用の両方を用意しておく必要があります</span>'
@@ -6422,9 +6427,14 @@ function calcPriceGap() {
   var probBg = prob >= 70 ? 'rgba(34,197,94,0.08)' : prob >= 40 ? 'rgba(245,158,11,0.08)' : 'rgba(239,68,68,0.08)';
   var probBorder = prob >= 70 ? 'rgba(34,197,94,0.35)' : prob >= 40 ? 'rgba(245,158,11,0.35)' : 'rgba(239,68,68,0.35)';
   var probLabel = prob >= 70 ? '交渉成立しやすい' : prob >= 40 ? '交渉の余地あり' : '交渉は難しいかも';
+  var pPG = parseFloat(localStorage.getItem('terra_prev_priceGap_prob') || '');
+  var diffBadgePG = '';
+  if (!isNaN(pPG) && pPG !== prob) { var dvPG = prob - pPG; diffBadgePG = '<div style="font-size:11px;color:' + (dvPG>0?'var(--green)':'var(--red)') + ';margin-top:2px">' + (dvPG>0?'▲':'▼') + ' 前回比 ' + Math.abs(dvPG) + '%ポイント</div>'; }
+  localStorage.setItem('terra_prev_priceGap_prob', prob);
   var html = '<div style="background:' + probBg + ';border:2px solid ' + probBorder + ';border-radius:14px;padding:20px;text-align:center;margin-top:10px;margin-bottom:12px">';
   html += '<div style="font-size:11px;color:' + probColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">交渉成立確率（目安）</div>';
   html += '<div style="font-size:52px;font-weight:900;color:' + probColor + ';line-height:1;margin-bottom:4px">' + prob + '<span style="font-size:20px">%</span></div>';
+  html += diffBadgePG;
   html += '<div style="font-size:15px;font-weight:700;color:' + probColor + ';margin-bottom:10px">' + probLabel + '</div>';
   html += '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:8px 16px;display:inline-block">';
   html += '<span style="font-size:13px;font-weight:700;color:var(--gold)">💡 歩み寄り提案: ' + suggestedPrice.toLocaleString() + '万円</span>';
@@ -6497,9 +6507,14 @@ function calcRateRise() {
   var riseHeroColor = riseAmt2 >= 3 ? 'var(--red)' : riseAmt2 >= 1.5 ? '#f97316' : '#f59e0b';
   var riseHeroBg = riseAmt2 >= 3 ? 'rgba(239,68,68,0.08)' : 'rgba(249,115,22,0.08)';
   var riseHeroBorder = riseAmt2 >= 3 ? 'rgba(239,68,68,0.35)' : 'rgba(249,115,22,0.35)';
+  var pRR = parseFloat(localStorage.getItem('terra_prev_rateRise_riseAmt2') || '');
+  var diffBadgeRR = '';
+  if (!isNaN(pRR) && pRR !== riseAmt2) { var dvRR = riseAmt2 - pRR; diffBadgeRR = '<div style="font-size:11px;color:' + (dvRR>0?'var(--red)':'var(--green)') + ';margin-top:2px">' + (dvRR>0?'▲':'▽') + ' 前回比 ' + Math.abs(Math.round(dvRR*10)/10) + '万円/月</div>'; }
+  localStorage.setItem('terra_prev_rateRise_riseAmt2', riseAmt2);
   var html = '<div style="background:' + riseHeroBg + ';border:2px solid ' + riseHeroBorder + ';border-radius:14px;padding:20px;text-align:center;margin-top:10px;margin-bottom:12px">';
   html += '<div style="font-size:11px;color:' + riseHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">金利+2%上昇した場合の月返済増加額</div>';
   html += '<div style="font-size:52px;font-weight:900;color:' + riseHeroColor + ';line-height:1;margin-bottom:4px">+' + riseAmt2 + '<span style="font-size:20px">万円/月</span></div>';
+  html += diffBadgeRR;
   html += '<div style="font-size:12px;color:var(--text-muted)">年間で +' + Math.round(riseAmt2 * 12 * 10) / 10 + '万円の負担増</div>';
   html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:8px;display:inline-block">';
   html += '<span style="font-size:12px;font-weight:700;color:#fb923c">+0.5%でも月' + riseAmt1 + '万円の増加 — 変動金利の方は要注意</span>';

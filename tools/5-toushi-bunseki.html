@@ -7826,11 +7826,16 @@ function calcCFStability() {
             : pct >= 35 ? { label: 'C', color: 'var(--red)', msg: '不安定。収益改善または売却検討を推奨。' }
             : { label: 'D', color: '#dc2626', msg: '危険水域。出口戦略を早急に検討してください。' };
   var gradeRgbCFS = pct >= 80 ? '212,175,55' : pct >= 65 ? '74,222,128' : pct >= 50 ? '245,158,11' : '239,68,68';
+  var pCFS = parseFloat(localStorage.getItem('terra_prev_cfStability_pct') || '');
+  var diffBadgeCFS = '';
+  if (!isNaN(pCFS) && pCFS !== pct) { var dvCFS = pct - pCFS; diffBadgeCFS = '<div style="font-size:11px;color:' + (dvCFS>0?'var(--green)':'var(--red)') + ';margin-top:2px">' + (dvCFS>0?'▲':'▼') + ' 前回比 ' + Math.abs(dvCFS) + '%</div>'; }
+  localStorage.setItem('terra_prev_cfStability_pct', pct);
   var html = '<div style="margin-top:10px">';
   html += '<div style="background:linear-gradient(135deg,rgba(' + gradeRgbCFS + ',0.08),rgba(' + gradeRgbCFS + ',0.03));border:2px solid rgba(' + gradeRgbCFS + ',0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
   html += '<div style="font-size:11px;color:' + grade.color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">CF安定性グレード</div>';
   html += '<div style="font-size:52px;font-weight:900;color:' + grade.color + ';line-height:1;margin-bottom:4px">' + grade.label + '</div>';
   html += '<div style="font-size:16px;font-weight:700;color:' + grade.color + ';margin-bottom:4px">' + pct + '%安定　' + total + '/' + maxTotal + '点</div>';
+  html += diffBadgeCFS;
   html += '<div style="font-size:12px;color:var(--text-muted)">' + grade.msg + '</div>';
   html += '</div>';
   html += '<div style="display:grid;gap:5px">';
@@ -8767,10 +8772,15 @@ function calcQuickCheck() {
   else { verdict = '❌ この条件では慎重に'; verdictColor = 'var(--red)'; verdictIcon = '🔴'; }
 
   var cfHeroRgbQC = monthlyCF >= 50000 ? '74,222,128' : monthlyCF >= 0 ? '245,158,11' : '239,68,68';
+  var pQC = parseFloat(localStorage.getItem('terra_prev_quickCheck_cfMan') || '');
+  var diffBadgeQC = '';
+  if (!isNaN(pQC) && pQC !== cfMan) { var dvQC = cfMan - pQC; diffBadgeQC = '<div style="font-size:11px;color:' + (dvQC>0?'var(--green)':'var(--red)') + ';margin-top:2px">' + (dvQC>0?'▲':'▼') + ' 前回比 ' + Math.abs(Math.round(dvQC*10)/10) + '万/月</div>'; }
+  localStorage.setItem('terra_prev_quickCheck_cfMan', cfMan);
   var html = '<div style="margin-top:10px">';
   html += '<div style="background:linear-gradient(135deg,rgba(' + cfHeroRgbQC + ',0.08),rgba(' + cfHeroRgbQC + ',0.03));border:2px solid rgba(' + cfHeroRgbQC + ',0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
   html += '<div style="font-size:11px;color:' + verdictColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + verdict + '</div>';
   html += '<div style="font-size:52px;font-weight:900;color:' + cfColor + ';line-height:1;margin-bottom:4px">' + (cfMan >= 0 ? '+' : '') + cfMan + '<span style="font-size:20px">万</span></div>';
+  html += diffBadgeQC;
   html += '<div style="font-size:12px;color:var(--text-muted)">毎月の手残り概算（経費20%・ローン返済後）</div>';
   html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(' + cfHeroRgbQC + ',0.1);border:1px solid rgba(' + cfHeroRgbQC + ',0.25);border-radius:8px;display:inline-block">';
   html += '<span style="font-size:13px;font-weight:700;color:' + verdictColor + '">' + passed + '/3 指標クリア　表面利回り ' + grossYield.toFixed(1) + '%</span>';
@@ -9219,9 +9229,14 @@ function calcLoanTermCFComp() {
   var bestRgbLTC = best.cf >= 0 ? '74,222,128' : '239,68,68';
   var bestCFColorLTC = best.cf >= 0 ? 'var(--green)' : 'var(--red)';
   var cfDiffHero = Math.abs(Math.round((best.cf - rows[0].cf) / 10000 * 10) / 10);
+  var pLTC = parseFloat(localStorage.getItem('terra_prev_loanTermCF_best') || '');
+  var diffBadgeLTC = '';
+  if (!isNaN(pLTC) && pLTC !== bestCFManHero) { var dvLTC = bestCFManHero - pLTC; diffBadgeLTC = '<div style="font-size:11px;color:' + (dvLTC>0?'var(--green)':'var(--red)') + ';margin-top:2px">' + (dvLTC>0?'▲':'▼') + ' 前回比 ' + Math.abs(Math.round(dvLTC*10)/10) + '万/月</div>'; }
+  localStorage.setItem('terra_prev_loanTermCF_best', bestCFManHero);
   var html = '<div style="background:linear-gradient(135deg,rgba(' + bestRgbLTC + ',0.08),rgba(' + bestRgbLTC + ',0.03));border:2px solid rgba(' + bestRgbLTC + ',0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
   html += '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">★ ' + best.term + '年返済が最も手残りが多い</div>';
   html += '<div style="font-size:52px;font-weight:900;color:' + bestCFColorLTC + ';line-height:1;margin-bottom:4px">' + (bestCFManHero >= 0 ? '+' : '') + bestCFManHero + '<span style="font-size:20px">万</span></div>';
+  html += diffBadgeLTC;
   html += '<div style="font-size:12px;color:var(--text-muted)">毎月の手残り（家賃収入−ローン返済額）</div>';
   if (cfDiffHero > 0) { html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(' + bestRgbLTC + ',0.1);border:1px solid rgba(' + bestRgbLTC + ',0.25);border-radius:8px;display:inline-block"><span style="font-size:13px;font-weight:700;color:' + bestCFColorLTC + '">最短20年との差: 月' + cfDiffHero + '万円</span></div>'; }
   html += '</div>';
