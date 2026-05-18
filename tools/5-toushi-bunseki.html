@@ -7143,7 +7143,16 @@ function calcSublease() {
   var winLabel = selfBetter ? '自己管理が有利' : 'サブリースが有利';
   var winColor = selfBetter ? 'var(--green)' : '#4fc3f7';
 
-  var html = '<div style="margin-top:10px">'
+  var slRgb = selfBetter ? '74,222,128' : '79,195,247';
+  var slColor = selfBetter ? 'var(--green)' : '#4fc3f7';
+  var slGuide = selfBetter ? '10年で自己管理が有利。空室リスク管理ができるなら自主管理を検討' : 'サブリース契約で収入が安定。空室・管理の手間を省きたい場合に有利';
+  var slHero = '<div style="background:linear-gradient(135deg,rgba('+slRgb+',0.1),rgba('+slRgb+',0.03));border:2px solid rgba('+slRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+slColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年間の累積収入差額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+slColor+';line-height:1;margin-bottom:4px">'+(selfBetter?'+':'-')+Math.round(Math.abs(diff10)/10000).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+winLabel+' / 年間差額 '+Math.round(Math.abs(selfAnnual-slAnnual)/10000)+'万円</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:'+slColor+'">'+slGuide+'</div>'
+    +'</div>';
+  var html = slHero + '<div style="margin-top:10px">'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.2);border-radius:8px;padding:12px;text-align:center">'
     + '<div style="font-size:11px;color:#4fc3f7;margin-bottom:4px;font-weight:700">サブリース（保証' + slRate + '%）</div>'
@@ -7829,7 +7838,18 @@ function calcKubuIttou() {
     { label: '収入の分散', k: kubu.scatter, i: ittou.scatter, ks: kubu.scatter_score, is: ittou.scatter_score },
     { label: '入門のしやすさ', k: kubu.min_price, i: ittou.min_price, ks: 4, is: 2 }
   ];
-  var html = '<div style="margin-top:10px">';
+  var kiKubuScore = 2+kubu.liq_score+kubu.manage_score+kubu.scatter_score+4;
+  var kiIttouScore = 5+ittou.liq_score+ittou.manage_score+ittou.scatter_score+2;
+  var kiWinner = kiKubuScore >= kiIttouScore ? kubu : ittou;
+  var kiWinnerAnnual = kiWinner === kubu ? annualKubu : annualIttou;
+  var kiDiff = annualIttou - annualKubu;
+  var kiHero = '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:2px solid rgba(201,168,76,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">同じ'+price+'万円で一棟は区分より年間</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">+'+(kiDiff).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">区分 '+annualKubu+'万円/年 ／ 一棟 '+annualIttou+'万円/年（表面利回り目安）</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:var(--gold)">利回りは一棟が高いが、参入資金・管理難度・融資条件の差も大きい</div>'
+    +'</div>';
+  var html = kiHero + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
   [kubu, ittou].forEach(function(p) {
     var annual = p === kubu ? annualKubu : annualIttou;
