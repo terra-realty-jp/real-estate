@@ -5575,7 +5575,12 @@ function calcAgencyScore() {
     return { col: c.toUpperCase() + '社', total: total };
   });
   var maxScore = Math.max.apply(null, scores.map(function(s){ return s.total; }));
-  var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:2px solid rgba(201,168,76,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">仲介会社 最高評価スコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+maxScore+'<span style="font-size:20px">/25点</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">総合評価1位: '+scores.reduce(function(a,b){return a.total>=b.total?a:b;}).col+'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">';
   scores.forEach(function(s) {
     var isBest = s.total === maxScore;
     var pct = Math.round(s.total / 25 * 100);
@@ -5990,7 +5995,7 @@ function calcSellBuyOrder() {
   var sboHeroRgb = recommend === 'sell' ? '77,182,245' : '74,222,128';
   var html = '<div style="background:linear-gradient(135deg,rgba(' + sboHeroRgb + ',0.1),rgba(' + sboHeroRgb + ',0.03));border:2px solid rgba(' + sboHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
     + '<div style="font-size:11px;color:' + recColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">おすすめの順番</div>'
-    + '<div style="font-size:36px;font-weight:900;color:' + recColor + ';line-height:1.1;margin-bottom:6px">' + recLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + recColor + ';line-height:1.1;margin-bottom:6px">' + recLabel + '</div>'
     + '<div style="font-size:12px;color:var(--text-muted)">売り先行スコア ' + sellFirst + ' pts vs 買い先行スコア ' + buyFirst + ' pts</div>'
     + '</div>'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
@@ -6297,7 +6302,12 @@ function calcBridgeLoan() {
       + '</div>';
   }).join('');
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(248,113,113,0.1),rgba(248,113,113,0.03));border:2px solid rgba(248,113,113,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">つなぎ融資 総コスト</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#f87171;line-height:1;margin-bottom:4px">'+totalCost.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">利息'+totalInterest.toLocaleString()+'万＋手数料'+fee.toLocaleString()+'万 · 月'+monthlyInterest.toLocaleString()+'万×'+months+'ヶ月</div>'
+    +'</div>'
+    +'<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 試算結果</div>'
     + rowsHtml
     + warning
@@ -6455,12 +6465,12 @@ function calcBuildCost() {
 
   const perTsuboTotal = Math.round(total / tsubo);
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
-    + '<div style="text-align:center;padding:10px 0;margin-bottom:10px">'
-    + '<div style="font-size:12px;color:var(--text-muted)">建築費用合計（概算）</div>'
-    + '<div style="font-size:36px;font-weight:900;color:var(--gold)">' + total.toLocaleString() + '<span style="font-size:18px">万円</span></div>'
-    + '<div style="font-size:12px;color:var(--text-muted)">坪単価合計 約' + perTsuboTotal.toLocaleString() + '万円/坪</div>'
-    + '</div>'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:2px solid rgba(201,168,76,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">建築費用合計（概算）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+total.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">坪単価合計 約'+perTsuboTotal.toLocaleString()+'万円/坪</div>'
+    +'</div>'
+    +'<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
     + rows
     + '<div style="margin-top:10px;padding:10px;background:rgba(255,180,0,0.07);border-radius:8px">'
     + '<div style="font-size:12px;font-weight:700;color:var(--gold)">💡 注意点</div>'
@@ -6517,8 +6527,15 @@ function calcFutureValue() {
   const fv20 = Math.round(projectLand(20) + projectBuild(20));
   const fv20diff = fv20 - price;
   const fv20pct = price > 0 ? (fv20diff / price * 100).toFixed(1) : 0;
+  const fv20HeroRgb = fv20diff >= 0 ? '74,222,128' : '248,113,113';
+  const fv20HeroColor = fv20diff >= 0 ? '#4ade80' : '#f87171';
 
-  r.innerHTML = `<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">
+  r.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+fv20HeroRgb+',0.1),rgba('+fv20HeroRgb+',0.03));border:2px solid rgba('+fv20HeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+fv20HeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">20年後の資産価値</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+fv20HeroColor+';line-height:1;margin-bottom:4px">'+fv20.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+(fv20diff>=0?'▲':'▼')+Math.abs(Math.round(fv20diff)).toLocaleString()+'万（'+fv20pct+'%） · 購入価格'+price.toLocaleString()+'万円比</div>'
+    +'</div>'
+    +`<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">構造: ${structName}（耐用年数${lifespan}年）／築${age}年／地価変動: ${landChgLabel}</div>
     <table style="width:100%;border-collapse:collapse;font-size:13px">
       <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.15)">
@@ -6573,8 +6590,14 @@ function calcInspectionCost() {
   const grade = roi >= 2 ? { label: '費用対効果：高', col: '#4caf50' }
     : roi >= 1 ? { label: '費用対効果：中', col: '#ff9800' }
     : { label: '費用対効果：低', col: '#f44336' };
+  const insRoiRgb = roi >= 2 ? '76,175,80' : roi >= 1 ? '255,152,0' : '244,67,54';
 
-  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+  r.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+insRoiRgb+',0.1),rgba('+insRoiRgb+',0.03));border:2px solid rgba('+insRoiRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+grade.col+';font-weight:700;letter-spacing:2px;margin-bottom:6px">費用対効果（ROI倍率）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+grade.col+';line-height:1;margin-bottom:4px">'+roi.toFixed(1)+'<span style="font-size:20px">倍</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+grade.label+' · 期待節約額'+Math.round(expectedSaving).toLocaleString()+'万円</div>'
+    +'</div>'
+    +'<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">費用目安</div><div style="font-size:18px;font-weight:900;color:#d4af37">' + range[0] + '〜' + range[1] + '<span style="font-size:11px">万円</span></div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">欠陥発見確率</div><div style="font-size:18px;font-weight:900;color:#ff9800">' + Math.round(defectProb * 100) + '<span style="font-size:11px">%</span></div></div>'
