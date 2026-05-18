@@ -11651,7 +11651,14 @@ function calcPropertyScore() {
     { label: '空室率', val: vacancyScore, max: 15 },
     { label: '築年数', val: ageScore, max: 15 }
   ];
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;background:var(--dark3);border-radius:10px;padding:14px">'
+  var psHeroRgb = grade === 'A' ? '74,222,128' : grade === 'B' ? '163,230,53' : grade === 'C' ? '251,191,36' : '248,113,113';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+psHeroRgb+',0.12),rgba('+psHeroRgb+',0.04));border:2px solid rgba('+psHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+gradeColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">物件投資適性スコア</div>'
+    + '<div style="font-size:80px;font-weight:900;color:'+gradeColor+';line-height:1;margin-bottom:4px">'+grade+'</div>'
+    + '<div style="font-size:28px;font-weight:900;color:'+gradeColor+';margin-bottom:4px">'+total+'<span style="font-size:16px">/100点</span></div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+gradeColor+'">'+gradeMsg+'</div>'
+    + '</div>'
+    + '<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;background:var(--dark3);border-radius:10px;padding:14px">'
     + '<div style="text-align:center"><div style="font-size:48px;font-weight:900;color:' + gradeColor + ';line-height:1">' + grade + '</div><div style="font-size:11px;color:var(--text-muted)">グレード</div></div>'
     + '<div style="flex:1"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">総合スコア</div><div style="font-size:24px;font-weight:900;color:' + gradeColor + '">' + total + '<span style="font-size:13px;font-weight:400;color:var(--text-muted)">/100点</span></div><div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:4px">' + gradeMsg + '</div></div>'
     + '</div>'
@@ -11676,7 +11683,14 @@ function calcTotalReturn10yr() {
   var roiOnDown = down > 0 ? Math.round(totalReturn / down * 100) : 0;
   var annualCF = Math.round(monthlyNet * 12);
   var color = totalReturn >= 0 ? '#4ade80' : '#f87171';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'
+  var tr10HeroRgb = totalReturn >= 0 ? '74,222,128' : '248,113,113';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+tr10HeroRgb+',0.12),rgba('+tr10HeroRgb+',0.04));border:2px solid rgba('+tr10HeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年トータルリターン</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+(totalReturn >= 0 ? '+' : '')+totalReturn+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">自己資金ROI: '+roiOnDown+'% / 年間CF: '+(annualCF >= 0 ? '+' : '')+annualCF+'万円/年</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+color+'">'+(totalReturn >= 0 ? (roiOnDown >= 50 ? '✅ 優秀（ROI50%以上）' : '良好な10年投資') : '⚠️ 物件価格下落が大きい・再検討を')+'</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">10年間の家賃収入合計</div><div style="font-size:15px;font-weight:700;color:#93c5fd">+' + cfTotal + '万円</div><div style="font-size:10px;color:var(--text-muted)">（月' + monthlyNet.toFixed(1) + '万円×120か月）</div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">売却後の手取り</div><div style="font-size:15px;font-weight:700;color:' + (saleNet >= 0 ? '#a3e635' : '#f87171') + '">' + (saleNet >= 0 ? '+' : '') + saleNet + '万円</div><div style="font-size:10px;color:var(--text-muted)">（残債・仲介費控除後）</div></div>'
     + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">10年トータルリターン</div><div style="font-size:17px;font-weight:900;color:' + color + '">' + (totalReturn >= 0 ? '+' : '') + totalReturn + '万円</div></div>'
@@ -11714,7 +11728,15 @@ function calcSimpleIRR() {
   var totalIncome = income * years;
   var totalReturn = Math.round((totalIncome + exitVal - invest) * 10) / 10;
   var simpleYield = Math.round(income / invest * 100 * 100) / 100;
-  var html = '<div style="display:grid;gap:8px">';
+  var sirrHeroRgb = irr >= 5 ? '74,222,128' : irr >= 3 ? '212,175,55' : '239,68,68';
+  var sirrHeroColor = irr >= 5 ? '#4ade80' : irr >= 3 ? '#d4af37' : '#ef4444';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+sirrHeroRgb+',0.12),rgba('+sirrHeroRgb+',0.04));border:2px solid rgba('+sirrHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+sirrHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">IRR（内部収益率）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+sirrHeroColor+';line-height:1;margin-bottom:4px">'+irr.toFixed(2)+'<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">単純利回り: '+simpleYield.toFixed(2)+'% / '+years+'年保有・出口'+exitVal+'万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+sirrHeroColor+'">'+(irr >= 5 ? '優良投資水準（目安: 5%以上）' : irr >= 3 ? '標準的な水準' : '利回りが低め・条件見直しを')+'</div>'
+    + '</div>'
+    + '<div style="display:grid;gap:8px">';
   html += '<div style="background:rgba(212,175,55,0.12);border-radius:8px;padding:14px;text-align:center">';
   html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">IRR（内部収益率）</div>';
   html += '<div style="font-size:32px;font-weight:700;color:' + (irr >= 5 ? '#4ade80' : irr >= 3 ? '#d4af37' : '#ef4444') + '">' + irr.toFixed(2) + '<span style="font-size:16px">%</span></div>';
@@ -11786,7 +11808,14 @@ function calcExitTiming() {
   else if (cf < 0) { recommendation = 'CF赤字 — 早期売却を検討'; recColor = '#fbbf24'; }
   else { recommendation = '保有継続が有利'; recColor = '#4ade80'; }
 
-  var html = '<div style="display:grid;gap:10px">';
+  var etHeroRgb = totalReturn >= 0 ? '74,222,128' : '248,113,113';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+etHeroRgb+',0.12),rgba('+etHeroRgb+',0.04));border:2px solid rgba('+etHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+recColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">売却タイミング診断</div>'
+    + '<div style="font-size:28px;font-weight:900;color:'+recColor+';line-height:1.2;margin-bottom:4px">'+recommendation+'</div>'
+    + '<div style="font-size:13px;color:var(--text-muted)">今売却の場合: トータル '+(totalReturn >= 0 ? '+' : '')+totalReturn+'万円 / IRR: '+irr+'%</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+recColor+'">'+years+'年以上の長期保有は税率が39%→20%に下がる</div>'
+    + '</div>'
+    + '<div style="display:grid;gap:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px;text-align:center">';
   html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">診断結果</div>';
@@ -11851,7 +11880,17 @@ function calcPropertyMatrixCF() {
     return Math.round(netRent - payment - maint);
   }
 
-  var html = '<div style="overflow-x:auto">';
+  var bestCFpm = -Infinity;
+  types.forEach(function(type) { type.baseYield.forEach(function(_, aidx) { var cf = monthlyCF(type, aidx); if (cf > bestCFpm) bestCFpm = cf; }); });
+  var pmcfHeroRgb = bestCFpm >= 3 ? '74,222,128' : bestCFpm >= 0 ? '251,191,36' : '248,113,113';
+  var pmcfHeroColor = bestCFpm >= 3 ? '#4ade80' : bestCFpm >= 0 ? '#fbbf24' : '#f87171';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+pmcfHeroRgb+',0.12),rgba('+pmcfHeroRgb+',0.04));border:2px solid rgba('+pmcfHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+pmcfHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">マトリックス最高月次CF</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+pmcfHeroColor+';line-height:1;margin-bottom:4px">'+(bestCFpm >= 0 ? '+' : '')+bestCFpm+'<span style="font-size:20px">万円/月</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">自己資金'+equity+'万円・金利'+rate+'%・'+term+'年ローン想定</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+pmcfHeroColor+'">'+(bestCFpm >= 3 ? '月3万円以上のプラスCF実現可能' : bestCFpm >= 0 ? '小幅プラス・条件選択が重要' : '全シナリオで赤字・条件見直し必要')+'</div>'
+    + '</div>'
+    + '<div style="overflow-x:auto">';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
   html += '<thead><tr><th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.4);font-weight:600;border-bottom:1px solid rgba(255,255,255,0.08)">物件種別</th>';
   ages.forEach(function(a) {
@@ -11903,7 +11942,16 @@ function calcStressTest() {
   var basePayment = monthPay(loan, rate, term);
   var baseCF = rent - basePayment - opex;
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var worstCFpre = rent * 0.8 - monthPay(loan, rate + 2, term) - opex;
+  var stHeroRgb = worstCFpre >= 0 ? '74,222,128' : '248,113,113';
+  var stHeroColor = worstCFpre >= 0 ? '#4ade80' : '#f87171';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+stHeroRgb+',0.12),rgba('+stHeroRgb+',0.04));border:2px solid rgba('+stHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+stHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">最悪シナリオの月次CF（金利+2%・家賃-20%）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+stHeroColor+';line-height:1;margin-bottom:4px">'+(worstCFpre >= 0 ? '+' : '')+Math.round(worstCFpre * 10) / 10+'<span style="font-size:20px">万円/月</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">現在の月次CF: '+(baseCF >= 0 ? '+' : '')+Math.round(baseCF * 10) / 10+'万円 / 月返済: '+Math.round(basePayment * 10) / 10+'万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+stHeroColor+'">'+(worstCFpre >= 0 ? '✅ 最悪シナリオでも黒字維持・財務体力は安定' : '⚠️ 最悪シナリオで赤字・繰上げ返済・修繕積立の見直しを')+'</div>'
+    + '</div>'
+    + '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:13px;font-weight:900;color:#fbbf24;margin-bottom:10px">⚠️ 月次CF ストレステスト（9シナリオ）</div>';
   html += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px">現在の月次CF: <strong style="color:' + (baseCF >= 0 ? '#4ade80' : '#f87171') + '">' + Math.round(baseCF * 10) / 10 + '万円</strong>　月返済: ' + Math.round(basePayment * 10) / 10 + '万円</div>';
   html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>'
