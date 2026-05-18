@@ -10821,7 +10821,15 @@ function calcRenovBudget() {
   }).join('');
   var rentBoost = issue === 'both' ? 12 : issue === 'equipment' ? 8 : 5;
   var payback = Math.round(budget / (budget * rentBoost / 100 * 12) * 10) / 10;
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  var rbPaybackRgb = payback <= 5 ? '74,222,128' : payback <= 10 ? '212,175,55' : '248,113,113';
+  var rbPaybackColor = payback <= 5 ? '#4ade80' : payback <= 10 ? 'var(--gold)' : '#f87171';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+rbPaybackRgb+',0.12),rgba('+rbPaybackRgb+',0.04));border:2px solid rgba('+rbPaybackRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+rbPaybackColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">リフォーム投資回収年数</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+rbPaybackColor+';line-height:1;margin-bottom:4px">'+payback+'<span style="font-size:20px">年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">予算'+budget+'万円 · 家賃改善効果+'+rentBoost+'% · '+tenantLabel+'向け</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+rbPaybackColor+'">'+(payback<=5?'回収が早く投資効率が高い':payback<=10?'物件の長期計画次第で検討を':'慎重に費用対効果を確認してください')+'</div>'
+    + '</div>'
+    + '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">🔨 リフォーム予算配分（' + tenantLabel + '向け・' + issueLabel + '）</div>'
     + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
     + '<tr style="color:rgba(255,255,255,0.5);font-size:11px"><th style="padding:4px 8px;text-align:left">工事項目</th><th style="padding:4px 8px;text-align:right">配分額</th><th style="padding:4px 8px;text-align:right">比率</th></tr>'
@@ -10856,7 +10864,13 @@ function calcRentFreeEffect() {
   var verdict = effective
     ? '✅ フリーレントは有効！ 通常募集より ' + saving + '万円お得になります'
     : '⚠️ 空室短縮効果が小さい場合、フリーレントの費用が上回ります（' + Math.abs(saving) + '万円の追加コスト）';
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+(effective?'74,222,128':'248,113,113')+',0.12),rgba('+(effective?'74,222,128':'248,113,113')+',0.04));border:2px solid rgba('+(effective?'74,222,128':'248,113,113')+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+savingColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+(effective?'フリーレントの節約効果':'フリーレントの追加コスト')+'</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+savingColor+';line-height:1;margin-bottom:4px">'+(effective?'+':'-')+Math.abs(saving)+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">フリーレント'+freeMonths+'ヶ月 · 空室'+daysWithout+'→'+daysWith+'日短縮</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+savingColor+'">'+(effective?'通常募集より有利です':'空室短縮効果が小さく損をします')+'</div>'
+    + '</div>'
+    + '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">🎁 フリーレント費用対効果比較</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
     + '<div style="padding:12px;background:rgba(0,0,0,0.2);border-radius:8px">'
@@ -10891,7 +10905,13 @@ function calcDepositReturn() {
   var conditionLabel = condition === 'normal' ? '通常使用（自然損耗）' : condition === 'heavy' ? 'タバコ・ペット等の使用' : '故意・過失による破損';
   var yearsLabel = years <= 1 ? '1年未満' : years <= 3 ? '1〜3年' : years <= 6 ? '3〜6年' : '6年以上';
   var returnColor = returnAmt > 0 ? ACCENT : '#f87171';
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+(returnAmt>0?'96,165,250':'248,113,113')+',0.12),rgba('+(returnAmt>0?'96,165,250':'248,113,113')+',0.04));border:2px solid rgba('+(returnAmt>0?'96,165,250':'248,113,113')+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+returnColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">敷金の返還額（目安）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+returnColor+';line-height:1;margin-bottom:4px">'+returnAmt+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">敷金'+deposit+'万 · 入居者負担'+tenantRepair+'万 · '+conditionLabel+'</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+returnColor+'">'+(shortage>0?'▲'+shortage+'万円不足 — 別途請求が必要です':'返還超過なし — 入居者へ返金してください')+'</div>'
+    + '</div>'
+    + '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">🔑 敷金精算シミュレーション（' + conditionLabel + '・' + yearsLabel + '）</div>'
     + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;margin-bottom:10px">'
     + '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:rgba(255,255,255,0.6)">修繕費合計（見積）</span><span style="font-size:12px;color:rgba(255,255,255,0.8)">' + repair + '万円</span></div>'
@@ -10932,7 +10952,14 @@ function calcOccupancyBreakEven() {
     : margin >= 10 ? '💡 やや余裕あり（' + margin + 'pt）。空室対策を継続しましょう'
     : margin >= 0 ? '⚠️ 余裕が少ない（' + margin + 'pt）。追加空室が出ると危険'
     : '❌ 現在の入居率では赤字です';
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  var obeMarginRgb = margin >= 20 ? '74,222,128' : margin >= 10 ? '96,165,250' : margin >= 0 ? '251,146,60' : '248,113,113';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+obeMarginRgb+',0.12),rgba('+obeMarginRgb+',0.04));border:2px solid rgba('+obeMarginRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+safetyColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">損益分岐点の入居率</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+safetyColor+';line-height:1;margin-bottom:4px">'+breakEvenPct+'<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">現在の入居率 '+current+'% · 余裕 '+margin+'pt</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+safetyColor+'">'+verdict+'</div>'
+    + '</div>'
+    + '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
     + '<div style="font-size:11px;color:rgba(255,255,255,0.5)">損益分岐点</div>'
@@ -10964,7 +10991,15 @@ function calcRepairFundCheck() {
   var sufficiency = Math.min(100, Math.round(futureAccum / totalRepair * 100));
   var statusColor = sufficiency >= 100 ? '#4ade80' : sufficiency >= 70 ? ACCENT : sufficiency >= 40 ? '#facc15' : '#f87171';
   var statusLabel = sufficiency >= 100 ? '✅ 十分（余裕あり）' : sufficiency >= 70 ? '💡 やや不足' : sufficiency >= 40 ? '⚠️ 不足気味' : '🚨 大幅不足';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var rfcHeroRgbMap = { '#4ade80': '74,222,128', '#60a5fa': '96,165,250', '#facc15': '250,204,21', '#f87171': '248,113,113' };
+  var rfcHeroRgb = rfcHeroRgbMap[statusColor] || '96,165,250';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+rfcHeroRgb+',0.12),rgba('+rfcHeroRgb+',0.04));border:2px solid rgba('+rfcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+statusColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">修繕資金の充足率</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+statusColor+';line-height:1;margin-bottom:4px">'+sufficiency+'<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">目安修繕費 '+totalRepair+'万 · 積立見込み '+Math.round(futureAccum)+'万（'+remainYears+'年後）</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+statusColor+'">'+statusLabel+(shortfall>0?' — 不足額 ▲'+shortfall.toFixed(1)+'万円':'')+'</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px"><div style="font-size:18px;font-weight:900;color:' + ACCENT + '">' + totalRepair + '万円</div><div style="font-size:10px;color:var(--text-muted)">修繕費の目安</div></div>';
   html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px"><div style="font-size:18px;font-weight:900;color:#4ade80">' + Math.round(futureAccum) + '万円</div><div style="font-size:10px;color:var(--text-muted)">' + remainYears + '年後の積立見込み</div></div>';
