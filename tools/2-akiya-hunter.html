@@ -5584,7 +5584,14 @@ function calcRentBreakeven() {
             : breakYears <= 15 ? { label: '要検討', color: 'var(--gold)', note: '回収に時間がかかります。売却との比較もご検討ください。' }
             : { label: '非推奨', color: 'var(--red)', note: '回収期間が長すぎます。リフォーム費の圧縮か売却を優先してください。' };
 
-  var html = '<div style="margin-top:10px">'
+  var rbHeroRgb = breakYears <= 5 ? '74,222,128' : breakYears <= 10 ? '79,195,247' : breakYears <= 15 ? '212,175,55' : '239,68,68';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + rbHeroRgb + ',0.1),rgba(' + rbHeroRgb + ',0.03));border:2px solid rgba(' + rbHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + grade.color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">リフォーム費の損益分岐点</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + grade.color + ';line-height:1;margin-bottom:4px">' + breakYears.toFixed(1) + '<span style="font-size:20px">年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">実質利回り ' + yieldRate + '% · 判定: ' + grade.label + '</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + grade.color + '">' + grade.note + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">'
     + '<div style="font-size:10px;color:var(--text-muted)">損益分岐点</div>'
@@ -7118,8 +7125,16 @@ function calcRenovVsRebuild() {
 
   var betterOption = renovNet10 > rebuildNet10 ? 'リノベ' : '建替え';
   var betterColor = renovNet10 > rebuildNet10 ? '#4caf50' : '#d4af37';
+  var diffAmt = Math.abs(Math.round(renovNet10 - rebuildNet10));
+  var rvrHeroRgb = renovNet10 > rebuildNet10 ? '76,175,80' : '212,175,55';
 
-  var html = '<div style="margin-top:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + rvrHeroRgb + ',0.1),rgba(' + rvrHeroRgb + ',0.03));border:2px solid rgba(' + rvrHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + betterColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年純収益 有利な選択</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + betterColor + ';line-height:1;margin-bottom:4px">' + betterOption + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">差額 ' + diffAmt.toLocaleString() + '万円 · 面積' + area + '㎡ · 築' + age + '年</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + betterColor + '">10年間の純収益を比較するとこちらが有利です</div>'
+    + '</div>';
+  html += '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
 
   // Renov card
