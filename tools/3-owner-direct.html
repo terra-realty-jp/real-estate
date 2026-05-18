@@ -8585,12 +8585,14 @@ function calcLoanApprovalRate() {
   // 返済比率の安全ライン
   var safeMaxRepay = income * 0.35 / 12;
 
+  var larRgb = color === '#4ade80' ? '74,222,128' : color === '#facc15' ? '250,204,21' : color === '#fb923c' ? '251,146,60' : '248,113,113';
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
-    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">審査通過見込みスコア</div>' +
-    '<div style="font-size:40px;font-weight:900;color:' + color + '">' + totalScore + '<span style="font-size:18px">/100</span></div>' +
-    '<div style="font-size:13px;font-weight:700;color:' + color + ';margin-top:4px">' + verdict + '</div>' +
-    '</div>' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+larRgb+',0.1),rgba('+larRgb+',0.03));border:2px solid rgba('+larRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">審査通過見込みスコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+totalScore+'<span style="font-size:20px">/100</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+verdict+'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;font-size:12px">' +
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;font-size:12px">' +
     '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center">' +
     '<div style="color:var(--text-muted);margin-bottom:4px">年間返済額</div><div style="font-weight:700;font-size:15px">' + annualRepay.toFixed(0) + '万円</div></div>' +
@@ -8667,7 +8669,12 @@ function calcPurchaseExtraCosts() {
   var totalBudget = price + total;
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(248,113,113,0.1),rgba(248,113,113,0.03));border:2px solid rgba(248,113,113,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">購入時の諸費用合計（物件価格に加えて必要）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#f87171;line-height:1;margin-bottom:4px">'+total.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">物件価格'+price+'万円 → 総予算'+totalBudget.toFixed(0)+'万円</div>'
+    +'</div>'
+    +'<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center">' +
     '<div><div style="font-size:11px;color:var(--text-muted)">諸費用合計（物件価格に加えて）</div><div style="font-size:28px;font-weight:900;color:#f87171">' + total.toFixed(0) + '<span style="font-size:14px">万円</span></div></div>' +
     '<div><div style="font-size:11px;color:var(--text-muted)">必要な総予算（物件価格込み）</div><div style="font-size:28px;font-weight:900;color:var(--gold)">' + totalBudget.toFixed(0) + '<span style="font-size:14px">万円</span></div></div>' +
@@ -8717,8 +8724,15 @@ function calcMortgageRefinance() {
   const totalSaving = Math.round(oldTotal - newTotal);
   const breakEven = monthSaving > 0 ? Math.ceil(costs / monthSaving) : null;
   const isWorth = totalSaving > 0;
+  const reRgb = isWorth ? '74,222,128' : '248,113,113';
+  const reColor = isWorth ? '#4ade80' : '#f87171';
   el.style.display = 'block';
-  el.innerHTML = `
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+reRgb+',0.1),rgba('+reRgb+',0.03));border:2px solid rgba('+reRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+reColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">借換えで残期間中に節約できる総額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+reColor+';line-height:1;margin-bottom:4px">'+(isWorth?'+':'')+totalSaving.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">毎月'+(monthSaving>0?'-':'+')+Math.abs(monthSaving).toLocaleString()+'万円 · 費用回収'+(breakEven?breakEven+'ヶ月後':'回収不可')+'</div>'
+    +'</div>'
+    + `
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:10px;padding:14px">
       <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 借換えシミュレーション結果</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -8785,12 +8799,15 @@ function calcMonthlyFixedCosts() {
                 total > 15 ? '標準的な負担。月収の25〜35%以内が目安です' :
                 '余裕ある水準です';
 
+  var mfcRgb = color === '#4ade80' ? '74,222,128' : color === '#fb923c' ? '251,146,60' : '248,113,113';
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(0,0,0,0.25);border:2px solid ' + color + ';border-radius:12px;padding:18px;margin-bottom:14px;text-align:center">' +
-    '<div style="font-size:11px;color:' + color + ';font-weight:700;margin-bottom:4px">月次固定費の合計</div>' +
-    '<div style="font-size:32px;font-weight:900;color:' + color + '">' + total.toFixed(1) + '<span style="font-size:16px">万円/月</span></div>' +
-    '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">' + verdict + '</div>' +
-    '</div>' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+mfcRgb+',0.1),rgba('+mfcRgb+',0.03));border:2px solid rgba('+mfcRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">月次固定費の合計</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+total.toFixed(1)+'<span style="font-size:20px">万円/月</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+verdict+'</div>'
+    +'</div>'
+    +'<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+    '<div style="font-weight:700;color:var(--gold);font-size:12px;margin-bottom:10px">費用の内訳</div>' +
     '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:12px">' +
     '<div style="font-weight:700;color:var(--gold);font-size:12px;margin-bottom:10px">費用の内訳</div>' +
     '<div style="display:flex;flex-direction:column;gap:8px;font-size:12px">' +
@@ -8869,8 +8886,14 @@ function calcCondoVsHouse() {
       '</tr>';
   }).join('');
 
+  var cvhRgb = condoWins ? '96,165,250' : '74,222,128';
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + winColor + ';border-radius:10px;padding:12px;margin-bottom:12px;text-align:center">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+cvhRgb+',0.1),rgba('+cvhRgb+',0.03));border:2px solid rgba('+cvhRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+winColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">20年コスト比較 — '+winner+'の方が約</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+winColor+';line-height:1;margin-bottom:4px">'+diff.toFixed(0)+'<span style="font-size:20px">万円お得</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">購入費＋維持費－将来売却価格（20年間）で比較</div>'
+    +'</div>'
+    +'<div style="background:rgba(0,0,0,0.2);border:2px solid ' + winColor + ';border-radius:10px;padding:12px;margin-bottom:12px;text-align:center">' +
     '<div style="font-size:11px;color:var(--text-muted)">20年間の総コスト（購入費＋維持費－将来売却価格）で比べると</div>' +
     '<div style="font-size:16px;font-weight:900;color:' + winColor + ';margin-top:4px">「' + winner + '」の方が約 ' + diff.toFixed(0) + ' 万円お得</div>' +
     '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">※ エリア・管理費水準・修繕状況によって大きく変わります</div>' +
@@ -8922,8 +8945,14 @@ function calcFutureValueEstimate() {
   var change = Math.round(futureVal - price);
   var changeRatio = Math.round((futureVal / price - 1) * 100);
   var color = change >= 0 ? '#4ade80' : '#f87171';
+  var fveRgb = change >= 0 ? '74,222,128' : '248,113,113';
   var label = type === 'mansion' ? 'マンション' : type === 'house' ? '一戸建て' : '土地';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+fveRgb+',0.1),rgba('+fveRgb+',0.03));border:2px solid rgba('+fveRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年後の推定価値</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+futureVal.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">現在'+price.toLocaleString()+'万円 → 変化'+(change>=0?'+':'')+change.toLocaleString()+'万円（'+(changeRatio>=0?'+':'')+changeRatio+'%）</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">現在の価値</div><div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.7)">' + price.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">築' + age + '年・' + label + '</div></div>'
     + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">10年後の推定価値</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + futureVal.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">築' + futureAge + '年時点</div></div>'
     + '</div>'
@@ -8957,7 +8986,12 @@ function calcRateTypeSwitch() {
   var varRateAt2 = variable + 2.0;
   var varMonthlyAt2 = Math.round(monthlyPayment(balance * 10000, varRateAt2, months) / 10000 * 100) / 100;
   var diffAt2 = Math.round((fixMonthly - varMonthlyAt2) * 100) / 100;
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.1),rgba(251,146,60,0.03));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">固定に切替で増える月返済額（安心料）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">+'+diffMonthly.toFixed(1)+'<span style="font-size:20px">万円/月</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">総支払増加 +'+diffTotal+'万円 · 変動'+variable+'% → 固定'+fixed+'%</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">変動金利 月返済</div><div style="font-size:18px;font-weight:700;color:#93c5fd">' + varMonthly.toFixed(1) + '万円</div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">固定金利 月返済</div><div style="font-size:18px;font-weight:700;color:#fb923c">' + fixMonthly.toFixed(1) + '万円</div></div>'
     + '</div>'
@@ -8994,7 +9028,15 @@ function calcRentToOwnPlan() {
   var totalOwn = Math.round((down + totalLoan + totalMaintenance + purchaseMisc) * 10) / 10;
   var totalRent = Math.round(rent * 12 * 35 * 10) / 10;
   var diff = Math.round((totalRent - totalOwn) * 10) / 10;
-  var html = '<div style="display:grid;gap:8px">';
+  var rtoRgb = diff > 0 ? '74,222,128' : '251,146,60';
+  var rtoColor = diff > 0 ? '#4ade80' : '#fb923c';
+  var rtoWinner = diff > 0 ? '購入' : '賃貸';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+rtoRgb+',0.1),rgba('+rtoRgb+',0.03));border:2px solid rgba('+rtoRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+rtoColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">35年間のトータルコスト差</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+rtoColor+';line-height:1;margin-bottom:4px">'+Math.abs(diff).toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+rtoWinner+'の方が安い（35年間比較）</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += '<div style="background:rgba(96,165,250,0.08);border-radius:8px;padding:12px">';
   html += '<div style="font-size:11px;color:#60a5fa;font-weight:600;margin-bottom:6px">🏠 購入（35年）</div>';
