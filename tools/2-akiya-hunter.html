@@ -7829,7 +7829,13 @@ function calcPlotUtility() {
   var useRateFAR = land > 0 ? currentBuild / maxFloorArea * 100 : 0;
   var status = remainFAR > currentBuild * 0.5 ? '余裕あり（増築・建て替えで大幅拡張可能）' : remainFAR > 0 ? 'やや余裕あり' : '上限到達（これ以上の拡張不可）';
   var statusColor = remainFAR > currentBuild * 0.5 ? '#4ade80' : remainFAR > 0 ? '#facc15' : '#f87171';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var puHeroRgb = remainFAR > currentBuild * 0.5 ? '74,222,128' : (remainFAR > 0 ? '250,204,21' : '248,113,113');
+  var html = '<div style="background:linear-gradient(135deg,rgba('+puHeroRgb+',0.1),rgba('+puHeroRgb+',0.03));border:2px solid rgba('+puHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+statusColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">増築可能面積（容積率基準）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+statusColor+';line-height:1;margin-bottom:4px">'+Math.round(remainFAR)+'<span style="font-size:20px">㎡</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">判定: '+status+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
   var panels3 = [
     { label: '建蔽率の上限', val: Math.round(maxCoverage) + 'm²', sub: '建物1階部分の上限', used: useRateCoverage },
@@ -7876,7 +7882,14 @@ function calcAkiyaMgmtCost() {
   var selfTotal = totalSelfPerYear + addlSelfCosts;
   var delegateTotal = delegateFee * 12;
   var better = selfTotal < delegateTotal ? 'self' : 'delegate';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var amcBestAmt = Math.min(selfTotal, delegateTotal);
+  var amcHeroRgb = '74,222,128';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+amcHeroRgb+',0.1),rgba('+amcHeroRgb+',0.03));border:2px solid rgba('+amcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">お得な管理方法: '+(better==='self'?'自主管理':'委託管理')+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">'+Math.round(amcBestAmt*10)/10+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">差額 '+Math.round(Math.abs(selfTotal-delegateTotal)*10)/10+'万円/年のコスト削減</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
   var panels5 = [
     { label: '自主管理（年間）', val: Math.round(selfTotal * 10) / 10 + '万円', sub: freqLabel, color: better === 'self' ? '#4ade80' : '#f87171', best: better === 'self' },
@@ -7937,7 +7950,12 @@ function calcVacancyPeriodCost() {
   var areaLabel = area === 'urban' ? '都市部' : area === 'suburb' ? '郊外' : '地方';
   var years5 = Math.round(annual * 5 * 10) / 10;
   var years10 = Math.round(annual * 10 * 10) / 10;
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(239,68,68,0.1),rgba(239,68,68,0.03));border:2px solid rgba(239,68,68,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--red);font-weight:700;letter-spacing:2px;margin-bottom:6px">空き家放置コスト（年間）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--red);line-height:1;margin-bottom:4px">'+annual+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">月'+monthly.toFixed(1)+'万円 · 5年'+years5+'万円 · 10年'+years10+'万円</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">📊 ' + typeLabel + '（' + areaLabel + '）の月別維持コスト</div>'
     + '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">'
     + '<tr style="color:rgba(255,255,255,0.5);font-size:11px"><th style="padding:4px 8px;text-align:left">費用項目</th><th style="padding:4px 8px;text-align:right">月額目安</th></tr>'
@@ -7977,7 +7995,12 @@ function calcAkiyaCarport() {
   var ptypeLabel = { monthly: '月極駐車場', hourly: 'コインパーキング', garage: '貸しガレージ' }[ptype];
   var locLabel = { city: '都市部', suburb: '郊外', rural: '地方' }[loc];
   var demoLabel = demo === 'yes' ? '解体費用（' + area + '㎡）' : '舗装・区画工事';
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.1),rgba(251,146,60,0.03));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">駐車場転用 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+annual+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+spots+'台 · 初期費用'+initCost+'万円 · 回収'+(payback>0?payback+'年':'—')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">🚗 ' + ptypeLabel + '転用シミュレーション（' + locLabel + '）</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center">'
@@ -8017,7 +8040,12 @@ function calcAkiyaSolar() {
   var payback = annualNet > 0 ? Math.round(initCost / annualNet * 10) / 10 : 0;
   var regionLabel = { south: '南日本・太平洋側', middle: '関東・東海・近畿', north: '東北・北海道・日本海側' }[region];
   var postFitNet = Math.round(annualKwh * 11 / 10000 * 10) / 10;
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.1),rgba(251,146,60,0.03));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">太陽光発電 年間売電収入</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+annualSale+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">設置費用'+initCost+'万円 · 回収'+(payback>0?payback+'年':'—')+' · '+kw+'kW</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">☀️ 太陽光発電試算（' + regionLabel + '・' + kw + 'kW）</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;text-align:center"><div style="font-size:11px;color:rgba(255,255,255,0.5)">設置費用目安</div><div style="font-size:16px;font-weight:700;color:#f87171">' + initCost + '万円</div></div>'
@@ -8050,7 +8078,14 @@ function calcSmallWorkspace() {
   var payback = monthlyNet > 0 ? Math.ceil(cost / monthlyNet) : 999;
   var ordinaryRent = Math.round(area * 0.12 * 10) / 10;
   var ordinaryNet = Math.round((ordinaryRent * 0.85 - running) * 10) / 10;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;font-size:13px">';
+  var swHeroRgb = yearlyNet >= 0 ? '74,222,128' : '239,68,68';
+  var swHeroColor = yearlyNet >= 0 ? 'var(--green)' : 'var(--red)';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+swHeroRgb+',0.1),rgba('+swHeroRgb+',0.03));border:2px solid rgba('+swHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+swHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+typeLabel[type]+' 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+swHeroColor+';line-height:1;margin-bottom:4px">'+yearlyNet.toFixed(1)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">回収 '+(payback>=999?'赤字リスク':payback+'ヶ月')+' · 月'+monthlyNet.toFixed(1)+'万円</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;font-size:13px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:18px;font-weight:900;color:' + ACCENT + '">' + monthlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間純収益</div></div>';
   html += '<div><div style="font-size:18px;font-weight:900;color:' + ACCENT + '">' + yearlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間純収益</div></div>';
