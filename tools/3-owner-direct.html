@@ -5724,7 +5724,15 @@ function calcJuset() {
   if (!el) return;
   var pct = Math.round(done / total * 100);
   var barColor = pct >= 80 ? 'var(--green)' : pct >= 50 ? '#f59e0b' : 'var(--red)';
-  var html = '<div>';
+  var jusetRgb = pct >= 80 ? '74,222,128' : pct >= 50 ? '245,158,11' : '239,68,68';
+  var jusetMsg = pct >= 100 ? '✅ 全項目確認済み！重説への備えは万全です' : pct >= 60 ? '⚡ もう少し — 未確認項目を重説当日に確認を' : '🔴 未確認が多いです。重説当日に疑問点をメモして持参を';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + jusetRgb + ',0.1),rgba(' + jusetRgb + ',0.03));border:2px solid rgba(' + jusetRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + barColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">重説 確認進捗</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + barColor + ';line-height:1;margin-bottom:4px">' + pct + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + done + ' / ' + total + '項目 確認済み</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + barColor + '">' + jusetMsg + '</div>'
+    + '</div>'
+    + '<div>';
   html += '<div style="background:rgba(255,255,255,0.06);border-radius:8px;height:8px;overflow:hidden;margin-bottom:8px">';
   html += '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:8px;transition:width 0.4s"></div>';
   html += '</div>';
@@ -5756,7 +5764,14 @@ function calcKessai() {
   var barColor = pct >= 80 ? 'var(--green)' : pct >= 50 ? '#f59e0b' : 'var(--red)';
   var verdict = pct >= 100 ? '✅ 準備完了！決済当日も落ち着いて臨めます' : pct >= 80 ? '⚡ ほぼ準備OK。残りの項目を確認しましょう' : pct >= 50 ? '⚠️ 準備途中です。不足書類を早めに手配しましょう' : '🔴 準備不足です。不動産会社・司法書士と確認を';
   var verdictColor = pct >= 100 ? 'var(--green)' : pct >= 80 ? '#34d399' : pct >= 50 ? '#f59e0b' : 'var(--red)';
-  var html = '<div style="margin-top:4px">';
+  var kessaiRgb = pct >= 80 ? '74,222,128' : pct >= 50 ? '245,158,11' : '239,68,68';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + kessaiRgb + ',0.1),rgba(' + kessaiRgb + ',0.03));border:2px solid rgba(' + kessaiRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + barColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">決済 準備進捗</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + barColor + ';line-height:1;margin-bottom:4px">' + pct + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + done + ' / ' + total + '項目 完了</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + verdictColor + '">' + verdict + '</div>'
+    + '</div>'
+    + '<div style="margin-top:4px">';
   html += '<div style="background:rgba(255,255,255,0.06);border-radius:8px;height:8px;overflow:hidden;margin-bottom:8px">';
   html += '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:8px;transition:width 0.4s"></div>';
   html += '</div>';
@@ -5791,7 +5806,14 @@ function calcHikiwatashi() {
   else if (pct >= 80) { verdict = '⚡ ほぼ完了。残り'+String(total-done)+'項目を確認しましょう'; verdictColor = '#34d399'; }
   else if (pct >= 50) { verdict = '⚠️ 確認中（'+String(done)+'/'+String(total)+'項目）。引き渡し前に必ず全確認を'; verdictColor = '#f59e0b'; }
   else { verdict = '🔴 確認不足（'+String(done)+'/'+String(total)+'）。未確認のまま引き渡すと後日トラブルの原因に'; verdictColor = '#f87171'; }
-  var html = '<div style="margin-top:10px">';
+  var hikiRgb = pct >= 100 ? '74,222,128' : pct >= 70 ? '52,211,153' : pct >= 40 ? '245,158,11' : '248,113,113';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + hikiRgb + ',0.1),rgba(' + hikiRgb + ',0.03));border:2px solid rgba(' + hikiRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + barColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">引渡し設備 確認進捗</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + barColor + ';line-height:1;margin-bottom:4px">' + pct + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + done + ' / ' + total + '設備 確認済み</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + verdictColor + '">' + verdict + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
   html += '<span style="font-size:12px;color:#aaa">確認進捗</span>';
   html += '<span style="font-size:16px;font-weight:900;color:'+barColor+'">'+pct+'%</span>';
@@ -5837,7 +5859,14 @@ function calcKyoyuMeigi() {
   else if (type === 'inherit') extraAdvice = '相続の場合、相続登記が未完了だと売却できません。先に全員分の相続登記を完了させてください。';
   else if (count >= 4) extraAdvice = '4人以上の共有は、連絡が取れない・反対する人が出やすくなります。早めに全員の意思確認をしてください。';
 
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var knRgb = pct >= 100 ? '74,222,128' : pct >= 70 ? '245,158,11' : '248,113,113';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + knRgb + ',0.1),rgba(' + knRgb + ',0.03));border:2px solid rgba(' + knRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + barColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">共有者 合意準備率</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + barColor + ';line-height:1;margin-bottom:4px">' + pct + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + done + ' / ' + total + '項目 確認済み</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + verdictColor + '">' + verdict + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
   html += '<span style="font-size:12px;color:#aaa">合意準備進捗</span>';
   html += '<span style="font-size:16px;font-weight:900;color:'+barColor+'">'+pct+'%</span>';
