@@ -8690,7 +8690,16 @@ function calcTaxSummary() {
     { label: blueDeduction > 0 ? '青色申告特別控除（' + blueDeduction + '万円）' : '白色申告（控除なし）', val: blueDeduction, color: 'var(--text-muted)', sign: blueDeduction > 0 ? '▲' : '' },
     { label: '課税不動産所得', val: taxableIncome, color: taxableIncome > 0 ? '#f87171' : 'var(--green)', sign: '' }
   ];
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:10px;overflow:hidden;margin-top:10px;margin-bottom:10px">';
+  var tsHeroRgb = taxableIncome === 0 ? '74,222,128' : taxableIncome < 50 ? '74,222,128' : taxableIncome < 100 ? '212,175,55' : '239,68,68';
+  var tsHeroColor = taxableIncome === 0 ? 'var(--green)' : taxableIncome < 50 ? 'var(--green)' : taxableIncome < 100 ? 'var(--gold)' : 'var(--red)';
+  var tsMsg = taxableIncome === 0 ? '✅ 課税所得がゼロ — 今年の税負担はありません' : blueDeduction > 0 ? '青色申告特別控除' + blueDeduction + '万円を活用済み' : '白色申告 — 青色申告に切り替えると最大65万円追加控除できます';
+  var tsPrepHtml = '<div style="background:linear-gradient(135deg,rgba(' + tsHeroRgb + ',0.12),rgba(' + tsHeroRgb + ',0.04));border:2px solid rgba(' + tsHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + tsHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">課税不動産所得（確定申告対象額）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + tsHeroColor + ';line-height:1;margin-bottom:4px">' + taxableIncome + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">収入' + income + '万円 − 経費' + totalExpense + '万円 − 控除' + blueDeduction + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + tsHeroColor + '">' + tsMsg + '</div>'
+    + '</div>';
+  var html = tsPrepHtml + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;overflow:hidden;margin-top:10px;margin-bottom:10px">';
   items.forEach(function(it, i) {
     var isBold = it.label === '経費合計' || it.label === '課税不動産所得' || it.label.indexOf('不動産所得') >= 0;
     var bg = it.label === '課税不動産所得' ? 'rgba(201,168,76,0.1)' : (i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent');
@@ -8863,7 +8872,16 @@ function calcEquipReserve() {
   var urgencyLabel = urgency === 'urgent' ? '要緊急交換' : urgency === 'soon' ? '交換準備推奨' : '問題なし';
   var urgencyColor = urgency === 'urgent' ? '#f87171' : urgency === 'soon' ? '#fb923c' : '#4ade80';
 
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var eqHeroRgbMap = { '#f87171': '248,113,113', '#fb923c': '251,146,60', '#4ade80': '74,222,128' };
+  var eqHeroRgb = eqHeroRgbMap[urgencyColor] || '212,175,55';
+  var eqHeroMsg = urgency === 'urgent' ? '⚠️ 耐用年数超過 — 今すぐ交換準備を開始してください' : urgency === 'soon' ? '残り' + remaining + '年以内に交換が必要 — 月' + monthly.toFixed(1) + '万円の積立で備えを' : '✅ まだ余裕があります — 月' + monthly.toFixed(1) + '万円で計画的に積み立てておきましょう';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + eqHeroRgb + ',0.12),rgba(' + eqHeroRgb + ',0.04));border:2px solid rgba(' + eqHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + urgencyColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + sp.label + ' × ' + units + '台 — 残余寿命</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + urgencyColor + ';line-height:1;margin-bottom:4px">' + remaining + '<span style="font-size:20px">年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">総交換費用目安 ' + totalCost + '万円 · 月次積立目安 ' + monthly.toFixed(1) + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + urgencyColor + '">' + eqHeroMsg + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">残余寿命</div><div style="font-size:20px;font-weight:900;color:'+urgencyColor+'">'+remaining+'<span style="font-size:11px">年</span></div></div>';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">総交換費用</div><div style="font-size:20px;font-weight:900;color:#4db6f5">'+totalCost+'<span style="font-size:11px">万円</span></div></div>';
@@ -8986,7 +9004,15 @@ function calcRentNego() {
   var pct = Math.round(score / maxScore * 100);
   var color = pct >= 70 ? '#4ade80' : pct >= 50 ? '#f59e0b' : '#f87171';
   var label = pct >= 70 ? '交渉成功の可能性 高' : pct >= 50 ? '交渉可能だが丁寧な説明が必要' : '交渉は慎重に・退去リスクあり';
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var rnHeroRgbMap = { '#4ade80': '74,222,128', '#f59e0b': '245,158,11', '#f87171': '248,113,113' };
+  var rnHeroRgb2 = rnHeroRgbMap[color] || '212,175,55';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + rnHeroRgb2 + ',0.12),rgba(' + rnHeroRgb2 + ',0.04));border:2px solid rgba(' + rnHeroRgb2 + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">賃料値上げ交渉 成功確率</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + color + ';line-height:1;margin-bottom:4px">' + pct + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">現家賃' + current + '万円 → 値上げ後' + afterRent.toFixed(1) + '万円（+' + rate + '%）</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + color + '">' + label + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">値上げ後家賃</div><div style="font-size:18px;font-weight:900;color:#4db6f5">'+afterRent.toFixed(1)+'<span style="font-size:11px">万円</span></div></div>';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">相場との差</div><div style="font-size:18px;font-weight:900;color:'+(vsMarket<=0?'#4ade80':'#f87171')+'">'+(vsMarket>=0?'+':'')+vsMarket.toFixed(1)+'<span style="font-size:11px">%</span></div></div>';
