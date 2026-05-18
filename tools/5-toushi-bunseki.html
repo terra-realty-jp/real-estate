@@ -7103,7 +7103,14 @@ function calcDepreciation() {
       +'<td style="padding:6px 8px;font-size:12px;text-align:right;color:#facc15">'+bookVal.toFixed(0)+'万</td>'
       +'</tr>';
   }
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+  var depHeroHtml = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">年間節税効果</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">'+taxSave.toFixed(0)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">残存耐用年数 '+remaining+'年 ／ 年間償却費 '+annual.toFixed(0)+'万円</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:var(--green)">全期間累計節税 '+(taxSave*remaining).toFixed(0)+'万円（税率'+taxRate+'%で試算）</div>'
+    +'</div>';
+  el.innerHTML = depHeroHtml
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
     +'<div style="'+kpiStyle+'"><div style="font-size:22px;font-weight:900;color:var(--gold)">'+remaining+'年</div><div style="font-size:10px;color:var(--text-muted)">残存耐用年数</div></div>'
     +'<div style="'+kpiStyle+'"><div style="font-size:22px;font-weight:900;color:var(--text)">'+annual.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">年間償却費</div></div>'
     +'<div style="'+kpiStyle+'"><div style="font-size:22px;font-weight:900;color:var(--green)">'+taxSave.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">年間節税効果</div></div>'
@@ -7753,7 +7760,16 @@ function calcFirstYear() {
     { label: '初年度 実態CF（諸費用・節税込み）', val: firstYearCF, color: firstYearCF >= 0 ? 'var(--green)' : 'var(--red)', bold: true }
   ];
 
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:10px;overflow:hidden;margin-top:10px;margin-bottom:10px">';
+  var fyRgb = firstYearCF >= 0 ? '74,222,128' : '239,68,68';
+  var fyColor = firstYearCF >= 0 ? 'var(--green)' : 'var(--red)';
+  var fyGuide = firstYearCF >= 0 ? '初年度からプラスCF！節税と合わせて資産形成に有利な物件です' : '初年度は諸費用でマイナスが多い傾向。2年目以降のCFで回収できるか確認を';
+  var fyHero = '<div style="background:linear-gradient(135deg,rgba('+fyRgb+',0.1),rgba('+fyRgb+',0.03));border:2px solid rgba('+fyRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+fyColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">初年度 実態CF（諸費用・節税込み）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+fyColor+';line-height:1;margin-bottom:4px">'+(firstYearCF >= 0 ? '+' : '▲')+Math.abs(firstYearCF).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">CF（税引前）'+(cf>=0?'+':'')+cf+'万円 ／ 節税効果 '+taxEffect+'万円</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:'+fyColor+'">'+fyGuide+'</div>'
+    +'</div>';
+  var html = fyHero + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;overflow:hidden;margin-top:10px;margin-bottom:10px">';
   items.forEach(function(it, i) {
     var bg = it.label.indexOf('初年度') >= 0 ? 'rgba(201,168,76,0.1)' : (i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent');
     html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:' + bg + (i > 0 ? ';border-top:1px solid rgba(255,255,255,0.04)' : '') + '">';
