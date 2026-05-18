@@ -9769,13 +9769,15 @@ function calcTenantChurn() {
   var barWidth = score + '%';
   var barColor = gradeColor;
 
-  var html = '<div style="margin-top:14px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
-  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
-  html += '<div style="width:56px;height:56px;border-radius:50%;background:' + barColor + ';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff">' + grade + '</div>';
-  html += '<div>';
-  html += '<div style="font-size:18px;font-weight:700;color:' + gradeColor + '">' + label + '</div>';
-  html += '<div style="font-size:13px;color:var(--text-sub)">リスクスコア: ' + score + ' / 100</div>';
-  html += '</div></div>';
+  var tcHeroRgbMap = { '#4caf50': '76,175,80', '#f9a825': '249,168,37', '#ff7043': '255,112,67', '#e53935': '229,57,53' };
+  var tcHeroRgb = tcHeroRgbMap[gradeColor] || '255,112,67';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + tcHeroRgb + ',0.12),rgba(' + tcHeroRgb + ',0.04));border:2px solid rgba(' + tcHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + gradeColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">退去リスクスコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + gradeColor + ';line-height:1;margin-bottom:4px">' + score + '<span style="font-size:20px">/100</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + grade + '判定 — ' + label + '</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + gradeColor + '">' + actions[0] + '</div>'
+    + '</div>';
+  html += '<div style="margin-top:14px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
 
   html += '<div style="background:rgba(255,255,255,0.07);border-radius:6px;height:10px;margin-bottom:14px;overflow:hidden">';
   html += '<div style="height:100%;width:' + barWidth + ';background:' + barColor + ';border-radius:6px;transition:width 0.5s"></div></div>';
@@ -9808,7 +9810,18 @@ function calcEquipAgeRisk() {
 
   items.sort(function(a, b) { return (b.age - b.limit) - (a.age - a.limit); });
 
-  var html = '<div style="margin-top:10px">';
+  var urgentCount = items.filter(function(i){ return i.age >= i.limit; }).length;
+  var warnCount = items.filter(function(i){ return i.age >= i.warn && i.age < i.limit; }).length;
+  var eaHeroRgb = urgentCount >= 3 ? '229,57,53' : urgentCount >= 1 ? '255,112,67' : warnCount >= 1 ? '249,168,37' : '76,175,80';
+  var eaHeroColor = urgentCount >= 3 ? '#e53935' : urgentCount >= 1 ? '#ff7043' : warnCount >= 1 ? '#f9a825' : '#4caf50';
+  var eaHeroMsg = urgentCount > 0 ? urgentCount + '件が寿命超過 — 今すぐ交換を検討してください' : warnCount > 0 ? warnCount + '件が要注意 — 計画的な交換準備を' : '全て良好 — 定期点検を継続してください';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + eaHeroRgb + ',0.12),rgba(' + eaHeroRgb + ',0.04));border:2px solid rgba(' + eaHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + eaHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">設備劣化リスク診断</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + eaHeroColor + ';line-height:1;margin-bottom:4px">' + urgentCount + '<span style="font-size:20px">件</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">寿命超過 · 要注意 ' + warnCount + '件</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + eaHeroColor + '">' + eaHeroMsg + '</div>'
+    + '</div>';
+  html += '<div style="margin-top:10px">';
   items.forEach(function(item) {
     var ratio = item.age / item.limit;
     var overLimit = item.age >= item.limit;
@@ -9831,7 +9844,6 @@ function calcEquipAgeRisk() {
     html += '</div></div>';
   });
 
-  var urgentCount = items.filter(function(i){ return i.age >= i.limit; }).length;
   if (urgentCount > 0) {
     html += '<div style="padding:10px;background:rgba(229,57,53,0.12);border:1px solid rgba(229,57,53,0.3);border-radius:8px;font-size:12px;color:var(--red);line-height:1.7">';
     html += '⚠️ ' + urgentCount + '件が寿命超過です。入居者からの故障連絡前に計画的な交換を強くお勧めします。民法606条に基づき、修繕義務はオーナーが負います。';
@@ -9863,8 +9875,15 @@ function calcVacancyReformROI() {
   else if (paybackYears <= 6) { verdict = '回収期間3〜6年 → 物件の将来計画次第'; vColor = '#f9a825'; }
   else { verdict = '回収期間6年超 → 慎重に検討'; vColor = '#e53935'; }
 
-  var html = '<div style="margin-top:10px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
-  html += '<div style="font-size:14px;font-weight:700;color:' + vColor + ';margin-bottom:12px">' + verdict + '</div>';
+  var vrrHeroRgbMap = { '#4caf50': '76,175,80', '#f9a825': '249,168,37', '#e53935': '229,57,53', '#888': '136,136,136' };
+  var vrrHeroRgb = vrrHeroRgbMap[vColor] || '249,168,37';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + vrrHeroRgb + ',0.12),rgba(' + vrrHeroRgb + ',0.04));border:2px solid rgba(' + vrrHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + vColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">リフォーム回収期間</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + vColor + ';line-height:1;margin-bottom:4px">' + (paybackYears ? paybackYears.toFixed(1) : '—') + '<span style="font-size:20px">年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">費用' + cost + '万円 · 年間効果 ' + totalAnnualGain.toFixed(1) + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + vColor + '">' + verdict + '</div>'
+    + '</div>';
+  html += '<div style="margin-top:10px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
   html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">家賃UP効果/年</div><div style="font-size:18px;font-weight:900;color:var(--gold)">+' + (rentUp * 12).toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
   html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">入居加速効果</div><div style="font-size:18px;font-weight:900;color:var(--gold)">+' + speedGain.toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
