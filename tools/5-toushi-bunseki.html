@@ -8352,7 +8352,17 @@ function calcCrowdFundCompare() {
     rec = '💡 十分な自己資金がある場合は<strong>直接投資</strong>がレバレッジ・節税効果で有利になりやすいです。ただし管理業務・流動性リスクを理解した上でご判断ください。';
   }
 
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+  var cfcWinCrowd = crowdNet >= totalCF;
+  var cfcHeroRgb = cfcWinCrowd ? '96,165,250' : (totalCF >= 0 ? '74,222,128' : '248,113,113');
+  var cfcHeroColor = cfcWinCrowd ? '#60a5fa' : (totalCF >= 0 ? '#4ade80' : '#f87171');
+  var cfcBestLabel = cfcWinCrowd ? 'クラウドファンディングが有利' : '直接投資が有利';
+  var cfcBestVal = cfcWinCrowd ? crowdNet : totalCF;
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+cfcHeroRgb+',0.12),rgba('+cfcHeroRgb+',0.04));border:2px solid rgba('+cfcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px;letter-spacing:0.05em">'+years+'年間 試算結果：'+cfcBestLabel+'</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+cfcHeroColor+';line-height:1;margin-bottom:4px">'+(cfcBestVal>=0?'+':'')+cfcBestVal.toFixed(1)+'<span style="font-size:20px;font-weight:700">万円</span></div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.5)">'+(cfcWinCrowd?'税引後リターン（年利'+crowdRate+'%）':'累計キャッシュフロー（月次CF '+monthlyCF.toFixed(1)+'万円）')+'</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
     + '<div style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);border-radius:10px;padding:14px">'
     + '<div style="font-size:13px;font-weight:700;color:#60a5fa;margin-bottom:8px">🌐 クラウドファンディング</div>'
     + '<div style="font-size:11px;color:var(--text-muted)">投資額</div>'
@@ -8615,7 +8625,15 @@ function calcValuationCompare() {
       + '</div></div>';
   };
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+  var vcPctMid = diffPctMid(diffCost, diffIncome);
+  var vcHeroRgb = vcPctMid <= -15 ? '76,175,80' : vcPctMid >= 20 ? '244,67,54' : '33,150,243';
+  var vcHeroColor = vcPctMid <= -15 ? '#4caf50' : vcPctMid >= 20 ? '#f44336' : '#60a5fa';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+vcHeroRgb+',0.12),rgba('+vcHeroRgb+',0.04));border:2px solid rgba('+vcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px;letter-spacing:0.05em">2方式の中間 適正価格（参考）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+vcHeroColor+';line-height:1;margin-bottom:4px">'+midVal.toLocaleString()+'<span style="font-size:20px;font-weight:700">万円</span></div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.5)">実勢価格との差: '+(diffMid>=0?'+':'')+diffMid.toLocaleString()+'万円 / 診断: '+verdict+'</div>'
+    + '</div>'
+    + '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px">📊 価格比較</div>'
     + bar('積算価格（コストアプローチ）', costApproach, '#9c27b0')
     + bar('収益還元価格（インカムアプローチ）', incomeApproach, '#ff9800')
@@ -8703,7 +8721,14 @@ function calcSensitivity() {
     const cf = Math.round((price * y / 100 * 0.8 * (1 - expRate/100)) - annualRepay);
     return cf > best ? cf : best;
   }, -Infinity);
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+  var saHeroRgb = bestCell >= 50 ? '74,222,128' : bestCell >= 0 ? '212,175,55' : '248,113,113';
+  var saHeroColor = bestCell >= 50 ? '#4ade80' : bestCell >= 0 ? '#d4af37' : '#f87171';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+saHeroRgb+',0.12),rgba('+saHeroRgb+',0.04));border:2px solid rgba('+saHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px;letter-spacing:0.05em">年間返済負担（LTV'+ltv+'% / 金利'+loanRate+'% / '+term+'年）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#fbbf24;line-height:1;margin-bottom:4px">'+Math.round(annualRepay).toLocaleString()+'<span style="font-size:20px;font-weight:700">万円/年</span></div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.5)">楽観シナリオ最大年間CF: '+(bestCell>=0?'+':'')+bestCell.toLocaleString()+'万円　この返済額を超える収益が確保できるか確認してください</div>'
+    + '</div>'
+    + '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px">📊 年間CF マトリックス（万円/年）</div>'
     + html
     + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('📊 投資物件 感度分析（シナリオ別CF試算）\n\n物件価格' + price + '万円・LTV' + ltv + '%・金利' + loanRate + '%\n年間返済額: ' + Math.round(annualRepay).toLocaleString() + '万円\n\n「利回りが下がったら？空室が増えたら？」のシナリオをマトリックスで確認！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>'
@@ -8911,7 +8936,14 @@ function calcPropertyTaxSim() {
     <td style="padding:7px 6px;text-align:right;color:#4caf50;font-weight:700">${sp}円</td>
   </tr>`).join('');
 
-  r.innerHTML = `<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">
+  var ptHeroRgb = saving > 0 ? '74,222,128' : '212,175,55';
+  var ptHeroColor = saving > 0 ? '#4ade80' : '#d4af37';
+  r.innerHTML = `<div style="background:linear-gradient(135deg,rgba(${ptHeroRgb},0.12),rgba(${ptHeroRgb},0.04));border:2px solid rgba(${ptHeroRgb},0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px;letter-spacing:0.05em">年間固定資産税（特例適用後）</div>
+    <div style="font-size:52px;font-weight:900;color:${ptHeroColor};line-height:1;margin-bottom:4px">${Math.round(totalSpecial * 10000).toLocaleString()}<span style="font-size:20px;font-weight:700">円/年</span></div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.5)">${saving > 0 ? '住宅用地特例で年間▲' + Math.round(saving * 10000).toLocaleString() + '円の節税（特例なし: ' + Math.round(totalBase * 10000).toLocaleString() + '円/年）' : '住宅用地特例の対象外（更地・事業用地など）'}</div>
+  </div>
+  <div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">
     ${use === 'house' ? `<div style="font-size:12px;color:#4caf50;margin-bottom:10px;background:rgba(76,175,80,0.1);padding:8px 10px;border-radius:6px">住宅用地特例: ${smallLabel}</div>` : ''}
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">
       <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.15)">
@@ -8988,7 +9020,15 @@ function calcREITComp() {
       + '</div>';
   }).join('');
 
-  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+  var rcHeroRgb = best === 0 ? '96,165,250' : '74,222,128';
+  var rcHeroColor = best === 0 ? '#60a5fa' : '#4ade80';
+  var rcBestLabel = best === 0 ? 'J-REIT（紙の不動産）' : '現物不動産';
+  r.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+rcHeroRgb+',0.12),rgba('+rcHeroRgb+',0.04));border:2px solid rgba('+rcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px;letter-spacing:0.05em">'+years+'年後の試算資産：'+rcBestLabel+'が有利</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+rcHeroColor+';line-height:1;margin-bottom:4px">'+Math.round(comparison[best].final).toLocaleString()+'<span style="font-size:20px;font-weight:700">万円</span></div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.5)">自己資金 '+budget.toFixed(0)+'万円 × LTV'+ltv+'%（'+years+'年間累計CF: '+(comparison[best].total>=0?'+':'')+comparison[best].total.toFixed(0)+'万円）</div>'
+    + '</div>'
+    + '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">自己資金 <strong>' + budget.toFixed(0) + '万円</strong> × LTV' + ltv + '%（現物購入価格: ' + propPrice.toFixed(0) + '万円）</div>'
     + cards
     + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>どちらを選ぶか — 判断の基準:</strong> 投資初心者や副業として始める方はJ-REITが入りやすく、少額・分散・すぐに換金できる3点で有利です。レバレッジで大きな資産形成を目指す場合は現物不動産が有利ですが、ローン審査・管理・空室リスクを引き受ける覚悟が必要です。「まずREITで感覚をつかみ、慣れたら現物へ」という段階的なルートも有効です。どちらが有利かはローン金利と物件利回りの差（スプレッド）が決め手です。</div>'
@@ -12014,7 +12054,13 @@ function calcPriceFairCheck() {
   else if (priceDiffPct <= 25) { verdict = 'やや割高'; verdictColor = '#fb923c'; advice = '市場相場より' + Math.round(priceDiffPct) + '% 割高。' + Math.round(priceDiff) + '万円程度の値引き交渉を試みる価値があります。'; }
   else { verdict = '割高（慎重に検討）'; verdictColor = '#f87171'; advice = '市場相場より' + Math.round(priceDiffPct) + '% 高い。適正価格は' + Math.round(fairPrice) + '万円前後。強い交渉か物件見直しを推奨します。'; }
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var pfcHeroRgb = priceDiffPct <= -20 ? '74,222,128' : priceDiffPct <= -5 ? '134,239,172' : priceDiffPct <= 10 ? '251,191,36' : priceDiffPct <= 25 ? '251,146,60' : '248,113,113';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+pfcHeroRgb+',0.12),rgba('+pfcHeroRgb+',0.04));border:2px solid rgba('+pfcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px;letter-spacing:0.05em">価格診断：'+verdict+'</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+verdictColor+';line-height:1;margin-bottom:4px">'+(priceDiff>=0?'+':'')+Math.round(priceDiff)+'<span style="font-size:20px;font-weight:700">万円</span></div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.5)">実勢価格と相場適正価格（'+Math.round(fairPrice)+'万円）の差　'+(Math.round(Math.abs(priceDiffPct)))+'%'+( priceDiff > 0 ? '割高' : '割安')+'</div>'
+    + '</div>'
+    + '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:13px;font-weight:900;color:' + verdictColor + ';margin-bottom:10px">🔍 判定：' + verdict + '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">表面利回り</div><div style="font-size:20px;font-weight:900;color:#93c5fd">' + Math.round(grossYield * 10) / 10 + '%</div></div>';
@@ -12071,7 +12117,13 @@ function calcRentVsBuy() {
   else if (diff > -200) { winner = 'ほぼ同等'; winnerColor = '#fbbf24'; advice = '賃貸と購入の差は小さい。転勤・転職・家族構成変化の可能性を優先して検討してください。'; }
   else { winner = '賃貸が有利'; winnerColor = '#f87171'; advice = '賃貸より購入の方が' + Math.round(-diff) + '万円多くかかります。価格・金利・売却価格の条件を変えて再検討を。'; }
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var rvbHeroRgb = diff > 200 ? '74,222,128' : diff > 0 ? '134,239,172' : diff > -200 ? '251,191,36' : '248,113,113';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+rvbHeroRgb+',0.12),rgba('+rvbHeroRgb+',0.04));border:2px solid rgba('+rvbHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px;letter-spacing:0.05em">'+years+'年間コスト比較：'+winner+'</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+winnerColor+';line-height:1;margin-bottom:4px">'+(diff>=0?'+':'')+Math.round(diff)+'<span style="font-size:20px;font-weight:700">万円</span></div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.5)">賃貸総コスト '+Math.round(rentTotal)+'万円 vs 購入実質コスト '+Math.round(buyNet)+'万円の差額</div>'
+    + '</div>'
+    + '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:13px;font-weight:900;color:' + winnerColor + ';margin-bottom:10px">🏠 ' + years + '年間コスト比較：' + winner + '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">賃貸 総コスト</div><div style="font-size:17px;font-weight:900;color:#93c5fd">' + Math.round(rentTotal) + '万円</div></div>';
