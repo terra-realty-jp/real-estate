@@ -8199,7 +8199,14 @@ function calcReplaceSpecial() {
   var replaceBenefit = gain > 0 && buy >= sell ? gain * 10000 * TAX_RATE_LONG : (sell > buy ? (sell - buy) * 10000 * TAX_RATE_LONG : 0);
   var deferredTax = gain > 0 && buy >= sell ? gain * 10000 * TAX_RATE_LONG : 0;
   var isReplaceEligible = buy >= sell && gain > 0;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var rsHeroRgb = gain >= 0 ? '74,222,128' : '239,68,68';
+  var rsHeroColor = gain >= 0 ? 'var(--green)' : 'var(--red)';
+  var rsHero = '<div style="background:linear-gradient(135deg,rgba('+rsHeroRgb+',0.1),rgba('+rsHeroRgb+',0.03));border:2px solid rgba('+rsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+rsHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">売却益（課税対象）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+rsHeroColor+';line-height:1;margin-bottom:4px">'+gain.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">3,000万控除後税: '+Math.round(tax3000/10000)+'万円 / 買替特例: '+(isReplaceEligible?'0万円（繰延）':'非対象')+'</div>'
+    +'</div>';
+  var html = rsHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:8px;font-size:13px">📊 2つの特例 今すぐ納税比較</div>';
   html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">売却益: <b style="color:' + (gain > 0 ? '#4ade80' : '#f87171') + '">' + gain.toFixed(0) + '万円</b></div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
@@ -8318,7 +8325,13 @@ function calcMortgageTaxDeduction() {
     if (y <= 5 || y === 10 || y === 13) tableRows.push({ y: y, bal: Math.round(balance / 10000), deduct: Math.round(deduct / 10000 * 10) / 10 });
   }
   var ACCENT = '#4ade80', BG = 'rgba(74,222,128,0.07)', BDR = 'rgba(74,222,128,0.2)';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var mtdTotalMan = Math.round(totalDeduct / 10000);
+  var mtdHero = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">住宅ローン控除 13年間 合計</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">'+mtdTotalMan.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">年0.7%控除 / 上限'+cap+'万円 / '+Math.min(DEDUCT_YEARS,years)+'年間</div>'
+    +'</div>';
+  var html = mtdHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';font-size:15px;margin-bottom:6px">13年間 控除総額: <span style="font-size:20px">' + Math.round(totalDeduct / 10000).toLocaleString() + '万円</span></div>';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">控除率0.7% / 上限' + cap + '万円 / 最大' + DEDUCT_YEARS + '年間</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
