@@ -5296,7 +5296,13 @@ function calcAssetGoal() {
       + '<div style="font-size:10px;color:var(--text-muted)">' + fmtW(m.cf5) + '</div>'
       + '</div>';
   }).join('');
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.04));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#d4af37;font-weight:700;letter-spacing:2px;margin-bottom:6px">必要ポートフォリオ総額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#d4af37;line-height:1;margin-bottom:4px">' + Math.round(neededPortfolio).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">目標 ' + target.toLocaleString() + '万円 / ' + years + '年 / 利回り' + yld + '%想定</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#d4af37">頭金（自己資金20%）: ' + Math.round(downPay).toLocaleString() + '万円が目安</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">'
     + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">必要CF（年間）</div><div style="font-size:18px;font-weight:900;color:#a78bfa">' + fmtW(neededAnnualCF) + '</div><div style="font-size:10px;color:var(--text-muted)">月' + Math.round(neededMonthCF/10000) + '万円</div></div>'
     + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">必要ポートフォリオ総額</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + fmtW(neededPortfolio) + '</div><div style="font-size:10px;color:var(--text-muted)">頭金 ' + fmtW(downPay) + '</div></div>'
     + '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,0.15);border-radius:8px"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">到達目安</div><div style="font-size:18px;font-weight:900;color:var(--green)">' + years + '年</div><div style="font-size:10px;color:var(--text-muted)">利回り' + yld + '%想定</div></div>'
@@ -6215,7 +6221,14 @@ function calcPrepay() {
   const savedYears = Math.floor(savedMonths/12);
   const remainMonths = savedMonths%12;
   const M = v => Math.abs(Math.round(v/10000)).toLocaleString();
-  el.innerHTML = `
+  el.innerHTML = (savedInterest > 0
+    ? '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.12),rgba(74,222,128,0.04));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+      + '<div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">利息削減額</div>'
+      + '<div style="font-size:52px;font-weight:900;color:#4ade80;line-height:1;margin-bottom:4px">' + savedInterest.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+      + '<div style="font-size:12px;color:var(--text-muted)">返済期間 ' + (savedYears>0?savedYears+'年':'') + (remainMonths>0?remainMonths+'ヶ月':'') + '短縮</div>'
+      + '<div style="margin-top:6px;font-size:11px;color:#4ade80">この金額が丸ごと手元に残る</div>'
+      + '</div>'
+    : '') + `
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
       <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px">
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">利息削減額</div>
@@ -6252,7 +6265,15 @@ function calcPrepayVsInvest() {
   var winner = diff > 0 ? '追加投資' : '繰り上げ返済';
   var winnerColor = diff > 0 ? 'var(--green)' : 'var(--gold)';
   var kpiS = 'border-radius:10px;padding:12px;text-align:center';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+  var piHeroRgb = diff > 0 ? '74,222,128' : '212,175,55';
+  var piHeroColor = diff > 0 ? '#4ade80' : '#d4af37';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+piHeroRgb+',0.12),rgba('+piHeroRgb+',0.04));border:2px solid rgba('+piHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+piHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+winner+'が有利</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+piHeroColor+';line-height:1;margin-bottom:4px">'+Math.abs(diff).toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">'+years+'年間の差額（'+winner+'が上回る額）</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+piHeroColor+'">'+(diff>0?'利回り'+invYield+'% > 金利'+loanRate+'%':'金利'+loanRate+'% > 利回り'+invYield+'%')+'</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
     +'<div style="'+kpiS+';background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.25)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">繰り上げ返済の効果</div><div style="font-size:22px;font-weight:900;color:#facc15">'+prepayBenefit.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">利息削減（'+years+'年）</div></div>'
     +'<div style="'+kpiS+';background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">追加投資の収益（概算）</div><div style="font-size:22px;font-weight:900;color:var(--green)">'+investBenefit.toFixed(0)+'万</div><div style="font-size:10px;color:var(--text-muted)">不動産収入（'+years+'年）</div></div>'
     +'</div>'
@@ -6293,7 +6314,15 @@ function calcLoanQualify() {
   const targetRatio = income > 0 && targetMonthly > 0 ? Math.round(targetMonthly / (income * 10000 / 12) * 100) : 0;
   const statusColor = canAfford30 ? 'var(--green)' : canAfford35 ? 'var(--gold)' : target > 0 ? 'var(--red)' : 'var(--text-muted)';
   const statusLabel = canAfford30 ? '融資基準クリア（返済比率30%以内）' : canAfford35 ? '条件付きクリア（30〜35%）' : target > 0 ? '融資困難（返済比率超過）' : '—';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+  var lqHeroRgb = canAfford30 ? '74,222,128' : canAfford35 ? '212,175,55' : target > 0 ? '248,113,113' : '74,222,128';
+  var lqHeroColor = canAfford30 ? '#4ade80' : canAfford35 ? '#d4af37' : target > 0 ? '#f87171' : '#4ade80';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+lqHeroRgb+',0.12),rgba('+lqHeroRgb+',0.04));border:2px solid rgba('+lqHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+lqHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">融資可能額目安（返済比率30%）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+lqHeroColor+';line-height:1;margin-bottom:4px">' + maxLoan30.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">月返済上限 ' + monthlyMax30.toLocaleString() + '円 / 年収' + income + '万円 / 金利' + rate + '%</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+lqHeroColor+'">'+(target > 0 ? statusLabel : '返済比率35%上限: ' + maxLoan35.toLocaleString() + '万円')+'</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
     + '<div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:12px;text-align:center">'
     + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">融資可能額目安（返済比率30%）</div>'
     + '<div style="font-size:22px;font-weight:900;color:#4ade80">' + maxLoan30.toLocaleString() + '<span style="font-size:12px">万円</span></div>'
@@ -6446,7 +6475,13 @@ function calcAreaScore() {
     return '<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span style="color:var(--text-muted)">' + a.name + '</span><span style="color:var(--text)">' + a.score + '/' + a.max + '</span></div>'
       + '<div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + bw + '%;background:' + bc + ';border-radius:3px"></div></div></div>';
   }).join('');
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:16px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:12px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+({'#4ade80':'74,222,128','var(--gold)':'212,175,55','#fb923c':'251,146,60','#f87171':'248,113,113'}[gradeColor]||'74,222,128')+',0.12),rgba('+({'#4ade80':'74,222,128','var(--gold)':'212,175,55','#fb923c':'251,146,60','#f87171':'248,113,113'}[gradeColor]||'74,222,128')+',0.04));border:2px solid rgba('+({'#4ade80':'74,222,128','var(--gold)':'212,175,55','#fb923c':'251,146,60','#f87171':'248,113,113'}[gradeColor]||'74,222,128')+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+gradeColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">エリア投資適性スコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+gradeColor+';line-height:1;margin-bottom:4px">' + grade + '<span style="font-size:20px"> ' + pct + '点</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + advice + '</div>'
+    + (weakAxes.length > 0 ? '<div style="margin-top:6px;font-size:11px;color:#fb923c">要注意: ' + weakAxes.join('・') + 'が低い</div>' : '')
+    + '</div>'
+    + '<div style="display:flex;align-items:center;gap:16px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:12px">'
     + '<div style="text-align:center;min-width:56px"><div style="font-size:36px;font-weight:900;color:' + gradeColor + ';line-height:1">' + grade + '</div><div style="font-size:10px;color:var(--text-muted);margin-top:3px">エリアスコア</div></div>'
     + '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:' + gradeColor + ';margin-bottom:4px">' + pct + '点 — ' + advice + '</div>'
     + weakMsg
@@ -6501,7 +6536,15 @@ function calcRateRisk() {
   var advice = worstCF >= 0
     ? '<div style="padding:10px 12px;background:rgba(74,222,128,0.1);border-radius:6px;border-left:3px solid var(--green);font-size:12px">✅ 金利が2%上昇しても年間CFはプラスを維持できる見込みです。</div>'
     : '<div style="padding:10px 12px;background:rgba(239,68,68,0.1);border-radius:6px;border-left:3px solid var(--red);font-size:12px">⚠️ 金利上昇時にCFがマイナスになるリスクがあります。繰上返済・固定金利への借換えを検討してください。</div>';
-  el.innerHTML = '<table class="sensitivity-table" style="margin-bottom:12px">'
+  var rrsHeroRgb = worstCF >= 0 ? '74,222,128' : '248,113,113';
+  var rrsHeroColor = worstCF >= 0 ? '#4ade80' : '#f87171';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+rrsHeroRgb+',0.12),rgba('+rrsHeroRgb+',0.04));border:2px solid rgba('+rrsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+rrsHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">金利+2%時の年間CF</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+rrsHeroColor+';line-height:1;margin-bottom:4px">'+(worstCF>=0?'+':'')+Math.round(worstCF/10000).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">金利' + (baseRate+2).toFixed(1) + '% 最悪シナリオ</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+rrsHeroColor+'">'+(worstCF>=0?'金利2%上昇でもプラスを維持できる':'金利上昇時にマイナス転落リスクあり')+'</div>'
+    + '</div>'
+    + '<table class="sensitivity-table" style="margin-bottom:12px">'
     + '<thead><tr><th>金利シナリオ</th><th>月次返済額</th><th>年間CF</th><th>DSCR</th></tr></thead>'
     + '<tbody>' + tableRows + '</tbody></table>'
     + '<p style="font-size:10px;color:var(--text-muted);margin-bottom:8px">DSCR（Debt Service Coverage Ratio）: 1.2以上が安全圏 / 1.0未満は返済不能リスク</p>'
@@ -6539,8 +6582,16 @@ function calcCorpVsPersonal() {
   var personalTaxOnSalary2 = personalOnSalary2 - personalOnSalaryOnly;
   var corpTotalTax = corpTax + personalTaxOnSalary2;
   var saving = personalTax2 - corpTotalTax;
+  var cvpHeroRgb = saving > 0 ? '74,222,128' : '248,113,113';
+  var cvpHeroColor = saving > 0 ? '#4ade80' : '#f87171';
   var kpiS = 'background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;text-align:center';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+cvpHeroRgb+',0.12),rgba('+cvpHeroRgb+',0.04));border:2px solid rgba('+cvpHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+cvpHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">法人化の節税効果（年間）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+cvpHeroColor+';line-height:1;margin-bottom:4px">'+(saving>=0?'+':'')+saving.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">個人 '+personalTax2.toFixed(0)+'万 → 法人化後 '+corpTotalTax.toFixed(0)+'万</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+cvpHeroColor+'">'+(saving>0?'年間この金額の節税が見込まれます':'法人化のメリットが出にくい規模です')+'</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
     +'<div style="'+kpiS+'"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">個人税負担（概算）</div><div style="font-size:20px;font-weight:900;color:var(--red)">'+personalTax2.toFixed(0)+'万</div></div>'
     +'<div style="'+kpiS+'"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">法人化後 税合計（概算）</div><div style="font-size:20px;font-weight:900;color:var(--gold)">'+corpTotalTax.toFixed(0)+'万</div></div>'
     +'<div style="'+kpiS+'"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">節税効果（年間）</div><div style="font-size:20px;font-weight:900;color:'+(saving>0?'var(--green)':'var(--red)')+'">'+( saving>=0?'+':'')+saving.toFixed(0)+'万</div></div>'
@@ -6592,7 +6643,15 @@ function calcScreening() {
               : pct >= 40 ? { label: '△ 要改善ポイントあり', color: 'var(--gold)' }
               : { label: '✗ リスクが高い', color: 'var(--red)' };
 
-  var html = '<div style="margin-top:12px">'
+  var scHeroRgbMap = {'var(--green)':'74,222,128','#4fc3f7':'96,195,247','var(--gold)':'212,175,55','var(--red)':'248,113,113'};
+  var scHeroRgb = scHeroRgbMap[verdict.color] || '74,222,128';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+scHeroRgb+',0.12),rgba('+scHeroRgb+',0.04));border:2px solid rgba('+scHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+verdict.color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">物件スクリーニング総合スコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+verdict.color+';line-height:1;margin-bottom:4px">' + total + '<span style="font-size:20px">/' + maxScore + '点</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + verdict.label + '</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+verdict.color+'">80点以上で購入を前向きに検討できる水準</div>'
+    + '</div>'
+    + '<div style="margin-top:12px">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
     + '<div style="font-size:14px;font-weight:700;color:' + verdict.color + '">' + verdict.label + '</div>'
     + '<div style="font-size:18px;font-weight:700;color:' + verdict.color + '">' + total + '/' + maxScore + '<span style="font-size:11px">点</span></div></div>';
@@ -6640,7 +6699,13 @@ function calcBudgetFit() {
     return Object.assign({}, t, { score: score, inRange: inRange });
   }).sort(function(a, b) { return b.score - a.score; });
 
-  var html = '<div style="margin-top:10px">'
+  var html = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.04));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#d4af37;font-weight:700;letter-spacing:2px;margin-bottom:6px">購入力（融資込み）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#d4af37;line-height:1;margin-bottom:4px">' + buyingPower.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">自己資金 ' + total.toLocaleString() + '万円 × 頭金' + down + '% → 購入可能上限</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#d4af37">頭金 ' + Math.round(total * down / 100).toLocaleString() + '万円 で取得できる物件価格帯</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">'
     + '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px">'
     + '💰 頭金 <strong style="color:var(--gold)">' + Math.round(total * down / 100).toLocaleString() + '万円</strong> で購入できる目安価格帯： <strong style="color:#4fc3f7">〜' + buyingPower.toLocaleString() + '万円</strong></div>'
     + '<div style="display:flex;flex-direction:column;gap:6px">';
@@ -6694,7 +6759,13 @@ function calcCFGoal() {
   var actualCF = totalNOI - totalRepay;
   var unitsNeeded = Math.ceil((propValue * 10000) / (avgRent * 10000 * 12 / (yld/100)));
   var ccr = totalEquity > 0 ? actualCF / totalEquity * 100 : 0;
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.04));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#d4af37;font-weight:700;letter-spacing:2px;margin-bottom:6px">必要物件総額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#d4af37;line-height:1;margin-bottom:4px">' + propValue.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">月CF目標 ' + monthly + '万円 / 利回り' + yld + '% / LTV' + ltv + '%</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#d4af37">自己資金 ' + Math.round(totalEquity/10000).toLocaleString() + '万円 + 借入 ' + Math.round(totalLoan/10000).toLocaleString() + '万円</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px">'
     + kpi('必要物件総額', propValue.toLocaleString()+'万円', 'var(--gold)')
     + kpi('必要自己資金', Math.round(totalEquity/10000).toLocaleString()+'万円', '#60a5fa')
     + kpi('必要借入額', Math.round(totalLoan/10000).toLocaleString()+'万円', 'var(--text-muted)')
@@ -6757,7 +6828,15 @@ function calcExitStrategy() {
       +'<span style="color:'+(p.neg?'var(--red)':'var(--green)')+';flex-shrink:0">'+(p.neg?'▼':'▲')+'</span>'
       +'<span>'+p.t+'</span></div>';
   }).join('');
-  el.innerHTML = '<div style="background:'+verdictBg+';border-left:4px solid '+verdictColor+';border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
+  var esHeroColor = netAfterTax >= 0 ? (score >= 2 ? 'var(--green)' : 'var(--gold)') : '#f87171';
+  var esHeroRgb = netAfterTax >= 0 ? (score >= 2 ? '74,222,128' : '212,175,55') : '248,113,113';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+esHeroRgb+',0.12),rgba('+esHeroRgb+',0.04));border:2px solid rgba('+esHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+esHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">売却手取り（税後）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+esHeroColor+';line-height:1;margin-bottom:4px">'+(netAfterTax>=0?'+':'')+netAfterTax.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">税前手取り '+sellNet.toFixed(0)+'万 - 税金 '+tax.toFixed(0)+'万</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+esHeroColor+'">'+verdict+'（判定スコア: '+score+'点）</div>'
+    + '</div>'
+    + '<div style="background:'+verdictBg+';border-left:4px solid '+verdictColor+';border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
     +'<div style="font-size:36px">'+verdictIcon+'</div>'
     +'<div><div style="font-size:18px;font-weight:900;color:'+verdictColor+'">'+verdict+'</div>'
     +'<div style="font-size:11px;color:var(--text-muted);margin-top:2px">判定スコア: '+score+' 点</div></div></div>'
