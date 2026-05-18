@@ -8160,7 +8160,15 @@ function calcPriceDropEffect() {
     return { label: s.label, sellPrice: sellPrice, expM: expM, holdCost: holdCost, net: net };
   });
   var bestIdx = rows.reduce(function(bi, r, i) { return r.net > rows[bi].net ? i : bi; }, 0);
-  var html = '<div style="background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var bestRow0 = rows[bestIdx];
+  var gain0 = bestRow0.net - rows[0].net;
+  var html = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">最適シナリオの手取り</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">' + bestRow0.net.toFixed(1) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + bestRow0.label + (bestIdx > 0 ? '（現状比 +' + gain0.toFixed(1) + '万円）' : '・現状維持が最適') + '</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--green)">値下げ×維持費を考慮した手取り最大シナリオ</div>'
+    + '</div>'
+    + '<div style="background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:#4ade80;margin-bottom:10px;font-size:13px">📊 値下げシナリオ比較</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
   html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)">';

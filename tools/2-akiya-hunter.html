@@ -4011,7 +4011,13 @@ function calcSaleGain() {
   var netWithSpecial = special ? Math.round(sell - taxWithSpecial) : netNoSpecial;
   var saving = special ? taxNoSpecial - taxWithSpecial : 0;
   var fM = function(v){ return Math.round(v).toLocaleString() + '万円'; };
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">売却後の手取り（税引後）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">' + Math.round(netWithSpecial).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">売却益 ' + fM(gain) + ' − 税金 ' + fM(taxWithSpecial) + (special && saving > 0 ? ' · 控除適用済み' : '') + '</div>'
+    + (special && saving > 0 ? '<div style="margin-top:6px;font-size:11px;color:var(--green)">3,000万円控除で ' + fM(saving) + ' の節税効果あり</div>' : '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">マイホームなら3,000万円控除で節税できる可能性あり</div>')
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
     + '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px">'
     + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">譲渡所得（課税対象）</div>'
     + '<div style="font-size:20px;font-weight:900;color:var(--text)">' + fM(gain) + '</div>'
