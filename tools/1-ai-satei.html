@@ -4665,7 +4665,13 @@ function calcLoanPayoff(price) {
   var tip = canPay
     ? (remaining >= 500 ? '新居の頭金や老後資金として活用できます。' : '手残りが少ないため、引っ越し費用も含めた資金計画を立てましょう。')
     : '売却価格の引き上げ交渉、または任意売却の専門家への相談をご検討ください。';
-  el.innerHTML = '<div style="padding:12px 14px;border-radius:8px;border:1px solid ' + color + '33;background:' + color + '0d;margin-top:12px">'
+  var lpRgb = canPay ? '74,222,128' : '248,113,113';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+lpRgb+',0.1),rgba('+lpRgb+',0.03));border:2px solid rgba('+lpRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+(canPay?'ローン完済後の手元資金':'ローン完済に必要な追加資金')+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+(remaining>=0?'+':'')+remaining.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">手取り'+netProceeds.toLocaleString()+'万円 - ローン残債'+balance.toLocaleString()+'万円</div>'
+    +'</div>'
+    +'<div style="padding:12px 14px;border-radius:8px;border:1px solid ' + color + '33;background:' + color + '0d;margin-top:12px">'
     + '<div style="font-size:13px;font-weight:700;margin-bottom:6px">' + icon + ' ' + msg + '</div>'
     + '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px">'
     + '<div style="font-size:12px;color:var(--text-muted)">手取り <span style="color:var(--text)">' + netProceeds.toLocaleString() + '万円</span></div>'
@@ -8425,8 +8431,9 @@ function calcTaxFilingCheck() {
 
   var heroRgb = verdictColor;
   var heroHtml = '<div style="background:linear-gradient(135deg,rgba('+heroRgb+',0.12),rgba('+heroRgb+',0.04));border:2px solid rgba('+heroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
-    + '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:6px">判定結果</div>'
-    + '<div style="font-size:26px;font-weight:900;color:rgb('+heroRgb+');line-height:1.1;margin-bottom:8px">' + verdict + '</div>'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:6px">売却の譲渡益（概算）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb('+heroRgb+');line-height:1;margin-bottom:4px">' + (gain >= 0 ? '+' : '') + Math.round(gain).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:14px;font-weight:700;color:rgb('+heroRgb+');margin-bottom:6px">' + verdict + '</div>'
     + '<div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.6">' + reason + '</div>'
     + '</div>';
 
