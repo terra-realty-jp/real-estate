@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-05-18 （Phase 2-C リテンション機能 完了）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 2-C 「また来たくなる」仕掛け（前回比較バッジ）
+- **改善内容**:
+  - 全5ツールのTOP3カード（計15カード）に「前回比 ▲/▽ XX万円」差分バッジを追加
+  - localStorage (`terra_prev_*` キー) に計算値を保存し、再訪時に前回との差分を自動表示
+  - 増加は赤・減少は緑で色分け（損失系は逆: 増加=悪化で赤）
+  - 初回訪問時はバッジ非表示、2回目以降から機能
+- **理由**: 「前回査定より〇〇万円下がった→早く売った方がいい」「利回りが改善した→条件を変えてよかった」など、ユーザーが変化を実感してまた来たくなる仕掛けを実装。
+
 ## 2026-05-18 （Phase 2ビジュアル強化 完了）
 
 - **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
