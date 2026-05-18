@@ -9041,7 +9041,12 @@ function calcTaxFreeGift() {
     return 6300 + (t - 20000) * 0.45;
   }
   var giftTax = annual > 110 ? Math.max(0, (annual - 110) * 0.10) : 0;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var tfgHero = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">推定節税額（相続税ベース）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">'+Math.round(saving).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">相続税: '+Math.round(taxBefore).toLocaleString()+'万円 → '+Math.round(taxAfter).toLocaleString()+'万円（'+years+'年間の贈与総額: '+totalGift.toLocaleString()+'万円）</div>'
+    +'</div>';
+  var html = tfgHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + totalGift.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">' + years + '年間の贈与総額</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + Math.round(saving).toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">推定節税額（相続税ベース）</div></div>';
@@ -9074,7 +9079,14 @@ function calcDIYvsProRenovate() {
   var proNet = proPriceUp - pro;
   var better = diyNet >= proNet ? 'DIY' : 'プロ依頼';
   var betterNet = Math.max(diyNet, proNet);
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var dvpHeroRgb = betterNet >= 0 ? '74,222,128' : '251,146,60';
+  var dvpHeroColor = betterNet >= 0 ? 'var(--green)' : '#fb923c';
+  var dvpHero = '<div style="background:linear-gradient(135deg,rgba('+dvpHeroRgb+',0.1),rgba('+dvpHeroRgb+',0.03));border:2px solid rgba('+dvpHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+dvpHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+better+' — 純利益（最良案）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+dvpHeroColor+';line-height:1;margin-bottom:4px">'+(betterNet>=0?'+':'')+betterNet+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">DIY: '+(diyNet>=0?'+':'')+diyNet+'万円 / プロ依頼: '+(proNet>=0?'+':'')+proNet+'万円</div>'
+    +'</div>';
+  var html = dvpHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">🔨 DIY（' + diy + '万円）</div>';
   html += '<div style="font-size:14px;font-weight:700;color:var(--text)">価格UP: +' + diyPriceUp + '万円</div>';
@@ -9107,7 +9119,12 @@ function calcCurbAppeal() {
   var speedMonths = speedMap[cond][type];
   var roi = Math.round((priceUp / budget) * 10) / 10;
   var monthSave = Math.round(Math.abs(speedMonths) * price * 0.003);
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var caHero = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">外観改善 推定価格アップ効果</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">+'+priceUp+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">ROI '+roi+'倍 — 成約期間 '+Math.abs(speedMonths)+'ヶ月短縮（維持費節減 +'+monthSave+'万円）</div>'
+    +'</div>';
+  var html = caHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">+' + priceUp + '万円</div><div style="font-size:10px;color:var(--text-muted)">推定価格UP効果</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + (speedMonths < 0 ? speedMonths : '+') + speedMonths + 'ヶ月</div><div style="font-size:10px;color:var(--text-muted)">成約期間の短縮見込み</div></div>';
@@ -9138,7 +9155,12 @@ function calcSaleReadiness() {
   var docFee = 3;
   var minorRepair = type === 'land' ? 0 : (age > 20 ? 20 : age > 10 ? 10 : 5);
   var total = Math.round((moving + cleaning + survey + docFee + minorRepair) * 10) / 10;
-  var html = '<div style="display:grid;gap:8px">';
+  var srHero = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">売り出し前の準備費用 合計</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">約'+total.toFixed(1)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">※ 仲介手数料（売却価格の約3%）は別途必要です</div>'
+    +'</div>';
+  var html = srHero+'<div style="display:grid;gap:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
   var items = [
     ['引越し費用', moving > 0 ? moving + '万円' : '不要（空室）'],
@@ -10231,7 +10253,12 @@ function calcAgencyFeeCalc() {
     { label: '売主直接取引', fee: feeZero, color: '#4ade80', note: '仲介業者なしの場合。契約書作成・司法書士費用は別途必要' }
   ];
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var afcHero = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">半額交渉成功時の節約額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">'+Math.round(feeSeller-feeHalf).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">法定上限: '+Math.round(feeSeller)+'万円 → 交渉後: '+Math.round(feeHalf)+'万円</div>'
+    +'</div>';
+  var html = afcHero+'<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:13px;font-weight:900;color:#fbbf24;margin-bottom:10px">💸 仲介手数料 パターン別 試算</div>';
   html += '<div style="margin-bottom:10px">';
   patterns.forEach(function(p) {
@@ -10280,7 +10307,13 @@ function calcReformVsAsIs() {
   else if (diff > -50) { winner = 'ほぼ同等'; winnerColor = '#fbbf24'; advice = '手取り差は小さい（' + Math.round(Math.abs(diff)) + '万円）。販売期間の短縮を優先するなら現状渡し、バイヤー層を広げたいならリフォームを選択。'; }
   else { winner = '現状渡しが有利'; winnerColor = '#f87171'; advice = 'リフォームすると手取りが' + Math.round(-diff) + '万円減ります。費用・保有期間を考慮すると「現状渡し＋値下げ交渉余地確保」が合理的です。'; }
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var rvaHeroRgb = winnerColor === '#4ade80' ? '74,222,128' : winnerColor === '#86efac' ? '134,239,172' : winnerColor === '#fbbf24' ? '251,191,36' : '248,113,113';
+  var rvaHero = '<div style="background:linear-gradient(135deg,rgba('+rvaHeroRgb+',0.1),rgba('+rvaHeroRgb+',0.03));border:2px solid rgba('+rvaHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+winnerColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">リフォーム差額（手取り増減）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+winnerColor+';line-height:1;margin-bottom:4px">'+(diff>=0?'+':'')+Math.round(diff)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+winner+' — 現状渡し: '+Math.round(netAsIs)+'万 / リフォーム: '+Math.round(netReform)+'万</div>'
+    +'</div>';
+  var html = rvaHero+'<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:13px;font-weight:900;color:' + winnerColor + ';margin-bottom:10px">🔨 比較結果：' + winner + '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">現状渡し 手取り</div><div style="font-size:17px;font-weight:900;color:#93c5fd">' + Math.round(netAsIs) + '万円</div></div>';
