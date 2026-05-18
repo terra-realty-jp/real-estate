@@ -9300,7 +9300,15 @@ function calcPortfolioCFSum() {
   });
 
   var grossYield = totalPrice > 0 ? (totalRent * 12 / totalPrice * 100) : 0;
-  var html = '<div style="margin-top:10px">';
+  var pcsCFRgb = totalCF >= 0 ? '212,175,55' : '248,113,113';
+  var pcsCFColor = totalCF >= 0 ? '#d4af37' : '#f87171';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+pcsCFRgb+',0.12),rgba('+pcsCFRgb+',0.04));border:2px solid rgba('+pcsCFRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+pcsCFColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">ポートフォリオ合計 月次CF</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+pcsCFColor+';line-height:1;margin-bottom:4px">'+(totalCF>=0?'+':'')+totalCF.toFixed(1)+'<span style="font-size:20px">万円/月</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">年換算 '+(totalCF*12>=0?'+':'')+(totalCF*12).toFixed(1)+'万円 / 全体表面利回り '+grossYield.toFixed(1)+'%</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+pcsCFColor+'">'+(totalCF>=5?'月CF'+Math.round(totalCF)+'万円 — 副収入として安定した水準':totalCF>=0?'プラスCFを維持中':'いずれかの物件がマイナスCFです')+'</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
   html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">合計月次CF</div><div style="font-size:22px;font-weight:900;color:' + (totalCF >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + (totalCF >= 0 ? '+' : '') + totalCF.toFixed(1) + '<span style="font-size:11px">万円</span></div></div>';
   html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">合計年間CF</div><div style="font-size:22px;font-weight:900;color:' + (totalCF >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + (totalCF * 12 >= 0 ? '+' : '') + (totalCF * 12).toFixed(1) + '<span style="font-size:11px">万円</span></div></div>';
@@ -9378,7 +9386,22 @@ function calcCCRLeverage() {
     return loanAmt * m / (1 - Math.pow(1 + m, -n)) * 12;
   }
 
-  var html = '<div style="margin-top:10px">';
+  var leverageAdvantage = capRate > rate;
+  var ccrHeroRgb = leverageAdvantage ? '74,222,128' : '248,113,113';
+  var ccrHeroColor = leverageAdvantage ? '#4ade80' : '#f87171';
+  var ccrBestRow = equityPcts.reduce(function(best, ep) {
+    var eq = price * ep / 100; var lo = price - eq;
+    var ad = lo > 0 ? (function(){ var m = rate/100/12,n=term*12; return lo * 10000 * m / (1-Math.pow(1+m,-n)) * 12 / 10000; })() : 0;
+    var cf = noi - ad; var c = eq > 0 ? cf / eq * 100 : 0;
+    return c > best.ccr ? {ccr:c, ep:ep} : best;
+  }, {ccr:-Infinity, ep:100});
+  var html = '<div style="background:linear-gradient(135deg,rgba('+ccrHeroRgb+',0.12),rgba('+ccrHeroRgb+',0.04));border:2px solid rgba('+ccrHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+ccrHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">利回り（Cap Rate）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+ccrHeroColor+';line-height:1;margin-bottom:4px">'+capRate.toFixed(2)+'<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">ローン金利 '+rate+'% との差: '+(leverageAdvantage?'+':'')+( capRate-rate).toFixed(2)+'%</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+ccrHeroColor+'">'+(leverageAdvantage?'✅ ポジティブレバレッジ — 借入活用でCCR向上':'⚠️ ネガティブレバレッジ — 借入増加でCCR低下')+'</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">利回り（Cap Rate）: <strong style="color:var(--gold)">' + capRate.toFixed(2) + '%</strong> / ローン金利: <strong style="color:var(--text)">' + rate + '%</strong></div>';
   html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<tr style="background:rgba(255,255,255,0.06)"><th style="padding:7px;text-align:right;color:var(--text-muted)">自己資金</th><th style="padding:7px;text-align:right;color:var(--text-muted)">自己資金額</th><th style="padding:7px;text-align:right;color:var(--text-muted)">年間返済</th><th style="padding:7px;text-align:right;color:var(--text-muted)">年間CF</th><th style="padding:7px;text-align:right;color:var(--text-muted)">CCR</th></tr>';
@@ -9601,7 +9624,14 @@ function calcRegionalRisk() {
   if (access <= 2) cautions.push('⚠️ 公共交通不便エリア。若年層の流入が少なく高齢化が進みやすい');
   if (employ <= 2) cautions.push('⚠️ 雇用の縮小が空室率上昇につながるリスクあり');
   if (cautions.length === 0) cautions.push('✅ 特段の懸念事項は確認されません');
-  el.innerHTML = '<div style="background:rgba('+gc.replace('#','').replace(/(..)(..)(..)/, function(_,r,g,b){ return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16); })+',0.06);border:1px solid '+gc.replace(')',',0.25)').replace('rgb(','rgba(')+';border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;gap:14px">'
+  var rrHex = gc.replace('#',''); var rrR=parseInt(rrHex.substr(0,2),16),rrG=parseInt(rrHex.substr(2,2),16),rrB=parseInt(rrHex.substr(4,2),16);
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+rrR+','+rrG+','+rrB+',0.12),rgba('+rrR+','+rrG+','+rrB+',0.04));border:2px solid rgba('+rrR+','+rrG+','+rrB+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+gc+';font-weight:700;letter-spacing:2px;margin-bottom:6px">エリア健全性スコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+gc+';line-height:1;margin-bottom:4px">'+pct+'<span style="font-size:20px">pt</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">'+grade+'</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+gc+'">75点以上で低リスク・安定した賃貸需要が期待できる水準</div>'
+    + '</div>'
+    + '<div style="background:rgba('+rrR+','+rrG+','+rrB+',0.06);border:1px solid rgba('+rrR+','+rrG+','+rrB+',0.25);border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;gap:14px">'
     +'<div style="text-align:center;min-width:70px;flex-shrink:0">'
     +'<div style="font-size:30px;font-weight:900;color:'+gc+'">'+pct+'<span style="font-size:14px">pt</span></div>'
     +'<div style="font-size:9px;color:rgba(255,255,255,0.4)">エリア健全性</div>'
@@ -9671,7 +9701,17 @@ function calcCashVsLoan() {
   var verdict = leverageOK
     ? '💡 <b style="color:#d4af37">融資活用の方がCCRが高い</b>（ポジティブレバレッジ）。同じ自己資金で<b style="color:#d4af37">' + fmt(equityA - equityB) + '分の物件追加投資</b>が可能になります。'
     : '⚠️ <b style="color:#f44336">現金購入の方がCCRが高い</b>（ネガティブレバレッジ）。借入コストが物件利回りを上回っています。利回り改善か金利交渉が必要です。';
-  el.innerHTML = rows
+  var cvHeroRgb = leverageOK ? '212,175,55' : '74,222,128';
+  var cvHeroColor = leverageOK ? '#d4af37' : '#4ade80';
+  var cvWinner = leverageOK ? '融資活用' : '現金購入';
+  var cvBetterCCR = leverageOK ? Math.round((ccrB-ccrA)*10)/10 : Math.round((ccrA-ccrB)*10)/10;
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+cvHeroRgb+',0.12),rgba('+cvHeroRgb+',0.04));border:2px solid rgba('+cvHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+cvHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+cvWinner+'が有利（CCR比較）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+cvHeroColor+';line-height:1;margin-bottom:4px">+'+(leverageOK?Math.round(ccrB*10)/10:Math.round(ccrA*10)/10)+'<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">月CF: '+(leverageOK?Math.round(cfB/10000*10)/10:Math.round(cfA/10000*10)/10)+'万円/月 / '+(leverageOK?'LTV'+Math.round(ltv*100)+'%融資':'フルキャッシュ')+'</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+cvHeroColor+'">'+(leverageOK?'現金購入より+'+ cvBetterCCR +'% 高いCCR':'融資活用より+'+cvBetterCCR+'% 高いCCR')+'</div>'
+    + '</div>'
+    + rows
     +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba('+lc.replace('#','').replace(/(..)(..)(..)/, function(_,r,g,b){ return parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16); })+',0.2);border-radius:8px;padding:10px;font-size:11px;line-height:1.7">'+verdict+'</div>'
     +'<div style="font-size:10px;color:rgba(255,255,255,0.25);margin-top:8px">📌 CF・CCRは満室想定。空室率・税金は含みません。DSCR(返済余裕率)は1.2以上が融資審査の目安。</div>'
     +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💰 現金 vs 融資 どっちが得？\n\n物件価格: ' + Math.round(price/10000) + '万円\n現金購入: 月CF' + Math.round(cfA/10000*10)/10 + '万円・CCR' + Math.round(ccrA*10)/10 + '%\n融資活用(LTV' + Math.round(ltv*100) + '%): 月CF' + Math.round(cfB/10000*10)/10 + '万円・CCR' + Math.round(ccrB*10)/10 + '%\n→ ' + (leverageOK ? '融資活用の方が自己資金効率が高い（ポジティブレバレッジ）' : '現金購入の方が効率的（ネガティブレバレッジ注意）') + '\n\n▶ あなたの物件でも無料比較\n不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
@@ -9700,7 +9740,15 @@ function calcPortfolioRebalance() {
   var YIELDS = { housing: 0.06, commercial: 0.08, land: 0.02 };
   var currentCF = housing * YIELDS.housing + commercial * YIELDS.commercial + land * YIELDS.land;
   var targetCF = tgtHousingAmt * YIELDS.housing + tgtCommAmt * YIELDS.commercial + tgtLandAmt * YIELDS.land;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var cfDiffRgb = targetCF >= currentCF ? '74,222,128' : '251,146,60';
+  var cfDiffColor = targetCF >= currentCF ? '#4ade80' : '#fb923c';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+cfDiffRgb+',0.12),rgba('+cfDiffRgb+',0.04));border:2px solid rgba('+cfDiffRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+cfDiffColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">リバランス後の年間CF</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+cfDiffColor+';line-height:1;margin-bottom:4px">'+targetCF.toFixed(0)+'<span style="font-size:20px">万円/年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">現在 '+currentCF.toFixed(0)+'万円/年 → 変化 '+(targetCF-currentCF>=0?'+':'')+(targetCF-currentCF).toFixed(0)+'万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+cfDiffColor+'">'+(targetCF>currentCF?'商業系比率を上げることでCFを改善できます':'住宅系中心で安定性を重視した配分')+'</div>'
+    + '</div>'
+    + '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + GOLD + ';margin-bottom:10px;font-size:13px">📊 現状 vs 目標 比率比較</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px">';
   html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:4px 6px">種別</th><th style="text-align:right;padding:4px 6px">現状</th><th style="text-align:right;padding:4px 6px">目標</th><th style="text-align:right;padding:4px 6px">差額</th></tr>';
@@ -9769,7 +9817,15 @@ function calcInheritanceTax() {
   var withoutTokureig = Math.max(0, prop + other - basicExemption);
   var taxWithout = calcTax(withoutTokureig / heirs) * heirs;
   var saving = (taxWithout - totalTaxBase);
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var ihtHeroRgb = totalTaxBase <= 0 ? '74,222,128' : '248,113,113';
+  var ihtHeroColor = totalTaxBase <= 0 ? '#4ade80' : '#f87171';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+ihtHeroRgb+',0.12),rgba('+ihtHeroRgb+',0.04));border:2px solid rgba('+ihtHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+ihtHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">相続税 概算総額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+ihtHeroColor+';line-height:1;margin-bottom:4px">'+(totalTaxBase<=0?'非課税':Math.round(totalTaxBase).toLocaleString()+'<span style="font-size:20px">万円</span>')+'</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">課税遺産 '+taxableAmt.toFixed(0)+'万円 / 基礎控除 '+basicExemption+'万円 / 相続人'+heirs+'人</div>'
+    + (tokureig && saving > 0 ? '<div style="margin-top:6px;font-size:11px;color:#4ade80">小規模宅地特例で '+Math.round(saving).toLocaleString()+'万円節税</div>' : '<div style="margin-top:6px;font-size:11px;color:'+ihtHeroColor+'">'+(totalTaxBase<=0?'基礎控除内のため相続税なし':'相続人1人あたり '+ Math.round(totalTaxBase/heirs).toLocaleString()+'万円の負担')+'</div>')
+    + '</div>'
+    + '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
   var stats = [
     ['課税遺産総額', (taxableAmt > 0 ? taxableAmt.toFixed(0) : '0') + '万円', taxableAmt > 0 ? '#fb923c' : '#4ade80'],
@@ -9822,7 +9878,16 @@ function calcSubleaseVsSelf() {
   }
   var diff = selfTotal - slTotal;
   var slWins = slTotal > selfTotal;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var svsHeroRgb = !slWins ? '74,222,128' : '212,175,55';
+  var svsHeroColor = !slWins ? '#4ade80' : '#d4af37';
+  var svsWinner = !slWins ? '自主管理' : 'サブリース';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+svsHeroRgb+',0.12),rgba('+svsHeroRgb+',0.04));border:2px solid rgba('+svsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+svsHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+svsWinner+'が有利（10年累計）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+svsHeroColor+';line-height:1;margin-bottom:4px">'+(!slWins?Math.round(selfTotal).toLocaleString():Math.round(slTotal).toLocaleString())+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">差額 '+(Math.abs(diff)>=0?'+':'')+Math.round(Math.abs(diff)).toLocaleString()+'万円 / 相場家賃 '+market+'万円/月</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+svsHeroColor+'">'+(slWins?'空室リスクゼロの安心感と引き換えに収益を上乗せ':'空室'+Math.round(vacancy*100)+'%・管理費'+Math.round(mgmt*100)+'%控除後でも自主管理が有利')+'</div>'
+    + '</div>'
+    + '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + GOLD + ';margin-bottom:10px;font-size:13px">📊 10年間 収益比較</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
   html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (slWins ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
