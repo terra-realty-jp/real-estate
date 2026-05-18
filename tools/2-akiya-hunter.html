@@ -6601,7 +6601,14 @@ function calcNearRisk() {
     level = '–'; color = '#6b7280'; label = 'チェックなし';
     action = '該当する項目にチェックを入れてください。';
   }
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var nrHeroRgb = color === '#f87171' ? '248,113,113' : color === '#fb923c' ? '251,146,60' : color === '#f59e0b' ? '245,158,11' : '52,211,153';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+nrHeroRgb+',0.1),rgba('+nrHeroRgb+',0.03));border:2px solid rgba('+nrHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">近隣被害リスクスコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+total+'<span style="font-size:20px">点</span></div>'
+    +'<div style="font-size:18px;font-weight:700;color:'+color+';margin-bottom:4px">'+label+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">4点以上で損害賠償リスクあり</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">';
   html += '<div style="width:52px;height:52px;border-radius:50%;background:'+color+'22;border:2px solid '+color+';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:'+color+'">'+level+'</div>';
   html += '<div><div style="font-size:14px;font-weight:700;color:'+color+'">'+label+'</div><div style="font-size:11px;color:#aaa;margin-top:2px">リスクスコア：'+total+'点</div></div>';
@@ -6637,7 +6644,14 @@ function calcAkiyaSec() {
     verdict = '🔴 対策 不十分（'+done+'/'+total+'項目）';
     tips = '空き家は放置期間が長いほど侵入・放火・災害リスクが高まります。まずガス・電気の遮断と施錠確認から始めてください。';
   }
-  var html = '<div style="margin-top:10px">';
+  var asHeroRgb = pct >= 100 ? '74,222,128' : pct >= 60 ? '245,158,11' : '248,113,113';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+asHeroRgb+',0.1),rgba('+asHeroRgb+',0.03));border:2px solid rgba('+asHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+barColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">防犯・防災対策 完了度</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+barColor+';line-height:1;margin-bottom:4px">'+pct+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:14px;font-weight:700;color:'+barColor+';margin-bottom:4px">'+done+'/'+total+'項目 完了</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+verdict+'</div>'
+    +'</div>'
+    +'<div style="margin-top:10px">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
   html += '<span style="font-size:12px;color:#aaa">対策進捗</span><span style="font-size:16px;font-weight:900;color:'+barColor+'">'+pct+'%</span>';
   html += '</div>';
@@ -6681,7 +6695,12 @@ function calcUtilityStatus() {
     mid: '✅ 3〜12ヶ月の場合は<strong>ガス閉栓</strong>（費用0〜数千円）から始めるのがおすすめ。電気・水道は最小プランに変更しましょう。',
     long: '✅ 1年以上の長期空き家は<strong>全契約の休止・解約</strong>を検討してください。最大' + (totalPeriod / 10000).toFixed(1) + '万円の節約効果があります。'
   };
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--green);font-weight:700;letter-spacing:2px;margin-bottom:6px">光熱費を全休止した場合の節約額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1;margin-bottom:4px">'+( totalPeriod/10000).toFixed(1)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+months+'ヶ月間・月'+totalMonthly.toLocaleString()+'円の固定費を解除</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
     + '<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:12px;text-align:center">'
     + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現状 ' + months + 'ヶ月間の無駄な固定費</div>'
     + '<div style="font-size:24px;font-weight:900;color:#f87171">' + (totalPeriod / 10000).toFixed(1) + '<span style="font-size:14px">万円</span></div>'
@@ -6737,7 +6756,12 @@ function calcCleanupCost() {
     advice = '✅ 比較的費用は少額です。売却後の価格交渉余地（値引き分）と比べて、先に費用をかけて物件をきれいにしてから売却する方が高値を引きやすい場合があります。';
   }
 
-  el.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;margin-bottom:12px">' + rows
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">片付け・クリーニング費用の目安</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+total+'〜'+totalMax+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">延床'+area+'㎡・業者依頼の場合の概算</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;margin-bottom:12px">' + rows
     + '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 0">'
     + '<div style="font-size:13px;font-weight:700">合計概算</div>'
     + '<div style="font-size:20px;font-weight:900;color:var(--gold)">' + total + '〜' + totalMax + '万円</div></div></div>'
