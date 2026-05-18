@@ -3422,6 +3422,31 @@
     <div id="rv_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 自宅を賃貸に出すとローン控除が消える！損失試算カード -->
+  <div class="card" id="card-loan-deduction-loss">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">⚠️ 自宅を賃貸に出すと住宅ローン控除が使えなくなる！失う節税額を試算する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">転勤・住み替えで自宅を賃貸に出すと、「住んでいない」ため住宅ローン控除（年末残高×0.7%）が適用停止になります。知らずに賃貸に出して毎年数十万円の節税を失っている人が多いです。賃貸期間中に失う控除額を計算しましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在のローン残高（万円）（例: 3500）</label>
+        <input type="number" id="ldl_balance" value="3500" min="100" max="100000" step="100" oninput="calcLoanDeductionLoss()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">控除残り年数（年）（例: 8）</label>
+        <input type="number" id="ldl_years" value="8" min="1" max="13" step="1" oninput="calcLoanDeductionLoss()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">賃貸に出す予定期間（年）（例: 3）</label>
+        <input type="number" id="ldl_rent_years" value="3" min="1" max="13" step="1" oninput="calcLoanDeductionLoss()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">想定月額家賃収入（万円）（例: 12）</label>
+        <input type="number" id="ldl_rent" value="12" min="1" max="100" step="1" oninput="calcLoanDeductionLoss()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="loan-deduction-loss-result"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -12378,6 +12403,62 @@ function calcRepairVsReplace() {
     html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🔧 修理vs買い替えの損得を比較してみた！\n\n修理費・耐用年数・買い替えコストを比較\n「修理すべき？買い替えすべき？」に答えが出た！\n\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 el.innerHTML = html;
 }
+
+function calcLoanDeductionLoss() {
+  var balance = parseFloat(document.getElementById('ldl_balance').value) || 0;
+  var years = parseInt(document.getElementById('ldl_years').value) || 0;
+  var rentYears = parseInt(document.getElementById('ldl_rent_years').value) || 0;
+  var rent = parseFloat(document.getElementById('ldl_rent').value) || 0;
+  var el = document.getElementById('loan-deduction-loss-result');
+  if (!el) return;
+
+  var actualRentYears = Math.min(rentYears, years);
+  // 年間控除額 = ローン残高 × 0.7%（簡易計算・毎年残高が減ると仮定し平均値で計算）
+  var annualDeduction = balance * 0.007; // 万円
+  var totalLost = Math.round(annualDeduction * actualRentYears * 10) / 10;
+  var totalRent = rent * 12 * actualRentYears;
+  var netGain = totalRent - totalLost;
+  var deductionClr = '248,113,113';
+  var gainClr = netGain >= 0 ? '74,222,128' : '248,113,113';
+
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba('+deductionClr+',0.12),rgba('+deductionClr+',0.04));border:2px solid rgba('+deductionClr+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:6px">賃貸中に失う住宅ローン控除（累計）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb('+deductionClr+');line-height:1;margin-bottom:6px">▲' + totalLost.toLocaleString() + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.6)">年間控除額 約' + Math.round(annualDeduction * 10) / 10 + '万円 × ' + actualRentYears + '年間</div>'
+    + '</div>';
+
+  var compHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="text-align:center;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px">'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">賃貸収入（税前・'+actualRentYears+'年）</div>'
+    + '<div style="font-size:18px;font-weight:700;color:#4ade80">+' + totalRent.toLocaleString() + '万円</div>'
+    + '</div>'
+    + '<div style="text-align:center;background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px">'
+    + '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">失う控除額</div>'
+    + '<div style="font-size:18px;font-weight:700;color:#f87171">▲' + totalLost.toLocaleString() + '万円</div>'
+    + '</div>'
+    + '</div>';
+
+  var verdictHtml = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-bottom:12px">'
+    + '<div style="font-size:12px;font-weight:700;color:rgb('+gainClr+');margin-bottom:6px">'
+    + (netGain >= 0 ? '✅ 差し引き +' + Math.round(netGain).toLocaleString() + '万円のプラス' : '❌ 差し引き ' + Math.round(netGain).toLocaleString() + '万円の実質損失')
+    + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">※家賃収入には所得税・修繕費・管理費がかかるため実質手取りはさらに少なくなります。賃貸に戻ってから居住を再開すれば、残余期間の控除を再適用できる場合があります（要件要確認）。</div>'
+    + '</div>';
+
+  var noteHtml = '<div style="background:rgba(251,146,60,0.06);border:1px solid rgba(251,146,60,0.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:rgba(255,255,255,0.75);line-height:1.7">'
+    + '💡 <strong style="color:#fb923c">重要</strong>：住宅ローン控除は「自ら居住している」期間のみ適用されます。転勤・住み替えで賃貸に出すと適用が停止し、その間の控除はもらえません。転勤の場合は転勤特例（3年以内に戻ると再開可）を活用できる場合があります。'
+    + '</div>';
+
+  var shareVal = encodeURIComponent('⚠️ 自宅を賃貸に出すと住宅ローン控除が消える！\n\n賃貸中に失う控除額: ▲' + totalLost.toLocaleString() + '万円\n賃貸収入（' + actualRentYears + '年）: +' + totalRent.toLocaleString() + '万円\n実質差引: ' + (netGain >= 0 ? '+' : '') + Math.round(netGain).toLocaleString() + '万円\n\n転勤・住み替えを考えている人は必読！\n▶ 無料で計算\n不動産かんたんツール（TERRA REALTY）');
+  var lineUrl = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(location.href) + '&text=' + shareVal;
+
+  el.innerHTML = heroHtml + compHtml + verdictHtml + noteHtml
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + '<a href="' + lineUrl + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#00B900;color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none">📤 LINEでシェア</a>'
+    + '<a href="mailto:terra.realty.iam@gmail.com?subject=転勤・住み替えでローン控除について相談したい&body=' + encodeURIComponent('住宅ローン控除が賃貸に出すと消える件について相談したいです。\nローン残高: ' + balance + '万円\n残余控除年数: ' + years + '年\n賃貸予定期間: ' + rentYears + '年') + '" style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);color:var(--green);border:1px solid rgba(34,197,94,0.25);font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none">→ TERRA REALTYに相談</a>'
+    + '</div>';
+}
+(function(){ calcLoanDeductionLoss(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
