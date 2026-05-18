@@ -10872,7 +10872,13 @@ function calcBreakevenYield() {
   var expenseRate = 0.2;
   var breakevenGrossAnnual = Math.round(annualLoan / (1 - expenseRate) * 10) / 10;
   var breakevenYield = Math.round(breakevenGrossAnnual / price * 100 * 100) / 100;
-  var html = '<div style="display:grid;gap:8px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.04));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#d4af37;font-weight:700;letter-spacing:2px;margin-bottom:6px">損益分岐となる最低利回り</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#d4af37;line-height:1;margin-bottom:4px">'+breakevenYield.toFixed(2)+'<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">年間ローン返済: '+annualLoan.toFixed(1)+'万円 / 必要年間賃料: '+breakevenGrossAnnual.toFixed(1)+'万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#d4af37">安全圏の目安は'+(breakevenYield + 1).toFixed(1)+'%以上（+1pt余裕が理想）</div>'
+    + '</div>'
+    + '<div style="display:grid;gap:8px">';
   html += '<div style="background:rgba(212,175,55,0.12);border-radius:8px;padding:14px;text-align:center">';
   html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">損益分岐となる最低利回り</div>';
   html += '<div style="font-size:32px;font-weight:700;color:#d4af37">' + breakevenYield.toFixed(2) + '<span style="font-size:16px">%</span></div>';
@@ -10920,7 +10926,15 @@ function calcScrapRebuild() {
   var assetUp = assetNew - assetNow - demoCost;
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+  var srbHeroRgb = recoupYears <= 20 ? '74,222,128' : recoupYears <= 30 ? '250,204,21' : '248,113,113';
+  var srbHeroColor = recoupYears <= 20 ? '#4ade80' : recoupYears <= 30 ? '#facc15' : '#f87171';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+srbHeroRgb+',0.12),rgba('+srbHeroRgb+',0.04));border:2px solid rgba('+srbHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+srbHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">建て替え投資の回収期間</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+srbHeroColor+';line-height:1;margin-bottom:4px">'+recoupYears.toFixed(0)+'<span style="font-size:20px">年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">投資総額: '+totalCost.toFixed(0)+'万円 / 年収増: +'+annualNetIncrease.toFixed(0)+'万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+srbHeroColor+'">'+(recoupYears <= 20 ? '✅ 20年以内回収・建て替えが有効' : recoupYears <= 30 ? '💡 20〜30年・長期視点で検討' : '⚠️ 30年超・費用対効果を要再検討')+'</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
     '<div style="background:var(--dark3);border-radius:10px;padding:12px;text-align:center">' +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">現在の利回り（概算）</div>' +
     '<div style="font-size:28px;font-weight:900;color:#fb923c">' + yieldNow.toFixed(1) + '<span style="font-size:14px">%</span></div>' +
@@ -10992,9 +11006,17 @@ function calcNisaVsRealestate() {
 
   var winner = nisaFinal > reTotalReturn ? 'NISA' : '不動産投資';
   var diff = Math.abs(nisaFinal - reTotalReturn);
+  var nvrHeroRgb = nisaFinal > reTotalReturn ? '74,222,128' : '212,175,55';
+  var nvrHeroColor = nisaFinal > reTotalReturn ? '#4ade80' : '#d4af37';
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+nvrHeroRgb+',0.12),rgba('+nvrHeroRgb+',0.04));border:2px solid rgba('+nvrHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+nvrHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+years+'年後の有利な運用先</div>'
+    + '<div style="font-size:36px;font-weight:900;color:'+nvrHeroColor+';line-height:1;margin-bottom:4px">'+winner+'<span style="font-size:16px">が有利</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:2px">差額: <b style="color:'+nvrHeroColor+'">'+Math.round(diff).toLocaleString()+'万円</b></div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+nvrHeroColor+'">'+(nisaFinal > reTotalReturn ? '流動性・リスク管理でNISAが優勢' : 'レバレッジ活用で不動産が資産規模で優勢')+'</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
     '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:14px;text-align:center">' +
     '<div style="font-size:11px;color:#4ade80;font-weight:700;margin-bottom:6px">📈 NISA（投資信託）' + years + '年後</div>' +
     '<div style="font-size:11px;color:var(--text-muted)">年利' + nisaRate + '%・非課税・複利</div>' +
@@ -11074,7 +11096,13 @@ function calcInflationVsCash() {
   var lossRealValue = capital - bank10Real;
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(248,113,113,0.12),rgba(248,113,113,0.04));border:2px solid rgba(248,113,113,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">インフレ'+inflation+'%継続時の現金目減り（10年後）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#f87171;line-height:1;margin-bottom:4px">'+lossRealValue.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">元本'+capital+'万円が実質'+bank10Real.toFixed(0)+'万円に目減り</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#4ade80">不動産投資の場合: '+re10Real.toFixed(0)+'万円（+'+(re10Real - capital).toFixed(0)+'万円）</div>'
+    + '</div>'
+    + '<div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
     '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;text-align:center">インフレ' + inflation + '%が続くと10年後…</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">' +
     '<div style="text-align:center;background:rgba(248,113,113,0.1);border-radius:8px;padding:10px">' +
@@ -11202,7 +11230,13 @@ function calcInvestDebut() {
     : ['次の物件購入に向けて自己資金計画を立てる', 'ポートフォリオの分散（エリア・物件タイプ）を検討する', 'このツールでキャッシュフロー分析を繰り返す'];
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.04));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#d4af37;font-weight:700;letter-spacing:2px;margin-bottom:6px">あなたへのおすすめ投資タイプ</div>'
+    + '<div style="font-size:28px;font-weight:900;color:#d4af37;line-height:1.2;margin-bottom:8px">'+recommendations[0].icon+' '+recommendations[0].type+'</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">投資予算目安: '+Math.min(totalBudget, capital * 10).toFixed(0)+'万円（自己資金'+capital+'万円+融資）</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#4ade80">'+recommendations[0].yield+'</div>'
+    + '</div>'
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:14px;margin-bottom:12px">' +
     '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">💡 あなたの状況</div>' +
     '<div style="font-size:12px;color:var(--text-muted);line-height:1.7">' + budgetNote + '</div>' +
     '</div>' +
@@ -11278,7 +11312,15 @@ function calcExitStrategy3Way() {
   }).join('');
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px">10年間のトータルリターン比較（手取り概算）</div>' +
+  var esHeroColor = options[0].value >= 0 ? '#4ade80' : '#f87171';
+  var esHeroRgb = options[0].value >= 0 ? '74,222,128' : '248,113,113';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+esHeroRgb+',0.12),rgba('+esHeroRgb+',0.04));border:2px solid rgba('+esHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+esHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年トータルリターン最大の選択肢</div>'
+    + '<div style="font-size:28px;font-weight:900;color:'+esHeroColor+';line-height:1.2;margin-bottom:4px">'+options[0].name+'</div>'
+    + '<div style="font-size:36px;font-weight:900;color:'+esHeroColor+';line-height:1;margin-bottom:4px">'+Math.abs(Math.round(options[0].value)).toLocaleString()+'<span style="font-size:18px">万円</span></div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+esHeroColor+'">2位より'+(Math.abs(Math.round(options[0].value)) - Math.abs(Math.round(options[1].value))).toLocaleString()+'万円多い</div>'
+    + '</div>'
+    + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px">10年間のトータルリターン比較（手取り概算）</div>' +
     optHtml +
     '<div style="background:rgba(245,158,11,0.08);border-radius:8px;padding:10px;font-size:12px;line-height:1.7">' +
     '💡 <strong>判断のポイント：</strong>どの選択肢が最良かは市場環境・立地・資金力によって変わります。空室率が今後も上がる見込みなら早期売却も有力な選択肢です。まず現在の利回りと築年数の関係を確認することをおすすめします。' +
@@ -11312,7 +11354,13 @@ function calcPensionSupplement() {
   var monthlyTarget = ownCapital / (yearsLeft * 12);
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.35);border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.04));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#d4af37;font-weight:700;letter-spacing:2px;margin-bottom:6px">年金補完のために必要な物件数</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#d4af37;line-height:1;margin-bottom:4px">'+roomsNeeded+'<span style="font-size:20px">室</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">月間不足額: '+shortfall+'万円 / 必要投資額: '+totalInvestment.toLocaleString()+'万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:#d4af37">月積立目標: '+monthlyTarget.toFixed(1)+'万円（65歳まで'+yearsLeft+'年）</div>'
+    + '</div>'
+    + '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.35);border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">月間不足額（目標 ' + target + '万円 − 年金 ' + pension + '万円）</div>' +
     '<div style="font-size:36px;font-weight:900;color:var(--gold)">' + shortfall + '<span style="font-size:16px">万円/月</span></div>' +
     '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">不動産収入で補うべき金額</div>' +
@@ -11381,7 +11429,12 @@ function calcLossOffsetTax() {
   const totalSaving = itSaving + jitSaving;
   const effectiveRate = loss > 0 ? (totalSaving / loss * 100) : 0;
   el.style.display = 'block';
-  el.innerHTML = `
+  el.innerHTML = `<div style="background:linear-gradient(135deg,rgba(74,222,128,0.12),rgba(74,222,128,0.04));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">
+    <div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">損益通算による年間節税額</div>
+    <div style="font-size:52px;font-weight:900;color:#4ade80;line-height:1;margin-bottom:4px">${Math.round(totalSaving)}<span style="font-size:20px">万円</span></div>
+    <div style="font-size:12px;color:var(--text-muted)">実効節税率: ${effectiveRate.toFixed(1)}% / 赤字${loss}万円に対して</div>
+    <div style="margin-top:6px;font-size:11px;color:#4ade80">年収${salary}万円のサラリーマンの損益通算効果</div>
+  </div>
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:10px;padding:14px">
       <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 損益通算の節税効果</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -11444,7 +11497,12 @@ function calcStartDelay() {
   var urgency = delayYears >= 5 ? '🔴 非常に高い' : delayYears >= 3 ? '🟠 高い' : '🟡 中程度';
   var startAge = age + delayYears;
 
-  el.innerHTML = `
+  el.innerHTML = `<div style="background:linear-gradient(135deg,rgba(248,113,113,0.12),rgba(248,113,113,0.04));border:2px solid rgba(248,113,113,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">
+    <div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">${delayYears}年先延ばしによる生涯機会損失</div>
+    <div style="font-size:52px;font-weight:900;color:#f87171;line-height:1;margin-bottom:4px">${lifetimeDiff.toLocaleString()}<span style="font-size:20px">万円</span></div>
+    <div style="font-size:12px;color:var(--text-muted)">先延ばしリスク: ${urgency} / 手残り損失: ${cfYearLoss}万円</div>
+    <div style="margin-top:6px;font-size:11px;color:#f87171">今すぐ始めると${yearsNow}年間運用 → ${delayYears}年後なら${yearsDelayed}年間しか運用できない</div>
+  </div>
     <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:14px;margin-top:10px">
       <div style="font-size:13px;font-weight:700;color:#f87171;margin-bottom:12px">⏳ ${delayYears}年間先延ばしにした場合の機会損失</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
@@ -11527,7 +11585,15 @@ function calcYieldTriple() {
   var diff = grossYield - netYield;
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">' +
+  var ytHeroRgb = colors[netGrade] ? (netGrade === '優秀' ? '74,222,128' : netGrade === '良好' ? '134,239,172' : netGrade === '標準' ? '250,204,21' : netGrade === '低め' ? '251,146,60' : '248,113,113') : '212,175,55';
+  var ytHeroColor = colors[netGrade] || '#d4af37';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+ytHeroRgb+',0.12),rgba('+ytHeroRgb+',0.04));border:2px solid rgba('+ytHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+ytHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">実質利回り（ネット）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+ytHeroColor+';line-height:1;margin-bottom:4px">'+netYield.toFixed(1)+'<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">表面利回り: '+grossYield.toFixed(1)+'% / CCR: '+ccr.toFixed(1)+'% / 月手残り: '+monthlyCF.toFixed(1)+'万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+ytHeroColor+'">'+netGrade+'（目安: 6%以上で良好・8%以上で優秀）</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">' +
     ['表面利回り（グロス）', '実質利回り（ネット）', 'CCR（自己資本収益率）'].map(function(label, i) {
       var vals = [grossYield, netYield, ccr];
       var grades = [grossGrade, netGrade, ccrGrade];
