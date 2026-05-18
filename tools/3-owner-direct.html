@@ -4943,7 +4943,15 @@ function calcNego() {
   });
   var baseNet = rows[0].net;
 
-  var html = '<div style="margin-top:10px;overflow-x:auto">'
+  var ngHeroRgb   = baseNet >= 0 ? '201,168,76' : '239,68,68';
+  var ngHeroColor = baseNet >= 0 ? 'var(--gold)' : 'var(--red)';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + ngHeroRgb + ',0.1),rgba(' + ngHeroRgb + ',0.03));border:2px solid rgba(' + ngHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + ngHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">希望価格での手取り概算</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + ngHeroColor + ';line-height:1;margin-bottom:4px">' + Math.round(baseNet).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">5%値引きすると▲' + Math.round(Math.abs(rows[4].change)).toLocaleString() + '万円 · 7%値引きすると▲' + Math.round(Math.abs(rows[5].change)).toLocaleString() + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">⚠️ 値引きに応じすぎると手取りが大幅に減少します — 交渉は3%以内が目安</div>'
+    + '</div>'
+    + '<div style="margin-top:10px;overflow-x:auto">'
     + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
     + '<thead><tr style="background:rgba(255,255,255,0.05)">'
     + '<th style="padding:7px 8px;text-align:left;color:var(--text-muted);font-weight:600">値引き率</th>'

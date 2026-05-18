@@ -5889,8 +5889,18 @@ function calcTransferTax() {
   var tax = Math.max(0, taxableBase * taxRate);
   var taxNoSpecial = Math.max(0, gain * taxRate);
   var netProceeds = sell - expense - tax;
+  var ttHeroTax = special ? tax : taxNoSpecial;
+  var ttHeroRgb   = gain <= 0 ? '74,222,128' : ttHeroTax === 0 ? '74,222,128' : ttHeroTax < 100 ? '212,175,55' : '239,68,68';
+  var ttHeroColor = gain <= 0 ? 'var(--green)' : ttHeroTax === 0 ? 'var(--green)' : ttHeroTax < 100 ? 'var(--gold)' : 'var(--red)';
+  var ttHeroLabel = special ? '譲渡所得税（3,000万特控あり）' : '譲渡所得税（特控なし）';
   var kpiS = 'background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;text-align:center';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + ttHeroRgb + ',0.1),rgba(' + ttHeroRgb + ',0.03));border:2px solid rgba(' + ttHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + ttHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + ttHeroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + ttHeroColor + ';line-height:1;margin-bottom:4px">' + (gain <= 0 ? '0' : Math.round(ttHeroTax).toLocaleString()) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + exemptionLabel + ' · 実効税率' + (taxRate*100).toFixed(3) + '% · 手取り' + (sell-expense-ttHeroTax).toFixed(0) + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">' + (gain <= 0 ? '✓ 譲渡益なし — 税金はかかりません' : special && tax === 0 ? '✓ 3,000万円特別控除で税金ゼロです' : special ? '3,000万特控を使うと▲' + (taxNoSpecial - tax).toFixed(0) + '万円の節税になります' : '⚠️ 3,000万特控が使えれば税額を大幅に減らせる可能性があります') + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
     +'<div style="'+kpiS+'"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">譲渡益</div><div style="font-size:20px;font-weight:900;color:'+(gain>=0?'var(--gold)':'var(--red)')+'">'+gain.toFixed(0)+'万</div></div>'
     +'<div style="'+kpiS+'"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">保有区分</div><div style="font-size:15px;font-weight:700;color:'+(isLong?'var(--green)':'var(--red)')+'">'+exemptionLabel+'</div><div style="font-size:11px;color:var(--text-muted)">実効税率 '+(taxRate*100).toFixed(3)+'%</div></div>'
     +'</div>'
