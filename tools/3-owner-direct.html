@@ -7288,7 +7288,15 @@ function calcDirectVsAgent() {
   var agentNet = price - feeAgent;
   var diff = directNet - agentNet;
   var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var dvaHeroRgb = diff > 0 ? '74,222,128' : '248,113,113';
+  var dvaHeroColor = diff > 0 ? '#4ade80' : '#f87171';
+  var dvaHeroLabel = diff > 0 ? '直接売買が有利（差額）' : '仲介ありが有利（差額）';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+dvaHeroRgb+',0.1),rgba('+dvaHeroRgb+',0.03));border:2px solid rgba('+dvaHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+dvaHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+dvaHeroLabel+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+dvaHeroColor+';line-height:1;margin-bottom:4px">'+Math.abs(diff).toFixed(1)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">仲介手取'+agentNet.toFixed(1)+'万 vs 直接手取'+directNet.toFixed(1)+'万</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">📊 手取り比較</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
   html += '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px;text-align:center' + (agentNet >= directNet ? ';border:1px solid rgba(74,222,128,0.3)' : '') + '">';
@@ -7341,7 +7349,12 @@ function calcPairLoan() {
   var pairDeduction = Math.min(loan * 10000, 40000000) * 0.007 / 2;
   var soloDeduction = Math.min(loan * 10000, 30000000) * 0.007;
   var ACCENT = '#60a5fa', BG = 'rgba(96,165,250,0.07)', BDR = 'rgba(96,165,250,0.2)';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(96,165,250,0.03));border:2px solid rgba(96,165,250,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#60a5fa;font-weight:700;letter-spacing:2px;margin-bottom:6px">ペアローン 借入可能上限</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#60a5fa;line-height:1;margin-bottom:4px">'+Math.round(pairLimit).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">単独ローン上限'+soloLimit.toFixed(0)+'万円'+(loanOk?'（希望額で借入可能）':'（希望額'+loan+'万円を超過）')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">';
   html += '<div style="font-weight:700;color:' + ACCENT + ';margin-bottom:10px;font-size:13px">📊 ペアローン vs 単独ローン比較</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
   html += '<tr style="color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.1)">';
@@ -7398,7 +7411,13 @@ function calcOfferTiming() {
     advice = '掲載直後の人気物件は値引き交渉が難しい傾向があります。市場動向を観察しつつタイミングを計りましょう。';
   }
   var compLabel = { high: '人気あり（競合が多い）', mid: '普通', low: '少ない（交渉しやすい）' }[competition];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var otHeroRgb = totalScore >= 70 ? '74,222,128' : totalScore >= 40 ? '96,165,250' : '251,146,60';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+otHeroRgb+',0.1),rgba('+otHeroRgb+',0.03));border:2px solid rgba('+otHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+timingColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">交渉余地の目安</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+timingColor+';line-height:1;margin-bottom:4px">'+negoAmt.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+timingLabel+' · タイミング指数'+totalScore+'/100</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="text-align:center;margin-bottom:12px">';
   html += '<div style="font-size:22px;font-weight:900;color:' + timingColor + '">' + timingLabel + '</div>';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">タイミング指数: ' + totalScore + '/100</div>';
@@ -7443,7 +7462,12 @@ function calcBuyerProfile() {
     rural: '移住希望者・自然志向層・定年後移住組がターゲット。広さと自然をアピール'
   };
   var pLabel = { house_family: '一戸建て（ファミリー向け）', condo_1r: 'マンション（1R〜1LDK）', condo_3ldk: 'マンション（3LDK〜）', old_house: '築古物件', large_land: '大型土地' }[pType];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(96,165,250,0.03));border:2px solid rgba(96,165,250,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#60a5fa;font-weight:700;letter-spacing:2px;margin-bottom:6px">想定ターゲット層</div>'
+    +'<div style="font-size:26px;font-weight:900;color:#60a5fa;line-height:1.2;margin-bottom:6px">'+profiles[pType].main+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+profiles[pType].sub+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">📍 ' + pLabel + ' / 駅' + station + '分 / ' + envLabels[env] + '</div>';
   html += '<div style="margin-bottom:12px">';
   html += '<div style="font-size:12px;color:' + ACCENT + ';font-weight:700;margin-bottom:2px">主要ターゲット</div>';
@@ -7491,7 +7515,12 @@ function calcMediationClause() {
     { name: '専属専任媒介', score: sensokuScore, reportObligation: '1週間に1回以上', periodMax: '3ヶ月以内', selfFind: '不可（業者経由のみ）', pros: '業者の最大積極性。週次報告で最も手厚いサポート', cons: '自己発見取引不可。1社への最大依存' }
   ];
   contracts.sort(function(a, b) { return b.score - a.score; });
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(96,165,250,0.03));border:2px solid rgba(96,165,250,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#60a5fa;font-weight:700;letter-spacing:2px;margin-bottom:6px">あなたの状況に最適な媒介契約</div>'
+    +'<div style="font-size:40px;font-weight:900;color:#60a5fa;line-height:1.1;margin-bottom:4px">'+contracts[0].name+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">マッチ度'+contracts[0].score+'pt · 2位: '+contracts[1].name+'（'+contracts[1].score+'pt）</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="font-size:12px;font-weight:700;color:' + ACCENT + ';margin-bottom:10px">おすすめ順: ' + contracts.map(function(c) { return c.name; }).join(' → ') + '</div>';
   contracts.forEach(function(c, i) {
     var isTop = i === 0;
@@ -7529,6 +7558,9 @@ function calcContingencyClause() {
   else if (competition === 'mid') { withScore += 20; withoutScore += 20; }
   else { withScore += 25; withoutScore += 10; }
   var rec = withScore >= withoutScore ? 'with' : 'without';
+  var ccRecLabel = rec === 'with' ? '融資特約あり' : '融資特約なし';
+  var ccHeroRgb = rec === 'with' ? '74,222,128' : '96,165,250';
+  var ccHeroColor = rec === 'with' ? '#4ade80' : '#60a5fa';
   var buyerAdvice, sellerAdvice;
   if (role === 'buyer') {
     buyerAdvice = rec === 'with'
@@ -7539,7 +7571,12 @@ function calcContingencyClause() {
       ? '特約あり申込みの場合、売主は融資否認時の白紙解除リスクを負います。高需要物件なら特約なし条件を提示する交渉も可能です。'
       : '競合需要が高い場合、特約なし申込みを優先条件として選ぶことで早期成約を狙えます。ただし買主の与信確認を徹底してください。';
   }
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+ccHeroRgb+',0.1),rgba('+ccHeroRgb+',0.03));border:2px solid rgba('+ccHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+ccHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">おすすめ条件</div>'
+    +'<div style="font-size:40px;font-weight:900;color:'+ccHeroColor+';line-height:1.1;margin-bottom:4px">'+ccRecLabel+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">マッチ度 '+(rec==='with'?withScore:withoutScore)+'pt</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
   var opts = [
     { label: '融資特約あり', score: withScore, pros: '審査落ち時に手付金返還', cons: '売主側のリスク大・競争で不利' },
@@ -7612,7 +7649,14 @@ function calcMoveInReform() {
   var msg = overBudget
     ? '<p style="color:#fb923c;font-size:12px;margin-top:8px">⚠️ 優先度に基づき予算' + budget + '万円内に配分（全項目実施には' + total + '万円必要）</p>'
     : '<p style="color:#4ade80;font-size:12px;margin-top:8px">✅ 予算' + budget + '万円内で全項目を実施できます</p>';
-  el.innerHTML = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
+  var mirHeroRgb = overBudget ? '251,146,60' : '74,222,128';
+  var mirHeroColor = overBudget ? '#fb923c' : '#4ade80';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+mirHeroRgb+',0.1),rgba('+mirHeroRgb+',0.03));border:2px solid rgba('+mirHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+mirHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">推奨リフォーム費用合計</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+mirHeroColor+';line-height:1;margin-bottom:4px">'+displayTotal+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+occLabel+'向け・'+prioLabel+(overBudget?' · 予算内に配分':'')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:16px">'
     + '<div style="font-size:13px;font-weight:700;color:' + ACCENT + ';margin-bottom:12px">📋 推奨リフォーム項目（' + occLabel + '向け・' + prioLabel + '）</div>'
     + '<table style="width:100%;border-collapse:collapse;font-size:12px">'
     + '<tr style="color:rgba(255,255,255,0.5);font-size:11px"><th style="padding:4px 8px;text-align:left">工事項目</th><th style="padding:4px 8px;text-align:right">費用目安</th><th style="padding:4px 8px;text-align:left">理由</th></tr>'
