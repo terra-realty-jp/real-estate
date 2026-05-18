@@ -6646,8 +6646,19 @@ function calcAkiya3Choice() {
   var gap = Math.abs(Math.round(best.net) - Math.round(worst.net));
   var shareText = encodeURIComponent('🏚️ 実家の空き家、どうするのが一番お得？\n\n【10年間の損得試算】\n✅最有利: ' + best.name + '（' + (best.net >= 0 ? '＋' : '') + Math.round(best.net).toLocaleString() + '万円）\n❌最不利: ' + worst.name + '\n→ 選択によって' + gap.toLocaleString() + '万円の差が出る可能性！\n\n▶ あなたの空き家でも無料試算できます\n不動産かんたんツール（TERRA REALTY）');
   var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
-    + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 10年間の損益試算（現在価格との比較）</div>'
+  var bestColor = best.net >= 0 ? '#4ade80' : '#f87171';
+  var bestBg = best.net >= 0 ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
+  var bestBorder = best.net >= 0 ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)';
+  el.innerHTML = '<div style="background:' + bestBg + ';border:2px solid ' + bestBorder + ';border-radius:14px;padding:20px;text-align:center;margin-top:12px;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:' + bestColor + ';font-weight:700;letter-spacing:2px;margin-bottom:4px">★ 最有利シナリオ</div>'
+    + '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">' + best.icon + ' ' + best.name + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + bestColor + ';line-height:1;margin-bottom:4px">' + (best.net >= 0 ? '+' : '') + Math.round(best.net).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">10年間の損益（現在価格との比較）</div>'
+    + '<div style="margin-top:10px;padding:8px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;display:inline-block">'
+    + '<span style="font-size:13px;font-weight:700;color:#f87171">選択によって最大 ' + gap.toLocaleString() + '万円 の差が出ます</span>'
+    + '</div></div>'
+    + '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px">📊 3つのシナリオ比較（10年損益）</div>'
     + cards
     + '<div style="margin-top:8px;padding:10px;background:rgba(255,180,0,0.07);border-radius:8px;border-left:3px solid var(--gold)">'
     + '<div style="font-size:12px;font-weight:700;color:var(--gold)">📝 診断</div>'
@@ -6751,11 +6762,18 @@ function calcDemoSubsidy() {
   const allMet = mandatoryMet === mandatoryTotal;
   const statusColor = allMet ? '#4caf50' : mandatoryMet >= 3 ? '#ff9800' : '#f44336';
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(34,197,94,0.08),rgba(34,197,94,0.03));border:2px solid rgba(34,197,94,0.35);border-radius:14px;padding:20px;text-align:center;margin-top:12px;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">補助金を使った場合の自己負担概算</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">' + netCost.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">解体費用 ' + demoCost.toLocaleString() + '万円 − 補助金 最大' + subsidy.toLocaleString() + '万円</div>'
+    + '<div style="margin-top:10px;padding:8px 16px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:8px;display:inline-block">'
+    + '<span style="font-size:13px;font-weight:700;color:#4ade80">補助金で最大 ' + subsidy.toLocaleString() + '万円 節約できます</span>'
+    + '</div></div>'
+    + '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-bottom:0">'
     + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;padding:12px 0;margin-bottom:12px">'
-    + '<div><div style="font-size:11px;color:var(--text-muted)">解体費用概算</div><div style="font-size:20px;font-weight:900">' + demoCost.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">' + unitCost + '万円/㎡×' + area + '㎡</div></div>'
-    + '<div><div style="font-size:11px;color:#4caf50">補助金見込み</div><div style="font-size:20px;font-weight:900;color:#4caf50">最大' + subsidy.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">加算' + bonusCount + '件</div></div>'
-    + '<div><div style="font-size:11px;color:var(--gold)">自己負担概算</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + netCost.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">概算</div></div>'
+    + '<div><div style="font-size:11px;color:var(--text-muted)">解体費用概算</div><div style="font-size:22px;font-weight:900">' + demoCost.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">' + unitCost + '万円/㎡×' + area + '㎡</div></div>'
+    + '<div><div style="font-size:11px;color:#4caf50">補助金見込み</div><div style="font-size:22px;font-weight:900;color:#4caf50">最大' + subsidy.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">加算' + bonusCount + '件</div></div>'
+    + '<div><div style="font-size:11px;color:var(--gold)">自己負担概算</div><div style="font-size:22px;font-weight:900;color:var(--gold)">' + netCost.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">概算</div></div>'
     + '</div>'
     + '<div style="padding:10px;background:rgba(255,180,0,0.07);border-radius:8px;border-left:3px solid ' + statusColor + '">'
     + '<div style="font-size:12px;font-weight:700;color:' + statusColor + '">📝 申請可能性</div>'
@@ -6800,16 +6818,18 @@ function calcSouzokuTokurei() {
   const statusColor = metAll ? '#4caf50' : '#ff9800';
   const unmet = Object.entries(checks).filter(([k,v]) => !v).length;
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
-    + '<div style="text-align:center;padding:10px 0;margin-bottom:12px">'
-    + '<div style="font-size:12px;color:var(--text-muted)">評価減額（概算）</div>'
-    + '<div style="font-size:36px;font-weight:900;color:#4caf50">' + reduction.toLocaleString() + '<span style="font-size:18px">万円</span></div>'
-    + '<div style="font-size:12px;color:var(--text-muted)">' + cfg.label + ' 適用（減額率' + (cfg.rate * 100) + '%）</div>'
-    + '</div>'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(34,197,94,0.03));border:2px solid rgba(34,197,94,0.4);border-radius:14px;padding:20px;text-align:center;margin-top:12px;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">評価減額（概算）— ' + cfg.label + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#4ade80;line-height:1;margin-bottom:4px">▲' + reduction.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">減額率 ' + (cfg.rate * 100) + '% 適用 ／ 対象面積 ' + applicableArea + '㎡</div>'
+    + '<div style="margin-top:10px;padding:8px 16px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:8px;display:inline-block">'
+    + '<span style="font-size:13px;font-weight:700;color:#4ade80">' + value.toLocaleString() + '万円 → ' + afterValue.toLocaleString() + '万円 に圧縮</span>'
+    + '</div></div>'
+    + '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px">'
     + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:12px">'
-    + '<div><div style="font-size:11px;color:var(--text-muted)">特例前評価額</div><div style="font-size:16px;font-weight:700">' + value.toLocaleString() + '万円</div></div>'
-    + '<div><div style="font-size:11px;color:#4caf50">評価減額</div><div style="font-size:16px;font-weight:700;color:#4caf50">▲' + reduction.toLocaleString() + '万円</div></div>'
-    + '<div><div style="font-size:11px;color:var(--gold)">特例後評価額</div><div style="font-size:16px;font-weight:700;color:var(--gold)">' + afterValue.toLocaleString() + '万円</div></div>'
+    + '<div><div style="font-size:11px;color:var(--text-muted)">特例前評価額</div><div style="font-size:18px;font-weight:700">' + value.toLocaleString() + '万円</div></div>'
+    + '<div><div style="font-size:11px;color:#4caf50">評価減額</div><div style="font-size:18px;font-weight:700;color:#4caf50">▲' + reduction.toLocaleString() + '万円</div></div>'
+    + '<div><div style="font-size:11px;color:var(--gold)">特例後評価額</div><div style="font-size:18px;font-weight:700;color:var(--gold)">' + afterValue.toLocaleString() + '万円</div></div>'
     + '</div>'
     + '<div style="padding:10px;background:rgba(255,180,0,0.07);border-radius:8px;border-left:3px solid ' + statusColor + '">'
     + '<div style="font-size:12px;font-weight:700;color:' + statusColor + '">📝 適用チェック状況</div>'

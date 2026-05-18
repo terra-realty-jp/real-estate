@@ -6177,12 +6177,14 @@ function calcPurchaseFees() {
     + (it.val > 0 ? it.val.toLocaleString() + '万円' : '—') + '</span>'
     + '</div>').join('');
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
-    + '<div style="text-align:center;padding:10px 0;margin-bottom:10px">'
-    + '<div style="font-size:12px;color:var(--text-muted)">諸費用合計（概算）</div>'
-    + '<div style="font-size:36px;font-weight:900;color:var(--gold)">' + Math.round(total).toLocaleString() + '<span style="font-size:18px">万円</span></div>'
-    + '<div style="font-size:12px;color:var(--text-muted)">物件価格の約 ' + pct + '%</div>'
-    + '</div>'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(239,68,68,0.03));border:2px solid rgba(239,68,68,0.35);border-radius:14px;padding:20px;text-align:center;margin-top:12px;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">物件価格以外に必要な諸費用（概算）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">' + Math.round(total).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">物件価格 ' + price.toLocaleString() + '万円 の約 ' + pct + '%</div>'
+    + '<div style="margin-top:10px;padding:8px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;display:inline-block">'
+    + '<span style="font-size:13px;font-weight:700;color:#f87171">⚠️ 物件価格 + 諸費用の両方を用意しておく必要があります</span>'
+    + '</div></div>'
+    + '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px">'
     + rows
     + '<div style="margin-top:10px;padding:10px;background:rgba(255,180,0,0.07);border-radius:8px">'
     + '<div style="font-size:12px;font-weight:700;color:var(--gold)">💡 目安</div>'
@@ -6417,26 +6419,37 @@ function calcPriceGap() {
   var probColor = prob >= 70 ? 'var(--green)' : prob >= 40 ? '#f59e0b' : 'var(--red)';
   var gapColor = gapPct <= 5 ? 'var(--green)' : gapPct <= 10 ? '#f59e0b' : 'var(--red)';
 
-  var html = '<div style="margin-top:10px">';
+  var probBg = prob >= 70 ? 'rgba(34,197,94,0.08)' : prob >= 40 ? 'rgba(245,158,11,0.08)' : 'rgba(239,68,68,0.08)';
+  var probBorder = prob >= 70 ? 'rgba(34,197,94,0.35)' : prob >= 40 ? 'rgba(245,158,11,0.35)' : 'rgba(239,68,68,0.35)';
+  var probLabel = prob >= 70 ? '交渉成立しやすい' : prob >= 40 ? '交渉の余地あり' : '交渉は難しいかも';
+  var html = '<div style="background:' + probBg + ';border:2px solid ' + probBorder + ';border-radius:14px;padding:20px;text-align:center;margin-top:10px;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:' + probColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">交渉成立確率（目安）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + probColor + ';line-height:1;margin-bottom:4px">' + prob + '<span style="font-size:20px">%</span></div>';
+  html += '<div style="font-size:15px;font-weight:700;color:' + probColor + ';margin-bottom:10px">' + probLabel + '</div>';
+  html += '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:8px 16px;display:inline-block">';
+  html += '<span style="font-size:13px;font-weight:700;color:var(--gold)">💡 歩み寄り提案: ' + suggestedPrice.toLocaleString() + '万円</span>';
+  html += '</div></div>';
+
+  html += '<div style="margin-bottom:12px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
   html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">価格ギャップ</div>';
-  html += '<div style="font-size:18px;font-weight:900;color:' + gapColor + '">' + gap.toLocaleString() + '万</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:' + gapColor + '">' + gap.toLocaleString() + '万</div>';
   html += '<div style="font-size:10px;color:' + gapColor + '">（' + gapPct.toFixed(1) + '%）</div>';
   html += '</div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
   html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">妥結確率（目安）</div>';
-  html += '<div style="font-size:18px;font-weight:900;color:' + probColor + '">' + prob + '%</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:' + probColor + '">' + prob + '%</div>';
   html += '</div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">';
   html += '<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">売主の手取り概算</div>';
-  html += '<div style="font-size:18px;font-weight:900;color:' + (netAtBid >= 0 ? 'var(--green)' : 'var(--red)') + '">' + Math.round(netAtBid).toLocaleString() + '万</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:' + (netAtBid >= 0 ? 'var(--green)' : 'var(--red)') + '">' + Math.round(netAtBid).toLocaleString() + '万</div>';
   html += '</div>';
   html += '</div>';
 
   html += '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:12px;margin-bottom:10px">';
   html += '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px">💡 歩み寄り提案価格</div>';
-  html += '<div style="font-size:20px;font-weight:900">' + suggestedPrice.toLocaleString() + '万円</div>';
+  html += '<div style="font-size:24px;font-weight:900">' + suggestedPrice.toLocaleString() + '万円</div>';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">（' + (urgency === 'high' ? '急ぎのため売主60%歩み寄り' : urgency === 'low' ? '余裕のため売主40%歩み寄り' : '5:5の折衷案') + '）</div>';
   html += '</div>';
 
@@ -6479,7 +6492,19 @@ function calcRateRise() {
     { label: '+2.0%', rate: rate + 2.0, color: '#e53935' }
   ];
 
-  var html = '<div style="margin-top:10px">';
+  var riseAmt1 = Math.round((monthlyPayment(balance, rate + 1.0, term) - current) / 10000 * 10) / 10;
+  var riseAmt2 = Math.round((monthlyPayment(balance, rate + 2.0, term) - current) / 10000 * 10) / 10;
+  var riseHeroColor = riseAmt2 >= 3 ? 'var(--red)' : riseAmt2 >= 1.5 ? '#f97316' : '#f59e0b';
+  var riseHeroBg = riseAmt2 >= 3 ? 'rgba(239,68,68,0.08)' : 'rgba(249,115,22,0.08)';
+  var riseHeroBorder = riseAmt2 >= 3 ? 'rgba(239,68,68,0.35)' : 'rgba(249,115,22,0.35)';
+  var html = '<div style="background:' + riseHeroBg + ';border:2px solid ' + riseHeroBorder + ';border-radius:14px;padding:20px;text-align:center;margin-top:10px;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:' + riseHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">金利+2%上昇した場合の月返済増加額</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + riseHeroColor + ';line-height:1;margin-bottom:4px">+' + riseAmt2 + '<span style="font-size:20px">万円/月</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">年間で +' + Math.round(riseAmt2 * 12 * 10) / 10 + '万円の負担増</div>';
+  html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:8px;display:inline-block">';
+  html += '<span style="font-size:12px;font-weight:700;color:#fb923c">+0.5%でも月' + riseAmt1 + '万円の増加 — 変動金利の方は要注意</span>';
+  html += '</div></div>';
+  html += '<div>';
   html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<tr style="background:rgba(255,255,255,0.06)"><th style="padding:8px;text-align:left;color:var(--text-muted);font-weight:600">シナリオ</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">適用金利</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">月返済額</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">増加額</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">返済比率</th></tr>';
 

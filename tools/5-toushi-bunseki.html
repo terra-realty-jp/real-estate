@@ -7825,12 +7825,13 @@ function calcCFStability() {
             : pct >= 50 ? { label: 'B', color: '#f59e0b', msg: 'やや不安定。空室率・DSCR改善を検討。' }
             : pct >= 35 ? { label: 'C', color: 'var(--red)', msg: '不安定。収益改善または売却検討を推奨。' }
             : { label: 'D', color: '#dc2626', msg: '危険水域。出口戦略を早急に検討してください。' };
+  var gradeRgbCFS = pct >= 80 ? '212,175,55' : pct >= 65 ? '74,222,128' : pct >= 50 ? '245,158,11' : '239,68,68';
   var html = '<div style="margin-top:10px">';
-  html += '<div style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px">';
-  html += '<div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:' + grade.color + ';flex-shrink:0">' + grade.label + '</div>';
-  html += '<div><div style="font-size:22px;font-weight:900;color:' + grade.color + '">' + total + '<span style="font-size:13px;color:var(--text-muted)">/' + maxTotal + '点</span></div>';
-  html += '<div style="font-size:11px;margin-top:2px">' + grade.msg + '</div></div>';
-  html += '<div style="margin-left:auto;text-align:right"><div style="font-size:10px;color:var(--text-muted)">安定度</div><div style="font-size:20px;font-weight:900;color:' + grade.color + '">' + pct + '%</div></div>';
+  html += '<div style="background:linear-gradient(135deg,rgba(' + gradeRgbCFS + ',0.08),rgba(' + gradeRgbCFS + ',0.03));border:2px solid rgba(' + gradeRgbCFS + ',0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:' + grade.color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">CF安定性グレード</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + grade.color + ';line-height:1;margin-bottom:4px">' + grade.label + '</div>';
+  html += '<div style="font-size:16px;font-weight:700;color:' + grade.color + ';margin-bottom:4px">' + pct + '%安定　' + total + '/' + maxTotal + '点</div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">' + grade.msg + '</div>';
   html += '</div>';
   html += '<div style="display:grid;gap:5px">';
   scores.forEach(function(s) {
@@ -8765,12 +8766,15 @@ function calcQuickCheck() {
   else if (passed === 2) { verdict = '⚠️ 条件付きで検討可能'; verdictColor = '#f59e0b'; verdictIcon = '🟡'; }
   else { verdict = '❌ この条件では慎重に'; verdictColor = 'var(--red)'; verdictIcon = '🔴'; }
 
+  var cfHeroRgbQC = monthlyCF >= 50000 ? '74,222,128' : monthlyCF >= 0 ? '245,158,11' : '239,68,68';
   var html = '<div style="margin-top:10px">';
-  html += '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">';
-  html += '<div style="font-size:24px;margin-bottom:4px">' + verdictIcon + '</div>';
-  html += '<div style="font-size:14px;font-weight:900;color:' + verdictColor + '">' + verdict + '</div>';
-  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">' + passed + '/3 指標クリア</div>';
-  html += '</div>';
+  html += '<div style="background:linear-gradient(135deg,rgba(' + cfHeroRgbQC + ',0.08),rgba(' + cfHeroRgbQC + ',0.03));border:2px solid rgba(' + cfHeroRgbQC + ',0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:' + verdictColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + verdict + '</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + cfColor + ';line-height:1;margin-bottom:4px">' + (cfMan >= 0 ? '+' : '') + cfMan + '<span style="font-size:20px">万</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">毎月の手残り概算（経費20%・ローン返済後）</div>';
+  html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(' + cfHeroRgbQC + ',0.1);border:1px solid rgba(' + cfHeroRgbQC + ',0.25);border-radius:8px;display:inline-block">';
+  html += '<span style="font-size:13px;font-weight:700;color:' + verdictColor + '">' + passed + '/3 指標クリア　表面利回り ' + grossYield.toFixed(1) + '%</span>';
+  html += '</div></div>';
   html += '<div style="display:grid;gap:8px">';
 
   // 表面利回り
@@ -9211,7 +9215,17 @@ function calcLoanTermCFComp() {
     return { term: t, mp: mp, cf: cf, totalInt: totalInt, rem20: rem20 };
   });
   var best = rows.reduce(function(b, r) { return r.cf > b.cf ? r : b; }, rows[0]);
-  var html = '<div style="overflow-x:auto;margin-bottom:10px"><table width="100%" style="border-collapse:collapse;font-size:12px">'
+  var bestCFManHero = Math.round(best.cf / 10000 * 10) / 10;
+  var bestRgbLTC = best.cf >= 0 ? '74,222,128' : '239,68,68';
+  var bestCFColorLTC = best.cf >= 0 ? 'var(--green)' : 'var(--red)';
+  var cfDiffHero = Math.abs(Math.round((best.cf - rows[0].cf) / 10000 * 10) / 10);
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + bestRgbLTC + ',0.08),rgba(' + bestRgbLTC + ',0.03));border:2px solid rgba(' + bestRgbLTC + ',0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">★ ' + best.term + '年返済が最も手残りが多い</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + bestCFColorLTC + ';line-height:1;margin-bottom:4px">' + (bestCFManHero >= 0 ? '+' : '') + bestCFManHero + '<span style="font-size:20px">万</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">毎月の手残り（家賃収入−ローン返済額）</div>';
+  if (cfDiffHero > 0) { html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(' + bestRgbLTC + ',0.1);border:1px solid rgba(' + bestRgbLTC + ',0.25);border-radius:8px;display:inline-block"><span style="font-size:13px;font-weight:700;color:' + bestCFColorLTC + '">最短20年との差: 月' + cfDiffHero + '万円</span></div>'; }
+  html += '</div>';
+  html += '<div style="overflow-x:auto;margin-bottom:10px"><table width="100%" style="border-collapse:collapse;font-size:12px">'
     + '<thead><tr style="background:rgba(201,168,76,0.15)">'
     + '<th style="padding:8px;text-align:left;color:var(--gold)">返済期間</th>'
     + '<th style="padding:8px;text-align:right;color:var(--text-muted)">月返済額</th>'

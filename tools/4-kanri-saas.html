@@ -9423,7 +9423,15 @@ function calcVacancyLossSim() {
   var breakeven = rent > 0 ? Math.ceil(totalCost / rent) : 0;
 
   var rows = [1, 2, 3, 6, 9, 12];
+  var loss3mHero = rent * 3 + fixed * 3;
   var html = '<div style="margin-top:10px">';
+  html += '<div style="background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(239,68,68,0.03));border:2px solid rgba(239,68,68,0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:var(--red);font-weight:700;letter-spacing:2px;margin-bottom:6px">空室3ヶ月の損失シミュレーション</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:var(--red);line-height:1;margin-bottom:4px">▲' + loss3mHero.toLocaleString() + '<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">機会損失＋固定費負担の合計（3ヶ月空室の場合）</div>';
+  html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;display:inline-block">';
+  html += '<span style="font-size:13px;font-weight:700;color:var(--red)">' + (totalCost > 0 ? '対策コスト' + totalCost + '万円は空室' + breakeven + 'ヶ月以内で回収可能' : '空室が長引くほど損失は拡大します') + '</span>';
+  html += '</div></div>';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">広告費＋修繕費合計: <strong style="color:var(--gold)">' + totalCost.toLocaleString() + '万円</strong>　損益分岐: 空室<strong style="color:var(--gold)">' + breakeven + 'ヶ月</strong>未満で対策コストが空室損失を下回ります</div>';
   html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<tr style="background:rgba(255,255,255,0.06)"><th style="padding:8px;text-align:left;color:var(--text-muted);font-weight:600">空室期間</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">機会損失</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">固定費負担</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">合計損失</th><th style="padding:8px;text-align:right;color:var(--text-muted);font-weight:600">対策cost vs 損失</th></tr>';
@@ -9674,7 +9682,15 @@ function calcLongRepairPlan() {
     if (yr <= 30) total30 += sum;
   });
 
+  var monthlyReserveHero = Math.round(total30 / 30 / 12 * 10) / 10;
   var html = '<div style="margin-top:10px">';
+  html += '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">今後30年間の修繕費合計（概算）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">' + total30.toLocaleString() + '<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">外壁・屋根・設備・大規模修繕を含む概算費用</div>';
+  html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);border-radius:8px;display:inline-block">';
+  html += '<span style="font-size:13px;font-weight:700;color:var(--gold)">毎月の積立目安: ' + monthlyReserveHero + '万円/月</span>';
+  html += '</div></div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
   html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">10年間合計</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + total10.toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
   html += '<div style="text-align:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px"><div style="font-size:10px;color:var(--text-muted)">20年間合計</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + total20.toLocaleString() + '<span style="font-size:11px">万円</span></div></div>';
@@ -9824,7 +9840,15 @@ function calcRenewalSchedule() {
   rows.sort(function(a, b) { return a.remaining - b.remaining; });
   var totalFee = rows.reduce(function(s, r) { return s + r.fee; }, 0);
   var urgentCount = rows.filter(function(r) { return r.remaining <= 3; }).length;
-  var html = '<div style="margin-bottom:8px">';
+  var heroRgbRnw = urgentCount > 0 ? '239,68,68' : '212,175,55';
+  var heroColorRnw = urgentCount > 0 ? 'var(--red)' : 'var(--gold)';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroRgbRnw + ',0.08),rgba(' + heroRgbRnw + ',0.03));border:2px solid rgba(' + heroRgbRnw + ',0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">';
+  html += '<div style="font-size:11px;color:' + heroColorRnw + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + (urgentCount > 0 ? '⚠️ 3ヶ月以内に更新が必要' : '更新スケジュール管理') + '</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + heroColorRnw + ';line-height:1;margin-bottom:4px">' + (urgentCount > 0 ? urgentCount : rows.length) + '<span style="font-size:20px">' + (urgentCount > 0 ? '件' : '室') + '</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-muted)">' + (urgentCount > 0 ? '更新交渉の機会を見逃さないでください' : '全室の更新タイミングを把握できています') + '</div>';
+  if (feeMonths > 0 && totalFee > 0) { html += '<div style="margin-top:10px;padding:8px 16px;background:rgba(' + heroRgbRnw + ',0.1);border:1px solid rgba(' + heroRgbRnw + ',0.25);border-radius:8px;display:inline-block"><span style="font-size:13px;font-weight:700;color:' + heroColorRnw + '">次回更新料合計: ' + Math.round(totalFee / 10000) + '万円</span></div>'; }
+  html += '</div>';
+  html += '<div style="margin-bottom:8px">';
   rows.forEach(function(r) {
     var color = r.remaining <= 3 ? 'var(--red)' : r.remaining <= 6 ? '#f9a825' : '#4caf50';
     var label = r.remaining <= 3 ? '⚠️ 要対応' : r.remaining <= 6 ? '📌 要確認' : '✅ 余裕あり';
