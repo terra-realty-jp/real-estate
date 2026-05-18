@@ -7407,7 +7407,14 @@ function calcInhRegistration() {
     ? ['被相続人の出生〜死亡の戸籍謄本（全部事項）', '相続人全員の戸籍謄本・住民票', '遺産分割協議書（相続人全員の実印・印鑑証明書付）', '登記識別情報または登記済証', '管理組合規約（マンション）']
     : ['被相続人の出生〜死亡の戸籍謄本（全部事項）', '相続人全員の戸籍謄本・住民票', '遺産分割協議書（相続人全員の実印・印鑑証明書付）', '固定資産税評価証明書', '不動産の登記済権利証または登記識別情報'];
 
-  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+  var irHeroRgb = elapsed >= 30 ? '244,67,54' : elapsed >= 18 ? '255,152,0' : '76,175,80';
+  var irHero = '<div style="background:linear-gradient(135deg,rgba('+irHeroRgb+',0.1),rgba('+irHeroRgb+',0.03));border:2px solid rgba('+irHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+urgency.col+';font-weight:700;letter-spacing:2px;margin-bottom:6px">相続登記 申請期限まで（3年以内義務）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+urgency.col+';line-height:1;margin-bottom:4px">'+remaining+'<span style="font-size:20px">ヶ月</span></div>'
+    +'<div style="font-size:13px;font-weight:700;color:'+urgency.col+';margin-bottom:4px">'+urgency.label+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">総費用見込み 約'+Math.round(totalCost/10000)+'万円（登録免許税+司法書士費用）</div>'
+    +'</div>';
+  r.innerHTML = irHero+'<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">申請期限まで</div><div style="font-size:20px;font-weight:900;color:' + urgency.col + '">' + remaining + '<span style="font-size:11px">ヶ月</span></div><div style="font-size:11px;color:' + urgency.col + '">' + urgency.label + '</div></div>'
     + '<div style="background:var(--dark3);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">登録免許税</div><div style="font-size:18px;font-weight:900;color:#d4af37">' + Math.round(regTax / 10000).toLocaleString() + '<span style="font-size:11px">万円</span></div></div>'
@@ -7660,7 +7667,14 @@ function calcDemolishCompare() {
   var winner = diff >= 0 ? '更地渡し' : '建物あり売却';
   var winnerColor = diff >= 0 ? 'var(--green)' : 'var(--gold)';
 
-  var html = '<div style="margin-top:10px">';
+  var dcHeroRgb = diff >= 0 ? '74,222,128' : '212,175,55';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+dcHeroRgb+',0.1),rgba('+dcHeroRgb+',0.03));border:2px solid rgba('+dcHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+winnerColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">更地 vs 建物あり 手取り差額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+winnerColor+';line-height:1;margin-bottom:4px">'+Math.abs(Math.round(diff)).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:13px;font-weight:700;color:'+winnerColor+';margin-bottom:4px">→ '+winner+'が有利</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">建物あり '+Math.round(netWith).toLocaleString()+'万 vs 更地 '+Math.round(netLand).toLocaleString()+'万</div>'
+    +'</div>';
+  html += '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
 
   // 建物ありカード
