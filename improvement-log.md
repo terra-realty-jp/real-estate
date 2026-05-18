@@ -2543,3 +2543,17 @@
 - **仮ユーザーレビュー**: 田中みちこさん視点 → 「自分の都道府県を選んだら空き家率が出た。山梨21%というのは衝撃的で、人に話したくなる数字」✅。佐藤健一さん視点 → 「ページを開いたら今の金利が表示されて、入力フォームにも反映されている。自分で調べなくていい」✅
 - **理由**: ハードコードの古いデータ・全国一律の相場データをリアルタイムかつ地域別に改善することで、計算結果の信頼性と一般ユーザーの「これは自分の話だ」という共感度を高める
 
+
+## 2026-05-18（Tool5 全非TOP3カード 52px大型ヒーローボックス追加・完了）
+
+- **対象**: tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 2-B ビジュアル強化（PLG・シェア促進）
+- **改善内容**: Tool5（不動産投資シミュレーター）の非TOP3計算カード全89関数に52pxグラデーションヒーローボックスを追加完了
+  - Batch 1（18関数）: calcCondoVsApartment / calcPropertyVsStock / calcLoanVsReinvest / calcNOIDetail / calcDCFValuation / calcIRRCalc / calcLeverageEffect / calcAreaDiversify / calcDSCR / calcMortgageConstant / calcFIRETarget / calcAreaPopTrend / calcMultiUnitMix / calcSecondProperty / calcLandValueUp / calcInvestorExpenses / calcPortfolioLTV / calcMortgageRefi
+  - Batch 2（10関数）: calcBreakevenYield / calcScrapRebuild / calcNisaVsRealestate / calcInflationVsCash / calcInvestDebut / calcExitStrategy3Way / calcPensionSupplement / calcLossOffsetTax / calcStartDelay / calcYieldTriple
+  - Batch 3（6関数）: calcPropertyScore（80px学年レター＋28px点数）/ calcTotalReturn10yr / calcSimpleIRR / calcExitTiming / calcPropertyMatrixCF / calcStressTest
+  - Batch 4（7関数）: calcCrowdFundCompare / calcValuationCompare / calcSensitivity / calcPropertyTaxSim / calcREITComp / calcPriceFairCheck / calcRentVsBuy
+  - 色コーディング: グリーン（良好/プラス）/ レッド（危険/マイナス）/ ゴールド（中立/合計）/ オレンジ（中程度リスク）/ ブルー（比較勝者・代替）
+- **仮ユーザーレビュー**: 佐藤健一さん視点 → 「DSCR返済余裕率1.41 — 緑色の大きな数字で表示されていて、解釈ガイドと合わせて"1.2以上なら安全圏"とすぐわかる。これは良い物件かどうかの判断が3秒でできる」✅
+- **理由**: 計算結果が小さく埋もれていた非TOP3カードも、最重要数字を52px・グラデーションボックスで強調することで「この数字は良いのか悪いのか」が一目でわかる設計に。LINEシェア誘発率の向上が期待できる
+- **達成状況**: Tool1〜Tool5の全405関数（非TOP3含む）に52pxヒーローボックス実装完了。全5ツールのビジュアル強化Phase 2-B完了
