@@ -9061,7 +9061,17 @@ function calcRentCutBreakeven() {
     recommendation = '⚠️ 損益分岐まで約<strong>' + breakeven + 'ヶ月（' + (breakeven/12).toFixed(1) + '年）</strong>。値下げ幅が大きすぎる可能性があります。';
     color = '#fb923c';
   }
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+  var rcbHeroRgbMap = { '#f87171': '248,113,113', '#4ade80': '74,222,128', '#facc15': '250,204,21', '#fb923c': '251,146,60' };
+  var rcbHeroRgb = rcbHeroRgbMap[color] || '212,175,55';
+  var rcbBigNum = (vShort < vLong && breakeven > 0) ? breakeven + 'ヶ月' : '—';
+  var rcbSubMsg = vShort < vLong ? '値下げなし空室損失' + lossNocut.toFixed(1) + '万円 → 値下げ後' + lossVacant.toFixed(1) + '万円（節約' + savedVacancy.toFixed(1) + '万円）' : '値下げ後の空室期間を短く設定してください';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + rcbHeroRgb + ',0.12),rgba(' + rcbHeroRgb + ',0.04));border:2px solid rgba(' + rcbHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">家賃値下げ 損益分岐点</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + color + ';line-height:1;margin-bottom:4px">' + rcbBigNum + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + rcbSubMsg + '</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + color + '">' + recommendation.replace(/<\/?strong>/g,'') + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
     + '<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:12px;text-align:center">'
     + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">値下げなし 空室損失</div>'
     + '<div style="font-size:22px;font-weight:900;color:#f87171">' + lossNocut.toFixed(1) + '<span style="font-size:13px">万円</span></div>'
@@ -9125,7 +9135,16 @@ function calcKeyMoneyOpt() {
     advice = '💡 標準的なエリアでは<strong>礼金1ヶ月＋AD1ヶ月</strong>が一般的なバランスです。空室が続く場合はまずADを増やして仲介会社のモチベーションを高めましょう。';
   }
 
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+  var kmHeroRgb = netFirst >= 0 ? '74,222,128' : '239,68,68';
+  var kmHeroColor = netFirst >= 0 ? '#4ade80' : '#f87171';
+  var kmMsg = netFirst >= 0 ? '✅ 礼金・ADの設定で初期収支がプラスです' : '⚠️ 空室が長引くと初期収支がマイナスになります — 設定を見直してください';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + kmHeroRgb + ',0.12),rgba(' + kmHeroRgb + ',0.04));border:2px solid rgba(' + kmHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + kmHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">礼金・AD設定 初期収支（目安）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + kmHeroColor + ';line-height:1;margin-bottom:4px">' + (netFirst >= 0 ? '+' : '') + netFirst.toFixed(1) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">礼金収入' + reiIncome.toFixed(1) + '万 − AD' + adCost.toFixed(1) + '万 − 推定空室損失' + vacancyLoss.toFixed(1) + '万</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + kmHeroColor + '">' + kmMsg + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;text-align:center">'
     + '<div style="font-size:10px;color:var(--text-muted)">礼金収入</div>'
     + '<div style="font-size:18px;font-weight:900;color:#4ade80">+' + reiIncome.toFixed(1) + '<span style="font-size:12px">万円</span></div></div>'
@@ -9182,7 +9201,15 @@ function calcRepairTriage() {
   const legalNote = safety === 3 || spread === 3
     ? '<div style="margin-top:10px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px;font-size:11px;color:#fca5a5;line-height:1.6">⚖️ <strong>法的注意</strong>：漏水・設備故障など入居者の生活に支障がある修繕は、民法606条（賃貸人の修繕義務）に基づき迅速対応が必要です。放置した場合は家賃減額請求（民法611条）の対象になる可能性があります。</div>' : '';
 
-  el.innerHTML = '<div style="background:' + level.color + '22;border:1px solid ' + level.color + '44;border-radius:10px;padding:14px;margin-bottom:12px">'
+  var rtHeroRgbMap = { '#f87171': '248,113,113', '#fb923c': '251,146,60', '#facc15': '250,204,21', '#4ade80': '74,222,128' };
+  var rtHeroRgb = rtHeroRgbMap[level.color] || '212,175,55';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + rtHeroRgb + ',0.14),rgba(' + rtHeroRgb + ',0.05));border:2px solid rgba(' + rtHeroRgb + ',0.5);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + level.color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + level.badge + ' 修繕優先度スコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + level.color + ';line-height:1;margin-bottom:4px">' + total + '<span style="font-size:20px">/9</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + name + ' — ' + level.label + '対応</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + level.color + '">⏰ 推奨対応期限: ' + level.action + '</div>'
+    + '</div>'
+    + '<div style="background:' + level.color + '22;border:1px solid ' + level.color + '44;border-radius:10px;padding:14px;margin-bottom:12px">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
     + '<div><div style="font-size:16px;font-weight:900">' + level.badge + ' ' + level.label + '対応</div>'
     + '<div style="font-size:12px;color:' + level.color + '">' + name + '</div></div>'
