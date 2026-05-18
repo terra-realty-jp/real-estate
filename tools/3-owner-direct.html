@@ -4880,12 +4880,14 @@ function calcPurchaseCost() {
   var total = items.reduce(function(s, x){ return s + x.val; }, 0);
   var ratio = price > 0 ? (total / pYen * 100).toFixed(1) : 0;
 
+  var pcTotalMan = Math.round(total/10000);
   var html = '<div style="margin-top:14px">'
-    + '<div style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">'
-    + '<div><div style="font-size:11px;color:var(--text-muted)">諸費用合計（目安）</div>'
-    + '<div style="font-size:22px;font-weight:700;color:var(--gold)">' + Math.round(total/10000).toLocaleString() + '<span style="font-size:13px">万円</span></div></div>'
-    + '<div style="text-align:right"><div style="font-size:11px;color:var(--text-muted)">物件価格比</div>'
-    + '<div style="font-size:18px;font-weight:700;color:#4fc3f7">約 ' + ratio + '%</div></div></div>';
+    + '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:2px solid rgba(201,168,76,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">購入時に必要な諸費用（目安）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">' + pcTotalMan.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">物件価格 ' + price.toLocaleString() + '万円の約 ' + ratio + '% が別途必要です</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">⚠️ 諸費用は別途用意が必要です — 頭金に加えて現金で準備してください</div>'
+    + '</div>';
 
   html += '<div style="display:flex;flex-direction:column;gap:4px">';
   items.forEach(function(item) {
