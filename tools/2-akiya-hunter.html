@@ -8117,7 +8117,14 @@ function calcAkiyaHeatPump() {
   var netCost = budget - subsidy;
   var monthlyBenefit = energySaving + rentUp;
   var payback = monthlyBenefit > 0 ? Math.ceil(netCost / monthlyBenefit) : 999;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var ahpHeroRgb = monthlyBenefit >= 0 ? '74,222,128' : '239,68,68';
+  var ahpHeroColor = monthlyBenefit >= 0 ? 'var(--green)' : 'var(--red)';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+ahpHeroRgb+',0.1),rgba('+ahpHeroRgb+',0.03));border:2px solid rgba('+ahpHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+ahpHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">ヒートポンプ 月間効果合計</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+ahpHeroColor+';line-height:1;margin-bottom:4px">+'+(monthlyBenefit).toFixed(1)+'<span style="font-size:20px">万円/月</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">補助金約'+subsidy+'万円 · 実質'+netCost+'万円 · 回収'+(payback>=999?'要確認':payback+'ヶ月')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">+' + rentUp.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間賃料UP効果</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:#4ade80">+' + energySaving.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間省エネ節約</div></div>';
@@ -8152,7 +8159,14 @@ function calcAkiyaStorageConvert() {
   var yearlyNet = Math.round(monthlyNet * 12 * 10) / 10;
   var payback = monthlyNet > 0 ? Math.ceil(cost / monthlyNet) : 999;
   var ordinaryRent = Math.round(units * 0.5 * occ * 10) / 10;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var ascHeroRgb = yearlyNet >= 0 ? '251,146,60' : '239,68,68';
+  var ascHeroColor = yearlyNet >= 0 ? '#fb923c' : 'var(--red)';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+ascHeroRgb+',0.1),rgba('+ascHeroRgb+',0.03));border:2px solid rgba('+ascHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+ascHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+typeLabel+' 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+ascHeroColor+';line-height:1;margin-bottom:4px">'+yearlyNet.toFixed(1)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">月'+monthlyNet.toFixed(1)+'万円 · 回収'+(payback>=999?'赤字':payback+'ヶ月')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + monthlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間純収益</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + yearlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間純収益</div></div>';
@@ -8183,7 +8197,13 @@ function calcAkiyaRentPark() {
   var monthlyNet = Math.round((monthlyGross - managing) * 10) / 10;
   var yearlyNet = Math.round(monthlyNet * 12 * 10) / 10;
   var payback = monthlyNet > 0 ? Math.ceil(cost / monthlyNet) : 999;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var arpHeroRgb = yearlyNet >= 0 ? '251,146,60' : '239,68,68';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+arpHeroRgb+',0.1),rgba('+arpHeroRgb+',0.03));border:2px solid rgba('+arpHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">月極駐車場 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+yearlyNet.toFixed(0)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+units+'台 · 月'+monthlyNet.toFixed(1)+'万円 · 回収'+(payback>=999?'赤字':payback+'ヶ月')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + monthlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間純収益</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + yearlyNet.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間純収益</div></div>';
@@ -8215,7 +8235,13 @@ function calcAkiyaCycleParking() {
   var monthlyNet = Math.round(monthlyGross * 0.92 * 10) / 10;
   var yearlyNet = Math.round(monthlyNet * 12 * 10) / 10;
   var payback = monthlyNet > 0 ? Math.ceil(cost / monthlyNet) : 999;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var acyHeroRgb = yearlyNet >= 0 ? '251,146,60' : '239,68,68';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+acyHeroRgb+',0.1),rgba('+acyHeroRgb+',0.03));border:2px solid rgba('+acyHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">駐輪場転用 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+yearlyNet.toFixed(0)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+units+'台 · 月'+monthlyNet.toFixed(1)+'万円 · 回収'+(payback>=999?'赤字':payback+'ヶ月')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + monthlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間純収益</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + yearlyNet.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間純収益</div></div>';
@@ -8248,7 +8274,13 @@ function calcAkiyaPopupShop() {
   var monthlyNet = Math.round((monthlyGross - platformFee - running) * 10) / 10;
   var yearlyNet = Math.round(monthlyNet * 12 * 10) / 10;
   var payback = monthlyNet > 0 ? Math.ceil(cost / monthlyNet) : 999;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var apsHeroRgb = yearlyNet >= 0 ? '251,146,60' : '239,68,68';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+apsHeroRgb+',0.1),rgba('+apsHeroRgb+',0.03));border:2px solid rgba('+apsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">'+typeLabel+' 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+yearlyNet.toFixed(0)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">月'+monthlyNet.toFixed(1)+'万円 · 回収'+(payback>=999?'赤字':payback+'ヶ月')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + monthlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間純収益</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + yearlyNet.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間純収益</div></div>';
@@ -8287,7 +8319,13 @@ function calcAkiyaVending() {
   var yearlyNet = Math.round(monthlyNet * 12 * 10) / 10;
   var trafficLabel = { high: '多い（月' + monthlySales + '万円/台）', mid: '中程度（月' + monthlySales + '万円/台）', low: '少ない（月' + monthlySales + '万円/台）' }[traffic];
   var typeLabel = type === 'lease' ? '場所貸し（収益の18%受取）' : '自社運営（全収益受取・コスト55%）';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var avdHeroRgb = yearlyNet >= 0 ? '251,146,60' : '239,68,68';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+avdHeroRgb+',0.1),rgba('+avdHeroRgb+',0.03));border:2px solid rgba('+avdHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">自動販売機 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+yearlyNet.toFixed(0)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">月'+monthlyNet.toFixed(1)+'万円 · '+units+'台 · '+(type==='lease'?'初期費用ゼロ':'初期'+(units*80)+'万円')+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + monthlyNet.toFixed(1) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月間純収益</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + yearlyNet.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">年間純収益</div></div>';
@@ -8318,7 +8356,12 @@ function calcAkiyaSharehouse() {
   var normalRent = rent * 0.7;
   var normalNet = Math.round(normalRent * rooms * (1 - expenseRate) * 10) / 10;
   var uplift = Math.round((netMonthly - normalNet) * 10) / 10;
-  var html = '<div style="display:grid;gap:8px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.1),rgba(251,146,60,0.03));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">シェアハウス転用 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+netAnnual.toFixed(1)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+rooms+'室 · 月'+netMonthly.toFixed(1)+'万円 · 回収'+paybackYears.toFixed(1)+'年</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += '<div style="background:rgba(251,146,60,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">月間純収益</div><div style="font-size:24px;font-weight:700;color:#fb923c">' + netMonthly.toFixed(1) + '<span style="font-size:12px;color:#94a3b8">万円</span></div></div>';
   html += '<div style="background:rgba(251,146,60,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">年間純収益</div><div style="font-size:24px;font-weight:700;color:#fb923c">' + netAnnual.toFixed(1) + '<span style="font-size:12px;color:#94a3b8">万円</span></div></div>';
@@ -8352,7 +8395,12 @@ function calcAkiyaSolarPanel() {
   var maintenanceCostAnnual = Math.round(cost * 0.01 * 10) / 10;
   var netAnnual = Math.round((annualIncome - maintenanceCostAnnual) * 10) / 10;
   var paybackYears = netAnnual > 0 ? Math.round(cost / netAnnual * 10) / 10 : 9999;
-  var html = '<div style="display:grid;gap:8px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.1),rgba(251,146,60,0.03));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">太陽光パネル 年間純収益</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+netAnnual.toFixed(1)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">kW'+kw+' · 回収'+(paybackYears>=9999?'要確認':paybackYears.toFixed(1)+'年')+' · 月'+monthlyIncome.toFixed(1)+'万円</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += '<div style="background:rgba(251,146,60,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">月間売電収入</div><div style="font-size:22px;font-weight:700;color:#fb923c">' + monthlyIncome.toFixed(1) + '<span style="font-size:11px;color:#94a3b8">万円</span></div></div>';
   html += '<div style="background:rgba(251,146,60,0.1);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;color:#94a3b8;margin-bottom:4px">年間発電量</div><div style="font-size:22px;font-weight:700;color:#fb923c">' + annualKwh.toLocaleString() + '<span style="font-size:11px;color:#94a3b8">kWh</span></div></div>';
@@ -8399,7 +8447,14 @@ function calcTwoFamilyReno() {
   var valueUp = renoType === 'full' ? renoCost * 0.7 : renoCost * 0.5; // リノベ費用の50〜70%が価値に転換
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
+  var tfrHeroRgb = recoupYears <= 15 ? '74,222,128' : (recoupYears <= 25 ? '250,204,21' : '248,113,113');
+  var tfrHeroColor = recoupYears <= 15 ? 'var(--green)' : (recoupYears <= 25 ? '#facc15' : 'var(--red)');
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+tfrHeroRgb+',0.1),rgba('+tfrHeroRgb+',0.03));border:2px solid rgba('+tfrHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+tfrHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">二世帯リノベ 年間家賃収入</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+tfrHeroColor+';line-height:1;margin-bottom:4px">'+annualRent+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">実質負担'+totalCost.toFixed(0)+'万円 · 回収'+(recoupYears<99?recoupYears.toFixed(0)+'年':'要確認')+'</div>'
+    +'</div>'
+    +'<div style="background:var(--dark3);border-radius:10px;padding:14px;margin-bottom:10px">' +
     '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">費用の内訳</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
     '<div><span style="color:var(--text-muted)">リノベ工事費</span><br><strong>' + renoCost + '万円</strong></div>' +
@@ -8487,7 +8542,13 @@ function calcAkiyaRiskScore() {
   }
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
+  var arsHeroRgb = score >= 80 ? '248,113,113' : (score >= 60 ? '251,146,60' : (score >= 40 ? '250,204,21' : '74,222,128'));
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+arsHeroRgb+',0.1),rgba('+arsHeroRgb+',0.03));border:2px solid rgba('+arsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">空き家 危険度スコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+score+'<span style="font-size:20px">/100点</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">ランク '+level+': '+label+'</div>'
+    +'</div>'
+    +'<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">危険度スコア</div>' +
     '<div style="font-size:40px;font-weight:900;color:' + color + '">' + score + '<span style="font-size:18px">/100</span></div>' +
     '<div style="background:' + color + ';color:#000;font-weight:700;font-size:13px;padding:4px 12px;border-radius:20px;display:inline-block;margin-top:6px">ランク ' + level + '</div>' +
