@@ -9546,8 +9546,15 @@ function calcPostSaleReloc() {
     color = '#4ade80'; icon = '⬇'; verdict = '月々の費用が減ります。賃貸転換でキャッシュフロー改善';
   }
 
+  var psrHeroRgb = color === '#4ade80' ? '74,222,128' : color === '#facc15' ? '250,204,21' : color === '#fb923c' ? '251,146,60' : '248,113,113';
+  var psrHero = '<div style="background:linear-gradient(135deg,rgba('+psrHeroRgb+',0.1),rgba('+psrHeroRgb+',0.03));border:2px solid rgba('+psrHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">賃貸移行後 月額差額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+(diff>=0?'+':'')+diff.toFixed(1)+'<span style="font-size:20px">万円/月</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">10年間累計: '+(tenYearDiff>=0?'+':'')+Math.round(tenYearDiff)+'万円の差</div>'
+    +'</div>';
+
   el.style.display = 'block';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+  el.innerHTML = psrHero+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
     '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;text-align:center">' +
     '<div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px">現在の月額費用</div>' +
     '<div style="font-size:26px;font-weight:900;color:var(--text)">' + ownMonthly.toFixed(1) + '<span style="font-size:13px">万円</span></div>' +
@@ -9627,9 +9634,15 @@ function calcRetirementFund() {
   }
 
   var monthlyCover = monthlyShortfall > 0 ? monthlyShortfall.toFixed(1) + '万円/月を売却資産から補填' : '年金だけで黒字';
+  var rfHeroRgb = color === '#4ade80' ? '74,222,128' : color === '#facc15' ? '250,204,21' : '248,113,113';
+  var rfHero = '<div style="background:linear-gradient(135deg,rgba('+rfHeroRgb+',0.1),rgba('+rfHeroRgb+',0.03));border:2px solid rgba('+rfHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">老後資産 合計</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+totalAssets.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+verdict+'</div>'
+    +'</div>';
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:12px;padding:18px;margin-bottom:14px;text-align:center">' +
+  el.innerHTML = rfHero+'<div style="background:rgba(0,0,0,0.2);border:2px solid ' + color + ';border-radius:12px;padding:18px;margin-bottom:14px;text-align:center">' +
     '<div style="font-size:11px;color:' + color + ';font-weight:700;margin-bottom:4px">' + icon + ' 診断結果</div>' +
     '<div style="font-size:22px;font-weight:900;color:' + color + ';line-height:1.3">' + verdict + '</div>' +
     '<div style="font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.7">' + advice + '</div>' +
@@ -9678,6 +9691,11 @@ function calcInheritanceSplit() {
     p2: [{name:'父', r:0.5},{name:'母', r:0.5}],
   };
   const heirs = splits[family];
+  const isHero = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">手取り分配総額（売却額 − 費用）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+net.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">相続人 '+heirs.length+'名 / 1人あたり約'+Math.round(net/heirs.length).toLocaleString()+'万円</div>'
+    +'</div>';
   const rows = heirs.map(h => {
     const amt = Math.round(net * h.r);
     const pct = (h.r * 100).toFixed(1);
@@ -9690,7 +9708,7 @@ function calcInheritanceSplit() {
     </div>`;
   }).join('');
   el.style.display = 'block';
-  el.innerHTML = `
+  el.innerHTML = isHero+`
     <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:10px;padding:14px">
       <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 法定相続分による分配試算</div>
       <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center;margin-bottom:12px">
