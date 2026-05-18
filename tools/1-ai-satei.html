@@ -7009,7 +7009,14 @@ function calcPreSaleReformROI() {
   const verdict = totalROI >= 100 ? {txt:'投資効果あり：費用を上回る価値上昇が期待できます', color:'#4ade80'}
     : totalROI >= 60 ? {txt:'投資効果あり（一部）：費用の60〜100%は回収できる見込み', color:'#facc15'}
     : {txt:'費用対効果が低い：リフォームより値下げ対応の方が有利な可能性あり', color:'#f87171'};
-  el.innerHTML = '<div style="margin-bottom:10px">' + rows.join('') + '</div>'
+  var roiHeroRgb = totalROI >= 100 ? '74,222,128' : totalROI >= 60 ? '250,204,21' : '248,113,113';
+  var roiHero = '<div style="background:linear-gradient(135deg,rgba('+roiHeroRgb+',0.1),rgba('+roiHeroRgb+',0.03));border:2px solid rgba('+roiHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+verdict.color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">売却前リフォーム 費用対効果</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+verdict.color+';line-height:1;margin-bottom:4px">'+totalROI+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">純利益 '+(netGain>=0?'+':'')+netGain.toFixed(0)+'万円（費用'+totalCost+'万→価格+'+totalEffect.toFixed(0)+'万）</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:'+verdict.color+'">'+verdict.txt+'</div>'
+    +'</div>';
+  el.innerHTML = roiHero+'<div style="margin-bottom:10px">' + rows.join('') + '</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted)">リフォーム費用合計</div><div style="font-size:16px;font-weight:900;color:#f87171">▲' + totalCost + '万円</div></div>'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted)">価格上昇効果</div><div style="font-size:16px;font-weight:900;color:#60a5fa">+' + totalEffect.toFixed(0) + '万円</div></div>'
@@ -7073,7 +7080,14 @@ function calcTimingScore() {
   const barPct = Math.min(100, pct);
   const barColor = pct >= 65 ? '#4caf50' : pct >= 50 ? '#ff9800' : '#f44336';
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+  var tsHeroRgb = pct >= 65 ? '74,222,128' : pct >= 50 ? '250,204,21' : '239,68,68';
+  var tsHero = '<div style="background:linear-gradient(135deg,rgba('+tsHeroRgb+',0.1),rgba('+tsHeroRgb+',0.03));border:2px solid rgba('+tsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+gradeColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">売り時 総合タイミングスコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+gradeColor+';line-height:1;margin-bottom:4px">'+pct+'<span style="font-size:20px">点</span></div>'
+    +'<div style="font-size:13px;font-weight:700;color:'+gradeColor+';margin-bottom:4px">'+grade+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">満点18点中 '+total+'点</div>'
+    +'</div>';
+  el.innerHTML = tsHero+'<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="text-align:center;padding:12px 0">'
     + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">総合タイミングスコア</div>'
     + '<div style="font-size:36px;font-weight:900;color:' + gradeColor + '">' + pct + '<span style="font-size:18px">点</span></div>'
