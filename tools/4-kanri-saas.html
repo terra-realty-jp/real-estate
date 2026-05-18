@@ -10014,11 +10014,15 @@ function calcTenantSatisfaction() {
 
   var lowest = scores.slice().sort(function(a,b){return a.score-b.score;}).slice(0,2);
 
-  var html = '<div style="margin-top:10px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
-  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
-  html += '<div style="width:52px;height:52px;border-radius:50%;background:' + gradeColor + ';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0">' + grade + '</div>';
-  html += '<div><div style="font-size:16px;font-weight:700;color:' + gradeColor + '">' + comment + '</div>';
-  html += '<div style="font-size:12px;color:var(--text-muted)">総合スコア: ' + total + '/' + maxScore + ' (' + pct + '%)</div></div></div>';
+  var tsHeroRgbMap = { '#4caf50': '76,175,80', '#8bc34a': '139,195,74', '#f9a825': '249,168,37', '#ff7043': '255,112,67', '#e53935': '229,57,53' };
+  var tsHeroRgb = tsHeroRgbMap[gradeColor] || '249,168,37';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + tsHeroRgb + ',0.12),rgba(' + tsHeroRgb + ',0.04));border:2px solid rgba(' + tsHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + gradeColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">入居者満足度スコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + gradeColor + ';line-height:1;margin-bottom:4px">' + pct + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + grade + '判定 · ' + total + '/' + maxScore + '点</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + gradeColor + '">' + comment + '</div>'
+    + '</div>';
+  html += '<div style="margin-top:10px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
 
   html += '<div style="margin-bottom:12px">';
   scores.forEach(function(s) {
