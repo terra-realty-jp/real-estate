@@ -9266,7 +9266,16 @@ function calcCommonAlloc() {
     verdictColor = '#2196f3';
   }
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+  var caHeroRgbMap = { '#4caf50': '76,175,80', '#f44336': '244,67,54', '#2196f3': '33,150,243' };
+  var caHeroRgb = caHeroRgbMap[verdictColor] || '212,175,55';
+  var caHeroMsg = Math.abs(diff) <= 200 ? '✅ 現在の共益費設定は実費と一致しています' : diff > 0 ? '⚠️ 月' + diff.toLocaleString() + '円/戸の不足 — 共益費の値上げを検討してください' : '📦 月' + Math.abs(diff).toLocaleString() + '円/戸の余剰 — テナント還元か積立への転用を検討';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + caHeroRgb + ',0.12),rgba(' + caHeroRgb + ',0.04));border:2px solid rgba(' + caHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + verdictColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">1戸あたりの月間実費</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + verdictColor + ';line-height:1;margin-bottom:4px">' + perUnit.toLocaleString() + '<span style="font-size:16px">円/戸</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">月間共用コスト合計' + total.toLocaleString() + '円 ÷ ' + units + '戸 · 現在の共益費' + current.toLocaleString() + '円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + verdictColor + '">' + caHeroMsg + '</div>'
+    + '</div>'
+    + '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 按分結果</div>'
     + rows
     + '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px">'
@@ -9351,7 +9360,16 @@ function calcRestorationCost() {
     + '<span style="font-size:13px;font-weight:' + (it.val > 0 ? '700' : '400') + '">' + (it.val > 0 ? it.val.toLocaleString() + '万円' : '—') + '</span>'
     + '</div>').join('');
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+  var rcHeroRgb = tenantTotal >= 10 ? '244,67,54' : tenantTotal >= 3 ? '251,146,60' : '212,175,55';
+  var rcHeroColor = tenantTotal >= 10 ? '#f44336' : tenantTotal >= 3 ? '#fb923c' : 'var(--gold)';
+  var rcHeroMsg = '入居' + years + '年・' + area + '㎡ — 残存価値率に基づく借主負担の概算';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + rcHeroRgb + ',0.12),rgba(' + rcHeroRgb + ',0.04));border:2px solid rgba(' + rcHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + rcHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">借主への請求目安</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + rcHeroColor + ';line-height:1;margin-bottom:4px">' + tenantTotal.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">オーナー負担（通常損耗）: ' + ownerTotal.toLocaleString() + '万円 · 合計: ' + grandTotal.toLocaleString() + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">' + rcHeroMsg + '</div>'
+    + '</div>'
+    + '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📊 概算費用内訳</div>'
     + rows
     + '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px">'
@@ -9422,7 +9440,15 @@ function calcApplicantRisk() {
 
   var shareText = encodeURIComponent('👤 入居申込者 滞納リスクスコアリング\nグレード: ' + grade + '（' + pct + '点）\n' + advice + '\n▶ 無料でスコアリング');
   var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html');
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+  var arHeroRgbMap = { '#4caf50': '76,175,80', '#8bc34a': '139,195,74', '#ff9800': '255,152,0', '#ff5722': '255,87,34', '#f44336': '244,67,54' };
+  var arHeroRgb = arHeroRgbMap[gradeColor] || '212,175,55';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + arHeroRgb + ',0.12),rgba(' + arHeroRgb + ',0.04));border:2px solid rgba(' + arHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + gradeColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">入居者 滞納リスクスコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + gradeColor + ';line-height:1;margin-bottom:4px">' + pct + '<span style="font-size:20px">点</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">21点満点 · ' + total + '点（' + grade + '）</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + gradeColor + '">' + advice + '</div>'
+    + '</div>'
+    + '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="text-align:center;padding:12px 0;margin-bottom:12px">'
     + '<div style="font-size:12px;color:var(--text-muted)">滞納リスクスコア</div>'
     + '<div style="font-size:40px;font-weight:900;color:' + gradeColor + '">' + pct + '<span style="font-size:18px">点</span></div>'
