@@ -7329,7 +7329,16 @@ function calcBusinessScale() {
       + '<td style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);text-align:center;font-size:12px;color:var(--text-muted)">'+b.norm+'</td>'
       + '</tr>';
   }).join('');
-  el.innerHTML = '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px"><span>事業的規模スコア</span><span style="font-weight:700;color:'+barColor+'">'+ score +'/10点</span></div><div style="height:10px;background:rgba(255,255,255,0.08);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:5px;transition:width 0.4s"></div></div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">スコアの計算式：アパート・マンション1室=1点、一戸建て1棟=2点、駐車場5台=1点、事務所1室=2点</div></div>'
+  var bsHeroRgbMap = { 'var(--green)': '74,222,128', 'var(--gold)': '212,175,55', 'var(--red)': '239,68,68' };
+  var bsHeroRgb = bsHeroRgbMap[barColor] || '212,175,55';
+  var bsHeroMsg = isScale ? '✅ 青色申告65万円控除・家族給与・赤字繰越が使えます' : score >= 7 ? '⚠️ あと' + (10-score) + 'ポイントで事業的規模に到達します' : '❌ 物件を増やすと税務上有利な事業的規模に達します';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + bsHeroRgb + ',0.12),rgba(' + bsHeroRgb + ',0.04));border:2px solid rgba(' + bsHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + barColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">事業的規模スコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + barColor + ';line-height:1;margin-bottom:4px">' + score + '<span style="font-size:20px">/10点</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">アパート' + apt + '室 · 一戸建て' + house + '棟 · 駐車場' + parking + '台 · 事務所' + office + '室</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + barColor + '">' + bsHeroMsg + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px"><span>進捗</span><span style="font-weight:700;color:'+barColor+'">'+ pct +'%</span></div><div style="height:10px;background:rgba(255,255,255,0.08);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:5px;transition:width 0.4s"></div></div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">スコアの計算式：アパート・マンション1室=1点、一戸建て1棟=2点、駐車場5台=1点、事務所1室=2点</div></div>'
     + verdict
     + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--dark3)"><th style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);text-align:left;color:var(--text-muted)">税務上のメリット</th><th style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);color:var(--gold)">事業的規模</th><th style="padding:7px 10px;border:1px solid rgba(255,255,255,0.06);color:var(--text-muted)">それ以外</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=\' + encodeURIComponent(\'https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html\') + \'&text=\' + encodeURIComponent(\'📊 賃貸管理の事業規模診断！\n\n物件数・戸数から最適な管理スタイル（自主管理 vs 委託）を判断しました！\n\n#賃貸管理 #不動産経営 #TERRA_REALTY\n\') + \'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
@@ -7362,11 +7371,17 @@ function calcTenantRisk() {
   if(lifecycle >= 2) actions.push('🏠 生活変化あり — 次の住まいへの転居意向をさりげなく確認');
   if(tenure >= 2) actions.push('🔄 入居歴短い — 馴染みが浅い段階。環境整備で定着を促す');
   var barPct = Math.min(100, pct);
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
-    +'<div style="text-align:center;min-width:70px"><div style="font-size:28px;font-weight:900;color:'+gradeColor+'">'+grade+'</div><div style="font-size:10px;color:var(--text-muted)">リスクレベル</div></div>'
-    +'<div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text-muted)">リスクスコア</span><span style="font-size:13px;font-weight:700;color:'+gradeColor+'">'+score.toFixed(1)+' / '+maxScore+'</span></div>'
+  var trHeroRgbMap = { 'var(--green)': '74,222,128', '#facc15': '250,204,21', '#fb923c': '251,146,60', 'var(--red)': '239,68,68' };
+  var trHeroRgb = trHeroRgbMap[gradeColor] || '212,175,55';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + trHeroRgb + ',0.12),rgba(' + trHeroRgb + ',0.04));border:2px solid rgba(' + trHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + gradeColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">退去リスクレベル</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + gradeColor + ';line-height:1;margin-bottom:4px">' + grade + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">リスクスコア: ' + score.toFixed(1) + ' / ' + maxScore + '点</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + gradeColor + '">' + verdict + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text-muted)">リスクスコア</span><span style="font-size:13px;font-weight:700;color:'+gradeColor+'">'+score.toFixed(1)+' / '+maxScore+'</span></div>'
     +'<div style="background:rgba(255,255,255,0.07);border-radius:4px;height:12px;overflow:hidden;margin-bottom:6px"><div style="width:'+barPct+'%;height:100%;background:'+gradeColor+';border-radius:4px;transition:width 0.4s"></div></div>'
-    +'<div style="font-size:12px;color:var(--text-muted)">'+verdict+'</div></div></div>'
+    +'</div>'
     +(actions.length ? '<p style="font-size:11px;color:var(--text-muted);margin-bottom:6px">推奨アクション</p>'
       +actions.map(function(a){return '<div style="font-size:12px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;margin-bottom:4px">'+a+'</div>';}).join(''):'')
     +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 参考目安です。実際の退去は複合的要因で決まります。</p>';
@@ -7432,7 +7447,17 @@ function calcVacancyCost() {
   var adCost = rent * ad;
   var reformCost = reform * 10000;
   var months = [1,2,3,4,6,9,12];
-  var html = '<div style="margin-top:10px">';
+  var cost3m = Math.round((rent * 3 + cost * 3 + adCost + reformCost) / 10000 * 10) / 10;
+  var vcHeroRgb = cost3m >= 30 ? '239,68,68' : cost3m >= 15 ? '251,146,60' : '212,175,55';
+  var vcHeroColor = cost3m >= 30 ? 'var(--red)' : cost3m >= 15 ? '#fb923c' : 'var(--gold)';
+  var vcMsg = cost3m >= 30 ? '⚠️ 3ヶ月で30万円超 — 早急な入居促進策が必要です' : cost3m >= 15 ? '空室対策（広告費増・写真刷新等）を検討する時期です' : '損失はまだ小さいですが早めの対策が効果的です';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + vcHeroRgb + ',0.12),rgba(' + vcHeroRgb + ',0.04));border:2px solid rgba(' + vcHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + vcHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">3ヶ月空室継続の累積コスト（機会損失＋維持費＋AD含む）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + vcHeroColor + ';line-height:1;margin-bottom:4px">▲' + cost3m + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">月家賃' + (rent/10000).toFixed(1) + '万円 × 3ヶ月 + 維持費 + 広告料' + (reform > 0 ? ' + リフォーム' : '') + '</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + vcHeroColor + '">' + vcMsg + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
   html += '<thead><tr style="background:rgba(255,255,255,0.06)">';
   html += '<th style="padding:6px 8px;text-align:left;color:var(--text-muted)">空室期間</th>';
@@ -7521,10 +7546,16 @@ function calcHealthCheck() {
       +'<td style="padding:8px 10px;font-size:11px;color:var(--text-muted)">'+m.benchmark+'</td>'
       +'</tr>';
   }).join('');
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
-    +'<div style="text-align:center;min-width:70px"><div style="font-size:36px;font-weight:900;color:'+scoreColor+'">'+totalScore+'</div><div style="font-size:10px;color:var(--text-muted)">健全性スコア</div></div>'
-    +'<div style="flex:1"><div style="background:rgba(255,255,255,0.07);border-radius:4px;height:12px;overflow:hidden;margin-bottom:6px"><div style="width:'+totalScore+'%;height:100%;background:'+scoreColor+';border-radius:4px;transition:width 0.4s"></div></div>'
-    +'<div style="font-size:12px;color:var(--text-muted)">5指標中 <strong style="color:var(--text)">'+goodCount+'</strong> 項目が良好 / 年間CF: <strong style="color:'+(cf>=0?'var(--green)':'var(--red)')+'">'+cf.toFixed(0)+'万円</strong></div></div></div>'
+  var hcHeroRgbMap = { 'var(--green)': '74,222,128', '#facc15': '250,204,21', '#fb923c': '251,146,60', 'var(--red)': '239,68,68' };
+  var hcHeroRgb = hcHeroRgbMap[scoreColor] || '212,175,55';
+  var hcMsg = totalScore >= 80 ? '✅ 健全な賃貸経営です。この状態を維持しましょう' : totalScore >= 60 ? '⚠️ 概ね良好ですが改善できる指標があります' : totalScore >= 40 ? '⚠️ 複数の指標に課題あり — 優先度の高い項目から対策を' : '❌ 複数の指標が危険水準 — 早急な見直しが必要です';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + hcHeroRgb + ',0.12),rgba(' + hcHeroRgb + ',0.04));border:2px solid rgba(' + hcHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + scoreColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">賃貸経営 健全性スコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + scoreColor + ';line-height:1;margin-bottom:4px">' + totalScore + '<span style="font-size:20px">点</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">5指標中 ' + goodCount + ' 項目が良好 / 年間CF: ' + (cf >= 0 ? '+' : '') + cf.toFixed(0) + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + scoreColor + '">' + hcMsg + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px"><div style="background:rgba(255,255,255,0.07);border-radius:4px;height:12px;overflow:hidden;margin-bottom:6px"><div style="width:'+totalScore+'%;height:100%;background:'+scoreColor+';border-radius:4px;transition:width 0.4s"></div></div></div>'
     +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
     +'<thead><tr style="background:rgba(255,255,255,0.05)"><th style="padding:8px 10px;font-size:11px;text-align:left">指標</th><th style="padding:8px 10px;font-size:11px;text-align:right">現在値</th><th style="padding:8px 10px;font-size:11px;text-align:center">評価</th><th style="padding:8px 10px;font-size:11px;text-align:left">目安</th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table></div>'
