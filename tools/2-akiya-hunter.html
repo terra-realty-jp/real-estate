@@ -5515,7 +5515,13 @@ function calcExpertRoute() {
       + '</div>';
   }).join('');
   var pointsHTML = r.primary.points.map(function(p){ return '<li style="margin-bottom:3px">'+p+'</li>'; }).join('');
-  el.innerHTML = '<div style="padding:14px;background:rgba(255,255,255,0.04);border:2px solid '+ r.primary.badgeColor +';border-radius:10px;margin-bottom:12px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid '+r.primary.badgeColor+';border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+r.primary.badgeColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">あなたの状況にまず相談すべき専門家</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+r.primary.badgeColor+';line-height:1;margin-bottom:4px">'+r.primary.icon+'</div>'
+    + '<div style="font-size:18px;font-weight:900;color:'+r.primary.badgeColor+';margin-bottom:4px">'+r.primary.name+'</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">'+r.primary.badge+'の窓口</div>'
+    + '</div>'
+    + '<div style="padding:14px;background:rgba(255,255,255,0.04);border:2px solid '+ r.primary.badgeColor +';border-radius:10px;margin-bottom:12px">'
     + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
     + '<span style="font-size:18px">' + r.primary.icon + '</span>'
     + '<div><div style="font-size:13px;font-weight:700;color:var(--text)">' + r.primary.name + '</div>'
@@ -5557,7 +5563,16 @@ function calcSokkiCheck() {
       +'<div style="font-size:13px;font-weight:700;color:#fb923c">'+a.icon+' '+a.t+'</div>'
       +'<div style="font-size:12px;color:var(--text-muted);margin-top:4px">'+a.note+'</div></div>';
   }).join('');
-  el.innerHTML = (urgentHTML?'<p style="font-size:11px;color:var(--red);margin-bottom:6px;font-weight:700">🔴 緊急対応が必要</p>'+urgentHTML:'')
+  var scHeroRgb = urgents.length > 0 ? '239,68,68' : actions.length > 0 ? '251,146,60' : '74,222,128';
+  var scHeroColor = urgents.length > 0 ? 'var(--red)' : actions.length > 0 ? '#fb923c' : 'var(--green)';
+  var scHeroLabel = urgents.length > 0 ? '緊急対応が必要な項目' : actions.length > 0 ? '対応が必要な項目' : '緊急対応なし';
+  var scHeroVal = urgents.length > 0 ? urgents.length : actions.length;
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+scHeroRgb+',0.1),rgba('+scHeroRgb+',0.03));border:2px solid rgba('+scHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+scHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+scHeroLabel+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+scHeroColor+';line-height:1;margin-bottom:4px">'+(urgents.length===0&&actions.length===0?'✅':scHeroVal)+'<span style="font-size:20px">'+(urgents.length===0&&actions.length===0?'':urgents.length>0?'件（緊急）':'件')+'</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">その他の対応項目: '+actions.length+'件</div>'
+    +'</div>'
+    +(urgentHTML?'<p style="font-size:11px;color:var(--red);margin-bottom:6px;font-weight:700">🔴 緊急対応が必要</p>'+urgentHTML:'')
     +(actionHTML?'<p style="font-size:11px;color:#fb923c;margin:10px 0 6px;font-weight:700">🟠 対応が必要</p>'+actionHTML:'')
     +(c[0]||c[1]?'<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px">💡 <strong>相続登記の費用目安:</strong> 司法書士報酬5〜15万円 + 登録免許税（固定資産税評価額×0.4%）</div>':'')
     +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 2024年4月から相続登記が義務化されています。司法書士へのご相談をお勧めします。</p>'
@@ -5620,6 +5635,14 @@ function calcScenario3() {
   html += '<div style="font-size:10px;color:var(--text-muted);line-height:1.6;margin-top:4px">※ 賃貸は年間収入×空室率10%・管理費5%で試算。税金・ローン残債は含みません。</div></div>';
   html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>数字以外で考えるポイント:</strong> 賃貸が有利でも入居者トラブル・修繕の手間・定期的な出費が伴います。売却が有利でも相続登記が未完了だと売れません（2024年義務化）。「維持」はほぼ常に最悪の選択肢で、放置するほど価値が下がります。</div>';
   var sc3BestLabel = sellNet === best ? '売却' : rent5 === best ? '賃貸に出す' : 'このまま維持';
+  var sc3BestHeroRgb = best >= 0 ? '74,222,128' : '239,68,68';
+  var sc3BestColor = best >= 0 ? 'var(--green)' : 'var(--red)';
+  var sc3Hero = '<div style="background:linear-gradient(135deg,rgba('+sc3BestHeroRgb+',0.1),rgba('+sc3BestHeroRgb+',0.03));border:2px solid rgba('+sc3BestHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+sc3BestColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">5年間で最も有利な選択: 「'+sc3BestLabel+'」</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+sc3BestColor+';line-height:1;margin-bottom:4px">'+(best>=0?'+':'')+Math.round(best).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">5年間の手取り・累積（税金・ローン除く）</div>'
+    +'</div>';
+  html = sc3Hero + html;
   var sc3Url = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
   var sc3Text = encodeURIComponent('🏡 空き家の活用 3択シナリオ比較（5年間）\n\n🏡売却: 即時手取り' + (sellNet !== null ? sellNet.toLocaleString() : '—') + '万円\n🔑賃貸: 5年累計' + (rent5 >= 0 ? '+' : '') + Math.round(rent5).toLocaleString() + '万円\n🏚維持: 5年コスト▲' + keepCost5.toLocaleString() + '万円\n→ 最有利は「' + sc3BestLabel + '」！\n\n▶ あなたの物件でも無料比較\n不動産かんたんツール（TERRA REALTY）');
   html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + sc3Url + '&text=' + sc3Text + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
