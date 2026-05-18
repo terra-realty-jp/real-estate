@@ -9020,12 +9020,14 @@ function calcLoanCapacity() {
     { pct: 30, label: '頭金30%' }
   ];
 
-  var html = '<div style="margin-top:10px">';
-  html += '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:14px;margin-bottom:12px">';
-  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">借入可能額（年収' + income.toLocaleString() + '万・返済比率' + ratioLimit + '%）</div>';
-  html += '<div style="font-size:30px;font-weight:900;color:var(--gold)">' + loanMan.toLocaleString() + '<span style="font-size:14px;color:var(--text-muted)"> 万円</span></div>';
-  html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">月返済上限: 約' + Math.round(monthlyBudget / 10000 * 10) / 10 + '万円</div>';
-  html += '</div>';
+  var lcGuide = loanMan >= 5000 ? '十分な借入余力あり。物件探しと事前審査を進めましょう' : loanMan >= 2000 ? '中程度の借入余力。頭金増額でより大きな物件も視野に' : '借入余力は限定的。自己資金を積み増してから挑戦を';
+  var html = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">借入可能額（年収'+income.toLocaleString()+'万・返済比率'+ratioLimit+'%）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+loanMan.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">月返済上限 約'+Math.round(monthlyBudget/10000*10)/10+'万円 ／ 金利'+rate+'% '+term+'年</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--gold)">'+lcGuide+'</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
 
   html += '<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px">📋 頭金別 購入可能物件価格</div>';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
@@ -9102,7 +9104,15 @@ function calcFullLoanRisk() {
   else if (score >= 35) { grade = 'C'; gradeColor = '#f9a825'; verdict = 'リスクが高め・自己資金の積み増しを検討'; }
   else { grade = 'D'; gradeColor = '#e53935'; verdict = 'フルローンは危険・条件の見直しが必要'; }
 
-  var html = '<div style="margin-top:10px">';
+  var flRgb = score >= 75 ? '76,175,80' : score >= 55 ? '139,195,74' : score >= 35 ? '249,168,37' : '229,57,53';
+  var flGuide = score >= 75 ? '融資条件・CF・自己資金の3要素が整っており、投資実行を検討できます' : score >= 55 ? '概ね条件が整っています。DSCRや頭金の再確認を行いましょう' : score >= 35 ? '自己資金を増やすか物件価格を下げてリスクを下げてから検討を' : '現状では投資実行は危険です。頭金・CF・借入比率を根本的に見直してください';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+flRgb+',0.1),rgba('+flRgb+',0.03));border:2px solid rgba('+flRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+gradeColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">フルローン投資 リスクスコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+gradeColor+';line-height:1;margin-bottom:4px">'+grade+'</div>'
+    + '<div style="font-size:14px;font-weight:700;color:'+gradeColor+';margin-bottom:4px">'+verdict+'（'+score+'/100点）</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">'+flGuide+'</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">';
   html += '<div style="width:52px;height:52px;border-radius:50%;background:' + gradeColor + ';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0">' + grade + '</div>';
   html += '<div><div style="font-size:16px;font-weight:700;color:' + gradeColor + '">' + verdict + '</div>';
