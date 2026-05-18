@@ -666,6 +666,7 @@
   <h2 style="font-size:15px;font-weight:700;color:var(--gold);margin:28px 0 12px;letter-spacing:0.5px">🧮 かんたん計算ツール</h2>
   <!-- お気に入りバー（動的） -->
   <div id="re-fav-bar" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:10px"></div>
+  <div id="re-auto-used-bar" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px"></div>
   <!-- 計算履歴パネル（動的） -->
   <div id="re-history-panel" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:10px"></div>
   <!-- ウィザード: 状況別おすすめカード案内 -->
@@ -9356,6 +9357,50 @@ calcFee();
     saved[el.id]=el.type==='checkbox'?el.checked:el.value;
     try{localStorage.setItem(LS,JSON.stringify(saved));}catch(e){}
   });
+})();
+// ===== よく使う機能 自動検出（使用頻度トラッキング） =====
+(function(){
+  var LS_KEY='tool3_auto_used';
+  var counts={};
+  try{counts=JSON.parse(localStorage.getItem(LS_KEY)||'{}');}catch(e){}
+  function renderBar(){
+    var bar=document.getElementById('re-auto-used-bar');
+    if(!bar)return;
+    var favBar=document.getElementById('re-fav-bar');
+    if(favBar&&favBar.style.display!=='none'){bar.style.display='none';return;}
+    var entries=Object.entries(counts).sort(function(a,b){return b[1].n-a[1].n;}).slice(0,3);
+    if(entries.length<1){bar.style.display='none';return;}
+    bar.style.display='block';
+    bar.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:7px">📊 よく使う機能（自動）</div>'
+      +'<div style="display:flex;gap:7px;flex-wrap:wrap">'
+      +entries.map(function(e){
+        var id=e[0],data=e[1];
+        return '<button onclick="(function(){var el=document.getElementById(\''+id+'\');if(el){el.scrollIntoView({behavior:\'smooth\',block:\'center\'});el.style.outline=\'2px solid rgba(212,175,55,0.6)\';setTimeout(function(){el.style.outline=\'\'},1800);}})()"'
+          +' style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:5px 12px;color:rgba(255,255,255,0.7);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">'
+          +data.title+(data.n>1?' ('+data.n+'回)':'')+'</button>';
+      }).join('')+'</div>';
+  }
+  function attachTrackers(){
+    document.querySelectorAll('.card').forEach(function(card){
+      if(!card.id)return;
+      var titleEl=card.querySelector('.card-title');
+      if(!titleEl)return;
+      var title=titleEl.textContent.trim().replace(/[★☆]/g,'').trim().slice(0,16);
+      card.querySelectorAll('button[onclick]').forEach(function(btn){
+        if(btn.dataset.tracked)return;
+        btn.dataset.tracked='1';
+        btn.addEventListener('click',function(){
+          var entry=counts[card.id]||{title:title,n:0};
+          entry.n++;entry.title=title;
+          counts[card.id]=entry;
+          try{localStorage.setItem(LS_KEY,JSON.stringify(counts));}catch(e){}
+          renderBar();
+        });
+      });
+    });
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){attachTrackers();renderBar();});}
+  else{attachTrackers();renderBar();}
 })();
 </script>
 </body>
