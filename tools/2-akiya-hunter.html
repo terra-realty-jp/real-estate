@@ -3072,6 +3072,32 @@
     <div id="amc_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 「子どもが使うかも」待ちコスト試算カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">⏳ 「子どもが将来使うかも」と何年も待ち続けると、いくら損する？待ちコスト試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「いつか子どもが使うかもしれない」と空き家を維持し続けると、固定資産税・維持費・機会損失が積み上がります。今すぐ売却・賃貸に出すのと比べて、「待ち」の実際のコストを数字で確認しましょう。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間の固定資産税（万円）（例: 12）</label>
+        <input type="number" id="wc_tax" placeholder="例: 12" oninput="calcWaitingCost()" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間の維持管理費（万円）（例: 20）</label>
+        <input type="number" id="wc_maint" placeholder="例: 20" oninput="calcWaitingCost()" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">もし賃貸に出したときの月額家賃（万円）（例: 6）</label>
+        <input type="number" id="wc_rent" placeholder="例: 6" oninput="calcWaitingCost()" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">待ち続ける年数（年）（例: 5）</label>
+        <input type="number" id="wc_years" placeholder="例: 5" min="1" max="30" oninput="calcWaitingCost()" style="width:100%;padding:8px 10px;background:var(--dark);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcWaitingCost()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">「待ち」の実際のコストを計算する</button>
+    <div id="wc_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -9599,6 +9625,42 @@ function calcAkiyaManageCost() {
   el.innerHTML = html;
 }
 
+function calcWaitingCost() {
+  var tax = parseFloat(document.getElementById('wc_tax').value) || 0;
+  var maint = parseFloat(document.getElementById('wc_maint').value) || 0;
+  var rent = parseFloat(document.getElementById('wc_rent').value) || 0;
+  var years = parseFloat(document.getElementById('wc_years').value) || 0;
+  var el = document.getElementById('wc_result');
+  if (!el) return;
+  if (!tax && !maint && !rent || !years) {
+    el.style.display = 'none';
+    return;
+  }
+  var yearlyKeepCost = tax + maint;
+  var yearlyRentIncome = rent * 12 * 0.8;
+  var totalKeepCost = Math.round(yearlyKeepCost * years);
+  var totalOpportunityCost = Math.round(yearlyRentIncome * years);
+  var totalLoss = totalKeepCost + totalOpportunityCost;
+  var wcRgb = '248,113,113';
+  var wcColor = '#f87171';
+  el.style.display = 'block';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+wcRgb+',0.1),rgba('+wcRgb+',0.03));border:2px solid rgba('+wcRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+wcColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">「待ち」による'+years+'年間の実質損失合計</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+wcColor+';line-height:1;margin-bottom:4px">▲'+totalLoss.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">維持コスト '+totalKeepCost.toLocaleString()+'万円 ＋ 賃貸にしていれば得られた収入 '+totalOpportunityCost.toLocaleString()+'万円</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin-bottom:10px">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px">💸 「待ち」コスト内訳（'+years+'年間）</div>'
+    +'<div style="display:grid;gap:6px;font-size:12px">'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">固定資産税（年'+tax+'万円）</span><span style="color:#f87171">▲'+Math.round(tax*years).toLocaleString()+'万円</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">維持管理費（年'+maint+'万円）</span><span style="color:#f87171">▲'+Math.round(maint*years).toLocaleString()+'万円</span></div>'
+    +(rent > 0 ? '<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">賃貸に出せば得られた収入（月'+rent+'万円×80%）</span><span style="color:#fb923c">▲'+totalOpportunityCost.toLocaleString()+'万円</span></div>' : '')
+    +'<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;margin-top:2px;font-size:14px"><span style="font-weight:700;color:var(--text)">合計の実質損失</span><span style="font-weight:900;color:#f87171">▲'+totalLoss.toLocaleString()+'万円</span></div>'
+    +'</div></div>'
+    +'<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">💡 「子どもがいつか使うかも」という思いは自然ですが、子ども側も生活が変わりいざとなっても使わないケースが大半です。今すぐ決断しなくても、TERRA REALTYに相談して選択肢を整理しておくだけでも損失を防ぐ第一歩になります。</div>'
+    +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html')+'&text='+encodeURIComponent('⏳ 空き家を「子どもが使うかも」と'+years+'年待ったら▲'+totalLoss.toLocaleString()+'万円の損失に！\n\n維持コスト: ▲'+totalKeepCost.toLocaleString()+'万円\n賃貸機会損失: ▲'+totalOpportunityCost.toLocaleString()+'万円\n\n「待ち」の本当のコスト、知ってますか？\n▶ 不動産かんたんツール（TERRA REALTY）')+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  if (typeof saveCardResult === 'function') saveCardResult('待ちコスト試算', '▲'+totalLoss+'万円の損失（'+years+'年間）', 'wc_result');
+}
 
 function calcKokkoKizoku() {
   const area = parseFloat(document.getElementById('kk_area').value);
