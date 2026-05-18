@@ -7916,7 +7916,13 @@ function calcBuyerInspection() {
   var roi = Math.round((preventedCost / cost) * 10) / 10;
   var riskLevel = age <= 10 ? '低い' : age <= 20 ? 'やや低い' : age <= 30 ? '中程度' : '高い';
   var riskColor = age <= 10 ? '#4ade80' : age <= 20 ? '#a3e635' : age <= 30 ? '#facc15' : '#fb923c';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var biRoiRgb = age <= 10 ? '74,222,128' : age <= 20 ? '163,230,53' : age <= 30 ? '250,204,21' : '251,146,60';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+biRoiRgb+',0.1),rgba('+biRoiRgb+',0.03));border:2px solid rgba('+biRoiRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+riskColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">検査費用の費用対効果（ROI）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+riskColor+';line-height:1;margin-bottom:4px">'+roi.toFixed(0)+'<span style="font-size:20px">倍</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">検査費'+cost+'万円 → 期待節約'+preventedCost.toFixed(0)+'万円 · リスク水準: '+riskLevel+'</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + riskColor + '">' + riskLevel + '</div><div style="font-size:10px;color:var(--text-muted)">潜在リスク水準</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:#fb923c">' + expectedRepair.toFixed(0) + '万円</div><div style="font-size:10px;color:var(--text-muted)">見逃した場合の修繕費（推定）</div></div>';
@@ -7945,7 +7951,14 @@ function calcSellThenRent() {
   var yr5 = netProceeds - monthlyDiff * 12 * 5;
   var yr10 = netProceeds - monthlyDiff * 12 * 10;
   var yr20 = netProceeds - monthlyDiff * 12 * 20;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var strHeroRgb = netProceeds >= 0 ? '96,165,250' : '248,113,113';
+  var strHeroColor = netProceeds >= 0 ? '#60a5fa' : '#f87171';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+strHeroRgb+',0.1),rgba('+strHeroRgb+',0.03));border:2px solid rgba('+strHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+strHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">売却後の手取り額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+strHeroColor+';line-height:1;margin-bottom:4px">'+netProceeds.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">売却'+sale+'万−ローン'+loan+'万−諸費用'+Math.round(sale*0.05)+'万</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + netProceeds.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">売却手取り額</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + (monthlyDiff > 0 ? '#fb923c' : '#4ade80') + '">' + (monthlyDiff > 0 ? '+' : '') + monthlyDiff.toFixed(1) + '万円/月</div><div style="font-size:10px;color:var(--text-muted)">月間支出の変化</div></div>';
@@ -7984,7 +7997,12 @@ function calcFirstHomeBenefit() {
     { name: '新築取得補助金', value: Math.round(subsidyNew) + '万円', note: 'すまい給付金・地域補助金', show: type === 'new' },
     { name: '登録免許税の軽減', value: registerDiscount.toFixed(0) + '万円', note: '一般住宅は0.4%→0.1%等', show: true },
   ];
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">初めての住宅購入 受けられる優遇合計</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#4ade80;line-height:1;margin-bottom:4px">'+total.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">住宅ローン控除・補助金・登録免許税軽減を合算（条件充足時）</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="text-align:center;margin-bottom:12px"><div style="font-size:22px;font-weight:900;color:' + ACCENT + '">' + total.toLocaleString() + '万円</div>';
   html += '<div style="font-size:11px;color:var(--text-muted)">合計の優遇・給付金目安（条件充足時）</div></div>';
   html += '<div style="font-size:12px;color:var(--text-muted);line-height:2;background:rgba(255,255,255,0.03);border-radius:8px;padding:10px">';
@@ -8015,7 +8033,12 @@ function calcSharedPurchase() {
   var share2 = 100 - share1;
   var relLabel = { couple: 'ペアローン（夫婦）', parent: '親子ローン', sibling: '兄弟共有ローン' }[rel];
   var caution = rel === 'couple' ? '離婚時の名義・ローン負担の問題が生じる可能性があります' : rel === 'parent' ? '親の年齢によって借入期間が制限される場合があります' : '意見が合わない場合の売却・改修が困難になるリスクがあります';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">共有購入で増える借入可能額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#4ade80;line-height:1;margin-bottom:4px">+'+loanUp.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">1人上限'+loanSingle.toLocaleString()+'万 → 共有上限'+loanJoint.toLocaleString()+'万円</div>'
+    +'</div>'
+    +'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;text-align:center">';
   html += '<div><div style="font-size:16px;font-weight:900;color:var(--text)">' + loanSingle.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">1人での借入上限</div></div>';
   html += '<div><div style="font-size:16px;font-weight:900;color:' + ACCENT + '">' + loanJoint.toLocaleString() + '万円</div><div style="font-size:10px;color:var(--text-muted)">共有での借入上限</div></div>';
@@ -8048,7 +8071,12 @@ function calcTitleTransferCost() {
   var total = regTax + scrivener + docCost + mortgage;
   var reasonLabel = { sale: '売買（所有権移転）', inherit: '相続（所有権移転）', gift: '贈与（所有権移転）' }[reason];
   var rateDisp = reason === 'sale' && ptype !== 'land' ? '0.3%（軽減税率）' : (rate * 100).toFixed(1) + '%';
-  var html = '<div style="display:grid;gap:8px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">名義変更 費用合計目安</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">約'+total.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+reasonLabel+'・評価額'+val.toLocaleString()+'万円 · 登録免許税'+regTax+'万円+司法書士'+scrivener+'万円</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:8px">';
   html += '<div style="background:rgba(96,165,250,0.08);border-radius:8px;padding:12px">';
   html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">登録免許税（' + rateDisp + '）</div>';
   html += '<div style="font-size:20px;font-weight:700;color:#60a5fa">' + regTax.toLocaleString() + '<span style="font-size:12px;color:#94a3b8">万円</span></div>';
@@ -8087,7 +8115,15 @@ function calcDownPaymentPlan() {
   var rate = 0.005 / 12;
   var term = 35 * 12;
   var monthlyPayment = loanAmt > 0 && rate > 0 ? Math.round(loanAmt * 10000 * rate * Math.pow(1 + rate, term) / (Math.pow(1 + rate, term) - 1)) / 10000 : 0;
-  var html = '<div style="display:grid;gap:8px">';
+  var dppHeroColor = months <= 60 ? '#4ade80' : months <= 120 ? '#60a5fa' : '#fb923c';
+  var dppHeroRgb = months <= 60 ? '74,222,128' : months <= 120 ? '96,165,250' : '251,146,60';
+  var dppLabel = months >= 9999 ? '月々の積立額を入力' : years > 0 ? years + '年' + (mons > 0 ? mons + 'ヶ月で達成' : 'で達成') : mons + 'ヶ月で達成';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+dppHeroRgb+',0.1),rgba('+dppHeroRgb+',0.03));border:2px solid rgba('+dppHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+dppHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">頭金目標額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+dppHeroColor+';line-height:1;margin-bottom:4px">'+target.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+dppLabel+' · 月'+monthly+'万円積立 · 不足額'+remaining.toLocaleString()+'万円</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:8px">';
   html += '<div style="background:rgba(96,165,250,0.08);border-radius:8px;padding:12px">';
   html += '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px">頭金の目標額（' + ratio + '%）</div>';
   html += '<div style="font-size:24px;font-weight:700;color:#60a5fa">' + target.toLocaleString() + '<span style="font-size:13px;color:#94a3b8">万円</span></div>';
@@ -8124,7 +8160,12 @@ function calcLandAcquisitionCost() {
   var misc = 5;
   var total = Math.round((agentFee + regTax + acquisitionTax + scrivener + surveyFee + misc) * 10) / 10;
   var pct = Math.round(total / price * 100 * 10) / 10;
-  var html = '<div style="display:grid;gap:8px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.1),rgba(251,146,60,0.03));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">土地購入 諸費用合計</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">約'+total.toFixed(1)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">物件価格'+price.toLocaleString()+'万円の約'+pct.toFixed(1)+'%相当</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
   var items = [
     ['仲介手数料', agentFee > 0 ? '約' + agentFee.toFixed(1) + '万円' : '直接取引：0円'],
