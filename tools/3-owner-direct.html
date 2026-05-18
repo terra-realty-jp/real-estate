@@ -9166,7 +9166,12 @@ function calcMortgageTaxDed() {
     if (y <= 3 || y === 7 || y === 10 || y === 13) yearRows.push({ y: y, ded: dedAmt, actual: actual });
   }
 
-  var html = '<div style="display:grid;gap:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">住宅ローン控除 13年間 総節税効果（概算）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#4ade80;line-height:1;margin-bottom:4px">'+Math.round(totalSaving)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">控除率0.7% · 借入上限'+loanCeilings[type]+'万円</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:10px">';
   html += '<div style="background:rgba(77,182,245,0.06);border:1px solid rgba(77,182,245,0.2);border-radius:10px;padding:14px;text-align:center">';
   html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">13年間の総節税効果（概算）</div>';
   html += '<div style="font-size:34px;font-weight:900;color:#4db6f5">'+Math.round(totalSaving)+'<span style="font-size:14px">万円</span></div>';
@@ -9223,7 +9228,12 @@ function calcMaxPurchase() {
   var monthlyRec = Math.round(recMonthly / 10000 * 10) / 10;
   var yearlyRec = Math.round(monthlyRec * 12 * 10) / 10;
 
-  var html = '<div style="display:grid;gap:10px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(96,165,250,0.03));border:2px solid rgba(96,165,250,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#60a5fa;font-weight:700;letter-spacing:2px;margin-bottom:6px">無理のない購入価格の上限</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#60a5fa;line-height:1;margin-bottom:4px">'+recPrice+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">返済比率'+ratio+'% · 月返済'+monthlyRec+'万円 · 頭金'+down+'万円</div>'
+    +'</div>'
+    +'<div style="display:grid;gap:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   html += '<div style="background:rgba(77,182,245,0.06);border:1px solid rgba(77,182,245,0.2);border-radius:10px;padding:14px;text-align:center">';
   html += '<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">無理のない購入価格</div>';
@@ -9307,7 +9317,13 @@ function calcNewVsUsedFull() {
   else if (diff > -300) { winner = '中古がやや有利'; winnerColor = '#86efac'; advice = '中古の価格差がコスト優位を生んでいます（' + Math.round(-diff) + '万円）。リフォーム箇所の状態を現地確認した上で決断を。'; }
   else { winner = '中古が有利'; winnerColor = '#4ade80'; advice = '中古の方が' + Math.round(-diff) + '万円お得です。インスペクション（住宅診断）を活用し、隠れた欠陥リスクを事前に把握することをお勧めします。'; }
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var nvufRgb = diff > 0 ? '147,197,253' : '74,222,128';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+nvufRgb+',0.1),rgba('+nvufRgb+',0.03));border:2px solid rgba('+nvufRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+winnerColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+years+'年コスト比較 — '+winner+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+winnerColor+';line-height:1;margin-bottom:4px">'+Math.abs(Math.round(diff))+'<span style="font-size:20px">万円差</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">新築'+Math.round(newTotal)+'万円 vs 中古'+Math.round(usedTotal)+'万円（ローン控除差引後）</div>'
+    +'</div>'
+    +'<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:13px;font-weight:900;color:' + winnerColor + ';margin-bottom:10px">🏗️ ' + years + '年間トータルコスト比較：' + winner + '</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">新築 総コスト</div><div style="font-size:17px;font-weight:900;color:#93c5fd">' + Math.round(newTotal) + '万円</div></div>';
@@ -9355,7 +9371,12 @@ function calcPropertyTax() {
 
   var newReductionYears = type === 'new_house' ? 3 : type === 'new_condo' ? 5 : 0;
 
-  var html = '<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
+  var html = '<div style="background:linear-gradient(135deg,rgba(251,146,60,0.1),rgba(251,146,60,0.03));border:2px solid rgba(251,146,60,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:#fb923c;font-weight:700;letter-spacing:2px;margin-bottom:6px">年間税額の合計（固定資産税＋都市計画税）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:#fb923c;line-height:1;margin-bottom:4px">'+(Math.round(totalAnnual*10)/10)+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">月換算約'+(Math.round(monthlyAvg*10)/10)+'万円 · 土地'+land+'万円・建物'+bldg+'万円</div>'
+    +'</div>'
+    +'<div style="margin-top:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px">';
   html += '<div style="font-size:13px;font-weight:900;color:#93c5fd;margin-bottom:10px">🏛️ 年間税額の概算</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
   html += '<div style="background:rgba(147,197,253,0.08);border:1px solid rgba(147,197,253,0.2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px">固定資産税（年）</div><div style="font-size:17px;font-weight:900;color:#93c5fd">' + Math.round(totalFixed * 10) / 10 + '万円</div></div>';
