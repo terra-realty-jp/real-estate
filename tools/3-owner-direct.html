@@ -5928,7 +5928,13 @@ function calcSellBuyOrder() {
   var recColor = recommend === 'sell' ? '#4db6f5' : '#4ade80';
   var recLabel = recommend === 'sell' ? '売り先行がおすすめ' : '買い先行がおすすめ';
 
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var sboHeroRgb = recommend === 'sell' ? '77,182,245' : '74,222,128';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + sboHeroRgb + ',0.1),rgba(' + sboHeroRgb + ',0.03));border:2px solid rgba(' + sboHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + recColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">おすすめの順番</div>'
+    + '<div style="font-size:36px;font-weight:900;color:' + recColor + ';line-height:1.1;margin-bottom:6px">' + recLabel + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">売り先行スコア ' + sellFirst + ' pts vs 買い先行スコア ' + buyFirst + ' pts</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="text-align:center;padding:8px;border-radius:6px;background:'+recColor+'22;border:1px solid '+recColor+'44;margin-bottom:12px">';
   html += '<span style="font-size:15px;font-weight:900;color:'+recColor+'">'+recLabel+'</span>';
   html += '</div>';
@@ -5966,7 +5972,14 @@ function calcPostAcq() {
   if (pct >= 100) verdict = '✅ 購入後手続き 全完了！';
   else if (pct >= 70) verdict = '⚡ もう少し！残り'+String(total-done)+'項目';
   else verdict = '🔴 未対応 '+String(total-done)+' 項目あり';
-  var html = '<div style="margin-top:10px">';
+  var paRgb = pct >= 100 ? '74,222,128' : pct >= 70 ? '245,158,11' : '248,113,113';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + paRgb + ',0.1),rgba(' + paRgb + ',0.03));border:2px solid rgba(' + paRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + barColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">購入後手続き 完了率</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + barColor + ';line-height:1;margin-bottom:4px">' + pct + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + done + ' / ' + total + '項目 完了済み</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + barColor + '">' + verdict + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:flex;justify-content:space-between;margin-bottom:4px">';
   html += '<span style="font-size:12px;color:#aaa">完了進捗</span>';
   html += '<span style="font-size:16px;font-weight:900;color:'+barColor+'">'+pct+'%</span>';
