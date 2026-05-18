@@ -8155,10 +8155,15 @@ function calcLossCut() {
     level = '保有継続が有利'; color = '#4ade80';
     action = '現時点で売却を急ぐ理由はありません。引き続き収益最大化を目指してください。';
   }
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
-  html += '<div style="text-align:center;padding:10px;border-radius:8px;background:'+color+'22;border:1px solid '+color+'44;margin-bottom:10px">';
-  html += '<div style="font-size:15px;font-weight:900;color:'+color+'">'+level+'（スコア'+total+'点）</div>';
-  html += '</div>';
+  var lcRgb = total >= 8 ? '248,113,113' : total >= 5 ? '251,146,60' : total >= 3 ? '245,158,11' : total >= 1 ? '52,211,153' : '74,222,128';
+  var lcGuide = total >= 8 ? '複数のリスクが重複しています。まず査定額を確認しましょう' : total >= 5 ? '出口戦略を今から準備しておくことをお勧めします' : total >= 3 ? 'CF改善を先に進めましょう。売却は急がないで大丈夫です' : '現状は健全です。市況・税務を踏まえた中長期計画を立てましょう';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+lcRgb+',0.1),rgba('+lcRgb+',0.03));border:2px solid rgba('+lcRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">売却判断スコア</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+total+'<span style="font-size:20px">点</span></div>'
+    +'<div style="font-size:14px;font-weight:700;color:'+color+';margin-bottom:4px">'+level+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+lcGuide+'</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="font-size:12px;color:#aaa;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;line-height:1.7">📌 '+action+'</div>';
   if (total >= 5) {
     html += '<div style="font-size:11px;color:#4db6f5;margin-top:8px;padding:6px 10px;background:rgba(77,182,245,0.08);border-radius:6px;line-height:1.7">💡 売却時のポイント：①5年超保有なら長期譲渡税率（約20%）が適用 ②市況が高い時に売るほど手取りが増える ③TERRA REALTYで無料査定相談が可能です</div>';
@@ -8310,7 +8315,16 @@ function calcExitScenario5Y() {
 
   const es5Url = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html');
   const es5Text = encodeURIComponent('📈 5年後出口シナリオ試算（自己資金' + equityInit.toLocaleString() + '万円）\n\n楽観（地価+10%）: 総合リターン' + (cols[0].totalReturn >= 0 ? '+' : '') + Math.round(cols[0].totalReturn).toLocaleString() + '万円（ROI' + cols[0].roiPct + '%）\n標準（地価±0%）: ' + (cols[1].totalReturn >= 0 ? '+' : '') + Math.round(cols[1].totalReturn).toLocaleString() + '万円\n悲観（地価-15%）: ' + (cols[2].totalReturn >= 0 ? '+' : '') + Math.round(cols[2].totalReturn).toLocaleString() + '万円\n\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">' + cardRows + '</div>'
+  const es5StdReturn = Math.round(cols[1].totalReturn);
+  const es5Rgb = es5StdReturn >= 0 ? '74,222,128' : '239,68,68';
+  const es5Color = es5StdReturn >= 0 ? 'var(--green)' : 'var(--red)';
+  const es5Hero = '<div style="background:linear-gradient(135deg,rgba('+es5Rgb+',0.1),rgba('+es5Rgb+',0.03));border:2px solid rgba('+es5Rgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+es5Color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">標準シナリオ 5年後 総合リターン</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+es5Color+';line-height:1;margin-bottom:4px">'+(es5StdReturn>=0?'+':'')+es5StdReturn.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">自己資金'+equityInit.toLocaleString()+'万円 ／ ROI '+cols[1].roiPct+'%</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:'+es5Color+'">'+(es5StdReturn>=0?'5年後にプラス。楽観・悲観シナリオも確認してリスクを把握しましょう':'地価±0シナリオでもマイナス。購入価格か条件の見直しを検討してください')+'</div>'
+    +'</div>';
+  el.innerHTML = es5Hero + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">' + cardRows + '</div>'
     + '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
     + '<span style="font-size:12px;color:var(--text-muted)">自己資金（頭金） </span><strong>' + equityInit.toLocaleString() + '万円</strong>'
     + '<span style="font-size:12px;color:var(--text-muted);margin-left:12px">5年後残債 </span><strong style="color:#f87171">' + Math.round(remaining).toLocaleString() + '万円</strong>'
