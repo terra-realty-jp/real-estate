@@ -8463,6 +8463,13 @@ function calcAbsenceRisk() {
   html += '<tr style="border-top:2px solid rgba(255,255,255,0.15);font-weight:900"><td style="padding:6px 6px">機会損失合計</td><td style="text-align:right;padding:6px 6px;color:#f87171;font-size:13px">' + Math.round(totalLoss).toLocaleString() + '万円</td></tr>';
   html += '</table>';
   var perMonth = Math.round(totalLoss / (years * 12));
+  var arHeroRgb = '239,68,68';
+  var arHero = '<div style="background:linear-gradient(135deg,rgba('+arHeroRgb+',0.1),rgba('+arHeroRgb+',0.03));border:2px solid rgba('+arHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--red);font-weight:700;letter-spacing:2px;margin-bottom:6px">'+years+'年間 放置による機会損失</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--red);line-height:1;margin-bottom:4px">'+Math.round(totalLoss).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">価値下落 '+Math.round(priceLoss).toLocaleString()+'万 + 維持費 '+Math.round(maintTotal).toLocaleString()+'万 / 月'+perMonth+'万円ずつ損失</div>'
+    +'</div>';
+  html = arHero + html;
   html += '<div style="font-size:12px;margin-bottom:4px">💸 1ヶ月あたりの機会損失: <b style="color:#f87171">' + perMonth + '万円</b></div>';
   html += '<div style="font-size:11px;color:var(--text-muted)">売却の決断が1ヶ月遅れるたびに約' + perMonth + '万円のコストが発生し続けています。市場価格が回復する根拠がない限り、早期売却が合理的な選択です。</div>';
   html += '</div>';
@@ -8489,7 +8496,13 @@ function calcSaleGapAnalysis() {
   var optimalAsk = market * 1.05;
   var gapLabel = gapPct <= 0 ? '査定内' : gapPct <= 5 ? '小幅乖離（許容範囲）' : gapPct <= 10 ? '中程度乖離（要注意）' : gapPct <= 20 ? '大幅乖離（販売困難）' : '過大乖離（売却不可能に近い）';
   var gapColor = gapPct <= 5 ? '#4ade80' : gapPct <= 10 ? '#facc15' : gapPct <= 20 ? '#fb923c' : '#f87171';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var sgaHeroRgb = gapPct <= 5 ? '74,222,128' : gapPct <= 10 ? '250,204,21' : gapPct <= 20 ? '251,146,60' : '248,113,113';
+  var sgaHero = '<div style="background:linear-gradient(135deg,rgba('+sgaHeroRgb+',0.1),rgba('+sgaHeroRgb+',0.03));border:2px solid rgba('+sgaHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+gapColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">成約確率（目安）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+gapColor+';line-height:1;margin-bottom:4px">'+successProb.toFixed(0)+'<span style="font-size:20px">%</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">乖離率 '+(gapPct >= 0 ? '+' : '')+gapPct.toFixed(1)+'% / '+gapLabel+'</div>'
+    +'</div>';
+  var html = sgaHero+'<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
   var pnls = [
     { label: '乖離額', val: (gapAmt >= 0 ? '+' : '') + Math.round(gapAmt).toLocaleString() + '万円', sub: (gapPct >= 0 ? '+' : '') + gapPct.toFixed(1) + '%', color: gapColor },
