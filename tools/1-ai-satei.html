@@ -9177,7 +9177,14 @@ function calcInheritedPropertySale() {
   var taxRate = 0.2315;
   var tax = Math.round(taxableGain * taxRate);
   var netProfit = sell - base - expense - tax;
-  var html = '<div style="display:grid;gap:8px">';
+  var ipsHeroRgb = netProfit >= 0 ? '74,222,128' : '239,68,68';
+  var ipsHeroColor = netProfit >= 0 ? 'var(--green)' : 'var(--red)';
+  var ipsHero = '<div style="background:linear-gradient(135deg,rgba('+ipsHeroRgb+',0.1),rgba('+ipsHeroRgb+',0.03));border:2px solid rgba('+ipsHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+ipsHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">相続不動産 手取り利益（税引後）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+ipsHeroColor+';line-height:1;margin-bottom:4px">'+netProfit.toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">売却'+sell+'万 − 取得費'+base+'万 − 費用'+expense+'万 − 税'+tax+'万</div>'
+    +'</div>';
+  var html = ipsHero+'<div style="display:grid;gap:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">売却益（粗）</div><div style="font-size:14px;font-weight:600;color:#e2e8f0">' + gain.toLocaleString() + '万円</div></div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#94a3b8">3,000万円控除</div><div style="font-size:14px;font-weight:600;color:#4ade80">-' + deduction.toLocaleString() + '万円</div></div>';
@@ -9228,9 +9235,15 @@ function calcBuyVsRent30yr() {
   var diff = rentNetCost - buyNetCost;
   var winner = diff > 0 ? '購入の方が得' : '賃貸の方が得';
   var color = diff > 0 ? '#4ade80' : '#fb923c';
+  var bvrHeroRgb = diff > 0 ? '74,222,128' : '251,146,60';
+  var bvrHero = '<div style="background:linear-gradient(135deg,rgba('+bvrHeroRgb+',0.1),rgba('+bvrHeroRgb+',0.03));border:2px solid rgba('+bvrHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+color+';font-weight:700;letter-spacing:2px;margin-bottom:6px">30年間 トータル差額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+color+';line-height:1;margin-bottom:4px">'+Math.abs(diff).toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+winner+' — 購入: '+buyNetCost.toFixed(0)+'万 / 賃貸: '+rentNetCost.toFixed(0)+'万</div>'
+    +'</div>';
 
   el.style.display = 'block';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+  el.innerHTML = bvrHero+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
     '<div style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:14px;text-align:center">' +
     '<div style="font-size:11px;color:#4ade80;font-weight:700;margin-bottom:6px">🏠 購入した場合（30年後売却）</div>' +
     '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">諸費用・ローン・維持費 合計</div>' +
