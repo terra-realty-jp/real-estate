@@ -7431,7 +7431,15 @@ function calcTaxSaving() {
   var corpTax = Math.max(0, reIncome - expense) * 0.233;
   var corpTotal = corpPersonalTax + corpTax;
   var corpSaving = baseTax - corpTotal;
-  var html = '<div style="margin-top:10px">';
+  var txHeroColor = fullSaving > 0 ? 'var(--green)' : 'var(--text-muted)';
+  var txHeroRgb = fullSaving > 0 ? '74,222,128' : '156,163,175';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + txHeroRgb + ',0.1),rgba(' + txHeroRgb + ',0.03));border:2px solid rgba(' + txHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + txHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">最大節税額（青色申告＋減価償却）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + txHeroColor + ';line-height:1;margin-bottom:4px">▲' + Math.round(fullSaving).toLocaleString() + '<span style="font-size:20px">万円/年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">現在の税負担 ' + Math.round(baseTax).toLocaleString() + '万円 → 節税後 ' + Math.round(fullTax).toLocaleString() + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + txHeroColor + '">' + (fullSaving > 50 ? '大きな節税効果あり — 青色申告＋減価償却の活用を検討してください' : fullSaving > 0 ? '節税効果あり — まず青色申告への切り替えがお勧めです' : '現在の条件では節税効果が限定的です') + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:var(--text-muted)">現在の概算税負担: <span style="color:var(--text);font-weight:700">' + Math.round(baseTax).toLocaleString() + '万円/年</span>（所得税+住民税）</div>';
   var options = [
     { label: '青色申告特別控除（65万）', saving: blueSaving, desc: '複式簿記で確定申告することで65万円を追加控除' },
@@ -8037,7 +8045,15 @@ function calcCapRate() {
   else if (spreadPct > -1) { spreadColor = '#34d399'; spreadLabel = 'キャップレート維持'; }
   else { spreadColor = '#4ade80'; spreadLabel = 'キャップレート圧縮（売却価格 上昇傾向）'; }
 
-  var html = '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
+  var crHeroColor = annualReturn >= 5 ? '#4ade80' : annualReturn >= 3 ? '#f59e0b' : '#f87171';
+  var crHeroRgb = annualReturn >= 5 ? '74,222,128' : annualReturn >= 3 ? '245,158,11' : '239,68,68';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + crHeroRgb + ',0.1),rgba(' + crHeroRgb + ',0.03));border:2px solid rgba(' + crHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + crHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">年平均リターン（投資額比）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + crHeroColor + ';line-height:1;margin-bottom:4px">' + annualReturn.toFixed(1) + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">購入' + price + '万円 · ' + hold + '年保有 · 出口売却' + exitPrice.toLocaleString() + '万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + crHeroColor + '">' + (annualReturn >= 5 ? '✅ 優良 — 年5%以上のリターンが見込める物件です' : annualReturn >= 3 ? '⚠ 標準 — リスクに見合うか出口条件を精査してください' : '❌ 要検討 — リターンが低くリスクに見合わない可能性があります') + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;margin-top:8px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">購入時キャップレート</div><div style="font-size:18px;font-weight:900;color:#4db6f5">'+entryCap.toFixed(2)+'<span style="font-size:11px">%</span></div></div>';
   html += '<div style="text-align:center"><div style="font-size:11px;color:#aaa">出口想定キャップレート</div><div style="font-size:18px;font-weight:900;color:'+spreadColor+'">'+exitCap.toFixed(1)+'<span style="font-size:11px">%</span></div></div>';
