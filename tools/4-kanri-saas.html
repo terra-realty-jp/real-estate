@@ -3447,6 +3447,31 @@
     <div id="loan-deduction-loss-result"></div>
   </div>
 
+  <!-- 管理会社乗り換えコスト回収期間カード -->
+  <div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;margin-bottom:16px">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔄 管理会社を乗り換えると年間いくら節約？乗り換えコスト回収期間を診断する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">管理会社を変えると手続きコストがかかりますが、管理費が下がれば数ヶ月〜1年で元が取れます。「乗り換えると年間○万円節約、○ヶ月で回収」が即わかります。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額家賃収入合計（万円）（例: 30）</label>
+        <input type="number" id="msc_rent" value="30" min="1" max="9999" step="1" oninput="calcMgmtSwitch()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の管理費率（%）（例: 8）</label>
+        <input type="number" id="msc_current_rate" value="8" min="1" max="30" step="0.5" oninput="calcMgmtSwitch()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">乗り換え先の管理費率（%）（例: 5）</label>
+        <input type="number" id="msc_new_rate" value="5" min="1" max="30" step="0.5" oninput="calcMgmtSwitch()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">乗り換えの手続きコスト概算（万円）（例: 10）</label>
+        <input type="number" id="msc_switch_cost" value="10" min="0" max="9999" step="1" oninput="calcMgmtSwitch()" style="width:100%;background:var(--dark2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div id="msc_result" style="margin-top:4px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -12470,6 +12495,51 @@ function calcLoanDeductionLoss() {
     + '</div>';
 }
 (function(){ calcLoanDeductionLoss(); })();
+
+function calcMgmtSwitch() {
+  var rent = parseFloat(document.getElementById('msc_rent').value) || 0;
+  var curRate = parseFloat(document.getElementById('msc_current_rate').value) || 0;
+  var newRate = parseFloat(document.getElementById('msc_new_rate').value) || 0;
+  var switchCost = parseFloat(document.getElementById('msc_switch_cost').value) || 0;
+  var el = document.getElementById('msc_result');
+  if (!el) return;
+  if (!rent || curRate <= newRate) {
+    el.innerHTML = '<p style="color:var(--text-muted);font-size:12px">'+(curRate <= newRate ? '乗り換え先の管理費率は現在より低く設定してください。' : '月額家賃収入を入力してください。')+'</p>';
+    return;
+  }
+  var curFee = Math.round(rent * curRate / 100 * 10) / 10;
+  var newFee = Math.round(rent * newRate / 100 * 10) / 10;
+  var monthlySaving = Math.round((curFee - newFee) * 10) / 10;
+  var annualSaving = Math.round(monthlySaving * 12 * 10) / 10;
+  var recoveryMonths = switchCost > 0 ? Math.ceil(switchCost / monthlySaving) : 0;
+  var recoveryYears = Math.round(recoveryMonths / 12 * 10) / 10;
+  var mscRgb = annualSaving >= 20 ? '74,222,128' : annualSaving >= 10 ? '201,168,76' : '96,165,250';
+  var mscColor = annualSaving >= 20 ? '#4ade80' : annualSaving >= 10 ? '#c9a84c' : '#60a5fa';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+mscRgb+',0.1),rgba('+mscRgb+',0.03));border:2px solid rgba('+mscRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+mscColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">乗り換えで削減できる年間管理費</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+mscColor+';line-height:1;margin-bottom:4px">▲'+annualSaving.toLocaleString()+'<span style="font-size:20px">万円/年</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">'+(recoveryMonths > 0 ? '乗り換えコスト（'+switchCost+'万円）の回収期間: 約'+recoveryMonths+'ヶ月（'+recoveryYears+'年）' : '乗り換えコスト0円 → 即時節約スタート')+'</div>'
+    +'</div>'
+    +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin-bottom:10px">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:10px">💰 管理費 比較内訳</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    +'<div style="text-align:center;background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">現在の管理費（月）</div>'
+    +'<div style="font-size:18px;font-weight:700;color:#f87171">'+curFee.toLocaleString()+'万円</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4)">（'+curRate+'%）</div>'
+    +'</div>'
+    +'<div style="text-align:center;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:10px">'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">乗り換え後（月）</div>'
+    +'<div style="font-size:18px;font-weight:700;color:#4ade80">'+newFee.toLocaleString()+'万円</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.4)">（'+newRate+'%）</div>'
+    +'</div>'
+    +'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted);line-height:1.7">月'+monthlySaving.toLocaleString()+'万円 → 年'+annualSaving.toLocaleString()+'万円の節約。'+(recoveryMonths > 0 ? '乗り換えコスト'+switchCost+'万円は約'+recoveryMonths+'ヶ月で回収できます。' : '')+'5年後の累積節約額は'+Math.round(annualSaving*5).toLocaleString()+'万円です。</div>'
+    +'</div>'
+    +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html')+'&text='+encodeURIComponent('🔄 管理会社を乗り換えたら年間'+annualSaving.toLocaleString()+'万円節約できると判明！\n\n現在の管理費: 月'+curFee.toLocaleString()+'万円（'+curRate+'%）\n乗り換え後: 月'+newFee.toLocaleString()+'万円（'+newRate+'%）\n\n▶ あなたの物件でも無料診断\n不動産かんたんツール（TERRA REALTY）')+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  if (typeof saveCardResult === 'function') saveCardResult('管理会社乗り換え節約', '年間▲'+annualSaving+'万円節約・'+recoveryMonths+'ヶ月で回収', 'msc_result');
+}
+(function(){ calcMgmtSwitch(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
