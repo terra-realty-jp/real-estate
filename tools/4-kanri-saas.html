@@ -10628,7 +10628,16 @@ function calcRentVacancyOpt() {
   var diff = cutIncome - holdIncome;
   var better = diff > 0 ? 'cut' : 'hold';
   var breakEvenMonths = cutLossPerMonth > 0 ? (holdWait - cutWait) * rent / cutLossPerMonth : 0;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var rvoHeroRgb = better === 'cut' ? '96,165,250' : '74,222,128';
+  var rvoHeroColor = better === 'cut' ? '#60a5fa' : '#4ade80';
+  var rvoHeroLabel = better === 'cut' ? '賃料引下げが有利' : '賃料維持が有利';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+rvoHeroRgb+',0.12),rgba('+rvoHeroRgb+',0.04));border:2px solid rgba('+rvoHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+rvoHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">'+simYears+'年間累計収入の差額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+rvoHeroColor+';line-height:1;margin-bottom:4px">'+Math.abs(Math.round(diff)).toLocaleString()+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">'+rvoHeroLabel+' · 家賃'+Math.round(cutRate*100)+'%引下げ比較</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+rvoHeroColor+'">'+rvoHeroLabel+'（'+simYears+'年間シミュレーション）</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
   var panels = [
     { label: '賃料' + Math.round(cutRate * 100) + '%引下げ案\n(' + rent + '万→' + Math.round(newRent * 10) / 10 + '万円)', val: Math.round(cutIncome).toLocaleString() + '万円', sub: '成約まで'+cutWait+'ヶ月想定', color: ACCENT, best: better === 'cut' },
@@ -10679,7 +10688,15 @@ function calcRentGuarantee() {
   var expectedDefaultLoss = rent * 12 * simYears * defaultRisk;
   var expectedRecovery = expectedDefaultLoss * 0.9;
   var netBenefit = expectedRecovery - ownerCost;
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var rgNetRgb = netBenefit >= 0 ? '74,222,128' : '248,113,113';
+  var rgNetColor = netBenefit >= 0 ? '#4ade80' : '#f87171';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+rgNetRgb+',0.12),rgba('+rgNetRgb+',0.04));border:2px solid rgba('+rgNetRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+rgNetColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">オーナーの純メリット（'+simYears+'年間）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+rgNetColor+';line-height:1;margin-bottom:4px">'+(netBenefit>=0?'+':'')+Math.round(netBenefit*10)/10+'<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">オーナー負担コスト '+Math.round(ownerCost*10)/10+'万 · 期待回収 '+Math.round(expectedRecovery*10)/10+'万</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+rgNetColor+'">'+(netBenefit>=0?'保証会社加入が有利です':'コストが回収額を上回っています')+'</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
   var panels2 = [
     { label: '初回保証料', val: Math.round(initCost * 10) / 10 + '万円', sub: '賃料×' + Math.round(initRate * 100) + '%' },
@@ -10732,7 +10749,15 @@ function calcSeismicRetrofit() {
   var annualBenefit = rentUP * 12 + (rent * 12 * vacancyImprove / 100);
   var payback = selfCost > 0 ? selfCost / annualBenefit : 0;
   var levelLabel = level === 'basic' ? '簡易改修' : '全面改修';
-  var html = '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
+  var srPaybackRgb = payback <= 5 ? '74,222,128' : payback <= 10 ? '249,168,37' : '248,113,113';
+  var srPaybackColor = payback <= 5 ? '#4ade80' : payback <= 10 ? '#f9a825' : '#f87171';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+srPaybackRgb+',0.12),rgba('+srPaybackRgb+',0.04));border:2px solid rgba('+srPaybackRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:'+srPaybackColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">耐震改修の投資回収年数</div>'
+    + '<div style="font-size:52px;font-weight:900;color:'+srPaybackColor+';line-height:1;margin-bottom:4px">'+(payback>0?Math.round(payback*10)/10:'即')+'<span style="font-size:20px">'+(payback>0?'年':'回収')+'</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">自己負担 '+Math.round(selfCost*10)/10+'万円 · 年間収益改善 '+Math.round(annualBenefit*10)/10+'万円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:'+srPaybackColor+'">'+levelLabel+' · 補助金最大'+Math.round(subsidy*10)/10+'万円</div>'
+    + '</div>';
+  html += '<div style="background:' + BG + ';border:1px solid ' + BDR + ';border-radius:10px;padding:14px;margin-bottom:10px">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
   var p4 = [
     { label: '工事費（概算）', val: Math.round(workCost * 10) / 10 + '万円', sub: area + 'm²×' + costPerM + '万/m²' },
