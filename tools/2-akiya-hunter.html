@@ -5739,7 +5739,15 @@ function calcAkiyaTax() {
   var taxIncrease = designatedTotal - normalTotal;
   var riskLabels = ['低リスク', '軽度リスク', '中リスク', '高リスク（特定空き家相当）'];
   var riskColors = ['var(--green)', '#facc15', '#fb923c', 'var(--red)'];
-  var html = '<div style="margin-top:10px">';
+  var aktHeroRgb   = riskLevel >= 3 ? '239,68,68' : riskLevel >= 2 ? '251,146,60' : riskLevel >= 1 ? '250,204,21' : '74,222,128';
+  var aktHeroColor = riskColors[riskLevel];
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + aktHeroRgb + ',0.12),rgba(' + aktHeroRgb + ',0.04));border:2px solid rgba(' + aktHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + aktHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">特定空き家リスク判定</div>'
+    + '<div style="font-size:36px;font-weight:900;color:' + aktHeroColor + ';line-height:1;margin-bottom:4px">' + riskLabels[riskLevel] + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">指定後の年間固定資産税: ' + Math.round(designatedTotal/10000*10)/10 + '万円（現在比 +' + Math.round(taxIncrease/10000*10)/10 + '万円）</div>'
+    + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">' + (riskLevel >= 3 ? '⚠️ 今すぐ対処しないと強制解体・過料のリスクがあります' : riskLevel >= 2 ? '早めに活用方針を決めることで特定空き家指定を避けられます' : riskLevel >= 1 ? '管理状況の改善と活用計画の策定をお勧めします' : '✓ 現時点ではリスクは低い状態です') + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">現在の固定資産税（年）</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + Math.round(normalTotal/10000).toLocaleString() + '万円</div></div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">特定空き家指定後（年）</div><div style="font-size:18px;font-weight:900;color:var(--red)">' + Math.round(designatedTotal/10000).toLocaleString() + '万円</div></div>';

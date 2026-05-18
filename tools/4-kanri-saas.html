@@ -7392,8 +7392,16 @@ function calcVacancyLoss() {
   var revReduced = rentNew * (stayMonths + faster) / 10000;
   var diff = revReduced - revCurrent;
   var breakEvenMonths = cut > 0 ? Math.ceil((rent * faster / 10000) / (cut / 10000)) : null;
+  var vlHeroRgb   = alreadyLost >= 10 ? '239,68,68' : alreadyLost >= 3 ? '251,146,60' : '212,175,55';
+  var vlHeroColor = alreadyLost >= 10 ? 'var(--red)' : alreadyLost >= 3 ? '#fb923c' : 'var(--gold)';
   var kpiS = 'background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center';
-  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + vlHeroRgb + ',0.12),rgba(' + vlHeroRgb + ',0.04));border:2px solid rgba(' + vlHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + vlHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">空室による既発生損失（' + elapsed + 'ヶ月分）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + vlHeroColor + ';line-height:1;margin-bottom:4px">▲' + alreadyLost.toFixed(1) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">月' + monthlyLossOngoing.toFixed(1) + '万円 × ' + elapsed + 'ヶ月 — このまま続くと毎月追加損失</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">' + (alreadyLost >= 10 ? '⚠️ 損失が10万円を超えています — 早急な入居促進策が必要です' : alreadyLost >= 3 ? '値下げ・広告強化などの空室対策を検討する時期です' : '損失はまだ小さいですが、早めの対策が効果的です') + '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
     +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:var(--red)">-'+alreadyLost.toFixed(1)+'万</div><div style="font-size:10px;color:var(--text-muted)">既発生損失（'+elapsed+'ヶ月）</div></div>'
     +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:#fb923c)">'+monthlyLossOngoing.toFixed(1)+'万/月</div><div style="font-size:10px;color:var(--text-muted)">このまま空室が続く損失</div></div>'
     +'<div style="'+kpiS+'"><div style="font-size:20px;font-weight:900;color:'+(diff>=0?'var(--green)':'var(--red)')+'">'+( diff>=0?'+':'')+diff.toFixed(1)+'万</div><div style="font-size:10px;color:var(--text-muted)">値下げ後の収益差（'+stay+'年）</div></div>'
