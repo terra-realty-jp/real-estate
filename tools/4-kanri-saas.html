@@ -7904,7 +7904,16 @@ function calcRecruitOpt() {
   var poolLabel = enabledBoost >= 60 ? '非常に広い' : enabledBoost >= 35 ? '広い' : enabledBoost >= 15 ? '普通' : '狭め';
   var poolColor = enabledBoost >= 60 ? 'var(--green)' : enabledBoost >= 35 ? '#4fc3f7' : enabledBoost >= 15 ? 'var(--gold)' : 'var(--red)';
 
-  var html = '<div style="margin-top:14px">';
+  var roHeroRgbMap = { 'var(--green)': '74,222,128', '#4fc3f7': '79,195,247', 'var(--gold)': '212,175,55', 'var(--red)': '239,68,68' };
+  var roHeroRgb = roHeroRgbMap[poolColor] || '212,175,55';
+  var roMsg = enabledBoost >= 60 ? '✅ 入居者層を最大限に広げています' : enabledBoost >= 35 ? '追加で条件開放すると入居者が見つかりやすくなります' : enabledBoost >= 15 ? '⚠️ 入居者層がやや狭い — 下記の条件を検討してください' : '❌ 条件が厳しすぎる可能性 — 空室長期化に注意';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + roHeroRgb + ',0.12),rgba(' + roHeroRgb + ',0.04));border:2px solid rgba(' + roHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + poolColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">入居者プール拡大スコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + poolColor + ';line-height:1;margin-bottom:4px">+' + enabledBoost + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">入居者プール: ' + poolLabel + (vacancyLoss > 0 ? ' · 空室損失: ▲' + Math.round(vacancyLoss/10000*10)/10 + '万円' : '') + '</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + poolColor + '">' + roMsg + '</div>'
+    + '</div>'
+    + '<div style="margin-top:14px">';
   if (vacancyLoss > 0) {
     html += '<div style="background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.25);border-radius:8px;padding:10px 14px;margin-bottom:10px">'
       + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">現在の空室損失（概算）</div>'
@@ -8342,7 +8351,17 @@ function calcRentRevision() {
   var finalAnnual = rows[rows.length - 1].annual;
   var cumulative = rows.reduce(function(s, r) { return s + r.annual; }, 0);
   var gain = cumulative - baseAnnual * (totalYears + 1);
-  var html = '<div style="margin-top:10px">';
+  var rrGainMan = Math.round(gain/10000);
+  var rrHeroRgb = rrGainMan >= 0 ? '74,222,128' : '239,68,68';
+  var rrHeroColor = rrGainMan >= 0 ? 'var(--green)' : 'var(--red)';
+  var rrMsg = rrGainMan >= 0 ? '✅ 賃料値上げで' + totalYears + '年間の累計収益が増加します' : '⚠️ 退去増加で累計収益がマイナスになる試算です — 値上げ幅の見直しを';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + rrHeroRgb + ',0.12),rgba(' + rrHeroRgb + ',0.04));border:2px solid rgba(' + rrHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + rrHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + totalYears + '年間 累計増収効果</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + rrHeroColor + ';line-height:1;margin-bottom:4px">' + (rrGainMan >= 0 ? '+' : '') + rrGainMan.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + intervalYrs + '年ごとに' + stepPct + '% · ' + totalYears + '年後の月額家賃: ' + rows[rows.length-1].rent.toLocaleString() + '円</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:' + rrHeroColor + '">' + rrMsg + '</div>'
+    + '</div>'
+    + '<div style="margin-top:10px">';
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">' + totalYears + '年後の月額家賃</div><div style="font-size:18px;font-weight:900;color:var(--gold)">' + rows[rows.length-1].rent.toLocaleString() + '円</div></div>';
   html += '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">' + totalYears + '年後の年間収入</div><div style="font-size:18px;font-weight:900;color:var(--green)">' + Math.round(finalAnnual/10000).toLocaleString() + '万円/年</div></div>';
@@ -8422,9 +8441,14 @@ function calcScreeningScore() {
       + '<div style="font-size:13px;font-weight:900;color:'+it.color+';white-space:nowrap;margin-left:8px">'+( it.pts>=0?'+':'' )+it.pts+'点</div></div>';
   }).join('');
 
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:16px;padding:12px 0;margin-bottom:8px">'
-    + '<div style="text-align:center"><div style="font-size:36px;font-weight:900;color:'+verdict.color+'">'+score+'</div><div style="font-size:11px;color:var(--text-muted)">/ 100点</div></div>'
-    + '<div><div style="font-size:15px;font-weight:700;color:'+verdict.color+'">'+verdict.label+'</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px">80点以上: 安心, 60〜79点: 要検討, 59点以下: 慎重判断</div></div></div>'
+  var scHeroRgbMap = { 'var(--green)': '74,222,128', 'var(--gold)': '212,175,55', 'var(--red)': '239,68,68' };
+  var scHeroRgb = scHeroRgbMap[verdict.color] || '212,175,55';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + scHeroRgb + ',0.12),rgba(' + scHeroRgb + ',0.04));border:2px solid rgba(' + scHeroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + verdict.color + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">入居審査スコア</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + verdict.color + ';line-height:1;margin-bottom:4px">' + score + '<span style="font-size:20px">点</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">100点満点 · 75点以上: 承認推奨 / 55点以上: 条件付き / 54点以下: 慎重</div>'
+    + '<div style="margin-top:6px;font-size:13px;font-weight:700;color:' + verdict.color + '">' + verdict.label + '</div>'
+    + '</div>'
     + rowHtml
     + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>スコアの活用法:</strong> 75点以上なら一般的な審査通過水準です。低スコアの原因が「収入比率が高い」場合は保証会社加入で補完できます。「過去履歴に問題」は減点が大きく(-10点)、最終判断では書類確認が必須です。収入比率は家賃÷月収で25%以内が理想・33%超は融資審査でも否決されやすい水準です。</div>'
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; あくまで参考スコアです。最終判断は総合的な面談・書類確認を経てオーナー様が行ってください。</div>';
