@@ -7295,7 +7295,16 @@ function calcMgmtUpSim() {
     + '<td style="padding:6px 8px;text-align:right;font-size:13px;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.07);color:' + (d.total > nowTotal * 1.5 ? '#f44336' : d.total > nowTotal * 1.2 ? '#ff9800' : 'var(--text)') + '">' + d.total.toLocaleString() + '万円</td>'
     + '</tr>').join('');
 
-  el.innerHTML = '<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
+  var muIncrRatio = nowTotal > 0 ? y20Total / nowTotal : 1;
+  var muHeroRgb = muIncrRatio >= 1.5 ? '239,68,68' : muIncrRatio >= 1.2 ? '250,204,21' : '74,222,128';
+  var muHeroColor = muIncrRatio >= 1.5 ? 'var(--red)' : muIncrRatio >= 1.2 ? 'var(--gold)' : 'var(--green)';
+  var muHero = '<div style="background:linear-gradient(135deg,rgba('+muHeroRgb+',0.1),rgba('+muHeroRgb+',0.03));border:2px solid rgba('+muHeroRgb+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:'+muHeroColor+';font-weight:700;letter-spacing:2px;margin-bottom:6px">20年後の月額コスト（概算）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:'+muHeroColor+';line-height:1;margin-bottom:4px">'+y20Total.toLocaleString()+'<span style="font-size:20px">万円/月</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">現在 '+nowTotal.toLocaleString()+'万円 → 20年累計 約'+Math.round(annualCum20).toLocaleString()+'万円</div>'
+    +'<div style="margin-top:6px;font-size:11px;color:'+muHeroColor+'">'+(muIncrRatio>=1.5?'⚠️ 現在の'+muIncrRatio.toFixed(1)+'倍に！長期保有コストの増加に要注意':muIncrRatio>=1.2?'コストが現在の'+muIncrRatio.toFixed(1)+'倍に増加する見込みです':'コスト増加は軽微です')+'</div>'
+    +'</div>';
+  el.innerHTML = muHero+'<div style="background:var(--dark2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;padding:10px 0;margin-bottom:12px">'
     + '<div><div style="font-size:11px;color:var(--text-muted)">現在（月額合計）</div><div style="font-size:20px;font-weight:900">' + nowTotal.toLocaleString() + '万円</div></div>'
     + '<div><div style="font-size:11px;color:#ff9800">10年後（月額）</div><div style="font-size:20px;font-weight:900;color:#ff9800">' + y10Total.toLocaleString() + '万円</div></div>'
@@ -7361,7 +7370,12 @@ function calcReinvestPlan() {
   }).join('');
 
   const bestPlan = plans[0];
-  r.innerHTML = '<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
+  var rpHero = '<div style="background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03));border:2px solid rgba(212,175,55,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">'+years+'年後 最高リターン（'+bestPlan.label+'）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">'+bestPlan.total.toFixed(0)+'<span style="font-size:20px">万円</span></div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">年間収益 '+bestPlan.annual.toFixed(0)+'万円 / 元本 '+proceeds.toFixed(0)+'万円 → '+years+'年後</div>'
+    +'</div>';
+  r.innerHTML = rpHero+'<div style="background:var(--dark2);border-radius:10px;padding:16px;margin-top:12px">'
     + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">手取り <strong>' + proceeds.toFixed(0) + '万円</strong> を' + years + '年間運用した場合の比較</div>'
     + rows
     + '<div style="font-size:11px;color:var(--text-muted)">※税金・取引費用は考慮していません。実際の運用は税理士・FPにご相談ください。</div>'
