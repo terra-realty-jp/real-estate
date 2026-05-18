@@ -7185,14 +7185,21 @@ function calcDeadCross() {
   var annualDeprMan = Math.round(annualDepr / 10000);
   var headerHtml = '';
   if (dcYear !== null) {
-    headerHtml = '<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
-      + '<div style="font-size:28px;font-weight:900;color:#f87171;min-width:56px;text-align:center">' + dcYear + '年目</div>'
-      + '<div><div style="font-size:13px;font-weight:700;color:#f87171;margin-bottom:3px">⚠ デッドクロス発生</div>'
-      + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">' + dcYear + '年目から元金返済額（約' + Math.round(rows[dcYear-1].principal/10000) + '万円/年）が<br>減価償却費（' + annualDeprMan + '万円/年）を上回ります。<br>帳簿上の利益が現金CFを超えて税負担が増加します。</div></div></div>';
+    headerHtml = '<div style="background:linear-gradient(135deg,rgba(239,68,68,0.12),rgba(239,68,68,0.05));border:2px solid rgba(239,68,68,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+      + '<div style="font-size:11px;color:#f87171;font-weight:700;letter-spacing:2px;margin-bottom:6px">⚠️ デッドクロス発生年</div>'
+      + '<div style="font-size:52px;font-weight:900;color:#f87171;line-height:1;margin-bottom:4px">' + dcYear + '<span style="font-size:20px">年目</span></div>'
+      + '<div style="font-size:12px;color:var(--text-muted)">この年から税負担増加・資金計画の要注意ポイント</div>'
+      + '<div style="margin-top:10px;padding:8px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;display:inline-block">'
+      + '<span style="font-size:13px;font-weight:700;color:#f87171">元金' + Math.round(rows[dcYear-1].principal/10000) + '万円/年 > 償却' + annualDeprMan + '万円/年</span>'
+      + '</div></div>';
   } else {
-    headerHtml = '<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center">'
-      + '<div style="font-size:13px;font-weight:700;color:#4ade80">✓ 返済期間中はデッドクロスが発生しません</div>'
-      + '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">年間減価償却費（' + annualDeprMan + '万円）が元金返済額を上回り続けます</div></div>';
+    headerHtml = '<div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:2px solid rgba(74,222,128,0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+      + '<div style="font-size:11px;color:#4ade80;font-weight:700;letter-spacing:2px;margin-bottom:6px">デッドクロス判定</div>'
+      + '<div style="font-size:36px;font-weight:900;color:#4ade80;line-height:1;margin-bottom:4px">✓ 発生なし</div>'
+      + '<div style="font-size:12px;color:var(--text-muted)">返済期間中はデッドクロスが発生しません</div>'
+      + '<div style="margin-top:10px;padding:8px 16px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.25);border-radius:8px;display:inline-block">'
+      + '<span style="font-size:13px;font-weight:700;color:#4ade80">年間減価償却費（' + annualDeprMan + '万円）が元金を上回り続けます</span>'
+      + '</div></div>';
   }
   var tableRows = rows.slice(0, 15).map(function(r) {
     var bg = r.dc ? 'background:rgba(239,68,68,0.15);' : '';
@@ -7537,7 +7544,17 @@ function calcRealYield() {
   var inflation10 = invest > 0 ? Math.round(invest * Math.pow(1 + infl/100, 10)) : 0;
   var realGain10 = future10 - inflation10;
 
-  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">'
+  var ryMetric = net > 0 ? realNet : realGross;
+  var ryLabel  = net > 0 ? '実質利回り（経費後・インフレ調整）' : '表面利回り（インフレ調整後）';
+  var ryHeroRgb   = ryMetric >= 3 ? '74,222,128' : ryMetric >= 0 ? '212,175,55' : '239,68,68';
+  var ryHeroColor = ryMetric >= 3 ? 'var(--green)' : ryMetric >= 0 ? 'var(--gold)' : 'var(--red)';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + ryHeroRgb + ',0.08),rgba(' + ryHeroRgb + ',0.03));border:2px solid rgba(' + ryHeroRgb + ',0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:' + ryHeroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + ryLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + ryHeroColor + ';line-height:1;margin-bottom:4px">' + ryMetric.toFixed(2) + '<span style="font-size:20px">%</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">名目' + (net > 0 ? net : gross).toFixed(1) + '% − インフレ' + infl.toFixed(1) + '% 調整後</div>'
+    + '<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">' + (ryMetric >= 3 ? '✓ 実質2%以上 — 現金・預金より資産を守りやすい水準です' : ryMetric >= 0 ? '△ 実質利回り低め — インフレに対して資産価値は維持できています' : '⚠️ 実質マイナス — 名目利回りがインフレ率を下回り購買力が目減りします') + '</div>'
+    + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">'
     + rowHtml
     + (invest > 0 ?
       '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px 14px">'
