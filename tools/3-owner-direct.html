@@ -3073,6 +3073,36 @@
     <div id="crf_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <div class="card" id="card-asset-at-retirement">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📅 今買うと65歳のとき物件の価値はいくら残っている？ローン完済後の「住宅純資産」を試算する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「家を買う＝老後の資産になる」と言われますが、実際に65歳時点でローンを完済し手元に残る物件価値（純資産）はいくら？購入価格・年齢・物件種別を入力すると、定年時点での住宅資産の目安がわかります。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.7">✏️ 下の数字はサンプル値です。ご自分の状況に合わせて書き換えてください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の年齢（歳）<br><span style="color:rgba(0,0,0,0.3)">例: 今45歳なら45と入力</span></label>
+        <input type="number" id="aar_age" placeholder="例: 45" value="45" step="1" min="25" max="64" oninput="calcAssetAtRetirement()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">購入価格（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 物件価格+諸費用の合計</span></label>
+        <input type="number" id="aar_price" placeholder="例: 4500" value="4500" step="100" min="500" max="100000" oninput="calcAssetAtRetirement()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">頭金（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 頭金ゼロなら0と入力</span></label>
+        <input type="number" id="aar_down" placeholder="例: 500" value="500" step="100" min="0" max="50000" oninput="calcAssetAtRetirement()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件種別<br><span style="color:rgba(0,0,0,0.3)">種別により価値の下がり方が違います</span></label>
+        <select id="aar_type" onchange="calcAssetAtRetirement()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="mansion_urban">マンション（都市部・駅近）</option>
+          <option value="mansion_sub" selected>マンション（郊外）</option>
+          <option value="kodate">一戸建て（郊外）</option>
+          <option value="kodate_rural">一戸建て（地方・過疎地）</option>
+        </select>
+      </div>
+    </div>
+    <div id="aar_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -10263,6 +10293,83 @@ function calcCondoRepairFundSurge() {
   el.innerHTML = heroHtml + gridHtml + schedHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcCondoRepairFundSurge(); })();
+
+function calcAssetAtRetirement() {
+  var el = document.getElementById('aar_result');
+  if (!el) return;
+  var age = parseInt(document.getElementById('aar_age').value) || 45;
+  var price = parseFloat(document.getElementById('aar_price').value) || 0;
+  var down = parseFloat(document.getElementById('aar_down').value) || 0;
+  var propType = document.getElementById('aar_type').value;
+  var RETIRE_AGE = 65;
+
+  var yearsToRetire = Math.max(0, RETIRE_AGE - age);
+  var loan = price - down;
+
+  // 価値下落率（年率・種別別）
+  var declineRate = {
+    mansion_urban: 0.010, // 都市マンション: 年1%下落（地価維持）
+    mansion_sub:   0.018, // 郊外マンション: 年1.8%下落
+    kodate:        0.025, // 一戸建て郊外: 年2.5%下落（建物30年でほぼゼロ化）
+    kodate_rural:  0.035  // 地方一戸建て: 年3.5%下落
+  }[propType] || 0.018;
+
+  // ローン期間: 最大35年 or 80歳完済制限
+  var maxLoanYears = Math.min(35, 80 - age);
+  var loanRate = 0.005; // 変動0.5%想定
+  // 月返済額（元利均等）
+  var monthlyRate = loanRate / 12;
+  var totalMonths = maxLoanYears * 12;
+  var monthlyPayment = loan * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+  // 65歳時点の残債
+  var elapsedMonths = Math.min(yearsToRetire * 12, totalMonths);
+  var remainLoan = loan * Math.pow(1 + monthlyRate, elapsedMonths) - monthlyPayment * (Math.pow(1 + monthlyRate, elapsedMonths) - 1) / monthlyRate;
+  remainLoan = Math.max(0, Math.round(remainLoan));
+
+  // 65歳時点の物件価値
+  var valueAtRetire = Math.round(price * Math.pow(1 - declineRate, yearsToRetire));
+  // 純資産 = 物件価値 - 残債
+  var netAsset = Math.round(valueAtRetire - remainLoan);
+
+  var heroColor = netAsset > 1000 ? '#16a34a' : netAsset > 0 ? '#c9a84c' : '#dc2626';
+
+  var heroHtml = '<div style="text-align:center;padding:16px 0 8px">'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">65歳時点の住宅純資産（物件価値－残債）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + (netAsset >= 0 ? '' : '-') + Math.abs(netAsset).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted)">'
+    + (netAsset > 0 ? '老後の住宅資産として残る金額' : 'オーバーローン（資産価値 < 残債）') + '</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏠 65歳時点の物件価値</div>'
+    + '<div style="font-size:22px;font-weight:900;color:var(--text)">' + valueAtRetire.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">年' + (declineRate * 100).toFixed(1) + '%下落 × ' + yearsToRetire + '年</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">💳 65歳時点のローン残債</div>'
+    + '<div style="font-size:22px;font-weight:900;color:' + (remainLoan > 0 ? '#dc2626' : '#16a34a') + '">' + remainLoan.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + maxLoanYears + '年ローン・完済は' + (age + maxLoanYears) + '歳</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '💡 ' + (netAsset > 500
+      ? '65歳時点で' + netAsset.toLocaleString() + '万円の住宅資産が残る見込みです。老後の売却・リバースモーゲージの原資になります。'
+      : netAsset > 0
+      ? '65歳時点の純資産は小さめです。繰り上げ返済・物件の価値維持（修繕）で資産を守ることが重要です。'
+      : '注意：物件価値の下落がローン残債を上回る「オーバーローン」になる可能性があります。売却に制約が生じる場合があります。')
+    + '</div>';
+
+  var shareText = encodeURIComponent(age + '歳で' + price + '万円の家を買うと65歳の時点で住宅純資産' + netAsset + '万円！老後の資産になるか計算してみました\n▶ あなたの場合でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+
+  el.style.display = 'block';
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcAssetAtRetirement(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
