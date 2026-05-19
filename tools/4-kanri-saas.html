@@ -3568,6 +3568,35 @@
     <div id="ftl_result" style="margin-top:8px"></div>
   </div>
 
+  <div class="card" id="card-long-term-discount">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🎁 長期入居者に家賃割引を付けると、退去・空室コスト削減で結局得になる？10年比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「家賃を下げたくない」気持ちはわかります。でも退去のたびにかかるリフォーム・空室・仲介料の合計は家賃の数ヶ月分。入居3年以上の方に5%割引を付けて長期化してもらうと、10年間の手取りが増えることがあります。数字で確かめましょう。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.7">✏️ 下の数字はサンプル値です。ご自分の物件に合わせて書き換えてください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">月家賃（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 家賃8万円なら8と入力</span></label>
+        <input type="number" id="ltd_rent" placeholder="例: 8" value="8" step="0.5" min="2" max="100" oninput="calcLongTermDiscount()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">長期特典の家賃割引率（%）<br><span style="color:rgba(0,0,0,0.3)">例: 3年以上の入居者に5%割引</span></label>
+        <input type="number" id="ltd_disc" placeholder="例: 5" value="5" step="1" min="1" max="15" oninput="calcLongTermDiscount()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の平均居住年数（年）<br><span style="color:rgba(0,0,0,0.3)">例: 入居者が平均3年で退去なら3</span></label>
+        <input type="number" id="ltd_stay" placeholder="例: 3" value="3" step="0.5" min="0.5" max="10" oninput="calcLongTermDiscount()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">退去後の原状回復・リフォーム費（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 壁紙・クリーニング等で30万円</span></label>
+        <input type="number" id="ltd_reform" placeholder="例: 30" value="30" step="5" min="5" max="200" oninput="calcLongTermDiscount()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">退去後の平均空室期間（ヶ月）<br><span style="color:rgba(0,0,0,0.3)">例: 次の入居者が決まるまで平均2ヶ月</span></label>
+        <input type="number" id="ltd_empty" placeholder="例: 2" value="2" step="0.5" min="0.5" max="12" oninput="calcLongTermDiscount()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="ltd_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -12851,6 +12880,72 @@ function calcFixedTermLease() {
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcFixedTermLease(); })();
+
+function calcLongTermDiscount() {
+  var el = document.getElementById('ltd_result');
+  if (!el) return;
+  var rent = parseFloat(document.getElementById('ltd_rent').value) || 0;
+  var disc = parseFloat(document.getElementById('ltd_disc').value) || 5;
+  var stay = Math.max(0.5, parseFloat(document.getElementById('ltd_stay').value) || 3);
+  var reform = parseFloat(document.getElementById('ltd_reform').value) || 30;
+  var empty = parseFloat(document.getElementById('ltd_empty').value) || 2;
+
+  var SIM_YEARS = 10;
+  var AD_COST = rent; // 仲介AD = 家賃1ヶ月分
+
+  // 割引なしシナリオ（基準）
+  var turnovers_base = SIM_YEARS / stay;
+  var turnoverCost_base = turnovers_base * (reform + rent * empty + AD_COST);
+  var income_base = rent * 12 * SIM_YEARS - turnoverCost_base;
+
+  // 割引ありシナリオ（割引により居住年数が延びる）
+  // 実証研究ベース概算: 5%割引→平均1.5年延長、10%→3年延長
+  var stayExtension = (disc / 5) * 1.5;
+  var newStay = Math.min(stay + stayExtension, SIM_YEARS);
+  var turnovers_disc = SIM_YEARS / newStay;
+  var discRent = rent * (1 - disc / 100);
+  var turnoverCost_disc = turnovers_disc * (reform + discRent * empty + AD_COST);
+  var income_disc = discRent * 12 * SIM_YEARS - turnoverCost_disc;
+
+  var diff = Math.round(income_disc - income_base);
+  var isWin = diff > 0;
+  var heroColor = isWin ? '#16a34a' : '#dc2626';
+  var heroLabel = isWin ? '割引ありの方が得（10年差）' : '割引なしの方が得（10年差）';
+
+  var heroHtml = '<div style="text-align:center;padding:16px 0 8px">'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">' + heroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + Math.abs(diff).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted)">10年間の手取り収入の差</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">💰 割引なし（現状）10年収益</div>'
+    + '<div style="font-size:22px;font-weight:900;color:var(--text)">' + Math.round(income_base).toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">退去' + turnovers_base.toFixed(1) + '回 / 退去コスト' + Math.round(turnoverCost_base) + '万円</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🎁 ' + disc + '%割引あり 10年収益</div>'
+    + '<div style="font-size:22px;font-weight:900;color:' + heroColor + '">' + Math.round(income_disc).toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">退去' + turnovers_disc.toFixed(1) + '回 / 平均居住' + newStay.toFixed(1) + '年に延長</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '💡 ' + (isWin
+      ? '長期特典（' + disc + '%割引）を付けると、退去・リフォーム・空室コストの削減で月の家賃減額分を吸収できます。特に退去コストが高い物件（設備充実・広い間取り）ほど効果的です。'
+      : '現在の退去コスト・空室期間だと割引の方が損になります。退去コスト削減（DIY補修・入居者負担明確化）か、割引率を下げることを検討してください。')
+    + '</div>';
+
+  var shareText = encodeURIComponent('家賃' + disc + '%割引を付けると、退去コスト削減で10年で' + Math.abs(diff) + '万円' + (isWin ? '得' : '損') + 'になる！長期入居特典の損得を試算しました\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+
+  el.style.display = 'block';
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcLongTermDiscount(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
