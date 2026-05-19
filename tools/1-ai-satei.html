@@ -3724,6 +3724,31 @@
     <div id="red_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 建て替え vs リフォーム 30年総費用比較カード -->
+  <div class="card" id="card-rebuild-vs-reform">
+    <div class="card-title">🔨 今の家を「建て替え」vs「大規模リフォーム」どちらが30年でお得？費用・資産価値まで比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">築30〜40年の家を建て替えると資産価値は上がりますが費用が大きい。リフォームは費用が抑えられますが資産価値の向上は限定的。30年間の総コストと将来の資産価値を合わせて比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">建て替え費用（万円・例: 2500）</label>
+        <input type="number" id="rvr_rebuild" value="2500" min="500" max="10000" step="100" oninput="calcRebuildVsReform()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">大規模リフォーム費用（万円・例: 800）</label>
+        <input type="number" id="rvr_reform" value="800" min="100" max="5000" step="50" oninput="calcRebuildVsReform()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の土地評価額（万円・例: 1500）</label>
+        <input type="number" id="rvr_land" value="1500" min="0" max="50000" step="100" oninput="calcRebuildVsReform()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">建物の築年数（年・例: 35）</label>
+        <input type="number" id="rvr_age" value="35" min="1" max="60" step="1" oninput="calcRebuildVsReform()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="rvr_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12051,6 +12076,74 @@ function calcResidentExemptDeadline() {
   el.innerHTML = html;
 }
 (function(){ calcResidentExemptDeadline(); })();
+
+function calcRebuildVsReform() {
+  var rebuildCost = parseFloat(document.getElementById('rvr_rebuild').value) || 2500;
+  var reformCost = parseFloat(document.getElementById('rvr_reform').value) || 800;
+  var land = parseFloat(document.getElementById('rvr_land').value) || 1500;
+  var age = parseInt(document.getElementById('rvr_age').value) || 35;
+  var years = 30;
+
+  // 建物評価: 木造の法定耐用年数22年。築年数超過分はゼロに近い
+  var buildingValAfterRebuild = rebuildCost * Math.max(0, 1 - years / 22);
+  var buildingValAfterReform = Math.max(0, reformCost * 0.3);
+
+  // 30年後の資産価値
+  var rebuildFinalVal = land + buildingValAfterRebuild;
+  var reformFinalVal = land + buildingValAfterReform;
+
+  // 30年間の追加修繕費
+  var rebuildMaintenace = rebuildCost * 0.01 * years;
+  var reformMaintenance = reformCost * 0.015 * years + (age + years > 40 ? 500 : 200);
+
+  // トータルコスト（初期費用+維持費-将来価値）
+  var rebuildTotalCost = rebuildCost + rebuildMaintenace - rebuildFinalVal;
+  var reformTotalCost = reformCost + reformMaintenance - reformFinalVal;
+  var diff = reformTotalCost - rebuildTotalCost;
+  var rebuildWins = diff > 0;
+  var diffAbs = Math.abs(Math.round(diff));
+
+  var fmt = function(n) { return Math.round(n).toLocaleString(); };
+  var heroR = rebuildWins ? 22 : 201;
+  var heroG = rebuildWins ? 163 : 168;
+  var heroB = rebuildWins ? 74 : 76;
+
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba(' + heroR + ',' + heroG + ',' + heroB + ',0.12),rgba(' + heroR + ',' + heroG + ',' + heroB + ',0.04));border:2px solid rgba(' + heroR + ',' + heroG + ',' + heroB + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">30年間の実質コスト差（' + (rebuildWins ? '建て替えが' : 'リフォームが') + '有利）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroR + ',' + heroG + ',' + heroB + ');line-height:1;margin-bottom:4px">' + fmt(diffAbs) + '</div>'
+    + '<div style="font-size:14px;font-weight:700;color:rgb(' + heroR + ',' + heroG + ',' + heroB + ')">万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">初期費用+維持費-30年後の資産価値 で比較</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(220,38,38,0.06);border-radius:10px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏗️ 建て替え（新築）</div>'
+    + '<div style="font-size:18px;font-weight:900;color:#dc2626">初期費用 ' + fmt(rebuildCost) + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">30年後の資産価値: 約' + fmt(rebuildFinalVal) + '万円</div>'
+    + '<div style="font-size:11px;font-weight:700;color:#dc2626;margin-top:4px">実質負担 ' + fmt(rebuildTotalCost) + '万円</div>'
+    + '</div>'
+    + '<div style="background:rgba(22,163,74,0.06);border-radius:10px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🔨 大規模リフォーム</div>'
+    + '<div style="font-size:18px;font-weight:900;color:#16a34a">初期費用 ' + fmt(reformCost) + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">30年後の資産価値: 約' + fmt(reformFinalVal) + '万円</div>'
+    + '<div style="font-size:11px;font-weight:700;color:#16a34a;margin-top:4px">実質負担 ' + fmt(reformTotalCost) + '万円</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(0,0,0,0.03);border-radius:10px;padding:12px;font-size:12px;line-height:1.7;margin-bottom:10px">'
+    + (rebuildWins
+      ? '✅ <strong>30年間トータルでは建て替えの方が有利です。</strong>初期費用は高いですが、新築の耐用年数・断熱性能・耐震性でランニングコストが下がり、将来の資産価値も高く保てます。'
+      : '💡 <strong>リフォームの方が30年間トータルで有利です。</strong>初期費用が低い分、差額を運用・積立に回すとさらにお得になる場合も。ただし築' + (age + 30) + '年時点での大規模修繕リスクは別途考慮が必要です。')
+    + '<br><span style="font-size:10px;color:var(--text-muted)">※木造建物の法定耐用年数22年で試算。RC造・軽量鉄骨は異なります。実際の試算はTERRA REALTYにご相談ください。</span>'
+    + '</div>';
+
+  var shareText = '🔨 「建て替え vs リフォーム」30年比較をしてみた！\n\n建て替え（' + fmt(rebuildCost) + '万円）の実質負担: ' + fmt(rebuildTotalCost) + '万円\nリフォーム（' + fmt(reformCost) + '万円）の実質負担: ' + fmt(reformTotalCost) + '万円\n\n→ ' + (rebuildWins ? '建て替えが' : 'リフォームが') + fmt(diffAbs) + '万円お得！\n▶ あなたの家でも無料試算\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + encodeURIComponent(shareText) + '%0A' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで家族と一緒に考える</a>';
+
+  var el = document.getElementById('rvr_result');
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcRebuildVsReform(); })();
 
 
 
