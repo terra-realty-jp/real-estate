@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>実装レポート 2026-05-19</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:#0f172a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif; min-height:100vh; }
+.header { background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); border-bottom:3px solid #c9a84c; padding:36px 40px; }
+.header-inner { max-width:860px; margin:0 auto; }
+.header h1 { font-size:28px; font-weight:900; color:#c9a84c; margin-bottom:6px; }
+.header .date { font-size:15px; color:#94a3b8; margin-bottom:16px; }
+.stats { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+.stat { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 20px; text-align:center; min-width:100px; }
+.stat .num { font-size:28px; font-weight:900; color:#c9a84c; }
+.stat .lbl { font-size:11px; color:#64748b; margin-top:2px; }
+.chips { display:flex; gap:8px; flex-wrap:wrap; }
+.body { max-width:860px; margin:0 auto; padding:28px 24px; }
+.section-title { font-size:11px; font-weight:700; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }
+.commit-row { background:#1e293b; border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:14px 18px; margin-bottom:10px; transition:background 0.15s; }
+.commit-row:hover { background:#243347; }
+.commit-meta { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+.sha { background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:4px; font-size:11px; color:#64748b; }
+.tag { border:1px solid; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:600; }
+.time { font-size:11px; color:#475569; margin-left:auto; }
+.commit-msg { font-size:13px; color:#cbd5e1; line-height:1.6; }
+.footer { max-width:860px; margin:0 auto; padding:0 24px 32px; display:flex; gap:12px; flex-wrap:wrap; }
+.btn { display:inline-block; border-radius:8px; padding:11px 22px; font-size:13px; font-weight:600; text-decoration:none; cursor:pointer; }
+.btn-gold { background:#c9a84c; color:#000; }
+.btn-ghost { background:rgba(255,255,255,0.06); color:#94a3b8; border:1px solid rgba(255,255,255,0.1); }
+@media(max-width:600px){ .header{ padding:24px 16px; } .body,.footer{ padding-left:16px; padding-right:16px; } .stats{ gap:8px; } .stat{ min-width:80px; padding:10px 14px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="date">📅 2026年05月19日 の実装レポート</div>
+    <h1>不動産ツール 実装サマリー</h1>
+    <div class="stats">
+      <div class="stat"><div class="num">57</div><div class="lbl">コミット数</div></div>
+      <div class="stat"><div class="num">4851</div><div class="lbl">追加カード数</div></div>
+      <div class="stat"><div class="num">6</div><div class="lbl">カテゴリ</div></div>
+    </div>
+    <div class="chips"><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">🏠 Tool1 AI査定: 13件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">🤝 Tool3 売買: 10件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">🏢 Tool4 管理: 8件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">• その他: 12件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">📊 Tool5 投資: 8件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">🏚️ Tool2 空き家: 6件</span></div>
+  </div>
+</div>
+<div class="body">
+  <div class="section-title">本日のコミット一覧</div>
+  
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">4209105</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 20:02</span>
+  </div>
+  <div class="commit-msg">Tool1: 配偶者の相続税「税額軽減」確認カード追加（calcSpouseInheritance）—1億6000万円非課税枠を試算</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">bf71d46</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-19 19:56</span>
+  </div>
+  <div class="commit-msg">Tool3: 子どもの学費vsローン繰り上げ返済「10年間の節約比較」カード追加（calcCollegeVsLoan）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">f9e8ea8</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-19 19:26</span>
+  </div>
+  <div class="commit-msg">Tool3: 退職金×住宅ローン控除「一括返済vsそのまま」差額比較カードを追加（calcRetirementLumpPayoff）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">cc014c6</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 19:18</span>
+  </div>
+  <div class="commit-msg">Tool1/2: 新カード2枚追加（老人ホーム費用試算・空き家店舗転用比較）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">96e173b</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-19 19:13</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（446枚・Tool3/4/5 新カード反映）+ improvement-log追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">67d6895</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-19 19:12</span>
+  </div>
+  <div class="commit-msg">Tool4/5/3: 新カード3枚追加（定期借家比較・投資開始年齢比較・住宅ローン改善3択）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">65c8558</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 18:54</span>
+  </div>
+  <div class="commit-msg">docs: CLAUDE.md implementation-notesの実装反映方法を追加（セッション開始時読み込み・昇格ルール・矛盾処理）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">2d80752</code>
+    <span class="tag" style="background:#d4af3722;color:#d4af37;border-color:#d4af3744">📊 Tool5 投資</span>
+    <span class="time">2026-05-19 18:47</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（443枚・Tool5 100機能到達）+ improvement-log・implementation-notes追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">eddcb31</code>
+    <span class="tag" style="background:#d4af3722;color:#d4af37;border-color:#d4af3744">📊 Tool5 投資</span>
+    <span class="time">2026-05-19 18:47</span>
+  </div>
+  <div class="commit-msg">Tool5: 新カード追加「ローン完済後の毎月手取り収入を試算 不労所得X万円/月」（100機能到達）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">6641d18</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 18:44</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（442枚・Tool1 90機能）+ improvement-log・implementation-notes追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">8fa19d4</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 18:43</span>
+  </div>
+  <div class="commit-msg">Tool1: 新カード追加「ローン残あり vs 売って賃貸、月の手取りはどう変わる？月次コスト比較」</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">d13369e</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-19 18:41</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（441枚・Tool2 85機能）+ improvement-log・implementation-notes追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">cbb6836</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-19 18:41</span>
+  </div>
+  <div class="commit-msg">Tool2: 新カード追加「空き家の4種類の価格（固定資産税評価額・路線価・公示地価・実勢価格）の違いを一覧比較」</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">59453dd</code>
+    <span class="tag" style="background:#d4af3722;color:#d4af37;border-color:#d4af3744">📊 Tool5 投資</span>
+    <span class="time">2026-05-19 18:38</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（440枚・Tool5 99機能）+ improvement-log・implementation-notes追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">d7935a8</code>
+    <span class="tag" style="background:#d4af3722;color:#d4af37;border-color:#d4af3744">📊 Tool5 投資</span>
+    <span class="time">2026-05-19 18:37</span>
+  </div>
+  <div class="commit-msg">Tool5: 新カード追加「月X万円の家賃収入を得るには何戸・いくらの物件が必要？目標から逆算」</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">d436055</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-19 18:35</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（439枚・Tool3 83機能）+ improvement-log・implementation-notes追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">1eee955</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-19 18:34</span>
+  </div>
+  <div class="commit-msg">Tool3: 新カード追加「相続時精算課税 vs 暦年課税 どちらが節税になる？」（500万円贈与で最大48万円節税）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">e3cdc11</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 18:32</span>
+  </div>
+  <div class="commit-msg">docs: CLAUDE.md implementation-notes記録ルール追加・implementation-notes.md新規作成（今セッションの判断事項を記録）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">69031cb</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-19 18:29</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（438枚・Tool4 85機能）+ improvement-log追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">0d95a0f</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-19 18:28</span>
+  </div>
+  <div class="commit-msg">Tool4: 新カード追加「高齢入居者の孤独死コスト試算 保険あり・なし比較」（賃貸オーナーのリスク可視化）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">58f4c2b</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 18:25</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（437枚・Tool1 89機能）+ improvement-log追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">f48d780</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 18:24</span>
+  </div>
+  <div class="commit-msg">Tool1: 新カード追加「リバースモーゲージ 自宅に住みながら毎月X万円の老後資金」（60-70代向け）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">f240924</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-19 18:19</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（436枚・Tool3 82機能）+ improvement-log追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">59f6487</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-19 18:18</span>
+  </div>
+  <div class="commit-msg">Tool3: 新カード追加「子どもの住宅購入援助 最大1000万円贈与税ゼロ特例診断」（住宅取得等資金の贈与特例）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">f358799</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 18:16</span>
+  </div>
+  <div class="commit-msg">docs: CLAUDE.md ループ開始手順を強化（未コミット中断作業の検出手順を追加）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">a99308f</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 18:12</span>
+  </div>
+  <div class="commit-msg">docs: CLAUDE.md ループ開始手順を改訂（複数アカウント対応・git fetch必須化）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">b7789b8</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 18:11</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（435枚・全ツール機能数を実績値に更新）+ improvement-log追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">7343a9c</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-19 18:09</span>
+  </div>
+  <div class="commit-msg">Tool2: 新カード追加「固定資産税が払えない！延滞金・分割払い・売却を比較診断」（ライトテーマ対応）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">2fee10d</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 15:02</span>
+  </div>
+  <div class="commit-msg">docs: CLAUDE.md現状評価を更新（2026-05-19）— 431枚・PLG機能完成・非TOP3シェアテキスト全ツール改善完了</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">8a7c426</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 15:01</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（Tool1 83機能・Tool4 79機能・新規カード2枚追加・431枚）+ improvement-log更新</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">8062f44</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-19 15:00</span>
+  </div>
+  <div class="commit-msg">Tool4: 新カード追加「賃貸中（オーナーチェンジ）vs 退去後に売る、手取り差を比較」（52pxヒーロー・auto-init・LINEシェア付き）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">39ed5a3</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 14:58</span>
+  </div>
+  <div class="commit-msg">Tool1: 新カード追加「家を売った後 賃貸 vs 買い替え、老後の住居費を85歳まで比較」（52pxヒーロー・auto-init・LINEシェア付き）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">7d1187c</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-19 14:55</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool3 非TOP3カード2枚のLINEシェアテキストを「驚き・損失恐怖」訴求型に改善（新築vs中古・手付金リスク）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">0645b77</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-19 14:50</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool4・Tool5 非TOP3カード4枚のLINEシェアテキストを「驚き・不安」訴求型に改善（税務サマリー・退去リスク・修繕計画・CF安定性）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">fe2dcb9</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 14:47</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（新規カード3枚追加・カード枚数408枚に更新）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">416223d</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 14:44</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool1 非TOP3カード3枚のLINEシェアテキストを「驚き・不安」訴求型に改善（仲介契約・売却時期・固定資産税）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">b14dfe3</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-19 14:44</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool2 非TOP3カード4枚のLINEシェアテキストを「驚き・不安」訴求型に改善</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">a8be505</code>
+    <span class="tag" style="background:#d4af3722;color:#d4af37;border-color:#d4af3744">📊 Tool5 投資</span>
+    <span class="time">2026-05-19 14:43</span>
+  </div>
+  <div class="commit-msg">Tool5: 新カード追加「青色申告に切り替えると年間いくら節税できる？」（52pxヒーロー・auto-init・LINEシェア付き）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">c29b6ef</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-19 14:40</span>
+  </div>
+  <div class="commit-msg">Tool3: 新カード追加「家を買ったあとに来る不動産取得税 軽減措置込み計算」（52pxヒーロー・auto-init・LINEシェア付き）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">6de298d</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 14:39</span>
+  </div>
+  <div class="commit-msg">Tool1: 新カード追加「家を売ってから入金まで何ヶ月？売却スケジュールシミュレーター」（auto-init・LINEシェア付き）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">3501fd4</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 14:37</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（全5ツール自動初期化・サンプル値ヒント完了）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">50952af</code>
+    <span class="tag" style="background:#d4af3722;color:#d4af37;border-color:#d4af3744">📊 Tool5 投資</span>
+    <span class="time">2026-05-19 14:37</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool5 6カードにサンプル値デフォルト入力＋ヒントバナー追加（インフレvs現金・NISA比較・投資デビュー・損益通算・利回り3乗・建替え）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">e836fb7</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-19 14:36</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool4 6カードにサンプル値デフォルト入力＋ヒントバナー追加（管理費影響・敷金・満室収益・家賃値上げ・空室回収・相続比較）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">ef96b7d</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-19 14:35</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool2 賃貸損益分岐カードにサンプル値デフォルト入力＋ヒントバナー追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">f7ba6be</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 14:33</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool1 4カードにサンプル値デフォルト入力＋ヒントバナー追加（買う vs 賃貸・解体比較・売却費用・今売る vs 待つ）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">00a7f5d</code>
+    <span class="tag" style="background:#d4af3722;color:#d4af37;border-color:#d4af3744">📊 Tool5 投資</span>
+    <span class="time">2026-05-19 14:31</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool5 20個の計算カードに自動初期化追加（ページ読み込み時に即結果表示）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">ae272e6</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-19 14:30</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool4 16個の計算カードに自動初期化追加（ページ読み込み時に即結果表示）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">d988062</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-19 14:30</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool3 18個の計算カードに自動初期化追加（ページ読み込み時に即結果表示）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">d474c01</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-19 14:30</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool2 19個の計算カードに自動初期化追加（ページ読み込み時に即結果表示）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">cc0affd</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 14:28</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool1 13個の計算カードに自動初期化追加（ページ読み込み時に即結果表示）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">5770e39</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 14:02</span>
+  </div>
+  <div class="commit-msg">docs: ライトテーマリデザインをimprovement-logに記録</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">2f596f3</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 14:02</span>
+  </div>
+  <div class="commit-msg">Design: 全ページ ダーク→ライト系テーマへリデザイン（統一デザインシステム）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">1614b34</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-19 13:27</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool1 老後資金カードにサンプル値・自動計算・サンプル値ヒント追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">05d662f</code>
+    <span class="tag" style="background:#d4af3722;color:#d4af37;border-color:#d4af3744">📊 Tool5 投資</span>
+    <span class="time">2026-05-19 13:25</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool5 フォーム入力不要ジャンプバー追加・物件即判定カードにサンプル値ヒント追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">71e651d</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-19 13:24</span>
+  </div>
+  <div class="commit-msg">UX/PLG: Tool4 物件登録不要ジャンプバー追加・空室損失カードにサンプル値ヒント追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">3c30191</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 13:23</span>
+  </div>
+  <div class="commit-msg">docs: CLAUDE.md達成率を95%→25%に正直更新・PLG残課題を追記（2026-05-19）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">906502f</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-19 13:21</span>
+  </div>
+  <div class="commit-msg">UX/PLG: ホームページ仲介手数料即試算ウィジェット・全ツール個別計算ジャンプバー・サンプル値ヒント追加</div>
+</div>
+</div>
+<div class="footer">
+  <a class="btn btn-gold" href="https://shinji-japaaaan.github.io/real-estate/" target="_blank">🌐 本番サイトを開く</a>
+  <a class="btn btn-ghost" href="index.html">← レポート一覧へ</a>
+  <a class="btn btn-ghost" href="https://github.com/shinji-japaaaan/real-estate/commits/main" target="_blank">GitHubで確認</a>
+</div>
+<div style="text-align:center;padding:16px;color:#334155;font-size:11px">Generated: 2026-05-19 20:03 JST</div>
+</body>
+</html>
