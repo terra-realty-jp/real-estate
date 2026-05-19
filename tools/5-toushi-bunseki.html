@@ -3236,6 +3236,31 @@
     <div id="tir_result" style="margin-top:8px"></div>
   </div>
 
+  <div class="card" id="card-after-payoff">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏆 ローンを完済した後、毎月いくら手元に残る？「完済後の不労所得」を今から試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産投資の最大の魅力は「ローンを払い終えた後、家賃がそのまま収入になる」こと。今から物件を買った場合、何年後の完済時点でいくらの毎月収入が手に入るかを試算します。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:11px;color:rgba(22,163,74,0.9)">✏️ 下の数字はサンプル値です。あなたの条件に変えると即座に計算し直せます</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件価格（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 3000</span></label>
+        <input type="number" id="apo_price" value="3000" min="100" max="100000" step="100" oninput="calcAfterPayoff()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">表面利回り（%）<br><span style="color:rgba(0,0,0,0.35)">例: 8</span></label>
+        <input type="number" id="apo_yield" value="8" min="2" max="30" step="0.5" oninput="calcAfterPayoff()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">ローン期間（年）<br><span style="color:rgba(0,0,0,0.35)">例: 25</span></label>
+        <input type="number" id="apo_term" value="25" min="5" max="35" step="5" oninput="calcAfterPayoff()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">経費率（管理費・修繕費など %）<br><span style="color:rgba(0,0,0,0.35)">例: 20</span></label>
+        <input type="number" id="apo_expense" value="20" min="5" max="50" step="5" oninput="calcAfterPayoff()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="apo_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -12468,6 +12493,57 @@ function calcTargetIncomeReverse() {
   r.innerHTML = heroHtml + gridHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcTargetIncomeReverse(); })();
+
+function calcAfterPayoff() {
+  var r = document.getElementById('apo_result');
+  if (!r) return;
+  var price = parseFloat(document.getElementById('apo_price').value) || 0;
+  var yld = parseFloat(document.getElementById('apo_yield').value) || 0;
+  var term = parseInt(document.getElementById('apo_term').value) || 25;
+  var expense = parseFloat(document.getElementById('apo_expense').value) || 0;
+  if (!price || !yld) { r.innerHTML = ''; return; }
+  var annualRent = price * yld / 100;
+  var monthlyRent = annualRent / 12;
+  var monthlyNetAfterPayoff = monthlyRent * (1 - expense / 100);
+  var annualNetAfterPayoff = Math.round(monthlyNetAfterPayoff * 12);
+  var remainValue = Math.max(Math.round(price * Math.pow(0.98, term) * 0.7 + price * 0.3), Math.round(price * 0.2));
+  var loanRate = 0.025 / 12;
+  var loanMonths = term * 12;
+  var monthlyLoan = Math.round(price * loanRate * Math.pow(1 + loanRate, loanMonths) / (Math.pow(1 + loanRate, loanMonths) - 1) * 10) / 10;
+  var beforeCF = Math.round((monthlyRent - monthlyLoan - monthlyRent * expense / 100) * 10) / 10;
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba(22,163,74,0.12),rgba(22,163,74,0.04));border:2px solid rgba(22,163,74,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">' + term + '年後のローン完済後、毎月の手取り収入</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1">' + (Math.round(monthlyNetAfterPayoff * 10) / 10).toFixed(1) + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">万円/月（年間 約' + annualNetAfterPayoff.toLocaleString() + '万円の不労所得）</div>'
+    + '</div>';
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">⏳ 完済前の月次CF目安</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + (beforeCF >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (beforeCF >= 0 ? '+' : '') + beforeCF.toFixed(1) + '万円/月</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">返済中（金利2.5%・' + term + '年想定）</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏆 完済後の月収入</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--green)">+' + (Math.round(monthlyNetAfterPayoff * 10) / 10).toFixed(1) + '万円/月</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">経費' + expense + '% 差引後</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏠 完済時の物件残存価値</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--text)">' + remainValue.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">概算（土地+建物残存）</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">💰 完済後の年間収入</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--green)">' + annualNetAfterPayoff.toLocaleString() + '万円/年</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">年金の補填・老後収入に</div>'
+    + '</div>'
+    + '</div>';
+  var shareText = encodeURIComponent('【不動産投資の夢】' + price.toLocaleString() + '万円の物件、' + term + '年後のローン完済後は毎月' + (Math.round(monthlyNetAfterPayoff * 10) / 10).toFixed(1) + '万円の不労所得！年間' + annualNetAfterPayoff.toLocaleString() + '万円が入り続ける。今から始めると自分は何年後に完済できる？');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで投資仲間と共有</a>';
+  r.innerHTML = heroHtml + gridHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcAfterPayoff(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
