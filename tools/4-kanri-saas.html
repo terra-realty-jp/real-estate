@@ -3597,6 +3597,32 @@
     <div id="ltd_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <div class="card" id="card-proactive-repair">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔧 壊れる前に交換 vs 壊れてから直す——予防修繕で空室・緊急対応コストを節約できるか試算する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「まだ使えるから」とエアコン・給湯器・水道を放置していませんか？真夏のエアコン故障・冬の給湯器故障は入居者が退去するリスクがあります。計画的な交換コストと、壊れてからの緊急修理・空室損失を比較します。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.7">✏️ 下の数字はサンプル値です。ご自分の物件に合わせて書き換えてください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">設備の種類<br><span style="color:rgba(0,0,0,0.3)">交換費用・緊急対応コストが変わります</span></label>
+        <select id="pr_type" onchange="calcProactiveRepair()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="ac">エアコン（寿命10〜15年）</option>
+          <option value="heater">給湯器（寿命10〜12年）</option>
+          <option value="water">水道設備・洗濯機置き場（寿命15〜20年）</option>
+          <option value="fridge">冷蔵庫・洗濯機（備付の場合・寿命10年）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">設置からの年数（年）<br><span style="color:rgba(0,0,0,0.3)">例: 10年経過のエアコンなら10</span></label>
+        <input type="number" id="pr_age" placeholder="例: 10" value="10" step="1" min="1" max="30" oninput="calcProactiveRepair()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">月家賃（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 入居者の月額家賃</span></label>
+        <input type="number" id="pr_rent" placeholder="例: 7" value="7" step="0.5" min="1" max="100" oninput="calcProactiveRepair()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="pr_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -12946,6 +12972,76 @@ function calcLongTermDiscount() {
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcLongTermDiscount(); })();
+
+function calcProactiveRepair() {
+  var el = document.getElementById('pr_result');
+  if (!el) return;
+  var type = document.getElementById('pr_type').value;
+  var age = parseInt(document.getElementById('pr_age').value) || 10;
+  var rent = parseFloat(document.getElementById('pr_rent').value) || 0;
+
+  // 設備別のデータ
+  var typeData = {
+    ac:     { name: 'エアコン',   lifespan: 13, normalReplace: 15, emergencyFix: 5,  urgencyMonths: 1.5, retainRisk: 0.25 },
+    heater: { name: '給湯器',    lifespan: 11, normalReplace: 20, emergencyFix: 10, urgencyMonths: 2.0, retainRisk: 0.35 },
+    water:  { name: '水道設備',  lifespan: 18, normalReplace: 30, emergencyFix: 20, urgencyMonths: 1.5, retainRisk: 0.20 },
+    fridge: { name: '冷蔵庫等',  lifespan: 10, normalReplace: 8,  emergencyFix: 3,  urgencyMonths: 1.0, retainRisk: 0.15 }
+  };
+  var d = typeData[type];
+
+  // 故障確率（寿命に対する年数割合で線形近似）
+  var breakdownProb = Math.min(0.9, age / d.lifespan * 0.6 + (age > d.lifespan ? 0.3 : 0));
+
+  // 予防交換シナリオのコスト
+  var proactiveCost = d.normalReplace; // 計画修理
+
+  // 放置して故障したシナリオのコスト（期待値）
+  var emergencyCost = d.emergencyFix * 1.3; // 緊急手数料加算 30%
+  var vacancyCost = Math.round(rent * d.urgencyMonths); // 退去リスク×空室期間
+  var moveOutCost = Math.round(rent * 1.5); // AD+リフォーム
+  var expectedTotalOnBreakdown = Math.round(emergencyCost + (vacancyCost + moveOutCost) * d.retainRisk * breakdownProb);
+
+  var saving = Math.round(expectedTotalOnBreakdown - proactiveCost);
+  var isProactiveWin = saving > 0;
+  var heroColor = isProactiveWin ? '#16a34a' : '#c9a84c';
+
+  var heroHtml = '<div style="text-align:center;padding:16px 0 8px">'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">'
+    + (isProactiveWin ? '予防交換で節約できる期待額' : 'まだ使い続けても問題なし') + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + Math.abs(saving).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted)">'
+    + (isProactiveWin ? '予防交換 vs 故障後対応の差' : '現時点では交換の緊急性は低め') + '</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">'
+    + '<div style="background:rgba(22,163,74,0.06);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🔧 今すぐ予防交換のコスト</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#16a34a">' + proactiveCost + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">計画修理・業者手配費込み</div>'
+    + '</div>'
+    + '<div style="background:rgba(220,38,38,0.06);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">⚠️ 故障後に対応した場合の期待コスト</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#dc2626">' + expectedTotalOnBreakdown + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">故障確率' + Math.round(breakdownProb * 100) + '%・退去リスク加味</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '💡 ' + d.name + 'の目安寿命は' + d.lifespan + '年です。現在' + age + '年経過（寿命比' + Math.round(age / d.lifespan * 100) + '%）。'
+    + (breakdownProb >= 0.5
+      ? '⚠️ 故障確率が高い状態です。真冬・真夏の突発故障は入居者の怒りを招きやすく、退去リスクが特に高まります。'
+      : 'まだ故障確率は低めですが、定期的な動作確認を推奨します。')
+    + '</div>';
+
+  var shareText = encodeURIComponent(d.name + '（' + age + '年使用）を今すぐ交換（' + proactiveCost + '万円）vs 壊れてから直す（期待コスト' + expectedTotalOnBreakdown + '万円）差額' + Math.abs(saving) + '万円！予防修繕で損を防ごう\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+
+  el.style.display = 'block';
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcProactiveRepair(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
