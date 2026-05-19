@@ -3393,6 +3393,46 @@
     <div id="muc_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 売却後 資金化タイムライン カード -->
+  <div class="card" id="card-sale-timeline">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📅 家を売ったお金、いつ手元に入る？売却から入金までのスケジュールと注意点</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「家を売ろう」と決めてから、実際に売却代金が振り込まれるまでの目安期間を表示します。ローン借り換え・次の住まいの購入タイミングを計画するときの参考にしてください。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の種類<br><span style="color:rgba(0,0,0,0.35)">一戸建て / マンション / 土地</span></label>
+        <select id="st_type" onchange="calcSaleTimeline()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="house" selected>一戸建て</option>
+          <option value="mansion">マンション</option>
+          <option value="land">土地（更地）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">今の状況<br><span style="color:rgba(0,0,0,0.35)">まだ住んでいる / 空き家 / 賃貸中</span></label>
+        <select id="st_status" onchange="calcSaleTimeline()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="living" selected>まだ住んでいる</option>
+          <option value="empty">空き家（誰も住んでいない）</option>
+          <option value="rented">賃貸中</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">ローンの残債<br><span style="color:rgba(0,0,0,0.35)">ある場合は「あり」を選択</span></label>
+        <select id="st_loan" onchange="calcSaleTimeline()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="yes" selected>ローンあり（抵当権あり）</option>
+          <option value="no">ローンなし（完済済み）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">売却の急ぎ度<br><span style="color:rgba(0,0,0,0.35)">どれくらい早く売りたいか</span></label>
+        <select id="st_urgency" onchange="calcSaleTimeline()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="normal" selected>普通（3〜6ヶ月以内）</option>
+          <option value="fast">急ぎ（1〜2ヶ月以内）</option>
+          <option value="slow">じっくり（半年〜1年）</option>
+        </select>
+      </div>
+    </div>
+    <div id="st_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -10018,6 +10058,71 @@ function calcMoveUpCash() {
     +'<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html')+'&text='+encodeURIComponent('🏡→🏠 住み替え後の手元残金を試算してみた！\n\n売却手取り: '+netSell.toLocaleString()+'万円\n住み替え後 手元残金: '+(remaining>=0?'+':'')+remaining.toLocaleString()+'万円\n新居ローン月々: 約'+monthly.toLocaleString()+'円\n\n▶ あなたの住み替えでも無料計算\n不動産かんたんツール（TERRA REALTY）')+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
   if (typeof saveCardResult === 'function') saveCardResult('住み替え手元残金', '住み替え後'+(remaining>=0?'+':'')+remaining+'万円残', 'muc_result');
 }
+
+function calcSaleTimeline() {
+  var el = document.getElementById('st_result');
+  if (!el) return;
+  var type = document.getElementById('st_type')?.value || 'house';
+  var status = document.getElementById('st_status')?.value || 'living';
+  var loan = document.getElementById('st_loan')?.value || 'yes';
+  var urgency = document.getElementById('st_urgency')?.value || 'normal';
+
+  // Base timeline weeks
+  var baseWeeks = type === 'house' ? 16 : type === 'mansion' ? 14 : 10;
+  if (status === 'rented') baseWeeks += 8;
+  if (urgency === 'fast') baseWeeks = Math.round(baseWeeks * 0.6);
+  if (urgency === 'slow') baseWeeks = Math.round(baseWeeks * 1.6);
+
+  var loanWeeks = loan === 'yes' ? 2 : 0;
+
+  var steps = [
+    { name: '不動産会社選び・査定', weeks: 2, note: '複数社に見積もり。無料査定を活用。' },
+    { name: '媒介契約の締結', weeks: 1, note: '専任・専属専任・一般の3種から選択。' },
+    { name: '売り出し開始〜買主が見つかる', weeks: type === 'house' ? 8 : type === 'mansion' ? 6 : 4, note: urgency === 'fast' ? '買取業者を活用すると最短2週間も可能。' : urgency === 'slow' ? 'じっくり売るなら半年〜1年も視野に。' : '内覧対応を丁寧に行うと成約率UP。' },
+    { name: '売買契約の締結', weeks: 1, note: '重要事項説明・手付金の受領（通常5〜10%）。' },
+    { name: '引渡し準備・引越し', weeks: type === 'house' || status === 'living' ? 4 : 2, note: status === 'rented' ? '入居者への退去交渉が別途必要。' : 'ローン完済手続き・抵当権抹消登記が必要。' },
+    { name: '決済・所有権移転（入金）', weeks: 1, note: '代金全額を受領。ローン残債がある場合は同日返済。' }
+  ];
+  if (loan === 'yes') {
+    steps.push({ name: 'ローン返済・抵当権抹消登記', weeks: 2, note: '司法書士立会いのもと実施。登記費用5〜10万円が必要。' });
+  }
+
+  var totalWeeks = steps.reduce(function(s, x) { return s + x.weeks; }, 0);
+  var totalMonths = (totalWeeks / 4.3).toFixed(1);
+
+  var stepsHtml = steps.map(function(s, i) {
+    var color = i < 2 ? '#6b6058' : i < 4 ? '#c2410c' : '#16a34a';
+    return '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">'
+      + '<div style="min-width:28px;width:28px;height:28px;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0;margin-top:2px">' + (i + 1) + '</div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:12px;font-weight:700;color:var(--text)">' + s.name + '<span style="font-size:11px;color:' + color + ';margin-left:6px">約' + s.weeks + '週間</span></div>'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.5">' + s.note + '</div>'
+      + '</div></div>';
+  }).join('');
+
+  var urgencyLabel = urgency === 'fast' ? '急ぎモード（買取活用）' : urgency === 'slow' ? 'じっくりモード' : '通常ペース';
+  var urgencyColor = urgency === 'fast' ? '#dc2626' : urgency === 'slow' ? '#2563eb' : '#16a34a';
+
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:2px solid rgba(201,168,76,0.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:6px">売却決断から入金まで（' + urgencyLabel + '）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px">約' + totalMonths + '<span style="font-size:20px">ヶ月</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">（目安 ' + totalWeeks + '週間）</div>'
+    + '</div>'
+    + '<div style="background:var(--dark3);border-radius:12px;padding:14px;margin-bottom:12px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">📋 売却の流れ（ステップ別）</div>'
+    + stepsHtml
+    + '</div>'
+    + '<div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:10px;padding:12px;margin-bottom:12px">'
+    + '<div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:6px">⚠️ 注意が必要なポイント</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">'
+    + (status === 'rented' ? '・<strong style="color:var(--text)">賃貸中の物件</strong>は入居者の退去交渉が必要。拒否された場合、立退料の支払いが発生することも<br>' : '')
+    + (loan === 'yes' ? '・<strong style="color:var(--text)">ローン残債</strong>は決済日に全額返済が必要。売却価格が残債を下回る「オーバーローン」に注意<br>' : '')
+    + '・売却益に<strong style="color:var(--text)">譲渡所得税</strong>がかかる場合あり（3000万円控除等の特例適用を確認）<br>'
+    + '・入金は決済日当日。<strong style="color:var(--text)">次の住まいの費用</strong>との資金タイミングを事前に調整すること'
+    + '</div></div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('📅 家を売ってから入金まで約' + totalMonths + 'ヶ月かかる！\n\n意外と長い売却プロセス、計画的に進めよう\n→ ステップ別スケジュールを無料チェック\n不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcSaleTimeline(); })();
 
 function calcRepairFundShortfall() {
   var el = document.getElementById('rsf_result');
