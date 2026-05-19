@@ -3543,6 +3543,31 @@
     <div id="ld_result" style="margin-top:8px"></div>
   </div>
 
+  <!-- 定期借家 vs 普通借家 収益比較カード -->
+  <div class="card" id="card-fixed-term-lease">
+    <div class="card-title">📋 次の入居者と「定期借家 vs 普通借家」で契約すると、10年後の家賃収入はどう変わる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">定期借家契約（期間満了で確実終了）で入居者を迎えると、更新ごとに家賃を市場相場に合わせて改定できます。インフレ局面では普通借家より長期的な収入が増える可能性があります。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">設定家賃（万円/月・例: 8）</label>
+        <input type="number" id="ftl_rent" value="8" min="1" max="100" step="0.5" oninput="calcFixedTermLease()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間家賃上昇率（%・例: 1.5）</label>
+        <input type="number" id="ftl_inflation" value="1.5" min="0" max="5" step="0.1" oninput="calcFixedTermLease()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">定期借家の更新サイクル（年）</label>
+        <input type="number" id="ftl_cycle" value="2" min="1" max="5" step="1" oninput="calcFixedTermLease()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">更新時の追加空室（月・例: 1）</label>
+        <input type="number" id="ftl_extra" value="1" min="0" max="6" step="1" oninput="calcFixedTermLease()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="ftl_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -12756,6 +12781,76 @@ function calcLonelyDeath() {
   r.innerHTML = heroHtml + gridHtml + totalHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcLonelyDeath(); })();
+
+function calcFixedTermLease() {
+  var el = document.getElementById('ftl_result');
+  if (!el) return;
+  var rent = parseFloat(document.getElementById('ftl_rent').value) || 8;
+  var inflPct = parseFloat(document.getElementById('ftl_inflation').value) || 1.5;
+  var infl = inflPct / 100;
+  var cycle = parseInt(document.getElementById('ftl_cycle').value) || 2;
+  var extra = parseInt(document.getElementById('ftl_extra').value) || 1;
+  var years = 10;
+
+  // 普通借家: 家賃固定（正当事由がなければ値上げが法的に困難）
+  var futsuu10y = rent * 12 * years;
+
+  // 定期借家: cycle年ごとに更新・値上げ、2回目以降はextraヶ月の空室
+  var cycles = Math.floor(years / cycle);
+  var teiki10y = 0;
+  for (var i = 0; i < cycles; i++) {
+    var periodRent = rent * Math.pow(1 + infl, i * cycle);
+    var activeMonths = (i === 0) ? cycle * 12 : cycle * 12 - extra;
+    teiki10y += periodRent * activeMonths;
+  }
+  var remainMonths = years * 12 - cycles * cycle * 12;
+  if (remainMonths > 0) {
+    teiki10y += rent * Math.pow(1 + infl, cycles * cycle) * remainMonths;
+  }
+
+  var diff = teiki10y - futsuu10y;
+  var rent10 = rent * Math.pow(1 + infl, years);
+  var heroColor = diff >= 0 ? '#16a34a' : '#dc2626';
+  var heroBg = diff >= 0 ? 'rgba(22,163,74,0.12),rgba(22,163,74,0.04)' : 'rgba(220,38,38,0.12),rgba(220,38,38,0.04)';
+  var heroBorder = diff >= 0 ? 'rgba(22,163,74,0.4)' : 'rgba(220,38,38,0.4)';
+  var fmt = function(v) { return Math.round(v * 10) / 10; };
+
+  var heroHtml = '<div style="background:linear-gradient(135deg,' + heroBg + ');border:2px solid ' + heroBorder + ';border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">定期借家の10年間収益アドバンテージ</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + (diff >= 0 ? '+' : '') + Math.round(diff) + '万円</div>'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">10年後の月家賃: <strong style="color:' + heroColor + '">' + fmt(rent10) + '万円</strong>（普通借家は' + rent + '万円のまま）</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">普通借家（10年累計）</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--text)">' + Math.round(futsuu10y) + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">月' + rent + '万円固定</div>'
+    + '</div>'
+    + '<div style="background:rgba(22,163,74,0.06);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">定期借家（10年累計）</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--green)">' + Math.round(teiki10y) + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">年' + inflPct + '%上昇反映</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">'
+    + '💡 <strong style="color:var(--text)">定期借家のメリット：</strong>期間満了で確実に契約終了・更新時に家賃を自由設定。インフレ局面では長期的に収入格差が広がります。<br>'
+    + '⚠️ 定期借家は入居者に敬遠されることも。設定家賃は相場より少し安めにするか、設備や条件で差別化するとよいでしょう。<br>'
+    + '⚠️ 現在入居中の普通借家を定期借家に強制変更はできません。次の空室時・新規契約時に採用してください。'
+    + '</div>';
+
+  var shareAmt = Math.round(diff);
+  var shareText = encodeURIComponent('📋 定期借家 vs 普通借家 10年間の収益差を試算！\n\n'
+    + '月' + rent + '万円の物件、定期借家で10年後には月' + fmt(rent10) + '万円に！\n'
+    + '10年間の累計差額: ' + (diff >= 0 ? '+' : '') + shareAmt + '万円\n\n'
+    + 'インフレ時代は定期借家で家賃改定の自由度を確保！\n▶ 無料で比較する\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで仲間のオーナーに教える</a>';
+
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcFixedTermLease(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {

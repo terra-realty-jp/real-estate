@@ -3261,6 +3261,31 @@
     <div id="apo_result" style="margin-top:8px"></div>
   </div>
 
+  <!-- 投資開始年齢比較カード -->
+  <div class="card" id="card-invest-start-age">
+    <div class="card-title">🎯 40代で始める vs 50代で始める — 不動産投資を10年早く始めると65歳の資産はいくら変わる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「そのうち始めよう」の10年後回しが老後資産にどれだけ影響するか試算します。同じ物件・同じ条件で、スタート年齢の違いが65歳時点の累計手残りにどう現れるかを比較します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の年齢（歳）</label>
+        <input type="number" id="isa_age" value="45" min="30" max="60" step="1" oninput="calcInvestStartAge()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">自己資金（頭金・万円）</label>
+        <input type="number" id="isa_fund" value="500" min="100" max="5000" step="100" oninput="calcInvestStartAge()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件価格（万円・例: 2000）</label>
+        <input type="number" id="isa_price" value="2000" min="500" max="30000" step="100" oninput="calcInvestStartAge()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">表面利回り（%・例: 8）</label>
+        <input type="number" id="isa_yield" value="8" min="3" max="20" step="0.5" oninput="calcInvestStartAge()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="isa_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -12544,6 +12569,89 @@ function calcAfterPayoff() {
   r.innerHTML = heroHtml + gridHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcAfterPayoff(); })();
+
+function calcInvestStartAge() {
+  var el = document.getElementById('isa_result');
+  if (!el) return;
+  var age = parseInt(document.getElementById('isa_age').value) || 45;
+  var fund = parseFloat(document.getElementById('isa_fund').value) || 500;
+  var price = parseFloat(document.getElementById('isa_price').value) || 2000;
+  var yieldRate = parseFloat(document.getElementById('isa_yield').value) || 8;
+
+  var targetAge = 65;
+  var loanRate = 0.025;
+  var loanTerm = 25;
+  var vacancyRate = 0.10;
+  var expenseRate = 0.20;
+
+  var loanAmt = Math.max(0, price - fund);
+  var monthlyRate = loanRate / 12;
+  var loanMonths = loanTerm * 12;
+  var monthlyLoan = loanAmt > 0 ? (loanAmt * 10000 * monthlyRate / (1 - Math.pow(1 + monthlyRate, -loanMonths))) / 10000 : 0;
+  var annualLoan = monthlyLoan * 12;
+  var annualNetIncome = price * yieldRate / 100 * (1 - vacancyRate) * (1 - expenseRate);
+
+  function calcTotalCF(startAge) {
+    if (startAge >= targetAge) return 0;
+    var total = 0;
+    var yearsInvesting = targetAge - startAge;
+    for (var y = 1; y <= yearsInvesting; y++) {
+      if (y <= loanTerm) {
+        total += annualNetIncome - annualLoan;
+      } else {
+        total += annualNetIncome;
+      }
+    }
+    return total;
+  }
+
+  var laterAge = Math.min(age + 10, 60);
+  var cfEarly = calcTotalCF(age);
+  var cfLate = calcTotalCF(laterAge);
+  var diff = cfEarly - cfLate;
+
+  var heroColor = diff > 0 ? '#16a34a' : '#dc2626';
+  var heroBg = diff > 0 ? 'rgba(22,163,74,0.12),rgba(22,163,74,0.04)' : 'rgba(220,38,38,0.12),rgba(220,38,38,0.04)';
+  var heroBorder = diff > 0 ? 'rgba(22,163,74,0.4)' : 'rgba(220,38,38,0.4)';
+  var fmt = function(v) { return Math.round(v).toLocaleString(); };
+
+  var heroHtml = '<div style="background:linear-gradient(135deg,' + heroBg + ');border:2px solid ' + heroBorder + ';border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">10年早く始めることによる65歳時点の累計収益差</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + (diff >= 0 ? '+' : '') + fmt(Math.abs(Math.round(diff))) + '万円</div>'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">' + age + '歳スタートの方が65歳時点でこれだけ多い</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    + '<div style="background:rgba(22,163,74,0.06);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">今すぐ（' + age + '歳）始めた場合</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--green)">' + (cfEarly >= 0 ? '+' : '') + fmt(Math.round(cfEarly)) + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">65歳時点の累計手残り</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">' + laterAge + '歳で始めた場合</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--text)">' + (cfLate >= 0 ? '+' : '') + fmt(Math.round(cfLate)) + '万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted)">65歳時点の累計手残り</div>'
+    + '</div>'
+    + '</div>';
+
+  var yrsEarly = targetAge - age;
+  var yrsLate = targetAge - laterAge;
+  var guideHtml = '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">'
+    + '💡 <strong style="color:var(--text)">前提条件：</strong>物件' + price + '万円・利回り' + yieldRate + '%・空室10%・経費20%・ローン金利2.5%・期間25年。<br>'
+    + '年間純収入: <strong style="color:var(--text)">' + fmt(Math.round(annualNetIncome * 10) / 10) + '万円</strong> / 年間ローン返済: <strong style="color:var(--red)">' + fmt(Math.round(annualLoan * 10) / 10) + '万円</strong><br>'
+    + '⚠️ 物件価値・税金・融資条件は考慮していません。実際の投資前には専門家に相談してください。'
+    + '</div>';
+
+  var shareText = encodeURIComponent('🎯 不動産投資、10年早く始めると65歳時点で' + fmt(Math.abs(Math.round(diff))) + '万円の差！\n\n'
+    + age + '歳スタート: 累計' + (cfEarly >= 0 ? '+' : '') + fmt(Math.round(cfEarly)) + '万円\n'
+    + laterAge + '歳スタート: 累計' + (cfLate >= 0 ? '+' : '') + fmt(Math.round(cfLate)) + '万円\n\n'
+    + '「そのうち始めよう」の10年が老後の資産を大きく変える！\n▶ 無料でシミュレーション\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで仲間にシェア</a>';
+
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcInvestStartAge(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {

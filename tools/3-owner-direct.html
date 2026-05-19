@@ -2969,6 +2969,31 @@
     <div id="svr_result" style="margin-top:8px"></div>
   </div>
 
+  <!-- 住宅ローン改善3択比較カード -->
+  <div class="card" id="card-mortgage-overhaul">
+    <div class="card-title">💳 住宅ローン「改善3択」比較 — 繰り上げ返済・借り換え・金利タイプ変更、10年後の節約効果はどれが一番大きい？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">ローン残高・金利・返済期間を入力すると、「繰り上げ返済」「借り換え」「金利タイプ変更」3つの改善策の10年後の節約効果を比較します。どれから手をつけるべきか判断できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">ローン残高（万円・例: 2500）</label>
+        <input type="number" id="moh_balance" value="2500" min="100" max="50000" step="100" oninput="calcMortgageOverhaul()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の金利（%・例: 1.5）</label>
+        <input type="number" id="moh_rate" value="1.5" min="0.1" max="8" step="0.1" oninput="calcMortgageOverhaul()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">残返済期間（年・例: 25）</label>
+        <input type="number" id="moh_term" value="25" min="1" max="50" step="1" oninput="calcMortgageOverhaul()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間余剰資金（繰り上げ用・万円）</label>
+        <input type="number" id="moh_prepay" value="50" min="0" max="500" step="10" oninput="calcMortgageOverhaul()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="moh_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -9795,6 +9820,131 @@ function calcSeiSanVsReki() {
   r.innerHTML = heroHtml + gridHtml + savingHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcSeiSanVsReki(); })();
+
+function calcMortgageOverhaul() {
+  var el = document.getElementById('moh_result');
+  if (!el) return;
+  var balance = parseFloat(document.getElementById('moh_balance').value) || 2500;
+  var rate = (parseFloat(document.getElementById('moh_rate').value) || 1.5) / 100;
+  var term = parseInt(document.getElementById('moh_term').value) || 25;
+  var prepayAnnual = parseFloat(document.getElementById('moh_prepay').value) || 50;
+
+  var compareYears = 10;
+  var mr = rate / 12;
+  var nm = term * 12;
+
+  // 現在の月返済額
+  var monthlyPayment = balance * 10000 * mr / (1 - Math.pow(1 + mr, -nm)) / 10000;
+  var annualPayment = monthlyPayment * 12;
+
+  // 10年間の利息計算ヘルパー
+  function calcInterest10y(bal, r, months) {
+    var m = r / 12;
+    var payment = bal * 10000 * m / (1 - Math.pow(1 + m, -months)) / 10000;
+    var remaining = bal;
+    var totalInterest = 0;
+    for (var i = 0; i < Math.min(compareYears * 12, months); i++) {
+      var interestPart = remaining * m;
+      totalInterest += interestPart;
+      var principal = payment - interestPart;
+      remaining -= principal / 10000;
+    }
+    return totalInterest;
+  }
+
+  // A. 何もしない：10年間の利息
+  var interestA = calcInterest10y(balance, rate, nm);
+
+  // B. 繰り上げ返済（毎年prepayAnnual万円の期間短縮型）
+  function calcPrepayInterest10y(bal, r, months, annualPrepay) {
+    var m = r / 12;
+    var payment = bal * 10000 * m / (1 - Math.pow(1 + m, -months)) / 10000;
+    var remaining = bal;
+    var totalInterest = 0;
+    var monthsLeft = months;
+    for (var i = 0; i < compareYears * 12 && monthsLeft > 0; i++) {
+      var interestPart = remaining * m;
+      totalInterest += interestPart;
+      var principal = payment - interestPart;
+      remaining -= principal / 10000;
+      monthsLeft--;
+      if (i % 12 === 11 && annualPrepay > 0) {
+        var prepay = Math.min(annualPrepay, remaining);
+        remaining -= prepay;
+        // 期間短縮: 残り月数を再計算
+        if (remaining > 0 && m > 0) {
+          monthsLeft = Math.ceil(-Math.log(1 - remaining * 10000 * m / (payment * 10000)) / Math.log(1 + m));
+        } else {
+          monthsLeft = 0;
+        }
+      }
+    }
+    return totalInterest;
+  }
+  var interestB = calcPrepayInterest10y(balance, rate, nm, prepayAnnual);
+  var savingB = interestA - interestB;
+
+  // C. 借り換え（金利が0.7%下がる場合の節約）
+  var newRate = Math.max(0.001, rate - 0.007);
+  var refinanceCost = balance * 0.02; // 借り換え費用: 残高の約2%（登記費用・手数料）
+  var interestC = calcInterest10y(balance, newRate, nm);
+  var savingC = interestA - interestC - refinanceCost;
+
+  // D. 固定金利に変更（+0.5%の金利上昇コスト = リスクヘッジコスト）
+  var fixedRate = rate + 0.005;
+  var interestD = calcInterest10y(balance, fixedRate, nm);
+  var extraCostD = interestD - interestA;
+
+  var bestSaving = Math.max(savingB, savingC);
+  var bestMethod = savingB >= savingC ? '繰り上げ返済' : '借り換え';
+  var heroColor = bestSaving > 0 ? '#16a34a' : '#f59e0b';
+  var heroBg = 'rgba(22,163,74,0.12),rgba(22,163,74,0.04)';
+  var heroBorder = 'rgba(22,163,74,0.4)';
+
+  var fmt = function(v) { return Math.round(v).toLocaleString(); };
+
+  var heroHtml = '<div style="background:linear-gradient(135deg,' + heroBg + ');border:2px solid ' + heroBorder + ';border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">最も効果的な改善策: ' + bestMethod + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + fmt(Math.round(Math.max(0, bestSaving))) + '万円</div>'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">10年間で節約できる利息（概算）</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:8px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">何もしない（10年利息）</div>'
+    + '<div style="font-size:16px;font-weight:700;color:var(--red)">' + fmt(Math.round(interestA)) + '万円</div>'
+    + '</div>'
+    + '<div style="background:rgba(22,163,74,0.06);border-radius:8px;padding:8px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">繰り上げ返済（年' + prepayAnnual + '万円）</div>'
+    + '<div style="font-size:16px;font-weight:700;color:var(--green)">▲' + fmt(Math.round(Math.max(0, savingB))) + '万円節約</div>'
+    + '</div>'
+    + '<div style="background:rgba(59,130,246,0.06);border-radius:8px;padding:8px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">借り換え（金利-0.7%想定）</div>'
+    + '<div style="font-size:16px;font-weight:700;color:#3b82f6">▲' + fmt(Math.round(Math.max(0, savingC))) + '万円節約</div>'
+    + '</div>'
+    + '<div style="background:rgba(245,158,11,0.06);border-radius:8px;padding:8px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">固定金利化（+0.5%）コスト</div>'
+    + '<div style="font-size:16px;font-weight:700;color:#f59e0b">+' + fmt(Math.round(Math.max(0, extraCostD))) + '万円増</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">'
+    + '💡 <strong style="color:var(--text)">現在の月返済額: ' + fmt(Math.round(monthlyPayment * 10) / 10) + '万円</strong>（年間 ' + fmt(Math.round(annualPayment * 10) / 10) + '万円）<br>'
+    + '繰り上げ返済は手元資金を使うリスクあり。借り換えは返済期間や手数料を金融機関に確認してください。<br>'
+    + '固定金利は「保険」として考える — 金利上昇に備えたコストとして捉えましょう。'
+    + '</div>';
+
+  var shareText = encodeURIComponent('💳 住宅ローン改善3択を比較！\n\n'
+    + 'ローン残' + balance + '万円・金利' + (rate * 100).toFixed(1) + '%・残' + term + '年\n'
+    + '📌 繰り上げ返済（年' + prepayAnnual + '万円）: ▲' + fmt(Math.round(Math.max(0, savingB))) + '万円節約\n'
+    + '📌 借り換え（金利-0.7%）: ▲' + fmt(Math.round(Math.max(0, savingC))) + '万円節約\n\n'
+    + '最も効果的: ' + bestMethod + ' で10年間' + fmt(Math.round(Math.max(0, bestSaving))) + '万円節約！\n▶ あなたのローンでも無料比較\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで住宅ローンを持つ友人に教える</a>';
+
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcMortgageOverhaul(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
