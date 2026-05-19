@@ -3418,6 +3418,31 @@
     <div id="eg_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 区分マンション vs 戸建て投資 長期コスト比較カード -->
+  <div class="card" id="card-condo-vs-house-invest">
+    <div class="card-title">🏢 区分マンション vs 戸建て投資、20年間の「隠れコスト」を比較 — 管理費・修繕積立金の差額はいくら？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">区分マンションは管理費・修繕積立金が毎月かかります。戸建ては自分で修繕費を積み立てる必要があります。同じ利回りに見えても20年後の手取りはどれだけ違うか確認できます。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">月額家賃収入（万円・例: 8）</label>
+        <input type="number" id="chi_rent" value="8" min="1" max="100" step="0.5" oninput="calcCondoVsHouseInvest()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件価格（万円・例: 2000）</label>
+        <input type="number" id="chi_price" value="2000" min="100" max="50000" step="100" oninput="calcCondoVsHouseInvest()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">マンション管理費+修繕積立金（月・万円・例: 2）</label>
+        <input type="number" id="chi_mgmt" value="2" min="0.1" max="20" step="0.1" oninput="calcCondoVsHouseInvest()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">戸建て年間修繕積立目安（万円・例: 12）</label>
+        <input type="number" id="chi_repair" value="12" min="0" max="100" step="1" oninput="calcCondoVsHouseInvest()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="chi_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -13054,6 +13079,68 @@ function calcEquityGrowth() {
   el.innerHTML = html;
 }
 (function(){ calcEquityGrowth(); })();
+
+function calcCondoVsHouseInvest() {
+  var rent = parseFloat(document.getElementById('chi_rent').value) || 8;
+  var price = parseFloat(document.getElementById('chi_price').value) || 2000;
+  var mgmt = parseFloat(document.getElementById('chi_mgmt').value) || 2;
+  var repairAnnual = parseFloat(document.getElementById('chi_repair').value) || 12;
+  var years = 20;
+
+  var grossRent20 = rent * 12 * years;
+  var condoMgmt20 = mgmt * 12 * years;
+  var houseRepair20 = repairAnnual * years;
+  var vacancyLoss = rent * 12 * years * 0.05;
+
+  var condoNet20 = grossRent20 - condoMgmt20 - vacancyLoss;
+  var houseNet20 = grossRent20 - houseRepair20 - vacancyLoss;
+  var diff = houseNet20 - condoNet20;
+  var houseWins = diff > 0;
+  var diffAbs = Math.abs(Math.round(diff));
+
+  var fmt = function(n) { return Math.round(n).toLocaleString(); };
+  var grossYield = (rent * 12 / price * 100).toFixed(2);
+  var condoNetYield = (condoNet20 / years / price * 100).toFixed(2);
+  var houseNetYield = (houseNet20 / years / price * 100).toFixed(2);
+
+  var heroR = 201, heroG = 168, heroB = 76;
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba(' + heroR + ',' + heroG + ',' + heroB + ',0.12),rgba(' + heroR + ',' + heroG + ',' + heroB + ',0.04));border:2px solid rgba(' + heroR + ',' + heroG + ',' + heroB + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">20年間の手取り差額（' + (houseWins ? '戸建てが' : 'マンションが') + '有利）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroR + ',' + heroG + ',' + heroB + ');line-height:1;margin-bottom:4px">' + fmt(diffAbs) + '</div>'
+    + '<div style="font-size:14px;font-weight:700;color:rgb(' + heroR + ',' + heroG + ',' + heroB + ')">万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">同じ家賃収入でも20年間の「隠れコスト」の差はこれだけ</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(59,130,246,0.06);border-radius:10px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏢 区分マンション 20年手取り</div>'
+    + '<div style="font-size:20px;font-weight:900;color:#2563eb">' + fmt(condoNet20) + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">管理費+積立: ' + fmt(condoMgmt20) + '万円引き</div>'
+    + '<div style="font-size:11px;font-weight:700;color:#2563eb;margin-top:4px">実質利回り ' + condoNetYield + '%</div>'
+    + '</div>'
+    + '<div style="background:rgba(22,163,74,0.06);border-radius:10px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏡 戸建て投資 20年手取り</div>'
+    + '<div style="font-size:20px;font-weight:900;color:#16a34a">' + fmt(houseNet20) + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">修繕積立: ' + fmt(houseRepair20) + '万円引き</div>'
+    + '<div style="font-size:11px;font-weight:700;color:#16a34a;margin-top:4px">実質利回り ' + houseNetYield + '%</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(0,0,0,0.03);border-radius:10px;padding:12px;font-size:12px;line-height:1.7;margin-bottom:10px">'
+    + '📌 <strong>表面利回りは同じ ' + grossYield + '% でも、コスト構造が全く違います。</strong><br>'
+    + (houseWins
+      ? '戸建ては管理費がないため手取りが多くなりがちですが、大規模修繕（屋根・外壁）が突発的に発生するリスクに注意。'
+      : 'マンションは管理費・修繕積立金が高額ですが、管理組合が建物を一括管理するため突発修繕のリスクは低い傾向があります。')
+    + '<br><span style="font-size:10px;color:var(--text-muted)">※空室率5%・管理会社費用は別途。実際の収支はTERRA REALTYにご相談ください。</span>'
+    + '</div>';
+
+  var shareText = '🏢 マンション vs 戸建て投資の「隠れコスト」を比較！\n\n月額家賃' + rent + '万円の物件で20年間\n🏢マンション（管理費月' + mgmt + '万）: ' + fmt(condoNet20) + '万円\n🏡戸建て（修繕年' + repairAnnual + '万）: ' + fmt(houseNet20) + '万円\n\n→ 差額' + fmt(diffAbs) + '万円！同じ利回りに見えて実質' + (houseWins ? '戸建てが有利' : 'マンションが有利') + '\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + encodeURIComponent(shareText) + '%0A' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで投資仲間に教える</a>';
+
+  var el = document.getElementById('chi_result');
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcCondoVsHouseInvest(); })();
 
 
 var _toushiCat = '';
