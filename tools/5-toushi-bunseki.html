@@ -3322,6 +3322,35 @@
     <div id="iid_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <div class="card" id="card-prepay-vs-next-prop">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔄 余剰資金を「ローン繰り上げ返済」に使うか「2棟目の頭金」に使うか——10年後の資産はどちらが多い？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">1棟目のキャッシュフローが安定してきたら「次の物件を買うべきか、ローンを早く返すべきか」迷う人が多いです。繰り上げ返済は確実な節利、2棟目はレバレッジによる収益拡大。10年後の純資産をシミュレーションして判断しましょう。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.7">✏️ 下の数字はサンプル値です。ご自分の状況に合わせて書き換えてください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現ローン残高（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 1棟目のローン残高</span></label>
+        <input type="number" id="pvn_bal" placeholder="例: 4000" value="4000" step="100" min="100" max="100000" oninput="calcPrepayVsNextProp()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現ローン金利（%）<br><span style="color:rgba(0,0,0,0.3)">例: 変動金利0.875%が多い</span></label>
+        <input type="number" id="pvn_rate" placeholder="例: 1.5" value="1.5" step="0.1" min="0.5" max="8" oninput="calcPrepayVsNextProp()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">余剰資金（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 頭金や繰り上げ返済に使える金額</span></label>
+        <input type="number" id="pvn_cash" placeholder="例: 500" value="500" step="50" min="50" max="10000" oninput="calcPrepayVsNextProp()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">2棟目の表面利回り（%）<br><span style="color:rgba(0,0,0,0.3)">例: 検討中の物件の利回り目安</span></label>
+        <input type="number" id="pvn_yield2" placeholder="例: 7" value="7" step="0.5" min="2" max="25" oninput="calcPrepayVsNextProp()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">2棟目の融資金利（%）<br><span style="color:rgba(0,0,0,0.3)">例: 新規融資は金利が高いことが多い</span></label>
+        <input type="number" id="pvn_rate2" placeholder="例: 2.5" value="2.5" step="0.1" min="0.5" max="8" oninput="calcPrepayVsNextProp()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="pvn_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -12764,6 +12793,79 @@ function calcInheritInvestDecision() {
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcInheritInvestDecision(); })();
+
+function calcPrepayVsNextProp() {
+  var el = document.getElementById('pvn_result');
+  if (!el) return;
+  var bal = parseFloat(document.getElementById('pvn_bal').value) || 0;
+  var rate = parseFloat(document.getElementById('pvn_rate').value) / 100 || 0.015;
+  var cash = parseFloat(document.getElementById('pvn_cash').value) || 0;
+  var yield2 = parseFloat(document.getElementById('pvn_yield2').value) / 100 || 0.07;
+  var rate2 = parseFloat(document.getElementById('pvn_rate2').value) / 100 || 0.025;
+  var SIM_YEARS = 10;
+
+  // シナリオA: 繰り上げ返済
+  // 節利 = cash を一括繰り上げしたときの10年間の節約利息（概算: cash × rate × 10年 × 0.6 → 残高が減るので約60%の平均残高）
+  var interestSaved = Math.round(cash * rate * SIM_YEARS * 0.6);
+  // 1棟目のCFはそのまま（変化なし）
+  var netA = interestSaved; // 繰り上げの純メリット
+
+  // シナリオB: 2棟目購入（cash = 頭金）
+  // 2棟目物件価格 = cash / 0.2 (20%頭金想定)
+  var ltv = 0.80;
+  var price2 = Math.round(cash / (1 - ltv));
+  var loan2 = Math.round(price2 * ltv);
+  // 年間NOI ≈ 表面利回り × 0.7（実質70%として計算）
+  var noi2_annual = price2 * yield2 * 0.75;
+  // 年間ローン返済額 ≈ loan2 × rate2 × 1.05 (元利均等概算)
+  var annualRepay2 = Math.round(loan2 * (rate2 * 1.05));
+  var annualCF2 = noi2_annual - annualRepay2;
+  var totalCF2 = Math.max(0, annualCF2 * SIM_YEARS);
+  // 10年後の2棟目物件残債: 元金返済で約20%減少と仮定
+  var remainLoan2 = Math.round(loan2 * 0.80);
+  // 物件価値（横ばい想定）
+  var asset2 = price2 - remainLoan2;
+  var netB = Math.round(totalCF2 + asset2);
+
+  var diff = Math.round(netB - netA);
+  var winner = diff > 0 ? 'next' : 'prepay';
+  var heroColor = diff > 0 ? '#16a34a' : '#c9a84c';
+  var heroLabel = winner === 'next' ? '2棟目購入の方が有利' : '繰り上げ返済の方が確実';
+
+  var heroHtml = '<div style="text-align:center;padding:16px 0 8px">'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">' + heroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + Math.abs(diff).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted)">10年後の純資産差（概算）</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">✅ 繰り上げ返済の10年効果</div>'
+    + '<div style="font-size:22px;font-weight:900;color:' + (winner === 'prepay' ? '#16a34a' : 'var(--text)') + '">' + netA.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">利息節約（確実・リスクゼロ）</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏘️ 2棟目購入の10年純資産</div>'
+    + '<div style="font-size:22px;font-weight:900;color:' + (winner === 'next' ? '#16a34a' : 'var(--text)') + '">' + netB.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">CF' + (annualCF2 >= 0 ? '+' : '') + Math.round(annualCF2) + '万/年＋資産' + asset2 + '万</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '💡 ' + (winner === 'next'
+      ? '2棟目の表面利回りが融資金利より高く（スプレッドがある）、CFがプラスなら拡張戦略が有効です。ただし空室・金利上昇リスクを考慮すると「CF余裕がある状態での2棟目」が鉄則です。'
+      : '2棟目のCFが薄い場合や融資金利が高い場合は、まず繰り上げ返済で自己資本を強化し、審査通過率を上げてから拡張する方が安全です。')
+    + '</div>';
+
+  var shareText = encodeURIComponent('投資ローン' + cash + '万円を「繰り上げ返済」vs「2棟目頭金」に使うと10年後に' + Math.abs(diff) + '万円差！どちらが有利か試算しました\n▶ あなたの状況でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+
+  el.style.display = 'block';
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcPrepayVsNextProp(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
