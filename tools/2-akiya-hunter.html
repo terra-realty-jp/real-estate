@@ -2609,6 +2609,35 @@
     <div id="anc_result" style="margin-top:8px"></div>
   </div>
 
+  <!-- 相続ローン付き空き家 売却完済シミュレーションカード -->
+  <div class="card" id="card-inherited-loan-sale">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏦 亡くなった親が残したローン付きの家——売っても完済できる？ローン残高 vs 売却手取りを確認する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">相続した家にローンが残っていても、売却代金でローンを完済できれば「現金を受け取る」ことができます。逆に足りない場合は自腹で補填が必要。まず金額を確認しましょう。</p>
+    <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">空き家の売却可能額（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 1500（査定額の目安）</span></label>
+        <input type="number" id="ils_price" value="1500" min="100" max="50000" step="100" oninput="calcInheritedLoanSale()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">引き継いだローン残高（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 500（残債ゼロなら0）</span></label>
+        <input type="number" id="ils_loan" value="500" min="0" max="50000" step="100" oninput="calcInheritedLoanSale()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">相続人の数（人）<br><span style="color:rgba(0,0,0,0.35)">例: 2（兄弟2人など）</span></label>
+        <input type="number" id="ils_heirs" value="2" min="1" max="10" step="1" oninput="calcInheritedLoanSale()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">解体・登記等の諸費用（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 50（不明な場合は50）</span></label>
+        <input type="number" id="ils_misc" value="50" min="0" max="500" step="10" oninput="calcInheritedLoanSale()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcInheritedLoanSale()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">売却後のローン完済と手残りを計算する</button>
+    <div id="ils_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -10676,6 +10705,63 @@ function calcAkiyaNeglectCost() {
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcAkiyaNeglectCost(); })();
+
+function calcInheritedLoanSale() {
+  var price = parseFloat(document.getElementById('ils_price').value) || 1500;
+  var loan = parseFloat(document.getElementById('ils_loan').value) || 500;
+  var heirs = parseInt(document.getElementById('ils_heirs').value) || 2;
+  var misc = parseFloat(document.getElementById('ils_misc').value) || 50;
+  var el = document.getElementById('ils_result'); if (!el) return;
+
+  // 仲介手数料（上限: 価格×3%+6万円 × 消費税1.1）
+  var agencyFee = Math.round((price * 0.03 + 6) * 1.1 * 10) / 10;
+  // 売却手取り
+  var proceeds = price - agencyFee - misc;
+  // ローン完済後の残額
+  var afterLoan = proceeds - loan;
+  // 1人当たり
+  var perPerson = heirs > 0 ? afterLoan / heirs : afterLoan;
+
+  var canPayOff = afterLoan >= 0;
+  var heroColor = canPayOff ? '22,163,74' : '220,38,38';
+  var heroTextColor = canPayOff ? 'var(--green)' : 'var(--red)';
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">ローン完済後の手残り（相続人' + heirs + '人で分配）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + heroTextColor + ';line-height:1">' + (perPerson >= 0 ? '+' : '') + Math.round(perPerson) + '万円</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">' + (canPayOff ? '✅ 売却でローン完済できます' : '❌ ' + Math.abs(Math.round(afterLoan)) + '万円 足りません（追加費用が必要）') + '</div>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
+  html += '<div style="background:var(--dark2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売却手取り（諸費用差引）</div><div style="font-size:20px;font-weight:900;color:var(--green)">+' + Math.round(proceeds) + '万円</div></div>';
+  html += '<div style="background:var(--dark2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">ローン残高</div><div style="font-size:20px;font-weight:900;color:var(--red)">▲' + Math.round(loan) + '万円</div></div>';
+  html += '</div>';
+
+  html += '<div style="background:rgba(0,0,0,0.05);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.9">';
+  html += '売却価格: ' + price + '万円<br>';
+  html += '仲介手数料（概算）: ▲' + agencyFee + '万円<br>';
+  html += '諸費用（登記等）: ▲' + misc + '万円<br>';
+  html += 'ローン残高: ▲' + loan + '万円<br>';
+  html += '<strong>ローン完済後残額: ' + (afterLoan >= 0 ? '+' : '') + Math.round(afterLoan) + '万円 → 1人当たり: ' + (perPerson >= 0 ? '+' : '') + Math.round(perPerson) + '万円</strong>';
+  html += '</div>';
+
+  if (!canPayOff) {
+    html += '<div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text-muted);line-height:1.8">';
+    html += '⚠️ 売却代金だけではローンが完済できない場合、相続人が手出しで補填するか、金融機関と「任意売却」を交渉する必要があります。相続放棄（3ヶ月以内）も選択肢の一つです。';
+    html += '</div>';
+  }
+
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.8">';
+  html += '💡 団体信用生命保険（団信）がついていた場合、被相続人の死亡時にローンが免除されることがあります。まず金融機関に団信の有無を確認しましょう。';
+  html += '</div>';
+
+  var shareText = encodeURIComponent('🏦 相続した空き家のローン付き売却を試算してみた！\n\n売却価格: ' + price + '万円\nローン残高: ▲' + loan + '万円\nローン完済後の手残り: ' + (afterLoan >= 0 ? '+' : '') + Math.round(afterLoan) + '万円\n→ ' + heirs + '人で分配すると1人当たり' + (perPerson >= 0 ? '+' : '') + Math.round(perPerson) + '万円\n\n▶ あなたの空き家でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcInheritedLoanSale(); })();
 
 
 var _akiyaCat = '';
