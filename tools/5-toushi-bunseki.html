@@ -3565,6 +3565,32 @@
     </div>
   </div>
 
+  <!-- ローン借り換え損益分岐点年数計算（calcRefinanceBreak） -->
+  <div class="card" data-category="ローン・融資" data-title="投資ローンの借り換えは何年住むと元が取れる？ 損益分岐点年数を計算" data-tags="借り換え ローン 損益分岐点 元が取れる 諸費用 金利" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">投資ローンの借り換えは何年で元が取れる？ 損益分岐点年数を計算</div>
+        <div class="card-desc">借り換えには諸費用がかかります。「月々の節約額」で「諸費用」を回収するまでに何年かかるかを計算します</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(201,168,76,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">借り換え諸費用（登記費用・保証料・手数料など）が月次節約額で回収できる年数が「損益分岐点」。売却やリファイナンス予定より前に回収できるかが鍵です。</div>
+      <label style="font-size:12px;color:var(--text-muted)">現在のローン残高（例: 5000万円）</label>
+      <input id="rfb_loan" type="number" placeholder="例: 50000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">現在の金利（% 例: 3.0%）</label>
+      <input id="rfb_cur" type="number" placeholder="例: 3.0" step="0.1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">借り換え後の金利（% 例: 2.0%）</label>
+      <input id="rfb_new" type="number" placeholder="例: 2.0" step="0.1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">残りの返済期間（年 例: 20年）</label>
+      <input id="rfb_term" type="number" placeholder="例: 20" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">借り換え諸費用（登記・手数料など総額 例: 100万円）</label>
+      <input id="rfb_cost" type="number" placeholder="例: 1000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <button onclick="calcRefinanceBreak()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">損益分岐点年数を計算する</button>
+      <div id="rfb_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -13537,6 +13563,59 @@ function calcHazardRiskPremium() {
   el.style.display = 'block';
 }
 (function(){ calcHazardRiskPremium(); })();
+
+function calcRefinanceBreak() {
+  var el = document.getElementById('rfb_result');
+  if (!el) return;
+  var loan = parseFloat(document.getElementById('rfb_loan').value) || 0;
+  var cur  = parseFloat(document.getElementById('rfb_cur').value) || 0;
+  var newR = parseFloat(document.getElementById('rfb_new').value) || 0;
+  var term = parseInt(document.getElementById('rfb_term').value) || 20;
+  var cost = parseFloat(document.getElementById('rfb_cost').value) || 0;
+  if (!loan || !cur || !newR || cur <= newR) {
+    if (cur <= newR && cur && newR) { el.innerHTML = '<div style="padding:10px;color:rgba(220,38,38,1);font-size:13px">借り換え後の金利は現在より低い値を入力してください。</div>'; el.style.display='block'; return; }
+    el.style.display='none'; return;
+  }
+
+  function monthlyPmt(p, rate, n) { var r=rate/100/12; if(r===0) return p/n; return p*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1); }
+
+  var n = term * 12;
+  var mpCur = monthlyPmt(loan, cur, n);
+  var mpNew = monthlyPmt(loan, newR, n);
+  var monthlySaving = mpCur - mpNew;
+  var breakEvenMonths = cost > 0 ? Math.ceil(cost / monthlySaving) : 0;
+  var breakEvenYrs = Math.round(breakEvenMonths / 12 * 10) / 10;
+  var totalSaving = monthlySaving * n;
+
+  var worthwhile = breakEvenYrs <= term / 2;
+  var heroColor = worthwhile ? '22,163,74' : '201,168,76';
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">損益分岐点（費用回収）年数</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1.1">' + breakEvenYrs + '<span style="font-size:22px">年後</span></div>';
+  html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">' + (worthwhile ? '✅ ' + term + '年以内に費用回収 → 借り換えを検討する価値あり' : '⚠️ 回収まで時間がかかる → 慎重に検討') + '</div>';
+  html += '</div>';
+
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">';
+  html += '<thead><tr style="background:rgba(128,128,128,0.1)"><th style="padding:8px;text-align:left">項目</th><th style="padding:8px;text-align:right">現在</th><th style="padding:8px;text-align:right">借り換え後</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">適用金利</td><td style="padding:6px;text-align:right">' + cur + '%</td><td style="padding:6px;text-align:right">' + newR + '%</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">月額返済額</td><td style="padding:6px;text-align:right">' + Math.round(mpCur/10000*10)/10 + '万円</td><td style="padding:6px;text-align:right;color:rgba(22,163,74,1)">' + Math.round(mpNew/10000*10)/10 + '万円</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">月次節約額</td><td style="padding:6px;text-align:right" colspan="2;"><span style="color:rgba(22,163,74,1);font-weight:700">+' + Math.round(monthlySaving/10000*10)/10 + '万円/月</span></td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">借り換え諸費用</td><td style="padding:6px;text-align:right" colspan="2">▲' + Math.round(cost/10000) + '万円</td></tr>';
+  html += '<tr style="font-weight:700"><td style="padding:6px">損益分岐点</td><td style="padding:6px;text-align:right" colspan="2">' + breakEvenYrs + '年後（' + breakEvenMonths + 'ヶ月後）</td></tr>';
+  html += '<tr><td style="padding:6px">' + term + '年間の総節約額</td><td style="padding:6px;text-align:right" colspan="2;"><span style="color:rgba(22,163,74,1)">+' + Math.round(totalSaving/10000) + '万円</span></td></tr>';
+  html += '</tbody></table>';
+
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">💡 一般的に「損益分岐点が残り返済期間の半分以下」なら借り換えを検討する価値があります。物件の保有継続期間も考慮してください。</div>';
+
+  var shareText = encodeURIComponent('🏦 投資ローンの借り換えシミュレーション！\n\n金利: ' + cur + '% → ' + newR + '%\n月次節約: +' + Math.round(monthlySaving/10000*10)/10 + '万円\n費用' + Math.round(cost/10000) + '万円の回収: ' + breakEvenYrs + '年後\n→ ' + (worthwhile ? '借り換えを検討する価値あり！' : '慎重に判断が必要') + '\n\n▶ あなたのローンでも試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcRefinanceBreak(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
