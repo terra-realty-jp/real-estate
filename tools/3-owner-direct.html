@@ -3254,6 +3254,30 @@
     <div id="blc_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- マンション管理費・修繕積立金の20年上昇試算（calcCondoAgeMaint） -->
+  <div class="card" data-category="購入・物件選び" data-title="マンション 管理費・修繕積立金の今後20年 上昇額試算" data-tags="マンション 管理費 修繕積立金 値上がり 20年 費用 コスト" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">マンション 管理費・修繕積立金の今後20年 上昇額試算</div>
+        <div class="card-desc">「購入時は安かったのに…」修繕積立金は築年数とともに必ず値上がります。20年後の総負担額を先に確認しましょう</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(220,38,38,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">築年数が進むと大規模修繕のたびに修繕積立金が値上がりします。購入前に「20年後まで払い続けられるか」を確認することが大切です。</div>
+      <label style="font-size:12px;color:var(--text-muted)">現在の月額管理費（例: 15,000円）</label>
+      <input id="cam_mgmt" type="number" placeholder="例: 15000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">現在の月額修繕積立金（例: 10,000円）</label>
+      <input id="cam_repair" type="number" placeholder="例: 10000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">現在のマンションの築年数（例: 10年）</label>
+      <input id="cam_age" type="number" placeholder="例: 10" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">購入価格（参考用 例: 4000万円）</label>
+      <input id="cam_price" type="number" placeholder="例: 40000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <button onclick="calcCondoAgeMaint()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">20年間の管理費・積立金の総負担を試算する</button>
+      <div id="cam_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -10887,6 +10911,70 @@ function calcBuildingLimitCheck() {
   el.style.display = 'block';
 }
 (function(){ calcBuildingLimitCheck(); })();
+
+function calcCondoAgeMaint() {
+  var el = document.getElementById('cam_result');
+  if (!el) return;
+  var mgmt  = parseFloat(document.getElementById('cam_mgmt').value) || 0;
+  var repair = parseFloat(document.getElementById('cam_repair').value) || 0;
+  var age   = parseFloat(document.getElementById('cam_age').value) || 0;
+  var price = parseFloat(document.getElementById('cam_price').value) || 0;
+  if (!mgmt && !repair) { el.style.display='none'; return; }
+
+  // 修繕積立金: 築年別に段階値上がりモデル（国交省「長期修繕計画作成ガイドライン」参考）
+  // 修繕積立金は概ね5〜10年ごとに大規模修繕時に値上がりする
+  // 管理費: ほぼ横ばい（+5%/10年）
+  var months = 20 * 12;
+  var totalMgmt = 0, totalRepair = 0;
+  var yearRows = [];
+  for (var yr = 1; yr <= 20; yr++) {
+    var curAge = age + yr;
+    var repairMult = 1;
+    if (curAge >= 40) repairMult = 3.0;
+    else if (curAge >= 30) repairMult = 2.5;
+    else if (curAge >= 25) repairMult = 2.0;
+    else if (curAge >= 20) repairMult = 1.7;
+    else if (curAge >= 15) repairMult = 1.4;
+    else if (curAge >= 10) repairMult = 1.2;
+    var mgmtMult = yr <= 10 ? 1.0 : 1.05;
+    var monthlyMgmt = mgmt * mgmtMult;
+    var monthlyRepair = repair * repairMult;
+    totalMgmt += monthlyMgmt * 12;
+    totalRepair += monthlyRepair * 12;
+    if ([1,5,10,15,20].indexOf(yr) >= 0) {
+      yearRows.push({yr: yr, age: curAge, mgmt: Math.round(monthlyMgmt), repair: Math.round(monthlyRepair), total: Math.round((monthlyMgmt + monthlyRepair) * 12)});
+    }
+  }
+  var grandTotal = totalMgmt + totalRepair;
+  var grandMn = Math.round(grandTotal / 10000);
+  var pricePct = price > 0 ? Math.round(grandTotal / price * 100) : 0;
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(220,38,38,0.12),rgba(220,38,38,0.04));border:2px solid rgba(220,38,38,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">20年間の管理費＋修繕積立金 合計</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba(220,38,38,1);line-height:1.1">' + grandMn + '<span style="font-size:22px">万円</span></div>';
+  if (pricePct > 0) html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">購入価格 ' + Math.round(price/10000) + '万円の <strong>' + pricePct + '%</strong> に相当</div>';
+  html += '</div>';
+
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">';
+  html += '<thead><tr style="background:rgba(128,128,128,0.1)"><th style="padding:6px;text-align:left">経過年</th><th style="padding:6px;text-align:right">築年数</th><th style="padding:6px;text-align:right">管理費/月</th><th style="padding:6px;text-align:right">修繕積立/月</th><th style="padding:6px;text-align:right">年間合計</th></tr></thead>';
+  html += '<tbody>';
+  yearRows.forEach(function(r) {
+    html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px">' + r.yr + '年後</td><td style="padding:5px;text-align:right">築' + r.age + '年</td><td style="padding:5px;text-align:right">' + r.mgmt.toLocaleString() + '円</td><td style="padding:5px;text-align:right">' + r.repair.toLocaleString() + '円</td><td style="padding:5px;text-align:right;font-weight:700">' + Math.round(r.total/10000) + '万円</td></tr>';
+  });
+  html += '<tr style="font-weight:700;background:rgba(220,38,38,0.05)"><td colspan="4" style="padding:6px">20年間 総合計</td><td style="padding:6px;text-align:right;color:rgba(220,38,38,1)">' + grandMn + '万円</td></tr>';
+  html += '</tbody></table>';
+
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">';
+  html += '※修繕積立金の値上がりは「国土交通省 長期修繕計画作成ガイドライン」をもとにした推定モデルです。実際の値上がり率はマンションの管理組合の計画によって異なります。';
+  html += '</div>';
+
+  var shareText = encodeURIComponent('😱 マンションの管理費・修繕積立金、20年で' + grandMn + '万円もかかることが判明！\n\n現在: 月額 ' + (mgmt + repair).toLocaleString() + '円\n20年後: 月額 ' + (yearRows[yearRows.length-1].mgmt + yearRows[yearRows.length-1].repair).toLocaleString() + '円（値上がり後）\n→ 20年間の総負担: ' + grandMn + '万円\n\n▶ あなたのマンションでも試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcCondoAgeMaint(); })();
 
 
 var _ownerCat = '';
