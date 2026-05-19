@@ -3278,6 +3278,32 @@
     </div>
   </div>
 
+  <!-- 年収から買える物件上限価格を逆算（calcBuyingPower） -->
+  <div class="card" data-category="購入・物件選び" data-title="年収から「買える物件の上限価格」を逆算する" data-tags="年収 購入予算 上限 住宅ローン 返済負担率 頭金" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">年収から「買える物件の上限価格」を逆算する</div>
+        <div class="card-desc">年収・金利・頭金を入力すると「無理なく買える価格」と「銀行が融資できる上限価格」を両方表示します</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(22,163,74,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">返済負担率25%（安心ライン）と35%（銀行の上限）で計算します。「年収の5〜7倍」という目安も一緒に確認できます。</div>
+      <label style="font-size:12px;color:var(--text-muted)">世帯年収（例: 600万円）</label>
+      <input id="bp_income" type="number" placeholder="例: 6000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">住宅ローンの金利（% 例: 変動0.5% / 固定1.5%）</label>
+      <input id="bp_rate" type="number" placeholder="例: 0.5" step="0.1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">返済期間（年 例: 35年）</label>
+      <input id="bp_term" type="number" placeholder="例: 35" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">用意できる頭金（例: 500万円）</label>
+      <input id="bp_down" type="number" placeholder="例: 5000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">現在のその他の月額ローン（車など なければ0）</label>
+      <input id="bp_other" type="number" placeholder="例: 0" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <button onclick="calcBuyingPower()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">買える物件の上限価格を逆算する</button>
+      <div id="bp_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -10975,6 +11001,64 @@ function calcCondoAgeMaint() {
   el.style.display = 'block';
 }
 (function(){ calcCondoAgeMaint(); })();
+
+function calcBuyingPower() {
+  var el = document.getElementById('bp_result');
+  if (!el) return;
+  var income = parseFloat(document.getElementById('bp_income').value) || 0;
+  var rate   = parseFloat(document.getElementById('bp_rate').value) || 1.0;
+  var term   = parseFloat(document.getElementById('bp_term').value) || 35;
+  var down   = parseFloat(document.getElementById('bp_down').value) || 0;
+  var other  = parseFloat(document.getElementById('bp_other').value) || 0;
+  if (!income) { el.style.display='none'; return; }
+
+  // 月次金利
+  var r = rate / 100 / 12;
+  var n = term * 12;
+  // 元利均等返済の借入可能額: loan = payment × (1-(1+r)^-n) / r
+  function loanFromPayment(pmt) {
+    if (r === 0) return pmt * n;
+    return pmt * (1 - Math.pow(1 + r, -n)) / r;
+  }
+
+  var maxMonthly25 = income / 12 * 0.25 - other;
+  var maxMonthly35 = income / 12 * 0.35 - other;
+  var loan25 = Math.max(0, loanFromPayment(maxMonthly25));
+  var loan35 = Math.max(0, loanFromPayment(maxMonthly35));
+  var price25 = loan25 + down;
+  var price35 = loan35 + down;
+
+  // 年収倍率
+  var mul5 = income * 5, mul6 = income * 6, mul7 = income * 7;
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(22,163,74,0.12),rgba(22,163,74,0.04));border:2px solid rgba(22,163,74,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">安心して買える上限（返済負担率25%）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba(22,163,74,1);line-height:1.1">' + Math.round(price25/10000) + '<span style="font-size:22px">万円</span></div>';
+  html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">月返済: 約 ' + Math.round(Math.max(0,maxMonthly25)/10000*10)/10 + '万円</div>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
+  html += '<div style="background:rgba(220,38,38,0.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">銀行審査上限（35%）</div><div style="font-size:20px;font-weight:900;color:rgba(220,38,38,1)">' + Math.round(price35/10000) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月返済 ' + Math.round(Math.max(0,maxMonthly35)/10000*10)/10 + '万円</div></div>';
+  html += '<div style="background:rgba(128,128,128,0.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">年収6倍の目安</div><div style="font-size:20px;font-weight:900">' + Math.round(mul6/10000) + '万円</div><div style="font-size:10px;color:var(--text-muted)">（年収5〜7倍が一般目安）</div></div>';
+  html += '</div>';
+
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">';
+  html += '<thead><tr style="background:rgba(128,128,128,0.1)"><th style="padding:6px;text-align:left">返済負担率</th><th style="padding:6px;text-align:right">借入可能額</th><th style="padding:6px;text-align:right">購入可能上限</th><th style="padding:6px;text-align:right">月返済額</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px">25%（安心ライン）</td><td style="padding:5px;text-align:right">' + Math.round(loan25/10000) + '万円</td><td style="padding:5px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">' + Math.round(price25/10000) + '万円</td><td style="padding:5px;text-align:right">' + Math.round(maxMonthly25/10000*10)/10 + '万円</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px">30%</td><td style="padding:5px;text-align:right">' + Math.round(loanFromPayment(income/12*0.30-other)/10000) + '万円</td><td style="padding:5px;text-align:right">' + Math.round((loanFromPayment(income/12*0.30-other)+down)/10000) + '万円</td><td style="padding:5px;text-align:right">' + Math.round((income/12*0.30-other)/10000*10)/10 + '万円</td></tr>';
+  html += '<tr><td style="padding:5px">35%（銀行上限）</td><td style="padding:5px;text-align:right">' + Math.round(loan35/10000) + '万円</td><td style="padding:5px;text-align:right;color:rgba(220,38,38,1)">' + Math.round(price35/10000) + '万円</td><td style="padding:5px;text-align:right">' + Math.round(maxMonthly35/10000*10)/10 + '万円</td></tr>';
+  html += '</tbody></table>';
+
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">※金利' + rate + '% 返済' + term + '年で試算。変動金利の場合は将来の金利上昇も考慮し、25〜28%以内を目安にすることをおすすめします。</div>';
+
+  var shareText = encodeURIComponent('🏠 年収から「買える物件の上限価格」を試算してみた！\n\n世帯年収: ' + Math.round(income/10000) + '万円\n安心ライン（25%）: ' + Math.round(price25/10000) + '万円\n銀行上限（35%）: ' + Math.round(price35/10000) + '万円\n月返済: 約' + Math.round(maxMonthly25/10000*10)/10 + '万円\n\n▶ あなたの年収でも試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcBuyingPower(); })();
 
 
 var _ownerCat = '';
