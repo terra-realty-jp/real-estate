@@ -2584,6 +2584,31 @@
     <div id="mfa_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 空き家放置コスト10年試算カード -->
+  <div class="card" id="card-akiya-neglect-cost">
+    <div class="card-title">⏳ 空き家を「とりあえず放置」するといくらかかる？10年間の維持費・税金・リスクを全部足すと…</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">空き家を何もしないでいると、固定資産税・火災保険・最低限の草刈り・経年劣化による修繕費が毎年かさみます。「売らずに置いておく」選択のコストを10年間で試算します。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">固定資産税（年・万円・例: 12）</label>
+        <input type="number" id="anc_tax" value="12" min="1" max="200" step="1" oninput="calcAkiyaNeglectCost()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">火災保険料（年・万円・例: 3）</label>
+        <input type="number" id="anc_ins" value="3" min="0" max="50" step="0.5" oninput="calcAkiyaNeglectCost()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">草刈り・清掃（年・万円・例: 5）</label>
+        <input type="number" id="anc_clean" value="5" min="0" max="50" step="1" oninput="calcAkiyaNeglectCost()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の売却可能額（万円・例: 1000）</label>
+        <input type="number" id="anc_sell" value="1000" min="0" max="50000" step="100" oninput="calcAkiyaNeglectCost()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="anc_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -10592,6 +10617,65 @@ function calcMgmtFlawAkiyaTax() {
   el.innerHTML = html;
 }
 (function(){ calcMgmtFlawAkiyaTax(); })();
+
+function calcAkiyaNeglectCost() {
+  var taxAnnual = parseFloat(document.getElementById('anc_tax').value) || 12;
+  var insAnnual = parseFloat(document.getElementById('anc_ins').value) || 3;
+  var cleanAnnual = parseFloat(document.getElementById('anc_clean').value) || 5;
+  var sellNow = parseFloat(document.getElementById('anc_sell').value) || 1000;
+  var years = 10;
+
+  var baseCostAnnual = taxAnnual + insAnnual + cleanAnnual;
+  var repairAccum = 0;
+  var repairRates = [0, 0, 0.005, 0.008, 0.012, 0.015, 0.02, 0.025, 0.03, 0.035];
+  for (var i = 0; i < years; i++) {
+    repairAccum += sellNow * (repairRates[i] || 0.035);
+  }
+  var totalRunning = baseCostAnnual * years + repairAccum;
+  var sellAfter10 = Math.max(0, sellNow * 0.75);
+  var opportunityCost = sellNow - sellAfter10;
+  var totalRealCost = totalRunning + opportunityCost;
+
+  var fmt = function(n) { return Math.round(n).toLocaleString(); };
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba(220,38,38,0.12),rgba(220,38,38,0.04));border:2px solid rgba(220,38,38,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">⚠️ 10年放置の「実質損失」合計</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#dc2626;line-height:1;margin-bottom:4px">' + fmt(Math.round(totalRealCost)) + '</div>'
+    + '<div style="font-size:14px;font-weight:700;color:#dc2626">万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">維持費' + fmt(Math.round(totalRunning)) + '万 + 資産価値の目減り' + fmt(Math.round(opportunityCost)) + '万円</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(220,38,38,0.06);border-radius:10px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">固定資産税等</div>'
+    + '<div style="font-size:16px;font-weight:900;color:#dc2626">▲' + fmt(baseCostAnnual * years) + '万</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">10年分</div>'
+    + '</div>'
+    + '<div style="background:rgba(220,38,38,0.06);border-radius:10px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">経年劣化修繕</div>'
+    + '<div style="font-size:16px;font-weight:900;color:#dc2626">▲' + fmt(Math.round(repairAccum)) + '万</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">蓄積修繕費</div>'
+    + '</div>'
+    + '<div style="background:rgba(220,38,38,0.06);border-radius:10px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">資産価値目減り</div>'
+    + '<div style="font-size:16px;font-weight:900;color:#dc2626">▲' + fmt(Math.round(opportunityCost)) + '万</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">今売る vs 10年後</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(0,0,0,0.03);border-radius:10px;padding:12px;font-size:12px;line-height:1.7;margin-bottom:10px">'
+    + '💡 <strong>「何もしない」は選択肢の中で最もコストがかかる場合があります。</strong><br>'
+    + '現在の売却価格（' + fmt(sellNow) + '万円）で売れば、この' + fmt(Math.round(totalRealCost)) + '万円の損失を回避できます。<br>'
+    + '賃貸活用なら維持費を家賃収入でカバーしながら資産も保有できます。<br>'
+    + '<span style="font-size:10px;color:var(--text-muted)">※修繕費は経年劣化シミュレーション（累積増加）で試算。資産価値は10年で25%減で計算しています。</span>'
+    + '</div>';
+
+  var shareText = '⏳ 空き家を10年放置するとトータル' + fmt(Math.round(totalRealCost)) + '万円の損失！\n\n固定資産税等: ' + fmt(baseCostAnnual * years) + '万円\n修繕費: ' + fmt(Math.round(repairAccum)) + '万円\n資産価値の目減り: ' + fmt(Math.round(opportunityCost)) + '万円\n\n「とりあえず放置」が一番損！今すぐ活用を検討を\n▶ 無料で試算する\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + encodeURIComponent(shareText) + '%0A' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで空き家を持つ家族に知らせる</a>';
+
+  var el = document.getElementById('anc_result');
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcAkiyaNeglectCost(); })();
 
 
 var _akiyaCat = '';
