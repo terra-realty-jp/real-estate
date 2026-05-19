@@ -2515,6 +2515,23 @@
     <div id="kk_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <div class="card" id="card-akiya-four-prices">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">📋 相続した空き家の「価格」が4種類あって混乱している方へ——固定資産税評価額・路線価・相続税評価額・実勢価格の違いを一覧比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「役所の書類に書いてある金額」と「実際に売れる金額」はなぜ違うの？土地の面積と固定資産税評価額を入力すると、4種類の価格の目安と用途の違いを一覧で確認できます。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:11px;color:rgba(22,163,74,0.9)">✏️ 下の数字はサンプル値です。固定資産税の通知書に書いてある金額に変えると即座に計算し直せます</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">固定資産税評価額（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 800（通知書に記載）</span></label>
+        <input type="number" id="afp_fix" value="800" min="10" max="100000" step="10" oninput="calcAkiyaFourPrices()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">土地面積（㎡）<br><span style="color:rgba(0,0,0,0.35)">例: 100</span></label>
+        <input type="number" id="afp_area" value="100" min="10" max="10000" step="10" oninput="calcAkiyaFourPrices()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="afp_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -9962,6 +9979,53 @@ function calcTaxCannotPay() {
 (function(){ calcKokkoKizoku(); })();
 (function(){ calcWaitingCost(); })();
 (function(){ calcRentalIncomeTax(); })();
+
+function calcAkiyaFourPrices() {
+  var r = document.getElementById('afp_result');
+  if (!r) return;
+  var fix = parseFloat(document.getElementById('afp_fix').value) || 0;
+  var area = parseFloat(document.getElementById('afp_area').value) || 0;
+  if (!fix || !area) { r.innerHTML = ''; return; }
+  // 4種類の価格を推計
+  // 固定資産税評価額は「公示地価の約70%」が目安
+  var kojiPrice = Math.round(fix / 0.70);
+  // 路線価は「公示地価の約80%」→ 固定資産税評価額の約80/70 ≒ 1.14倍
+  var rosenka = Math.round(fix * 1.14);
+  // 相続税評価額（路線価方式）≒ 路線価 × 面積 (万円/㎡を使うため面積で割った後計算)
+  var zeiEval = rosenka; // 土地全体の相続税評価額 ≈ 路線価全体
+  // 実勢価格（市場価格）: 公示地価 × 0.9〜1.1 の中央値として1.0倍 ＋ 地方は0.8倍も
+  var jissei = Math.round(kojiPrice * 0.95);
+  var pricePerSqm = Math.round(fix / area * 10) / 10;
+  var rows = [
+    { name: '固定資産税評価額', val: fix, use: '固定資産税・都市計画税の計算に使う', note: '通知書に記載された金額', color: 'rgba(0,0,0,0.55)' },
+    { name: '路線価（相続税路線価）', val: rosenka, use: '相続税・贈与税の計算に使う', note: '国税庁が毎年7月に公表', color: 'var(--gold)' },
+    { name: '公示地価（目安）', val: kojiPrice, use: '土地取引の指標・公的な「公平な値段」', note: '国土交通省が毎年3月公表', color: 'var(--text)' },
+    { name: '実勢価格（市場価格）', val: jissei, use: '実際に売買される金額の目安', note: '需要・供給・物件状態で変動', color: 'var(--green)' }
+  ];
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));border:2px solid rgba(201,168,76,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">実勢価格（売れる可能性のある目安）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1">' + jissei.toLocaleString() + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">万円（固定資産税評価額 ' + fix.toLocaleString() + '万円の約' + Math.round(jissei/fix*10)/10 + '倍）</div>'
+    + '</div>';
+  var tableHtml = '<div style="border:1px solid rgba(0,0,0,0.08);border-radius:10px;overflow:hidden;margin-bottom:12px">';
+  rows.forEach(function(row, i) {
+    var bg = i % 2 === 0 ? 'rgba(0,0,0,0.015)' : 'transparent';
+    tableHtml += '<div style="background:' + bg + ';padding:10px 12px;border-bottom:1px solid rgba(0,0,0,0.06)">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px">'
+      + '<div style="font-size:12px;font-weight:700;color:' + row.color + '">' + row.name + '</div>'
+      + '<div style="font-size:14px;font-weight:700;color:' + row.color + '">' + row.val.toLocaleString() + '万円</div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted);line-height:1.5">' + row.use + '<br><span style="opacity:0.7">' + row.note + '</span></div>'
+      + '</div>';
+  });
+  tableHtml += '</div>';
+  var noteHtml = '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--text-muted)">💡 これらはすべて<b>土地のみの概算</b>です。建物の価値（古い場合はほぼゼロ）は別途。地方・過疎地では実勢価格が評価額を大きく下回る場合もあります。正確な価格はTERRA REALTYへ無料相談を。</div>';
+  var shareText = encodeURIComponent('【空き家の価格の謎】固定資産税評価額' + fix.toLocaleString() + '万円の土地、実際に売れる金額の目安は' + jissei.toLocaleString() + '万円！4種類の価格の違いをやっと理解した！相続した家を持っている人に教えたい');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで家族に教える</a>';
+  r.innerHTML = heroHtml + tableHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcAkiyaFourPrices(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
