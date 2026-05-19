@@ -3182,6 +3182,35 @@
     <div id="tccp_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <div class="card" id="card-inheritance-waiver-cost">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">⚠️ 相続放棄しても終わりじゃない！放棄後に残る管理義務と費用の試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「相続放棄すれば関係なくなる」は間違いです。2023年の民法改正で、空き家を管理できる人が現れるまで前の占有者（＝あなた）が管理する義務が残ります。放棄後にかかり続ける費用と、国庫帰属申請（20万円で手放す制度）のどちらが得か比較しましょう。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.7">✏️ 下の数字はサンプル値です。ご自分の状況に合わせて書き換えてください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間固定資産税（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 固定資産税通知書の金額</span></label>
+        <input type="number" id="iwc_tax" placeholder="例: 8" value="8" step="0.1" oninput="calcInheritanceWaiverCost()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">年間最低管理費（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 草刈り・見回り・清掃など</span></label>
+        <input type="number" id="iwc_mgmt" placeholder="例: 6" value="6" step="0.1" oninput="calcInheritanceWaiverCost()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">管理義務が続く見込み年数<br><span style="color:rgba(0,0,0,0.3)">例: 次の相続人が決まるまで3〜5年</span></label>
+        <input type="number" id="iwc_years" placeholder="例: 4" value="4" step="1" min="1" max="20" oninput="calcInheritanceWaiverCost()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">建物の状態<br><span style="color:rgba(0,0,0,0.3)">国庫帰属の審査に影響します</span></label>
+        <select id="iwc_cond" onchange="calcInheritanceWaiverCost()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="good">問題なし（普通の空き家）</option>
+          <option value="mid">一部損傷あり（雨漏り等）</option>
+          <option value="bad">老朽化が激しい（崩壊リスクあり）</option>
+        </select>
+      </div>
+    </div>
+    <div id="iwc_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -10114,6 +10143,82 @@ function calcAkiyaShopConvert() {
   el.innerHTML = heroHtml + gridHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcAkiyaShopConvert(); })();
+
+function calcInheritanceWaiverCost() {
+  var el = document.getElementById('iwc_result');
+  if (!el) return;
+  var tax = parseFloat(document.getElementById('iwc_tax').value) || 0;
+  var mgmt = parseFloat(document.getElementById('iwc_mgmt').value) || 0;
+  var years = Math.max(1, Math.min(20, parseInt(document.getElementById('iwc_years').value) || 4));
+  var cond = document.getElementById('iwc_cond').value;
+
+  // 放棄後管理コスト（固定資産税は放棄後も相続人確定まで元占有者が払う義務あり）
+  var annualCost = tax + mgmt;
+  var totalMgmtCost = Math.round(annualCost * years);
+
+  // 国庫帰属制度のコスト（2023年施行）
+  // 申請費用: 審査手数料1万4000円 + 鑑定・測量等20〜50万円概算
+  // 負担金: 宅地10年分管理費 = 国が定める単価（全国平均20万円程度）
+  // 建物状態によって申請可否・追加費用が異なる
+  var KOKUKOCC_BASE = 20; // 負担金（万円）
+  var applicationFee = 21; // 申請費用概算（万円）
+  var condNote = '';
+  var eligible = true;
+  if (cond === 'mid') {
+    applicationFee += 30; // 補修・残置物撤去費用加算
+    condNote = '一部損傷のため、申請前に補修費用（概算30万円）が必要です。';
+  } else if (cond === 'bad') {
+    eligible = false;
+    condNote = '老朽化が激しい建物は国庫帰属申請が原則却下されます。解体（100〜300万円）後に土地のみ申請するか、そのままの場合は管理コストが永続します。';
+  }
+  var kokukoTotal = eligible ? Math.round(applicationFee + KOKUKOCC_BASE) : 999;
+
+  var diff = totalMgmtCost - kokukoTotal;
+  var winner = eligible && diff > 0 ? 'kokuko' : 'mgmt';
+  var heroVal = eligible ? Math.abs(diff) : totalMgmtCost;
+  var heroColor = diff > 0 && eligible ? '#16a34a' : '#dc2626';
+
+  var heroHtml = '<div style="text-align:center;padding:16px 0 8px">'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">'
+    + (eligible ? (winner === 'kokuko' ? '国庫帰属申請の方が' : '管理を続ける方が') : '管理コスト（放棄後' + years + '年間）') + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + heroVal.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted)">'
+    + (eligible ? (winner === 'kokuko' ? '安く済みます（合計比較）' : '安く済みます') : '（固定資産税＋管理費の合計）') + '</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏚️ 放棄後の管理コスト（' + years + '年分）</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#dc2626">' + totalMgmtCost.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">年' + annualCost + '万円 × ' + years + '年</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏛️ 国庫帰属申請の総費用</div>'
+    + (eligible
+      ? '<div style="font-size:22px;font-weight:900;color:#16a34a">' + kokukoTotal.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+        + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">申請' + applicationFee + '万円＋負担金' + KOKUKOCC_BASE + '万円</div>'
+      : '<div style="font-size:22px;font-weight:900;color:#dc2626">申請不可</div>'
+        + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">建物状態により却下</div>')
+    + '</div>'
+    + '</div>';
+
+  var condNoteHtml = condNote ? '<div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:8px;padding:10px;font-size:12px;color:#dc2626;line-height:1.7;margin-bottom:10px">⚠️ ' + condNote + '</div>' : '';
+
+  var guideHtml = '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '💡 相続放棄後も「管理義務」は消えません。2023年改正民法では、相続人全員が放棄した場合も、新たな管理者が決まるまで最後の占有者（放棄した人）が保存行為（台風対策・不法侵入防止等）の責任を負います。'
+    + (eligible && winner === 'kokuko' ? '国庫帰属申請は一度払えば完全に手放せます。' : '')
+    + '<br><a href="mailto:terra.realty.iam@gmail.com?subject=相続放棄後の空き家管理について相談したい" style="color:var(--gold)">→ TERRA REALTYに無料相談</a></div>';
+
+  var shareVal = eligible ? diff : totalMgmtCost;
+  var shareText = encodeURIComponent('相続放棄したのに管理費が' + totalMgmtCost + '万円！国庫帰属申請（' + (eligible ? kokukoTotal : '不可') + '万円）との差は' + Math.abs(diff) + '万円。知らないと大損する制度を試算しました\n▶ 無料で試算する\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+
+  el.style.display = 'block';
+  el.innerHTML = heroHtml + gridHtml + condNoteHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcInheritanceWaiverCost(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
