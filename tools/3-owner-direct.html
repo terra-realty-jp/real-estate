@@ -3206,6 +3206,25 @@
     <div id="pvnh_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 手付金リスク計算カード -->
+  <div class="card" id="card-deposit-risk">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">⚠️ 家を買う前に確認！「手付金」はいくら払う？ キャンセルした場合は全額没収になる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産購入の際に最初に支払う「手付金」。買主がキャンセルすると手付金は没収、売主がキャンセルすると2倍返しが原則です。払う前に損失リスクを把握しておきましょう。</p>
+    <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">物件価格（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 3000</span></label>
+        <input type="number" id="dr_price" value="3000" min="100" max="100000" step="100" oninput="calcDepositRisk()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">手付金の割合（%）<br><span style="color:rgba(0,0,0,0.35)">例: 5（一般的に3〜10%）</span></label>
+        <input type="number" id="dr_rate" value="5" min="1" max="20" step="0.5" oninput="calcDepositRisk()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcDepositRisk()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">手付金の金額とキャンセルリスクを確認する</button>
+    <div id="dr_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -10740,6 +10759,51 @@ function calcPrepayVsNisaHome() {
   el.innerHTML = html;
 }
 (function(){ calcPrepayVsNisaHome(); })();
+
+function calcDepositRisk() {
+  var price = parseFloat(document.getElementById('dr_price').value) || 3000;
+  var rate = parseFloat(document.getElementById('dr_rate').value) || 5;
+  var el = document.getElementById('dr_result'); if (!el) return;
+
+  var deposit = Math.round(price * rate / 100);
+  // 売主キャンセルの場合（倍返し）
+  var sellerCancelRefund = deposit * 2;
+  // 中間的な手付金割合の評価
+  var isLow = rate < 3;
+  var isHigh = rate > 10;
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(220,38,38,0.12),rgba(220,38,38,0.04));border:2px solid rgba(220,38,38,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">買主キャンセル時の没収額（あなたの損失）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:var(--red);line-height:1">▲' + deposit + '万円</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">物件価格 ' + price + '万円 × ' + rate + '% = 手付金 ' + deposit + '万円</div>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
+  html += '<div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">買主キャンセル（没収）</div><div style="font-size:20px;font-weight:900;color:var(--red)">▲' + deposit + '万円</div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">手付金全額を失う</div></div>';
+  html += '<div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売主キャンセル（倍返し）</div><div style="font-size:20px;font-weight:900;color:var(--green)">+' + sellerCancelRefund + '万円</div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">手付金の2倍が戻る</div></div>';
+  html += '</div>';
+
+  html += '<div style="background:rgba(0,0,0,0.05);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.9">';
+  if (isLow) {
+    html += '⚠️ 手付金3%未満は売主から見て「本気度が低い」と判断される場合があります。<br>';
+  } else if (isHigh) {
+    html += '💡 手付金10%超は買主リスクが高い設定です。ローン特約の確認を忘れずに。<br>';
+  }
+  html += '🏠 住宅ローン特約（融資特約）付きの場合: ローンが通らなければ手付金は返還されます<br>';
+  html += '📋 契約書に「手付解除」期限が設定されている場合があるため、必ず確認してください';
+  html += '</div>';
+
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.8">';
+  html += '💡 手付金は「内金（代金の一部）」と「解約手付（解除の対価）」の2種類があります。不動産売買では通常「解約手付」として扱われます。契約書の「手付の種類」を必ず確認しましょう。';
+  html += '</div>';
+
+  var shareText = encodeURIComponent('⚠️ 家を買うときの手付金リスクを確認してみた！\n\n物件価格: ' + price + '万円\n手付金（' + rate + '%）: ' + deposit + '万円\n→ 買主キャンセルだと' + deposit + '万円が全額没収！\n→ 売主キャンセルなら' + sellerCancelRefund + '万円の倍返し\n\n▶ 買う前に必ず確認\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcDepositRisk(); })();
 
 
 var _ownerCat = '';
