@@ -3489,6 +3489,32 @@
     <div id="msc_result" style="margin-top:4px"></div>
   </div>
 
+  <!-- 賃貸中に売る vs 退去後に売る 比較カード -->
+  <div class="card" id="card-owner-change-vs-vacant">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏠 賃貸中のまま売る（オーナーチェンジ）vs 退去後に売る、手取りの差はいくら？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">賃貸中に投資家向けに売ると価格が下がりますが、退去を待つと立退き料と時間がかかります。あなたの物件でどちらが得かを試算します。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:11px;color:rgba(22,163,74,0.9)">✏️ 下の数字はサンプル値です。あなたの物件の数字に変えると即座に計算し直せます</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の市場価格（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 3000</span></label>
+        <input type="number" id="ocv_price" value="3000" min="100" max="100000" step="100" oninput="calcOwnerChangeVsVacant()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">月家賃（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 10</span></label>
+        <input type="number" id="ocv_rent" value="10" min="1" max="200" step="0.5" oninput="calcOwnerChangeVsVacant()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">ローン残債（万円）<br><span style="color:rgba(0,0,0,0.35)">なければ0</span></label>
+        <input type="number" id="ocv_loan" value="1500" min="0" max="100000" step="100" oninput="calcOwnerChangeVsVacant()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">入居者の残り契約月数（ヶ月）<br><span style="color:rgba(0,0,0,0.35)">例: 12</span></label>
+        <input type="number" id="ocv_months" value="12" min="0" max="60" step="1" oninput="calcOwnerChangeVsVacant()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="owner-change-vs-vacant-result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -12573,6 +12599,63 @@ function calcMgmtSwitch() {
 (function(){ calcRestoreCost(); })();
 (function(){ calcTaxBlueReturn(); })();
 (function(){ calcVacancyRecovery(); })();
+
+// ===== 賃貸中に売る vs 退去後に売る 比較 =====
+function calcOwnerChangeVsVacant() {
+  var el = document.getElementById('owner-change-vs-vacant-result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('ocv_price').value) || 0;
+  var rent = parseFloat(document.getElementById('ocv_rent').value) || 0;
+  var loan = parseFloat(document.getElementById('ocv_loan').value) || 0;
+  var contractMonths = parseFloat(document.getElementById('ocv_months').value) || 0;
+  if (price <= 0 || rent <= 0) { el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">市場価格と月家賃を入力してください</div>'; return; }
+  var commission = (price <= 200 ? price * 0.05 + 2 : price <= 400 ? price * 0.04 + 2 : price * 0.03 + 6) * 1.1;
+  var ocPrice = Math.round(price * 0.85);
+  var ocNet = Math.round(ocPrice - commission - loan);
+  var vacantPrice = price;
+  var evictionFee = Math.round(rent * 6);
+  var waitMonths = contractMonths + 3;
+  var waitRentLoss = Math.round(rent * waitMonths);
+  var vacantCommission = (vacantPrice <= 200 ? vacantPrice * 0.05 + 2 : vacantPrice <= 400 ? vacantPrice * 0.04 + 2 : vacantPrice * 0.03 + 6) * 1.1;
+  var vacantNet = Math.round(vacantPrice - vacantCommission - loan - evictionFee);
+  var diff = Math.abs(ocNet - vacantNet);
+  var vacantWins = vacantNet > ocNet;
+  var heroColor = vacantWins ? '#16a34a' : '#c9a84c';
+  var heroRgb = vacantWins ? '22,163,74' : '201,168,76';
+  var pOCV = parseFloat(localStorage.getItem('terra_prev_ocvNet_diff') || '');
+  var diffBadgeOCV = '';
+  if (!isNaN(pOCV) && pOCV !== diff) { var dvOCV = diff - pOCV; diffBadgeOCV = '<div style="font-size:11px;color:' + (dvOCV>0?'var(--green)':'var(--red)') + ';margin-top:2px">' + (dvOCV>0?'▲':'▼') + ' 前回比 ' + Math.abs(dvOCV).toLocaleString() + '万円</div>'; }
+  localStorage.setItem('terra_prev_ocvNet_diff', diff);
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroRgb + ',0.10),rgba(' + heroRgb + ',0.03));border:2px solid rgba(' + heroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">手取り差額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + diff.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + diffBadgeOCV
+    + '<div style="font-size:12px;color:var(--text-muted)">「' + (vacantWins ? '退去後に売る' : '賃貸中に売る') + '」方が手取りが多い</div>'
+    + '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  html += '<div style="background:rgba(0,0,0,0.04);border-radius:10px;padding:12px;border:2px solid ' + (!vacantWins ? 'rgba(201,168,76,0.5)' : 'rgba(0,0,0,0.08)') + '">';
+  html += '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">💰 賃貸中に売る</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.8">売却価格（85%）: ' + ocPrice.toLocaleString() + '万円<br>仲介手数料: ▲' + Math.round(commission).toLocaleString() + '万円<br>ローン返済: ▲' + loan.toLocaleString() + '万円<br></div>';
+  html += '<div style="margin-top:8px;font-size:15px;font-weight:900;color:' + (ocNet >= 0 ? 'var(--gold)' : 'var(--red)') + '">' + (ocNet >= 0 ? '' : '▲') + Math.abs(ocNet).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted)">今すぐ売却可能</div>';
+  if (!vacantWins) html += '<div style="font-size:11px;color:var(--gold);font-weight:700;margin-top:4px">✓ こちらが有利</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(0,0,0,0.04);border-radius:10px;padding:12px;border:2px solid ' + (vacantWins ? 'rgba(22,163,74,0.5)' : 'rgba(0,0,0,0.08)') + '">';
+  html += '<div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px">🏠 退去後に売る</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.8">売却価格（100%）: ' + price.toLocaleString() + '万円<br>立退き料（家賃6ヶ月）: ▲' + evictionFee.toLocaleString() + '万円<br>仲介手数料: ▲' + Math.round(vacantCommission).toLocaleString() + '万円<br>ローン返済: ▲' + loan.toLocaleString() + '万円<br></div>';
+  html += '<div style="margin-top:8px;font-size:15px;font-weight:900;color:' + (vacantNet >= 0 ? '#16a34a' : 'var(--red)') + '">' + (vacantNet >= 0 ? '' : '▲') + Math.abs(vacantNet).toLocaleString() + '万円</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted)">退去まで約' + waitMonths + 'ヶ月待ち</div>';
+  if (vacantWins) html += '<div style="font-size:11px;color:#16a34a;font-weight:700;margin-top:4px">✓ こちらが有利</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>判断のポイント:</strong> 賃貸中に売る（オーナーチェンジ）は価格が相場の80〜90%に下がる一方、今すぐ現金化できます。退去後に実需向けで売ると高値が期待できますが、立退き交渉・待機期間の費用がかかります。利回りが低い物件や長期契約中の場合は今すぐ売却する方が総合的に有利なことも多いです。</div>';
+  html += '<div style="font-size:10px;color:var(--text-muted);background:rgba(0,0,0,0.02);border-radius:6px;padding:8px;line-height:1.6">📌 立退き料は家賃6ヶ月分で概算。実際は交渉次第です。オーナーチェンジ売却価格の割引率（85%）は目安であり、物件・市場により異なります。</div>';
+  var ocvUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html');
+  var ocvText = encodeURIComponent('🏠 賃貸物件を売るなら「賃貸中」か「退去後」か？手取りの差が' + diff.toLocaleString() + '万円！\n\n賃貸中に売る（オーナーチェンジ）: ' + (ocNet >= 0 ? '' : '▲') + Math.abs(ocNet).toLocaleString() + '万円\n退去後に売る: ' + (vacantNet >= 0 ? '' : '▲') + Math.abs(vacantNet).toLocaleString() + '万円\n\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + ocvUrl + '&text=' + ocvText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  el.innerHTML = html;
+}
+(function(){ calcOwnerChangeVsVacant(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
