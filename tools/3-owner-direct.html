@@ -3132,6 +3132,29 @@
     <div id="dpvi_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 新築vs中古 住宅ローン控除比較カード -->
+  <div class="card" id="card-hl-deduct-comp">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">📊 新築 vs 中古：住宅ローン控除は累計でいくら差が出る？（0.7%×13年 vs 10年）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">新築は最長13年・借入限度3,000万円、中古は10年・2,000万円と控除の仕組みが違います。「新築の方が税金がたくさん戻ってくる」とよく言われますが、実際の差はいくら？あなたのローン金額と年収で比較します。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">住宅ローン借入額（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 3000</span></label>
+        <input type="number" id="hldc_loan" placeholder="例: 3000" value="3000" step="100" min="500" max="10000" oninput="calcHLDeductComp()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年収（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 600</span></label>
+        <input type="number" id="hldc_income" placeholder="例: 600" value="600" step="50" min="200" max="5000" oninput="calcHLDeductComp()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">住宅ローン金利（%）<br><span style="color:rgba(0,0,0,0.35)">例: 0.5（変動金利の参考値）</span></label>
+      <input type="number" id="hldc_rate" placeholder="例: 0.5" value="0.5" step="0.1" min="0.1" max="5" oninput="calcHLDeductComp()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+    </div>
+    <button onclick="calcHLDeductComp()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">控除額を比較する</button>
+    <div id="hldc_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -10470,6 +10493,76 @@ function calcDownPayVsInvest() {
   el.innerHTML = html;
 }
 (function(){ calcDownPayVsInvest(); })();
+
+function calcHLDeductComp() {
+  var el = document.getElementById('hldc_result'); if (!el) return;
+  var loan = parseFloat(document.getElementById('hldc_loan').value) || 3000;
+  var income = parseFloat(document.getElementById('hldc_income').value) || 600;
+  var rate = (parseFloat(document.getElementById('hldc_rate').value) || 0.5) / 100;
+  var GOLD = '#c9a84c', GREEN = '#16a34a', BLUE = '#3b82f6';
+  var taxCap = income >= 800 ? 28 : income >= 600 ? 22 : income >= 450 ? 15 : income >= 350 ? 10 : 7;
+  function calcCumDeduct(loanAmt, capAmt, years) {
+    var effectiveLoan = Math.min(loanAmt, capAmt);
+    var monthlyR = rate / 12;
+    var totalMonths = 35 * 12;
+    var bal = loanAmt;
+    var monthly = monthlyR > 0 ? loanAmt * monthlyR * Math.pow(1+monthlyR,totalMonths)/(Math.pow(1+monthlyR,totalMonths)-1) : loanAmt/totalMonths;
+    var total = 0;
+    for (var y = 1; y <= years; y++) {
+      for (var m = 0; m < 12; m++) { var i = bal*monthlyR; bal = Math.max(0, bal - (monthly - i)); }
+      var ded = Math.round(Math.min(effectiveLoan, bal) * 0.007 * 10) / 10;
+      total += Math.min(ded, taxCap);
+    }
+    return Math.round(total * 10) / 10;
+  }
+  var newDeduct = calcCumDeduct(loan, 3000, 13);
+  var usedDeduct = calcCumDeduct(loan, 2000, 10);
+  var diff = newDeduct - usedDeduct;
+  var heroColor = diff > 0 ? GREEN : BLUE;
+  var heroRgb = diff > 0 ? '22,163,74' : '59,130,246';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroRgb + ',0.1),rgba(' + heroRgb + ',0.03));border:2px solid rgba(' + heroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">新築 vs 中古 控除累計差額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + (diff > 0 ? '+' : '') + diff.toFixed(0) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">新築:累計' + newDeduct.toFixed(0) + '万 / 中古:累計' + usedDeduct.toFixed(0) + '万（所得税控除上限考慮済み）</div>'
+    + '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">';
+  var panels = [
+    { label: '新築（認定外一般）', color: GREEN, rows: [
+      ['控除期間', '13年'],
+      ['借入限度額', '3,000万円'],
+      ['年間控除率', '0.7%'],
+      ['年収上限（所得税）', taxCap + '万円/年'],
+      ['累計節税額（推計）', newDeduct.toFixed(0) + '万円']
+    ]},
+    { label: '中古住宅', color: BLUE, rows: [
+      ['控除期間', '10年'],
+      ['借入限度額', '2,000万円'],
+      ['年間控除率', '0.7%'],
+      ['年収上限（所得税）', taxCap + '万円/年'],
+      ['累計節税額（推計）', usedDeduct.toFixed(0) + '万円']
+    ]}
+  ];
+  panels.forEach(function(p) {
+    html += '<div style="background:rgba(0,0,0,0.03);border-radius:10px;padding:10px">';
+    html += '<div style="font-weight:700;color:' + p.color + ';font-size:11px;margin-bottom:6px">' + p.label + '</div>';
+    p.rows.forEach(function(r) {
+      html += '<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px solid rgba(0,0,0,0.05)"><span style="color:var(--text-muted)">' + r[0] + '</span><span style="font-weight:700;color:var(--text)">' + r[1] + '</span></div>';
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  var note = diff > 50
+    ? '💡 <strong>新築は住宅ローン控除の面で大きな優遇があります。</strong>ただし新築物件は中古より物件価格が高く、購入後に資産価値が大きく下がりやすい点も考慮してください。総コストで比較すると中古+リノベが有利になるケースも多いです。'
+    : '💡 <strong>ローン金額・年収によっては新築と中古の控除差は意外と小さくなります。</strong>物件価格差・設備の新しさ・立地など総合的に判断しましょう。';
+  html += '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.7;margin-bottom:10px">' + note + '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.6;margin-bottom:10px">※ 2024年以降の住宅ローン控除制度（0.7%×新築13年/中古10年）を基に試算。認定長期優良住宅・ZEHは限度額が異なります。所得税で控除しきれない分は翌年の住民税（上限9.75万円/年）から控除可能。</div>';
+  var shareText = '📊 住宅ローン控除 新築vs中古 比較\n\n借入' + loan + '万円 年収' + income + '万円\n新築（13年）: 累計' + newDeduct.toFixed(0) + '万円節税\n中古（10年）: 累計' + usedDeduct.toFixed(0) + '万円節税\n\n差額は' + Math.abs(diff).toFixed(0) + '万円！新築vs中古で迷っているなら▶';
+  var shareUrl = 'https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html';
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(shareText) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  el.style.display = 'block';
+  el.innerHTML = html;
+}
+(function(){ calcHLDeductComp(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
