@@ -3207,6 +3207,35 @@
     <div id="brs_result" style="margin-top:8px"></div>
   </div>
 
+  <div class="card" id="card-target-income-reverse">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🎯 月10万円の家賃収入を得るには何戸・いくらの物件が必要？目標から逆算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「不動産で月X万円稼ぎたい」という目標から、必要な投資額・物件数を逆算します。利回り・空室率・経費率を加味した「実際の手残り」ベースで計算します。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:11px;color:rgba(22,163,74,0.9)">✏️ 下の数字はサンプル値です。あなたの目標に変えると即座に計算し直せます</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">毎月の手残り目標（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 10</span></label>
+        <input type="number" id="tir_target" value="10" min="1" max="500" step="1" oninput="calcTargetIncomeReverse()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">想定する物件の表面利回り（%）<br><span style="color:rgba(0,0,0,0.35)">例: 8（地方中古なら7〜10%）</span></label>
+        <input type="number" id="tir_yield" value="8" min="2" max="30" step="0.5" oninput="calcTargetIncomeReverse()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">空室率（%）<br><span style="color:rgba(0,0,0,0.35)">例: 10</span></label>
+        <input type="number" id="tir_vacancy" value="10" min="0" max="50" step="5" oninput="calcTargetIncomeReverse()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">経費率（%）<br><span style="color:rgba(0,0,0,0.35)">例: 20（管理費・修繕費など）</span></label>
+        <input type="number" id="tir_expense" value="20" min="5" max="60" step="5" oninput="calcTargetIncomeReverse()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">1部屋あたりの物件価格（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 700（地方ワンルームなら300〜1000万程度）</span></label>
+        <input type="number" id="tir_price" value="700" min="100" max="50000" step="100" oninput="calcTargetIncomeReverse()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="tir_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -12384,6 +12413,61 @@ el.innerHTML = html;
 (function(){ calcSublease(); })();
 (function(){ calcYieldTriple(); })();
 (function(){ calcBlueReturnSaving(); })();
+
+function calcTargetIncomeReverse() {
+  var r = document.getElementById('tir_result');
+  if (!r) return;
+  var target = parseFloat(document.getElementById('tir_target').value) || 0;
+  var yieldPct = parseFloat(document.getElementById('tir_yield').value) || 0;
+  var vacancy = parseFloat(document.getElementById('tir_vacancy').value) || 0;
+  var expense = parseFloat(document.getElementById('tir_expense').value) || 0;
+  var price = parseFloat(document.getElementById('tir_price').value) || 0;
+  if (!target || !yieldPct || !price) { r.innerHTML = ''; return; }
+  // 実質月手残り = 物件価格 × 利回り/12 × (1-空室率/100) × (1-経費率/100)
+  var monthlyRaw = price * yieldPct / 100 / 12;
+  var monthlyNet = monthlyRaw * (1 - vacancy / 100) * (1 - expense / 100);
+  // 必要物件数 = 目標 / 1部屋手残り
+  var unitsNeeded = Math.ceil(target / monthlyNet);
+  var totalInvest = Math.round(unitsNeeded * price);
+  // 必要な総投資額（自己資金20%想定と全額ローン想定）
+  var selfFund20 = Math.round(totalInvest * 0.20);
+  var selfFund30 = Math.round(totalInvest * 0.30);
+  // 実質利回り（経費・空室後）
+  var realYield = yieldPct * (1 - vacancy / 100) * (1 - expense / 100);
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba(22,163,74,0.12),rgba(22,163,74,0.04));border:2px solid rgba(22,163,74,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">月' + target + '万円の手残りに必要な物件数</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1">' + unitsNeeded + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">戸（1部屋の手残り: 約' + monthlyNet.toFixed(1) + '万円/月 ÷ 目標' + target + '万円）</div>'
+    + '</div>';
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">💰 必要な総投資額</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--text)">' + totalInvest.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">' + unitsNeeded + '戸 × ' + price.toLocaleString() + '万円</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📊 実質利回り</div>'
+    + '<div style="font-size:18px;font-weight:700;color:' + (realYield >= 5 ? 'var(--green)' : realYield >= 3 ? 'var(--text)' : 'var(--red)') + '">' + realYield.toFixed(1) + '%</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">空室・経費差引後</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏦 頭金20%の場合</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--text)">' + selfFund20.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">自己資金（残りはローン）</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏦 頭金30%の場合</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--text)">' + selfFund30.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">自己資金（残りはローン）</div>'
+    + '</div>'
+    + '</div>';
+  var noteHtml = '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--text-muted)">💡 ローン返済前の「手残り」試算です。実際にはローン返済額を差し引いた「キャッシュフロー」で確認してください。物件ごとに「月次CF計算」カードで詳細確認をおすすめします。</div>';
+  var shareText = encodeURIComponent('【不動産投資目標試算】月' + target + '万円の家賃収入を得るには利回り' + yieldPct + '%の物件が' + unitsNeeded + '戸必要！総投資額' + totalInvest.toLocaleString() + '万円。あなたの目標は何戸？今すぐ試算して！');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで投資仲間に共有</a>';
+  r.innerHTML = heroHtml + gridHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcTargetIncomeReverse(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
