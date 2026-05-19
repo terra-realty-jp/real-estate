@@ -3623,6 +3623,36 @@
     <div id="pr_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 貸付事業用宅地等の特例カード -->
+  <div class="card" id="card-rental-kochi-tokusai">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏡 賃貸中の土地を相続したとき「貸付事業用宅地等の特例」で相続税はいくら減る？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">アパートや駐車場として貸している土地を相続する場合、「貸付事業用宅地等の特例」を使うと200㎡まで評価額を50%下げられます。どれくらい相続税が減るか試算します。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">土地の相続税評価額（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 5000</span></label>
+        <input type="number" id="rkt_value" placeholder="例: 5000" value="5000" step="100" min="100" max="100000" oninput="calcRentalKochiTokusai()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">土地の面積（㎡）<br><span style="color:rgba(0,0,0,0.35)">例: 150</span></label>
+        <input type="number" id="rkt_area" placeholder="例: 150" value="150" step="10" min="10" max="2000" oninput="calcRentalKochiTokusai()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">相続税の適用税率（%）<br><span style="color:rgba(0,0,0,0.35)">相続人数・財産総額による（概算）</span></label>
+      <select id="rkt_rate" onchange="calcRentalKochiTokusai()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+        <option value="0.10">10%（課税遺産総額1,000万円以下）</option>
+        <option value="0.15">15%（〜3,000万円）</option>
+        <option value="0.20" selected>20%（〜5,000万円）</option>
+        <option value="0.30">30%（〜1億円）</option>
+        <option value="0.40">40%（〜2億円）</option>
+        <option value="0.45">45%（〜3億円）</option>
+      </select>
+    </div>
+    <button onclick="calcRentalKochiTokusai()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">節税効果を試算する</button>
+    <div id="rkt_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -13042,6 +13072,51 @@ function calcProactiveRepair() {
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcProactiveRepair(); })();
+
+function calcRentalKochiTokusai() {
+  var el = document.getElementById('rkt_result'); if (!el) return;
+  var totalValue = parseFloat(document.getElementById('rkt_value').value) || 5000;
+  var area = parseFloat(document.getElementById('rkt_area').value) || 150;
+  var taxRate = parseFloat(document.getElementById('rkt_rate').value) || 0.20;
+  var GREEN = '#16a34a', GOLD = '#c9a84c', RED = '#dc2626';
+  var MAX_AREA = 200;
+  var applicableArea = Math.min(area, MAX_AREA);
+  var applicableRatio = applicableArea / area;
+  var reducedValue = totalValue * applicableRatio * 0.50;
+  var taxSaving = reducedValue * taxRate;
+  var taxableAfter = totalValue - reducedValue;
+  var heroColor = taxSaving >= 200 ? GREEN : taxSaving >= 50 ? GOLD : GOLD;
+  var heroRgb = taxSaving >= 200 ? '22,163,74' : '201,168,76';
+  var overMax = area > MAX_AREA;
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroRgb + ',0.1),rgba(' + heroRgb + ',0.03));border:2px solid rgba(' + heroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">貸付事業用宅地等の特例による節税効果</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + Math.round(taxSaving) + '<span style="font-size:20px">万円節税</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">評価額' + Math.round(reducedValue) + '万円減額 / 適用面積' + applicableArea + '㎡</div>'
+    + '</div>';
+  html += '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + GOLD + ';font-size:12px;margin-bottom:8px">📊 計算内訳</div>';
+  var rows = [
+    ['土地の相続税評価額', totalValue.toLocaleString() + '万円', GOLD],
+    ['土地面積', area + '㎡（特例適用：' + applicableArea + '㎡）', GOLD],
+    ['評価額の減額幅（50%）', '-' + Math.round(reducedValue).toLocaleString() + '万円', GREEN],
+    ['特例適用後の評価額', Math.round(taxableAfter).toLocaleString() + '万円', GOLD],
+    ['相続税の節税額（推計）', Math.round(taxSaving).toLocaleString() + '万円', GREEN]
+  ];
+  rows.forEach(function(r) {
+    html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:12px"><span style="color:var(--text-muted)">' + r[0] + '</span><span style="font-weight:700;color:' + r[2] + '">' + r[1] + '</span></div>';
+  });
+  if (overMax) {
+    html += '<div style="background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:6px;padding:8px 10px;font-size:11px;color:#fb923c;margin-top:8px">⚠️ 面積が200㎡を超えているため、超過分（' + (area - MAX_AREA) + '㎡）には特例が適用されません。</div>';
+  }
+  html += '</div>';
+  html += '<div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.15);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.7;margin-bottom:10px">💡 <strong>適用の主な条件：</strong>①相続開始前3年以内から事業的規模で貸付（小規模な貸付は除外）②相続税申告期限まで貸付事業を継続③土地を申告期限まで保有。「3年以内の新たな貸付」は2018年改正で除外されたため注意が必要です。詳細は税理士にご確認ください。</div>';
+  var shareText = '🏡 賃貸土地の相続税 特例シミュレーション\n\n「貸付事業用宅地等の特例」を活用\n評価額' + totalValue + '万円の土地\n→ ' + Math.round(reducedValue) + '万円減額で\n相続税が約' + Math.round(taxSaving) + '万円節税！\n\n賃貸物件を相続する前に確認を▶';
+  var shareUrl = 'https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html';
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(shareText) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  el.style.display = 'block';
+  el.innerHTML = html;
+}
+(function(){ calcRentalKochiTokusai(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
