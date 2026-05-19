@@ -3767,6 +3767,34 @@
     <div id="gvr_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 建物の法定耐用年数残存診断カード -->
+  <div class="card" id="card-legal-life-remain">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏗️ 建物の「法定耐用年数」があと何年？ 融資が受けられなくなる前に売却・建て替えのタイミングを確認する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">銀行が投資物件に融資する期間は「法定耐用年数の残り年数」が目安です。残存年数が少ないと次の買い手がローンを組みにくくなり、売却価格が下落します。今のうちに確認しましょう。</p>
+    <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">構造</label>
+      <select id="llr_struct" onchange="calcLegalLifeRemain()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+        <option value="22">木造（法定耐用年数 22年）</option>
+        <option value="27">軽量鉄骨（27年）</option>
+        <option value="34">重量鉄骨（34年）</option>
+        <option value="47" selected>RC・SRC造（47年）</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">築年数（年）<br><span style="color:rgba(0,0,0,0.35)">例: 25</span></label>
+        <input type="number" id="llr_age" value="25" min="1" max="80" step="1" oninput="calcLegalLifeRemain()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月間家賃収入（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 20</span></label>
+        <input type="number" id="llr_rent" value="20" min="1" max="500" step="1" oninput="calcLegalLifeRemain()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcLegalLifeRemain()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">残存耐用年数と売却・建て替え時期を診断する</button>
+    <div id="llr_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -13458,6 +13486,60 @@ function calcGuaranteeVsRisk() {
   el.style.display = 'block';
 }
 (function(){ calcGuaranteeVsRisk(); })();
+
+function calcLegalLifeRemain() {
+  var legalLife = parseInt(document.getElementById('llr_struct').value) || 47;
+  var age = parseInt(document.getElementById('llr_age').value) || 25;
+  var rent = parseFloat(document.getElementById('llr_rent').value) || 20;
+  var el = document.getElementById('llr_result'); if (!el) return;
+
+  var remain = Math.max(0, legalLife - age);
+  var remainRate = Math.round(remain / legalLife * 100);
+  // 残存年数によるリスク判定
+  var riskLevel = remain <= 0 ? 'critical' : remain <= 5 ? 'high' : remain <= 15 ? 'medium' : 'low';
+  var heroColor = riskLevel === 'critical' ? '220,38,38' : riskLevel === 'high' ? '220,38,38' : riskLevel === 'medium' ? '201,168,76' : '22,163,74';
+  var heroTextColor = riskLevel === 'low' ? 'var(--green)' : riskLevel === 'medium' ? 'var(--gold)' : 'var(--red)';
+
+  var statusMsg = remain <= 0 ? '🚨 耐用年数超過！融資はほぼ不可能' :
+                  remain <= 5 ? '🚨 残り5年以下：早急に売却・建て替えを検討' :
+                  remain <= 15 ? '⚠️ 残り15年以下：売却・建て替えの計画を立てる時期' :
+                  '✅ 残存年数に余裕あり';
+
+  // 残存収益（残り年数間の家賃）の概算
+  var futureRent20yr = rent * 12 * Math.min(20, remain);
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">法定耐用年数の残存年数</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + heroTextColor + ';line-height:1">' + remain + '年</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">' + statusMsg + '</div>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
+  html += '<div style="background:var(--dark2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">法定耐用年数</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + legalLife + '年</div></div>';
+  html += '<div style="background:var(--dark2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">残存率</div><div style="font-size:20px;font-weight:900;color:' + heroTextColor + '">' + remainRate + '%</div></div>';
+  html += '</div>';
+
+  html += '<div style="background:rgba(0,0,0,0.05);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.9">';
+  html += '築年数: ' + age + '年 / 法定耐用年数: ' + legalLife + '年 / 残存: ' + remain + '年<br>';
+  html += '今後' + Math.min(20, remain) + '年間の概算家賃収入: +' + Math.round(futureRent20yr) + '万円<br>';
+  if (remain <= 15 && remain > 0) {
+    html += '<strong>→ 残存' + remain + '年以内に売却すると買い手がローンを組みやすい状態</strong>';
+  } else if (remain <= 0) {
+    html += '<strong>→ 法定耐用年数超過のため、融資は土地担保のみが基本となります</strong>';
+  }
+  html += '</div>';
+
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.8">';
+  html += '💡 法定耐用年数を超えた物件でも「実質耐用年数」が高ければ融資を受けられる場合もあります。ただし買い手がつきにくくなるため、残存10〜15年を目安に売却・建て替えを検討することを推奨します。';
+  html += '</div>';
+
+  var shareText = encodeURIComponent('🏗️ 投資物件の法定耐用年数をチェックしてみた！\n\n築' + age + '年 / ' + legalLife + '年建物\n残存耐用年数: ' + remain + '年（残' + remainRate + '%）\n→ ' + (remain <= 10 ? '売却・建て替えを急ぐべき段階！' : remain <= 20 ? '計画を立てる時期が近い' : 'まだ余裕あり') + '\n\n▶ あなたの物件でも無料診断\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcLegalLifeRemain(); })();
 
 
 
