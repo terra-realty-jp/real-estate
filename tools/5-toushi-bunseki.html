@@ -3443,6 +3443,29 @@
     <div id="chi_result" style="margin-top:8px"></div>
   </div>
 
+  <!-- ローン元利内訳シミュレーションカード -->
+  <div class="card" id="card-loan-amort-chart">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">😱 投資ローンの「元金」はなかなか減らない！ 毎年いくら利息を払い続けているか確認する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">住宅ローン・投資ローンは初期ほど利息が多く元金の返済は少ない仕組みです。「10年間払っても元金はXX万円しか減っていない」という事実を年別の内訳で確認できます。</p>
+    <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">借入額（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 3000</span></label>
+        <input type="number" id="lac_principal" value="3000" min="100" max="100000" step="100" oninput="calcLoanAmortChart()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">金利（%）<br><span style="color:rgba(0,0,0,0.35)">例: 2.5</span></label>
+        <input type="number" id="lac_rate" value="2.5" min="0.1" max="15" step="0.1" oninput="calcLoanAmortChart()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">返済期間（年）<br><span style="color:rgba(0,0,0,0.35)">例: 30</span></label>
+        <input type="number" id="lac_years" value="30" min="5" max="50" step="1" oninput="calcLoanAmortChart()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcLoanAmortChart()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">年別の利息 vs 元金を確認する</button>
+    <div id="lac_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -13141,6 +13164,78 @@ function calcCondoVsHouseInvest() {
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcCondoVsHouseInvest(); })();
+
+function calcLoanAmortChart() {
+  var principal = parseFloat(document.getElementById('lac_principal').value) || 3000;
+  var annualRate = parseFloat(document.getElementById('lac_rate').value) || 2.5;
+  var termYears = parseInt(document.getElementById('lac_years').value) || 30;
+  var el = document.getElementById('lac_result'); if (!el) return;
+
+  var monthlyRate = annualRate / 100 / 12;
+  var totalMonths = termYears * 12;
+  var monthlyPayment = principal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -totalMonths));
+
+  // 累計利息・元金を年ごとに集計
+  var balance = principal;
+  var totalInterestPaid = 0;
+  var totalPrincipalPaid = 0;
+  var yearData = [];
+  for (var m = 1; m <= totalMonths; m++) {
+    var interest = balance * monthlyRate;
+    var princ = monthlyPayment - interest;
+    balance -= princ;
+    if (balance < 0) balance = 0;
+    totalInterestPaid += interest;
+    totalPrincipalPaid += princ;
+    if (m % 12 === 0) {
+      var yr = m / 12;
+      yearData.push({ year: yr, balance: Math.round(balance * 100) / 100, cumInterest: Math.round(totalInterestPaid * 100) / 100 });
+    }
+  }
+  var totalInterest = Math.round(totalInterestPaid * 10) / 10;
+  var balanceAt10 = yearData.length >= 10 ? Math.round(yearData[9].balance) : 0;
+  var interestAt10 = yearData.length >= 10 ? Math.round(yearData[9].cumInterest) : 0;
+  var principalAt10 = principal - balanceAt10;
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(220,38,38,0.12),rgba(220,38,38,0.04));border:2px solid rgba(220,38,38,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">30年間の総支払利息（衝撃の事実）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:var(--red);line-height:1">▲' + totalInterest + '万円</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">借入' + principal + '万円に対して利息だけで' + Math.round(totalInterest / principal * 100) + '%払う</div>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
+  html += '<div style="background:var(--dark2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">月々の返済額</div><div style="font-size:20px;font-weight:900;color:var(--gold)">' + Math.round(monthlyPayment * 10) / 10 + '万円/月</div></div>';
+  html += '<div style="background:var(--dark2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">10年後のローン残高</div><div style="font-size:20px;font-weight:900;color:var(--red)">' + balanceAt10 + '万円</div></div>';
+  html += '</div>';
+
+  // 5年ごとの残高テーブル
+  html += '<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--text-muted)">▼ 年別ローン残高・累計利息</div>';
+  html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr style="background:rgba(0,0,0,0.08)"><th style="padding:6px 8px;text-align:left">経過年</th><th style="padding:6px 8px;text-align:right;color:var(--red)">残高</th><th style="padding:6px 8px;text-align:right;color:var(--red)">累計利息</th><th style="padding:6px 8px;text-align:right;color:var(--green)">返済済元金</th></tr>';
+  var intervals = [1, 3, 5, 10, 15, 20, 25, termYears];
+  intervals.forEach(function(yr) {
+    if (yr <= termYears && yearData[yr-1]) {
+      var d = yearData[yr-1];
+      var paidPrinc = Math.round(principal - d.balance);
+      html += '<tr style="border-bottom:1px solid rgba(0,0,0,0.07)"><td style="padding:6px 8px">' + yr + '年後</td>';
+      html += '<td style="padding:6px 8px;text-align:right;color:var(--red)">' + Math.round(d.balance) + '万円</td>';
+      html += '<td style="padding:6px 8px;text-align:right;color:var(--red)">▲' + Math.round(d.cumInterest) + '万円</td>';
+      html += '<td style="padding:6px 8px;text-align:right;color:var(--green)">+' + paidPrinc + '万円</td></tr>';
+    }
+  });
+  html += '</table></div>';
+
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.8">';
+  html += '💡 10年返済して元金が' + principalAt10 + '万円しか減っていないのがわかります。繰り上げ返済や賃料収入でのローン圧縮が投資収益を左右します。';
+  html += '</div>';
+
+  var shareText = encodeURIComponent('😱 投資ローンの利息の多さに衝撃を受けた！\n\n借入' + principal + '万円 × ' + termYears + '年\n月返済: ' + Math.round(monthlyPayment * 10) / 10 + '万円\n30年総利息: ▲' + totalInterest + '万円\n10年後もローン残高: ' + balanceAt10 + '万円！\n\n▶ あなたのローンで確認\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcLoanAmortChart(); })();
 
 
 var _toushiCat = '';
