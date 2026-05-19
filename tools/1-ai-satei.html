@@ -3459,6 +3459,31 @@
     <div id="downsize-choice-result" style="margin-top:8px"></div>
   </div>
 
+  <div class="card" id="card-reverse-mortgage">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏦 自宅を売らずに毎月お金をもらう「リバースモーゲージ」——月いくら受け取れる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">持ち家はあるのに毎月の生活費が不安な60〜70代向けの試算です。自宅に住み続けながら毎月受け取れる額を計算し、今すぐ売却した場合と比べられます。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:11px;color:rgba(22,163,74,0.9)">✏️ 下の数字はサンプル値です。あなたの状況に変えると即座に計算し直せます</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">自宅の評価額（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 3000</span></label>
+        <input type="number" id="rm_house" value="3000" min="500" max="100000" step="100" oninput="calcReverseMortgage()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の年齢（歳）<br><span style="color:rgba(0,0,0,0.35)">例: 68</span></label>
+        <input type="number" id="rm_age" value="68" min="55" max="85" step="1" oninput="calcReverseMortgage()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">融資金利（%/年）<br><span style="color:rgba(0,0,0,0.35)">例: 3.0（銀行によって2〜4%程度）</span></label>
+        <input type="number" id="rm_rate" value="3.0" min="0.5" max="8" step="0.1" oninput="calcReverseMortgage()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">融資割合（%）<br><span style="color:rgba(0,0,0,0.35)">例: 50（評価額の何%まで融資）</span></label>
+        <input type="number" id="rm_ltv" value="50" min="30" max="70" step="5" oninput="calcReverseMortgage()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="rm_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11169,6 +11194,48 @@ renderLeads();
 (function(){ calcMoveUpCash(); })();
 (function(){ calcRepairFundShortfall(); })();
 (function(){ calcInheritanceSplit(); })();
+
+function calcReverseMortgage() {
+  var r = document.getElementById('rm_result');
+  if (!r) return;
+  var house = parseFloat(document.getElementById('rm_house').value) || 0;
+  var age = parseInt(document.getElementById('rm_age').value) || 68;
+  var rate = parseFloat(document.getElementById('rm_rate').value) || 3.0;
+  var ltv = parseFloat(document.getElementById('rm_ltv').value) || 50;
+  if (!house) { r.innerHTML = ''; return; }
+  var loanMax = house * ltv / 100;
+  var years = Math.max(90 - age, 5);
+  var months = years * 12;
+  var monthRate = rate / 100 / 12;
+  var factor = Math.pow(1 + monthRate, months);
+  var monthly = Math.round(loanMax * monthRate / (factor - 1) * 10) / 10;
+  var totalReceive = Math.round(monthly * months);
+  var sellNet = Math.round(house * 0.96);
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba(22,163,74,0.12),rgba(22,163,74,0.04));border:2px solid rgba(22,163,74,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">自宅に住み続けながら毎月受け取れる老後資金</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1">' + monthly.toFixed(1) + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">万円/月（90歳まで' + years + '年間／合計 約' + totalReceive.toLocaleString() + '万円）</div>'
+    + '</div>';
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏦 リバースモーゲージ</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--green)">月' + monthly.toFixed(1) + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">住み続けながら受取<br>融資上限: ' + loanMax.toLocaleString() + '万円</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🏠 今すぐ売却した場合</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--text)">' + sellNet.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">一括手取り<br>（諸費用約4%差引）</div>'
+    + '</div>'
+    + '</div>';
+  var noteHtml = '<div style="background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.2);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--text-muted)">⚠️ <b>注意：</b>金利上昇で受取額は減少します。評価額下落時に担保不足（担保割れ）になるリスクもあります。実際の契約前に金融機関・FPへのご相談をお勧めします。</div>';
+  var shareText = encodeURIComponent('【老後資金試算】' + house.toLocaleString() + '万円の自宅に住み続けながら毎月' + monthly.toFixed(1) + '万円！' + years + '年で合計' + totalReceive.toLocaleString() + '万円受取れる「リバースモーゲージ」、あなたの家は何万円？');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで友人に教える</a>';
+  r.innerHTML = heroHtml + gridHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcReverseMortgage(); })();
+
 // ===== 全ヒーローボックス 前回比バッジ自動注入（非TOP3カード対応） =====
 (function(){
   var PRE='hd1_';
