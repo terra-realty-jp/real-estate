@@ -2711,6 +2711,32 @@
     </div>
   </div>
 
+  <!-- 複数空き家 段階的賃貸化収支シミュレーション（calcAkiyaBatchRent） -->
+  <div class="card" data-category="活用・賃貸転用" data-title="複数の空き家を1件ずつ賃貸に転用した場合の段階別収支シミュレーション" data-tags="複数 空き家 賃貸 段階的 収支 活用 シミュレーション" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">複数の空き家を1件ずつ賃貸に転用した場合の段階別収支シミュレーション</div>
+        <div class="card-desc">「まず1件試してから」という段階的な賃貸化で、収支がどう変わるかを1件〜全件のシナリオで比較します</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(22,163,74,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">親から相続した空き家が複数ある場合などに、すべて賃貸に出すことで年間いくら収入が得られるか、何年で改修費を回収できるかを確認できます。</div>
+      <label style="font-size:12px;color:var(--text-muted)">空き家の件数（最大5件 例: 3件）</label>
+      <input id="abr_count" type="number" placeholder="例: 3" min="1" max="5" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">1件あたりの改修費（例: 200万円）</label>
+      <input id="abr_reno" type="number" placeholder="例: 2000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">1件あたりの月額家賃（例: 6万円）</label>
+      <input id="abr_rent" type="number" placeholder="例: 60000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">管理費率（% 例: 10%）</label>
+      <input id="abr_mgmt" type="number" placeholder="例: 10" step="1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">想定空室率（% 例: 10%）</label>
+      <input id="abr_vacancy" type="number" placeholder="例: 10" step="1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <button onclick="calcAkiyaBatchRent()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">件数別の年間収支を計算する</button>
+      <div id="abr_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11008,6 +11034,46 @@ function calcDemolishTaxEffect() {
   el.style.display = 'block';
 }
 (function(){ calcDemolishTaxEffect(); })();
+
+function calcAkiyaBatchRent() {
+  var el = document.getElementById('abr_result');
+  if (!el) return;
+  var count   = Math.min(5, Math.max(1, parseInt(document.getElementById('abr_count').value) || 1));
+  var reno    = parseFloat(document.getElementById('abr_reno').value) || 0;
+  var rent    = parseFloat(document.getElementById('abr_rent').value) || 0;
+  var mgmt    = parseFloat(document.getElementById('abr_mgmt').value) || 10;
+  var vacancy = parseFloat(document.getElementById('abr_vacancy').value) || 10;
+  if (!rent) { el.style.display='none'; return; }
+
+  var annualRentPerUnit = rent * 12 * (1 - vacancy/100) * (1 - mgmt/100);
+  var totalRenoPlan = reno * count;
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(22,163,74,0.12),rgba(22,163,74,0.04));border:2px solid rgba(22,163,74,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">全' + count + '件 賃貸化の年間純収入</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba(22,163,74,1);line-height:1.1">' + Math.round(annualRentPerUnit * count / 10000) + '<span style="font-size:22px">万円/年</span></div>';
+  html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">改修費回収: 約 <strong>' + (annualRentPerUnit * count > 0 ? Math.round(totalRenoPlan / (annualRentPerUnit * count) * 10) / 10 : '—') + '年</strong></div>';
+  html += '</div>';
+
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">';
+  html += '<thead><tr style="background:rgba(128,128,128,0.1)"><th style="padding:6px;text-align:left">賃貸化件数</th><th style="padding:6px;text-align:right">累計改修費</th><th style="padding:6px;text-align:right">年間純収入</th><th style="padding:6px;text-align:right">回収年数</th></tr></thead>';
+  html += '<tbody>';
+  for (var i = 1; i <= count; i++) {
+    var renoCum = reno * i;
+    var annualI = annualRentPerUnit * i;
+    var recovery = annualI > 0 ? Math.round(renoCum / annualI * 10) / 10 : '—';
+    html += '<tr style="border-bottom:1px solid var(--border);' + (i === count ? 'font-weight:700;' : '') + '"><td style="padding:5px">' + i + '件</td><td style="padding:5px;text-align:right">▲' + Math.round(renoCum/10000) + '万円</td><td style="padding:5px;text-align:right;color:rgba(22,163,74,1)">+' + Math.round(annualI/10000) + '万円</td><td style="padding:5px;text-align:right">' + recovery + '年</td></tr>';
+  }
+  html += '</tbody></table>';
+
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">※空室率' + vacancy + '% / 管理費率' + mgmt + '%を控除した純収入です。固定資産税・火災保険・修繕費は別途かかります。</div>';
+
+  var shareText = encodeURIComponent('🏘️ 空き家' + count + '件を段階的に賃貸化してみたら？\n\n1件: 年間' + Math.round(annualRentPerUnit/10000) + '万円\n全' + count + '件: 年間' + Math.round(annualRentPerUnit*count/10000) + '万円\n改修費' + Math.round(totalRenoPlan/10000) + '万円 → ' + (annualRentPerUnit*count>0?Math.round(totalRenoPlan/(annualRentPerUnit*count)*10)/10:'—') + '年で回収！\n\n▶ あなたの空き家でも試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcAkiyaBatchRent(); })();
 
 
 var _akiyaCat = '';
