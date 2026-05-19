@@ -3505,6 +3505,32 @@
     <div id="nvl_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 物件価値下落でオーバーローンになるまでの年数試算（calcOverloanYears） -->
+  <div class="card" data-category="リスク分析" data-title="物件価値が下落するとオーバーローンに…何年後に危険ゾーンへ？" data-tags="オーバーローン 価値下落 リスク 残債 売却できない" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">物件価値が下落するとオーバーローンに…何年後に危険ゾーンへ？</div>
+        <div class="card-desc">「売りたくても売れない」オーバーローンになるまでの年数を先に知って、出口戦略を立てましょう</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(220,38,38,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">オーバーローンとは「ローン残高が物件価値を上回る状態」。売却してもローンを完済できなくなります。特に築古物件・高利回り物件は要注意。</div>
+      <label style="font-size:12px;color:var(--text-muted)">現在の物件価値（例: 4000万円）</label>
+      <input id="oly_value" type="number" placeholder="例: 40000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">現在のローン残高（例: 3500万円）</label>
+      <input id="oly_loan" type="number" placeholder="例: 35000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">月額ローン返済額（元利合計 例: 12万円）</label>
+      <input id="oly_payment" type="number" placeholder="例: 120000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">想定年間価値下落率（% 例: 2%）</label>
+      <input id="oly_decline" type="number" placeholder="例: 2" step="0.1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">月額元金返済額（元利返済のうち元金分 例: 5万円）</label>
+      <input id="oly_principal" type="number" placeholder="例: 50000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <button onclick="calcOverloanYears()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">オーバーローンになるまでの年数を試算する</button>
+      <div id="oly_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -13354,6 +13380,70 @@ function calcNowVsLater() {
 }
 (function(){ calcNowVsLater(); })();
 
+function calcOverloanYears() {
+  var el = document.getElementById('oly_result');
+  if (!el) return;
+  var value    = parseFloat(document.getElementById('oly_value').value) || 0;
+  var loan     = parseFloat(document.getElementById('oly_loan').value) || 0;
+  var payment  = parseFloat(document.getElementById('oly_payment').value) || 0;
+  var decline  = parseFloat(document.getElementById('oly_decline').value) || 2;
+  var principal = parseFloat(document.getElementById('oly_principal').value) || 0;
+  if (!value || !loan) { el.style.display='none'; return; }
+
+  var declineRate = decline / 100;
+  var annualPrincipal = principal * 12;
+  var overloanYear = -1;
+  var rows = [];
+  var curValue = value, curLoan = loan;
+
+  for (var yr = 1; yr <= 30; yr++) {
+    curValue = curValue * (1 - declineRate);
+    curLoan = Math.max(0, curLoan - annualPrincipal);
+    var equity = curValue - curLoan;
+    if (equity <= 0 && overloanYear < 0) overloanYear = yr;
+    if ([1,3,5,7,10,15,20,25,30].indexOf(yr) >= 0) {
+      rows.push({yr: yr, value: Math.round(curValue/10000), loan: Math.round(curLoan/10000), equity: Math.round(equity/10000)});
+    }
+  }
+
+  var heroColor, heroMsg;
+  if (overloanYear > 0) {
+    heroColor = '220,38,38';
+    heroMsg = overloanYear + '年後にオーバーローン危険ゾーンへ';
+  } else {
+    heroColor = '22,163,74';
+    heroMsg = '30年間オーバーローンなし（安全）';
+  }
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  if (overloanYear > 0) {
+    html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">試算上のオーバーローン到達</div>';
+    html += '<div style="font-size:52px;font-weight:900;color:rgba(220,38,38,1);line-height:1.1">' + overloanYear + '<span style="font-size:22px">年後</span></div>';
+    html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">年' + decline + '%下落が続くと<strong>' + overloanYear + '年後</strong>に売却できなくなります</div>';
+  } else {
+    html += '<div style="font-size:52px;font-weight:900;color:rgba(22,163,74,1);line-height:1.1">安全</div>';
+    html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">年' + decline + '%下落でも30年間はオーバーローンになりません</div>';
+  }
+  html += '</div>';
+
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">';
+  html += '<thead><tr style="background:rgba(128,128,128,0.1)"><th style="padding:6px;text-align:left">経過年</th><th style="padding:6px;text-align:right">物件価値</th><th style="padding:6px;text-align:right">ローン残高</th><th style="padding:6px;text-align:right">エクイティ</th></tr></thead>';
+  html += '<tbody>';
+  rows.forEach(function(r) {
+    var rowColor = r.equity <= 0 ? 'rgba(220,38,38,0.08)' : '';
+    html += '<tr style="border-bottom:1px solid var(--border);background:' + rowColor + '"><td style="padding:5px">' + r.yr + '年後</td><td style="padding:5px;text-align:right">' + r.value + '万円</td><td style="padding:5px;text-align:right">' + r.loan + '万円</td><td style="padding:5px;text-align:right;font-weight:' + (r.equity <= 0 ? '700;color:rgba(220,38,38,1)' : '400') + '">' + (r.equity >= 0 ? '+' : '') + r.equity + '万円</td></tr>';
+  });
+  html += '</tbody></table>';
+
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">※物件価値の下落率は「年' + decline + '%」の一定率モデルで計算。実際には地域・物件種別・金利動向によって大きく異なります。</div>';
+
+  var shareText = encodeURIComponent('😱 投資物件がオーバーローンになるまでの年数を試算してみた！\n\n現在の物件価値: ' + Math.round(value/10000) + '万円\nローン残高: ' + Math.round(loan/10000) + '万円\n年' + decline + '%下落すると→ ' + (overloanYear > 0 ? overloanYear + '年後にオーバーローンに！' : '30年間安全') + '\n\n▶ あなたの物件でもリスク確認\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcOverloanYears(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
