@@ -3304,6 +3304,34 @@
     </div>
   </div>
 
+  <!-- 固定金利 vs 変動金利 30年間総支払い比較（calcFixedVsVariable） -->
+  <div class="card" data-category="住宅ローン" data-title="固定金利 vs 変動金利 30年間の総返済額を比較する" data-tags="固定金利 変動金利 ローン 返済 比較 金利上昇" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">固定金利 vs 変動金利 30年間の総返済額を比較する</div>
+        <div class="card-desc">「変動は安いけど将来が不安…」固定と変動の月返済額と30年間の総支払い差を数字で確認できます</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(201,168,76,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">変動金利は今は安くても将来上がるリスクがあります。「固定との差額を15年後に足し戻してみたらどうなる？」を先に確認しましょう。</div>
+      <label style="font-size:12px;color:var(--text-muted)">借入額（例: 3000万円）</label>
+      <input id="fvv_loan" type="number" placeholder="例: 30000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">固定金利（% 例: 1.5%）</label>
+      <input id="fvv_fixed" type="number" placeholder="例: 1.5" step="0.1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">変動金利 現在（% 例: 0.5%）</label>
+      <input id="fvv_var" type="number" placeholder="例: 0.5" step="0.1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">変動金利の将来想定（上昇後の金利 例: 2.0%）</label>
+      <input id="fvv_varrise" type="number" placeholder="例: 2.0" step="0.1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">金利が上昇するまでの年数（例: 10年後）</label>
+      <input id="fvv_riseyr" type="number" placeholder="例: 10" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">返済期間（年 例: 30年）</label>
+      <input id="fvv_term" type="number" placeholder="例: 30" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <button onclick="calcFixedVsVariable()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">固定 vs 変動の総返済額を比較する</button>
+      <div id="fvv_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11059,6 +11087,65 @@ function calcBuyingPower() {
   el.style.display = 'block';
 }
 (function(){ calcBuyingPower(); })();
+
+function calcFixedVsVariable() {
+  var el = document.getElementById('fvv_result');
+  if (!el) return;
+  var loan   = parseFloat(document.getElementById('fvv_loan').value) || 0;
+  var fixed  = parseFloat(document.getElementById('fvv_fixed').value) || 1.5;
+  var varNow = parseFloat(document.getElementById('fvv_var').value) || 0.5;
+  var varRise = parseFloat(document.getElementById('fvv_varrise').value) || 2.0;
+  var riseYr = parseInt(document.getElementById('fvv_riseyr').value) || 10;
+  var term   = parseInt(document.getElementById('fvv_term').value) || 30;
+  if (!loan) { el.style.display='none'; return; }
+
+  function monthlyPayment(principal, annualRate, months) {
+    var r = annualRate / 100 / 12;
+    if (r === 0) return principal / months;
+    return principal * r * Math.pow(1+r, months) / (Math.pow(1+r, months) - 1);
+  }
+
+  // 固定: 全期間同金利
+  var mpFixed = monthlyPayment(loan, fixed, term * 12);
+  var totalFixed = mpFixed * term * 12;
+
+  // 変動: 前半riseYr年は低金利、後半は上昇後金利
+  var mpVarLow = monthlyPayment(loan, varNow, term * 12);
+  // 前半終了時の残債
+  var rLow = varNow / 100 / 12;
+  var nLow = riseYr * 12;
+  var balanceAfterLow = loan * Math.pow(1+rLow, nLow) - mpVarLow * (Math.pow(1+rLow, nLow) - 1) / rLow;
+  var remainMonths = (term - riseYr) * 12;
+  var mpVarHigh = remainMonths > 0 ? monthlyPayment(Math.max(0, balanceAfterLow), varRise, remainMonths) : 0;
+  var totalVarLow = mpVarLow * nLow;
+  var totalVarHigh = mpVarHigh * remainMonths;
+  var totalVar = totalVarLow + totalVarHigh;
+  var diff = totalFixed - totalVar;
+
+  var heroColor = diff > 0 ? '22,163,74' : '220,38,38';
+  var betterLabel = diff > 0 ? '変動金利（想定）の方が' : '固定金利の方が';
+  var diffMn = Math.round(Math.abs(diff) / 10000);
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">' + term + '年間 総返済額の差</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1.1">' + diffMn + '<span style="font-size:22px">万円</span></div>';
+  html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">' + betterLabel + ' <strong>' + diffMn + '万円安く</strong>なります（金利' + varRise + '%上昇想定）</div>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
+  html += '<div style="background:rgba(59,130,246,0.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">固定金利' + fixed + '%（全期間）</div><div style="font-size:18px;font-weight:900">' + Math.round(totalFixed/10000) + '万円</div><div style="font-size:10px;color:var(--text-muted)">月' + Math.round(mpFixed/10000*10)/10 + '万円（一定）</div></div>';
+  html += '<div style="background:rgba(220,38,38,0.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">変動' + varNow + '%→' + varRise + '%（' + riseYr + '年後）</div><div style="font-size:18px;font-weight:900">' + Math.round(totalVar/10000) + '万円</div><div style="font-size:10px;color:var(--text-muted)">初期月' + Math.round(mpVarLow/10000*10)/10 + '万→後期' + Math.round(mpVarHigh/10000*10)/10 + '万</div></div>';
+  html += '</div>';
+
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">⚠️ 変動金利の将来上昇率は仮定のシナリオです。実際の金利変動は予測困難。金利が' + varRise + '%を上回った場合、固定金利の方が有利になります。月' + Math.round((mpVarHigh-mpFixed)/10000*10)/10 + '万円の差異がリスク許容範囲内かが判断の鍵です。</div>';
+
+  var shareText = encodeURIComponent('🏠 住宅ローン 固定' + fixed + '% vs 変動（' + varNow + '%→' + varRise + '%上昇）を比較してみた！\n\n固定総返済: ' + Math.round(totalFixed/10000) + '万円\n変動総返済（想定）: ' + Math.round(totalVar/10000) + '万円\n→ ' + betterLabel + ' ' + diffMn + '万円の差！\n\n▶ あなたの条件でも試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcFixedVsVariable(); })();
 
 
 var _ownerCat = '';
