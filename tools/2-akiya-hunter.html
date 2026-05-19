@@ -2661,6 +2661,34 @@
     <div id="gst_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 相続後3年以内に売ると取得費加算の特例で節税（calcAkiyaSouzokuSale3yr） -->
+  <div class="card" data-category="相続・税金" data-title="相続後3年以内に売ると税金いくら安くなる？ 取得費加算の特例試算" data-tags="相続 3年以内 取得費加算 節税 譲渡所得 特例" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">相続後3年以内に売ると税金いくら安くなる？ 取得費加算の特例試算</div>
+        <div class="card-desc">相続した空き家を3年以内に売ると、払った相続税を「取得費」に上乗せして税金を大幅に節税できます</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(220,38,38,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">⏰ <strong>この特例は相続後3年10ヶ月以内に売らないと使えません！</strong> 知らずに売り時を逃すと税負担が大きく増えます。</div>
+      <label style="font-size:12px;color:var(--text-muted)">空き家の売却価格（例: 2000万円）</label>
+      <input id="ssa_price" type="number" placeholder="例: 20000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">当初の取得費（相続人が把握している場合 不明なら0を入力 → 売却額の5%で計算）</label>
+      <input id="ssa_acq" type="number" placeholder="例: 0（不明の場合）" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">相続税の支払い総額（例: 500万円）</label>
+      <input id="ssa_sotax" type="number" placeholder="例: 5000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">この空き家の相続税評価額（例: 1500万円）</label>
+      <input id="ssa_eval" type="number" placeholder="例: 15000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">相続財産の合計評価額（例: 3000万円）</label>
+      <input id="ssa_total" type="number" placeholder="例: 30000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">保有年数（相続時から）</label>
+      <input id="ssa_years" type="number" placeholder="例: 2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <button onclick="calcAkiyaSouzokuSale3yr()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">特例を使った場合と使わない場合の税金差を計算する</button>
+      <div id="ssa_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -10846,6 +10874,72 @@ function calcGiftVsSaleTransfer() {
   el.style.display = 'block';
 }
 (function(){ calcGiftVsSaleTransfer(); })();
+
+function calcAkiyaSouzokuSale3yr() {
+  var el = document.getElementById('ssa_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('ssa_price').value) || 0;
+  var acq   = parseFloat(document.getElementById('ssa_acq').value) || 0;
+  var sotax = parseFloat(document.getElementById('ssa_sotax').value) || 0;
+  var eval_ = parseFloat(document.getElementById('ssa_eval').value) || 0;
+  var total = parseFloat(document.getElementById('ssa_total').value) || 1;
+  var years = parseFloat(document.getElementById('ssa_years').value) || 0;
+  if (!price) { el.style.display='none'; return; }
+
+  var priceMn = price / 10000;
+  // 取得費: 不明なら売却額の5%
+  var baseCost = acq > 0 ? acq : price * 0.05;
+  // 取得費加算額 = 相続税 × (この物件の評価額 / 相続財産全体) ※3年10ヶ月以内のみ適用
+  var eligible = years <= 3;
+  var addCost = total > 0 ? sotax * (eval_ / total) : 0;
+  // 売却費用（仲介手数料等）
+  var sellFee = (price * 0.03 + 60000) * 1.1;
+  // 譲渡所得（特例あり）
+  var gainWith = price - baseCost - addCost - sellFee;
+  // 譲渡所得（特例なし）
+  var gainWithout = price - baseCost - sellFee;
+  // 税率（5年超なら20.315%、以下39.63%）
+  var taxRate = years > 5 ? 0.20315 : 0.3963;
+  var taxWith = Math.max(0, gainWith) * taxRate;
+  var taxWithout = Math.max(0, gainWithout) * taxRate;
+  var saved = taxWithout - taxWith;
+
+  var heroColor = eligible ? '22,163,74' : '220,38,38';
+  var savedMn = Math.round(saved / 10000);
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  if (eligible) {
+    html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">取得費加算の特例で節税できる額</div>';
+    html += '<div style="font-size:52px;font-weight:900;color:rgba(22,163,74,1);line-height:1.1">' + savedMn + '<span style="font-size:22px">万円</span></div>';
+    html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">特例を使わずに売ると <strong>税金が' + savedMn + '万円多く</strong>かかります</div>';
+  } else {
+    html += '<div style="font-size:52px;font-weight:900;color:rgba(220,38,38,1);line-height:1.1">期限切れ</div>';
+    html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">相続後3年10ヶ月を過ぎているため、この特例は利用できません</div>';
+  }
+  html += '</div>';
+
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">';
+  html += '<thead><tr style="background:rgba(128,128,128,0.1)"><th style="padding:8px;text-align:left">項目</th><th style="padding:8px;text-align:right">特例あり</th><th style="padding:8px;text-align:right">特例なし</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">売却価格</td><td style="padding:6px;text-align:right" colspan="2">' + priceMn.toFixed(0) + '万円</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">取得費（基礎）</td><td style="padding:6px;text-align:right" colspan="2">' + Math.round(baseCost/10000) + '万円</td></tr>';
+  if (eligible) {
+    html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">取得費加算額</td><td style="padding:6px;text-align:right">+' + Math.round(addCost/10000) + '万円</td><td style="padding:6px;text-align:right">0万円</td></tr>';
+  }
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">売却諸費用</td><td style="padding:6px;text-align:right" colspan="2">▲' + Math.round(sellFee/10000) + '万円</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">譲渡所得</td><td style="padding:6px;text-align:right">' + Math.round(Math.max(0,gainWith)/10000) + '万円</td><td style="padding:6px;text-align:right">' + Math.round(Math.max(0,gainWithout)/10000) + '万円</td></tr>';
+  html += '<tr style="font-weight:700"><td style="padding:6px">税金（' + (taxRate*100).toFixed(3) + '%）</td><td style="padding:6px;text-align:right">▲' + Math.round(taxWith/10000) + '万円</td><td style="padding:6px;text-align:right">▲' + Math.round(taxWithout/10000) + '万円</td></tr>';
+  html += '</tbody></table>';
+
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">※取得費加算の特例は「相続税の申告期限から3年以内（相続開始から3年10ヶ月以内）に売却」が条件。確定申告が必要です。税理士への相談を強くおすすめします。</div>';
+
+  var shareText = encodeURIComponent('⏰ 相続した空き家を「3年以内」に売ると税金が' + savedMn + '万円安くなることが判明！\n\n取得費加算の特例を使う: 税金▲' + Math.round(taxWith/10000) + '万円\n特例を使わない場合: 税金▲' + Math.round(taxWithout/10000) + '万円\n→ ' + savedMn + '万円の差！ 売り時を逃すと損します\n\n▶ あなたの空き家でも試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcAkiyaSouzokuSale3yr(); })();
 
 
 var _akiyaCat = '';
