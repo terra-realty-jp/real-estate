@@ -3749,6 +3749,35 @@
     <div id="rvr_result" style="margin-top:8px"></div>
   </div>
 
+  <!-- 住み替え二重ローン危険度診断カード -->
+  <div class="card" id="card-double-loan">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">⚠️ 今の家が売れる前に新居を買うと「二重ローン」期間が発生！ 月の家計は本当に大丈夫？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「新居を先に買ってから今の家を売る（買い先行）」は住み替えでよく起こります。その間ダブルでローンが走り、毎月の家計を圧迫します。何ヶ月・いくら耐えられるか確認しておきましょう。</p>
+    <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">今の家のローン月返済（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 10</span></label>
+        <input type="number" id="dl_old" value="10" min="1" max="100" step="0.5" oninput="calcDoubleLoan()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">新居のローン月返済（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 12</span></label>
+        <input type="number" id="dl_new" value="12" min="1" max="200" step="0.5" oninput="calcDoubleLoan()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月収（手取り・万円）<br><span style="color:rgba(0,0,0,0.35)">例: 40</span></label>
+        <input type="number" id="dl_income" value="40" min="10" max="500" step="1" oninput="calcDoubleLoan()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">ダブル期間の予想（ヶ月）<br><span style="color:rgba(0,0,0,0.35)">例: 4（業界平均は3〜6ヶ月）</span></label>
+        <input type="number" id="dl_months" value="4" min="1" max="24" step="1" oninput="calcDoubleLoan()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcDoubleLoan()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">二重ローン期間の家計リスクを確認する</button>
+    <div id="dl_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12144,6 +12173,56 @@ function calcRebuildVsReform() {
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcRebuildVsReform(); })();
+
+function calcDoubleLoan() {
+  var oldLoan = parseFloat(document.getElementById('dl_old').value) || 10;
+  var newLoan = parseFloat(document.getElementById('dl_new').value) || 12;
+  var income = parseFloat(document.getElementById('dl_income').value) || 40;
+  var months = parseInt(document.getElementById('dl_months').value) || 4;
+  var el = document.getElementById('dl_result'); if (!el) return;
+
+  var totalLoan = oldLoan + newLoan;
+  var loanRatio = (totalLoan / income) * 100;
+  // 生活費（ローン除き）= 月収の45%と仮定
+  var livingCost = income * 0.45;
+  var monthlySurplus = income - totalLoan - livingCost;
+  var totalDoublePeriodCost = totalLoan * months;
+  var surplusOrDeficit = monthlySurplus * months;
+
+  var danger = loanRatio >= 40;
+  var heroColor = danger ? '220,38,38' : '22,163,74';
+  var heroTextColor = danger ? 'var(--red)' : 'var(--green)';
+  var dangerLabel = loanRatio >= 50 ? '🚨 非常に危険' : loanRatio >= 40 ? '⚠️ 危険ライン超え' : '✅ 許容範囲内';
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">二重ローン期間の月次収支</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + heroTextColor + ';line-height:1">' + (monthlySurplus >= 0 ? '+' : '') + Math.round(monthlySurplus * 10) / 10 + '万円</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">' + dangerLabel + '（ローン比率 ' + Math.round(loanRatio) + '%）</div>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
+  html += '<div style="background:var(--dark2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">二重ローン月額合計</div><div style="font-size:20px;font-weight:900;color:var(--red)">▲' + Math.round(totalLoan * 10) / 10 + '万円/月</div></div>';
+  html += '<div style="background:var(--dark2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">' + months + 'ヶ月の合計負担</div><div style="font-size:20px;font-weight:900;color:var(--red)">▲' + Math.round(totalDoublePeriodCost * 10) / 10 + '万円</div></div>';
+  html += '</div>';
+
+  html += '<div style="background:rgba(0,0,0,0.05);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.9">';
+  html += '月収（手取り）: ' + income + '万円<br>';
+  html += '二重ローン計: ' + Math.round(totalLoan * 10) / 10 + '万円（旧' + oldLoan + ' + 新' + newLoan + '）<br>';
+  html += '生活費（推計）: ' + Math.round(livingCost * 10) / 10 + '万円<br>';
+  html += '<strong>月次余裕: ' + (monthlySurplus >= 0 ? '+' : '') + Math.round(monthlySurplus * 10) / 10 + '万円 → ' + months + 'ヶ月で' + (surplusOrDeficit >= 0 ? '貯蓄' : '▲貯蓄取り崩し') + ' ' + Math.abs(Math.round(surplusOrDeficit * 10) / 10) + '万円</strong>';
+  html += '</div>';
+
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.8">';
+  html += '💡 ローン比率40%以上はリスク大。旧宅売却に時間がかかると赤字が続きます。「売り先行（今の家を売ってから新居を探す）」にするか、つなぎ融資の活用を検討しましょう。';
+  html += '</div>';
+
+  var shareText = encodeURIComponent('⚠️ 住み替え中の二重ローンリスクを試算してみた！\n\n二重ローン月額: ▲' + Math.round(totalLoan * 10) / 10 + '万円\n月次余裕: ' + (monthlySurplus >= 0 ? '+' : '') + Math.round(monthlySurplus * 10) / 10 + '万円\n' + months + 'ヶ月で' + Math.abs(Math.round(surplusOrDeficit * 10) / 10) + '万円' + (surplusOrDeficit < 0 ? 'の貯蓄が消える！' : 'の余裕あり') + '\n\n▶ 住み替え前に必ず確認\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcDoubleLoan(); })();
 
 
 
