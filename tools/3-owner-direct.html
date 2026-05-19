@@ -3044,6 +3044,35 @@
     <div id="cvl_result" style="margin-top:8px"></div>
   </div>
 
+  <div class="card" id="card-condo-repair-fund-surge">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏗️ マンション修繕積立金は毎年上がる！20年後の月々の固定費とトータル負担を試算する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">購入時に安く見えた修繕積立金は、国交省ガイドラインでも「段階増額」が標準です。築10〜15年で1.5〜2倍に上がることが多く、知らないと家計に大きな影響が出ます。20年間の累計負担と「住み続けた場合の実質固定費」を確認しましょう。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.7">✏️ 下の数字はサンプル値です。ご自分の物件に合わせて書き換えてください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の修繕積立金（月額・円）<br><span style="color:rgba(0,0,0,0.3)">例: 管理費通知書に記載の積立金額</span></label>
+        <input type="number" id="crf_current" placeholder="例: 8000" value="8000" step="500" min="1000" max="200000" oninput="calcCondoRepairFundSurge()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">管理費（月額・円）<br><span style="color:rgba(0,0,0,0.3)">例: 管理費は通常あまり上がらない</span></label>
+        <input type="number" id="crf_kanri" placeholder="例: 15000" value="15000" step="500" min="0" max="200000" oninput="calcCondoRepairFundSurge()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の築年数（年）<br><span style="color:rgba(0,0,0,0.3)">例: 新築なら0、中古なら実年数</span></label>
+        <input type="number" id="crf_age" placeholder="例: 5" value="5" step="1" min="0" max="40" oninput="calcCondoRepairFundSurge()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">修繕積立金の増額ペース<br><span style="color:rgba(0,0,0,0.3)">管理組合の長期修繕計画で確認できる</span></label>
+        <select id="crf_pace" onchange="calcCondoRepairFundSurge()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="slow">緩い（5年ごとに1.2倍）</option>
+          <option value="normal" selected>標準（5年ごとに1.5倍・国交省目安）</option>
+          <option value="fast">急速（5年ごとに2倍・老朽化が激しい場合）</option>
+        </select>
+      </div>
+    </div>
+    <div id="crf_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -10160,6 +10189,80 @@ function calcCollegeVsLoan() {
   el.innerHTML = html;
 }
 (function(){ calcCollegeVsLoan(); })();
+
+function calcCondoRepairFundSurge() {
+  var el = document.getElementById('crf_result');
+  if (!el) return;
+  var current = parseFloat(document.getElementById('crf_current').value) || 0; // 円
+  var kanri = parseFloat(document.getElementById('crf_kanri').value) || 0; // 円
+  var age = parseInt(document.getElementById('crf_age').value) || 0;
+  var pace = document.getElementById('crf_pace').value;
+
+  // 増額係数（5年ごとの倍率）
+  var multiplier = pace === 'slow' ? 1.2 : pace === 'fast' ? 2.0 : 1.5;
+
+  // 20年間の累計修繕積立金
+  var totalRepair = 0;
+  var monthly = current;
+  var yearlySchedule = [];
+  for (var y = 1; y <= 20; y++) {
+    var ageAtYear = age + y;
+    // 5年ごとに増額（開始から5年後・10年後・15年後）
+    if (y === 5 || y === 10 || y === 15) monthly = Math.round(monthly * multiplier);
+    totalRepair += monthly * 12;
+    if (y === 1 || y === 5 || y === 10 || y === 15 || y === 20) {
+      yearlySchedule.push({ year: y, age: ageAtYear, monthly: monthly });
+    }
+  }
+  var totalKanri = kanri * 12 * 20;
+  var totalMonthly = Math.round((totalRepair + totalKanri) / 10000); // 万円
+  var totalRepairMan = Math.round(totalRepair / 10000); // 万円
+
+  // 20年後の月額
+  var finalMonthly = Math.round(current * Math.pow(multiplier, Math.floor(20 / 5)));
+
+  var heroColor = finalMonthly >= current * 2.5 ? '#dc2626' : finalMonthly >= current * 1.8 ? '#c9a84c' : '#16a34a';
+
+  var heroHtml = '<div style="text-align:center;padding:16px 0 8px">'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">20年後の修繕積立金（月額）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + Math.round(finalMonthly / 100) / 10 + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted)">現在の' + Math.round(finalMonthly / current * 10) / 10 + '倍</div>'
+    + '</div>';
+
+  var schedHtml = '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;margin:10px 0;font-size:12px">'
+    + '<div style="font-weight:700;margin-bottom:6px">📅 修繕積立金の段階増額スケジュール</div>';
+  yearlySchedule.forEach(function(r) {
+    schedHtml += '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.05)">'
+      + '<span>購入後' + r.year + '年目（築' + r.age + '年）</span>'
+      + '<span style="font-weight:700">' + (r.monthly / 10000).toFixed(1) + '万円/月</span>'
+      + '</div>';
+  });
+  schedHtml += '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0">'
+    + '<div style="background:rgba(220,38,38,0.06);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">💸 20年間の修繕積立金合計</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#dc2626">' + totalRepairMan.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏢 管理費＋積立 20年合計</div>'
+    + '<div style="font-size:22px;font-weight:900;color:var(--text)">' + totalMonthly.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '💡 中古マンション購入時は「長期修繕計画書」の提出を必ず求めてください。計画がない・大規模修繕の積立不足が判明した場合、将来的に一時金（数十〜百万円）の追加徴収が発生します。'
+    + '<br><a href="mailto:terra.realty.iam@gmail.com?subject=マンション修繕積立金について相談したい" style="color:var(--gold)">→ TERRA REALTYに無料相談</a></div>';
+
+  var shareText = encodeURIComponent('マンションの修繕積立金、20年後は今の' + Math.round(finalMonthly / current * 10) / 10 + '倍の月' + Math.round(finalMonthly / 100) / 10 + '万円に！20年間の総負担は' + totalRepairMan + '万円。知らずに買うと後悔します\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+
+  el.style.display = 'block';
+  el.innerHTML = heroHtml + gridHtml + schedHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcCondoRepairFundSurge(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
