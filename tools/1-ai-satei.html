@@ -3694,6 +3694,36 @@
     <div id="uct_result" style="display:none;margin-top:14px"></div>
   </div>
 
+
+  <!-- 転居後3年以内の3000万円控除 期限・節税効果チェックカード -->
+  <div class="card" id="card-resident-exempt-deadline">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">⏰ 引っ越した後の家を売るとき「3,000万円控除」の期限は大丈夫？ 節税チャンスが消える前に確認</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">住んでいた家を売ると3,000万円まで売却益が非課税になります（居住用財産の特別控除）。ただし、<strong>転居後3年が経過した12月31日までに売却しないと使えなくなります。</strong>期限と節税額を確認しましょう。</p>
+    <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">転居した年（西暦）<br><span style="color:rgba(0,0,0,0.35)">例: 2024</span></label>
+        <input type="number" id="red_moveyear" placeholder="例: 2024" value="2024" step="1" min="2000" max="2030" oninput="calcResidentExemptDeadline()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却予定価格（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 3500</span></label>
+        <input type="number" id="red_sell" placeholder="例: 3500" value="3500" step="100" min="100" max="100000" oninput="calcResidentExemptDeadline()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">取得費（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 2800（購入価格）</span></label>
+        <input type="number" id="red_cost" placeholder="例: 2800" value="2800" step="100" min="0" max="100000" oninput="calcResidentExemptDeadline()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">保有年数（年）<br><span style="color:rgba(0,0,0,0.35)">例: 10（5年超なら長期税率）</span></label>
+        <input type="number" id="red_holdingyears" placeholder="例: 10" value="10" step="1" min="1" max="50" oninput="calcResidentExemptDeadline()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcResidentExemptDeadline()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">3,000万円控除の期限と節税額を確認する</button>
+    <div id="red_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11946,6 +11976,82 @@ function calcUnknownCostTax() {
   el.innerHTML = html;
 }
 (function(){ calcUnknownCostTax(); })();
+
+function calcResidentExemptDeadline() {
+  var el = document.getElementById('red_result'); if (!el) return;
+  var moveYear = parseInt(document.getElementById('red_moveyear').value) || 2024;
+  var sell = parseFloat(document.getElementById('red_sell').value) || 3500;
+  var cost = parseFloat(document.getElementById('red_cost').value) || 2800;
+  var holdYears = parseFloat(document.getElementById('red_holdingyears').value) || 10;
+  var GREEN = '#16a34a', RED = '#ef4444', GOLD = '#c9a84c';
+  var currentYear = 2026;
+  // Deadline: transfer must occur by Dec 31 of (moveYear + 3)
+  var deadlineYear = moveYear + 3;
+  var deadlineDate = deadlineYear + '年12月31日';
+  var yearsLeft = deadlineYear - currentYear;
+  var isValid = currentYear <= deadlineYear;
+  // Tax calculation
+  var sellCost = Math.round(sell * 0.04);
+  var gain = Math.max(0, sell - cost - sellCost);
+  var taxRate = holdYears > 5 ? 0.20315 : 0.3963;
+  var rateLabel = holdYears > 5 ? '20.315%（長期）' : '39.63%（短期）';
+  // With 3000万円 exemption
+  var gainAfterExempt = Math.max(0, gain - 3000);
+  var taxWithExempt = Math.round(gainAfterExempt * taxRate);
+  // Without exemption
+  var taxWithoutExempt = Math.round(gain * taxRate);
+  var taxSaving = Math.max(0, taxWithoutExempt - taxWithExempt);
+  var heroColor = isValid ? (yearsLeft <= 0 ? GOLD : GREEN) : RED;
+  var heroRgb = isValid ? (yearsLeft <= 0 ? '201,168,76' : '22,163,74') : '239,68,68';
+  var statusText, statusDetail;
+  if (!isValid) {
+    statusText = '⚠️ 期限切れ（' + deadlineYear + '年末に終了）';
+    statusDetail = moveYear + '年転居→期限は' + deadlineDate + '。現在（2026年）は期限を過ぎています';
+  } else if (yearsLeft <= 0) {
+    statusText = '🔔 今年（' + currentYear + '年）が最終チャンス！';
+    statusDetail = '期限: ' + deadlineDate + '。今年中に売却しないと控除が使えなくなります';
+  } else {
+    statusText = '✅ 期限内（あと' + yearsLeft + '年）';
+    statusDetail = '期限: ' + deadlineDate + 'まで。3,000万円控除が利用できます';
+  }
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroRgb + ',0.1),rgba(' + heroRgb + ',0.03));border:2px solid rgba(' + heroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">3,000万円控除で節税できる金額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + taxSaving.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">' + statusText + '</div>'
+    + '</div>';
+  html += '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:10px;padding:12px 14px;margin-bottom:10px">';
+  html += '<div style="font-weight:700;font-size:12px;margin-bottom:8px">📊 控除使用有無 税額比較</div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:12px">'
+    + '<div><span style="color:' + GREEN + ';font-weight:700">✅ 3,000万円控除あり</span><br><span style="font-size:10px;color:var(--text-muted)">課税益: ' + gainAfterExempt.toLocaleString() + '万円（' + gain.toLocaleString() + '万 - 3,000万円）</span></div>'
+    + '<div style="text-align:right"><span style="font-weight:900;color:' + GREEN + '">' + taxWithExempt.toLocaleString() + '万円</span><br><span style="font-size:10px;color:var(--text-muted)">税率: ' + rateLabel + '</span></div>'
+    + '</div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:12px">'
+    + '<div><span style="color:' + RED + ';font-weight:700">❌ 期限切れ（控除なし）</span><br><span style="font-size:10px;color:var(--text-muted)">課税益: ' + gain.toLocaleString() + '万円</span></div>'
+    + '<div style="text-align:right"><span style="font-weight:900;color:' + RED + '">' + taxWithoutExempt.toLocaleString() + '万円</span></div>'
+    + '</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(' + heroRgb + ',0.06);border:1px solid rgba(' + heroRgb + ',0.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.7;margin-bottom:10px">';
+  html += '📅 <strong>' + statusDetail + '</strong>';
+  if (isValid && yearsLeft <= 0) {
+    html += '<br>今年を逃すと3,000万円控除が永久に使えなくなります。売却を急いで検討しましょう。';
+  } else if (!isValid) {
+    html += '<br>3,000万円控除は使えませんが、他の特例（買い替え特例・損益通算）が使える場合があります。税理士に相談してください。';
+  }
+  html += '</div>';
+  var shareText = '⏰ 3,000万円控除の期限チェック\n\n転居: ' + moveYear + '年 → 期限: ' + deadlineDate + '\n';
+  if (isValid && taxSaving > 0) {
+    shareText += '控除を使うと節税: ' + taxSaving + '万円！\n' + (yearsLeft <= 0 ? '今年が最終チャンス！' : 'あと' + yearsLeft + '年以内に売却を');
+  } else if (!isValid) {
+    shareText += '残念！期限切れ。他の節税方法を検討▶';
+  }
+  shareText += '\n\n自分の期限を確認▶';
+  var shareUrl = 'https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html';
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(shareText) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  el.style.display = 'block';
+  el.innerHTML = html;
+}
+(function(){ calcResidentExemptDeadline(); })();
+
 
 
 // ===== 全ヒーローボックス 前回比バッジ自動注入（非TOP3カード対応） =====
