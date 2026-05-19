@@ -259,14 +259,26 @@ PLGが成立する3条件：
 ### ループ開始時に必ず実行すること
 
 ```bash
-# 1. 前回の実装履歴を確認
+# 1. リモートの最新状態を取得（別アカウントの作業を含む）
+git -C /home/sishizaw/real-estate-project fetch origin
+
+# 2. リモートの直近コミットを確認（自分が未確認の作業がないか必ず確認する）
+git -C /home/sishizaw/real-estate-project log origin/main --oneline -20
+
+# 3. ローカルをリモートに合わせる（未コミット変更がない場合）
+git -C /home/sishizaw/real-estate-project pull --rebase origin main
+
+# 4. 前回の実装履歴を確認
 tail -100 /home/sishizaw/real-estate-project/improvement-log.md
 
-# 2. 直近のgitコミットを確認
-git -C /home/sishizaw/real-estate-project log --oneline -20
-
-# 3. 現在のフェーズを確認し、そのフェーズの優先事項を選ぶ
+# 5. 現在のフェーズを確認し、そのフェーズの優先事項を選ぶ
 ```
+
+> **⚠️ 複数アカウントが同時に作業している場合の注意**
+> このプロジェクトは複数のClaudeセッション（アカウント）が同じリポジトリに作業することがある。
+> セッション開始時に必ず `git fetch origin` → `git log origin/main` でリモートの最新コミットを確認し、
+> **すでに別アカウントが実装済みの内容を重複して実装しないようにすること**。
+> 重複チェックは `improvement-log.md` だけでなく、`git log origin/main` でも行う。
 
 **選択基準（この順番で判断する）:**
 1. Phase 1の「カード言語・オンボーディング改善」が未完了 → UX改善を最優先で選ぶ
