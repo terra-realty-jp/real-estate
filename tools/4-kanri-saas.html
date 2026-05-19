@@ -3515,6 +3515,34 @@
     <div id="owner-change-vs-vacant-result" style="margin-top:8px"></div>
   </div>
 
+  <div class="card" id="card-lonely-death-cost">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">⚠️ 高齢入居者が孤独死したとき、オーナーの損失はいくら？保険あり・なしで比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">特殊清掃・遺品整理・空室損失・事故物件による家賃下落を合算し、保険加入の有無でどれだけ差がつくかを試算します。高齢入居者を受け入れる前に確認しておきたいリスクです。</p>
+    <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:11px;color:rgba(220,38,38,0.85)">✏️ 下の数字はサンプル値です。あなたの状況に変えると即座に計算し直せます</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">月家賃（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 7</span></label>
+        <input type="number" id="ld_rent" value="7" min="1" max="100" step="0.5" oninput="calcLonelyDeath()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">部屋の広さ（㎡）<br><span style="color:rgba(0,0,0,0.35)">例: 30</span></label>
+        <input type="number" id="ld_area" value="30" min="10" max="200" step="5" oninput="calcLonelyDeath()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">発見まで何日（日）<br><span style="color:rgba(0,0,0,0.35)">例: 14（2週間）</span></label>
+        <input type="number" id="ld_days" value="14" min="1" max="90" step="1" oninput="calcLonelyDeath()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">孤独死保険の加入<br><span style="color:rgba(0,0,0,0.35)">月額数百円〜</span></label>
+        <select id="ld_insured" onchange="calcLonelyDeath()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+          <option value="no">加入していない</option>
+          <option value="yes">加入している</option>
+        </select>
+      </div>
+    </div>
+    <div id="ld_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -12656,6 +12684,78 @@ function calcOwnerChangeVsVacant() {
   el.innerHTML = html;
 }
 (function(){ calcOwnerChangeVsVacant(); })();
+
+function calcLonelyDeath() {
+  var r = document.getElementById('ld_result');
+  if (!r) return;
+  var rent = parseFloat(document.getElementById('ld_rent').value) || 0;
+  var area = parseFloat(document.getElementById('ld_area').value) || 0;
+  var days = parseInt(document.getElementById('ld_days').value) || 1;
+  var insured = document.getElementById('ld_insured').value;
+  if (!rent || !area) { r.innerHTML = ''; return; }
+  // 特殊清掃費用（発見日数・面積による）
+  var cleanBase = 3 + area * 0.8;
+  var dayMult = days <= 7 ? 1 : days <= 14 ? 1.5 : days <= 30 ? 2.2 : 3.2;
+  var cleanCost = Math.round(cleanBase * dayMult);
+  // 遺品整理費用（面積基準）
+  var estateCost = Math.round(area * 1.0);
+  // 空室損失（事故物件として12ヶ月空室想定）
+  var vacancyMonths = 12;
+  var vacancyLoss = Math.round(rent * vacancyMonths);
+  // 家賃下落損失（3年間、相場比20%下落）
+  var dropMonths = 36;
+  var dropLoss = Math.round(rent * 0.2 * dropMonths);
+  var totalNoInsurance = cleanCost + estateCost + vacancyLoss + dropLoss;
+  // 保険あり: 特殊清掃・遺品整理をカバー（免責1万円）、空室6ヶ月まで保障
+  var insuredClean = Math.max(cleanCost - 1, 0);
+  var insuredEstate = Math.max(estateCost - 1, 0);
+  var insuredVacancy = Math.round(rent * Math.max(vacancyMonths - 6, 0));
+  var insuranceCost = Math.round(rent * 0.01 * 12); // 月額保険料目安: 家賃の1%×12ヶ月
+  var totalWithInsurance = (cleanCost - insuredClean) + (estateCost - insuredEstate) + insuredVacancy + dropLoss + insuranceCost;
+  var saving = totalNoInsurance - totalWithInsurance;
+  var isInsured = insured === 'yes';
+  var heroColor = isInsured ? 'rgba(22,163,74,' : 'rgba(220,38,38,';
+  var heroTextColor = isInsured ? 'var(--green)' : 'var(--red)';
+  var heroLabel = isInsured ? '保険で削減できる損失' : '孤独死1件あたりの総損失（保険なし）';
+  var heroNum = isInsured ? saving : totalNoInsurance;
+  var heroHtml = '<div style="background:linear-gradient(135deg,' + heroColor + '0.12),' + heroColor + '0.04));border:2px solid ' + heroColor + '0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">' + heroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroTextColor + ';line-height:1">' + heroNum.toLocaleString() + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">万円（特殊清掃＋遺品整理＋空室損失＋家賃下落3年分）</div>'
+    + '</div>';
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🧹 特殊清掃費用</div>'
+    + '<div style="font-size:16px;font-weight:700;color:var(--red)">' + cleanCost.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">発見' + days + '日後（' + area + '㎡）</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📦 遺品整理費用</div>'
+    + '<div style="font-size:16px;font-weight:700;color:var(--red)">' + estateCost.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">（' + area + '㎡目安）</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🚫 空室損失</div>'
+    + '<div style="font-size:16px;font-weight:700;color:var(--red)">' + vacancyLoss.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">事故物件で12ヶ月空室</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📉 家賃下落損失</div>'
+    + '<div style="font-size:16px;font-weight:700;color:var(--red)">' + dropLoss.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">相場比20%減×3年間</div>'
+    + '</div>'
+    + '</div>';
+  var totalHtml = '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;margin-bottom:12px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">保険なし合計損失</div>'
+    + '<div style="font-size:20px;font-weight:900;color:var(--red)">' + totalNoInsurance.toLocaleString() + '万円</div>'
+    + (isInsured ? '<div style="font-size:11px;color:var(--green);margin-top:4px">✅ 保険加入で約' + saving.toLocaleString() + '万円の損失を回避できます</div>' : '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">孤独死保険（月額数百円〜）への加入で大半をカバー可能</div>')
+    + '</div>';
+  var shareText = encodeURIComponent('【賃貸オーナー衝撃】孤独死1件の総損失' + totalNoInsurance.toLocaleString() + '万円！特殊清掃' + cleanCost + '万円＋空室12ヶ月＋家賃下落3年…保険なしで全額自己負担。高齢入居者を受け入れる前にシミュレーションして！');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで仲間のオーナーに教える</a>';
+  r.innerHTML = heroHtml + gridHtml + totalHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcLonelyDeath(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
