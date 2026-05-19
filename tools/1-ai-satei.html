@@ -3509,6 +3509,31 @@
     <div id="lvsr_result" style="margin-top:8px"></div>
   </div>
 
+  <!-- 家を売って老人ホームに入る費用試算カード -->
+  <div class="card" id="card-nursing-home-fund">
+    <div class="card-title">🏥 家を売って老人ホームに入る費用を賄える？ 売却手取りで何年間入れるか試算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「実家を売れば老人ホームに入れるかも」と考えている方向けに、売却手取りと貯蓄・年金で月費用を賄うと何年間持つか試算します。60代の住み替えと老後資金計画に。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">売却手取り見込み（万円）</label>
+        <input type="number" id="nhf_sale" value="2500" min="100" max="50000" step="100" oninput="calcNursingHomeFund()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の貯蓄（万円）</label>
+        <input type="number" id="nhf_savings" value="500" min="0" max="50000" step="100" oninput="calcNursingHomeFund()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">老人ホームの月費用（万円・例: 25）</label>
+        <input type="number" id="nhf_cost" value="25" min="5" max="100" step="1" oninput="calcNursingHomeFund()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">月の年金受給額（万円・例: 16）</label>
+        <input type="number" id="nhf_pension" value="16" min="0" max="50" step="0.5" oninput="calcNursingHomeFund()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="nhf_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11306,6 +11331,73 @@ function calcLoanVsSellRent() {
   r.innerHTML = heroHtml + gridHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcLoanVsSellRent(); })();
+
+function calcNursingHomeFund() {
+  var el = document.getElementById('nhf_result');
+  if (!el) return;
+  var sale = parseFloat(document.getElementById('nhf_sale').value) || 2500;
+  var savings = parseFloat(document.getElementById('nhf_savings').value) || 500;
+  var cost = parseFloat(document.getElementById('nhf_cost').value) || 25;
+  var pension = parseFloat(document.getElementById('nhf_pension').value) || 16;
+
+  var totalFund = sale + savings;
+  var monthlyShortfall = cost - pension;
+
+  var heroHtml, gridHtml, guideHtml, shareAmt;
+
+  if (monthlyShortfall <= 0) {
+    // 年金だけで賄える
+    heroHtml = '<div style="background:linear-gradient(135deg,rgba(22,163,74,0.12),rgba(22,163,74,0.04));border:2px solid rgba(22,163,74,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+      + '<div style="font-size:11px;color:#16a34a;font-weight:700;letter-spacing:2px;margin-bottom:6px">年金だけで老人ホーム費用を賄えます</div>'
+      + '<div style="font-size:52px;font-weight:900;color:#16a34a;line-height:1">∞</div>'
+      + '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">年金（月' + pension + '万円）が月費用（' + cost + '万円）を上回っています</div>'
+      + '</div>';
+    shareAmt = '年金だけで賄える';
+  } else {
+    var months = totalFund / monthlyShortfall;
+    var years = months / 12;
+    var currentAge = 65;
+    var canLiveUntil = Math.floor(currentAge + years);
+    var heroColor = years >= 20 ? '#16a34a' : (years >= 10 ? '#c9a84c' : '#dc2626');
+    var heroBg = years >= 20 ? 'rgba(22,163,74,0.12),rgba(22,163,74,0.04)' : (years >= 10 ? 'rgba(201,168,76,0.12),rgba(201,168,76,0.04)' : 'rgba(220,38,38,0.12),rgba(220,38,38,0.04)');
+    var heroBorder = years >= 20 ? 'rgba(22,163,74,0.4)' : (years >= 10 ? 'rgba(201,168,76,0.4)' : 'rgba(220,38,38,0.4)');
+    var label = years >= 20 ? '老後は安心！' : (years >= 10 ? 'ある程度安心' : '年数が不足気味');
+
+    heroHtml = '<div style="background:linear-gradient(135deg,' + heroBg + ');border:2px solid ' + heroBorder + ';border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+      + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + label + '（65歳から入居想定）</div>'
+      + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + Math.floor(years) + '年</div>'
+      + '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">' + canLiveUntil + '歳まで費用を賄えます（売却手取り+貯蓄合計 ' + (sale+savings).toLocaleString() + '万円）</div>'
+      + '</div>';
+    shareAmt = Math.floor(years) + '年間（' + canLiveUntil + '歳まで）';
+  }
+
+  var monthlyShortfallDisplay = Math.max(0, monthlyShortfall);
+  gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">使える総資金（売却+貯蓄）</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--text)">' + (sale+savings).toLocaleString() + '万円</div>'
+    + '</div>'
+    + '<div style="background:rgba(220,38,38,0.04);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">月々の不足額（費用－年金）</div>'
+    + '<div style="font-size:18px;font-weight:700;color:var(--red)">' + monthlyShortfallDisplay.toLocaleString() + '万円/月</div>'
+    + '</div>'
+    + '</div>';
+
+  guideHtml = '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">'
+    + '💡 <strong style="color:var(--text)">老人ホームの費用目安：</strong>特別養護老人ホーム（特養）5〜15万円/月、有料老人ホーム（住宅型）15〜30万円/月、グループホーム15〜25万円/月。<br>'
+    + '⚠️ 入居一時金（0〜500万円）が別途必要な施設もあります。正確な費用はお近くの施設にご確認ください。'
+    + '</div>';
+
+  var shareText = encodeURIComponent('🏥 家を売って老人ホームに入る費用を試算！\n\n'
+    + '売却手取り' + sale + '万円＋貯蓄' + savings + '万円で\n'
+    + '月費用' + cost + '万円の老人ホームに→ ' + shareAmt + '\n\n'
+    + '老後の住み替えを考えているなら必見！\n▶ 無料で試算する\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで家族にシェア</a>';
+
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcNursingHomeFund(); })();
 
 // ===== 全ヒーローボックス 前回比バッジ自動注入（非TOP3カード対応） =====
 (function(){
