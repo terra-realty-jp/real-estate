@@ -3385,3 +3385,53 @@
 - Tool4: 92→93機能（calcGuaranteeVsRisk）
 - Tool5: 105→106機能（calcLoanAmortChart）
 - 計算カード総数: 483→488枚
+
+## 2026-05-20 08:30（セッション継続3）
+
+### Tool1: 太陽光パネル設置 費用回収・損益試算カード（calcSolarValueSale）
+- **対象**: tools/1-ai-satei.html
+- **フェーズ**: Phase 1 UX改善 / 新規計算カード追加
+- **改善内容**: 売却前の太陽光パネルの費用対効果を試算するカード追加
+  - 入力: 設置費用・年間電気代削減額・経過年数・売却時残存価値率
+  - 累計節電額+残存価値-設置費で損益計算、回収期間を表示
+  - ヒーロー: green（黒字）/ red（赤字）
+
+### Tool2: 空き家「贈与 vs 売却して現金で渡す」比較カード（calcGiftVsSaleTransfer）
+- **対象**: tools/2-akiya-hunter.html
+- **フェーズ**: Phase 1 UX改善 / 新規計算カード追加
+- **改善内容**: 空き家を子に渡す方法を贈与税と売却手取りで比較するカード追加
+  - 入力: 物件評価額・取得費・保有年数
+  - 贈与税（累進課税）vs 譲渡所得税（5年超20%・以下39%）を並列比較
+  - ヒーロー: gold（差額強調）
+
+### Tool3: 建ぺい率・容積率から増築可能面積診断カード（calcBuildingLimitCheck）
+- **対象**: tools/3-owner-direct.html
+- **フェーズ**: Phase 1 UX改善 / 新規計算カード追加
+- **改善内容**: 土地の法的制限から増築余地を計算するカード追加
+  - 入力: 土地面積・建ぺい率（%）・容積率（%）・現在の延べ床面積
+  - 建築可能上限と現在建物の差から増築可能㎡を表示
+  - ヒーロー: green（増築可能）/ red（増築不可/違反）
+
+### Tool4: 建物法定耐用年数残存診断カード（calcLegalLifeRemain）
+- **対象**: tools/4-kanri-saas.html
+- **フェーズ**: Phase 1 UX改善 / 新規計算カード追加
+- **改善内容**: 建物構造別の法定耐用年数から融資可能期間を診断するカード追加
+  - 入力: 建物構造選択（木造22・軽鉄27・重鉄34・RC47年）・築年数・月額家賃
+  - 残存年数と残存価値割合・リスクレベルを表示（critical/high/medium/low）
+  - ヒーロー: red（残存5年以下）/ gold（〜15年）/ green（余裕あり）
+
+### Tool5: 今すぐ買う vs 頭金積立後に買う 10年後純資産比較カード（calcNowVsLater）
+- **対象**: tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 1 UX改善 / 新規計算カード追加
+- **改善内容**: 購入タイミングの遅延コストを数値化するカード追加
+  - 入力: 物件価格・現在の頭金・月額家賃・毎月貯蓄額・期待利回り・待機年数
+  - 今すぐ購入 vs X年待機後購入の10年後純資産をA/B比較
+  - ヒーロー: gold（差額強調）
+
+### docs: llms.txt・CLAUDE.md更新（488→494枚・新カード6枚反映）
+- Tool1: 100→101機能（calcSolarValueSale）
+- Tool2: 92→94機能（calcGiftVsSaleTransfer）
+- Tool3: 97→98機能（calcBuildingLimitCheck）
+- Tool4: 93→94機能（calcLegalLifeRemain）
+- Tool5: 106→107機能（calcNowVsLater）
+- 計算カード総数: 488→494枚
