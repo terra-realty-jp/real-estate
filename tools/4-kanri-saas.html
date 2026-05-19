@@ -3682,6 +3682,34 @@
     <div id="rfs_result" style="display:none;margin-top:14px"></div>
   </div>
 
+
+  <!-- 民泊（Airbnb）転換 vs 通常賃貸 収益比較カード -->
+  <div class="card" id="card-minpaku-roi">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏠 民泊（Airbnb等）に転換すると収益はいくら変わる？（年180日規制対応試算）</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">住宅宿泊事業法（民泊新法）では年間180日の営業上限があります。通常の賃貸収入と、民泊転換した場合の純収入を比較して、どちらが有利かを確認できます。</p>
+    <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の月額家賃（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 8</span></label>
+        <input type="number" id="mpr_rent" placeholder="例: 8" value="8" step="0.5" min="1" max="100" oninput="calcMinpakuRentalROI()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">民泊の1泊平均単価（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 1.5（都市部1LDK目安）</span></label>
+        <input type="number" id="mpr_nightly" placeholder="例: 1.5" value="1.5" step="0.1" min="0.3" max="30" oninput="calcMinpakuRentalROI()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">民泊の稼働率（%）<br><span style="color:rgba(0,0,0,0.35)">例: 70（週5日稼働を想定）</span></label>
+        <input type="number" id="mpr_occ" placeholder="例: 70" value="70" step="5" min="10" max="100" oninput="calcMinpakuRentalROI()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">清掃・代行費用（円/泊）<br><span style="color:rgba(0,0,0,0.35)">例: 5000（清掃代行 目安）</span></label>
+        <input type="number" id="mpr_clean" placeholder="例: 5000" value="5000" step="500" min="0" max="50000" oninput="calcMinpakuRentalROI()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcMinpakuRentalROI()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">民泊転換の収益を比較する</button>
+    <div id="mpr_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -13197,6 +13225,70 @@ function calcRenewalFeeStrategy() {
   el.innerHTML = html;
 }
 (function(){ calcRenewalFeeStrategy(); })();
+
+function calcMinpakuRentalROI() {
+  var el = document.getElementById('mpr_result'); if (!el) return;
+  var rent = parseFloat(document.getElementById('mpr_rent').value) || 8;
+  var nightly = parseFloat(document.getElementById('mpr_nightly').value) || 1.5;
+  var occ = (parseFloat(document.getElementById('mpr_occ').value) || 70) / 100;
+  var cleanCost = parseFloat(document.getElementById('mpr_clean').value) || 5000;
+  var GREEN = '#16a34a', RED = '#ef4444', GOLD = '#c9a84c', BLUE = '#3b82f6';
+  // Standard rental: monthly rent × 12
+  var annualRent = rent * 12;
+  // Minpaku: 180 days max per year (法定上限)
+  var maxDays = 180;
+  var activeDays = Math.round(maxDays * occ);
+  // Gross revenue
+  var grossMinpaku = nightly * activeDays;
+  // Airbnb platform fee: ~20% of gross
+  var platformFee = grossMinpaku * 0.20;
+  // Cleaning cost
+  var totalClean = (cleanCost / 10000) * activeDays;
+  // Additional costs for minpaku: linens, utilities, supplies ≈ 3000円/泊
+  var miscCost = (3000 / 10000) * activeDays;
+  // Net minpaku income
+  var netMinpaku = Math.round((grossMinpaku - platformFee - totalClean - miscCost) * 10) / 10;
+  var diff = netMinpaku - annualRent;
+  var minpakuWins = diff > 0;
+  var heroColor = minpakuWins ? GREEN : GOLD;
+  var heroRgb = minpakuWins ? '22,163,74' : '201,168,76';
+  var heroTitle = minpakuWins ? '民泊転換で増える年間収入' : '通常賃貸が有利な年間差額';
+  var heroVal = Math.abs(Math.round(diff * 10) / 10);
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroRgb + ',0.1),rgba(' + heroRgb + ',0.03));border:2px solid rgba(' + heroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + heroTitle + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + heroVal.toFixed(1) + '<span style="font-size:20px">万円/年</span></div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">稼働率' + Math.round(occ*100) + '% × 年間' + activeDays + '泊 / プラット手数料20%・清掃費控除後</div>'
+    + '</div>';
+  html += '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:10px;padding:12px 14px;margin-bottom:10px">';
+  html += '<div style="font-weight:700;font-size:12px;margin-bottom:8px">📊 年間収入比較</div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:12px">'
+    + '<div><span style="color:' + (minpakuWins ? '#94a3b8' : GOLD) + ';font-weight:700">' + (minpakuWins ? '' : '🏆 ') + '通常賃貸</span><br><span style="font-size:10px;color:var(--text-muted)">月' + rent + '万円 × 12ヶ月</span></div>'
+    + '<div style="text-align:right"><span style="font-weight:900;color:' + (minpakuWins ? '#64748b' : GOLD) + '">' + annualRent.toFixed(1) + '万円</span></div>'
+    + '</div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:12px">'
+    + '<div><span style="color:' + (minpakuWins ? GREEN : '#94a3b8') + ';font-weight:700">' + (minpakuWins ? '🏆 ' : '') + '民泊（年180日上限）</span><br><span style="font-size:10px;color:var(--text-muted)">総売上' + grossMinpaku.toFixed(1) + '万円 → 費用控除後</span></div>'
+    + '<div style="text-align:right"><span style="font-weight:900;color:' + (minpakuWins ? GREEN : '#64748b') + '">' + netMinpaku.toFixed(1) + '万円</span></div>'
+    + '</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);padding:7px 0">'
+    + '民泊費用内訳: プラット手数料' + platformFee.toFixed(1) + '万円 + 清掃費' + totalClean.toFixed(1) + '万円 + 備品・光熱費' + miscCost.toFixed(1) + '万円'
+    + '</div>';
+  html += '</div>';
+  if (minpakuWins) {
+    html += '<div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:10px">💡 <strong>稼働率' + Math.round(occ*100) + '%なら民泊が有利です。</strong>ただし開始には住宅宿泊事業の届出（無料）が必要。近隣トラブル対策・消防設備確認も必須。管理代行（手数料20〜30%）を利用すれば手間が減りますが収益は下がります。</div>';
+  } else {
+    var breakEvenOcc = Math.round((annualRent + platformFee * 0 + totalClean + miscCost) / (nightly * maxDays * 0.8) * 100);
+    html += '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:10px">💡 <strong>現在の稼働率想定では通常賃貸の方が安定して有利です。</strong>年180日規制内での収益は単価・稼働率次第。清掃代行費用が高いほど通常賃貸が有利になります。人気エリア・観光地近くでは稼働率が大きく変わります。</div>';
+  }
+  var shareText = '🏠 民泊転換の採算チェック\n\n通常賃貸: 年' + annualRent.toFixed(1) + '万円\n民泊転換（稼働率' + Math.round(occ*100) + '%）: 年' + netMinpaku.toFixed(1) + '万円\n\n';
+  shareText += minpakuWins ? '民泊の方が年' + heroVal.toFixed(1) + '万円多い！' : '通常賃貸の方が年' + heroVal.toFixed(1) + '万円安定';
+  shareText += '\n\n自分の物件で試算▶';
+  var shareUrl = 'https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html';
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(shareText) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  el.style.display = 'block';
+  el.innerHTML = html;
+}
+(function(){ calcMinpakuRentalROI(); })();
+
 
 var _kanriCat = '';
 var _kanriCatKw = {
