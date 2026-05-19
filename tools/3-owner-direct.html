@@ -2994,6 +2994,31 @@
     <div id="moh_result" style="margin-top:8px"></div>
   </div>
 
+  <!-- 退職金でローン一括返済すべき？住宅ローン控除との比較カード -->
+  <div class="card" id="card-retirement-lump-payoff">
+    <div class="card-title">💰 退職金でローンを今すぐ一括返済すべき？住宅ローン控除の残り分と比較して「本当にお得な方」を計算</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">退職金でローンを一括返済すると利息は節約できますが、残っている住宅ローン控除（年末残高の0.7%が還付）を失います。どちらが得か、差額を計算します。超低金利では「控除を受け取り続ける方が得」な逆転現象が起きることも。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">ローン残高（万円・例: 2000）</label>
+        <input type="number" id="rlp_balance" value="2000" min="100" max="50000" step="100" oninput="calcRetirementLumpPayoff()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の金利（%・例: 1.0）</label>
+        <input type="number" id="rlp_rate" value="1.0" min="0.1" max="8" step="0.1" oninput="calcRetirementLumpPayoff()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">残返済期間（年・例: 15）</label>
+        <input type="number" id="rlp_term" value="15" min="1" max="40" step="1" oninput="calcRetirementLumpPayoff()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">残ローン控除期間（年・例: 8）</label>
+        <input type="number" id="rlp_deduct" value="8" min="0" max="13" step="1" oninput="calcRetirementLumpPayoff()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="rlp_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -9945,6 +9970,100 @@ function calcMortgageOverhaul() {
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcMortgageOverhaul(); })();
+
+function calcRetirementLumpPayoff() {
+  var balance = parseFloat(document.getElementById('rlp_balance').value) || 2000;
+  var ratePct = parseFloat(document.getElementById('rlp_rate').value) || 1.0;
+  var term = parseInt(document.getElementById('rlp_term').value) || 15;
+  var deductYears = parseInt(document.getElementById('rlp_deduct').value) || 8;
+
+  var rate = ratePct / 100;
+  var monthlyRate = rate / 12;
+  var months = term * 12;
+  var balYen = balance * 10000;
+
+  var monthlyPay = monthlyRate > 0
+    ? balYen * monthlyRate / (1 - Math.pow(1 + monthlyRate, -months))
+    : balYen / months;
+
+  var totalInterest = Math.max(0, monthlyPay * months - balYen);
+
+  var deductActual = Math.min(deductYears, term);
+  var deductTotal = 0;
+  var bal = balYen;
+  for (var y = 1; y <= term; y++) {
+    for (var m = 0; m < 12; m++) {
+      var intM = bal * monthlyRate;
+      var princM = monthlyPay - intM;
+      bal = Math.max(0, bal - princM);
+    }
+    if (y <= deductActual) {
+      deductTotal += Math.min(bal * 0.007, 210000);
+    }
+  }
+
+  var totalInterestMan = Math.round(totalInterest / 10000);
+  var deductTotalMan = Math.round(deductTotal / 10000);
+  var diff = totalInterestMan - deductTotalMan;
+  var diffAbs = Math.abs(diff);
+  var lumpWins = diff > 0;
+  var isLowRate = ratePct <= 0.7;
+
+  var heroR = lumpWins ? 22 : 220;
+  var heroG = lumpWins ? 163 : 38;
+  var heroB = lumpWins ? 74 : 38;
+
+  var fmt = function(n) { return n.toLocaleString(); };
+
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba(' + heroR + ',' + heroG + ',' + heroB + ',0.12),rgba(' + heroR + ',' + heroG + ',' + heroB + ',0.04));border:2px solid rgba(' + heroR + ',' + heroG + ',' + heroB + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">' + (lumpWins ? '🏆 一括返済が有利！差額' : '🏆 控除を受け取る方が有利！差額') + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroR + ',' + heroG + ',' + heroB + ');line-height:1;margin-bottom:4px">' + fmt(diffAbs) + '</div>'
+    + '<div style="font-size:14px;font-weight:700;color:rgb(' + heroR + ',' + heroG + ',' + heroB + ')">万円</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:6px">'
+    + (lumpWins ? '今すぐ一括返済した方が ' + fmt(diffAbs) + ' 万円お得' : '控除を使い切ってから返済する方が ' + fmt(diffAbs) + ' 万円お得')
+    + '</div></div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(220,38,38,0.06);border-radius:10px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">節約できる利息合計</div>'
+    + '<div style="font-size:20px;font-weight:900;color:#dc2626">▲' + fmt(totalInterestMan) + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">（一括返済で払わずに済む）</div>'
+    + '</div>'
+    + '<div style="background:rgba(22,163,74,0.06);border-radius:10px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">失う住宅ローン控除</div>'
+    + '<div style="font-size:20px;font-weight:900;color:#16a34a">+' + fmt(deductTotalMan) + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">（一括返済すると受け取れなくなる）</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(0,0,0,0.03);border-radius:10px;padding:12px;font-size:12px;line-height:1.7;margin-bottom:10px">';
+  if (isLowRate) {
+    guideHtml += '⚠️ <strong>超低金利（' + ratePct + '%）では「借り続ける方が得」な逆転現象が起きています！</strong><br>'
+      + 'ローン控除は残高の0.7%が戻るため、金利0.7%以下では控除額が利息を上回ることがあります。控除終了後に繰り上げ返済するのが最善策です。';
+  } else if (lumpWins) {
+    guideHtml += '✅ <strong>退職金で一括返済するのが有利です。</strong><br>'
+      + '節約できる利息（' + fmt(totalInterestMan) + '万円）が失う控除（' + fmt(deductTotalMan) + '万円）を上回っています。<br>'
+      + 'ただし退職所得控除・税金の取り扱いも含めてTERRA REALTYにご相談ください。';
+  } else {
+    guideHtml += '💡 <strong>控除を受け取り続けてから返済する「時間差作戦」が有利です。</strong><br>'
+      + '残' + deductActual + '年間の控除（' + fmt(deductTotalMan) + '万円）が節約利息（' + fmt(totalInterestMan) + '万円）を上回るため、<br>'
+      + '控除期間が終わってから繰り上げ返済するのが最善策です。';
+  }
+  guideHtml += '<br><span style="font-size:10px;color:var(--text-muted)">※ローン控除率0.7%・上限21万円/年（中古住宅基準）で試算。新築・ZEH住宅は上限が異なります。実際の控除額は年収や物件種類によって異なります。</span></div>';
+
+  var shareTextStr = '💰 退職金でローン一括返済すべきか試算！\n\n'
+    + 'ローン残' + balance + '万円・金利' + ratePct + '%・残' + term + '年\n'
+    + '節約できる利息: ' + fmt(totalInterestMan) + '万円\n'
+    + '失う住宅ローン控除: ' + fmt(deductTotalMan) + '万円\n\n'
+    + (lumpWins ? '→ 一括返済が' + fmt(diffAbs) + '万円お得！退職前に必ず計算を' : '→ 控除を使い切る方が' + fmt(diffAbs) + '万円お得！逆転現象に注意')
+    + '\n▶ あなたのローンでも計算\n不動産かんたんツール（TERRA REALTY）';
+  var shareUrl2 = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
+  var lineBtn2 = '<a href="https://line.me/R/msg/text/?' + encodeURIComponent(shareTextStr) + '%0A' + shareUrl2 + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで退職前の友人に教える</a>';
+
+  var el2 = document.getElementById('rlp_result');
+  el2.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn2 + '</div>';
+}
+(function(){ calcRetirementLumpPayoff(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
