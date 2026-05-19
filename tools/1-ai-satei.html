@@ -3778,6 +3778,35 @@
     <div id="dl_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 太陽光パネル設置 損益・回収期間試算カード -->
+  <div class="card" id="card-solar-value-sale">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">☀️ 太陽光パネルをつけると家の売却価格は上がる？ 設置費用・節約・売却プレミアムで損益を計算する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">太陽光パネルの設置は電気代の節約と売電収入をもたらしますが、設置費用がかかります。売却時には残存価値がプレミアムになる場合も。費用対効果と回収年数を確認しましょう。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">設置費用（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 150（4kW・工事込み）</span></label>
+        <input type="number" id="svs_cost" value="150" min="50" max="1000" step="10" oninput="calcSolarValueSale()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間の節約・収入合計（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 12（電気代節約+売電）</span></label>
+        <input type="number" id="svs_annual" value="12" min="1" max="100" step="0.5" oninput="calcSolarValueSale()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却まで住む年数（年）<br><span style="color:rgba(0,0,0,0.35)">例: 10</span></label>
+        <input type="number" id="svs_years" value="10" min="1" max="30" step="1" oninput="calcSolarValueSale()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却時の残存価値率（%）<br><span style="color:rgba(0,0,0,0.35)">例: 30（10年後の評価は設置費の30%）</span></label>
+        <input type="number" id="svs_resale" value="30" min="0" max="80" step="5" oninput="calcSolarValueSale()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcSolarValueSale()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">設置費用の回収期間と損益を計算する</button>
+    <div id="svs_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12223,6 +12252,55 @@ function calcDoubleLoan() {
   el.style.display = 'block';
 }
 (function(){ calcDoubleLoan(); })();
+
+function calcSolarValueSale() {
+  var cost = parseFloat(document.getElementById('svs_cost').value) || 150;
+  var annual = parseFloat(document.getElementById('svs_annual').value) || 12;
+  var years = parseInt(document.getElementById('svs_years').value) || 10;
+  var resaleRate = parseFloat(document.getElementById('svs_resale').value) || 30;
+  var el = document.getElementById('svs_result'); if (!el) return;
+
+  var cumulativeSaving = annual * years;
+  var resaleValue = Math.round(cost * resaleRate / 100 * 10) / 10;
+  var totalBenefit = cumulativeSaving + resaleValue;
+  var netProfit = totalBenefit - cost;
+  var paybackYears = annual > 0 ? Math.ceil(cost / annual) : 999;
+  var recoverable = netProfit >= 0;
+
+  var heroColor = recoverable ? '22,163,74' : '220,38,38';
+  var heroTextColor = recoverable ? 'var(--green)' : 'var(--red)';
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">設置費用に対する総合損益（' + years + '年後売却まで）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:' + heroTextColor + ';line-height:1">' + (netProfit >= 0 ? '+' : '') + Math.round(netProfit * 10) / 10 + '万円</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:6px">' + (recoverable ? '✅ ' + years + '年以内に費用を回収できます' : '⚠️ ' + years + '年以内の回収は困難です') + '</div>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';
+  html += '<div style="background:var(--dark2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">' + years + '年間の節約・収入合計</div><div style="font-size:20px;font-weight:900;color:var(--green)">+' + Math.round(cumulativeSaving * 10) / 10 + '万円</div></div>';
+  html += '<div style="background:var(--dark2);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">売却時の残存評価額</div><div style="font-size:20px;font-weight:900;color:var(--green)">+' + resaleValue + '万円</div></div>';
+  html += '</div>';
+
+  html += '<div style="background:rgba(0,0,0,0.05);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.9">';
+  html += '設置費用: ▲' + cost + '万円<br>';
+  html += '年間節約・収入: +' + annual + '万円 × ' + years + '年 = +' + Math.round(cumulativeSaving * 10) / 10 + '万円<br>';
+  html += '売却時残存評価（' + resaleRate + '%）: +' + resaleValue + '万円<br>';
+  html += '<strong>→ 総合損益: ' + (netProfit >= 0 ? '+' : '') + Math.round(netProfit * 10) / 10 + '万円';
+  if (paybackYears <= 30) html += '　回収年数: ' + paybackYears + '年（節約のみ）';
+  html += '</strong>';
+  html += '</div>';
+
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-muted);line-height:1.8">';
+  html += '💡 太陽光パネルの残存価値は査定会社によって大きく異なります。FIT売電期間（10年）終了後は売電単価が下がるため、自家消費率を高める蓄電池の導入も選択肢です。';
+  html += '</div>';
+
+  var shareText = encodeURIComponent('☀️ 太陽光パネル設置の費用対効果を試算してみた！\n\n設置費用: ▲' + cost + '万円\n' + years + '年間の節約・収入: +' + Math.round(cumulativeSaving * 10) / 10 + '万円\n売却時残存評価: +' + resaleValue + '万円\n→ 総合損益: ' + (netProfit >= 0 ? '+' : '') + Math.round(netProfit * 10) / 10 + '万円\n\n▶ あなたの家でも試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcSolarValueSale(); })();
 
 
 
