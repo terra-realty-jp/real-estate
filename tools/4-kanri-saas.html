@@ -3653,6 +3653,35 @@
     <div id="rkt_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 更新料廃止 vs 維持 10年収入比較カード -->
+  <div class="card" id="card-renewal-fee-strategy">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🔄 更新料を廃止すると入居率は上がる？10年間の収入への影響を比較</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">更新料（1〜2ヶ月分）を廃止すると、入居希望者から選ばれやすくなり空室期間が短縮されます。でも更新料収入は減ります。トータルで得か損か、10年間の手残りを比較します。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">月額家賃（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 7</span></label>
+        <input type="number" id="rfs_rent" placeholder="例: 7" value="7" step="0.5" min="1" max="100" oninput="calcRenewalFeeStrategy()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">更新料（ヶ月分）<br><span style="color:rgba(0,0,0,0.35)">例: 1</span></label>
+        <input type="number" id="rfs_fee_months" placeholder="例: 1" value="1" step="0.5" min="0.5" max="3" oninput="calcRenewalFeeStrategy()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">現在の年間空室率（%）<br><span style="color:rgba(0,0,0,0.35)">例: 10</span></label>
+        <input type="number" id="rfs_vacancy" placeholder="例: 10" value="10" step="1" min="0" max="50" oninput="calcRenewalFeeStrategy()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">更新料廃止で空室率が改善する想定（%ポイント）<br><span style="color:rgba(0,0,0,0.35)">例: 3</span></label>
+        <input type="number" id="rfs_vacancy_improve" placeholder="例: 3" value="3" step="1" min="0" max="30" oninput="calcRenewalFeeStrategy()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcRenewalFeeStrategy()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">10年収入を比較する</button>
+    <div id="rfs_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -13117,6 +13146,57 @@ function calcRentalKochiTokusai() {
   el.innerHTML = html;
 }
 (function(){ calcRentalKochiTokusai(); })();
+
+function calcRenewalFeeStrategy() {
+  var el = document.getElementById('rfs_result'); if (!el) return;
+  var rent = parseFloat(document.getElementById('rfs_rent').value) || 7;
+  var feeMonths = parseFloat(document.getElementById('rfs_fee_months').value) || 1;
+  var vacancyPct = (parseFloat(document.getElementById('rfs_vacancy').value) || 10) / 100;
+  var improvedVacancy = Math.max(0, vacancyPct - (parseFloat(document.getElementById('rfs_vacancy_improve').value) || 3) / 100);
+  var GOLD = '#c9a84c', GREEN = '#16a34a', RED = '#dc2626';
+  var SIM_YEARS = 10;
+  var RENEWAL_YEARS = 2;
+  var rentingMonthsA = 12 * (1 - vacancyPct);
+  var renewalIncome = rent * feeMonths * (SIM_YEARS / RENEWAL_YEARS);
+  var totalA = rent * rentingMonthsA * SIM_YEARS + renewalIncome;
+  var rentingMonthsB = 12 * (1 - improvedVacancy);
+  var totalB = rent * rentingMonthsB * SIM_YEARS;
+  var diff = totalB - totalA;
+  var winner = diff > 0 ? 'B' : 'A';
+  var heroColor = winner === 'B' ? GREEN : GOLD;
+  var heroRgb = winner === 'B' ? '22,163,74' : '201,168,76';
+  var heroLabel = winner === 'B' ? '更新料廃止が有利（10年差額）' : '更新料維持が有利（10年差額）';
+  var heroValue = Math.abs(diff).toFixed(0) + '万円';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroRgb + ',0.1),rgba(' + heroRgb + ',0.03));border:2px solid rgba(' + heroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + heroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + heroValue + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">更新料維持:' + Math.round(totalA) + '万 / 廃止後:' + Math.round(totalB) + '万（10年累計）</div>'
+    + '</div>';
+  html += '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + GOLD + ';font-size:12px;margin-bottom:8px">📊 10年間の収支内訳</div>';
+  var rows = [
+    ['現在の空室率', (vacancyPct*100).toFixed(0) + '%', GOLD],
+    ['廃止後の想定空室率', (improvedVacancy*100).toFixed(0) + '%', GREEN],
+    ['更新料収入（維持時）', '+' + renewalIncome.toFixed(0) + '万円（10年）', GOLD],
+    ['更新料廃止による空室収入改善', '+' + ((totalB - (rent * rentingMonthsA * SIM_YEARS))).toFixed(0) + '万円（10年）', GREEN],
+    ['10年累計収入（維持）', Math.round(totalA).toLocaleString() + '万円', GOLD],
+    ['10年累計収入（廃止）', Math.round(totalB).toLocaleString() + '万円', winner === 'B' ? GREEN : RED]
+  ];
+  rows.forEach(function(r) {
+    html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:12px"><span style="color:var(--text-muted)">' + r[0] + '</span><span style="font-weight:700;color:' + r[2] + '">' + r[1] + '</span></div>';
+  });
+  html += '</div>';
+  var advice = winner === 'B'
+    ? '💡 <strong>空室率の改善効果が更新料収入の損失を上回ります。</strong>特に競合物件が多いエリアや入居者ターゲットを若年層・転勤族に絞る場合に効果的です。更新料廃止時は礼金も同時に廃止すると入居促進効果が高まります。'
+    : '💡 <strong>更新料を維持した方が累計収入が多くなります。</strong>ただし、空室率が悪化している場合や競合が更新料なし物件に切り替えている場合は再検討を。空室率改善の想定（' + (parseFloat(document.getElementById('rfs_vacancy_improve').value)||3) + '%pt）を高めに見積もると判断が変わる場合があります。';
+  html += '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.7;margin-bottom:10px">' + advice + '</div>';
+  var shareText = '🔄 更新料「廃止 vs 維持」10年シミュレーション\n\n月額' + rent + '万円 / 更新料' + feeMonths + 'ヶ月分\n現空室率' + (vacancyPct*100).toFixed(0) + '% → 廃止後' + (improvedVacancy*100).toFixed(0) + '%\n\n10年で' + (winner==='B' ? '廃止が' : '維持が') + Math.abs(diff).toFixed(0) + '万円有利！\n\n更新料の見直しを検討する▶';
+  var shareUrl = 'https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html';
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(shareText) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  el.style.display = 'block';
+  el.innerHTML = html;
+}
+(function(){ calcRenewalFeeStrategy(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
