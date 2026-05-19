@@ -2945,6 +2945,30 @@
     <div id="hgs_result" style="margin-top:8px"></div>
   </div>
 
+  <div class="card" id="card-seisan-vs-reki">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🔄 子どもに贈与するなら「相続時精算課税」と「毎年少しずつ」どちらが節税になる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">一度に大きな金額を子どもに渡すなら「相続時精算課税制度」が有利な場合があります。通常の贈与（暦年課税）との税負担の差額を試算します。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:11px;color:rgba(22,163,74,0.9)">✏️ 下の数字はサンプル値です。あなたの状況に変えると即座に計算し直せます</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">今回渡したい金額（万円）<br><span style="color:rgba(0,0,0,0.35)">例: 500</span></label>
+        <input type="number" id="svr_amount" value="500" min="110" max="50000" step="100" oninput="calcSeiSanVsReki()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">過去に相続時精算課税で使った金額（万円）<br><span style="color:rgba(0,0,0,0.35)">初めては0</span></label>
+        <input type="number" id="svr_used" value="0" min="0" max="2500" step="100" oninput="calcSeiSanVsReki()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="font-size:11px;color:var(--text-muted)">相続財産の見込み<br><span style="color:rgba(0,0,0,0.35)">将来的な相続税の規模感</span></label>
+        <select id="svr_estate" onchange="calcSeiSanVsReki()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+          <option value="small">少ない（相続税がかからない見込み）</option>
+          <option value="large" selected>多い（相続税がかかる見込み）</option>
+        </select>
+      </div>
+    </div>
+    <div id="svr_result" style="margin-top:8px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -9705,6 +9729,72 @@ function calcHousingGiftSpecial() {
   if (typeof saveCardResult === 'function') saveCardResult('住宅資金贈与特例診断', '贈与' + amount + '万円 節税' + saving.toLocaleString() + '万円', 'card-housing-gift-special');
 }
 (function(){ calcHousingGiftSpecial(); })();
+
+function calcSeiSanVsReki() {
+  var r = document.getElementById('svr_result');
+  if (!r) return;
+  var amount = parseFloat(document.getElementById('svr_amount').value) || 0;
+  var used = parseFloat(document.getElementById('svr_used').value) || 0;
+  var estate = document.getElementById('svr_estate').value;
+  if (amount <= 0) { r.innerHTML = ''; return; }
+  // 特例贈与税率（直系卑属・成人）
+  function giftTax(g) {
+    var t = Math.max(g - 110, 0);
+    if (t <= 0) return 0;
+    var tax = 0;
+    if (t <= 200) tax = t * 0.10;
+    else if (t <= 400) tax = t * 0.15 - 10;
+    else if (t <= 600) tax = t * 0.20 - 30;
+    else if (t <= 1000) tax = t * 0.30 - 90;
+    else if (t <= 1500) tax = t * 0.40 - 190;
+    else if (t <= 3000) tax = t * 0.45 - 265;
+    else if (t <= 4500) tax = t * 0.50 - 415;
+    else tax = t * 0.55 - 640;
+    return Math.max(Math.round(tax), 0);
+  }
+  // 暦年課税での贈与税
+  var rekiTax = giftTax(amount);
+  // 相続時精算課税
+  // 年間110万円は基礎控除（申告不要・非課税）
+  // 基礎控除超過分に対し特別控除残額2500万まで0%、超過分20%
+  var tokubetsu = Math.max(2500 - used, 0);
+  var seiSanBase = Math.max(amount - 110, 0);
+  var seiSanTaxable = Math.max(seiSanBase - tokubetsu, 0);
+  var seiSanTax = Math.round(seiSanTaxable * 0.20);
+  var saving = rekiTax - seiSanTax;
+  var isAdvantage = saving > 0;
+  var heroHtml = '<div style="background:linear-gradient(135deg,rgba(22,163,74,0.12),rgba(22,163,74,0.04));border:2px solid rgba(22,163,74,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">相続時精算課税を使うと今回の贈与税が</div>'
+    + '<div style="font-size:52px;font-weight:900;color:var(--green);line-height:1">' + seiSanTax.toLocaleString() + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-top:4px">万円（通常の贈与なら▲' + rekiTax.toLocaleString() + '万円）</div>'
+    + '</div>';
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📅 通常贈与（暦年課税）</div>'
+    + '<div style="font-size:20px;font-weight:700;color:var(--red)">' + rekiTax.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">今回の贈与税</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">🔄 相続時精算課税</div>'
+    + '<div style="font-size:20px;font-weight:700;color:var(--green)">' + seiSanTax.toLocaleString() + '万円</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">今回の贈与税（特別控除残: ' + tokubetsu + '万円）</div>'
+    + '</div>'
+    + '</div>';
+  var savingHtml = isAdvantage
+    ? '<div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px;margin-bottom:10px;text-align:center"><span style="font-size:14px;font-weight:700;color:var(--green)">✅ 今回だけで ' + saving.toLocaleString() + '万円の節税！</span></div>'
+    : '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;margin-bottom:10px;text-align:center"><span style="font-size:12px;color:var(--text-muted)">特別控除をすでに使い切っているため、今回は差がありません</span></div>';
+  var warningMsg = estate === 'large'
+    ? '⚠️ 相続財産が多い場合：相続時精算課税で渡した財産は相続時に相続財産に加算されます（基礎控除分除く）。相続税が高い場合は、暦年課税で毎年少額を長期贈与した方が有利な場合もあります。FPへの相談を推奨。'
+    : '✅ 相続財産が少ない場合：相続時精算課税が有利です。贈与した財産が相続時に加算されても相続税がかからないので、今すぐ一括で渡す方が得です。';
+  var warnColor = estate === 'large' ? 'rgba(220,38,38,0.05)' : 'rgba(22,163,74,0.06)';
+  var warnBorder = estate === 'large' ? 'rgba(220,38,38,0.2)' : 'rgba(22,163,74,0.2)';
+  var noteHtml = '<div style="background:' + warnColor + ';border:1px solid ' + warnBorder + ';border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--text-muted)">' + warningMsg + '</div>';
+  var shareText = encodeURIComponent('【贈与税の節税】' + amount.toLocaleString() + '万円を子どもに渡すなら、通常の贈与税▲' + rekiTax.toLocaleString() + '万円→相続時精算課税なら' + seiSanTax.toLocaleString() + '万円！差額' + saving.toLocaleString() + '万円！知らないと大損する制度、シミュレーションしてみて！');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで家族に教える</a>';
+  r.innerHTML = heroHtml + gridHtml + savingHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcSeiSanVsReki(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
