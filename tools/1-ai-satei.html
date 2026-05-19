@@ -3833,6 +3833,30 @@
     </div>
   </div>
 
+  <!-- 住宅インスペクション費用 vs 未検査リスク損失比較（calcHomeWarranty） -->
+  <div class="card" data-category="売却準備" data-title="住宅インスペクション（建物検査）費用 vs 未検査で売った場合のリスク損失比較" data-tags="インスペクション 建物検査 瑕疵 リスク 費用 売却" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">住宅インスペクション（建物検査）費用 vs 未検査で売った場合のリスク損失比較</div>
+        <div class="card-desc">「検査費10万円」vs「後から瑕疵が発覚して100万円の損失」—— 事前検査のコスト対効果を試算します</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(201,168,76,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">売主が事前に建物検査を行うと、買主の不安を解消して価格交渉を有利に進められます。一方、未検査で売ると引渡し後の瑕疵発覚リスクが残ります。</div>
+      <label style="font-size:12px;color:var(--text-muted)">物件の売却価格（例: 3000万円）</label>
+      <input id="hw_price" type="number" placeholder="例: 30000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">未検査のまま売った場合の「瑕疵発覚リスク確率」（% 例: 築20年以上は20%）</label>
+      <input id="hw_risk" type="number" placeholder="例: 20" step="1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">瑕疵が発覚した場合の修繕・賠償費用見込み（例: 100万円）</label>
+      <input id="hw_defect" type="number" placeholder="例: 1000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">インスペクション費用（例: 5〜15万円）</label>
+      <input id="hw_inspect" type="number" placeholder="例: 100000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <button onclick="calcHomeWarranty()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">検査あり・なしのコスト差を試算する</button>
+      <div id="hw_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12378,6 +12402,54 @@ function calcStayVsMove() {
   el.style.display = 'block';
 }
 (function(){ calcStayVsMove(); })();
+
+function calcHomeWarranty() {
+  var el = document.getElementById('hw_result');
+  if (!el) return;
+  var price   = parseFloat(document.getElementById('hw_price').value) || 0;
+  var risk    = parseFloat(document.getElementById('hw_risk').value) || 0;
+  var defect  = parseFloat(document.getElementById('hw_defect').value) || 0;
+  var inspect = parseFloat(document.getElementById('hw_inspect').value) || 0;
+  if (!price && !defect) { el.style.display='none'; return; }
+
+  // 未検査リスク期待損失
+  var expectedLoss = defect * (risk / 100);
+  // 検査後の効果: 瑕疵事前発見で修繕費の80%を事前対処可能 + 価格0.5%上乗せ効果
+  var priceUplift = price * 0.005;
+  var riskReduction = defect * (risk / 100) * 0.8;
+  var netBenefit = priceUplift + riskReduction - inspect;
+
+  var heroColor = netBenefit > 0 ? '22,163,74' : '220,38,38';
+  var heroMn = Math.round(Math.abs(netBenefit) / 10000);
+  var heroMsg = netBenefit > 0 ? '検査を実施する方が有利' : '検査費用が効果を上回る可能性';
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">インスペクション 費用対効果</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1.1">' + (netBenefit > 0 ? '+' : '▲') + heroMn + '<span style="font-size:22px">万円</span></div>';
+  html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">' + heroMsg + '</div>';
+  html += '</div>';
+
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">';
+  html += '<thead><tr style="background:rgba(128,128,128,0.1)"><th style="padding:8px;text-align:left">項目</th><th style="padding:8px;text-align:right">金額</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">インスペクション費用</td><td style="padding:6px;text-align:right;color:rgba(220,38,38,1)">▲' + Math.round(inspect/10000) + '万円</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">未検査リスクの期待損失（瑕疵発覚' + risk + '%×' + Math.round(defect/10000) + '万円）</td><td style="padding:6px;text-align:right;color:rgba(220,38,38,1)">▲' + Math.round(expectedLoss/10000) + '万円相当</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">検査で事前発見→回避できるリスク（80%）</td><td style="padding:6px;text-align:right;color:rgba(22,163,74,1)">+' + Math.round(riskReduction/10000) + '万円</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">「検査済み物件」価格上乗せ効果（0.5%目安）</td><td style="padding:6px;text-align:right;color:rgba(22,163,74,1)">+' + Math.round(priceUplift/10000) + '万円</td></tr>';
+  html += '<tr style="font-weight:700"><td style="padding:6px">差し引き（検査の純メリット）</td><td style="padding:6px;text-align:right">' + (netBenefit >= 0 ? '+' : '▲') + Math.round(Math.abs(netBenefit)/10000) + '万円</td></tr>';
+  html += '</tbody></table>';
+
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">';
+  html += '💡 特に築15年以上の物件は瑕疵リスクが高く、事前インスペクションが効果的です。検査実施で「告知義務の明確化」にもなり、引き渡し後のトラブルリスクを大幅に下げられます。';
+  html += '</div>';
+
+  var shareText = encodeURIComponent('🔍 家を売る前のインスペクション（建物検査）、費用対効果を試算してみた！\n\n検査費用: ▲' + Math.round(inspect/10000) + '万円\n未検査リスクの期待損失: ▲' + Math.round(expectedLoss/10000) + '万円\n→ 検査実施で' + Math.round(Math.abs(netBenefit)/10000) + '万円' + (netBenefit > 0 ? '有利' : '分の費用') + '！\n\n▶ あなたの物件でも試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcHomeWarranty(); })();
 
 
 
