@@ -3807,6 +3807,32 @@
     <div id="svs_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 住み続ける vs 住み替え 20年総費用比較 -->
+  <div class="card" data-category="売却判断" data-title="住み続ける（修繕）vs 住み替え 20年総費用比較" data-tags="住み替え 修繕 リフォーム 売却 費用 比較" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">住み続ける（修繕）vs 住み替え 20年総費用比較</div>
+        <div class="card-desc">修繕して住み続ける vs 売って新居に引っ越す——20年間でどちらが何万円お得か</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(201,168,76,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">「もう少し住めばリフォームも必要だし、いっそ引っ越した方が…」と迷っている方向け。20年間の総費用を比べて判断できます。</div>
+      <label style="font-size:12px;color:var(--text-muted)">今の家の年間維持費（固定資産税・保険・管理費など 例: 20万円）</label>
+      <input id="svm_annual" type="number" placeholder="例: 200000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">今後10年以内に必要な大規模修繕費（例: 屋根・外壁・水回りで300万円）</label>
+      <input id="svm_repair" type="number" placeholder="例: 3000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">今の家を売った場合の手取り額（概算 例: 2000万円）</label>
+      <input id="svm_sale" type="number" placeholder="例: 20000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">新居の購入価格（例: 3000万円）</label>
+      <input id="svm_newprice" type="number" placeholder="例: 30000000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">新居のローン月返済額（ローンなしなら0 例: 8万円）</label>
+      <input id="svm_loan" type="number" placeholder="例: 80000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <button onclick="calcStayVsMove()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">20年間の総費用を比較する</button>
+      <div id="svm_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12301,6 +12327,57 @@ function calcSolarValueSale() {
   el.style.display = 'block';
 }
 (function(){ calcSolarValueSale(); })();
+
+function calcStayVsMove() {
+  var el = document.getElementById('svm_result');
+  if (!el) return;
+  var annual = parseFloat(document.getElementById('svm_annual').value) || 0;
+  var repair = parseFloat(document.getElementById('svm_repair').value) || 0;
+  var sale   = parseFloat(document.getElementById('svm_sale').value) || 0;
+  var newprice = parseFloat(document.getElementById('svm_newprice').value) || 0;
+  var loan   = parseFloat(document.getElementById('svm_loan').value) || 0;
+  if (!annual && !newprice) { el.style.display='none'; return; }
+
+  var years = 20;
+  // 住み続け: 年間維持費×20 + 修繕費
+  var stayCost = annual * years + repair;
+  // 住み替え: 売却諸費用(仲介3%+6万×1.1+引越し30万) + 購入諸費用(物件価格×4%) + 年間ローン返済×20 + 新居維持費(年間維持費×0.8 = 修繕リスク減として)
+  var sellFee = (sale * 0.03 + 60000) * 1.1 + 300000;
+  var buyFee = newprice * 0.04;
+  var moveCost = sellFee + buyFee + loan * 12 * years + annual * 0.8 * years;
+  var diff = moveCost - stayCost;
+
+  var heroColor = diff > 0 ? '22,163,74' : '220,38,38';
+  var heroMsg = diff > 0 ? '住み続ける方が' : '住み替えた方が';
+  var heroAbs = Math.round(Math.abs(diff) / 10000);
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">20年間 総費用差</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1.1">' + heroAbs + '<span style="font-size:22px">万円</span></div>';
+  html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">' + heroMsg + ' <strong>' + heroAbs + '万円お得</strong></div>';
+  html += '</div>';
+
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">';
+  html += '<thead><tr style="background:rgba(128,128,128,0.1)"><th style="padding:8px;text-align:left">費用項目</th><th style="padding:8px;text-align:right">住み続け</th><th style="padding:8px;text-align:right">住み替え</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">年間維持費×20年</td><td style="padding:6px;text-align:right">' + Math.round(annual * years / 10000) + '万円</td><td style="padding:6px;text-align:right">' + Math.round(annual * 0.8 * years / 10000) + '万円</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">修繕費（大規模）</td><td style="padding:6px;text-align:right">' + Math.round(repair / 10000) + '万円</td><td style="padding:6px;text-align:right">0万円</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">売却・購入諸費用</td><td style="padding:6px;text-align:right">0万円</td><td style="padding:6px;text-align:right">' + Math.round((sellFee + buyFee) / 10000) + '万円</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">ローン返済×20年</td><td style="padding:6px;text-align:right">0万円</td><td style="padding:6px;text-align:right">' + Math.round(loan * 12 * years / 10000) + '万円</td></tr>';
+  html += '<tr style="font-weight:700"><td style="padding:6px">20年間 合計</td><td style="padding:6px;text-align:right">' + Math.round(stayCost / 10000) + '万円</td><td style="padding:6px;text-align:right">' + Math.round(moveCost / 10000) + '万円</td></tr>';
+  html += '</tbody></table>';
+
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">';
+  html += '※住み替え後の維持費は「今の家の80%」として試算（新居の方が修繕リスクが低いため）。売却手取り額は計算に含まれていません（新居の頭金に充当と想定）。';
+  html += '</div>';
+
+  var shareText = encodeURIComponent('🏠 住み続ける vs 住み替え、20年間で試算してみた！\n\n住み続けコスト: ' + Math.round(stayCost / 10000) + '万円\n住み替えコスト: ' + Math.round(moveCost / 10000) + '万円\n→ ' + heroMsg + ' ' + heroAbs + '万円お得という結果に！\n\n▶ あなたの家でも試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcStayVsMove(); })();
 
 
 
