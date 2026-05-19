@@ -278,6 +278,10 @@ git -C /home/sishizaw/real-estate-project pull --rebase origin main
 # 6. 前回の実装履歴を確認（improvement-log.md の末尾が "WIP" や未完了の場合も要注意）
 tail -100 /home/sishizaw/real-estate-project/improvement-log.md
 
+# 6-b. 過去セッションの判断事項をロードする（計算式・係数・色規約など）
+#       → 同じ判断を再導出するコストをゼロにし、前回との矛盾を防ぐ
+cat /home/sishizaw/real-estate-project/implementation-notes.md
+
 # 7. 現在のフェーズを確認し、そのフェーズの優先事項を選ぶ
 ```
 
@@ -364,6 +368,31 @@ Supabase匿名集計はユーザー判断でスキップ（ユーザー数が増
 - 判断した直後（コミット前でよい）
 - まとめて複数件を1コミットで記録してよい
 - improvement-log.mdへの記録と並行して行う（別ファイル）
+
+### 実装への反映方法（記録した内容をどう活かすか）
+
+**① セッション開始時に必ず読む**
+ループ開始手順の step 6（`tail -100 improvement-log.md` の直後）で以下を実行する：
+```bash
+cat /home/sishizaw/real-estate-project/implementation-notes.md
+```
+前回セッションの判断（計算式・係数・色規約・デフォルト値）をロードし、同じ判断を再導出するコストをゼロにする。
+
+**② 実装前に関連する過去判断を検索する**
+新しいカードを追加する前に、類似テーマの判断が既に記録されていないか確認する：
+```bash
+grep -n '[テーマキーワード]' /home/sishizaw/real-estate-project/implementation-notes.md
+```
+例：「金利」「係数」「運用利回り」「保険料率」など。
+
+**③ 同じ判断が3回以上登場したら CLAUDE.md 本体に昇格する**
+implementation-notes.md を眺めて「同じ理由で同じ判断が繰り返されている」パターンを発見したら、それは CLAUDE.md の「実装ルール」または「品質の基準」セクションに恒久ルールとして追記する。
+例：「売却手取りは評価額×0.96で計算」が3回出てきたら → 実装ルールに「売却手取りの簡略計算は評価額×0.96（仲介手数料3%+その他1%）を使う」と追記。
+
+**④ 矛盾する判断が出た場合の処理**
+新たな判断が過去の記録と矛盾するとき：
+- より根拠の強い方を採用し、古い記録を「【更新】」と記して修正する
+- CLAUDE.md本体に昇格させ、以後のブレを防ぐ
 
 ---
 
