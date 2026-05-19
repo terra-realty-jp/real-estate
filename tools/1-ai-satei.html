@@ -3555,6 +3555,31 @@
     <div id="spi_result" style="margin-top:8px"></div>
   </div>
 
+  <div class="card" id="card-chukai-vs-kaitori">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">⚖️ 不動産会社に仲介を頼む vs 即時買取（直接売る）、手取り差と時間コストを比較する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">「仲介」は時間をかけて高値で売れる方法、「即時買取」は2〜4週間で確実に現金化できる方法です。一般的に買取価格は市場価格の75〜80%前後。でも仲介期間中の維持費・ストレスを考えると、どちらが実質的に得か変わります。数字で比べましょう。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.7">✏️ 下の数字はサンプル値です。ご自分の状況に合わせて書き換えてください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の査定額・市場価格（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 不動産会社の査定で3000万円</span></label>
+        <input type="number" id="cvk_price" placeholder="例: 3000" value="3000" step="100" min="100" max="100000" oninput="calcChukaiVsKaitori()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">買取価格の割合（%）<br><span style="color:rgba(0,0,0,0.3)">例: 市場価格の75〜80%が相場。確認済みなら実額から計算</span></label>
+        <input type="number" id="cvk_kaitori_pct" placeholder="例: 77" value="77" step="1" min="50" max="95" oninput="calcChukaiVsKaitori()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">仲介時の平均売却期間（ヶ月）<br><span style="color:rgba(0,0,0,0.3)">例: 一般的な一戸建ては3〜6ヶ月</span></label>
+        <input type="number" id="cvk_months" placeholder="例: 4" value="4" step="1" min="1" max="24" oninput="calcChukaiVsKaitori()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">売却期間中の月次維持費（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 固定資産税月割・ローン・光熱費の合計</span></label>
+        <input type="number" id="cvk_monthly_cost" placeholder="例: 5" value="5" step="0.5" min="0" max="100" oninput="calcChukaiVsKaitori()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <div id="cvk_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11501,6 +11526,63 @@ function calcSpouseInheritance() {
   el.innerHTML = html;
 }
 (function(){ calcSpouseInheritance(); })();
+
+function calcChukaiVsKaitori() {
+  var el = document.getElementById('cvk_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('cvk_price').value) || 0;
+  var kaitoriPct = parseFloat(document.getElementById('cvk_kaitori_pct').value) / 100 || 0.77;
+  var months = parseFloat(document.getElementById('cvk_months').value) || 4;
+  var monthlyCost = parseFloat(document.getElementById('cvk_monthly_cost').value) || 0;
+
+  // 仲介シナリオ: 市場価格 - 仲介手数料(3%+6万円)×1.1 - 売却期間中の維持費
+  var chukaiCommission = Math.round((price * 0.03 + 6) * 1.1 * 10) / 10;
+  var chukaiMaintCost = Math.round(monthlyCost * months * 10) / 10;
+  var chukaiNet = Math.round((price - chukaiCommission - chukaiMaintCost) * 10) / 10;
+
+  // 即時買取シナリオ: 買取価格 - 手数料なし(直接買取のため) - 維持費1ヶ月分(最短1ヶ月で完結)
+  var kaitoriPrice = Math.round(price * kaitoriPct * 10) / 10;
+  var kaitoriMaintCost = Math.round(monthlyCost * 1 * 10) / 10;
+  var kaitoriNet = Math.round((kaitoriPrice - kaitoriMaintCost) * 10) / 10;
+
+  var diff = Math.round((chukaiNet - kaitoriNet) * 10) / 10;
+  var winner = diff > 0 ? 'chukai' : 'kaitori';
+  var heroColor = diff > 0 ? '#16a34a' : '#c9a84c';
+  var heroLabel = winner === 'chukai' ? '仲介の方が手取り多い' : '即時買取でも差は小さい';
+
+  var heroHtml = '<div style="text-align:center;padding:16px 0 8px">'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">' + heroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + Math.abs(diff).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted)">仲介 vs 即時買取 の手取り差</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏢 仲介売却の手取り</div>'
+    + '<div style="font-size:22px;font-weight:900;color:' + (winner === 'chukai' ? '#16a34a' : 'var(--text)') + '">' + chukaiNet.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">手数料' + chukaiCommission.toFixed(1) + '万＋維持費' + chukaiMaintCost.toFixed(1) + '万</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">⚡ 即時買取の手取り</div>'
+    + '<div style="font-size:22px;font-weight:900;color:' + (winner === 'kaitori' ? '#16a34a' : 'var(--text)') + '">' + kaitoriNet.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">買取' + Math.round(kaitoriPct * 100) + '%=' + kaitoriPrice.toLocaleString() + '万円</div>'
+    + '</div>'
+    + '</div>';
+
+  var timeLine = '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '⏱️ 時間コスト: 仲介は平均' + months + 'ヶ月の売却活動（内覧対応・価格交渉・契約手続き）が必要です。急いでいる・転居済み・相続物件などは即時買取の方がストレスが少ない場合があります。'
+    + '<br>💡 ' + (winner === 'chukai' ? '差額' + Math.abs(diff).toLocaleString() + '万円を取るか、時間と手間を取るか—— 判断は状況次第です。' : '差額が小さい場合は「すぐ確実に現金化」できる即時買取も有力な選択肢です。')
+    + '<br><a href="mailto:terra.realty.iam@gmail.com?subject=仲介と買取どちらがいいか相談したい" style="color:var(--gold)">→ TERRA REALTYに無料相談</a></div>';
+
+  var shareText = encodeURIComponent('家を売るなら仲介（' + chukaiNet.toLocaleString() + '万円）vs 即時買取（' + kaitoriNet.toLocaleString() + '万円）差額' + Math.abs(diff).toLocaleString() + '万円！どちらが得か試算してみた\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+
+  el.style.display = 'block';
+  el.innerHTML = heroHtml + gridHtml + timeLine + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcChukaiVsKaitori(); })();
 
 // ===== 全ヒーローボックス 前回比バッジ自動注入（非TOP3カード対応） =====
 (function(){
