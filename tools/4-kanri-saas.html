@@ -3823,6 +3823,30 @@
     </div>
   </div>
 
+  <!-- フリーレント効果計算（calcRentFreePeriod） -->
+  <div class="card" data-category="空室対策・募集" data-title="フリーレント（初月無料）を付けると空室期間が短縮される？ 収支シミュレーション" data-tags="フリーレント 空室 募集 家賃 効果 収支" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">フリーレント（初月無料）を付けると空室期間が短縮される？ 収支シミュレーション</div>
+        <div class="card-desc">フリーレントの損失 vs 空室短縮効果——付けた方が最終的に手取りが増えるか計算します</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(22,163,74,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">フリーレントを付けると問い合わせが増えて空室期間が縮まります。しかしその分の家賃収入が減ります。どちらが有利かを計算しましょう。</div>
+      <label style="font-size:12px;color:var(--text-muted)">月額家賃（例: 8万円）</label>
+      <input id="frp_rent" type="number" placeholder="例: 80000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">現在の平均空室期間（ヶ月 例: 3ヶ月）</label>
+      <input id="frp_vacant" type="number" placeholder="例: 3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">フリーレント期間（ヶ月 例: 1〜2ヶ月）</label>
+      <input id="frp_free" type="number" placeholder="例: 1" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">フリーレントで短縮できる空室期間（ヶ月 例: 1ヶ月短縮）</label>
+      <input id="frp_shorten" type="number" placeholder="例: 1" step="0.5" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <button onclick="calcRentFreePeriod()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">フリーレント付きと付きなしの収支を比較する</button>
+      <div id="frp_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -13630,6 +13654,54 @@ function calcApartmentSellPlan() {
   el.style.display = 'block';
 }
 (function(){ calcApartmentSellPlan(); })();
+
+function calcRentFreePeriod() {
+  var el = document.getElementById('frp_result');
+  if (!el) return;
+  var rent    = parseFloat(document.getElementById('frp_rent').value) || 0;
+  var vacant  = parseFloat(document.getElementById('frp_vacant').value) || 0;
+  var free    = parseFloat(document.getElementById('frp_free').value) || 1;
+  var shorten = parseFloat(document.getElementById('frp_shorten').value) || 0;
+  if (!rent || !vacant) { el.style.display='none'; return; }
+
+  // フリーレントなし: 空室損失
+  var lossWithout = rent * vacant;
+  // フリーレントあり: フリーレント損失 + 短縮後の空室損失
+  var lossFreePeriod = rent * free;
+  var vacantAfter = Math.max(0, vacant - shorten);
+  var lossVacantAfter = rent * vacantAfter;
+  var totalLossWith = lossFreePeriod + lossVacantAfter;
+  // 差額（フリーレントありの方が少ない損失 = 得）
+  var saving = lossWithout - totalLossWith;
+
+  var heroColor = saving > 0 ? '22,163,74' : '220,38,38';
+  var savingMn = Math.round(Math.abs(saving) / 10000);
+  var heroMsg = saving > 0 ? 'フリーレントを付けた方が' : 'フリーレントなしの方が';
+
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">次回空室時の損失差額</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1.1">' + (saving > 0 ? '+' : '▲') + savingMn + '<span style="font-size:22px">万円</span></div>';
+  html += '<div style="font-size:14px;color:var(--text-muted);margin-top:4px">' + heroMsg + ' <strong>' + savingMn + '万円有利</strong></div>';
+  html += '</div>';
+
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">';
+  html += '<thead><tr style="background:rgba(128,128,128,0.1)"><th style="padding:8px;text-align:left">項目</th><th style="padding:8px;text-align:right">フリーレントなし</th><th style="padding:8px;text-align:right">フリーレントあり</th></tr></thead>';
+  html += '<tbody>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">空室期間</td><td style="padding:6px;text-align:right">' + vacant + 'ヶ月</td><td style="padding:6px;text-align:right">' + vacantAfter + 'ヶ月（' + shorten + 'ヶ月短縮）</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">空室損失</td><td style="padding:6px;text-align:right">▲' + Math.round(lossWithout/10000) + '万円</td><td style="padding:6px;text-align:right">▲' + Math.round(lossVacantAfter/10000) + '万円</td></tr>';
+  html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px">フリーレント損失（' + free + 'ヶ月分）</td><td style="padding:6px;text-align:right">0万円</td><td style="padding:6px;text-align:right">▲' + Math.round(lossFreePeriod/10000) + '万円</td></tr>';
+  html += '<tr style="font-weight:700"><td style="padding:6px">合計損失</td><td style="padding:6px;text-align:right">▲' + Math.round(lossWithout/10000) + '万円</td><td style="padding:6px;text-align:right">▲' + Math.round(totalLossWith/10000) + '万円</td></tr>';
+  html += '</tbody></table>';
+
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">💡 フリーレントの効果は物件の競争力・立地・季節によって変わります。「空室短縮ヶ月数」に実態値を入力してシミュレーションしましょう。一般的に競合が多いエリアほどフリーレントの効果が大きいとされています。</div>';
+
+  var shareText = encodeURIComponent('🏠 フリーレントを付けると空室損失が' + savingMn + '万円' + (saving > 0 ? '少なくなる' : '増える') + 'ことが判明！\n\nフリーレントなし: 損失▲' + Math.round(lossWithout/10000) + '万円\nフリーレントあり: 損失▲' + Math.round(totalLossWith/10000) + '万円\n→ ' + (saving > 0 ? '付けた方が' : '付けない方が') + savingMn + '万円お得\n\n▶ あなたの物件でも試算\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+(function(){ calcRentFreePeriod(); })();
 
 
 
