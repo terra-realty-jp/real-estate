@@ -3351,6 +3351,41 @@
     <div id="pvn_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <!-- 法人化節税 回収年数カード -->
+  <div class="card" id="card-corp-setup-roi">
+    <div style="font-size:15px;font-weight:900;margin-bottom:4px">🏢 法人化（合同会社設立）の節税効果 — 設立費用を何年で回収できる？</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産収入が増えてきたとき、「法人を作って節税した方がいい？」と気になりますよね。設立費用・年間維持費と毎年の節税額を比較して、何年目から「得」になるかを計算します。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.8">✏️ 下の数字はサンプル値です。ご自身の状況に変えてお試しください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">不動産収入（年・万円）<br><span style="color:rgba(0,0,0,0.35)">例: 300</span></label>
+        <input type="number" id="csr_income" placeholder="例: 300" value="300" step="50" min="50" max="10000" oninput="calcCorpSetupROI()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">個人の所得税率（%）<br><span style="color:rgba(0,0,0,0.35)">不動産収入にかかる税率</span></label>
+        <select id="csr_personal_rate" onchange="calcCorpSetupROI()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="0.20">20%（課税所得195万〜330万円）</option>
+          <option value="0.30" selected>30%（課税所得330万〜695万円）</option>
+          <option value="0.33">33%（課税所得695万〜900万円）</option>
+          <option value="0.43">43%（課税所得900万〜1800万円）</option>
+          <option value="0.50">50%（課税所得1800万円超）</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">法人設立費用（万円）<br><span style="color:rgba(0,0,0,0.35)">合同会社 約6万／株式会社 約25万</span></label>
+        <input type="number" id="csr_setup" placeholder="例: 10" value="10" step="1" min="1" max="100" oninput="calcCorpSetupROI()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間維持費（万円）<br><span style="color:rgba(0,0,0,0.35)">税理士費用+均等割 例: 30〜50</span></label>
+        <input type="number" id="csr_annual" placeholder="例: 35" value="35" step="5" min="5" max="200" oninput="calcCorpSetupROI()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+    </div>
+    <button onclick="calcCorpSetupROI()" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">回収年数を試算する</button>
+    <div id="csr_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -12866,6 +12901,69 @@ function calcPrepayVsNextProp() {
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcPrepayVsNextProp(); })();
+
+function calcCorpSetupROI() {
+  var el = document.getElementById('csr_result'); if (!el) return;
+  var income = parseFloat(document.getElementById('csr_income').value) || 300;
+  var personalRate = parseFloat(document.getElementById('csr_personal_rate').value) || 0.30;
+  var setupCost = parseFloat(document.getElementById('csr_setup').value) || 10;
+  var annualMaint = parseFloat(document.getElementById('csr_annual').value) || 35;
+  var GOLD = '#c9a84c', GREEN = '#16a34a', RED = '#dc2626';
+  var corpRate = income <= 400 ? 0.215 : income <= 800 ? 0.233 : 0.341;
+  var annualSaving = income * (personalRate - corpRate);
+  var netAnnualBenefit = annualSaving - annualMaint;
+  var heroColor, heroLabel, heroValue, breakEvenYears, cum10;
+  if (personalRate <= corpRate) {
+    heroColor = RED; heroLabel = '法人化のメリットなし'; heroValue = '非推奨'; breakEvenYears = null; cum10 = null;
+  } else if (netAnnualBenefit <= 0) {
+    heroColor = RED; heroLabel = '維持費が節税効果を超えています'; heroValue = '要再検討'; breakEvenYears = null; cum10 = annualSaving * 10 - setupCost - annualMaint * 10;
+  } else {
+    breakEvenYears = setupCost / netAnnualBenefit;
+    cum10 = netAnnualBenefit * 10 - setupCost;
+    if (breakEvenYears <= 3) { heroColor = GREEN; heroLabel = '設立費用回収まで'; heroValue = breakEvenYears.toFixed(1) + '年'; }
+    else if (breakEvenYears <= 7) { heroColor = GOLD; heroLabel = '設立費用回収まで'; heroValue = breakEvenYears.toFixed(1) + '年'; }
+    else { heroColor = RED; heroLabel = '設立費用回収まで'; heroValue = breakEvenYears.toFixed(1) + '年'; }
+  }
+  var heroRgb = heroColor === GREEN ? '22,163,74' : heroColor === GOLD ? '201,168,76' : '220,38,38';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroRgb + ',0.1),rgba(' + heroRgb + ',0.03));border:2px solid rgba(' + heroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:' + heroColor + ';font-weight:700;letter-spacing:2px;margin-bottom:6px">' + heroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + heroValue + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted)">年間節税 ' + annualSaving.toFixed(0) + '万円 / 年間維持費 ' + annualMaint.toFixed(0) + '万円</div>'
+    + '</div>';
+  html += '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px 14px;margin-bottom:8px">';
+  html += '<div style="font-weight:700;color:' + GOLD + ';font-size:12px;margin-bottom:8px">📊 内訳と10年間シミュレーション</div>';
+  var rows = [
+    ['個人税率（入力値）', (personalRate * 100).toFixed(0) + '%', GOLD],
+    ['法人実効税率（推計）', (corpRate * 100).toFixed(1) + '%', GOLD],
+    ['年間節税効果', annualSaving.toFixed(0) + '万円', GREEN],
+    ['年間維持費（税理士等）', '-' + annualMaint.toFixed(0) + '万円', RED],
+    ['年間純メリット', netAnnualBenefit.toFixed(0) + '万円', netAnnualBenefit >= 0 ? GREEN : RED]
+  ];
+  rows.forEach(function(r) {
+    html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:12px"><span style="color:var(--text-muted)">' + r[0] + '</span><span style="font-weight:700;color:' + r[2] + '">' + r[1] + '</span></div>';
+  });
+  if (breakEvenYears !== null) {
+    html += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:12px"><span style="color:var(--text-muted)">設立費用回収年数</span><span style="font-weight:700;color:' + heroColor + '">' + breakEvenYears.toFixed(1) + '年</span></div>';
+  }
+  if (cum10 !== null) {
+    html += '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px"><span style="color:var(--text-muted)">10年間の累積メリット</span><span style="font-weight:700;color:' + (cum10 >= 0 ? GREEN : RED) + '">' + (cum10 >= 0 ? '+' : '') + cum10.toFixed(0) + '万円</span></div>';
+  }
+  html += '</div>';
+  var advice = netAnnualBenefit > 0 && breakEvenYears <= 5
+    ? '💡 <strong>回収年数が短く、法人化を検討する価値があります。</strong>税理士に設立手続きを依頼すると最短1〜2ヶ月で法人設立できます。'
+    : netAnnualBenefit > 0
+    ? '💡 <strong>維持費を考慮すると回収に時間がかかります。</strong>税理士費用を抑えられるか確認してから判断しましょう。'
+    : '💡 <strong>現時点では個人での申告継続が有利です。</strong>不動産収入が増えた段階で再度検討してください（目安：年間収入800万円超）。';
+  html += '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.7;margin-bottom:10px">' + advice + '</div>';
+  var shareText = netAnnualBenefit > 0 && breakEvenYears !== null
+    ? '🏢 法人化の節税シミュレーション\n\n不動産収入' + income + '万円/年\n年間節税効果: ' + annualSaving.toFixed(0) + '万円\n設立費用回収まで' + breakEvenYears.toFixed(1) + '年\n10年間の累積メリット: ' + (cum10 >= 0 ? '+' : '') + (cum10 || 0).toFixed(0) + '万円\n\n法人化すべき？TERRA REALTYで無料相談▶'
+    : '🏢 法人化の節税シミュレーション\n\n不動産収入' + income + '万円/年\n年間節税効果: ' + annualSaving.toFixed(0) + '万円（現時点では維持費が上回る）\n\n収入が増えたタイミングで再計算▶';
+  var shareUrl = 'https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html';
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(shareText) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+  el.style.display = 'block';
+  el.innerHTML = html;
+}
+(function(){ calcCorpSetupROI(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
