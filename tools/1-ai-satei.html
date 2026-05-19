@@ -3580,6 +3580,34 @@
     <div id="cvk_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <div class="card" id="card-hold-5yr-tax">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">⏰ 売却を5年超まで待つと税金はいくら安くなる？「短期 vs 長期」譲渡所得税の差額を試算する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">不動産売却の税率は「保有5年以下（短期）= 約39.6%」と「保有5年超（長期）= 約20.3%」で<strong style="color:#dc2626">約19%の差</strong>があります。今の保有年数によっては「もう少し待てば税金が半分近くになる」ことも。試算してみましょう。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.7">✏️ 下の数字はサンプル値です。ご自分の状況に合わせて書き換えてください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">売却予定価格（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 査定額を参考に</span></label>
+        <input type="number" id="h5t_price" placeholder="例: 4000" value="4000" step="100" min="100" max="100000" oninput="calcHold5yrTax()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">取得費（購入価格・万円）<br><span style="color:rgba(0,0,0,0.3)">例: 購入時の価格。不明なら「売価の5%」とみなし</span></label>
+        <input type="number" id="h5t_cost" placeholder="例: 3000" value="3000" step="100" min="0" max="100000" oninput="calcHold5yrTax()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">現在の保有年数（年）<br><span style="color:rgba(0,0,0,0.3)">例: 購入から今まで3年なら3</span></label>
+        <input type="number" id="h5t_years" placeholder="例: 3" value="3" step="1" min="0" max="30" oninput="calcHold5yrTax()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">居住用（自宅）ですか？<br><span style="color:rgba(0,0,0,0.3)">居住用なら3000万円控除が使えます</span></label>
+        <select id="h5t_resident" onchange="calcHold5yrTax()" style="width:100%;padding:8px 10px;background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="yes" selected>はい（自宅・居住用）</option>
+          <option value="no">いいえ（別荘・投資物件等）</option>
+        </select>
+      </div>
+    </div>
+    <div id="h5t_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11583,6 +11611,74 @@ function calcChukaiVsKaitori() {
   el.innerHTML = heroHtml + gridHtml + timeLine + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcChukaiVsKaitori(); })();
+
+function calcHold5yrTax() {
+  var el = document.getElementById('h5t_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('h5t_price').value) || 0;
+  var cost = parseFloat(document.getElementById('h5t_cost').value) || 0;
+  var years = parseInt(document.getElementById('h5t_years').value) || 0;
+  var isResident = document.getElementById('h5t_resident').value === 'yes';
+
+  // 売却費用概算（仲介手数料等 = 価格×4%）
+  var sellingCost = Math.round(price * 0.04);
+  var gain = Math.max(0, price - cost - sellingCost);
+
+  // 3000万円控除（居住用のみ）
+  var exempt3000 = isResident ? 3000 : 0;
+  var taxableGainShort = Math.max(0, gain - exempt3000);
+  var taxableGainLong = Math.max(0, gain - exempt3000);
+
+  // 短期(5年以下): 所得税30.63% + 住民税9% = 39.63%
+  var SHORT_RATE = 0.3963;
+  // 長期(5年超): 所得税15.315% + 住民税5% = 20.315%
+  var LONG_RATE = 0.20315;
+
+  var taxShort = Math.round(taxableGainShort * SHORT_RATE);
+  var taxLong = Math.round(taxableGainLong * LONG_RATE);
+  var taxDiff = Math.max(0, taxShort - taxLong);
+
+  var isAlreadyLong = years > 5;
+  var yearsToWait = Math.max(0, 6 - years); // 5年超なので6年目が最初の長期
+  var heroColor = isAlreadyLong ? '#16a34a' : taxDiff > 200 ? '#dc2626' : '#c9a84c';
+
+  var heroHtml = '<div style="text-align:center;padding:16px 0 8px">'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">'
+    + (isAlreadyLong ? '既に長期保有！節税済みの税優遇額' : '今すぐ売ると余分にかかる税金') + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + taxDiff.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted)">'
+    + (isAlreadyLong ? '短期と比べた節税済み金額' : '長期保有まで待つと節税できる金額') + '</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">'
+    + '<div style="background:rgba(220,38,38,0.06);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">⚡ 今すぐ売った場合の税額（短期）</div>'
+    + '<div style="font-size:22px;font-weight:900;color:' + (isAlreadyLong ? 'var(--text)' : '#dc2626') + '">' + taxShort.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">税率39.63%' + (isResident ? '（3000万控除適用後）' : '') + '</div>'
+    + '</div>'
+    + '<div style="background:rgba(22,163,74,0.06);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">✅ ' + (isAlreadyLong ? '現在（長期保有）' : '5年超後に売った場合') + 'の税額</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#16a34a">' + taxLong.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">税率20.32%' + (isResident ? '（3000万控除適用後）' : '') + '</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '💡 ' + (isAlreadyLong
+      ? '保有' + years + '年で既に長期譲渡の優遇税率（20.32%）が適用されています。'
+      : 'あと' + yearsToWait + '年待つと長期譲渡（20.32%）になり、税金が' + taxDiff.toLocaleString() + '万円安くなります。ただし待つ間の維持費・機会損失もあるため総合判断が必要です。')
+    + (isResident && gain > 3000 ? '<br>⚠️ 3000万円控除を適用しても課税対象が残っています（売却益' + gain + '万円）。' : isResident ? '<br>✅ 3000万円控除を適用すると課税対象の売却益はゼロです。' : '')
+    + '</div>';
+
+  var shareText = encodeURIComponent('家を今売ると税金' + taxShort + '万円！5年超まで待つと' + taxLong + '万円に。差額' + taxDiff + '万円節税できる可能性があります\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+
+  el.style.display = 'block';
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcHold5yrTax(); })();
 
 // ===== 全ヒーローボックス 前回比バッジ自動注入（非TOP3カード対応） =====
 (function(){
