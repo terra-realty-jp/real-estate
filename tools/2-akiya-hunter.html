@@ -3211,6 +3211,43 @@
     <div id="iwc_result" style="display:none;margin-top:14px"></div>
   </div>
 
+  <div class="card" id="card-neighbor-buy-premium">
+    <div class="card-title" style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gold)">🏘️ 隣の人に買ってもらうと普通より高く売れる！「隣地プレミアム」の上乗せ額を試算する</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">実は「隣の土地が売りに出た」情報は、隣の家の方にとって超貴重です。自分の土地と合わせると「旗竿地が整形地になる」「駐車場が増える」「建物を大きくできる」など価値が劇的に上がるため、10〜30%高い価格で買ってくれることがあります。まず話してみましょう。</p>
+    <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.7">✏️ 下の数字はサンプル値です。実際の状況に合わせて書き換えてください。</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">物件の市場価格（万円）<br><span style="color:rgba(0,0,0,0.3)">例: 不動産会社の査定額</span></label>
+        <input type="number" id="nbp_price" placeholder="例: 1500" value="1500" step="100" min="100" max="100000" oninput="calcNeighborBuyPremium()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:14px;margin-top:4px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">土地の形・状況<br><span style="color:rgba(0,0,0,0.3)">隣地と合わせたときの価値が変わる</span></label>
+        <select id="nbp_type" onchange="calcNeighborBuyPremium()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="flag">旗竿地・細長い土地（隣と合わせると整形地になる）</option>
+          <option value="corner">角地・隣が駐車場を増やしたい状況</option>
+          <option value="normal">普通の整形地（隣に合わせてもあまり価値が変わらない）</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">相談できる隣地の数<br><span style="color:rgba(0,0,0,0.3)">例: 東・西・南など声をかけられる隣</span></label>
+        <select id="nbp_neighbors" onchange="calcNeighborBuyPremium()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="1">1人</option>
+          <option value="2" selected>2人</option>
+          <option value="3">3人以上</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted)">周辺の地価トレンド<br><span style="color:rgba(0,0,0,0.3)">上昇エリアほど隣人の購買意欲が高い</span></label>
+        <select id="nbp_trend" onchange="calcNeighborBuyPremium()" style="width:100%;padding:8px 10px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;color:var(--text);font-size:13px;margin-top:4px">
+          <option value="up">上昇中（都市部・駅近）</option>
+          <option value="flat" selected>横ばい（郊外住宅地）</option>
+          <option value="down">下落中（地方・過疎）</option>
+        </select>
+      </div>
+    </div>
+    <div id="nbp_result" style="display:none;margin-top:14px"></div>
+  </div>
+
   <!-- サマリー -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;" id="pipelineSummary"></div>
 
@@ -10219,6 +10256,66 @@ function calcInheritanceWaiverCost() {
   el.innerHTML = heroHtml + gridHtml + condNoteHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcInheritanceWaiverCost(); })();
+
+function calcNeighborBuyPremium() {
+  var el = document.getElementById('nbp_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('nbp_price').value) || 0;
+  var landType = document.getElementById('nbp_type').value;
+  var neighbors = parseInt(document.getElementById('nbp_neighbors').value) || 2;
+  var trend = document.getElementById('nbp_trend').value;
+
+  // 隣地プレミアム率（土地の形による合算価値アップ）
+  var premiumBase = landType === 'flag' ? 0.25 : landType === 'corner' ? 0.15 : 0.08;
+  // 地価トレンドによる調整
+  var trendAdj = trend === 'up' ? 1.3 : trend === 'down' ? 0.6 : 1.0;
+  // 隣人数が多いほど競争が生まれ交渉力アップ
+  var neighborAdj = neighbors >= 3 ? 1.2 : neighbors === 2 ? 1.1 : 1.0;
+  var effectivePremium = Math.round(premiumBase * trendAdj * neighborAdj * 100) / 100;
+  // 上限30%
+  effectivePremium = Math.min(0.30, effectivePremium);
+
+  var premiumAmt = Math.round(price * effectivePremium);
+  var neighborPrice = price + premiumAmt;
+  // 仲介手数料節約(直接交渉なら半分以下)
+  var normalCommission = Math.round((price * 0.03 + 6) * 1.1);
+  var neighborCommission = Math.round(normalCommission * 0.3); // 直接交渉でほぼ不要or司法書士のみ
+  var totalAdvantage = premiumAmt + normalCommission - neighborCommission;
+
+  var heroColor = totalAdvantage > 200 ? '#16a34a' : totalAdvantage > 50 ? '#c9a84c' : '#16a34a';
+
+  var heroHtml = '<div style="text-align:center;padding:16px 0 8px">'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">隣地交渉で上乗せ期待できる金額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + totalAdvantage.toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted)">プレミアム＋仲介手数料節約の合計</div>'
+    + '</div>';
+
+  var gridHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">'
+    + '<div style="background:rgba(22,163,74,0.06);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏘️ 隣地へ売った場合の期待価格</div>'
+    + '<div style="font-size:22px;font-weight:900;color:#16a34a">' + neighborPrice.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">市場価格比 +' + Math.round(effectivePremium * 100) + '% 上乗せ</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">🏢 仲介会社経由で売った場合</div>'
+    + '<div style="font-size:22px;font-weight:900;color:var(--text)">' + price.toLocaleString() + '<span style="font-size:13px">万円</span></div>'
+    + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">手数料' + normalCommission + '万円差し引き</div>'
+    + '</div>'
+    + '</div>';
+
+  var guideHtml = '<div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7">'
+    + '💡 まず隣人に「売却を検討中」と伝えることが第一歩です。断られても市場売却に進めばOK。プレミアムは土地の合算メリットが大きいほど高くなります（旗竿地が整形地になる場合が最大）。不動産会社に相談すると「隣地交渉の代行」サービスを行っているところもあります。'
+    + '<br><a href="mailto:terra.realty.iam@gmail.com?subject=隣地への売却交渉について相談したい" style="color:var(--gold)">→ TERRA REALTYに無料相談</a></div>';
+
+  var shareText = encodeURIComponent('空き家を隣の人に売ると市場価格より' + Math.round(effectivePremium * 100) + '%（' + premiumAmt + '万円）高く売れるかも！仲介手数料も節約でき合計' + totalAdvantage + '万円トク。知らないと損！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
+  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
+  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+
+  el.style.display = 'block';
+  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+}
+(function(){ calcNeighborBuyPremium(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
