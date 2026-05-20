@@ -3581,6 +3581,25 @@
     </div>
   </div>
 
+
+  <!-- calcRepairFundOwner -->
+  <div class="calc-card" id="card-calcRepairFundOwner">
+    <div class="card-header" onclick="toggleCard('calcRepairFundOwner')">
+      <span>マンションの修繕積立金が不足していたら将来いくら一時金を請求される？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcRepairFundOwner">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">修繕積立金が不足しているマンションでは、大規模修繕の際に1戸あたり数十〜数百万円の「一時金」を求められることがあります。購入前に確認しましょう。</p>
+      <label style="font-size:13px">マンションの総戸数（戸）<span style="color:#888;font-size:11px"> 例: 50</span></label>
+      <input type="number" id="rfo_units" value="50" min="5" max="500" oninput="calcRepairFundOwner()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の積立金残高（万円）<span style="color:#888;font-size:11px"> 例: 1500（管理組合の決算書で確認）</span></label>
+      <input type="number" id="rfo_balance" value="1500" min="0" oninput="calcRepairFundOwner()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">築年数（年）<span style="color:#888;font-size:11px"> 例: 20</span></label>
+      <input type="number" id="rfo_age" value="20" min="1" max="60" oninput="calcRepairFundOwner()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="rfo_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11935,6 +11954,39 @@ function calcMortgageDeduction(){
     +'<button onclick="shareLine(\'住宅ローン控除を13年使うと'+Math.round(totalDeduction).toLocaleString()+'万円が戻ってくる！年平均'+Math.round(totalDeduction/maxYears*10)/10+'万円の減税😳 購入前に確認を👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcMortgageDeduction(); })();
+function calcRepairFundOwner(){
+  var units=parseFloat(document.getElementById('rfo_units').value)||50;
+  var balance=parseFloat(document.getElementById('rfo_balance').value)||1500;
+  var age=parseFloat(document.getElementById('rfo_age').value)||20;
+  var r=document.getElementById('rfo_result');
+  if(!r)return;
+  // 大規模修繕の目安費用（国交省ガイドライン: 外壁・屋上・設備等）
+  // 平均的な修繕費: 1戸あたり100〜150万円（築20〜30年）
+  var repairPerUnit=age>=30?150:age>=20?120:80;
+  var totalRepair=repairPerUnit*units;
+  var shortage=Math.max(0,totalRepair-balance);
+  var perUnit=Math.round(shortage/units);
+  var sufficient=shortage<=0;
+  var heroColor=sufficient?'22,163,74':'220,38,38';
+  var riskLabel=shortage>perUnit*50?'高リスク（一時金が高額）':shortage>0?'要注意（不足あり）':'問題なし';
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba('+heroColor+',0.12),rgba('+heroColor+',0.04));border:2px solid rgba('+heroColor+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">積立金不足額（1戸あたり）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+heroColor+',1);line-height:1">'+(sufficient?0:perUnit.toLocaleString())+'</div>'
+    +'<div style="font-size:13px;color:#374151">万円の一時金リスク</div>'
+    +'<div style="font-size:14px;font-weight:700;color:rgb('+heroColor+');margin-top:8px">'+esc(riskLabel)+'</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 修繕費用の試算</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">推定修繕費用（全体）</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+totalRepair.toLocaleString()+'万円</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">現在の積立金残高</td><td style="padding:6px 8px;text-align:right">'+balance.toLocaleString()+'万円</td></tr>'
+    +'<tr style="background:'+(sufficient?'#f0fdf4':'#fef2f2')+'"><td style="padding:6px 8px;border-bottom:1px solid #eee">不足額（全体）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:'+(sufficient?'#166534':'#dc2626')+'">'+(sufficient?'0（十分）':shortage.toLocaleString()+'万円不足')+'</td></tr>'
+    +'<tr style="background:#fef9c3"><td style="padding:6px 8px;font-weight:700">1戸あたりの一時金リスク</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:#b45309">'+(sufficient?'なし':perUnit.toLocaleString()+'万円')+'</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 購入前に管理組合の「長期修繕計画」と「積立金残高」を必ず確認しましょう。国交省ガイドラインの推奨水準（1戸月200〜400円/㎡）を大きく下回るマンションは要注意です。</div>'
+    +'<button onclick="shareLine(\'マンション購入前に要確認！修繕積立金が足りないと1戸あたり'+(sufficient?0:perUnit)+'万円の一時金を請求される可能性😱 計算してみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcRepairFundOwner(); })();
+
 
 
 var _ownerCat = '';
