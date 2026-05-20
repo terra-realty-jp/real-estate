@@ -3700,6 +3700,24 @@
     </div>
   </div>
 
+  <div class="card" data-category="税金" id="card-calcShortTermSaleTax">
+    <div class="card-header" onclick="toggleCard('calcShortTermSaleTax')">
+      <span>買って5年以内に売ると税率が約2倍！ 短期 vs 長期 譲渡税の差額シミュレーション</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcShortTermSaleTax">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 不動産の譲渡所得税は「5年超保有」と「5年以下」で税率がほぼ2倍変わります（約20% vs 約40%）。「少し待つだけで数百万円の節税」になることも。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の状況に合わせて変更してください。</p>
+      <label style="font-size:13px">売却予定価格（万円）<span style="color:#888;font-size:11px"> 例: 3500</span></label>
+      <input type="number" id="sst_sell" value="3500" min="0" oninput="calcShortTermSaleTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">購入時の取得費合計（万円）<span style="color:#888;font-size:11px"> 例: 3000（購入価格＋諸費用）</span></label>
+      <input type="number" id="sst_cost" value="3000" min="0" oninput="calcShortTermSaleTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の保有年数（年）<span style="color:#888;font-size:11px"> 例: 3（売却時の1月1日時点）</span></label>
+      <input type="number" id="sst_years" value="3" min="0" max="50" oninput="calcShortTermSaleTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="sst_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -12285,6 +12303,34 @@ function calcEcoHomeSubsidy() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🌿 子育てエコホーム支援事業の補助金を試算してみた！\n\n' + note + '→ 約' + Math.round(subsidy) + '万円の補助金が受け取れる！\n' + (isFamily ? '子育て・若者世帯は上乗せあり' : '') + '\n\n新築・リフォームを考えているなら必ずチェック 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcEcoHomeSubsidy(); })();
+
+function calcShortTermSaleTax() {
+  var sell = parseFloat(document.getElementById('sst_sell').value) || 0;
+  var cost = parseFloat(document.getElementById('sst_cost').value) || 0;
+  var years = parseFloat(document.getElementById('sst_years').value) || 0;
+  var el = document.getElementById('sst_result');
+  if (!el) return;
+  var agencyFee = sell * 0.033 + 6;
+  var taxableGain = Math.max(sell - cost - agencyFee, 0);
+  var shortTax = Math.round(taxableGain * 0.3963);
+  var longTax = Math.round(taxableGain * 0.20315);
+  var saving = shortTax - longTax;
+  var waitYears = Math.max(0, 5 - years);
+  var isLong = years > 5;
+  var heroColor = saving > 0 ? '#16a34a' : '#888';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + saving.toLocaleString() + '万円</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">' + (isLong ? '既に長期保有 — 有利な税率が適用されています' : '5年超まで待つと節税できる金額') + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">📋 課税譲渡所得（概算）: <strong>' + Math.round(taxableGain).toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px;color:#dc2626">🔴 短期譲渡税（今すぐ売る場合）: <strong>' + shortTax.toLocaleString() + '万円</strong>（税率39.63%）</div>'
+    + '<div style="margin-bottom:4px;color:#16a34a">🟢 長期譲渡税（5年超待つ場合）: <strong>' + longTax.toLocaleString() + '万円</strong>（税率20.315%）</div>'
+    + '<div style="border-top:1px solid #eee;padding-top:6px;margin-top:4px">⏰ 長期になるまであと: <strong>' + (isLong ? '0年（既に5年超）' : waitYears + '年') + '</strong></div>'
+    + '</div>'
+    + (saving > 0 && !isLong ? '<div style="background:#dcfce7;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px;color:#166534">✅ あと' + waitYears + '年待つだけで' + saving.toLocaleString() + '万円の節税！急いで売る必要がなければ5年超をめどに検討してみましょう。</div>' : '')
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 譲渡費用に仲介手数料（3.3%＋6万円）を含めています。居住用3,000万円控除など特例は別途確認を。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('😨 今すぐ売ると税金' + shortTax + '万円！でも' + (isLong ? '既に長期保有で' : waitYears + '年待てば') + longTax + '万円に減らせる…差額' + saving + '万円の節税を知らずに損している人が多いらしい\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcShortTermSaleTax(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {

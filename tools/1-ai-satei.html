@@ -4236,6 +4236,30 @@
     </div>
   </div>
 
+  <div class="card" data-category="税金計算" id="card-calcHealthInsAfterSale">
+    <div class="card-header" onclick="toggleCard('calcHealthInsAfterSale')">
+      <span>家を売った翌年、健康保険料と住民税がいくら上がる？ 隠れ追加負担を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcHealthInsAfterSale">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 売却益が出ると「翌年6月」に住民税と国保料がまとめて増額請求されます。売却代金を全額使い切る前に、必ずこの「翌年コスト」を確認しておきましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の状況に合わせて変更してください。</p>
+      <label style="font-size:13px">課税譲渡所得（概算）（万円）<span style="color:#888;font-size:11px"> 例: 売値2000万－取得費1500万－諸費用100万＝400万円</span></label>
+      <input type="number" id="his_gain" value="400" min="0" oninput="calcHealthInsAfterSale()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">保有期間<span style="color:#888;font-size:11px"> 売却した年の1月1日時点での年数</span></label>
+      <select id="his_hold" onchange="calcHealthInsAfterSale()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="long">5年超（長期譲渡・税率約20%）</option>
+        <option value="short">5年以下（短期譲渡・税率約40%）</option>
+      </select>
+      <label style="font-size:13px">健康保険の種類<span style="color:#888;font-size:11px"> 会社員は「会社の健康保険」を選択</span></label>
+      <select id="his_ins" onchange="calcHealthInsAfterSale()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="kokuho">国民健康保険（自営業・退職者・専業主婦など）</option>
+        <option value="shakai">会社の健康保険（会社員・公務員）</option>
+      </select>
+      <div id="his_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12290,6 +12314,32 @@ function calcBridgeLoanCost() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('🏠 住み替えで「先買い」vs「先売り・仮住まい」のコスト差を計算してみた！\n\nつなぎ融資: ' + Math.round(bridgeCost / 10000) + '万円 vs 仮住まい: ' + Math.round(tenantCost / 10000) + '万円\n→ ' + cheaper + 'が約' + Math.round(diff / 10000) + '万円お得\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcBridgeLoanCost(); })();
+
+function calcHealthInsAfterSale() {
+  var gain = parseFloat(document.getElementById('his_gain').value) || 0;
+  var hold = document.getElementById('his_hold').value;
+  var ins = document.getElementById('his_ins').value;
+  var el = document.getElementById('his_result');
+  if (!el) return;
+  var incomeTaxRate = hold === 'long' ? 0.15315 : 0.3063;
+  var localTaxRate = hold === 'long' ? 0.05 : 0.09;
+  var incomeTax = Math.round(gain * incomeTaxRate);
+  var localTax = Math.round(gain * localTaxRate);
+  var kokuhoInc = ins === 'kokuho' ? Math.min(Math.round(gain * 0.09), 104) : 0;
+  var totalExtra = incomeTax + localTax + kokuhoInc;
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:#dc2626;line-height:1;margin-bottom:4px">' + totalExtra.toLocaleString() + '万円</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">翌年までの追加負担合計（概算）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">📋 所得税（売却年）: <strong>' + incomeTax.toLocaleString() + '万円</strong>（税率' + (incomeTaxRate * 100).toFixed(3) + '%）</div>'
+    + '<div style="margin-bottom:4px">🏙️ 住民税（翌年6月〜）: <strong>' + localTax.toLocaleString() + '万円</strong>（税率' + (localTaxRate * 100) + '%）</div>'
+    + (ins === 'kokuho' ? '<div style="margin-bottom:4px">🏥 国民健康保険料増加（翌年）: <strong style="color:#dc2626">' + kokuhoInc.toLocaleString() + '万円</strong>（概算・上限104万円）</div>' : '<div style="margin-bottom:4px">🏥 健康保険料: <strong>変化なし</strong>（会社員は給与のみが対象）</div>')
+    + '<div style="border-top:1px solid #eee;padding-top:6px;margin-top:4px">💰 合計追加負担: <strong style="color:#dc2626">' + totalExtra.toLocaleString() + '万円</strong></div>'
+    + '</div>'
+    + '<div style="background:#fff3cd;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px">⚠️ 住民税と国保料は翌年6月にまとめて請求が来ます。売却代金を全て使い切ると翌年に困る方が多いので、この金額を手元に残しておきましょう。</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 居住用財産3,000万円特別控除適用後に課税所得が残る場合の概算。実際の税額は確定申告で計算されます。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('😱 家を売った翌年の隠れコストが' + totalExtra + '万円と判明！\n\n住民税' + localTax + '万円' + (ins === 'kokuho' ? '＋国保料' + kokuhoInc + '万円' : '') + 'が翌年6月に追加請求される…売却代金を使い切る前に必ず確認を！\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcHealthInsAfterSale(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
