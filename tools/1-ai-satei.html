@@ -4013,6 +4013,24 @@
     </div>
   </div>
 
+  <!-- calcSell5Year -->
+  <div class="calc-card" id="card-calcSell5Year">
+    <div class="card-header" onclick="toggleCard('calcSell5Year')">
+      <span>5年以内に売ると税金が倍になる——短期 vs 長期譲渡税率の差と手取り比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSell5Year">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">売却益（譲渡所得）にかかる税率は、所有期間5年を境に大きく変わります。「5年以内（短期）は約39%、5年超（長期）は約20%」——この差が手取りにどう影響するかを試算します。</p>
+      <label style="font-size:13px">売却価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="s5y_price" value="3000" min="0" oninput="calcSell5Year()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">取得費・譲渡費用の合計（万円）<span style="color:#888;font-size:11px"> 例: 2200</span></label>
+      <input type="number" id="s5y_cost" value="2200" min="0" oninput="calcSell5Year()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">所有期間（年）<span style="color:#888;font-size:11px"> 例: 4（5年未満なら税率が高い）</span></label>
+      <input type="number" id="s5y_years" value="4" min="1" max="50" oninput="calcSell5Year()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="s5y_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11687,6 +11705,40 @@ function calcSale3000Special() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcSale3000Special(); })();
+
+function calcSell5Year() {
+  var el = document.getElementById('s5y_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('s5y_price').value) || 0;
+  var cost  = parseFloat(document.getElementById('s5y_cost').value) || 0;
+  var years = parseFloat(document.getElementById('s5y_years').value) || 0;
+  var gain  = Math.max(0, price - cost);
+  var isShort = years <= 5;
+  var rateShort = 39.63; // 所得税30%+住民税9%+復興税0.63%
+  var rateLong  = 20.315; // 所得税15%+住民税5%+復興税0.315%
+  var taxShort = Math.round(gain * rateShort / 100);
+  var taxLong  = Math.round(gain * rateLong  / 100);
+  var takShort = Math.round(price - taxShort);
+  var takLong  = Math.round(price - taxLong);
+  var diff = taxShort - taxLong;
+  var appliedTax = isShort ? taxShort : taxLong;
+  var appliedTake = isShort ? takShort : takLong;
+  var color = isShort ? '220,38,38' : '22,163,74';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">'+(isShort?'⚠ 短期譲渡（5年以内）——税率39.63%':'✅ 長期譲渡（5年超）——税率20.315%')+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">▲'+esc(appliedTax.toLocaleString())+'万円</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">税引き後手取り <strong>'+esc(appliedTake.toLocaleString())+'万円</strong></div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">項目</th><th style="padding:6px;text-align:right">短期（5年以内）</th><th style="padding:6px;text-align:right">長期（5年超）</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">税率</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">39.63%</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#16a34a">20.315%</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">税額</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">'+esc(taxShort.toLocaleString())+'万円</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#16a34a">'+esc(taxLong.toLocaleString())+'万円</td></tr>'
+    +'<tr><td style="padding:6px">手取り</td><td style="padding:6px;text-align:right;color:#dc2626">'+esc(takShort.toLocaleString())+'万円</td><td style="padding:6px;text-align:right;color:#16a34a">'+esc(takLong.toLocaleString())+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 所有5年を超えてから売ると税金が<strong>'+esc(diff.toLocaleString())+'万円</strong>節約できます。売り急ぎは損！</div>'
+    +'<button onclick="shareLine(\'売却タイミングで'+esc(diff.toLocaleString())+'万円変わると知ってびっくり😱 5年以内に売ると短期譲渡税率39.63%！長期なら20.315%に下がるのに…急いで売って損しないために無料ツールで確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcSell5Year(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
