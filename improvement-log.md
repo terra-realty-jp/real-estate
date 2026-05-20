@@ -4194,3 +4194,16 @@
   - Tool5: calcSmallLandSpecial — 小規模宅地等の特例による土地評価額最大80%減額と相続税節税額試算
 - **理由**: 「知らないと損する制度・隠れコスト」系カードは驚きを生んでLINEシェアを促す
 - **カード総数**: 622枚
+
+## 2026-05-21 Round 27（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 27）
+- **改善内容**:
+  - Tool1: calcCostBasisFlat — 書類紛失時の5%概算取得費ルールで増える税額試算
+  - Tool2: calcAkiyaPipingRisk — 空き家の配管老朽化リスク判定・修繕費比較
+  - Tool3: calcEnergyStandardImpact — 2024年省エネ基準義務化・中古住宅の資産価値割引リスク試算
+  - Tool4: calcWaterHeaterReplace — 給湯器の計画交換vs緊急交換の空室損失込みコスト比較
+  - Tool5: calcVariableRateBomb — 変動金利の5年ルール・125%ルールで発生する未払い利息リスク試算
+- **理由**: 「知らないと損する」系（隠れコスト・制度の落とし穴）カードは特にPLG効果が高い
+- **カード総数**: 627枚
