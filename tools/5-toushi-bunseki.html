@@ -3764,6 +3764,26 @@
     </div>
   </div>
 
+  <!-- calcSaleTimingROI -->
+  <div class="calc-card" id="card-calcSaleTimingROI">
+    <div class="card-header" onclick="toggleCard('calcSaleTimingROI')">
+      <span>売却タイミング別の総投資収益率（ROI）——5年・10年・15年保有でどれが一番お得？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSaleTimingROI">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">同じ物件を5年・10年・15年後に売った場合、家賃収入＋売却益を合わせた総ROI（投資回収率）がどう変わるかをシミュレーションします。</p>
+      <label style="font-size:13px">物件購入価格（万円）<span style="color:#888;font-size:11px"> 例: 4000</span></label>
+      <input type="number" id="str_buy" value="4000" min="0" oninput="calcSaleTimingROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">自己資金（頭金）（万円）<span style="color:#888;font-size:11px"> 例: 400</span></label>
+      <input type="number" id="str_down" value="400" min="0" oninput="calcSaleTimingROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間CF（手残り）（万円）<span style="color:#888;font-size:11px"> 例: 30</span></label>
+      <input type="number" id="str_cf" value="30" min="0" oninput="calcSaleTimingROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間物件価格の変動率（%）<span style="color:#888;font-size:11px"> 例: -1（年1%下落）または 0（維持）</span></label>
+      <input type="number" id="str_chg" value="-1" step="0.5" oninput="calcSaleTimingROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="str_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -14149,6 +14169,47 @@ function calcReitCompare() {
     +'<button onclick="shareLine(\'同じ'+esc(capital)+'万円を直接投資とJ-REITで比べたら5年で'+esc(Math.abs(diff).toLocaleString())+'万円も差が出た！どっちがいいか迷ってる人はシミュレーションしてみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcReitCompare(); })();
+
+function calcSaleTimingROI() {
+  var el = document.getElementById('str_result');
+  if (!el) return;
+  var buy  = parseFloat(document.getElementById('str_buy').value)  || 0;
+  var down = parseFloat(document.getElementById('str_down').value) || 0;
+  var cf   = parseFloat(document.getElementById('str_cf').value)   || 0;
+  var chg  = parseFloat(document.getElementById('str_chg').value)  || 0;
+  function calcROI(years) {
+    var salePrice = Math.round(buy * Math.pow(1 + chg/100, years));
+    var totalCF   = cf * years;
+    var gain      = salePrice - buy;
+    var totalReturn = totalCF + gain;
+    var roi = down > 0 ? Math.round(totalReturn / down * 1000) / 10 : 0;
+    return { years: years, salePrice: salePrice, totalCF: totalCF, gain: gain, totalReturn: totalReturn, roi: roi };
+  }
+  var r5  = calcROI(5);
+  var r10 = calcROI(10);
+  var r15 = calcROI(15);
+  var best = r15.roi >= r10.roi && r15.roi >= r5.roi ? '15年後が最大リターン' :
+             r10.roi >= r5.roi ? '10年後が最大リターン' : '5年後が最大リターン';
+  var color = r10.roi >= 0 ? '22,163,74' : '220,38,38';
+  function row(r, colr) {
+    var isP = r.totalReturn >= 0;
+    return '<tr><td style="padding:6px;border-bottom:1px solid #eee">'+r.years+'年後（'+esc(r.salePrice.toLocaleString())+'万円で売却）</td>'
+      +'<td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+(isP?'+':'')+esc(r.totalReturn.toLocaleString())+'万円</td>'
+      +'<td style="padding:6px;text-align:right;border-bottom:1px solid #eee;font-weight:700;color:rgba('+colr+',1)">'+(r.roi>=0?'+':'')+esc(r.roi)+'%</td></tr>';
+  }
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">'+esc(best)+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">ROI '+esc(r10.roi)+'%</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">（10年後の自己資金対収益率）</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">売却時期</th><th style="padding:6px;text-align:right">総リターン</th><th style="padding:6px;text-align:right">ROI</th></tr>'
+    +row(r5, '201,168,76')+row(r10, '22,163,74')+row(r15, '59,130,246')
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 物件価格が年1%下落しても、CF（年間手残り）が積み上がるほど長期保有の方が有利になるケースが多いです。</div>'
+    +'<button onclick="shareLine(\'同じ物件を5年・10年・15年後に売ったらROIが'+esc(r5.roi)+'%→'+esc(r10.roi)+'%→'+esc(r15.roi)+'%と変わった！売り時って大事😲 シミュレーションしてみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcSaleTimingROI(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
