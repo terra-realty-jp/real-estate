@@ -4057,6 +4057,26 @@
     </div>
   </div>
 
+  <!-- calcLoanTypeCompare -->
+  <div class="calc-card" id="card-calcLoanTypeCompare">
+    <div class="card-header" onclick="toggleCard('calcLoanTypeCompare')">
+      <span>変動金利 vs 固定金利——30年間の総返済額の差はいくら？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcLoanTypeCompare">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">変動金利は今は低金利ですが、将来の金利上昇リスクがあります。固定金利は毎月の返済が確定する安心感があります。30年間の総返済額を比較して、どちらが自分に向いているか判断しましょう。</p>
+      <label style="font-size:13px">借入額（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="ltc_loan" value="3000" min="0" oninput="calcLoanTypeCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">変動金利（年%）<span style="color:#888;font-size:11px"> 例: 0.5（2024年現在の一般的な水準）</span></label>
+      <input type="number" id="ltc_variable" value="0.5" min="0" step="0.1" oninput="calcLoanTypeCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">固定金利（年%）<span style="color:#888;font-size:11px"> 例: 1.8（フラット35の目安）</span></label>
+      <input type="number" id="ltc_fixed" value="1.8" min="0" step="0.1" oninput="calcLoanTypeCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">変動金利の将来上昇シナリオ（年%）<span style="color:#888;font-size:11px"> 例: 2.0（10年後に上昇した場合）</span></label>
+      <input type="number" id="ltc_varrise" value="2.0" min="0" step="0.1" oninput="calcLoanTypeCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="ltc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14324,6 +14344,50 @@ function calcCapRateScenario() {
     +'<button onclick="shareLine(\'家賃'+esc(rent)+'万円の物件、悲観シナリオ60%稼働だと年CF'+esc(worstCF)+'万円になる計算😳 3シナリオで投資可否を確認してみた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcCapRateScenario(); })();
+
+function calcLoanTypeCompare() {
+  var el = document.getElementById('ltc_result');
+  if (!el) return;
+  var loan    = parseFloat(document.getElementById('ltc_loan').value)     || 0;
+  var varRate = parseFloat(document.getElementById('ltc_variable').value) || 0;
+  var fixRate = parseFloat(document.getElementById('ltc_fixed').value)    || 0;
+  var varRise = parseFloat(document.getElementById('ltc_varrise').value)  || 0;
+  var years = 30;
+  // 元利均等返済の月返済額
+  function monthlyPayment(principal, annualRate, totalMonths) {
+    if (annualRate === 0) return principal / totalMonths;
+    var r = annualRate / 100 / 12;
+    return principal * r * Math.pow(1+r, totalMonths) / (Math.pow(1+r, totalMonths) - 1);
+  }
+  var totalMonths = years * 12;
+  // 変動（現在の低金利で10年 + 上昇後で20年）
+  var varPayLow  = monthlyPayment(loan, varRate, totalMonths);
+  var varTotal1  = varPayLow * 10 * 12; // 最初の10年
+  var remain10   = loan - (varPayLow * 10 * 12 - loan * varRate/100 * 10); // 概算残債
+  var remain10v  = Math.max(0, loan * (1 - 10/years * 0.7)); // 簡略残債
+  var varPayHigh = monthlyPayment(remain10v, varRise, 20 * 12);
+  var varTotal2  = varPayHigh * 20 * 12;
+  var varTotal   = Math.round(varTotal1 + varTotal2);
+  // 固定（30年間固定）
+  var fixPay   = monthlyPayment(loan, fixRate, totalMonths);
+  var fixTotal = Math.round(fixPay * totalMonths);
+  var diff = varTotal - fixTotal;
+  var isCheaper = diff < 0; // 変動の方が安い
+  var color = isCheaper ? '22,163,74' : '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">変動（金利上昇後）と固定の総返済額差</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(diff>=0?'+':'')+esc(Math.round(diff).toLocaleString())+'万円</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">'+(isCheaper?'変動金利の方が安い（金利が上がらなければ）':'金利上昇後は固定の方が安い')+'</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">ローン種別</th><th style="padding:6px;text-align:right">30年総返済額</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">変動金利（上昇シナリオ）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(varTotal.toLocaleString())+'万円</td></tr>'
+    +'<tr><td style="padding:6px">固定金利（'+fixRate+'%）</td><td style="padding:6px;text-align:right">'+esc(fixTotal.toLocaleString())+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 変動金利が上昇しなければ変動の方が安いです。「金利が何%以上になったら固定の方が得か」は上記の比較で判断できます。</div>'
+    +'<button onclick="shareLine(\'変動→'+varRate+'%→'+varRise+'%上昇シナリオと固定'+fixRate+'%の30年総返済額が'+esc(Math.abs(Math.round(diff)).toLocaleString())+'万円も違う😱 住宅ローン選びは大事！計算してみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcLoanTypeCompare(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
