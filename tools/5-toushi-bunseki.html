@@ -3708,6 +3708,22 @@
     </div>
   </div>
 
+  <!-- calcAfterTaxCF -->
+  <div class="calc-card" id="card-calcAfterTaxCF">
+    <div class="card-header" onclick="toggleCard('calcAfterTaxCF')">
+      <span>投資物件の「税引き後」年間キャッシュフロー——所得税を払った後の本当の手残りを確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAfterTaxCF">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">不動産投資の収益は最終的に「税引き後」の金額が手残りになります。家賃収入から経費・ローン返済・所得税を引いた「本当の年間手残り」を確認しましょう。</p>
+      <label>年間家賃収入（例：240万円なら240）<br><input type="number" id="atcf_rent" value="240" min="10" max="10000" step="10" oninput="calcAfterTaxCF()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">年間経費（管理費・修繕・減価償却等　例：60万円なら60）<br><input type="number" id="atcf_expense" value="60" min="0" max="5000" step="10" oninput="calcAfterTaxCF()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">年間ローン返済額（例：120万円なら120）<br><input type="number" id="atcf_loan" value="120" min="0" max="5000" step="10" oninput="calcAfterTaxCF()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">所得税率（例：20%なら20）<br><input type="number" id="atcf_taxrate" value="20" min="5" max="45" step="1" oninput="calcAfterTaxCF()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> %</label>
+      <div id="atcf_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -13996,6 +14012,41 @@ function calcJointSaleExit() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcJointSaleExit(); })();
+
+function calcAfterTaxCF() {
+  var el = document.getElementById('atcf_result');
+  if (!el) return;
+  var rent    = parseFloat(document.getElementById('atcf_rent').value) || 0;
+  var expense = parseFloat(document.getElementById('atcf_expense').value) || 0;
+  var loan    = parseFloat(document.getElementById('atcf_loan').value) || 0;
+  var taxrate = parseFloat(document.getElementById('atcf_taxrate').value) || 0;
+  var netIncome = Math.max(0, rent - expense);
+  var tax       = Math.round(netIncome * taxrate / 100);
+  var cfBefore  = Math.round(rent - expense - loan);
+  var cfAfter   = Math.round(rent - expense - loan - tax);
+  var roi       = rent > 0 ? Math.round(cfAfter / rent * 1000) / 10 : 0;
+  var isProfit  = cfAfter > 0;
+  var color     = isProfit ? '22,163,74' : '220,38,38';
+  var label     = isProfit ? '税引き後で年間'+cfAfter+'万円の手残りがあります' : '税引き後はマイナス'+Math.abs(cfAfter)+'万円の赤字です';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">税引き後の年間手残り（真のCF）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(isProfit?'+':'')+cfAfter+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">年間家賃収入</td><td style="padding:6px 8px;text-align:right;font-weight:700">+'+rent+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">年間経費</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">−'+expense+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">年間ローン返済</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">−'+loan+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">税前CF</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+(cfBefore>=0?'+':'')+cfBefore+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">所得税（'+taxrate+'%）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">−'+tax+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px;font-weight:700">税引き後CF（真の手残り）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+(isProfit?'+':'')+cfAfter+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 経費に減価償却を計上するとネット収入（課税所得）が下がり税金を抑えられます</p>';
+  var shareText = '不動産投資、家賃'+rent+'万円でも所得税'+tax+'万円を引くと実際の手残りは'+cfAfter+'万円！税引き前'+cfBefore+'万円との差に驚く #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcAfterTaxCF(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
