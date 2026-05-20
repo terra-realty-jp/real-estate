@@ -3458,6 +3458,30 @@
     </div>
   </div>
 
+  <!-- calcHouseAgeDiscount -->
+  <div class="calc-card" id="card-calcHouseAgeDiscount">
+    <div class="card-header" onclick="toggleCard('calcHouseAgeDiscount')">
+      <span>築年数が上がるほど価格は下がる——10年後・20年後の物件価値をシミュレーション</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcHouseAgeDiscount">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">不動産の建物価値は築年数に応じて下落します。木造・RC・軽量鉄骨の3構造別に、将来の物件価値と売却可能額の目安を確認できます。</p>
+      <label style="font-size:13px">現在の物件価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="had_price" value="3000" min="0" oninput="calcHouseAgeDiscount()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の築年数（年）<span style="color:#888;font-size:11px"> 例: 10</span></label>
+      <input type="number" id="had_age" value="10" min="0" max="80" oninput="calcHouseAgeDiscount()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">構造</label>
+      <select id="had_type" onchange="calcHouseAgeDiscount()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="22">木造（法定耐用年数22年）</option>
+        <option value="34" selected>軽量鉄骨（34年）</option>
+        <option value="47">RC・鉄筋コンクリート（47年）</option>
+      </select>
+      <label style="font-size:13px">土地価格の割合（%）<span style="color:#888;font-size:11px"> 例: 40（土地は価値が下がりにくい）</span></label>
+      <input type="number" id="had_land" value="40" min="0" max="100" oninput="calcHouseAgeDiscount()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="had_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11584,6 +11608,43 @@ function calcEarlyRepayEffect() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcEarlyRepayEffect(); })();
+
+function calcHouseAgeDiscount() {
+  var el = document.getElementById('had_result');
+  if (!el) return;
+  var price   = parseFloat(document.getElementById('had_price').value) || 0;
+  var age     = parseFloat(document.getElementById('had_age').value) || 0;
+  var life    = parseFloat(document.getElementById('had_type').value) || 34;
+  var landPct = parseFloat(document.getElementById('had_land').value) || 40;
+  var landVal = price * landPct / 100;
+  var bldVal  = price - landVal;
+  // 残存耐用年数による建物残価（定率法的に線形で計算・簡略化）
+  function bldAtAge(a) {
+    var remain = Math.max(0, life - a);
+    var ratio  = remain / life;
+    return bldVal * ratio;
+  }
+  var now10  = Math.round(landVal + bldAtAge(age + 10));
+  var now20  = Math.round(landVal + bldAtAge(age + 20));
+  var drop10 = price - now10;
+  var drop20 = price - now20;
+  var color10 = '201,168,76';
+  var color20 = '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color20+',0.12),rgba('+color20+',0.04));border:2px solid rgba('+color20+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color20+',1);margin-bottom:4px">20年後の推定価格（土地込み）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color20+',1);line-height:1.1">'+esc(now20.toLocaleString())+'万円</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">現在より <strong style="color:#dc2626">-'+esc(drop20.toLocaleString())+'万円（約'+Math.round(drop20/price*100)+'%下落）</strong></div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">時点</th><th style="padding:6px;text-align:right">推定価格</th><th style="padding:6px;text-align:right">下落額</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">現在（築'+Math.round(age)+'年）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(price.toLocaleString())+'万円</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">——</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">10年後（築'+Math.round(age+10)+'年）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#ca8a04">'+esc(now10.toLocaleString())+'万円</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#ca8a04">-'+esc(drop10.toLocaleString())+'万円</td></tr>'
+    +'<tr><td style="padding:6px">20年後（築'+Math.round(age+20)+'年）</td><td style="padding:6px;text-align:right;color:#dc2626">'+esc(now20.toLocaleString())+'万円</td><td style="padding:6px;text-align:right;color:#dc2626">-'+esc(drop20.toLocaleString())+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 建物価値は年数とともに下落しますが、土地価値は維持されやすいです。売り時は「建物がまだ価値を持つうちに」が基本です。</div>'
+    +'<button onclick="shareLine(\'このまま20年待つと家の価格が'+esc(drop20.toLocaleString())+'万円も下がるかも😱 築年数と構造別の価値下落シミュレーション、意外と怖い数字が出た👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcHouseAgeDiscount(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
