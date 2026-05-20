@@ -3693,6 +3693,21 @@
     </div>
   </div>
 
+  <!-- calcJointSaleExit -->
+  <div class="calc-card" id="card-calcJointSaleExit">
+    <div class="card-header" onclick="toggleCard('calcJointSaleExit')">
+      <span>共同購入物件の出口——持分だけ売る vs 全体を売却する、手取りの差は？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcJointSaleExit">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">複数人で購入した物件から抜けたい場合、「自分の持分だけを売る」か「共同者と合意して全体を売る」かで手取りが大きく変わります。持分売却は価格が安くなる傾向があります。</p>
+      <label>物件全体の現在価値（例：5000万円なら5000）<br><input type="number" id="jse_total" value="5000" min="100" max="100000" step="100" oninput="calcJointSaleExit()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">自分の持分割合（例：50%なら50）<br><input type="number" id="jse_share" value="50" min="1" max="99" step="1" oninput="calcJointSaleExit()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> %</label>
+      <label style="display:block;margin-top:8px">持分売却時の価格ディスカウント率（例：通常20%安なら20）<br><input type="number" id="jse_discount" value="20" min="0" max="50" step="1" oninput="calcJointSaleExit()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> %</label>
+      <div id="jse_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -13949,6 +13964,38 @@ function calcBuildingAgeScore() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcBuildingAgeScore(); })();
+
+function calcJointSaleExit() {
+  var el = document.getElementById('jse_result');
+  if (!el) return;
+  var total    = parseFloat(document.getElementById('jse_total').value) || 0;
+  var share    = parseFloat(document.getElementById('jse_share').value) || 0;
+  var discount = parseFloat(document.getElementById('jse_discount').value) || 0;
+  var myShareVal     = Math.round(total * share / 100);
+  var discountedVal  = Math.round(myShareVal * (1 - discount / 100));
+  var feeFull        = Math.round((myShareVal * 0.03 + 6) * 1.1);
+  var feePartial     = Math.round((discountedVal * 0.03 + 6) * 1.1);
+  var netFull        = myShareVal - feeFull;
+  var netPartial     = discountedVal - feePartial;
+  var diff           = netFull - netPartial;
+  var color          = '22,163,74';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">全体売却の方が持分売却より多く手取れる額</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">+'+diff+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">共同者を説得して全体売却できれば'+diff+'万円多く手元に残る</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"></td><td style="padding:6px 8px;text-align:center;font-weight:700">全体売却（推奨）</td><td style="padding:6px 8px;text-align:center;font-weight:700">持分のみ売却</td></tr>';
+  html += '<tr><td style="padding:6px 8px">売却額</td><td style="padding:6px 8px;text-align:right">'+myShareVal+'万円</td><td style="padding:6px 8px;text-align:right">'+discountedVal+'万円（'+discount+'%安）</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">仲介手数料</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">−'+feeFull+'万円</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">−'+feePartial+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px;font-weight:700">手取り額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">'+netFull+'万円</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+netPartial+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 持分売却の価格ディスカウントは市場・相手次第で変動します。共同者との協議が困難な場合は裁判所を通じた「共有物分割」も選択肢です</p>';
+  var shareText = '共有物件の持分（'+share+'%）だけを売ると'+discount+'%安くなり、全体で売るより'+diff+'万円損する！共同者を説得して一緒に売る価値がある #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcJointSaleExit(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
