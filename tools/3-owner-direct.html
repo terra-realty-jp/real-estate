@@ -3600,6 +3600,25 @@
     </div>
   </div>
 
+
+  <!-- calcNewVsRenovate -->
+  <div class="calc-card" id="card-calcNewVsRenovate">
+    <div class="card-header" onclick="toggleCard('calcNewVsRenovate')">
+      <span>中古＋リフォームと新築購入、20年間のトータルコストはどちらが安い？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcNewVsRenovate">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">「中古は安いけどリフォームが必要」「新築は高いけど当面安心」。20年間のトータルコストを比較して、本当にどちらが得か確認しましょう。</p>
+      <label style="font-size:13px">新築価格（万円）<span style="color:#888;font-size:11px"> 例: 4500</span></label>
+      <input type="number" id="nvr_new" value="4500" min="0" oninput="calcNewVsRenovate()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">中古物件価格（万円）<span style="color:#888;font-size:11px"> 例: 2800</span></label>
+      <input type="number" id="nvr_used" value="2800" min="0" oninput="calcNewVsRenovate()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">リフォーム費用（万円）<span style="color:#888;font-size:11px"> 例: 500（水回り・外壁等）</span></label>
+      <input type="number" id="nvr_reform" value="500" min="0" oninput="calcNewVsRenovate()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="nvr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11954,6 +11973,53 @@ function calcMortgageDeduction(){
     +'<button onclick="shareLine(\'住宅ローン控除を13年使うと'+Math.round(totalDeduction).toLocaleString()+'万円が戻ってくる！年平均'+Math.round(totalDeduction/maxYears*10)/10+'万円の減税😳 購入前に確認を👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcMortgageDeduction(); })();
+function calcNewVsRenovate(){
+  var newPrice=parseFloat(document.getElementById('nvr_new').value)||4500;
+  var usedPrice=parseFloat(document.getElementById('nvr_used').value)||2800;
+  var reform=parseFloat(document.getElementById('nvr_reform').value)||500;
+  var r=document.getElementById('nvr_result');
+  if(!r)return;
+  var calcRepay=function(price){
+    var loan=price*0.9;
+    var yr=0.008/12;
+    var n=35*12;
+    return loan*10000*yr*Math.pow(1+yr,n)/(Math.pow(1+yr,n)-1);
+  };
+  var newRepay=calcRepay(newPrice);
+  var newDown=newPrice*0.1+newPrice*0.06;
+  var newRepair20=newPrice*0.005*20;
+  var newTotal20=newDown+(newRepay*20*12/10000)+newRepair20;
+  var newSaleValue=newPrice*0.4*0.96;
+  var newNet=newTotal20-newSaleValue;
+  var usedTotal=usedPrice+reform;
+  var usedRepay=calcRepay(usedTotal);
+  var usedDown=usedTotal*0.1+usedTotal*0.06;
+  var usedRepair20=usedPrice*0.008*20;
+  var usedTotal20=usedDown+(usedRepay*20*12/10000)+usedRepair20;
+  var usedSaleValue=usedPrice*0.3*0.96;
+  var usedNet=usedTotal20-usedSaleValue;
+  var newWins=newNet<usedNet;
+  var diff=Math.abs(newNet-usedNet);
+  var heroColor=newWins?'59,130,246':'22,163,74';
+  var winnerLabel=newWins?'新築':'中古+リフォーム';
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba('+heroColor+',0.12),rgba('+heroColor+',0.04));border:2px solid rgba('+heroColor+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">20年間の実質コスト比較</div>'
+    +'<div style="display:flex;justify-content:space-around;align-items:flex-end;gap:12px;margin-bottom:8px">'
+    +'<div style="text-align:center"><div style="font-size:11px;color:#888;margin-bottom:2px">新築</div>'
+    +'<div style="font-size:40px;font-weight:900;color:rgba('+(newWins?'22,163,74':'220,38,38')+',1);line-height:1">'+Math.round(newNet).toLocaleString()+'</div>'
+    +'<div style="font-size:11px;color:#888">万円</div></div>'
+    +'<div style="font-size:20px;font-weight:700;color:#9ca3af">vs</div>'
+    +'<div style="text-align:center"><div style="font-size:11px;color:#888;margin-bottom:2px">中古+リフォーム</div>'
+    +'<div style="font-size:40px;font-weight:900;color:rgba('+(!newWins?'22,163,74':'220,38,38')+',1);line-height:1">'+Math.round(usedNet).toLocaleString()+'</div>'
+    +'<div style="font-size:11px;color:#888">万円</div></div>'
+    +'</div>'
+    +'<div style="font-size:14px;font-weight:700;color:rgb('+heroColor+')">→ '+esc(winnerLabel)+'の方が約'+Math.round(diff).toLocaleString()+'万円お得（20年間）</div>'
+    +'</div>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 中古は価格が安い分、修繕費・設備更新費が増えます。新築は資産価値の下落スピードが速い（購入直後で10〜20%下落）ため、長期保有か転売かで判断が変わります。</div>'
+    +'<button onclick="shareLine(\'新築vs中古+リフォーム20年トータル試算！差額は約'+Math.round(diff).toLocaleString()+'万円😮 '+esc(winnerLabel)+'の方が結果的にお得かも👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcNewVsRenovate(); })();
+
 function calcRepairFundOwner(){
   var units=parseFloat(document.getElementById('rfo_units').value)||50;
   var balance=parseFloat(document.getElementById('rfo_balance').value)||1500;
