@@ -4124,6 +4124,23 @@
     </div>
   </div>
 
+
+  <!-- calcPriceReductionFee -->
+  <div class="card" data-category="売却・費用" id="card-calcPriceReductionFee">
+    <div class="card-header" onclick="toggleCard('calcPriceReductionFee')">
+      <span>値引き交渉に応じると仲介手数料はいくら減る？ 値引き額vs手数料削減の損得</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcPriceReductionFee">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">買主から「○○万円値引いてほしい」と言われたとき、売値が下がると仲介手数料も減ります。「値引きの損失」と「手数料の減少」を合わせた実質的な影響を計算します。</p>
+      <label style="font-size:13px">売り出し価格（万円）<span style="color:#888;font-size:11px"> 例: 3500</span></label>
+      <input type="number" id="prf_list" value="3500" min="0" oninput="calcPriceReductionFee()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">値引き希望額（万円）<span style="color:#888;font-size:11px"> 例: 100</span></label>
+      <input type="number" id="prf_cut" value="100" min="0" oninput="calcPriceReductionFee()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="prf_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12003,6 +12020,35 @@ function calcHome3000Deduction(){
     +'<button onclick="shareLine(\'マイホーム売却で3000万円控除を使ったら'+saving.toLocaleString()+'万円節税！控除なしなら'+taxWithout.toLocaleString()+'万円の税金がかかるところだった😱 計算してみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcHome3000Deduction(); })();
+function calcPriceReductionFee(){
+  var list=parseFloat(document.getElementById('prf_list').value)||3500;
+  var cut=parseFloat(document.getElementById('prf_cut').value)||100;
+  var r=document.getElementById('prf_result');
+  if(!r)return;
+  var feeCalc=function(p){ return p<=200?p*0.05 : p<=400?10+p*0.04 : 18+p*0.03; };
+  var feeList=feeCalc(list);
+  var feeSale=feeCalc(list-cut);
+  var feeDiff=feeList-feeSale;
+  var actualLoss=cut-feeDiff; // 実質損失（値引き額から手数料削減を差し引き）
+  var heroColor=actualLoss<cut*0.9?'22,163,74':'220,38,38';
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba('+heroColor+',0.12),rgba('+heroColor+',0.04));border:2px solid rgba('+heroColor+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">'+cut+'万円値引き時の手取り減少額（実質）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+heroColor+',1);line-height:1">'+Math.round(actualLoss).toLocaleString()+'</div>'
+    +'<div style="font-size:13px;color:#374151">万円の実質損失（値引き'+cut+'万円から手数料削減'+Math.round(feeDiff*10)/10+'万円を差引）</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 値引き前後の比較</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">売り出し価格</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+Math.round(list).toLocaleString()+'万円</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">値引き後の成約価格</td><td style="padding:6px 8px;text-align:right">'+Math.round(list-cut).toLocaleString()+'万円</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">仲介手数料（値引き前）</td><td style="padding:6px 8px;text-align:right">'+Math.round(feeList*10)/10+'万円</td></tr>'
+    +'<tr style="background:#f0fdf4"><td style="padding:6px 8px;border-bottom:1px solid #eee">仲介手数料（値引き後）</td><td style="padding:6px 8px;text-align:right;color:#166534">'+Math.round(feeSale*10)/10+'万円（▲'+Math.round(feeDiff*10)/10+'万円）</td></tr>'
+    +'<tr style="background:#fef9c3"><td style="padding:6px 8px;font-weight:700">実質の手取り減少</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:#b45309">'+Math.round(actualLoss).toLocaleString()+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 値引きに応じると仲介手数料も連動して下がります。「100万円値引き=100万円損」ではなく、実際は'+Math.round(actualLoss)+'万円の損です。空室期間のコストと比較して判断しましょう。</div>'
+    +'<button onclick="shareLine(\'値引き交渉で'+cut+'万円下げても、仲介手数料が'+Math.round(feeDiff*10)/10+'万円減るから実質'+Math.round(actualLoss).toLocaleString()+'万円の損失！知らないと損する計算👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcPriceReductionFee(); })();
+
 
 
 var _sateiCat = '';
