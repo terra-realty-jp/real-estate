@@ -4215,6 +4215,22 @@
     </div>
   </div>
 
+  <div class="card" data-category="設備・リノベ" id="card-calcWaterHeaterReplace">
+    <div class="card-header" onclick="toggleCard('calcWaterHeaterReplace')">
+      <span>給湯器を「計画的に交換」vs「壊れてから緊急交換」どちらが安い？ コスト比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcWaterHeaterReplace">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 給湯器の平均寿命は10〜15年。壊れてから緊急交換すると、通常交換より5〜10万円以上高くなることがほとんど。さらに修理待ちで入居者が退去するリスクも。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。物件の状況に合わせて変更してください。</p>
+      <label style="font-size:13px">現在の給湯器の使用年数（年）<span style="color:#888;font-size:11px"> 例: 12</span></label>
+      <input type="number" id="whr_age" value="12" min="0" max="30" oninput="calcWaterHeaterReplace()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 7</span></label>
+      <input type="number" id="whr_rent" value="7" min="0" step="0.5" oninput="calcWaterHeaterReplace()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="whr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="設備・リノベ" id="card-calcFreeWifiROI">
     <div class="card-header" onclick="toggleCard('calcFreeWifiROI')">
       <span>「インターネット無料」を導入すると入居率と賃料はどう変わる？ 費用対効果試算</span>
@@ -14778,6 +14794,35 @@ function calcRentDelinquency() {
   }
 }
 (function(){ calcRentDelinquency(); })();
+
+function calcWaterHeaterReplace() {
+  var age = parseFloat(document.getElementById('whr_age').value) || 0;
+  var rent = parseFloat(document.getElementById('whr_rent').value) || 0;
+  var el = document.getElementById('whr_result');
+  if (!el) return;
+  var plannedCost = 15;
+  var emergencyCost = 25;
+  var vacancyMonths = 1.5;
+  var vacancyLoss = Math.round(rent * vacancyMonths);
+  var emergencyTotal = emergencyCost + vacancyLoss;
+  var saving = emergencyTotal - plannedCost;
+  var urgency = age >= 15 ? '今すぐ交換推奨' : age >= 12 ? '計画的な交換を検討' : 'まだ余裕あり';
+  var urgencyColor = age >= 15 ? '#dc2626' : age >= 12 ? '#c9a84c' : '#16a34a';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:#16a34a;line-height:1;margin-bottom:4px">' + saving.toLocaleString() + '万円</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">計画交換で防げる緊急交換時との差額</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">📅 現在の使用年数: <strong style="color:' + urgencyColor + '">' + age + '年 — ' + urgency + '</strong></div>'
+    + '<div style="margin-bottom:4px;border-top:1px solid #eee;padding-top:6px">🔧 計画的交換のコスト: <strong style="color:#16a34a">' + plannedCost + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">⚠️ 緊急交換のコスト: <strong style="color:#dc2626">' + emergencyCost + '万円</strong>（通常より+10万円）</div>'
+    + '<div style="margin-bottom:4px">🏠 修理待ち空室損失: <strong style="color:#dc2626">' + vacancyLoss + '万円</strong>（' + vacancyMonths + 'ヶ月×' + rent + '万円）</div>'
+    + '<div style="margin-bottom:4px;border-top:1px solid #eee;padding-top:6px">緊急交換の合計リスク: <strong style="color:#dc2626">' + emergencyTotal + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">節約できる金額: <strong style="color:#16a34a">+' + saving + '万円</strong></div>'
+    + '</div>'
+    + (age >= 12 ? '<div style="background:#fff3cd;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px">💡 給湯器の寿命は一般的に10〜15年。使用年数' + age + '年であれば計画交換を検討する時期です。入居中のタイミングより、空室時の工事が入居者への負担も少なく工賃も通常価格になります。</div>' : '')
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 経年劣化による自然故障は火災保険の補填対象外が多いため、オーナー費用となります。設備台帳を作成して交換時期を管理しましょう。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('💡 賃貸の給湯器、使用' + age + '年目。壊れてから交換すると空室損失込みで' + emergencyTotal + '万円かかる！\n今なら' + plannedCost + '万円で計画交換できるので差額' + saving + '万円の節約になる計算。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcWaterHeaterReplace(); })();
 
 function calcFreeWifiROI() {
   var cost = parseFloat(document.getElementById('wfi_cost').value) || 0;

@@ -3934,6 +3934,26 @@
     </div>
   </div>
 
+  <div class="card" data-category="ローン・融資" id="card-calcVariableRateBomb">
+    <div class="card-header" onclick="toggleCard('calcVariableRateBomb')">
+      <span>変動金利の「5年ルール・125%ルール」——金利急上昇で元金が減らない「未払い利息リスク」試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcVariableRateBomb">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#dc2626;line-height:1.7">⚠️ 変動金利の「5年ルール」では月返済額が5年間固定されますが、実際の利息計算は新金利で行われます。金利が急上昇すると元金が全く減らない「ネガティブアモチゼーション」が発生します。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身のローン情報に変更してください。</p>
+      <label style="font-size:13px">ローン残高（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="vrb_balance" value="3000" min="0" oninput="calcVariableRateBomb()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の金利（年利%）<span style="color:#888;font-size:11px"> 例: 0.5</span></label>
+      <input type="number" id="vrb_rate_now" value="0.5" min="0" max="10" step="0.1" oninput="calcVariableRateBomb()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">金利上昇後の想定金利（年利%）<span style="color:#888;font-size:11px"> 例: 2.0（+1.5%の上昇）</span></label>
+      <input type="number" id="vrb_rate_new" value="2.0" min="0" max="10" step="0.1" oninput="calcVariableRateBomb()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">残りローン年数（年）<span style="color:#888;font-size:11px"> 例: 20</span></label>
+      <input type="number" id="vrb_remaining" value="20" min="1" max="35" oninput="calcVariableRateBomb()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="vrb_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="相続・税金" id="card-calcSmallLandSpecial">
     <div class="card-header" onclick="toggleCard('calcSmallLandSpecial')">
       <span>「小規模宅地等の特例」で相続税が最大80%減！ 適用可否と節税額を試算</span>
@@ -14714,6 +14734,44 @@ function calcInheritanceShareConflict() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😱 相続で不動産が共有名義になって揉めた場合の損失を計算してみた…\n\n' + years + '年間の税金・弁護士費用・値下がりを合計すると約' + Math.round(totalLoss) + '万円の損失！\n生前対策が重要すぎる…\n\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcInheritanceShareConflict(); })();
+
+function calcVariableRateBomb() {
+  var balance = parseFloat(document.getElementById('vrb_balance').value) || 0;
+  var rateNow = parseFloat(document.getElementById('vrb_rate_now').value) || 0;
+  var rateNew = parseFloat(document.getElementById('vrb_rate_new').value) || 0;
+  var remaining = parseFloat(document.getElementById('vrb_remaining').value) || 1;
+  var el = document.getElementById('vrb_result');
+  if (!el) return;
+  var rNow = rateNow / 100 / 12;
+  var rNew = rateNew / 100 / 12;
+  var n = remaining * 12;
+  var calcPayment = function(bal, r, months) {
+    if (r <= 0) return bal / months;
+    return bal * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1);
+  };
+  var currentPayment = calcPayment(balance, rNow, n);
+  var requiredPayment = calcPayment(balance, rNew, n);
+  var maxPayment = currentPayment * 1.25;
+  var actualPayment = Math.min(requiredPayment, maxPayment);
+  var monthlyInterest = balance * 10000 * rNew;
+  var principalActual = actualPayment * 10000 - monthlyInterest;
+  var unpaidInterestPerMonth = Math.max(0, monthlyInterest - actualPayment * 10000);
+  var unpaid5Years = Math.round(unpaidInterestPerMonth * 60 / 10000);
+  var heroColor = unpaid5Years > 0 ? '#dc2626' : '#16a34a';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + (unpaid5Years > 0 ? '+' + unpaid5Years.toLocaleString() + '万円' : '安全') + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">' + (unpaid5Years > 0 ? '5年間で積み上がる「未払い利息」（残高増加リスク）' : '現在の条件では未払い利息リスクは小さい') + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">💰 現在の月返済額: <strong>' + Math.round(currentPayment).toLocaleString() + '万円</strong>（金利' + rateNow + '%）</div>'
+    + '<div style="margin-bottom:4px;color:#dc2626">📈 金利' + rateNew + '%に上昇後の本来必要な月返済: <strong>' + Math.round(requiredPayment).toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">🔒 125%ルールで実際の月返済額: <strong>' + Math.round(actualPayment).toLocaleString() + '万円</strong>（上限適用）</div>'
+    + (unpaid5Years > 0 ? '<div style="margin-bottom:4px;color:#dc2626">❗ 毎月の未払い利息: <strong>' + Math.round(unpaidInterestPerMonth / 10000 * 10) / 10 + '万円</strong></div>' : '')
+    + '<div style="border-top:1px solid #eee;padding-top:6px;margin-top:4px;color:#dc2626">5年間の未払い利息累計: <strong>' + unpaid5Years.toLocaleString() + '万円（残高が増加）</strong></div>'
+    + '</div>'
+    + (unpaid5Years > 0 ? '<div style="background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px;color:#991b1b">⚠️ 5年後の返済額見直し時に残高が' + unpaid5Years + '万円増えるため、さらに月返済が増加します。繰り上げ返済か固定金利への切り替えを検討してください。</div>' : '<div style="background:#dcfce7;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px;color:#166534">✅ 月返済が125%上限以内に収まるため、未払い利息リスクは今のところ小さい状況です。</div>')
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 「5年ルール」= 毎年2回金利見直しがあっても月返済額は5年間固定。「125%ルール」= 見直し後の返済額は前の125%が上限。この仕組みで月返済は守られますが元本は減りにくくなります。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😱 変動金利ローン' + balance + '万円、金利が' + rateNow + '%→' + rateNew + '%に上昇したら「5年ルール」で月返済が抑えられる代わりに5年間で未払い利息が' + unpaid5Years + '万円も積み上がることが判明！\n元金が全然減らないリスクを知らなかった…\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcVariableRateBomb(); })();
 
 function calcSmallLandSpecial() {
   var evalAmount = parseFloat(document.getElementById('sls_eval').value) || 0;

@@ -3077,6 +3077,22 @@
     </div>
   </div>
 
+  <div class="calc-card" data-category="リスク・費用" id="card-calcAkiyaPipingRisk">
+    <div class="card-header" onclick="toggleCard('calcAkiyaPipingRisk')">
+      <span>空き家の水道管・配管の老朽化リスクと修繕費試算（全交換 vs 部分補修）</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaPipingRisk">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#dc2626;line-height:1.7">⚠️ 長期間使われていない空き家の水道管は劣化・詰まりのリスクが高く、水漏れが起きると隣家への損害賠償が発生することも。早期の状態確認が重要です。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。空き家の情報に変更してください。</p>
+      <label style="font-size:13px">建物の築年数（年）<span style="color:#888;font-size:11px"> 例: 30（古い家ほど配管劣化リスクが高い）</span></label>
+      <input type="number" id="apr_age" value="30" min="1" oninput="calcAkiyaPipingRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">延床面積（㎡）<span style="color:#888;font-size:11px"> 例: 100</span></label>
+      <input type="number" id="apr_area" value="100" min="30" oninput="calcAkiyaPipingRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="apr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="calc-card" data-category="リスク・費用" id="card-calcAkiyaEncroachment">
     <div class="card-header" onclick="toggleCard('calcAkiyaEncroachment')">
       <span>隣の土地に越境している木や塀、放置するとどれだけ損する？ 撤去費用と売却影響試算</span>
@@ -12151,6 +12167,29 @@ function calcAkiyaDIYRent() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🔨 空き家を「DIY可賃貸」にしたら5年間でいくら違う？計算してみた！\n\n通常賃貸: ' + Math.round(normalTotal / 10000) + '万円 vs DIY可: ' + Math.round(diyTotal / 10000) + '万円\n→ ' + winner + 'が約' + Math.round(diff / 10000) + '万円多い！\n空き家オーナー必見の試算です\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaDIYRent(); })();
+
+function calcAkiyaPipingRisk() {
+  var age = parseFloat(document.getElementById('apr_age').value) || 0;
+  var area = parseFloat(document.getElementById('apr_area').value) || 0;
+  var el = document.getElementById('apr_result');
+  if (!el) return;
+  var partialCost = Math.round(area * 0.5);
+  var fullCost = Math.round(area * 2);
+  var damageRisk = age >= 30 ? 100 : age >= 20 ? 50 : 20;
+  var riskLevel = age >= 30 ? '高（今すぐ点検を）' : age >= 20 ? '中（近い将来要注意）' : '低（定期点検で対応）';
+  var riskColor = age >= 30 ? '#dc2626' : age >= 20 ? '#c9a84c' : '#16a34a';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + riskColor + ';line-height:1;margin-bottom:4px">' + riskLevel + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">配管老朽化リスクレベル（築' + age + '年）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🔧 部分補修費（緊急時）: <strong>' + partialCost + '万円</strong>（' + area + '㎡ × 0.5万円）</div>'
+    + '<div style="margin-bottom:4px">🔨 全交換費（計画的更新）: <strong>' + fullCost + '万円</strong>（' + area + '㎡ × 2万円）</div>'
+    + '<div style="margin-bottom:4px;border-top:1px solid #eee;padding-top:6px">⚠️ 水漏れ発生時の隣家損害賠償リスク: <strong style="color:#dc2626">概算' + damageRisk + '万円〜</strong></div>'
+    + '</div>'
+    + (age >= 20 ? '<div style="background:#fff3cd;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px">💡 鉛管・鋼管は錆びやすく築20年以上で要注意。賃貸化・売却前に管種と状態を確認し、見積りを取っておくことをおすすめします。</div>' : '')
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 長期間使わない水道管は「通水」しておくと詰まりや劣化を遅らせる効果があります。定期的に通水させることもケアの一つです。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('💧 空き家（築' + age + '年）の配管老朽化リスクを試算したら「' + riskLevel + '」と判定。水漏れしたら隣家賠償で' + damageRisk + '万円以上のリスクが…。配管全交換で' + fullCost + '万円あれば事前解決できる。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaPipingRisk(); })();
 
 function calcAkiyaEncroachment() {
   var trees = parseFloat(document.getElementById('aec_trees').value) || 0;

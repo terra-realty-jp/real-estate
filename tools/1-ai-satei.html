@@ -4236,6 +4236,27 @@
     </div>
   </div>
 
+  <div class="card" data-category="税金計算" id="card-calcCostBasisFlat">
+    <div class="card-header" onclick="toggleCard('calcCostBasisFlat')">
+      <span>購入時の書類がない！ 取得費不明だと税金が跳ね上がる — 5%概算ルールの損得を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcCostBasisFlat">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#dc2626;line-height:1.7">⚠️ 「購入時の売買契約書が見つからない」場合、取得費は売却価格の5%しか認められず、ほぼ全額が課税対象になります。今のうちに書類を探しておくことが重要です。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。売却予定の物件情報に変更してください。</p>
+      <label style="font-size:13px">売却予定価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="cbf_sell" value="3000" min="0" oninput="calcCostBasisFlat()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">実際の取得費（購入価格＋諸費用）（万円）<span style="color:#888;font-size:11px"> 例: 2500（書類がない場合は0を入力）</span></label>
+      <input type="number" id="cbf_cost" value="2500" min="0" oninput="calcCostBasisFlat()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">保有期間<span style="color:#888;font-size:11px"> 売却年の1月1日時点</span></label>
+      <select id="cbf_hold" onchange="calcCostBasisFlat()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="long" selected>5年超（長期譲渡・税率20.315%）</option>
+        <option value="short">5年以下（短期譲渡・税率39.63%）</option>
+      </select>
+      <div id="cbf_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="資金計画" id="card-calcSaleProceedsDrawdown">
     <div class="card-header" onclick="toggleCard('calcSaleProceedsDrawdown')">
       <span>売却代金を毎月取り崩す老後の生活費、何年で底をつく？ 取り崩しシミュレーション</span>
@@ -12332,6 +12353,36 @@ function calcBridgeLoanCost() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('🏠 住み替えで「先買い」vs「先売り・仮住まい」のコスト差を計算してみた！\n\nつなぎ融資: ' + Math.round(bridgeCost / 10000) + '万円 vs 仮住まい: ' + Math.round(tenantCost / 10000) + '万円\n→ ' + cheaper + 'が約' + Math.round(diff / 10000) + '万円お得\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcBridgeLoanCost(); })();
+
+function calcCostBasisFlat() {
+  var sell = parseFloat(document.getElementById('cbf_sell').value) || 0;
+  var cost = parseFloat(document.getElementById('cbf_cost').value) || 0;
+  var hold = document.getElementById('cbf_hold').value;
+  var el = document.getElementById('cbf_result');
+  if (!el) return;
+  var taxRate = hold === 'long' ? 0.20315 : 0.3963;
+  var transferFee = sell * 0.033 + 6;
+  var flatCost = sell * 0.05;
+  var taxableActual = Math.max(sell - cost - transferFee, 0);
+  var taxableFlat = Math.max(sell - flatCost - transferFee, 0);
+  var taxActual = Math.round(taxableActual * taxRate);
+  var taxFlat = Math.round(taxableFlat * taxRate);
+  var extraTax = Math.max(taxFlat - taxActual, 0);
+  var isFlat = cost < flatCost;
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:#dc2626;line-height:1;margin-bottom:4px">' + extraTax.toLocaleString() + '万円</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">書類がない場合に余分に払う税金（概算）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">📋 5%概算取得費（書類なし）: <strong>' + Math.round(flatCost) + '万円</strong>（売値の5%）</div>'
+    + '<div style="margin-bottom:4px">🟢 実際の取得費（書類あり）: <strong>' + cost + '万円</strong></div>'
+    + '<div style="margin-bottom:4px;border-top:1px solid #eee;padding-top:6px">書類ありの税額: <strong style="color:#16a34a">' + taxActual.toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">書類なしの税額: <strong style="color:#dc2626">' + taxFlat.toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">差額（書類を探す価値）: <strong style="color:#dc2626">+' + extraTax.toLocaleString() + '万円</strong></div>'
+    + '</div>'
+    + (extraTax > 0 ? '<div style="background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px;color:#991b1b">🔍 書類を見つけるだけで' + extraTax + '万円の節税に！売買契約書・登記申請書・仲介手数料の領収書・印紙税の控えなどを今すぐ確認しましょう。税務署や法務局で取得できる書類もあります。</div>' : '<div style="background:#dcfce7;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px;color:#166534">✅ 5%概算の方が節税になるか、実際の取得費の方が低い場合は有利な方を選択できます。</div>')
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 仲介手数料・登記費用・ローン手数料も取得費に含められます。リフォーム費も一部算入可。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('😱 家を売る時に購入時の書類がないと税金が' + extraTax + '万円も余分にかかる！\n\n取得費が「売値の5%」しか認められず、ほぼ全額が課税対象に。書類は今すぐ探しておかないと大損です。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcCostBasisFlat(); })();
 
 function calcSaleProceedsDrawdown() {
   var capital = parseFloat(document.getElementById('spd_capital').value) || 0;
