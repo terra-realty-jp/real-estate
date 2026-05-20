@@ -149,6 +149,23 @@ CREATE POLICY "inv_history_own" ON inv_history
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────
+-- 8. カード使用ログ（Phase 4-A 情報優位データ収集）
+--    匿名ログ。個人特定なし。INSERTのみ許可。
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS card_usage_log (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  tool_id     INT,
+  card_id     TEXT,
+  action      TEXT        DEFAULT 'calc',
+  session_id  TEXT,
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE card_usage_log ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "card_usage_log_insert" ON card_usage_log;
+CREATE POLICY "card_usage_log_insert" ON card_usage_log
+  FOR INSERT WITH CHECK (true);
+
+-- ─────────────────────────────────────────────
 -- 確認クエリ（実行後にテーブル一覧を確認）
 -- ─────────────────────────────────────────────
 SELECT table_name, pg_size_pretty(pg_total_relation_size(quote_ident(table_name))) AS size
