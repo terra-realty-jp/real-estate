@@ -3914,6 +3914,22 @@
     </div>
   </div>
 
+  <div class="card" data-category="価格分析" id="card-calcCapRateComparison">
+    <div class="card-header" onclick="toggleCard('calcCapRateComparison')">
+      <span>投資物件として売れる？ 表面利回り vs 実質利回り 買い手目線で評価</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcCapRateComparison">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">収益物件を売る場合、買い手は「実質利回り」で判断します。広告に載る「表面利回り」と実際の「実質利回り」の差が大きいと売れ残ります。</p>
+      <label>売却希望価格（例：3000万円の場合は3000）<br><input type="number" id="crc_price" value="3000" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">年間家賃収入（満室の場合、例：180万円の場合は180）<br><input type="number" id="crc_rent" value="180" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">空室率（例：10%の場合は10）<br><input type="number" id="crc_vacancy" value="10" style="width:100%"> %</label>
+      <label style="display:block;margin-top:8px">年間管理費・維持費（例：年12万円の場合は12）<br><input type="number" id="crc_expense" value="12" style="width:100%"> 万円</label>
+      <button onclick="calcCapRateComparison()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">表面 vs 実質 利回りを比較する</button>
+      <div id="crc_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11374,6 +11390,38 @@ function calcSellTimingTax() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcSellTimingTax(); })();
+
+function calcCapRateComparison() {
+  var el = document.getElementById('crc_result');
+  if (!el) return;
+  var price   = parseFloat(document.getElementById('crc_price').value) || 0;
+  var rent    = parseFloat(document.getElementById('crc_rent').value) || 0;
+  var vacancy = parseFloat(document.getElementById('crc_vacancy').value) || 0;
+  var expense = parseFloat(document.getElementById('crc_expense').value) || 0;
+  if (price <= 0 || rent <= 0) { el.innerHTML = '<p style="color:red">価格と家賃収入を入力してください</p>'; el.style.display='block'; return; }
+  var surfaceYield = Math.round(rent / price * 100 * 100) / 100;
+  var netRent      = rent * (1 - vacancy / 100) - expense;
+  var realYield    = Math.round(netRent / price * 100 * 100) / 100;
+  var gap          = Math.round((surfaceYield - realYield) * 100) / 100;
+  var isGood = realYield >= 4.0;
+  var hc = isGood ? '22,163,74' : (realYield >= 2.5 ? '201,168,76' : '220,38,38');
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">実質利回り（買い手の判断基準）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+realYield+'<span style="font-size:20px">%</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+(isGood?'4%超——投資物件として魅力的':(realYield>=2.5?'2.5〜4%——条件次第で検討対象':'2.5%未満——買い手から割高と見られやすい'))+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">表面利回り（広告掲載値）</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+surfaceYield+'%</td></tr>';
+  html += '<tr><td style="padding:6px 8px">実質利回り（諸経費・空室控除後）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+realYield+'%</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">利回りの乖離</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">▲'+gap+'%</td></tr>';
+  html += '<tr><td style="padding:6px 8px">実質利回り4%にするための適正価格</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+Math.round(netRent/0.04)+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 一般的に収益物件は実質利回り4〜8%が取引の目安。都心部ではそれ以下でも売れることがあります。</p>';
+  var shareText = '収益物件の表面利回り'+surfaceYield+'%——実際に買い手が見る実質利回りは'+realYield+'%と▲'+gap+'%も低い！価格設定に注意が必要 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcCapRateComparison(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
