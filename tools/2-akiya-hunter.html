@@ -2787,6 +2787,22 @@
     </div>
   </div>
 
+  <div class="card" data-category="活用法" id="card-calcAkiyaGreenConvert">
+    <div class="card-header" onclick="toggleCard('calcAkiyaGreenConvert')">
+      <span>空き家の敷地に太陽光パネルを設置 売電収入と初期費用の回収年数を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaGreenConvert">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">空き家の解体後の更地や屋根に太陽光パネルを設置して、余剰電力を売る活用法です。初期費用がいつ回収できるかを確認できます。</p>
+      <label>設置する太陽光パネルの容量（例：10kWの場合は10）<br><input type="number" id="agc_kw" value="10" style="width:100%"> kW</label>
+      <label style="display:block;margin-top:8px">1kWあたりの設置費用（例：20万円の場合は20）<br><input type="number" id="agc_unitcost" value="20" style="width:100%"> 万円/kW</label>
+      <label style="display:block;margin-top:8px">売電単価（固定買取価格FIT、例：12円/kWhの場合は0.12）<br><input type="number" id="agc_price" value="0.12" step="0.01" style="width:100%"> 万円/kWh</label>
+      <label style="display:block;margin-top:8px">年間の維持費（点検・保険等、例：5万円の場合は5）<br><input type="number" id="agc_maint" value="5" style="width:100%"> 万円</label>
+      <button onclick="calcAkiyaGreenConvert()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">売電収入と回収年数を試算する</button>
+      <div id="agc_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11232,6 +11248,43 @@ function calcAkiyaHolidayLet() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcAkiyaHolidayLet(); })();
+
+function calcAkiyaGreenConvert() {
+  var el = document.getElementById('agc_result');
+  if (!el) return;
+  var kw       = parseFloat(document.getElementById('agc_kw').value) || 0;
+  var unitcost = parseFloat(document.getElementById('agc_unitcost').value) || 0;
+  var price    = parseFloat(document.getElementById('agc_price').value) || 0;
+  var maint    = parseFloat(document.getElementById('agc_maint').value) || 0;
+  if (kw <= 0 || unitcost <= 0) { el.innerHTML = '<p style="color:red">容量と設置費用を入力してください</p>'; el.style.display='block'; return; }
+  var totalCost   = Math.round(kw * unitcost);
+  // 年間発電量 = kW × 年間1200時間（全国平均日照）
+  var annualKwh   = Math.round(kw * 1200);
+  var annualSell  = Math.round(annualKwh * price * 10) / 10;
+  var annualNet   = Math.round((annualSell - maint) * 10) / 10;
+  var recoveryYrs = annualNet > 0 ? Math.round(totalCost / annualNet * 10) / 10 : null;
+  var isGood = recoveryYrs !== null && recoveryYrs <= 15;
+  var hc = isGood ? '22,163,74' : '201,168,76';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">年間純売電収入</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+annualNet+'<span style="font-size:20px">万円/年</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+(recoveryYrs?'初期費用'+totalCost+'万円の回収期間：'+recoveryYrs+'年':'収益が出ない設定を見直してください')+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">設置容量</td><td style="padding:6px 8px;text-align:right">'+kw+'kW</td></tr>';
+  html += '<tr><td style="padding:6px 8px">初期設置費用</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">'+totalCost+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">年間発電量（1200時間/年）</td><td style="padding:6px 8px;text-align:right">'+annualKwh+'kWh</td></tr>';
+  html += '<tr><td style="padding:6px 8px">年間売電収入</td><td style="padding:6px 8px;text-align:right;color:rgba(22,163,74,1)">+'+annualSell+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">年間維持費</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">▲'+maint+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px"><strong>年間純収入</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+annualNet+'万円</td></tr>';
+  if (recoveryYrs) html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"><strong>初期費用回収年数</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700">'+recoveryYrs+'年</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ FIT（固定買取制度）の売電単価は年度によって変わります。10kW以上は産業用（20年保証）。実際の発電量は日照条件によって異なります。</p>';
+  var shareText = '空き家の更地に太陽光パネルを設置すると年間純収益+'+annualNet+'万円——'+totalCost+'万円の初期費用が'+recoveryYrs+'年で回収できる試算 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcAkiyaGreenConvert(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
