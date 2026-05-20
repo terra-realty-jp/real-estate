@@ -2754,6 +2754,22 @@
     </div>
   </div>
 
+  <div class="card" data-category="補助金・支援" id="card-calcAkiyaRepairSubsidy">
+    <div class="card-header" onclick="toggleCard('calcAkiyaRepairSubsidy')">
+      <span>空き家改修の補助金を使うと自己負担はいくら？ 補助金適用後の費用と回収年数を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaRepairSubsidy">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">多くの自治体が空き家改修費の1/3〜1/2を補助する制度があります。補助金を使うと実際の自己負担がいくらになるか、家賃収入で何年で回収できるかを確認できます。</p>
+      <label>改修工事の見積もり金額（例：200万円の場合は200）<br><input type="number" id="ars_cost" value="200" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">自治体の補助率（例：工事費の1/3なら33、1/2なら50）<br><input type="number" id="ars_rate" value="33" style="width:100%"> %</label>
+      <label style="display:block;margin-top:8px">補助金の上限額（例：上限100万円の場合は100）<br><input type="number" id="ars_cap" value="100" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">改修後の予定月額家賃（例：6万円の場合は6）<br><input type="number" id="ars_rent" value="6" style="width:100%"> 万円</label>
+      <button onclick="calcAkiyaRepairSubsidy()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">補助金後の自己負担と回収年数を確認する</button>
+      <div id="ars_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11130,6 +11146,39 @@ function calcParkingConvert() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcParkingConvert(); })();
+
+function calcAkiyaRepairSubsidy() {
+  var el = document.getElementById('ars_result');
+  if (!el) return;
+  var cost = parseFloat(document.getElementById('ars_cost').value) || 0;
+  var rate = parseFloat(document.getElementById('ars_rate').value) || 0;
+  var cap  = parseFloat(document.getElementById('ars_cap').value) || 0;
+  var rent = parseFloat(document.getElementById('ars_rent').value) || 0;
+  if (cost <= 0) { el.innerHTML = '<p style="color:red">改修工事の費用を入力してください</p>'; el.style.display='block'; return; }
+  var subsidy    = Math.min(cost * rate / 100, cap);
+  var selfBurden = cost - subsidy;
+  var recoveryYears = rent > 0 ? Math.round(selfBurden / (rent * 12) * 10) / 10 : null;
+  var subsidyRate  = Math.round(subsidy / cost * 100);
+  var hc = subsidyRate >= 30 ? '22,163,74' : '201,168,76';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">補助金適用後の自己負担</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+selfBurden+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">補助金'+subsidy+'万円（'+subsidyRate+'%）を差し引いた実質負担</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">改修工事費用</td><td style="padding:6px 8px;text-align:right">'+cost+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">補助金（'+rate+'%、上限'+cap+'万円）</td><td style="padding:6px 8px;text-align:right;color:rgba(22,163,74,1)">▲'+subsidy+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"><strong>自己負担額</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700">'+selfBurden+'万円</td></tr>';
+  if (recoveryYears !== null) {
+    html += '<tr><td style="padding:6px 8px">月額家賃'+rent+'万円で回収できる年数</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+recoveryYears+'年</td></tr>';
+  }
+  html += '</table>';
+  html += '<div style="background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.3);border-radius:8px;padding:10px;margin-top:10px;font-size:12px">💡 補助金制度の内容は自治体により異なります。「空き家バンク」や「住宅活用改修助成」で自治体サイトを検索してください。</div>';
+  var shareText = '空き家改修費'+cost+'万円が補助金'+subsidy+'万円で実質'+selfBurden+'万円に！'+(recoveryYears?'家賃'+rent+'万円で'+recoveryYears+'年で元が取れる計算':'')+'空き家を持つ方は補助金を確認すべき #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcAkiyaRepairSubsidy(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
