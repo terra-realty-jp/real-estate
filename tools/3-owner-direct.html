@@ -3562,6 +3562,25 @@
     </div>
   </div>
 
+
+  <!-- calcMortgageDeduction -->
+  <div class="calc-card" id="card-calcMortgageDeduction">
+    <div class="card-header" onclick="toggleCard('calcMortgageDeduction')">
+      <span>住宅ローン控除で13年間いくら税金が戻ってくる？年末残高から計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcMortgageDeduction">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">住宅ローン控除（住宅借入金等特別控除）は年末ローン残高の0.7%が最大13年間、所得税・住民税から戻ってきます。購入前に総額を確認しましょう。</p>
+      <label style="font-size:13px">借入額（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="mdc_loan" value="3000" min="0" oninput="calcMortgageDeduction()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">金利（年%）<span style="color:#888;font-size:11px"> 例: 0.8</span></label>
+      <input type="number" id="mdc_rate" value="0.8" min="0" step="0.1" oninput="calcMortgageDeduction()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">返済期間（年）<span style="color:#888;font-size:11px"> 例: 35</span></label>
+      <input type="number" id="mdc_period" value="35" min="10" max="50" oninput="calcMortgageDeduction()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="mdc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11870,6 +11889,53 @@ function calcBuyVsRentLifetime(){
     +'<button onclick="shareLine(\'持ち家vs賃貸35年で試算！実質コストの差がなんと'+Math.round(diff).toLocaleString()+'万円。どちらが得かを確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcBuyVsRentLifetime(); })();
+function calcMortgageDeduction(){
+  var loan=parseFloat(document.getElementById('mdc_loan').value)||3000;
+  var rate=parseFloat(document.getElementById('mdc_rate').value)||0.8;
+  var period=parseFloat(document.getElementById('mdc_period').value)||35;
+  var r=document.getElementById('mdc_result');
+  if(!r)return;
+  var yr=rate/100/12;
+  var n=period*12;
+  var monthly=yr>0?loan*10000*yr*Math.pow(1+yr,n)/(Math.pow(1+yr,n)-1):loan*10000/n;
+  // 各年末の残高を計算して控除額を積算（最大13年）
+  var totalDeduction=0;
+  var rows='';
+  var maxYears=Math.min(13,period);
+  for(var i=1;i<=maxYears;i++){
+    var balance=0;
+    var mPaid=i*12;
+    // 年末残高 = loan*(1+yr)^(i*12) - monthly*((1+yr)^(i*12)-1)/yr
+    if(yr>0){
+      balance=(loan*10000*Math.pow(1+yr,i*12)-monthly*(Math.pow(1+yr,i*12)-1)/yr)/10000;
+    } else {
+      balance=loan-loan/period*i;
+    }
+    balance=Math.max(0,balance);
+    // 控除上限：残高×0.7%、かつ年35万円（新築等）
+    var deduction=Math.min(balance*0.007,35);
+    totalDeduction+=deduction;
+    if(i<=3||i===7||i===13){
+      rows+='<tr><td style="padding:4px 8px;border-bottom:1px solid #eee">'+i+'年目末</td>'
+        +'<td style="padding:4px 8px;text-align:right;border-bottom:1px solid #eee">'+Math.round(balance).toLocaleString()+'万円</td>'
+        +'<td style="padding:4px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:700;color:#166534">'+Math.round(deduction).toLocaleString()+'万円</td></tr>';
+    }
+  }
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba(22,163,74,0.12),rgba(22,163,74,0.04));border:2px solid rgba(22,163,74,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">13年間の控除合計（概算）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba(22,163,74,1);line-height:1">'+Math.round(totalDeduction).toLocaleString()+'</div>'
+    +'<div style="font-size:13px;color:#374151">万円が戻ってくる</div>'
+    +'<div style="font-size:14px;font-weight:700;color:#166534;margin-top:8px">年平均: 約'+Math.round(totalDeduction/maxYears*10)/10+'万円の減税</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f3ef"><td style="padding:6px 8px;font-weight:700">年数</td><td style="padding:6px 8px;text-align:right;font-weight:700">年末残高</td><td style="padding:6px 8px;text-align:right;font-weight:700">控除額（概算）</td></tr>'
+    +rows
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 2024年以降の新築・既存住宅は控除率0.7%×13年。借入上限額は物件種別・省エネ性能により2000〜5000万円。実際の控除額は所得税・住民税額に上限があります。</div>'
+    +'<button onclick="shareLine(\'住宅ローン控除を13年使うと'+Math.round(totalDeduction).toLocaleString()+'万円が戻ってくる！年平均'+Math.round(totalDeduction/maxYears*10)/10+'万円の減税😳 購入前に確認を👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcMortgageDeduction(); })();
+
 
 var _ownerCat = '';
 var _ownerCatKw = {
