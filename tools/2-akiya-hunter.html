@@ -2887,6 +2887,27 @@
     </div>
   </div>
 
+  <!-- calcFloodRisk -->
+  <div class="calc-card" id="card-calcFloodRisk">
+    <div class="card-header" onclick="toggleCard('calcFloodRisk')">
+      <span>ハザードマップの浸水リスクが物件価格を下げる——リスクレベル別の価格影響と売却前確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcFloodRisk">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">2020年8月から不動産取引時のハザードマップ説明が義務化されました。浸水想定区域に指定されると物件価格が下落するリスクがあります。リスクレベル別の価格影響と対策を確認しましょう。</p>
+      <label style="font-size:13px">現在の物件の推定価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="fr_price" value="3000" min="0" oninput="calcFloodRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">浸水リスクレベル</label>
+      <select id="fr_level" onchange="calcFloodRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="0">リスクなし（ハザードマップ区域外）</option>
+        <option value="3" selected>低リスク（浸水深0〜0.5m想定）</option>
+        <option value="8">中リスク（浸水深0.5〜3m想定）</option>
+        <option value="15">高リスク（浸水深3m以上 / 土砂災害警戒区域）</option>
+      </select>
+      <div id="fr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11553,6 +11574,34 @@ function calcAkiyaVacancyTax() {
     +'<button onclick="shareLine(\'空き家を放置して固定資産税が'+esc(rateUp)+'倍になった話を聞いてゾッとした😱 特定空家に指定されると土地の軽減特例がはずれて年'+esc(taxAfter.toFixed(1))+'万円に…早めに相談が正解👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcAkiyaVacancyTax(); })();
+
+function calcFloodRisk() {
+  var el = document.getElementById('fr_result');
+  if (!el) return;
+  var price    = parseFloat(document.getElementById('fr_price').value) || 0;
+  var discount = parseFloat(document.getElementById('fr_level').value) || 0;
+  var dropAmt  = Math.round(price * discount / 100);
+  var afterPrc = price - dropAmt;
+  var level    = document.getElementById('fr_level');
+  var levelTxt = level ? level.options[level.selectedIndex].text : '';
+  var isRisk   = discount > 0;
+  var color    = discount === 0 ? '22,163,74' : discount <= 3 ? '201,168,76' : '220,38,38';
+  var tips = {
+    '0': '✅ ハザードマップ区域外のため価格への影響は軽微です。',
+    '3': '⚠ 浸水深0〜0.5m程度の低リスクエリアでは、売却価格が3〜5%程度下落する傾向があります。',
+    '8': '⚠ 浸水深0.5〜3m程度の中リスクエリアでは、売却価格が5〜15%程度下落するケースがあります。早めの売却検討を。',
+    '15': '🚨 3m以上の浸水想定・土砂災害警戒区域は価格への影響が大きく、将来的に売却困難になるリスクがあります。早期売却を強くおすすめします。'
+  };
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">'+(isRisk?'浸水リスクによる価格下落の目安':'価格への影響は軽微')+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(isRisk?'-'+esc(dropAmt.toLocaleString())+'万円':'影響なし')+'</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">'+(isRisk?'売却想定価格: <strong>'+esc(afterPrc.toLocaleString())+'万円（約-'+discount+'%）</strong>':'現在の価格水準を維持できる可能性が高い')+'</div>'
+    +'</div>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">'+esc(tips[String(discount)] || '')+'</div>'
+    +'<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px;font-size:12px;color:#0369a1;margin-bottom:12px">📌 国土交通省「重ねるハザードマップ」で物件の正確なリスクレベルを確認できます（無料）。</div>'
+    +'<button onclick="shareLine(\'ハザードマップのリスクレベルで売却価格が'+esc(dropAmt.toLocaleString())+'万円も変わるって知らなかった😱 相続した実家の価格がいくらになるか確認してみた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcFloodRisk(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
