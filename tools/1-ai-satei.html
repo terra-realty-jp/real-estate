@@ -4141,6 +4141,25 @@
     </div>
   </div>
 
+
+  <!-- calcInheritSell -->
+  <div class="card" data-category="税・控除" id="card-calcInheritSell">
+    <div class="card-header" onclick="toggleCard('calcInheritSell')">
+      <span>相続した家を売るとき「取得費の計算」を間違えると税金が大幅に変わる</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcInheritSell">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">相続した不動産を売る場合、取得費（購入価格）の計算方法によって納める税金が大きく変わります。2パターンを比較しましょう。</p>
+      <label style="font-size:13px">売却価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="ihs_price" value="3000" min="0" oninput="calcInheritSell()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">相続時の評価額（万円）<span style="color:#888;font-size:11px"> 例: 2500（相続税申告の評価額）</span></label>
+      <input type="number" id="ihs_inherit" value="2500" min="0" oninput="calcInheritSell()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">相続後の所有期間（年）<span style="color:#888;font-size:11px"> 例: 1（5年超で税率が下がります）</span></label>
+      <input type="number" id="ihs_years" value="1" min="0" oninput="calcInheritSell()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="ihs_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12020,6 +12039,46 @@ function calcHome3000Deduction(){
     +'<button onclick="shareLine(\'マイホーム売却で3000万円控除を使ったら'+saving.toLocaleString()+'万円節税！控除なしなら'+taxWithout.toLocaleString()+'万円の税金がかかるところだった😱 計算してみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcHome3000Deduction(); })();
+function calcInheritSell(){
+  var price=parseFloat(document.getElementById('ihs_price').value)||3000;
+  var inheritVal=parseFloat(document.getElementById('ihs_inherit').value)||2500;
+  var years=parseFloat(document.getElementById('ihs_years').value)||1;
+  var r=document.getElementById('ihs_result');
+  if(!r)return;
+  // 相続税評価額を取得費とする場合（相続後3年10ヶ月以内売却で加算特例を考慮）
+  // 通常の取得費: 相続時の評価額（被相続人の取得費を引き継ぐ場合もあるが、路線価評価額で簡略）
+  var transCost=Math.round(price*0.04);
+  // 短期（5年以下）: 39.363%、長期（5年超）: 20.315%
+  // 相続後の所有期間で判断
+  var isShotki=years<=5;
+  var taxRate=isShotki?0.39363:0.20315;
+  // 通常の取得費（被相続人の購入金額を知らない場合: 概算5%）
+  var costNormal=price*0.05; // 概算取得費5%（不明の場合）
+  var gainNormal=price-costNormal-transCost;
+  var taxNormal=Math.max(0,gainNormal)*taxRate;
+  // 相続時評価額を取得費とする場合（3年10ヶ月以内で相続税額の一部を加算可能）
+  var gainInherit=Math.max(0,price-inheritVal-transCost);
+  var taxInherit=gainInherit*taxRate;
+  var saving=taxNormal-taxInherit;
+  var heroColor=saving>0?'22,163,74':'220,38,38';
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba('+heroColor+',0.12),rgba('+heroColor+',0.04));border:2px solid rgba('+heroColor+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">相続評価額を取得費にすることで節税できる額</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+heroColor+',1);line-height:1">'+Math.round(saving).toLocaleString()+'</div>'
+    +'<div style="font-size:13px;color:#374151">万円の節税（取得費5%概算と比較）</div>'
+    +'<div style="font-size:14px;font-weight:700;color:rgb('+heroColor+');margin-top:8px">譲渡税: 概算5%計算→'+Math.round(taxNormal)+'万円 / 評価額使用→'+Math.round(taxInherit)+'万円</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 2パターンの税額比較</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">売却価格</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+price.toLocaleString()+'万円</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">【A】取得費5%概算の税額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:#dc2626">'+Math.round(taxNormal).toLocaleString()+'万円</td></tr>'
+    +'<tr style="background:#f0fdf4"><td style="padding:6px 8px;border-bottom:1px solid #eee">【B】相続評価額を取得費にした税額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:#166534">'+Math.round(taxInherit).toLocaleString()+'万円</td></tr>'
+    +'<tr style="background:#fef9c3"><td style="padding:6px 8px;font-weight:700">節税額（A-B）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:#b45309">'+Math.round(saving).toLocaleString()+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 被相続人（亡くなった方）の購入金額が不明な場合「売却価格の5%」が取得費の概算となります。相続時の路線価評価額の方が高い場合は評価額を取得費とすると有利です。相続税の取得費加算（3年10ヶ月以内）も検討を。</div>'
+    +'<button onclick="shareLine(\'相続した家を売るとき取得費の計算で節税額が'+Math.round(saving).toLocaleString()+'万円も変わる！知らないと損😱 計算してみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcInheritSell(); })();
+
 function calcPriceReductionFee(){
   var list=parseFloat(document.getElementById('prf_list').value)||3500;
   var cut=parseFloat(document.getElementById('prf_cut').value)||100;
