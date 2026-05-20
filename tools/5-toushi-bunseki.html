@@ -3784,6 +3784,24 @@
     </div>
   </div>
 
+  <!-- calcPopDeclineRisk -->
+  <div class="calc-card" id="card-calcPopDeclineRisk">
+    <div class="card-header" onclick="toggleCard('calcPopDeclineRisk')">
+      <span>人口減少エリアの投資リスク——将来の家賃下落と物件価値への影響を20年でシミュレーション</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcPopDeclineRisk">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">地方や郊外では人口減少によって空室率が上がり、家賃が下落し、物件価値が大幅に下がるリスクがあります。人口減少率を入力して20年後の家賃・物件価格への影響を確認しましょう。</p>
+      <label style="font-size:13px">現在の月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 8</span></label>
+      <input type="number" id="pdr_rent" value="8" min="0" step="0.5" oninput="calcPopDeclineRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">物件の現在価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="pdr_price" value="3000" min="0" oninput="calcPopDeclineRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">エリアの推定人口減少率（年%）<span style="color:#888;font-size:11px"> 例: 1.5（地方都市で年1〜2%が目安）</span></label>
+      <input type="number" id="pdr_decline" value="1.5" min="0" max="10" step="0.5" oninput="calcPopDeclineRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="pdr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -14210,6 +14228,37 @@ function calcSaleTimingROI() {
     +'<button onclick="shareLine(\'同じ物件を5年・10年・15年後に売ったらROIが'+esc(r5.roi)+'%→'+esc(r10.roi)+'%→'+esc(r15.roi)+'%と変わった！売り時って大事😲 シミュレーションしてみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcSaleTimingROI(); })();
+
+function calcPopDeclineRisk() {
+  var el = document.getElementById('pdr_result');
+  if (!el) return;
+  var rent    = parseFloat(document.getElementById('pdr_rent').value)    || 0;
+  var price   = parseFloat(document.getElementById('pdr_price').value)   || 0;
+  var decline = parseFloat(document.getElementById('pdr_decline').value) || 0;
+  var years = 20;
+  // 人口減少 → 空室率上昇 → 家賃下落（人口減少率の1.5倍が家賃下落圧力の目安）
+  var rentFactor = Math.pow(1 - decline * 1.5 / 100, years);
+  var priceFactor= Math.pow(1 - decline * 2.0 / 100, years); // 物件価格はより大きく下落
+  var rentAfter  = Math.round(rent * rentFactor * 10) / 10;
+  var priceAfter = Math.round(price * priceFactor);
+  var rentDrop   = Math.round((rent - rentAfter) * 10) / 10;
+  var priceDrop  = price - priceAfter;
+  var isHigh = decline >= 2;
+  var color  = isHigh ? '220,38,38' : '201,168,76';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">20年後の推定物件価格</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+esc(priceAfter.toLocaleString())+'万円</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">現在より <strong style="color:#dc2626">-'+esc(priceDrop.toLocaleString())+'万円（約'+Math.round(priceDrop/price*100)+'%下落）</strong></div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">項目</th><th style="padding:6px;text-align:right">現在</th><th style="padding:6px;text-align:right">20年後</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">月額家賃</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(rent)+'万円</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">'+esc(rentAfter)+'万円（-'+esc(rentDrop)+'万円）</td></tr>'
+    +'<tr><td style="padding:6px">物件価格</td><td style="padding:6px;text-align:right">'+esc(price.toLocaleString())+'万円</td><td style="padding:6px;text-align:right;color:#dc2626">'+esc(priceAfter.toLocaleString())+'万円（-'+esc(priceDrop.toLocaleString())+'万円）</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 '+(isHigh?'年2%以上の人口減少は高リスクエリアです。投資の際は出口戦略（早期売却）を重視してください。':'年1〜2%の減少は中リスク。家賃の経年下落を収支計画に織り込んでおきましょう。')+'</div>'
+    +'<button onclick="shareLine(\'人口が年'+esc(decline)+'%減少するエリアに投資すると20年後に家賃が'+esc(rentAfter)+'万円・物件価格が'+esc(priceAfter.toLocaleString())+'万円に😱 エリアの人口動向は投資前に必ずチェック👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcPopDeclineRisk(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
