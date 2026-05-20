@@ -3998,6 +3998,21 @@
     </div>
   </div>
 
+  <!-- calcSale3000Special -->
+  <div class="card" data-category="節税" id="card-calcSale3000Special">
+    <div class="card-header" onclick="toggleCard('calcSale3000Special')">
+      <span>住んでいた家を売ると3000万円特別控除！ 控除後の実際の税額を確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSale3000Special">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">自分が住んでいた家（マイホーム）を売却すると、売却益から最大3000万円を控除できる「3000万円特別控除」が使えます。控除後の実際の税額と手取り額を確認しましょう。</p>
+      <label>売却価格（例：4500万円なら4500）<br><input type="number" id="s3s_price" value="4500" min="100" max="100000" step="100" oninput="calcSale3000Special()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">購入時の取得費（例：3000万円なら3000）<br><input type="number" id="s3s_cost" value="3000" min="100" max="100000" step="100" oninput="calcSale3000Special()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">保有年数（例：6年なら6）<br><input type="number" id="s3s_holdyears" value="6" min="1" max="50" step="1" oninput="calcSale3000Special()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 年</label>
+      <div id="s3s_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11633,6 +11648,45 @@ function calcVacantRiskCheck() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcVacantRiskCheck(); })();
+
+function calcSale3000Special() {
+  var el = document.getElementById('s3s_result');
+  if (!el) return;
+  var price    = parseFloat(document.getElementById('s3s_price').value) || 0;
+  var cost     = parseFloat(document.getElementById('s3s_cost').value) || 0;
+  var holdyrs  = parseFloat(document.getElementById('s3s_holdyears').value) || 0;
+  var fee      = Math.round((price * 0.03 + 6) * 1.1);
+  var gain     = price - cost - fee;
+  var specialDeduct = Math.min(3000, Math.max(0, gain));
+  var taxable  = Math.max(0, gain - specialDeduct);
+  var taxRate  = holdyrs >= 5 ? 0.20315 : 0.39363;
+  var tax      = gain > 0 ? Math.round(taxable * taxRate) : 0;
+  var netSale  = price - fee - tax;
+  var taxWithoutDeduct = gain > 0 ? Math.round(gain * taxRate) : 0;
+  var saved    = taxWithoutDeduct - tax;
+  var color    = tax === 0 ? '22,163,74' : '59,130,246';
+  var label    = tax === 0 ? '3000万円控除で税金ゼロ！' : '控除後の税額は'+tax+'万円（控除なしより'+saved+'万円節税）';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">3000万円特別控除後の手取り</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+netSale+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">売却価格</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+price+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">取得費</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+cost+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">仲介手数料</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">−'+fee+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">売却益</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+(gain>0?gain:0)+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">3000万円特別控除</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">−'+specialDeduct+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">課税対象額</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+taxable+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">譲渡所得税（'+(holdyrs>=5?'長期20.3%':'短期39.4%')+'）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">'+tax+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px;font-weight:700">手取り額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">'+netSale+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 3000万円特別控除はマイホーム（居住用財産）の売却に限ります。売却年に入居していた・または3年以内の売却が条件</p>';
+  var shareText = 'マイホームを'+price+'万円で売ると！3000万円特別控除を使えば税金が'+saved+'万円も安くなる。手取りは'+netSale+'万円 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcSale3000Special(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
