@@ -4067,6 +4067,26 @@
     </div>
   </div>
 
+  <!-- calcNetAssetCheck -->
+  <div class="calc-card" id="card-calcNetAssetCheck">
+    <div class="card-header" onclick="toggleCard('calcNetAssetCheck')">
+      <span>売却後の「手元に残るお金」——ローン残高・税金・仲介手数料を引いた純手取りを確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcNetAssetCheck">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">「3000万円で売れた！」でも、住宅ローンが残っていると売却代金のほとんどが返済に消えることがあります。売却後に実際にいくら手元に残るかを確認しましょう。</p>
+      <label style="font-size:13px">売却価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="nac_price" value="3000" min="0" oninput="calcNetAssetCheck()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">住宅ローン残高（万円）<span style="color:#888;font-size:11px"> 例: 2200（ない場合は0）</span></label>
+      <input type="number" id="nac_loan" value="2200" min="0" oninput="calcNetAssetCheck()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">取得費（購入価格＋諸費用）（万円）<span style="color:#888;font-size:11px"> 例: 2800</span></label>
+      <input type="number" id="nac_cost" value="2800" min="0" oninput="calcNetAssetCheck()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">所有期間（年）<span style="color:#888;font-size:11px"> 例: 8（5年超で税率20%）</span></label>
+      <input type="number" id="nac_years" value="8" min="1" oninput="calcNetAssetCheck()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="nac_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11841,6 +11861,38 @@ function calcReplaceCostCheck() {
     +'<button onclick="shareLine(\'築古の家を建て替え('+esc(rebuildInvest.toLocaleString())+'万円)/リノベ('+esc(renovInvest.toLocaleString())+'万円)/売却('+esc(sellTake.toLocaleString())+'万円手取り)で比較してみた！どれが得か数字で見えた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcReplaceCostCheck(); })();
+
+function calcNetAssetCheck() {
+  var el = document.getElementById('nac_result');
+  if (!el) return;
+  var price  = parseFloat(document.getElementById('nac_price').value) || 0;
+  var loan   = parseFloat(document.getElementById('nac_loan').value)  || 0;
+  var cost   = parseFloat(document.getElementById('nac_cost').value)  || 0;
+  var years  = parseFloat(document.getElementById('nac_years').value) || 1;
+  var fee    = Math.round(price * 0.04); // 仲介手数料+諸費用 概算4%
+  var gain   = Math.max(0, price - cost - fee);
+  var taxRate= years > 5 ? 20.315 : 39.63;
+  var tax    = Math.round(gain * taxRate / 100);
+  var net    = price - loan - fee - tax;
+  var isPos  = net >= 0;
+  var color  = isPos ? '22,163,74' : '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">売却後の純手取り</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(isPos?'':'')+esc(net.toLocaleString())+'万円</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">'+(isPos?'手元に残る':'ローン完済後に不足する')+'金額</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">項目</th><th style="padding:6px;text-align:right">金額</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">売却価格</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#16a34a">+'+esc(price.toLocaleString())+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">ローン残高（返済）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">-'+esc(loan.toLocaleString())+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">仲介手数料・諸費用（概算4%）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">-'+esc(fee.toLocaleString())+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">譲渡所得税（'+taxRate+'%）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">-'+esc(tax.toLocaleString())+'万円</td></tr>'
+    +'<tr style="background:#f5f5f5"><td style="padding:6px"><strong>純手取り</strong></td><td style="padding:6px;text-align:right;font-weight:700;color:rgba('+color+',1)"><strong>'+esc(net.toLocaleString())+'万円</strong></td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 '+(isPos?'純手取り'+esc(net.toLocaleString())+'万円が手元に残ります。住み替えの頭金として活用できます。':'売却価格がローン残高を下回る「オーバーローン」状態です。金融機関に相談が必要です。')+'</div>'
+    +'<button onclick="shareLine(\'家を'+esc(price.toLocaleString())+'万円で売っても実際の手取りは'+esc(net.toLocaleString())+'万円と計算が出た😮 ローン・税金・手数料を全部引くとこんな差が…詳しく計算👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcNetAssetCheck(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
