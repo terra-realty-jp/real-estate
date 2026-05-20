@@ -3887,6 +3887,22 @@
     </div>
   </div>
 
+  <div class="card" data-category="ローン管理" id="card-calcEarlyPayoff">
+    <div class="card-header" onclick="toggleCard('calcEarlyPayoff')">
+      <span>繰り上げ返済 vs そのお金を運用する どちらが得か損益比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcEarlyPayoff">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">手元に100万円などのまとまったお金がある場合、ローン繰り上げ返済に充てるのと、投資・貯蓄に回すのとどちらが長期的にトクか計算できます。</p>
+      <label>繰り上げ返済に充てる金額（例：100万円の場合は100）<br><input type="number" id="ep_amount" value="100" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">ローンの現在金利（例：1.5%の場合は1.5）<br><input type="number" id="ep_loanrate" value="1.5" step="0.1" style="width:100%"> %</label>
+      <label style="display:block;margin-top:8px">運用・貯蓄の想定年利回り（例：3%の場合は3）<br><input type="number" id="ep_invest" value="3.0" step="0.1" style="width:100%"> %</label>
+      <label style="display:block;margin-top:8px">比較する期間（例：10年の場合は10）<br><input type="number" id="ep_years" value="10" style="width:100%"> 年</label>
+      <button onclick="calcEarlyPayoff()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">繰り上げ返済 vs 運用 どちらが得か確認</button>
+      <div id="ep_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -13817,6 +13833,42 @@ function calcRentHikeTiming() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcRentHikeTiming(); })();
+
+function calcEarlyPayoff() {
+  var el = document.getElementById('ep_result');
+  if (!el) return;
+  var amount   = parseFloat(document.getElementById('ep_amount').value) || 0;
+  var loanRate = parseFloat(document.getElementById('ep_loanrate').value) || 0;
+  var invest   = parseFloat(document.getElementById('ep_invest').value) || 0;
+  var years    = parseInt(document.getElementById('ep_years').value) || 10;
+  if (amount <= 0) { el.innerHTML = '<p style="color:red">繰り上げ返済額を入力してください</p>'; el.style.display='block'; return; }
+  // 繰り上げ返済の効果（単利で利息軽減）
+  var earlyGain  = Math.round(amount * (loanRate / 100) * years);
+  // 運用の複利効果（税引後：約20%課税）
+  var investNet  = invest * 0.80;
+  var investGain = Math.round(amount * (Math.pow(1 + investNet / 100, years) - 1));
+  var diff       = investGain - earlyGain;
+  var isInvest   = diff > 0;
+  var hc = isInvest ? '22,163,74' : '201,168,76';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+(isInvest?'運用が有利——差額':'繰り上げ返済が有利——差額')+'</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+Math.abs(diff)+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+(isInvest?'ローン金利より運用利回りが高いため運用が有利':'ローン金利が高いため繰り上げ返済が安全で確実')+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">繰り上げ返済額</td><td style="padding:6px 8px;text-align:right">'+amount+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">繰り上げ返済'+years+'年間の利息軽減額（'+loanRate+'%）</td><td style="padding:6px 8px;text-align:right;color:rgba(22,163,74,1)">+'+earlyGain+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">同額を運用した'+years+'年後の利益（'+invest+'%、税引後）</td><td style="padding:6px 8px;text-align:right;color:rgba(22,163,74,1)">+'+investGain+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px"><strong>差額（運用 - 繰り上げ）</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+(diff>=0?'+':'')+diff+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 運用利益には20.315%の税金がかかります（NISA口座利用で非課税化が可能）。投資にはリスクがあります。繰り上げ返済は確実な利息軽減効果があります。</p>';
+  var shareText = isInvest
+    ? '繰り上げ返済より年利'+invest+'%で運用の方が'+Math.abs(diff)+'万円お得な試算！ローン金利'+loanRate+'%より運用利回りが高ければ投資が有利 #不動産かんたんツール'
+    : 'ローン金利'+loanRate+'%の場合は繰り上げ返済が運用より'+Math.abs(diff)+'万円確実に得——リスクなしで確実な節約 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcEarlyPayoff(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
