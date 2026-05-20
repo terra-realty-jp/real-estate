@@ -3407,6 +3407,22 @@
     </div>
   </div>
 
+  <!-- calcLoanScreenCheck -->
+  <div class="calc-card" id="card-calcLoanScreenCheck">
+    <div class="card-header" onclick="toggleCard('calcLoanScreenCheck')">
+      <span>銀行ローン審査に通りそう？ 年収・物件価格から返済比率を事前チェック</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcLoanScreenCheck">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">銀行の住宅ローン審査では「年収に対する年間返済額の割合（返済比率）」が重視されます。審査の目安となる25〜35%を超えていないかを事前に確認しましょう。</p>
+      <label>世帯年収（例：600万円なら600）<br><input type="number" id="lsc_income" value="600" min="100" max="5000" step="50" oninput="calcLoanScreenCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/年</label>
+      <label style="display:block;margin-top:8px">物件の購入価格（例：4000万円なら4000）<br><input type="number" id="lsc_price" value="4000" min="100" max="50000" step="100" oninput="calcLoanScreenCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">頭金（例：400万円なら400）<br><input type="number" id="lsc_down" value="400" min="0" max="10000" step="100" oninput="calcLoanScreenCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">金利（例：0.7%なら0.7）<br><input type="number" id="lsc_rate" value="0.7" min="0.1" max="5" step="0.1" oninput="calcLoanScreenCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> %</label>
+      <div id="lsc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11403,6 +11419,42 @@ function calcCondoVsDetached() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcCondoVsDetached(); })();
+
+function calcLoanScreenCheck() {
+  var el = document.getElementById('lsc_result');
+  if (!el) return;
+  var income = parseFloat(document.getElementById('lsc_income').value) || 0;
+  var price  = parseFloat(document.getElementById('lsc_price').value) || 0;
+  var down   = parseFloat(document.getElementById('lsc_down').value) || 0;
+  var rate   = parseFloat(document.getElementById('lsc_rate').value) || 0;
+  var n = 35 * 12;
+  var r = rate / 100 / 12;
+  var principal = (price - down) * 10000;
+  var monthly = r > 0 ? principal * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1) : principal / n;
+  var annualPay = Math.round(monthly * 12 / 10000 * 10) / 10;
+  var ratio     = income > 0 ? Math.round(annualPay / income * 1000) / 10 : 0;
+  var isOk      = ratio <= 25;
+  var isBorder  = ratio > 25 && ratio <= 35;
+  var color     = isOk ? '22,163,74' : (isBorder ? '201,168,76' : '220,38,38');
+  var label     = isOk ? '◎ 審査通過の可能性が高い（25%以内）' : (isBorder ? '△ 要注意（25〜35%）——審査通る場合もあるが厳しい' : '× 審査落ちの可能性大（35%超）');
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">返済比率（年間返済÷年収）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+ratio+'<span style="font-size:20px">%</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">世帯年収</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+income+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">借入額（価格−頭金）</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+(price-down)+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">月々の返済額（35年）</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+Math.round(monthly/10000*10)/10+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">年間返済額</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+annualPay+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">返済比率</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+ratio+'%</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 審査は返済比率以外に勤続年数・雇用形態・他のローンも考慮されます。これはあくまで目安です</p>';
+  var shareText = '年収'+income+'万円で'+price+'万円の家を買うと返済比率が'+ratio+'%。銀行審査の目安25〜35%と比べると'+(isOk?'◎ 余裕あり':(isBorder?'△ ギリギリ':'× 厳しい')) + ' #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcLoanScreenCheck(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
