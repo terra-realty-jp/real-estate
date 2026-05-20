@@ -4025,3 +4025,24 @@
 - ヒーロー: green（3%超耐性）/ red（3%以下）
 
 ### docs: llms.txt更新（569→582枚）
+
+## 2026-05-21 01:00（セッション継続9 Round 19）
+
+- **対象**: tools/1-ai-satei.html, 2-akiya-hunter.html, 3-owner-direct.html, 4-kanri-saas.html, 5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新計算カード追加
+- **改善内容**: Round 19 — 各ツールに高PLG新規カード1枚ずつ追加（計5枚）
+
+### Tool1: 値引き交渉時の実質損失計算（calcPriceReductionFee）
+- 仲介手数料の連動減少分を差し引いた「本当の損失額」を表示
+
+### Tool2: 空き家民泊vs賃貸 年間収益比較（calcMinsyukuVsRent）
+- 1泊料金・稼働日数と月額家賃を比較。民泊の経費（手数料15%・清掃費）を控除
+
+### Tool3: マンション修繕積立金不足→1戸あたり一時金リスク（calcRepairFundOwner）
+- 築年数別の推定修繕費と現在残高から不足額・1戸あたりの一時金を計算
+
+### Tool4: 礼金ゼロ・フリーレント戦略の損得計算（calcDepositStrategy）
+- 24ヶ月間で空室期間短縮効果とフリーレント損失を比較
+
+### Tool5: 表面利回りから実質CF・実質利回り計算（calcActualYield）
+- 経費率20%・空室率5%・ローン控除後の月間CFと実質利回りを算出
