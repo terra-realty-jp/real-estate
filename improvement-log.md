@@ -4127,3 +4127,30 @@
 - calcBridgeLoanCost: 「つなぎ融資って何？」は最初あるが、説明文で「先に買うなら銀行の利息」「先に売るなら引越し2回」とあり理解できる。✅
 - calcRentDelinquency: 大家さん目線で「え、こんなにかかるの！」の驚きが生まれる。保証会社の入会を促す導線も自然。✅
 
+
+## 2026-05-21 05:15（セッション継続11 Round 23）
+
+- **対象**: tools/1-ai-satei.html, 2-akiya-hunter.html, 3-owner-direct.html, 4-kanri-saas.html, 5-toushi-bunseki.html, llms.txt
+- **フェーズ**: Phase 4 新計算カード追加（Round 23）
+- **改善内容**: 各ツールに高PLG新規カード1枚ずつ追加（計5枚）
+
+### Tool1: 売却前内装リフォームの費用対効果（calcPresaleMinorReno）
+- リフォーム費用・価格アップ率から「リフォームして売る」vs「現状渡し」の手取り差を計算
+- ヒーロー: green（リフォームが得）/ red（現状渡しが得）
+
+### Tool2: 家財付き売却 vs 処分後売却（calcAkiyaFurnishedSale）
+- 値引き率・処分費用から家財残置売却と処分後売却の手取りを比較
+- ヒーロー: green/gold（有利な方を大きく表示）
+
+### Tool3: マンション次の大規模修繕タイミング・一時金リスク（calcCondoNextRepair）
+- 築年数・月額積立金・総戸数から次回修繕まで何年か・1戸あたり不足額を試算
+- ヒーロー: green（余裕あり）/ red（3年以内）/ gold（6年以内）
+
+### Tool4: 火災保険で修繕費を賄えるか判断計算（calcFireInsuranceClaim）
+- 修繕費・免責金額・保険料値上がり見込みから「申請する価値があるか」を判断
+- ヒーロー: green（申請価値あり）/ gold（5年以内に回収）
+
+### Tool5: 不動産 割賦販売の節税効果（calcInstallmentSale）
+- 売却益・年収・分割年数から一括売却税額と割賦分散税額の差（節税額）を計算
+- ヒーロー: green（大きな節税）/ gold（中程度の節税）
+
