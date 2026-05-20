@@ -3883,6 +3883,21 @@
     </div>
   </div>
 
+  <div class="card" data-category="売却手続き" id="card-calcBoundaryCheck">
+    <div class="card-header" onclick="toggleCard('calcBoundaryCheck')">
+      <span>境界が未確定のまま売ると損する？ 測量費用 vs 値引きリスク 比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcBoundaryCheck">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">家を売る前に「境界確定測量が必要と言われた」方へ。測量費を払う価値があるかどうか、値引き要求リスクと比べて判断できます。</p>
+      <label>売却予定の金額（例：2500万円の場合は2500）<br><input type="number" id="bc_price" value="2500" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">境界が未確定だと買主から何%の値引きを要求されそうか（目安：1〜5%）<br><input type="number" id="bc_risk" value="3" style="width:100%"> %</label>
+      <label style="display:block;margin-top:8px">境界確定測量の費用（測量士に聞いた額、目安：35〜80万円）<br><input type="number" id="bc_cost" value="50" style="width:100%"> 万円</label>
+      <button onclick="calcBoundaryCheck()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">測量費用 vs リスク額 を比較する</button>
+      <div id="bc_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11269,6 +11284,36 @@ function calcReformVsAsIs() {
   el.innerHTML = html;
 }
 (function(){ calcReformVsAsIs(); })();
+
+function calcBoundaryCheck() {
+  var el = document.getElementById('bc_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('bc_price').value) || 0;
+  var risk  = parseFloat(document.getElementById('bc_risk').value) || 0;
+  var cost  = parseFloat(document.getElementById('bc_cost').value) || 0;
+  if (price <= 0) { el.innerHTML = '<p style="color:red">売却予定金額を入力してください</p>'; el.style.display='block'; return; }
+  var riskLoss   = Math.round(price * risk / 100);
+  var netBenefit = riskLoss - cost;
+  var isWorth    = netBenefit > 0;
+  var hc = isWorth ? '22,163,74' : '220,38,38';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">値引き要求リスク額</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">▲'+riskLoss+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+(isWorth?'測量費用を払う価値あり（測量で'+netBenefit+'万円の損失を回避）':'測量費用 > リスク額（費用対効果を要検討）')+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">値引き要求リスク額（'+price+'万×'+risk+'%）</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">▲'+riskLoss+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">境界確定測量費用</td><td style="padding:6px 8px;text-align:right">▲'+cost+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"><strong>測量で防げる損失</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+(netBenefit>=0?'22,163,74':'220,38,38')+',1)">'+(netBenefit>=0?'+':'')+netBenefit+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ リスク率はエリアや物件状況によって異なります。実際の測量費は土地形状・隣地状況で変わります。</p>';
+  var shareText = isWorth
+    ? '境界未確定のまま売ると▲'+riskLoss+'万円の値引きリスク！測量費'+cost+'万円を払えば'+netBenefit+'万円の損を防げると試算 #不動産かんたんツール'
+    : '境界確定測量費'+cost+'万円 vs 値引きリスク'+riskLoss+'万円——このケースでは費用対効果を慎重に検討 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcBoundaryCheck(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
