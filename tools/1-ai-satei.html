@@ -3952,6 +3952,22 @@
     </div>
   </div>
 
+  <!-- calcDoubleMortgage -->
+  <div class="card" data-category="売却" id="card-calcDoubleMortgage">
+    <div class="card-header" onclick="toggleCard('calcDoubleMortgage')">
+      <span>旧居が売れる前に新居を買うと二重ローン——月々の負担増と乗り越えられる期間を確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcDoubleMortgage">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">住み替えで旧居の売却と新居の購入が重なる期間は、2本のローンが同時に発生します。月々いくら増えるか、何ヶ月まで耐えられるかを事前に確認しましょう。</p>
+      <label>旧居の残ローン月返済額（例：7万円なら7）<br><input type="number" id="dm_oldPay" value="7" min="0" max="50" step="0.1" oninput="calcDoubleMortgage()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/月</label>
+      <label style="display:block;margin-top:8px">新居の予定月返済額（例：9万円なら9）<br><input type="number" id="dm_newPay" value="9" min="1" max="50" step="0.1" oninput="calcDoubleMortgage()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/月</label>
+      <label style="display:block;margin-top:8px">月々の手取り収入（例：35万円なら35）<br><input type="number" id="dm_income" value="35" min="10" max="200" step="1" oninput="calcDoubleMortgage()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/月</label>
+      <label style="display:block;margin-top:8px">生活費（二重ローン期間中の月額　例：20万円なら20）<br><input type="number" id="dm_living" value="20" min="5" max="100" step="1" oninput="calcDoubleMortgage()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/月</label>
+      <div id="dm_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11479,6 +11495,43 @@ function calcAgentComparison() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcAgentComparison(); })();
+
+function calcDoubleMortgage() {
+  var el = document.getElementById('dm_result');
+  if (!el) return;
+  var oldPay = parseFloat(document.getElementById('dm_oldPay').value) || 0;
+  var newPay = parseFloat(document.getElementById('dm_newPay').value) || 0;
+  var income = parseFloat(document.getElementById('dm_income').value) || 0;
+  var living = parseFloat(document.getElementById('dm_living').value) || 0;
+  var totalPay   = oldPay + newPay;
+  var monthly    = income - living - totalPay;
+  var surplusOld = income - living - newPay;
+  var months     = surplusOld > 0 ? Math.floor(surplusOld * 10 / oldPay) / 10 : 0;
+  var ratio      = income > 0 ? Math.round(totalPay / income * 1000) / 10 : 0;
+  var isOk       = monthly >= 0 && ratio <= 40;
+  var color      = isOk ? '22,163,74' : '220,38,38';
+  var label      = isOk ? '月々'+monthly+'万円の余裕があります' : '月々'+Math.abs(monthly)+'万円の赤字——早期売却が必要です';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">二重ローン期間の月々返済合計</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+totalPay+'<span style="font-size:20px">万円/月</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">旧居ローン</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+oldPay+'万円/月</td></tr>';
+  html += '<tr><td style="padding:6px 8px">新居ローン</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+newPay+'万円/月</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">二重期間の月々合計</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">'+totalPay+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">返済負担率</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+ratio+'%</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">月々の手残り</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+(monthly>=0?'22,163,74':'220,38,38')+',1)">'+(monthly>=0?'+':'')+monthly+'万円</td></tr>';
+  if (months > 0) {
+    html += '<tr><td style="padding:6px 8px">貯蓄ゼロでも耐えられる上限</td><td style="padding:6px 8px;text-align:right;font-weight:700">約'+months+'ヶ月</td></tr>';
+  }
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 旧居の売却が長引くほどリスクが高まります。仮住まいを使って売却を先行させる方法もあります</p>';
+  var shareText = '住み替えで旧居が売れる前に新居を買うと月'+totalPay+'万円の二重ローン！収入'+income+'万円から生活費引くと月'+monthly+'万円の余裕（またはマイナス）#不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcDoubleMortgage(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
