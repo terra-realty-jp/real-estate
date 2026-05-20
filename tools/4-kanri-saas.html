@@ -3950,6 +3950,22 @@
     </div>
   </div>
 
+  <!-- calcRentHikeBreakeven -->
+  <div class="calc-card" id="card-calcRentHikeBreakeven">
+    <div class="card-header" onclick="toggleCard('calcRentHikeBreakeven')">
+      <span>家賃を値上げすると退去率が上がる——値上げ幅別の損益分岐点を確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcRentHikeBreakeven">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">家賃値上げは増収につながりますが、退去リスクがあります。値上げして退去が1件増えた場合、空室損失と次の入居者募集コストで帳消しになります。値上げが得かどうかを確認しましょう。</p>
+      <label>現在の月額家賃（例：8万円なら8）<br><input type="number" id="rhb_rent" value="8" min="1" max="50" step="0.1" oninput="calcRentHikeBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/月</label>
+      <label style="display:block;margin-top:8px">値上げ幅（例：5000円=0.5万円の場合は0.5）<br><input type="number" id="rhb_hike" value="0.5" min="0.1" max="5" step="0.1" oninput="calcRentHikeBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">退去後の空室期間の見込み（例：2ヶ月なら2）<br><input type="number" id="rhb_vacancy" value="2" min="0" max="12" step="0.5" oninput="calcRentHikeBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> ヶ月</label>
+      <label style="display:block;margin-top:8px">退去時の原状回復・募集費用（例：20万円なら20）<br><input type="number" id="rhb_recost" value="20" min="0" max="100" step="1" oninput="calcRentHikeBreakeven()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <div id="rhb_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14017,6 +14033,40 @@ function calcRepairFundShortage() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcRepairFundShortage(); })();
+
+function calcRentHikeBreakeven() {
+  var el = document.getElementById('rhb_result');
+  if (!el) return;
+  var rent    = parseFloat(document.getElementById('rhb_rent').value) || 0;
+  var hike    = parseFloat(document.getElementById('rhb_hike').value) || 0;
+  var vacancy = parseFloat(document.getElementById('rhb_vacancy').value) || 0;
+  var recost  = parseFloat(document.getElementById('rhb_recost').value) || 0;
+  var annualGain    = Math.round(hike * 12 * 10) / 10;
+  var vacancyLoss   = Math.round(rent * vacancy * 10) / 10;
+  var totalLoss     = Math.round((vacancyLoss + recost) * 10) / 10;
+  var breakMonths   = hike > 0 ? Math.ceil(totalLoss / hike) : 0;
+  var breakYears    = Math.round(breakMonths / 12 * 10) / 10;
+  var isWorth       = breakYears <= 3;
+  var color         = isWorth ? '22,163,74' : '220,38,38';
+  var label         = isWorth ? '退去が出ても'+breakYears+'年で元が取れます（値上げ有利）' : '退去1件で元を取るのに'+breakYears+'年かかります（リスク大）';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">退去損失を値上げ分で回収するのに必要な期間</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+breakYears+'<span style="font-size:20px">年</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">値上げ幅</td><td style="padding:6px 8px;text-align:right;font-weight:700">+'+hike+'万円/月（年間+'+annualGain+'万円）</td></tr>';
+  html += '<tr><td style="padding:6px 8px">退去後の空室損失（'+vacancy+'ヶ月）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">−'+vacancyLoss+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">原状回復・募集費用</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">−'+recost+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">退去1件あたり損失</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">−'+totalLoss+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">損失回収期間</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">約'+breakMonths+'ヶ月（'+breakYears+'年）</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 3年以内に元が取れる値上げは合理的。長期入居者への値上げは退去リスクが低いため有利になりやすい</p>';
+  var shareText = '家賃を'+hike+'万円値上げして退去が1件出ると'+totalLoss+'万円の損失。値上げ分で元を取るのに'+breakYears+'年もかかる！ #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcRentHikeBreakeven(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
