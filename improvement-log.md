@@ -3926,3 +3926,36 @@
 - ヒーロー: green（直接投資優位）/ blue（REIT優位）
 
 ### docs: llms.txt更新（554→559枚・Round15新カード5枚反映）
+
+## 2026-05-20 23:00（セッション継続8 Round 16）
+
+- **対象**: tools/1-ai-satei.html, 2-akiya-hunter.html, 3-owner-direct.html, 4-kanri-saas.html, 5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新計算カード追加
+- **改善内容**: Round 16 — 各ツールに高PLG新規カード1枚ずつ追加（計5枚）
+
+### Tool1: 建替えvsリノベvs売却 3択損益比較（calcReplaceCostCheck）
+- 入力: 売却想定価格・建て替え費用・リノベ費用・土地価値
+- 初期コスト・10年後試算資産で3択を比較
+- ヒーロー: gold（3択判定）28px表示
+
+### Tool2: 親族への低額貸し・使用貸借の税務リスクと適正家賃（calcAkiyaFamilyRent）
+- 入力: 固定資産税評価額・現在の月額賃料
+- 相当家賃（評価額×1%÷12）と比較し贈与リスクを3段階判定
+- ヒーロー: green（適正）/ gold（グレー）/ red（リスクあり）
+
+### Tool3: 火災・地震保険料年間コスト試算（calcInsuranceRisk）
+- 入力: 建物評価額・構造・地震保険付加有無
+- 年間保険料・10年累計を計算
+- ヒーロー: blue（情報系）52px表示
+
+### Tool4: 稼働率3シナリオ別年間CF比較（calcCapRateScenario）
+- 入力: 月額満室家賃・固定費
+- 100%/80%/60%稼働の年間CF・収入を3段比較
+- ヒーロー: green/red（悲観シナリオCF）52px表示
+
+### Tool5: 売却タイミング別ROI比較（calcSaleTimingROI）
+- 入力: 購入価格・自己資金・年間CF・年間価格変動率
+- 5/10/15年後のROIを3択比較
+- ヒーロー: green（プラスROI）/ red（マイナスROI）
+
+### docs: llms.txt更新（559→564枚・Round16新カード5枚反映）
