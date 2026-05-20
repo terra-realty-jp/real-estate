@@ -4019,6 +4019,28 @@
     </div>
   </div>
 
+  <!-- calcMonthlyCFBreakdown -->
+  <div class="calc-card" id="card-calcMonthlyCFBreakdown">
+    <div class="card-header" onclick="toggleCard('calcMonthlyCFBreakdown')">
+      <span>月次キャッシュフロー明細——家賃収入からローン・管理費・税金を引いた「本当の手残り」</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcMonthlyCFBreakdown">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">家賃収入だけ見て「黒字」と思っていませんか？ローン返済・管理委託費・修繕積立金・固定資産税を差し引いた実際の手残り（月次CF）を明細付きで確認します。</p>
+      <label style="font-size:13px">月額家賃収入（万円）<span style="color:#888;font-size:11px"> 例: 12</span></label>
+      <input type="number" id="mcf_rent" value="12" min="0" step="0.1" oninput="calcMonthlyCFBreakdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">月々のローン返済額（万円）<span style="color:#888;font-size:11px"> 例: 7</span></label>
+      <input type="number" id="mcf_loan" value="7" min="0" step="0.1" oninput="calcMonthlyCFBreakdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">管理委託費（月額・万円）<span style="color:#888;font-size:11px"> 例: 0.6（家賃の5%が目安）</span></label>
+      <input type="number" id="mcf_mgmt" value="0.6" min="0" step="0.1" oninput="calcMonthlyCFBreakdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">修繕積立・火災保険（月換算・万円）<span style="color:#888;font-size:11px"> 例: 0.5</span></label>
+      <input type="number" id="mcf_repair" value="0.5" min="0" step="0.1" oninput="calcMonthlyCFBreakdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">固定資産税（年額）（万円）<span style="color:#888;font-size:11px"> 例: 12（月割りで計算）</span></label>
+      <input type="number" id="mcf_tax" value="12" min="0" oninput="calcMonthlyCFBreakdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="mcf_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14217,6 +14239,37 @@ function calcRenovCost() {
     +'<button onclick="shareLine(\'リノベ費用'+esc(cost)+'万円が'+esc(paybackText)+'で回収できると計算が出た！意外と早く元取れるかも💡 家賃アップ+空室改善の効果をシミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcRenovCost(); })();
+
+function calcMonthlyCFBreakdown() {
+  var el = document.getElementById('mcf_result');
+  if (!el) return;
+  var rent   = parseFloat(document.getElementById('mcf_rent').value)   || 0;
+  var loan   = parseFloat(document.getElementById('mcf_loan').value)   || 0;
+  var mgmt   = parseFloat(document.getElementById('mcf_mgmt').value)   || 0;
+  var repair = parseFloat(document.getElementById('mcf_repair').value) || 0;
+  var taxAnn = parseFloat(document.getElementById('mcf_tax').value)    || 0;
+  var taxMon = Math.round(taxAnn / 12 * 100) / 100;
+  var totalExp = loan + mgmt + repair + taxMon;
+  var cf = Math.round((rent - totalExp) * 100) / 100;
+  var isProfit = cf >= 0;
+  var color = isProfit ? '22,163,74' : '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">月次手残り（キャッシュフロー）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(isProfit?'+':'')+esc(cf)+'万円</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">年間換算: <strong>'+(isProfit?'+':'')+esc(Math.round(cf*12*10)/10)+'万円/年</strong></div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">項目</th><th style="padding:6px;text-align:right">月額</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">家賃収入</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#16a34a">+'+esc(rent)+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">ローン返済</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">-'+esc(loan)+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">管理委託費</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">-'+esc(mgmt)+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">修繕積立・保険</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">-'+esc(repair)+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">固定資産税（月割）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">-'+esc(taxMon)+'万円</td></tr>'
+    +'<tr style="background:#f5f5f5"><td style="padding:6px"><strong>手残り</strong></td><td style="padding:6px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+(isProfit?'+':'')+esc(cf)+'万円</td></tr>'
+    +'</table>'
+    +'<button onclick="shareLine(\'家賃'+esc(rent)+'万円の物件の本当の手残りは月'+esc(cf)+'万円だった！ローン・管理費・税金全部引いたら思ったより'+(isProfit?'多くて':'少なくて')+'驚き😲 明細付きで確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcMonthlyCFBreakdown(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
