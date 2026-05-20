@@ -4155,6 +4155,27 @@
     </div>
   </div>
 
+  <div class="card" data-category="税・節税" id="card-calcPropertyTaxReview">
+    <div class="card-header" onclick="toggleCard('calcPropertyTaxReview')">
+      <span>固定資産税が高すぎる！「価格審査請求」で税金を下げられるかチェック</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcPropertyTaxReview">
+      <div style="background:rgba(220,252,231,0.5);border:1px solid rgba(22,163,74,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#15803d;line-height:1.7">💡 固定資産税の評価額が市場価格より高い場合、「価格審査請求」で税額を下げられる可能性があります。固定資産税評価額は3年ごとに見直されます。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。実際の評価額・市場価格に変更してください。</p>
+      <label style="font-size:13px">固定資産税の課税評価額（万円）<span style="color:#888;font-size:11px"> 例: 2500（納税通知書に記載）</span></label>
+      <input type="number" id="ptr_eval" value="2500" min="0" oninput="calcPropertyTaxReview()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の市場価格（万円）<span style="color:#888;font-size:11px"> 例: 2000（仲介業者の査定額）</span></label>
+      <input type="number" id="ptr_market" value="2000" min="0" oninput="calcPropertyTaxReview()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">物件の種別</label>
+      <select id="ptr_type" onchange="calcPropertyTaxReview()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;font-size:13px">
+        <option value="residential" selected>住宅用地（1/6〜1/3軽減あり）</option>
+        <option value="commercial">商業・事業用地</option>
+      </select>
+      <div id="ptr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="修繕・リフォーム" id="card-calcFireInsuranceClaim">
     <div class="card-header" onclick="toggleCard('calcFireInsuranceClaim')">
       <span>賃貸物件の修繕、火災保険で賄える？ 保険申請 vs 自費修繕を判断する計算</span>
@@ -14630,6 +14651,34 @@ function calcIoTROI() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🔑 スマートロック・宅配ボックスを設置したら年間 +' + Math.round(annualGain * 10) / 10 + '万円 の増収になる試算が出た！\n\n投資回収期間は' + paybackMonths + 'ヶ月。設備投資を検討している大家さんは試してみて 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcIoTROI(); })();
+
+function calcPropertyTaxReview() {
+  var eval_ = parseFloat(document.getElementById('ptr_eval').value) || 0;
+  var market = parseFloat(document.getElementById('ptr_market').value) || 0;
+  var type = document.getElementById('ptr_type').value;
+  var el = document.getElementById('ptr_result');
+  if (!el) return;
+  var ratio = market > 0 ? eval_ / market : 1;
+  var overvalued = ratio > 0.7;
+  var taxBase = type === 'residential' ? eval_ * 10000 / 6 * 0.014 : eval_ * 10000 * 0.014;
+  var marketBase = market * 10000;
+  var targetEval = marketBase * 0.7;
+  var revisedTaxBase = type === 'residential' ? targetEval / 6 * 0.014 : targetEval * 0.014;
+  var annualSaving = Math.max(0, taxBase - revisedTaxBase);
+  var worthTrying = overvalued && annualSaving > 30000;
+  var heroColor = worthTrying ? '#16a34a' : ratio <= 0.7 ? '#3b82f6' : '#c9a84c';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + (worthTrying ? '申請推奨' : '適正範囲') + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">評価額の市場価格比率: <strong>' + Math.round(ratio * 100) + '%</strong>（70%以下が適正）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">📋 現在の課税評価額: <strong>' + eval_.toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">🏠 市場価格: <strong>' + market.toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">📊 適正評価額の目安: <strong>' + Math.round(targetEval / 10000).toLocaleString() + '万円</strong>（市場×70%）</div>'
+    + (worthTrying ? '<div style="margin-bottom:4px;color:#16a34a">💰 引き下げ成功時の年間節税: <strong>約' + Math.round(annualSaving / 10000) + '万円</strong></div>' : '')
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 審査請求は固定資産税の納税通知書が届いてから「3ヶ月以内」が期限です。対象の評価基準日（1月1日）時点の市場価格が証拠になります。市区町村の固定資産課に問い合わせるか、不服申立ての専門家（行政書士等）に相談しましょう。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('💡 固定資産税が高すぎないか確認してみたら…\n\n評価額が市場価格の' + Math.round(ratio * 100) + '%→' + (worthTrying ? '申請推奨！年間約' + Math.round(annualSaving / 10000) + '万円の節税可能性あり' : '適正範囲内でした') + '\n\n不動産オーナーは一度チェックを 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcPropertyTaxReview(); })();
 
 function calcFireInsuranceClaim() {
   var repair = parseFloat(document.getElementById('fic_repair').value) || 0;

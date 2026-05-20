@@ -3638,6 +3638,24 @@
     </div>
   </div>
 
+  <div class="card" data-category="物件・ローン" id="card-calcFixed2025Impact">
+    <div class="card-header" onclick="toggleCard('calcFixed2025Impact')">
+      <span>2025年の住宅ローン金利上昇で月々の返済はいくら増える？ 今借りた場合の影響試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcFixed2025Impact">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#dc2626;line-height:1.7">⚠️ 日銀の利上げを受け、2024〜2025年は変動・固定ともに金利上昇傾向が続いています。今後1〜2%の上昇シナリオで月返済がどう変わるかを確認しましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。実際の借入条件に変更してください。</p>
+      <label style="font-size:13px">借入金額（万円）<span style="color:#888;font-size:11px"> 例: 4000</span></label>
+      <input type="number" id="f25_loan" value="4000" min="0" oninput="calcFixed2025Impact()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の金利（年利%）<span style="color:#888;font-size:11px"> 例: 0.5（変動）または1.8（固定）</span></label>
+      <input type="number" id="f25_now" value="0.5" min="0" step="0.1" oninput="calcFixed2025Impact()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">返済期間（年）<span style="color:#888;font-size:11px"> 例: 35</span></label>
+      <input type="number" id="f25_years" value="35" min="5" max="50" oninput="calcFixed2025Impact()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="f25_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="物件・ローン" id="card-calcCondoNextRepair">
     <div class="card-header" onclick="toggleCard('calcCondoNextRepair')">
       <span>マンション購入前チェック：次の大規模修繕まで何年？ 一時金リスクを試算</span>
@@ -12164,6 +12182,37 @@ function calcFlat35VsVar() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏦 フラット35 vs 変動金利、20年間の総支払い差を計算してみた\n\n金利が5年ごとに上昇するシナリオだと\n' + cheaper + 'が約' + Math.round(Math.abs(diff) / 10000) + '万円 安い結果に！\n\nあなたの数字で試してみて 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcFlat35VsVar(); })();
+
+function calcFixed2025Impact() {
+  var loan = parseFloat(document.getElementById('f25_loan').value) || 0;
+  var now = parseFloat(document.getElementById('f25_now').value) || 0;
+  var years = parseFloat(document.getElementById('f25_years').value) || 35;
+  var el = document.getElementById('f25_result');
+  if (!el) return;
+  function monthly(p, r, n) {
+    if (r <= 0) return (p * 10000) / n;
+    var mr = r / 100 / 12;
+    var N = n * 12;
+    return (p * 10000) * mr * Math.pow(1 + mr, N) / (Math.pow(1 + mr, N) - 1);
+  }
+  var m0 = monthly(loan, now, years);
+  var m1 = monthly(loan, now + 1.0, years);
+  var m2 = monthly(loan, now + 2.0, years);
+  var d1 = m1 - m0;
+  var d2 = m2 - m0;
+  var heroColor = d2 > 30000 ? '#dc2626' : d2 > 15000 ? '#c9a84c' : '#16a34a';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">+' + Math.round(d1 / 1000) + '<span style="font-size:20px">千円/月</span></div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">金利が1%上昇した場合の月返済増加額</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">📊 現在（' + now + '%）: <strong>' + Math.round(m0 / 1000).toLocaleString() + '千円/月</strong></div>'
+    + '<div style="margin-bottom:4px">📈 +1%（' + (now + 1).toFixed(1) + '%）: <strong style="color:#c9a84c">' + Math.round(m1 / 1000).toLocaleString() + '千円/月</strong>（+' + Math.round(d1 / 1000) + '千円）</div>'
+    + '<div style="margin-bottom:4px">📈 +2%（' + (now + 2).toFixed(1) + '%）: <strong style="color:#dc2626">' + Math.round(m2 / 1000).toLocaleString() + '千円/月</strong>（+' + Math.round(d2 / 1000) + '千円）</div>'
+    + '<div style="font-size:11px;color:#888;margin-top:6px">35年間の総返済差: +1%で +' + Math.round(d1 * 35 * 12 / 10000) + '万円、+2%で +' + Math.round(d2 * 35 * 12 / 10000) + '万円</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 変動金利は「5年ルール・125%ルール」があり月返済は急増しませんが、未払い利息が発生する可能性があります。固定金利への借り換えを検討する場合は、手数料との損得も確認してください。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('😱 住宅ローン' + loan + '万円、金利が2%上昇したら月返済が' + Math.round(d2 / 1000) + '千円増える！\n\n' + years + '年で合計' + Math.round(d2 * 35 * 12 / 10000) + '万円の差になることが判明\n\n変動金利で借りている方は一度確認を 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcFixed2025Impact(); })();
 
 function calcCondoNextRepair() {
   var age = parseFloat(document.getElementById('cnr_age').value) || 0;
