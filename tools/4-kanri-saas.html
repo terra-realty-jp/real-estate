@@ -3903,6 +3903,23 @@
     </div>
   </div>
 
+  <div class="card" data-category="入居者管理" id="card-calcPetDamageRisk">
+    <div class="card-header" onclick="toggleCard('calcPetDamageRisk')">
+      <span>ペット可にして家賃アップ vs 原状回復リスク——年間の収支プラスになるか試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcPetDamageRisk">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">「ペット可にすれば家賃を上げられるが、退去後の損傷が怖い」オーナーへ。収益増加額と原状回復コストを比べて、ペット可が得か損かを確認できます。</p>
+      <label>現在の月額家賃（例：8万円の場合は8）<br><input type="number" id="pdr_rent" value="8" step="0.1" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">ペット可にすると家賃を何%上げられるか（例：10%の場合は10）<br><input type="number" id="pdr_premium" value="10" style="width:100%"> %</label>
+      <label style="display:block;margin-top:8px">敷金の月数（例：2ヶ月の場合は2）<br><input type="number" id="pdr_deposit" value="2" style="width:100%"> ヶ月</label>
+      <label style="display:block;margin-top:8px">退去時の原状回復費の見込み（例：50万円の場合は50）<br><input type="number" id="pdr_repair" value="50" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">平均の入居期間（例：3年の場合は3）<br><input type="number" id="pdr_tenure" value="3" style="width:100%"> 年</label>
+      <button onclick="calcPetDamageRisk()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">ペット可の年間収支を試算する</button>
+      <div id="pdr_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -13869,6 +13886,45 @@ function calcEarlyPayoff() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcEarlyPayoff(); })();
+
+function calcPetDamageRisk() {
+  var el = document.getElementById('pdr_result');
+  if (!el) return;
+  var rent    = parseFloat(document.getElementById('pdr_rent').value) || 0;
+  var premium = parseFloat(document.getElementById('pdr_premium').value) || 0;
+  var deposit = parseFloat(document.getElementById('pdr_deposit').value) || 0;
+  var repair  = parseFloat(document.getElementById('pdr_repair').value) || 0;
+  var tenure  = parseFloat(document.getElementById('pdr_tenure').value) || 3;
+  if (rent <= 0) { el.innerHTML = '<p style="color:red">現在の家賃を入力してください</p>'; el.style.display='block'; return; }
+  var newRent      = Math.round(rent * (1 + premium / 100) * 10) / 10;
+  var annualGain   = Math.round((newRent - rent) * 12 * 10) / 10;
+  var totalGain    = Math.round(annualGain * tenure * 10) / 10;
+  var depositAmt   = Math.round(newRent * deposit * 10) / 10;
+  var netRepair    = Math.max(0, repair - depositAmt);
+  var perYearCost  = Math.round(netRepair / tenure * 10) / 10;
+  var netPerYear   = Math.round((annualGain - perYearCost) * 10) / 10;
+  var isProfit     = netPerYear > 0;
+  var hc = isProfit ? '22,163,74' : '220,38,38';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">年間の純収支（収益増加 − リスクコスト）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+(netPerYear>=0?'+':'')+netPerYear+'<span style="font-size:20px">万円/年</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+(isProfit?'ペット可に切り替えると年間プラスになる試算':'修繕コストが家賃収入増加を上回ります')+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">ペット可後の月額家賃（+'+premium+'%）</td><td style="padding:6px 8px;text-align:right">'+newRent+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">年間収益増加</td><td style="padding:6px 8px;text-align:right;color:rgba(22,163,74,1)">+'+annualGain+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">敷金（'+deposit+'ヶ月分）</td><td style="padding:6px 8px;text-align:right">'+depositAmt+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">敷金超過の原状回復負担（'+tenure+'年に1回）</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">▲'+netRepair+'万円（年換算▲'+perYearCost+'万円）</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"><strong>年間純収支</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+(netPerYear>=0?'+':'')+netPerYear+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 原状回復費用は退去ごとに発生。敷金の範囲内に収まることが多いですが、超過分はオーナー負担になります。</p>';
+  var shareText = isProfit
+    ? 'ペット可にして家賃+'+premium+'%→年間収益+'+annualGain+'万円、修繕リスクを引いても年間+'+netPerYear+'万円のプラスになる試算 #不動産かんたんツール'
+    : 'ペット可で家賃+'+premium+'%でも修繕コストが年間'+perYearCost+'万円かかり、年間'+Math.abs(netPerYear)+'万円の損になる試算 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcPetDamageRisk(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
