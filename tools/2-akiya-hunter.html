@@ -2964,6 +2964,25 @@
     </div>
   </div>
 
+
+  <!-- calcAkiyaNegligence -->
+  <div class="calc-card" id="card-calcAkiyaNegligence">
+    <div class="card-header" onclick="toggleCard('calcAkiyaNegligence')">
+      <span>空き家を放置し続けると固定資産税が最大6倍！毎年の損失を計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaNegligence">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">「住宅用地の特例」が剥奪されると固定資産税が最大6倍に。管理不全な空き家は「特定空き家」に指定されるリスクがあります。今のうちに対策コストと比べましょう。</p>
+      <label style="font-size:13px">現在の固定資産税（年間・万円）<span style="color:#888;font-size:11px"> 例: 8</span></label>
+      <input type="number" id="an_tax" value="8" min="0" step="0.5" oninput="calcAkiyaNegligence()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">空き家の予想放置年数（年）<span style="color:#888;font-size:11px"> 例: 10</span></label>
+      <input type="number" id="an_years" value="10" min="1" max="30" oninput="calcAkiyaNegligence()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">最低限の管理費（年間・万円）<span style="color:#888;font-size:11px"> 例: 5（草刈り・清掃等）</span></label>
+      <input type="number" id="an_manage" value="5" min="0" step="0.5" oninput="calcAkiyaNegligence()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="an_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11759,6 +11778,40 @@ function calcAkiyaRentReturn() {
     +'<button onclick="shareLine(\'空き家をリフォーム'+esc(reform)+'万円かけて貸したら回収期間'+esc(payText)+'・20年で'+esc(profit20.toLocaleString())+'万円の利益になる計算！空き家を放置するより全然いい💡 試算してみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcAkiyaRentReturn(); })();
+function calcAkiyaNegligence(){
+  var tax=parseFloat(document.getElementById('an_tax').value)||8;
+  var years=parseFloat(document.getElementById('an_years').value)||10;
+  var manage=parseFloat(document.getElementById('an_manage').value)||5;
+  var r=document.getElementById('an_result');
+  if(!r)return;
+  // 現状：住宅用地特例で土地は1/6に軽減済み
+  var taxNow=tax;
+  // 特定空き家指定後：特例剥奪で最大6倍
+  var taxAfter=tax*6;
+  // 放置コスト（管理費+6倍税）vs 放置コスト（管理費+現行税）
+  var costNormal=(taxNow+manage)*years;
+  var costRisk=(taxAfter+manage)*years;
+  var extraCost=costRisk-costNormal;
+  // 解体費用の目安（木造40坪=約200万円）
+  var demolishEst=200;
+  var heroColor='220,38,38';
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba('+heroColor+',0.12),rgba('+heroColor+',0.04));border:2px solid rgba('+heroColor+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">特定空き家指定後'+years+'年間の追加負担（現行比）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+heroColor+',1);line-height:1">'+Math.round(extraCost).toLocaleString()+'</div>'
+    +'<div style="font-size:13px;color:#374151">万円の損失増加</div>'
+    +'<div style="font-size:14px;font-weight:700;color:rgb('+heroColor+');margin-top:8px">固定資産税: 年'+taxNow+'万円 → '+taxAfter+'万円（6倍）</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f3ef"><td colspan="3" style="padding:6px 8px;font-weight:700">📊 放置した場合のコスト比較</td></tr>'
+    +'<tr style="background:#f0f9ff"><td style="padding:6px 8px;border-bottom:1px solid #eee">現状維持</td><td style="padding:6px 8px;text-align:right">固定資産税<br>管理費</td><td style="padding:6px 8px;text-align:right;font-weight:700">年'+taxNow+'万円<br>年'+manage+'万円</td></tr>'
+    +'<tr style="background:#fef2f2"><td style="padding:6px 8px;border-bottom:1px solid #eee">特定空き家指定後</td><td style="padding:6px 8px;text-align:right">固定資産税<br>管理費</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:#dc2626">年'+taxAfter+'万円<br>年'+manage+'万円</td></tr>'
+    +'<tr style="background:#fef9c3"><td style="padding:6px 8px;font-weight:700">'+years+'年間の差額</td><td colspan="2" style="padding:6px 8px;text-align:right;font-weight:700;color:#b45309">▲'+Math.round(extraCost).toLocaleString()+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 解体費用（木造40坪で約'+demolishEst+'万円）や売却・賃貸を早めに検討すると、長期的なコストを大幅に抑えられます。2023年改正で管理不全空き家の認定要件が拡大しました。</div>'
+    +'<button onclick="shareLine(\'空き家を放置すると固定資産税が6倍に！'+years+'年で追加'+Math.round(extraCost).toLocaleString()+'万円の損失になる可能性😱 早めに対策を確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcAkiyaNegligence(); })();
+
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
