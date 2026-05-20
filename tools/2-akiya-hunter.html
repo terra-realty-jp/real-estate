@@ -2803,6 +2803,25 @@
     </div>
   </div>
 
+  <!-- calcAkiyaRegistrationDeadline -->
+  <div class="calc-card" id="card-calcAkiyaRegistrationDeadline">
+    <div class="card-header" onclick="toggleCard('calcAkiyaRegistrationDeadline')">
+      <span>相続登記の放置はいつまでOK？ 法定期限と過料リスクを確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaRegistrationDeadline">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">2024年4月から相続登記が義務化されました。相続を知った日から3年以内に登記しないと10万円以下の過料が科せられます。期限と登記費用の目安を確認しましょう。</p>
+      <label>相続を知った日（例：2023年3月なら2023.3と入力）<br>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <input type="number" id="ard_year" value="2023" min="2020" max="2030" step="1" oninput="calcAkiyaRegistrationDeadline()" style="flex:1;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 年
+          <input type="number" id="ard_month" value="3" min="1" max="12" step="1" oninput="calcAkiyaRegistrationDeadline()" style="flex:1;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 月
+        </div>
+      </label>
+      <label style="display:block;margin-top:8px">相続する不動産の固定資産評価額（例：800万円なら800）<br><input type="number" id="ard_eval" value="800" min="50" max="50000" step="50" oninput="calcAkiyaRegistrationDeadline()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <div id="ard_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11285,6 +11304,43 @@ function calcAkiyaGreenConvert() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcAkiyaGreenConvert(); })();
+
+function calcAkiyaRegistrationDeadline() {
+  var el = document.getElementById('ard_result');
+  if (!el) return;
+  var year  = parseInt(document.getElementById('ard_year').value) || 2023;
+  var month = parseInt(document.getElementById('ard_month').value) || 1;
+  var eval_ = parseFloat(document.getElementById('ard_eval').value) || 0;
+  var now   = new Date();
+  var start = new Date(year, month - 1, 1);
+  var deadline = new Date(year + 3, month - 1, 1);
+  var diffMs   = deadline - now;
+  var diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  var isOver   = diffDays <= 0;
+  var regFee   = Math.round(eval_ * 0.004);
+  var lawyerFee = Math.round(eval_ * 0.01 + 3);
+  var total    = regFee + lawyerFee;
+  var color    = isOver ? '220,38,38' : (diffDays <= 180 ? '201,168,76' : '22,163,74');
+  var label    = isOver ? '期限が過ぎています！今すぐ手続きを' : (diffDays <= 180 ? 'あと'+diffDays+'日——早めに動きましょう' : 'あと'+diffDays+'日あります');
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">相続登記の期限まで</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(isOver?'超過':diffDays)+'<span style="font-size:20px">'+(isOver?'':' 日')+'</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">相続を知った日</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+year+'年'+month+'月</td></tr>';
+  html += '<tr><td style="padding:6px 8px">法定期限</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">'+((year+3))+'年'+month+'月末</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">放置した場合の過料</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">最大10万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">登録免許税の目安</td><td style="padding:6px 8px;text-align:right;font-weight:700">約'+regFee+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">司法書士費用の目安</td><td style="padding:6px 8px;text-align:right;font-weight:700">約'+lawyerFee+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px;font-weight:700">手続き費用合計</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(201,168,76,1)">約'+total+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 登録免許税=固定資産評価額×0.4%（相続）。司法書士費用は目安です</p>';
+  var shareText = '相続登記の期限は相続を知った日から3年！期限を過ぎると最大10万円の過料。手続き費用は約'+total+'万円で済む #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcAkiyaRegistrationDeadline(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
