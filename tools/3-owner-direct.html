@@ -3363,6 +3363,20 @@
     </div>
   </div>
 
+  <div class="card" data-category="費用計算" id="card-calcFirstTimerBudget">
+    <div class="card-header" onclick="toggleCard('calcFirstTimerBudget')">
+      <span>初めて家を買う人へ——物件価格以外にかかる諸費用の全項目と総予算を一覧表示</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcFirstTimerBudget">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">家の購入では物件価格の他に「諸費用」が必要です。仲介手数料・登記費用・不動産取得税・火災保険・引越し費用などを含めた総予算を一覧で確認できます。</p>
+      <label>物件の購入価格（例：3000万円の場合は3000）<br><input type="number" id="ftb_price" value="3000" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">頭金として用意できる金額（例：300万円の場合は300）<br><input type="number" id="ftb_down" value="300" style="width:100%"> 万円</label>
+      <button onclick="calcFirstTimerBudget()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">諸費用の全項目と総予算を確認する</button>
+      <div id="ftb_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11256,6 +11270,45 @@ function calcLandVsBuilding() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcLandVsBuilding(); })();
+
+function calcFirstTimerBudget() {
+  var el = document.getElementById('ftb_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('ftb_price').value) || 0;
+  var down  = parseFloat(document.getElementById('ftb_down').value) || 0;
+  if (price <= 0) { el.innerHTML = '<p style="color:red">購入価格を入力してください</p>'; el.style.display='block'; return; }
+  var loan    = Math.max(0, price - down);
+  var agency  = Math.round((price * 0.03 + 6) * 1.1);
+  var register= Math.round(price * 0.002 + loan * 0.001 + 15);
+  var acqTax  = Math.round(price * 0.6 * 0.03);
+  var fire    = 10;
+  var moving  = 20;
+  var stamp   = price >= 5000 ? 2 : price >= 1000 ? 1 : 0.1;
+  var total   = Math.round(agency + register + acqTax + fire + moving + stamp);
+  var totalAll= price + total;
+  var hc = '201,168,76';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">別途かかる諸費用合計</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+total+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">物件価格'+price+'万円 + 諸費用'+total+'万円 ＝ 総必要資金'+totalAll+'万円</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">仲介手数料（3%+6万×消費税）</td><td style="padding:6px 8px;text-align:right">'+agency+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">登記費用（所有権移転+抵当権+司法書士）</td><td style="padding:6px 8px;text-align:right">'+register+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">不動産取得税（価格の60%×3%）</td><td style="padding:6px 8px;text-align:right">'+acqTax+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">印紙税</td><td style="padding:6px 8px;text-align:right">'+stamp+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">火災保険（概算）</td><td style="padding:6px 8px;text-align:right">'+fire+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">引越し費用（概算）</td><td style="padding:6px 8px;text-align:right">'+moving+'万円</td></tr>';
+  html += '<tr style="background:rgba(201,168,76,0.12)"><td style="padding:6px 8px"><strong>諸費用合計</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(201,168,76,1)">'+total+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px"><strong>必要な総資金（物件価格+諸費用）</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700">'+totalAll+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">ローン借入必要額</td><td style="padding:6px 8px;text-align:right">'+loan+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 諸費用は物件価格の5〜8%が目安。不動産取得税は軽減措置で減る場合あり。実際の金額は担当者に確認してください。</p>';
+  var shareText = '家を買うには物件価格'+price+'万円の他に諸費用が'+total+'万円かかる！知らずに頭金を全部使うと諸費用が払えなくなる注意 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcFirstTimerBudget(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
