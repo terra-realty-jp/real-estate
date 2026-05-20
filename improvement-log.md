@@ -3893,3 +3893,36 @@
 - ヒーロー: green（CCR8%以上）/ gold（プラス）/ red（マイナス）
 
 ### docs: llms.txt更新（549→554枚・Round14新カード5枚反映）
+
+## 2026-05-20 22:00（セッション継続8 Round 15）
+
+- **対象**: tools/1-ai-satei.html, 2-akiya-hunter.html, 3-owner-direct.html, 4-kanri-saas.html, 5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新計算カード追加
+- **改善内容**: Round 15 — 各ツールに高PLG新規カード1枚ずつ追加（計5枚）
+
+### Tool1: 相続税概算（基礎控除+速算表）（calcInheritTax）
+- 入力: 相続財産総額・法定相続人数
+- 基礎控除3000万+600万×人数を適用し速算表で税額を概算
+- ヒーロー: green（ゼロ）/ red（税発生）
+
+### Tool2: 浸水リスクレベル別物件価格下落影響試算（calcFloodRisk）
+- 入力: 物件価格・浸水リスクレベル（4段階）
+- リスク別価格下落率（0/3/8/15%）を適用した売却想定価格を表示
+- ヒーロー: green（リスクなし）/ gold（低）/ red（中〜高）
+
+### Tool3: 周辺空室率による家賃下落・CF影響試算（calcVacancyRateImpact）
+- 入力: 月額家賃・空室率・ローン返済
+- 空室率別家賃下落圧力（10%超で5%毎）とCF変化を計算
+- ヒーロー: green（プラスCF）/ red（マイナスCF）
+
+### Tool4: 月次CF明細（calcMonthlyCFBreakdown）
+- 入力: 家賃・ローン・管理費・修繕積立・固定資産税
+- 5項目の内訳明細付きで月次手残りを計算
+- ヒーロー: green（プラス）/ red（マイナス）
+
+### Tool5: 不動産直接投資 vs J-REIT 5年比較（calcReitCompare）
+- 入力: 自己資金・物件価格・表面利回り・REIT利回り
+- 5年累計収益の差額を比較表示
+- ヒーロー: green（直接投資優位）/ blue（REIT優位）
+
+### docs: llms.txt更新（554→559枚・Round15新カード5枚反映）
