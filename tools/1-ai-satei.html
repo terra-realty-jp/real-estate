@@ -3983,6 +3983,21 @@
     </div>
   </div>
 
+  <!-- calcVacantRiskCheck -->
+  <div class="card" data-category="売却" id="card-calcVacantRiskCheck">
+    <div class="card-header" onclick="toggleCard('calcVacantRiskCheck')">
+      <span>空き家を放置するリスク——特定空家に指定される前に売却すべき緊急度を確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcVacantRiskCheck">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">空き家を放置し続けると「特定空家」に指定されて固定資産税が最大6倍になります。放置コストと今売った場合の手取りを比べて、売却の緊急度を確認しましょう。</p>
+      <label>固定資産税の年額（現在　例：12万円なら12）<br><input type="number" id="vrc_tax" value="12" min="1" max="500" step="1" oninput="calcVacantRiskCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/年</label>
+      <label style="display:block;margin-top:8px">年間の維持費（管理・修繕・保険等　例：10万円なら10）<br><input type="number" id="vrc_maint" value="10" min="0" max="200" step="1" oninput="calcVacantRiskCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/年</label>
+      <label style="display:block;margin-top:8px">今すぐ売れる見込み額（例：800万円なら800）<br><input type="number" id="vrc_salePrice" value="800" min="0" max="50000" step="50" oninput="calcVacantRiskCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <div id="vrc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11586,6 +11601,38 @@ function calcMortDeductRemain() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcMortDeductRemain(); })();
+
+function calcVacantRiskCheck() {
+  var el = document.getElementById('vrc_result');
+  if (!el) return;
+  var tax       = parseFloat(document.getElementById('vrc_tax').value) || 0;
+  var maint     = parseFloat(document.getElementById('vrc_maint').value) || 0;
+  var salePrice = parseFloat(document.getElementById('vrc_salePrice').value) || 0;
+  var annualCost   = tax + maint;
+  var taxAfter6x   = Math.round(tax * 6);
+  var annualAfter  = taxAfter6x + maint;
+  var yrsBreakEven = annualCost > 0 ? Math.round(salePrice / annualCost * 10) / 10 : 0;
+  var saleFee      = Math.round((salePrice * 0.03 + 6) * 1.1);
+  var saleNet      = Math.round(salePrice - saleFee);
+  var color        = yrsBreakEven < 20 ? '220,38,38' : '201,168,76';
+  var label        = yrsBreakEven < 10 ? '今すぐ売却を強く推奨' : (yrsBreakEven < 20 ? '早めの売却検討を' : '急ぎではないが維持コストを把握しておきましょう');
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">放置し続けると何年で売却価格を上回るか</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+yrsBreakEven+'<span style="font-size:20px">年</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">現在の年間放置コスト</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">'+annualCost+'万円/年</td></tr>';
+  html += '<tr><td style="padding:6px 8px">特定空家指定後の年間コスト</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">'+annualAfter+'万円/年（固定資産税6倍）</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">今売れる見込み額</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+salePrice+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">売却後の手取り（手数料差引）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">約'+saleNet+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 特定空家への指定は自治体の判断によります。固定資産税6倍は住宅用地の軽減特例喪失による最大値</p>';
+  var shareText = '空き家を放置すると年間'+annualCost+'万円のコスト！特定空家に指定されると固定資産税が6倍で年間'+annualAfter+'万円に。'+yrsBreakEven+'年で売却価格を上回る #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcVacantRiskCheck(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
