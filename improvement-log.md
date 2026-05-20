@@ -4046,3 +4046,15 @@
 
 ### Tool5: 表面利回りから実質CF・実質利回り計算（calcActualYield）
 - 経費率20%・空室率5%・ローン控除後の月間CFと実質利回りを算出
+
+## 2026-05-21 02:00（セッション継続9 Round 20）
+
+- **対象**: tools/1-ai-satei.html, 2-akiya-hunter.html, 3-owner-direct.html, 4-kanri-saas.html, 5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新計算カード追加
+- **改善内容**: Round 20 — 各ツールに高PLG新規カード1枚ずつ追加（計5枚）
+
+### Tool1: 相続不動産の取得費2パターン節税比較（calcInheritSell）
+### Tool2: 空き家解体vs耐震改修 5年後資産価値（calcDemolishVsRetrofit）
+### Tool3: 新築vs中古+リフォーム 20年トータルコスト（calcNewVsRenovate）
+### Tool4: 長期入居者値下げ要求への対応 24ヶ月収益比較（calcLongTenantDeal）
+### Tool5: ワンルームvsファミリー向け 20年ROI（calcOneRoomVsFamily）
