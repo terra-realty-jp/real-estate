@@ -2770,6 +2770,23 @@
     </div>
   </div>
 
+  <div class="card" data-category="活用法" id="card-calcAkiyaHolidayLet">
+    <div class="card-header" onclick="toggleCard('calcAkiyaHolidayLet')">
+      <span>空き家を民泊・週末貸しで活用すると年間いくら稼げる？ 収支試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaHolidayLet">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">「Airbnbや民泊で空き家を貸したい」という方へ。稼働日数・1泊料金・清掃費・プラットフォーム手数料を入力して年間の収益がいくらになるかを試算できます。</p>
+      <label>1泊あたりの料金（例：15000円の場合は1.5）<br><input type="number" id="ahl_night" value="1.5" step="0.1" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">年間の稼働日数（例：100日の場合は100）<br><input type="number" id="ahl_days" value="100" style="width:100%"> 日</label>
+      <label style="display:block;margin-top:8px">1泊あたりの清掃費（例：5000円の場合は0.5）<br><input type="number" id="ahl_clean" value="0.5" step="0.1" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">プラットフォームの手数料（例：Airbnbは約3%）<br><input type="number" id="ahl_fee" value="3" style="width:100%"> %</label>
+      <label style="display:block;margin-top:8px">年間の固定費（光熱費・通信費・保険料など、例：24万円の場合は24）<br><input type="number" id="ahl_fixed" value="24" style="width:100%"> 万円</label>
+      <button onclick="calcAkiyaHolidayLet()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">年間収益を試算する</button>
+      <div id="ahl_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11179,6 +11196,42 @@ function calcAkiyaRepairSubsidy() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcAkiyaRepairSubsidy(); })();
+
+function calcAkiyaHolidayLet() {
+  var el = document.getElementById('ahl_result');
+  if (!el) return;
+  var night = parseFloat(document.getElementById('ahl_night').value) || 0;
+  var days  = parseFloat(document.getElementById('ahl_days').value) || 0;
+  var clean = parseFloat(document.getElementById('ahl_clean').value) || 0;
+  var fee   = parseFloat(document.getElementById('ahl_fee').value) || 0;
+  var fixed = parseFloat(document.getElementById('ahl_fixed').value) || 0;
+  if (night <= 0 || days <= 0) { el.innerHTML = '<p style="color:red">1泊料金と稼働日数を入力してください</p>'; el.style.display='block'; return; }
+  var grossRevenue = night * days;
+  var platformFee  = Math.round(grossRevenue * fee / 100 * 10) / 10;
+  var cleanCost    = Math.round(clean * days * 10) / 10;
+  var netRevenue   = Math.round((grossRevenue - platformFee - cleanCost - fixed) * 10) / 10;
+  var isProfit = netRevenue > 0;
+  var hc = isProfit ? '22,163,74' : '220,38,38';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">年間純収益</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+(netRevenue>=0?'+':'')+netRevenue+'<span style="font-size:20px">万円/年</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+(isProfit?'年間稼働'+days+'日で黒字':'固定費が収益を上回っています——稼働日数の見直しを')+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">宿泊収入（'+night+'万×'+days+'日）</td><td style="padding:6px 8px;text-align:right;color:rgba(22,163,74,1)">+'+grossRevenue+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">プラットフォーム手数料（'+fee+'%）</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">▲'+platformFee+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">清掃費（'+clean+'万×'+days+'日）</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">▲'+cleanCost+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">年間固定費</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">▲'+fixed+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"><strong>年間純収益</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+(netRevenue>=0?'+':'')+netRevenue+'万円</td></tr>';
+  html += '</table>';
+  html += '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:10px;margin-top:10px;font-size:12px">💡 民泊は旅館業法・住宅宿泊事業法（民泊新法）の届出が必要です。年間180日の稼働上限があります。</div>';
+  var shareText = isProfit
+    ? '空き家を年間'+days+'日民泊に使うと純収益+'+netRevenue+'万円になると試算！空き家のまま放置するより活用すべき #不動産かんたんツール'
+    : '民泊収入'+grossRevenue+'万円でも固定費・清掃費・手数料で収支が難しい。稼働日数を増やすか固定費を削減する必要あり #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcAkiyaHolidayLet(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
