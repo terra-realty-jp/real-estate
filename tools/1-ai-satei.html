@@ -4087,6 +4087,24 @@
     </div>
   </div>
 
+  <!-- calcLandPriceHistory -->
+  <div class="calc-card" id="card-calcLandPriceHistory">
+    <div class="card-header" onclick="toggleCard('calcLandPriceHistory')">
+      <span>今が「売り時」か診断——公示地価の変動率から見た売却タイミング判断</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcLandPriceHistory">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">国土交通省が毎年3月に発表する「公示地価」の変動率から、今のエリアが上昇・横ばい・下落のどの局面にあるかを判断し、売り時のタイミングを診断します。</p>
+      <label style="font-size:13px">物件の現在の売却想定価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="lph_price" value="3000" min="0" oninput="calcLandPriceHistory()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">エリアの公示地価 直近1年の変動率（%）<span style="color:#888;font-size:11px"> 例: 2.5（上昇）または -1（下落）</span></label>
+      <input type="number" id="lph_chg" value="2.5" step="0.1" oninput="calcLandPriceHistory()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">直近3年間の累積変動率（%）<span style="color:#888;font-size:11px"> 例: 8（3年で8%上昇）</span></label>
+      <input type="number" id="lph_chg3" value="8" step="0.1" oninput="calcLandPriceHistory()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="lph_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11893,6 +11911,39 @@ function calcNetAssetCheck() {
     +'<button onclick="shareLine(\'家を'+esc(price.toLocaleString())+'万円で売っても実際の手取りは'+esc(net.toLocaleString())+'万円と計算が出た😮 ローン・税金・手数料を全部引くとこんな差が…詳しく計算👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcNetAssetCheck(); })();
+
+function calcLandPriceHistory() {
+  var el = document.getElementById('lph_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('lph_price').value) || 0;
+  var chg   = parseFloat(document.getElementById('lph_chg').value)  || 0;
+  var chg3  = parseFloat(document.getElementById('lph_chg3').value) || 0;
+  // 売り時判断ロジック
+  var judgment, detail, color;
+  if (chg >= 3 && chg3 >= 5) {
+    judgment = '🔥 今が売り時（上昇局面のピーク付近）'; color = '22,163,74';
+    detail = '直近1年+'+chg+'%・3年+'+chg3+'%の強い上昇局面。高値での売却チャンスです。';
+  } else if (chg >= 1 && chg3 >= 3) {
+    judgment = '✅ 好調な売り時（上昇継続中）'; color = '22,163,74';
+    detail = '安定した上昇トレンド。売却を急ぐ必要はないが、今でも十分良い条件です。';
+  } else if (chg >= 0 && chg < 1) {
+    judgment = '⚠ 横ばい局面（中立）'; color = '201,168,76';
+    detail = '価格が安定しています。売却条件は悪くありませんが、積極的な値上がりは期待できない状況です。';
+  } else {
+    judgment = '🔻 下落局面——早めの売却を検討'; color = '220,38,38';
+    detail = '価格の下落傾向が見られます。早期売却の検討をおすすめします。';
+  }
+  var priceNext = Math.round(price * (1 + chg/100));
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">売り時診断</div>'
+    +'<div style="font-size:22px;font-weight:900;color:rgba('+color+',1);line-height:1.3">'+esc(judgment)+'</div>'
+    +'<div style="font-size:13px;color:#555;margin-top:8px">1年後の想定価格: <strong>'+esc(priceNext.toLocaleString())+'万円</strong>（+'+chg+'%変動）</div>'
+    +'</div>'
+    +'<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px;font-size:12px;color:#0369a1;margin-bottom:12px">ℹ '+esc(detail)+'</div>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 公示地価は国土交通省サイトで無料確認できます。「地価公示・地価調査」で検索してエリアを絞り込んでください。</div>'
+    +'<button onclick="shareLine(\'公示地価データで「'+esc(judgment)+'」と診断が出た！地価'+chg+'%変動で1年後に'+esc(priceNext.toLocaleString())+'万円になる可能性。売り時って重要😮 診断してみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcLandPriceHistory(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
