@@ -4117,6 +4117,27 @@
     </div>
   </div>
 
+
+  <!-- calcLongTenantDeal -->
+  <div class="calc-card" id="card-calcLongTenantDeal">
+    <div class="card-header" onclick="toggleCard('calcLongTenantDeal')">
+      <span>長期入居者に家賃値下げを要求された——応じる vs 据え置き、どちらが得か？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcLongTenantDeal">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">長期入居者から「家賃を下げてほしい」と要求されるケースがあります。値下げに応じて住み続けてもらう場合と、退去後に新しい入居者を探す場合の収益を比べます。</p>
+      <label style="font-size:13px">現在の月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 8</span></label>
+      <input type="number" id="ltd_rent" value="8" min="0" step="0.5" oninput="calcLongTenantDeal()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">値下げ要求額（万円）<span style="color:#888;font-size:11px"> 例: 1（8万円→7万円にしてほしい）</span></label>
+      <input type="number" id="ltd_cut" value="1" min="0" step="0.5" oninput="calcLongTenantDeal()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">退去後の空室期間の見込み（ヶ月）<span style="color:#888;font-size:11px"> 例: 3</span></label>
+      <input type="number" id="ltd_vacant" value="3" min="0" max="12" step="0.5" oninput="calcLongTenantDeal()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">退去時の原状回復・募集費用（万円）<span style="color:#888;font-size:11px"> 例: 30</span></label>
+      <input type="number" id="ltd_cost" value="30" min="0" oninput="calcLongTenantDeal()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="ltd_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14491,6 +14512,39 @@ function calcDepositStrategy(){
     +'<button onclick="shareLine(\'礼金ゼロ・フリーレント戦略を試算！空室を早く埋めた方が24ヶ月で'+Math.abs(Math.round(diff*10)/10)+'万円'+(promoWins?'得':'損')+'という結果に😮 大家さんは確認必須👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcDepositStrategy(); })();
+function calcLongTenantDeal(){
+  var rent=parseFloat(document.getElementById('ltd_rent').value)||8;
+  var cut=parseFloat(document.getElementById('ltd_cut').value)||1;
+  var vacant=parseFloat(document.getElementById('ltd_vacant').value)||3;
+  var cost=parseFloat(document.getElementById('ltd_cost').value)||30;
+  var r=document.getElementById('ltd_result');
+  if(!r)return;
+  var period=24;
+  var rentAfter=rent-cut;
+  var revenueAccept=rentAfter*period;
+  var revenueDeny=rent*(period-vacant)-cost;
+  var diff=revenueAccept-revenueDeny;
+  var acceptWins=diff>0;
+  var heroColor=acceptWins?'22,163,74':'59,130,246';
+  var breakEvenVacant=Math.max(0,Math.round((cut*period-cost)/rent*10)/10);
+  var verdictLabel=acceptWins?'値下げに応じた方が得':'据え置いて退去してもらう方が得';
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba('+heroColor+',0.12),rgba('+heroColor+',0.04));border:2px solid rgba('+heroColor+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">24ヶ月間の収益差（値下げ応じる - 据え置き）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+heroColor+',1);line-height:1">'+(diff>=0?'+':'')+Math.round(diff*10)/10+'</div>'
+    +'<div style="font-size:13px;color:#374151">万円（値下げに応じる方が'+(acceptWins?'有利':'不利')+'）</div>'
+    +'<div style="font-size:14px;font-weight:700;color:rgb('+heroColor+');margin-top:8px">'+esc(verdictLabel)+'</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 24ヶ月間の収益比較</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">値下げ応じる（月'+rentAfter+'万円×24ヶ月）</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+Math.round(revenueAccept)+'万円</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">据え置き（空室'+vacant+'ヶ月+費用'+cost+'万円）</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+Math.round(revenueDeny)+'万円</td></tr>'
+    +'<tr style="background:#fef9c3"><td style="padding:6px 8px;font-weight:700">値下げが得になる空室ライン</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:#b45309">'+breakEvenVacant+'ヶ月超</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 空室期間が'+breakEvenVacant+'ヶ月を超えると予想されるなら値下げに応じる方が得です。退去後の入居者が早く見つかるなら据え置き交渉が有利です。</div>'
+    +'<button onclick="shareLine(\'長期入居者への値下げ、24ヶ月で試算したら'+esc(verdictLabel)+'が'+Math.abs(Math.round(diff*10)/10)+'万円お得！ 大家さんは計算してから判断を👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcLongTenantDeal(); })();
+
 
 
 
