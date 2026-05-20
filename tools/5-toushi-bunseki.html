@@ -3878,6 +3878,24 @@
     </div>
   </div>
 
+  <div class="calc-card" id="card-calcInheritanceShareConflict">
+    <div class="card-header" onclick="toggleCard('calcInheritanceShareConflict')">
+      <span>相続で不動産が「共有名義」になったとき、売れない・揉めたときの損失コストを試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcInheritanceShareConflict">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#dc2626;line-height:1.7">⚠️ 相続で不動産が兄弟・親族の共有名義になると、1人でも反対すれば売却できません。早期対策か、合意形成のコストを事前に把握しておきましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の状況に変更して確認してください。</p>
+      <label style="font-size:13px">物件の評価額（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="isc_value" value="3000" min="0" oninput="calcInheritanceShareConflict()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">共有者の人数<span style="color:#888;font-size:11px"> 例: 3（自分＋兄弟2人）</span></label>
+      <input type="number" id="isc_persons" value="3" min="2" max="10" oninput="calcInheritanceShareConflict()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">意見がまとまるまでの期間（年）<span style="color:#888;font-size:11px"> 例: 3（典型的な揉め事は3〜5年）</span></label>
+      <input type="number" id="isc_years" value="3" min="1" max="20" oninput="calcInheritanceShareConflict()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="isc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -14498,6 +14516,34 @@ function calcFamilyTrust() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😰 親が認知症になったら不動産はどうなる？\n\n成年後見 vs 家族信託、' + years + '年間のコスト差は約' + Math.round(Math.abs(diff)) + '万円の差があった！\n\n早めに備える方が断然お得。試算はこちらから 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcFamilyTrust(); })();
+
+function calcInheritanceShareConflict() {
+  var value = parseFloat(document.getElementById('isc_value').value) || 0;
+  var persons = Math.max(2, parseFloat(document.getElementById('isc_persons').value) || 2);
+  var years = parseFloat(document.getElementById('isc_years').value) || 1;
+  var el = document.getElementById('isc_result');
+  if (!el) return;
+  var fixedAssetTax = value * 10000 * 0.014;
+  var totalTax = fixedAssetTax * years;
+  var lawyerFee = 50 + (persons - 2) * 15;
+  var mediationFee = 30;
+  var valueDrop = value * 0.05 * years;
+  var myShare = Math.round(value / persons);
+  var shareDiscount = myShare * 0.3;
+  var totalLoss = totalTax / 10000 + lawyerFee + mediationFee + valueDrop + shareDiscount;
+  var heroColor = totalLoss >= 200 ? '#dc2626' : totalLoss >= 100 ? '#c9a84c' : '#dc2626';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + Math.round(totalLoss).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">の潜在的損失（' + years + '年間・共有者' + persons + '名）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🏠 固定資産税（' + years + '年分）: <strong>-' + Math.round(totalTax / 10000).toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">⚖️ 弁護士・調停費用: <strong>-' + (lawyerFee + mediationFee) + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">📉 不動産価値の下落（年5%×' + years + '年）: <strong>-' + Math.round(valueDrop).toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">💔 持分売却時の値引き（30%安）: <strong>-' + Math.round(shareDiscount).toLocaleString() + '万円</strong></div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 生前に「遺言書」や「家族信託」を作成しておけば、共有名義を回避できます。相続登記期限（2024年〜3年以内が義務）を守らないと10万円以下の過料も発生します。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😱 相続で不動産が共有名義になって揉めた場合の損失を計算してみた…\n\n' + years + '年間の税金・弁護士費用・値下がりを合計すると約' + Math.round(totalLoss) + '万円の損失！\n生前対策が重要すぎる…\n\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcInheritanceShareConflict(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {

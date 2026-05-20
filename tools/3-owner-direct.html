@@ -3638,6 +3638,32 @@
     </div>
   </div>
 
+  <div class="card" data-category="補助金・税制" id="card-calcEcoHomeSubsidy">
+    <div class="card-header" onclick="toggleCard('calcEcoHomeSubsidy')">
+      <span>子育てエコホーム支援事業 補助金をいくらもらえる？ 省エネ基準・家族構成で試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcEcoHomeSubsidy">
+      <div style="background:rgba(220,252,231,0.5);border:1px solid rgba(22,163,74,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#15803d;line-height:1.7">💡 「子育てエコホーム支援事業」は国土交通省の補助金制度で、省エネ住宅の新築・リフォームに最大100万円が受け取れます（2024年度）。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の条件を選んで、概算の補助金額を確認してください。</p>
+      <label style="font-size:13px">住宅の種別</label>
+      <select id="eco_type" onchange="calcEcoHomeSubsidy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;font-size:13px">
+        <option value="new_zeh">新築（ZEH水準省エネ住宅）</option>
+        <option value="new_certified" selected>新築（長期優良・低炭素住宅）</option>
+        <option value="reform_zeh">リフォーム（ZEH水準）</option>
+        <option value="reform_standard">リフォーム（省エネ基準適合）</option>
+      </select>
+      <label style="font-size:13px">子育て・若者世帯ですか？<span style="color:#888;font-size:11px"> 18歳以下の子or夫婦どちらか39歳以下</span></label>
+      <select id="eco_family" onchange="calcEcoHomeSubsidy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;font-size:13px">
+        <option value="yes" selected>はい（子育て・若者世帯）</option>
+        <option value="no">いいえ（その他の世帯）</option>
+      </select>
+      <label style="font-size:13px">リフォームの場合：工事費（万円）<span style="color:#888;font-size:11px"> 例: 200（新築の場合は無視）</span></label>
+      <input type="number" id="eco_reform_cost" value="200" min="0" oninput="calcEcoHomeSubsidy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="eco_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -12120,6 +12146,49 @@ function calcFlat35VsVar() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏦 フラット35 vs 変動金利、20年間の総支払い差を計算してみた\n\n金利が5年ごとに上昇するシナリオだと\n' + cheaper + 'が約' + Math.round(Math.abs(diff) / 10000) + '万円 安い結果に！\n\nあなたの数字で試してみて 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcFlat35VsVar(); })();
+
+function calcEcoHomeSubsidy() {
+  var type = document.getElementById('eco_type').value;
+  var family = document.getElementById('eco_family').value;
+  var reformCost = parseFloat(document.getElementById('eco_reform_cost').value) || 0;
+  var el = document.getElementById('eco_result');
+  if (!el) return;
+  var isFamily = family === 'yes';
+  var subsidy = 0;
+  var maxSubsidy = 0;
+  var note = '';
+  if (type === 'new_certified') {
+    subsidy = isFamily ? 100 : 80;
+    maxSubsidy = 100;
+    note = '長期優良住宅・低炭素住宅の新築';
+  } else if (type === 'new_zeh') {
+    subsidy = isFamily ? 100 : 80;
+    maxSubsidy = 100;
+    note = 'ZEH水準省エネ新築';
+  } else if (type === 'reform_zeh') {
+    var base = Math.min(reformCost * 0.1, 45);
+    subsidy = isFamily ? Math.min(base * 1.5, 60) : base;
+    maxSubsidy = isFamily ? 60 : 45;
+    note = '省エネリフォーム（ZEH水準）';
+  } else {
+    var base2 = Math.min(reformCost * 0.1, 30);
+    subsidy = isFamily ? Math.min(base2 * 1.5, 45) : base2;
+    maxSubsidy = isFamily ? 45 : 30;
+    note = '省エネリフォーム（基準適合）';
+  }
+  var heroColor = subsidy >= 80 ? '#16a34a' : subsidy >= 40 ? '#c9a84c' : '#3b82f6';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + Math.round(subsidy) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">概算の補助金受取額（上限 ' + maxSubsidy + '万円）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🏠 <strong>住宅種別</strong>: ' + note + '</div>'
+    + '<div style="margin-bottom:4px">👨‍👩‍👧 <strong>世帯区分</strong>: ' + (isFamily ? '子育て・若者世帯（上乗せあり）' : 'その他世帯') + '</div>'
+    + '<div style="margin-bottom:4px">💰 <strong>概算補助金</strong>: <strong style="color:' + heroColor + '">' + Math.round(subsidy) + '万円</strong></div>'
+    + '<div style="font-size:11px;color:#888;margin-top:6px">※申請要件・省エネ基準の適合確認が必要です</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 補助金は工務店・ハウスメーカーが代理申請します。省エネ基準適合の確認書類が必要なので、契約前に「子育てエコホーム支援事業に対応しているか」を必ず確認してください。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🌿 子育てエコホーム支援事業の補助金を試算してみた！\n\n' + note + '→ 約' + Math.round(subsidy) + '万円の補助金が受け取れる！\n' + (isFamily ? '子育て・若者世帯は上乗せあり' : '') + '\n\n新築・リフォームを考えているなら必ずチェック 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcEcoHomeSubsidy(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
