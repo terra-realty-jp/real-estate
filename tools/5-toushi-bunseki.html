@@ -3744,6 +3744,26 @@
     </div>
   </div>
 
+  <!-- calcReitCompare -->
+  <div class="calc-card" id="card-calcReitCompare">
+    <div class="card-header" onclick="toggleCard('calcReitCompare')">
+      <span>不動産直接投資 vs J-REIT——同じ金額を5年間運用した場合の資産比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcReitCompare">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">「不動産を直接買う」か「J-REITに投資する」か迷っていませんか？同じ自己資金で5年後の資産額がどう違うか比較します。REITは流動性が高く少額から投資できる反面、レバレッジ効果は物件直接購入より低いです。</p>
+      <label style="font-size:13px">投資可能な自己資金（万円）<span style="color:#888;font-size:11px"> 例: 500</span></label>
+      <input type="number" id="rc2_capital" value="500" min="0" oninput="calcReitCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">直接投資：物件価格（万円）<span style="color:#888;font-size:11px"> 例: 5000（500万円の頭金でフルローン）</span></label>
+      <input type="number" id="rc2_proprice" value="5000" min="0" oninput="calcReitCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">直接投資：表面利回り（%）<span style="color:#888;font-size:11px"> 例: 6</span></label>
+      <input type="number" id="rc2_yield" value="6" min="0" step="0.1" oninput="calcReitCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">J-REIT：想定年間利回り（%）<span style="color:#888;font-size:11px"> 例: 3.5（東証REIT指数の平均分配利回り）</span></label>
+      <input type="number" id="rc2_reit" value="3.5" min="0" step="0.1" oninput="calcReitCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="rc2_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -14095,6 +14115,40 @@ function calcSelfFundROI() {
     +'<button onclick="shareLine(\'表面利回り'+esc(grossYield)+'%でも自己資金利回りは'+esc(ccr)+'%！レバレッジの効果って凄い😲 頭金に対して実際にどれだけ稼げるか計算してみた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcSelfFundROI(); })();
+
+function calcReitCompare() {
+  var el = document.getElementById('rc2_result');
+  if (!el) return;
+  var capital  = parseFloat(document.getElementById('rc2_capital').value)  || 0;
+  var proprice = parseFloat(document.getElementById('rc2_proprice').value) || 0;
+  var propYield= parseFloat(document.getElementById('rc2_yield').value)    || 0;
+  var reitYield= parseFloat(document.getElementById('rc2_reit').value)     || 0;
+  var years = 5;
+  // 直接投資: 物件全体の家賃収入（表面利回り）×5年、自己資金に対する収益率
+  var annualRentIncome = proprice * propYield / 100;
+  var direct5yr = Math.round(annualRentIncome * years);
+  var directROE = proprice > 0 ? Math.round(direct5yr / capital * 100) : 0;
+  // J-REIT: 自己資金に複利（単純年複利）
+  var reitAsset5 = Math.round(capital * Math.pow(1 + reitYield/100, years));
+  var reitIncome = reitAsset5 - capital;
+  var diff = direct5yr - reitIncome;
+  var isDirBetter = diff >= 0;
+  var color = isDirBetter ? '22,163,74' : '59,130,246';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">'+(isDirBetter?'直接投資の方が5年間収益が多い':'J-REITの方が5年間収益が多い')+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(isDirBetter?'+':'')+esc(Math.abs(diff).toLocaleString())+'万円差</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">'+(isDirBetter?'直接投資':'J-REIT')+'の方が5年で<strong>'+esc(Math.abs(diff).toLocaleString())+'万円</strong>多い収益</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">比較</th><th style="padding:6px;text-align:right">直接投資</th><th style="padding:6px;text-align:right">J-REIT</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">投資額</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">自己資金'+esc(capital)+'万円（物件'+esc(proprice)+'万円）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(capital)+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">利回り</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">表面'+propYield+'%</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+reitYield+'%</td></tr>'
+    +'<tr><td style="padding:6px">5年累計収益</td><td style="padding:6px;text-align:right;font-weight:700;color:#16a34a">+'+esc(direct5yr.toLocaleString())+'万円</td><td style="padding:6px;text-align:right;font-weight:700;color:#3b82f6">+'+esc(reitIncome.toLocaleString())+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 直接投資はレバレッジ効果で収益が大きい反面、管理手間・流動性リスクがあります。REITは少額で手軽ですが収益規模は限られます。</div>'
+    +'<button onclick="shareLine(\'同じ'+esc(capital)+'万円を直接投資とJ-REITで比べたら5年で'+esc(Math.abs(diff).toLocaleString())+'万円も差が出た！どっちがいいか迷ってる人はシミュレーションしてみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcReitCompare(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
