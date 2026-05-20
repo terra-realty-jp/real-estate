@@ -118,28 +118,64 @@ async function sbDelete(table, id) {
 }
 
 // ─────────────────────────────────────────────
-// 匿名利用ログ（Phase 3 データ蓄積）
+// 匿名利用ログ（Phase 4-A データ収集戦略）
 // ─────────────────────────────────────────────
 // localStorage: re_usage_stats → { cardId: count, ... } per tool
+// localStorage: re_session_id  → 匿名ブラウザセッションID（永続）
+// localStorage: re_calc_log    → 直近20件の計算ログ（Phase 4-C 相談CTA連携用）
 const _USAGE_LS_PREFIX = 're_usage_';
+const _SESSION_LS_KEY  = 're_session_id';
+const _CALC_LOG_KEY    = 're_calc_log';
 
-function sbLogCardUsage(toolId, cardId) {
+// 匿名セッションID取得（ブラウザごとに1つ・永続・個人特定不可）
+function _getSessionId() {
+  let sid = '';
+  try { sid = localStorage.getItem(_SESSION_LS_KEY) || ''; } catch(e) {}
+  if (!sid) {
+    try {
+      sid = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem(_SESSION_LS_KEY, sid);
+    } catch(e) { sid = 'unknown'; }
+  }
+  return sid;
+}
+
+// カード使用ログ（呼び出し側: logCardUsage(toolId, cardId, action, resultLabel)）
+// action: 'calc' / 'share' / 'fav'
+// resultLabel: ヒーロー数値の文字列（例: '350万円'）— Phase 4-C 相談CTA連携用
+function sbLogCardUsage(toolId, cardId, action, resultLabel) {
   if (!cardId) return;
+  action = action || 'calc';
+  // localStorageに使用回数を積む
   const key = _USAGE_LS_PREFIX + toolId;
   let stats = {};
   try { stats = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e) {}
   stats[cardId] = (stats[cardId] || 0) + 1;
   try { localStorage.setItem(key, JSON.stringify(stats)); } catch(e) {}
-  // 非同期でSupabaseにも記録（テーブルがなければ静かに失敗）
+  // 直近計算ログに積む（Phase 4-C 用）
+  if (action === 'calc' && resultLabel) {
+    try {
+      var log = JSON.parse(localStorage.getItem(_CALC_LOG_KEY) || '[]');
+      log.unshift({ toolId: toolId, cardId: cardId, result: resultLabel, ts: Date.now() });
+      if (log.length > 20) log = log.slice(0, 20);
+      localStorage.setItem(_CALC_LOG_KEY, JSON.stringify(log));
+    } catch(e) {}
+  }
+  // Supabaseに非同期送信（テーブルがなければ静かに失敗）
   if (_sbOK) {
-    _db.from('tool_events').insert({
+    _db.from('card_usage_log').insert({
       tool_id: toolId,
       card_id: cardId,
+      action: action,
+      session_id: _getSessionId(),
       created_at: new Date().toISOString()
     }).then(function() {}).catch(function() {});
   }
 }
 
+// よく使うカードTOP N を返す
 function sbGetTopCards(toolId, limit) {
   const key = _USAGE_LS_PREFIX + toolId;
   let stats = {};
@@ -148,6 +184,43 @@ function sbGetTopCards(toolId, limit) {
     .sort(function(a, b) { return b[1] - a[1]; })
     .slice(0, limit || 3)
     .map(function(e) { return { cardId: e[0], count: e[1] }; });
+}
+
+// 直近の計算ログを返す（Phase 4-C 相談CTA用）
+function sbGetRecentCalcLog(limit) {
+  try {
+    var log = JSON.parse(localStorage.getItem(_CALC_LOG_KEY) || '[]');
+    return log.slice(0, limit || 5);
+  } catch(e) { return []; }
+}
+
+// カード名（表示用）を card_id から生成
+function _cardLabel(cardId) {
+  if (!cardId) return '';
+  // 'card-calcXxx' or 'card-xxx' → 文字列加工
+  return cardId.replace(/^card-/, '').replace(/^calc/, '').replace(/([A-Z])/g, ' $1').trim();
+}
+
+// ─────────────────────────────────────────────
+// Phase 4-C: 相談CTA メール本文生成
+// ─────────────────────────────────────────────
+// 各ツールのCTAボタンの onclick で呼ぶ: updateCTALink(anchorEl, toolId)
+// → 直近3件の計算結果をメール本文に自動付加して差別化された初回提案を実現
+function updateCTALink(anchorEl, toolId) {
+  try {
+    var log = sbGetRecentCalcLog(3);
+    if (!log.length) return; // ログがなければhrefそのまま
+    var toolNames = {1:'AI査定', 2:'空き家活用', 3:'売主買主マッチング', 4:'賃貸管理', 5:'投資分析'};
+    var lines = ['【使用ツール: ' + (toolNames[toolId] || 'ツール' + toolId) + '】', '直近の計算履歴:'];
+    log.forEach(function(item, i) {
+      lines.push((i+1) + '. ' + _cardLabel(item.cardId) + ': ' + item.result);
+    });
+    lines.push('', '上記の計算をもとにご相談したいことがあります。');
+    var body = lines.join('\n');
+    var subject = encodeURIComponent('不動産についてご相談したい（計算結果あり）');
+    var bodyEnc = encodeURIComponent(body);
+    anchorEl.href = 'mailto:terra.realty.iam@gmail.com?subject=' + subject + '&body=' + bodyEnc;
+  } catch(e) {}
 }
 
 // ─────────────────────────────────────────────
