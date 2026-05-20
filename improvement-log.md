@@ -4167,3 +4167,17 @@
 ### Tool4: 固定資産税 価格審査請求で税額を下げる可能性試算（calcPropertyTaxReview）
 ### Tool5: 都心 新築ワンルーム vs 中古ワンルーム 10年収益比較（calcNewVsUsedWanRoom）
 
+
+## 2026-05-21 Round 25（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 25）
+- **改善内容**:
+  - Tool1: calcHealthInsAfterSale — 家を売った翌年の健康保険料・住民税「隠れコスト」試算。売却代金を使い切る前に翌年の追加請求額を把握できる
+  - Tool2: calcAkiyaSharedKitchen — 空き家をシェアキッチン（レンタルキッチン）に転用した場合の月次収益・改修費回収期間試算
+  - Tool3: calcShortTermSaleTax — 5年以内売却で税率約2倍。短期39.63%vs長期20.315%の税額差・節税額・あと何年待てばいいかを表示
+  - Tool4: calcExteriorReserve — 外壁・屋根塗替えの12年サイクル・費用概算と月次積立必要額。10年超で緊急警告
+  - Tool5: calcTowerMansionTax — 2024年改正前後のタワマン相続税評価額比較。節税効果の縮小金額を具体的に提示
+- **理由**: 「知らないと損する制度・税金」系カードはLINEシェアを促す強い感情反応（驚き・損失恐怖）を生む
+- **仮ユーザーレビュー**: ペルソナ3（鈴木幸子さん・家売却検討中）— calcHealthInsAfterSaleのタイトル「翌年、健康保険料と住民税がいくら上がる？」は売却後の不安に直結。「翌年6月に追加請求が来る」という警告テキストが次の行動を促す ✅
+- **カード総数**: 617枚
