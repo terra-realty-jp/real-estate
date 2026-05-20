@@ -4155,6 +4155,24 @@
     </div>
   </div>
 
+  <div class="card" data-category="修繕・リフォーム" id="card-calcFireInsuranceClaim">
+    <div class="card-header" onclick="toggleCard('calcFireInsuranceClaim')">
+      <span>賃貸物件の修繕、火災保険で賄える？ 保険申請 vs 自費修繕を判断する計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcFireInsuranceClaim">
+      <div style="background:rgba(220,252,231,0.5);border:1px solid rgba(22,163,74,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#15803d;line-height:1.7">💡 風災・水災・漏水・落雷などが原因の修繕は火災保険の「建物補償」で賄える場合があります。免責金額と保険料値上がりリスクを考慮した「申請の損益分岐点」を確認しましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。実際の修繕費・保険条件に変更してください。</p>
+      <label style="font-size:13px">修繕費用の見積もり（万円）<span style="color:#888;font-size:11px"> 例: 30</span></label>
+      <input type="number" id="fic_repair" value="30" min="0" oninput="calcFireInsuranceClaim()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">保険の免責金額（万円）<span style="color:#888;font-size:11px"> 例: 5（ゼロ免責プランは0）</span></label>
+      <input type="number" id="fic_deductible" value="5" min="0" oninput="calcFireInsuranceClaim()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">保険申請後の年間保険料値上がり見込み（万円）<span style="color:#888;font-size:11px"> 例: 2</span></label>
+      <input type="number" id="fic_rise" value="2" min="0" step="0.5" oninput="calcFireInsuranceClaim()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="fic_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="リスク管理" id="card-calcRentDelinquency">
     <div class="card-header" onclick="toggleCard('calcRentDelinquency')">
       <span>家賃滞納が続いたら損失はいくら？ 弁護士費用・強制退去コストを試算</span>
@@ -14612,6 +14630,30 @@ function calcIoTROI() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🔑 スマートロック・宅配ボックスを設置したら年間 +' + Math.round(annualGain * 10) / 10 + '万円 の増収になる試算が出た！\n\n投資回収期間は' + paybackMonths + 'ヶ月。設備投資を検討している大家さんは試してみて 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcIoTROI(); })();
+
+function calcFireInsuranceClaim() {
+  var repair = parseFloat(document.getElementById('fic_repair').value) || 0;
+  var deductible = parseFloat(document.getElementById('fic_deductible').value) || 0;
+  var rise = parseFloat(document.getElementById('fic_rise').value) || 0;
+  var el = document.getElementById('fic_result');
+  if (!el) return;
+  var payout = Math.max(0, repair - deductible);
+  var breakEven = rise > 0 ? Math.ceil(payout / rise) : 99;
+  var worthIt = payout > 0 && breakEven >= 5;
+  var heroColor = worthIt ? '#16a34a' : '#c9a84c';
+  var verdict = worthIt ? '申請する価値あり' : payout <= 0 ? '免責内のため申請不要' : '5年以内に保険料で回収';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + verdict + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">' + (payout > 0 ? '保険金見込み: <strong>' + payout + '万円</strong>' : '免責金額以下のため保険金なし') + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🔧 修繕費: <strong>' + repair + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">🛡️ 免責金額: <strong>-' + deductible + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">💰 保険金（見込み）: <strong style="color:' + heroColor + '">' + payout + '万円</strong></div>'
+    + (rise > 0 && payout > 0 ? '<div style="margin-bottom:4px">📈 保険料値上がりで元が取れる年数: <strong>' + (breakEven >= 99 ? '影響なし' : breakEven + '年') + '</strong></div>' : '')
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 保険申請の原則: 自然災害・突発事故が原因の損害は申請可能です。経年劣化や入居者の故意・過失は対象外です。修繕前に被害状況の写真を撮っておくことが重要です。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🛡️ 賃貸物件の修繕' + repair + '万円、火災保険で申請できるか計算してみた！\n\n保険金見込み: ' + payout + '万円→' + verdict + '\n\n大家さんは知っておきたい保険活用術 ↓\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcFireInsuranceClaim(); })();
 
 function calcRentDelinquency() {
   var rent = parseFloat(document.getElementById('rdc_rent').value) || 0;

@@ -4178,6 +4178,24 @@
     </div>
   </div>
 
+  <div class="card" data-category="手続き・媒介" id="card-calcPresaleMinorReno">
+    <div class="card-header" onclick="toggleCard('calcPresaleMinorReno')">
+      <span>売却前に内装リフォームすべき？ クロス張替え・クリーニング費用と査定価格アップを比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcPresaleMinorReno">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 「リフォームしてから売る」はコストが先に出ますが、査定価格が上がれば元が取れます。「現状渡し」で安く売るのと比較して、どちらが手取りが多いかを確認しましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。実際の物件価格・リフォーム費に変更してください。</p>
+      <label style="font-size:13px">現状渡しの売却予定価格（万円）<span style="color:#888;font-size:11px"> 例: 2800</span></label>
+      <input type="number" id="pmr_price" value="2800" min="0" oninput="calcPresaleMinorReno()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">リフォーム費用（万円）<span style="color:#888;font-size:11px"> 例: 50（クロス全面＋クリーニング＋CF張替え）</span></label>
+      <input type="number" id="pmr_cost" value="50" min="0" oninput="calcPresaleMinorReno()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">リフォーム後の価格アップ見込み（%）<span style="color:#888;font-size:11px"> 例: 3（内装リフォームで2〜5%が目安）</span></label>
+      <input type="number" id="pmr_up" value="3" min="0" max="20" step="0.5" oninput="calcPresaleMinorReno()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="pmr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="手続き・媒介" id="card-calcBridgeLoanCost">
     <div class="card-header" onclick="toggleCard('calcBridgeLoanCost')">
       <span>住み替えで「先に買うか・先に売るか」 つなぎ融資 vs 仮住まいコスト比較</span>
@@ -12179,6 +12197,30 @@ function calcNoFilePenalty() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('😱 不動産売却の確定申告を1年放置したら追徴税を計算してみた…\n\n本来の税額に無申告加算税＋延滞税が加わって\n合計 ' + Math.round(total / 10000) + '万円 になった！\n申告期限は忘れずに 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcNoFilePenalty(); })();
+
+function calcPresaleMinorReno() {
+  var price = parseFloat(document.getElementById('pmr_price').value) || 0;
+  var cost = parseFloat(document.getElementById('pmr_cost').value) || 0;
+  var up = parseFloat(document.getElementById('pmr_up').value) || 0;
+  var el = document.getElementById('pmr_result');
+  if (!el) return;
+  var priceUp = price * (up / 100);
+  var net = priceUp - cost;
+  var renoPrice = price + priceUp;
+  var heroColor = net >= 0 ? '#16a34a' : '#dc2626';
+  var judgment = net >= 0 ? 'リフォームが得！' : '現状渡しが得';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + judgment + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">純利益差: <strong style="color:' + heroColor + '">' + (net >= 0 ? '+' : '') + Math.round(net).toLocaleString() + '万円</strong></div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🏠 現状渡し売却: <strong>' + price.toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">🔨 リフォーム後売却: <strong>' + Math.round(renoPrice).toLocaleString() + '万円</strong>（+' + Math.round(priceUp) + '万円）</div>'
+    + '<div style="margin-bottom:4px">💸 リフォーム費: <strong>-' + cost + '万円</strong></div>'
+    + '<div style="margin-bottom:4px;border-top:1px solid #eee;padding-top:6px">✅ 純増加額: <strong style="color:' + heroColor + '">' + (net >= 0 ? '+' : '') + Math.round(net) + '万円</strong></div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 内装リフォームの効果は「内見時の第一印象」に大きく左右されます。クロス・クリーニング・CF（フローリング表面）の3点セットで費用を抑えつつ印象を上げることが多くの不動産業者の推奨策です。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('🏠 売却前にリフォームすべきか計算してみた！\n\nリフォーム費' + cost + '万円→査定価格' + Math.round(priceUp) + '万円アップ\n→ 純利益差: ' + (net >= 0 ? '+' : '') + Math.round(net) + '万円（' + judgment + '）\n\n売却を考えている方、一度試算を ↓\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcPresaleMinorReno(); })();
 
 function calcBridgeLoanCost() {
   var price = parseFloat(document.getElementById('blc_price').value) || 0;

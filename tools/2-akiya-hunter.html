@@ -3021,6 +3021,24 @@
     </div>
   </div>
 
+  <div class="calc-card" id="card-calcAkiyaFurnishedSale">
+    <div class="card-header" onclick="toggleCard('calcAkiyaFurnishedSale')">
+      <span>空き家の家具・家財を「残したまま売る」vs「処分してから売る」 手取り比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaFurnishedSale">
+      <div style="background:rgba(254,243,199,0.5);border:1px solid rgba(202,138,4,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400e;line-height:1.7">💡 家財付きは買い手が限られて価格が下がります。処分費は先に出ますが、売却価格が上がれば元が取れます。どちらが実際に手取りが多いか確認しましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。実際の物件価格・荷物の量に変更してください。</p>
+      <label style="font-size:13px">家財処分後の売却予定価格（万円）<span style="color:#888;font-size:11px"> 例: 1500</span></label>
+      <input type="number" id="afs_price" value="1500" min="0" oninput="calcAkiyaFurnishedSale()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">家財処分費用（万円）<span style="color:#888;font-size:11px"> 例: 40（荷物が多い一軒家の目安）</span></label>
+      <input type="number" id="afs_disposal" value="40" min="0" oninput="calcAkiyaFurnishedSale()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">家財付き売却での値引き率（%）<span style="color:#888;font-size:11px"> 例: 7（家財付きだと5〜10%安くなることが多い）</span></label>
+      <input type="number" id="afs_discount" value="7" min="0" max="30" step="0.5" oninput="calcAkiyaFurnishedSale()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="afs_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="calc-card" id="card-calcAkiyaDIYRent">
     <div class="card-header" onclick="toggleCard('calcAkiyaDIYRent')">
       <span>「自由にリフォームしていい」DIY可賃貸 vs 普通賃貸 — 空き家オーナーの手取りはどちらが多い？</span>
@@ -12008,6 +12026,28 @@ function calcAkiyaCare() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🏥 実家の空き家を' + labelMap[type] + 'に活用したら月 ' + Math.round(netMonthly / 10000) + '万円の収入になる試算が出た！\n\n投資回収期間は約' + (paybackMonths / 12).toFixed(1) + '年。賃貸より高収益になる可能性が。\n\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaCare(); })();
+
+function calcAkiyaFurnishedSale() {
+  var price = parseFloat(document.getElementById('afs_price').value) || 0;
+  var disposal = parseFloat(document.getElementById('afs_disposal').value) || 0;
+  var discount = parseFloat(document.getElementById('afs_discount').value) || 0;
+  var el = document.getElementById('afs_result');
+  if (!el) return;
+  var furnishedPrice = price * (1 - discount / 100);
+  var cleanSaleNet = price - disposal;
+  var diff = cleanSaleNet - furnishedPrice;
+  var winner = diff >= 0 ? '処分してから売る' : '家財付きで売る';
+  var winColor = diff >= 0 ? '#16a34a' : '#c9a84c';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + winColor + ';line-height:1;margin-bottom:4px">' + winner + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">が <strong>' + Math.abs(Math.round(diff)).toLocaleString() + '万円</strong> 手取りが多い</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">📦 家財付き売却: <strong>' + Math.round(furnishedPrice).toLocaleString() + '万円</strong>（値引き ' + discount + '%）</div>'
+    + '<div style="margin-bottom:4px">🧹 処分後売却の手取り: <strong>' + Math.round(cleanSaleNet).toLocaleString() + '万円</strong>（' + price + '万円 - 処分費' + disposal + '万円）</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 家財付き売却は「内容不知」として契約書に明記が必要です。家財の中に価値ある品（家具・骨董・貴金属）がある場合は、事前に鑑定・仕分けして「取り出せるものは取り出す」ことで処分費を抑えられます。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('📦 空き家の家財を処分してから売るか、そのまま売るか計算してみた！\n\n処分してから売る: ' + Math.round(cleanSaleNet) + '万円\n家財付き売却: ' + Math.round(furnishedPrice) + '万円\n→ ' + winner + 'が' + Math.abs(Math.round(diff)) + '万円お得！\n\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaFurnishedSale(); })();
 
 function calcAkiyaDIYRent() {
   var rent = parseFloat(document.getElementById('adr_rent').value) || 0;

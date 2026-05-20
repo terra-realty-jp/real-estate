@@ -3878,6 +3878,26 @@
     </div>
   </div>
 
+  <div class="calc-card" id="card-calcInstallmentSale">
+    <div class="card-header" onclick="toggleCard('calcInstallmentSale')">
+      <span>不動産を「分割払い（割賦販売）」で売ると税金はいくら減る？ 一括売却と比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcInstallmentSale">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 不動産を3〜5年の割賦（分割払い）で売ると、受け取る年ごとに収入・税金を分散できます。高額物件ほど、累進課税による節税効果が大きくなります。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。実際の売却益・その他収入に変更してください。</p>
+      <label style="font-size:13px">売却益（万円）<span style="color:#888;font-size:11px"> 例: 2000（売却価格 - 取得費 - 諸費用）</span></label>
+      <input type="number" id="is_gain" value="2000" min="0" oninput="calcInstallmentSale()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">その他の年収（万円）<span style="color:#888;font-size:11px"> 例: 600（給与・年金など）</span></label>
+      <input type="number" id="is_income" value="600" min="0" oninput="calcInstallmentSale()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">分割回数（年）<span style="color:#888;font-size:11px"> 例: 3（3年で等分）</span></label>
+      <input type="number" id="is_years" value="3" min="2" max="10" oninput="calcInstallmentSale()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">保有年数（年）<span style="color:#888;font-size:11px"> 例: 10（5年超で税率20%）</span></label>
+      <input type="number" id="is_hold" value="10" min="0" oninput="calcInstallmentSale()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="is_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="calc-card" id="card-calcInheritanceShareConflict">
     <div class="card-header" onclick="toggleCard('calcInheritanceShareConflict')">
       <span>相続で不動産が「共有名義」になったとき、売れない・揉めたときの損失コストを試算</span>
@@ -14516,6 +14536,46 @@ function calcFamilyTrust() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😰 親が認知症になったら不動産はどうなる？\n\n成年後見 vs 家族信託、' + years + '年間のコスト差は約' + Math.round(Math.abs(diff)) + '万円の差があった！\n\n早めに備える方が断然お得。試算はこちらから 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcFamilyTrust(); })();
+
+function calcInstallmentSale() {
+  var gain = parseFloat(document.getElementById('is_gain').value) || 0;
+  var income = parseFloat(document.getElementById('is_income').value) || 0;
+  var years = Math.max(2, Math.floor(parseFloat(document.getElementById('is_years').value) || 3));
+  var hold = parseFloat(document.getElementById('is_hold').value) || 0;
+  var el = document.getElementById('is_result');
+  if (!el) return;
+  var taxRate = hold > 5 ? 0.20315 : 0.39363;
+  var lumpTax = gain * 10000 * taxRate;
+  function calcIncomeTax(inc) {
+    var t = 0;
+    if (inc <= 195) t = inc * 0.05;
+    else if (inc <= 330) t = 195 * 0.05 + (inc - 195) * 0.10;
+    else if (inc <= 695) t = 195 * 0.05 + 135 * 0.10 + (inc - 330) * 0.20;
+    else if (inc <= 900) t = 195 * 0.05 + 135 * 0.10 + 365 * 0.20 + (inc - 695) * 0.23;
+    else if (inc <= 1800) t = 195 * 0.05 + 135 * 0.10 + 365 * 0.20 + 205 * 0.23 + (inc - 900) * 0.33;
+    else if (inc <= 4000) t = 195 * 0.05 + 135 * 0.10 + 365 * 0.20 + 205 * 0.23 + 900 * 0.33 + (inc - 1800) * 0.40;
+    else t = 195 * 0.05 + 135 * 0.10 + 365 * 0.20 + 205 * 0.23 + 900 * 0.33 + 2200 * 0.40 + (inc - 4000) * 0.45;
+    return t * 10000;
+  }
+  var perYear = gain / years;
+  var baseTax = calcIncomeTax(income);
+  var installTaxTotal = 0;
+  for (var i = 0; i < years; i++) {
+    installTaxTotal += calcIncomeTax(income + perYear) - baseTax;
+  }
+  var saving = lumpTax - installTaxTotal;
+  var heroColor = saving >= 50 * 10000 ? '#16a34a' : saving >= 10 * 10000 ? '#c9a84c' : '#3b82f6';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + Math.round(saving / 10000).toLocaleString() + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">割賦販売（' + years + '年分割）による節税効果</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">💸 一括売却の税負担: <strong>' + Math.round(lumpTax / 10000).toLocaleString() + '万円</strong>（' + (hold > 5 ? '長期20%' : '短期39%') + '）</div>'
+    + '<div style="margin-bottom:4px">📅 割賦販売の税負担: <strong>' + Math.round(installTaxTotal / 10000).toLocaleString() + '万円</strong>（' + years + '年均等分散）</div>'
+    + '<div style="margin-bottom:4px;color:' + heroColor + '">✅ 節税額: <strong>' + Math.round(saving / 10000).toLocaleString() + '万円</strong></div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 割賦販売は買い手が一括払いできない場合や、税負担を分散したい時に有効です。一方で売主に代金回収リスクが生じるため、連帯保証・抵当権設定が必須です。税理士への事前相談を強くお勧めします。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💡 不動産を「' + years + '年割賦販売」したら税金がいくら減るか計算してみた！\n\n一括売却: ' + Math.round(lumpTax / 10000) + '万円の税負担\n割賦販売: ' + Math.round(installTaxTotal / 10000) + '万円\n→ ' + Math.round(saving / 10000) + '万円の節税効果！\n\n不動産売却を考えている方は必見 ↓\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcInstallmentSale(); })();
 
 function calcInheritanceShareConflict() {
   var value = parseFloat(document.getElementById('isc_value').value) || 0;

@@ -3638,6 +3638,24 @@
     </div>
   </div>
 
+  <div class="card" data-category="物件・ローン" id="card-calcCondoNextRepair">
+    <div class="card-header" onclick="toggleCard('calcCondoNextRepair')">
+      <span>マンション購入前チェック：次の大規模修繕まで何年？ 一時金リスクを試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcCondoNextRepair">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#dc2626;line-height:1.7">⚠️ マンションは築12〜15年ごとに大規模修繕があります。修繕積立金が不足すると1戸あたり数十〜百万円の一時金を請求されることがあります。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。購入を検討しているマンションの情報に変更してください。</p>
+      <label style="font-size:13px">マンションの築年数（年）<span style="color:#888;font-size:11px"> 例: 18（重要事項説明書に記載）</span></label>
+      <input type="number" id="cnr_age" value="18" min="0" max="50" oninput="calcCondoNextRepair()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">月額修繕積立金（円）<span style="color:#888;font-size:11px"> 例: 8000（管理費とは別の項目）</span></label>
+      <input type="number" id="cnr_monthly" value="8000" min="0" step="500" oninput="calcCondoNextRepair()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">総戸数（戸）<span style="color:#888;font-size:11px"> 例: 50</span></label>
+      <input type="number" id="cnr_units" value="50" min="1" oninput="calcCondoNextRepair()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="cnr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="補助金・税制" id="card-calcEcoHomeSubsidy">
     <div class="card-header" onclick="toggleCard('calcEcoHomeSubsidy')">
       <span>子育てエコホーム支援事業 補助金をいくらもらえる？ 省エネ基準・家族構成で試算</span>
@@ -12146,6 +12164,35 @@ function calcFlat35VsVar() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏦 フラット35 vs 変動金利、20年間の総支払い差を計算してみた\n\n金利が5年ごとに上昇するシナリオだと\n' + cheaper + 'が約' + Math.round(Math.abs(diff) / 10000) + '万円 安い結果に！\n\nあなたの数字で試してみて 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcFlat35VsVar(); })();
+
+function calcCondoNextRepair() {
+  var age = parseFloat(document.getElementById('cnr_age').value) || 0;
+  var monthly = parseFloat(document.getElementById('cnr_monthly').value) || 0;
+  var units = parseFloat(document.getElementById('cnr_units').value) || 1;
+  var el = document.getElementById('cnr_result');
+  if (!el) return;
+  var repairCycle = 13;
+  var lastRepair = Math.floor(age / repairCycle) * repairCycle;
+  var nextRepair = lastRepair + repairCycle;
+  var yearsLeft = nextRepair - age;
+  var totalRepairCost = units * 1200000;
+  var monthsLeft = yearsLeft * 12;
+  var willAccumulate = monthly * units * monthsLeft;
+  var shortage = Math.max(0, totalRepairCost - willAccumulate);
+  var perUnit = Math.round(shortage / units / 10000);
+  var heroColor = yearsLeft <= 3 ? '#dc2626' : yearsLeft <= 6 ? '#c9a84c' : '#16a34a';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + yearsLeft + '<span style="font-size:20px">年後</span></div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">に大規模修繕が見込まれます（築' + nextRepair + '年目）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🏗️ 次回修繕まで: <strong style="color:' + heroColor + '">' + yearsLeft + '年</strong>（' + monthsLeft + 'ヶ月）</div>'
+    + '<div style="margin-bottom:4px">💰 積立見込み額（全棟）: <strong>' + Math.round(willAccumulate / 10000).toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">🏢 推定修繕費（全棟）: <strong>' + Math.round(totalRepairCost / 10000).toLocaleString() + '万円</strong></div>'
+    + (perUnit > 0 ? '<div style="margin-bottom:4px;color:#dc2626">⚠️ 不足分の1戸負担（概算）: <strong>-' + perUnit + '万円</strong></div>' : '<div style="margin-bottom:4px;color:#16a34a">✅ 積立が修繕費を上回っています</div>')
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 修繕積立金の積立額が少ないマンションは大規模修繕時に「一時金徴収」が発生します。重要事項説明書の「修繕積立金の残高・今後の計画」を必ず確認してください。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏗️ 購入を検討しているマンション、次の大規模修繕を試算してみた！\n\n築' + age + '年→あと' + yearsLeft + '年で修繕\n' + (perUnit > 0 ? '積立不足で1戸あたり約' + perUnit + '万円の一時金リスクあり！' : '積立は今のところ充足している') + '\n\n購入前に必ずチェックを 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcCondoNextRepair(); })();
 
 function calcEcoHomeSubsidy() {
   var type = document.getElementById('eco_type').value;
