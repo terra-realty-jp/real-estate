@@ -3392,6 +3392,21 @@
     </div>
   </div>
 
+  <!-- calcCondoVsDetached -->
+  <div class="calc-card" id="card-calcCondoVsDetached">
+    <div class="card-header" onclick="toggleCard('calcCondoVsDetached')">
+      <span>マンション vs 一戸建て——同じ価格で買うと20年間の維持費はいくら違う？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcCondoVsDetached">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">マンションは管理費・修繕積立金が毎月かかり、戸建ては大規模修繕を自分で積み立てる必要があります。同じ購入価格でも20年間の総コストが大きく異なります。</p>
+      <label>物件の購入価格（例：4000万円なら4000）<br><input type="number" id="cvd_price" value="4000" min="500" max="50000" step="100" oninput="calcCondoVsDetached()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">マンションの月額管理費（例：2万円なら2）<br><input type="number" id="cvd_mgmt" value="2" min="0" max="10" step="0.1" oninput="calcCondoVsDetached()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/月</label>
+      <label style="display:block;margin-top:8px">マンションの月額修繕積立金（例：1.5万円なら1.5）<br><input type="number" id="cvd_repair" value="1.5" min="0" max="5" step="0.1" oninput="calcCondoVsDetached()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/月</label>
+      <div id="cvd_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11357,6 +11372,37 @@ function calcMortgagePayoffAge() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcMortgagePayoffAge(); })();
+
+function calcCondoVsDetached() {
+  var el = document.getElementById('cvd_result');
+  if (!el) return;
+  var price  = parseFloat(document.getElementById('cvd_price').value) || 0;
+  var mgmt   = parseFloat(document.getElementById('cvd_mgmt').value) || 0;
+  var repair = parseFloat(document.getElementById('cvd_repair').value) || 0;
+  var years = 20;
+  var condoMaint   = Math.round((mgmt + repair) * 12 * years);
+  var houseMaint   = Math.round(price * 0.01 * years);
+  var diff         = condoMaint - houseMaint;
+  var condoBetter  = diff <= 0;
+  var color        = condoBetter ? '22,163,74' : '220,38,38';
+  var label        = condoBetter ? 'マンションの維持費は戸建てより安め' : '20年間でマンションの維持費が'+diff+'万円多い';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">20年間の維持費の差額</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+Math.abs(diff)+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"></td><td style="padding:6px 8px;text-align:center;font-weight:700">マンション</td><td style="padding:6px 8px;text-align:center;font-weight:700">一戸建て</td></tr>';
+  html += '<tr><td style="padding:6px 8px">管理費・積立（月額）</td><td style="padding:6px 8px;text-align:right">'+(mgmt+repair)+'万円</td><td style="padding:6px 8px;text-align:right">なし</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">大規模修繕費（20年）</td><td style="padding:6px 8px;text-align:right">積立金に含む</td><td style="padding:6px 8px;text-align:right">約'+houseMaint+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px;font-weight:700">20年間の維持費合計</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">'+condoMaint+'万円</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+houseMaint+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 一戸建ての大規模修繕費は物件価格の1%/年で試算。マンションは修繕積立金の値上がりも加味してください</p>';
+  var shareText = 'マンションと一戸建て、同じ'+price+'万円でも20年間の維持費が'+Math.abs(diff)+'万円違う！'+(condoBetter?'実はマンションの方が安い場合も':'マンションの方が高い') + ' #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcCondoVsDetached(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
