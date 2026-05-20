@@ -3966,6 +3966,22 @@
     </div>
   </div>
 
+  <!-- calcAdFeeROI -->
+  <div class="calc-card" id="card-calcAdFeeROI">
+    <div class="card-header" onclick="toggleCard('calcAdFeeROI')">
+      <span>広告料（AD）を払うと空室が早く埋まる？ 費用対効果を確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAdFeeROI">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">空室を早く埋めるために仲介業者に「広告料（AD）」を追加支払いする場合があります。AD分の費用と、早く入居者が決まることで得られる家賃収入の増加を比べて、得か損かを確認できます。</p>
+      <label>月額家賃（例：8万円なら8）<br><input type="number" id="adr_rent" value="8" min="1" max="50" step="0.1" oninput="calcAdFeeROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/月</label>
+      <label style="display:block;margin-top:8px">ADなしの場合の見込み空室期間（例：3ヶ月なら3）<br><input type="number" id="adr_noAdMonths" value="3" min="0.5" max="12" step="0.5" oninput="calcAdFeeROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> ヶ月</label>
+      <label style="display:block;margin-top:8px">AD払い時の見込み空室期間（例：1ヶ月なら1）<br><input type="number" id="adr_adMonths" value="1" min="0" max="12" step="0.5" oninput="calcAdFeeROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> ヶ月</label>
+      <label style="display:block;margin-top:8px">AD額（例：1ヶ月分=家賃8万円なら8）<br><input type="number" id="adr_adFee" value="8" min="0" max="50" step="0.5" oninput="calcAdFeeROI()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <div id="adr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14067,6 +14083,39 @@ function calcRentHikeBreakeven() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcRentHikeBreakeven(); })();
+
+function calcAdFeeROI() {
+  var el = document.getElementById('adr_result');
+  if (!el) return;
+  var rent      = parseFloat(document.getElementById('adr_rent').value) || 0;
+  var noAdM     = parseFloat(document.getElementById('adr_noAdMonths').value) || 0;
+  var adM       = parseFloat(document.getElementById('adr_adMonths').value) || 0;
+  var adFee     = parseFloat(document.getElementById('adr_adFee').value) || 0;
+  var noAdLoss  = Math.round(rent * noAdM * 10) / 10;
+  var adLoss    = Math.round(rent * adM * 10) / 10;
+  var adTotal   = Math.round((adLoss + adFee) * 10) / 10;
+  var netBenefit = Math.round((noAdLoss - adTotal) * 10) / 10;
+  var isWorth   = netBenefit > 0;
+  var color     = isWorth ? '22,163,74' : '220,38,38';
+  var label     = isWorth ? 'AD払いで'+netBenefit+'万円お得！広告料を払う価値があります' : 'AD払いで'+Math.abs(netBenefit)+'万円の損。空室短縮効果が薄い場合があります';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">AD払いによる実質メリット</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(isWorth?'+':'')+netBenefit+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"></td><td style="padding:6px 8px;text-align:center;font-weight:700">ADなし</td><td style="padding:6px 8px;text-align:center;font-weight:700">AD払い</td></tr>';
+  html += '<tr><td style="padding:6px 8px">空室期間</td><td style="padding:6px 8px;text-align:right">'+noAdM+'ヶ月</td><td style="padding:6px 8px;text-align:right">'+adM+'ヶ月</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">空室損失</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">−'+noAdLoss+'万円</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">−'+adLoss+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">AD費用</td><td style="padding:6px 8px;text-align:right">−</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">−'+adFee+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">合計コスト</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+noAdLoss+'万円</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+adTotal+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ ADによる空室短縮効果はエリアや物件条件によります。仲介業者との事前確認が重要です</p>';
+  var shareText = '家賃'+rent+'万円の空室。広告料（AD）を払うと空室が'+noAdM+'→'+adM+'ヶ月に短縮。AD費用と空室損失を比べると'+(isWorth?'プラス'+netBenefit+'万円お得':'マイナス'+Math.abs(netBenefit)+'万円の損') + ' #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcAdFeeROI(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
