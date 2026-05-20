@@ -3935,6 +3935,21 @@
     </div>
   </div>
 
+  <!-- calcRepairFundShortage -->
+  <div class="calc-card" id="card-calcRepairFundShortage">
+    <div class="card-header" onclick="toggleCard('calcRepairFundShortage')">
+      <span>マンションの修繕積立金が不足したら追加徴収はいくら？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcRepairFundShortage">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">マンションの大規模修繕（12〜15年周期）では修繕積立金が不足し、区分所有者に追加徴収が発生することがあります。1戸あたりの負担額を事前に確認しましょう。</p>
+      <label>マンションの総戸数（例：50戸なら50）<br><input type="number" id="rfs_units" value="50" min="5" max="500" step="1" oninput="calcRepairFundShortage()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 戸</label>
+      <label style="display:block;margin-top:8px">大規模修繕の見込み総費用（例：5000万円なら5000）<br><input type="number" id="rfs_total" value="5000" min="500" max="100000" step="100" oninput="calcRepairFundShortage()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">現在の修繕積立金の残高合計（例：1500万円なら1500）<br><input type="number" id="rfs_balance" value="1500" min="0" max="100000" step="100" oninput="calcRepairFundShortage()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <div id="rfs_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -13972,6 +13987,36 @@ function calcRentIncomeVsJob() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcRentIncomeVsJob(); })();
+
+function calcRepairFundShortage() {
+  var el = document.getElementById('rfs_result');
+  if (!el) return;
+  var units   = parseFloat(document.getElementById('rfs_units').value) || 1;
+  var total   = parseFloat(document.getElementById('rfs_total').value) || 0;
+  var balance = parseFloat(document.getElementById('rfs_balance').value) || 0;
+  var shortage    = Math.max(0, total - balance);
+  var perUnit     = shortage > 0 ? Math.round(shortage / units * 10) / 10 : 0;
+  var isSafe      = shortage <= 0;
+  var color       = isSafe ? '22,163,74' : '220,38,38';
+  var label       = isSafe ? '積立金は足りています' : '1戸あたり'+perUnit+'万円の追加徴収が発生する可能性があります';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">積立金の不足額合計</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+shortage+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">大規模修繕の費用見込み</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+total+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">現在の積立金残高</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+balance+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">不足額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">'+shortage+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">総戸数</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+units+'戸</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">1戸あたりの追加負担</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+(isSafe?'22,163,74':'220,38,38')+',1)">'+(isSafe?'なし':perUnit+'万円')+'</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 大規模修繕は築12〜15年周期が目安。積立金が不足すると一時金徴収または借入が必要になります</p>';
+  var shareText = 'マンションの大規模修繕で積立金が'+shortage+'万円不足！'+units+'戸で割ると1戸あたり'+perUnit+'万円の追加徴収になる可能性 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcRepairFundShortage(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
