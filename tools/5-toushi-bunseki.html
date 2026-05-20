@@ -3863,6 +3863,21 @@
     </div>
   </div>
 
+  <div class="calc-card" id="card-calcFamilyTrust">
+    <div class="card-header" onclick="toggleCard('calcFamilyTrust')">
+      <span>親が認知症になったら不動産はどうなる？ 家族信託 vs 成年後見、10年間のコストを比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcFamilyTrust">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">認知症になると不動産の売却・管理ができなくなります。事前に備える「家族信託」と、なってから使う「成年後見」の10年間のコストを比べておきましょう。</p>
+      <label style="font-size:13px">不動産の評価額（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="ft_value" value="3000" min="0" oninput="calcFamilyTrust()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">備える年数（年）<span style="color:#888;font-size:11px"> 例: 10（親が80歳になるまでの年数など）</span></label>
+      <input type="number" id="ft_years" value="10" min="1" max="30" oninput="calcFamilyTrust()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="ft_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -14450,6 +14465,39 @@ function calcOneRoomVsFamily(){
 
 
 
+
+function calcFamilyTrust() {
+  var value = parseFloat(document.getElementById('ft_value').value) || 0;
+  var years = parseFloat(document.getElementById('ft_years').value) || 10;
+  var el = document.getElementById('ft_result');
+  if (value <= 0) { el.innerHTML = '<p style="color:#888">不動産評価額を入力してください</p>'; return; }
+  // 家族信託コスト
+  var trustSetup = Math.min(Math.max(Math.round(value * 0.01 / 10) * 10, 50), 150);
+  var trustAnnual = 5;
+  var trustTotal = trustSetup + trustAnnual * years;
+  // 成年後見コスト
+  var guardianSetup = 10;
+  var guardianAnnual = value >= 5000 ? 6 : value >= 1000 ? 4 : 3;
+  var guardianTotal = guardianSetup + guardianAnnual * 12 * years / 12;
+  var diff = guardianTotal - trustTotal;
+  var heroColor = diff > 0 ? '#16a34a' : '#dc2626';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + Math.round(Math.abs(diff)) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:#888;margin-bottom:14px">（' + years + '年間で家族信託の方が安い差額）</div>'
+    + '<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px">'
+    + '<div style="margin-bottom:6px;font-weight:700">📋 家族信託（事前に備える）</div>'
+    + '<div style="margin-bottom:4px">　初期費用（司法書士・公証費用）: 約<strong>' + trustSetup + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">　年間維持費: 約<strong>' + trustAnnual + '万円/年</strong></div>'
+    + '<div style="margin-bottom:8px">　<strong>' + years + '年間合計: ' + trustTotal + '万円</strong></div>'
+    + '<div style="margin-bottom:6px;font-weight:700">⚖️ 成年後見（なってから使う）</div>'
+    + '<div style="margin-bottom:4px">　申立費用: 約<strong>' + guardianSetup + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">　後見人報酬: 約<strong>' + guardianAnnual + '万円/月</strong>（資産規模による）</div>'
+    + '<div style="margin-bottom:8px">　<strong>' + years + '年間合計: ' + guardianTotal + '万円</strong></div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 成年後見は毎月の費用が高く、後見人が就くと本人の意向に関わらず資産管理されます。家族信託は事前に信頼できる家族に管理を委ねられ、売却・活用も柔軟にできます。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😰 親が認知症になったら不動産はどうなる？\n\n成年後見 vs 家族信託、' + years + '年間のコスト差は約' + Math.round(Math.abs(diff)) + '万円の差があった！\n\n早めに備える方が断然お得。試算はこちらから 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcFamilyTrust(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
