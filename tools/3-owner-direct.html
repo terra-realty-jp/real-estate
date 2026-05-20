@@ -3332,6 +3332,21 @@
     </div>
   </div>
 
+  <div class="card" data-category="税金・費用" id="card-calcInheritedHomeSale">
+    <div class="card-header" onclick="toggleCard('calcInheritedHomeSale')">
+      <span>親から相続した家を売る——3000万円控除の適用判定と節税額を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcInheritedHomeSale">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">親が住んでいた家を相続して売る場合、「相続空き家の3000万円特別控除」が使えると税金が大幅に減ります。相続後3年以内が条件です。</p>
+      <label>売却価格（例：2000万円の場合は2000）<br><input type="number" id="ihs_price" value="2000" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">取得費（親が購入した価格。不明なら0と入力→売却価格の5%で自動計算）<br><input type="number" id="ihs_acq" value="0" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">相続が始まってから今日まで何ヶ月経ちましたか（例：18ヶ月）<br><input type="number" id="ihs_months" value="18" style="width:100%"> ヶ月</label>
+      <button onclick="calcInheritedHomeSale()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">3000万円控除の節税額を試算する</button>
+      <div id="ihs_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11147,6 +11162,48 @@ function calcFixedVsVariable() {
 }
 (function(){ calcFixedVsVariable(); })();
 
+function calcInheritedHomeSale() {
+  var el = document.getElementById('ihs_result');
+  if (!el) return;
+  var price  = parseFloat(document.getElementById('ihs_price').value) || 0;
+  var acq    = parseFloat(document.getElementById('ihs_acq').value) || 0;
+  var months = parseInt(document.getElementById('ihs_months').value) || 0;
+  if (price <= 0) { el.innerHTML = '<p style="color:red">売却価格を入力してください</p>'; el.style.display='block'; return; }
+  var acqFinal = acq > 0 ? acq : Math.round(price * 0.05);
+  var gain = price - acqFinal;
+  if (gain <= 0) { el.innerHTML = '<p style="padding:12px;background:rgba(22,163,74,0.1);border-radius:8px">取得費が売却価格以上のため、譲渡税は発生しません。</p>'; el.style.display='block'; return; }
+  var eligible = months <= 36;
+  var taxRate  = 0.20315;
+  var taxWith    = eligible ? Math.round(Math.max(0, gain - 3000) * taxRate) : Math.round(gain * taxRate);
+  var taxWithout = Math.round(gain * taxRate);
+  var saving = taxWithout - taxWith;
+  var hc = eligible ? '22,163,74' : '220,38,38';
+  var statusLabel = eligible ? '3000万円控除 適用可能' : '相続後3年超——特例は使えません';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">節税できる金額</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+saving+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+statusLabel+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">売却価格</td><td style="padding:6px 8px;text-align:right">'+price+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">取得費（'+( acq>0?'入力値':'概算5%' )+'）</td><td style="padding:6px 8px;text-align:right">'+acqFinal+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">譲渡益</td><td style="padding:6px 8px;text-align:right">'+gain+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">特例なしの税額（20.315%）</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">'+taxWithout+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">特例適用後の税額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+taxWith+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px"><strong>節税額</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">▲'+saving+'万円</td></tr>';
+  html += '</table>';
+  if (eligible) {
+    html += '<div style="background:rgba(22,163,74,0.08);border:1px solid rgba(22,163,74,0.3);border-radius:8px;padding:10px;margin-top:10px;font-size:12px">✅ 相続後3年以内なので特例の期限内です。要件（昭和56年5月以前建築・被相続人居住等）を税理士と確認してください。</div>';
+  } else {
+    html += '<div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px;margin-top:10px;font-size:12px">⚠️ 特例の適用期限（相続後3年の12月31日）を過ぎています。他の控除を税理士に相談してください。</div>';
+  }
+  var shareText = eligible
+    ? '相続した家の3000万円控除を使えば'+saving+'万円の節税！特例は相続後3年以内の売却が条件——期限内の方は急いで確認を #不動産かんたんツール'
+    : '親の家の売却益'+gain+'万円に'+taxWithout+'万円の税金がかかる試算。3000万円控除を使えれば'+saving+'万円節税できた可能性がある #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcInheritedHomeSale(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
