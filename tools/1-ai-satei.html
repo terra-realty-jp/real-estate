@@ -3930,6 +3930,28 @@
     </div>
   </div>
 
+  <div class="card" data-category="業者選び" id="card-calcAgentComparison">
+    <div class="card-header" onclick="toggleCard('calcAgentComparison')">
+      <span>不動産会社2社を比較——査定価格と手数料の違いで手取りはいくら変わる？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAgentComparison">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">「査定は高いが手数料も高い会社」と「査定は低いが手数料が安い会社」、どちらが最終的に手取りが多いか計算できます。</p>
+      <div style="background:rgba(0,0,0,0.04);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px">A社</div>
+        <label>A社の査定価格（例：2800万円なら2800）<br><input type="number" id="ac_priceA" value="2800" style="width:100%"> 万円</label>
+        <label style="display:block;margin-top:6px">A社の仲介手数料率（上限は3%+6万×消費税）<br><input type="number" id="ac_rateA" value="3.3" step="0.1" style="width:100%"> %</label>
+      </div>
+      <div style="background:rgba(0,0,0,0.04);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px">B社</div>
+        <label>B社の査定価格（例：2600万円なら2600）<br><input type="number" id="ac_priceB" value="2600" style="width:100%"> 万円</label>
+        <label style="display:block;margin-top:6px">B社の仲介手数料率（例：割安2%の場合）<br><input type="number" id="ac_rateB" value="2.0" step="0.1" style="width:100%"> %</label>
+      </div>
+      <button onclick="calcAgentComparison()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">どちらが手取りが多いか確認する</button>
+      <div id="ac_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11422,6 +11444,41 @@ function calcCapRateComparison() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcCapRateComparison(); })();
+
+function calcAgentComparison() {
+  var el = document.getElementById('ac_result');
+  if (!el) return;
+  var pA = parseFloat(document.getElementById('ac_priceA').value) || 0;
+  var rA = parseFloat(document.getElementById('ac_rateA').value) || 0;
+  var pB = parseFloat(document.getElementById('ac_priceB').value) || 0;
+  var rB = parseFloat(document.getElementById('ac_rateB').value) || 0;
+  if (pA <= 0 || pB <= 0) { el.innerHTML = '<p style="color:red">両社の査定価格を入力してください</p>'; el.style.display='block'; return; }
+  var feeA = Math.round((pA * rA / 100 + 6) * 1.1);
+  var feeB = Math.round((pB * rB / 100 + 6) * 1.1);
+  var netA = pA - feeA;
+  var netB = pB - feeB;
+  var betterA = netA >= netB;
+  var diff = Math.abs(netA - netB);
+  var hc = betterA ? '22,163,74' : '59,130,246';
+  var winner = betterA ? 'A社' : 'B社';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+winner+'を選んだ方が手取りが多い</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">+'+diff+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+winner+'の手取り '+(betterA?netA:netB)+'万円 vs '+(betterA?'B社':' A社')+' '+(betterA?netB:netA)+'万円</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.06)"><th style="padding:6px 8px;text-align:left"></th><th style="padding:6px 8px;text-align:right">A社</th><th style="padding:6px 8px;text-align:right">B社</th></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">査定価格</td><td style="padding:6px 8px;text-align:right">'+pA+'万円</td><td style="padding:6px 8px;text-align:right">'+pB+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">手数料率</td><td style="padding:6px 8px;text-align:right">'+rA+'%</td><td style="padding:6px 8px;text-align:right">'+rB+'%</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">仲介手数料（税込）</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">▲'+feeA+'万円</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">▲'+feeB+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px"><strong>手取り額</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+(betterA?'22,163,74':'220,38,38')+',1)">'+netA+'万円</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+(betterA?'220,38,38':'22,163,74')+',1)">'+netB+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 査定価格が実際の成約価格になるとは限りません。実際の売却価格は市場・交渉によって変わります。</p>';
+  var shareText = '不動産会社2社を比較——査定価格+手数料を合わせると'+winner+'の方が手取り'+diff+'万円多い！高い査定=得とは限らない #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcAgentComparison(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
