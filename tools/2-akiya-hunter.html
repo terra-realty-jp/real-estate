@@ -2737,6 +2737,23 @@
     </div>
   </div>
 
+  <div class="card" data-category="活用法" id="card-calcParkingConvert">
+    <div class="card-header" onclick="toggleCard('calcParkingConvert')">
+      <span>空き家を解体して月極駐車場に転用 収益 vs 固定資産税増加 損益計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcParkingConvert">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">空き家を解体して駐車場にすると固定資産税が大幅に上がります（住宅用地の軽減特例が消える）。駐車場収入で増税分をカバーできるか確認できます。</p>
+      <label>土地の固定資産税評価額（例：800万円の場合は800）<br><input type="number" id="pc_land" value="800" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">土地の面積（例：180㎡の場合は180）<br><input type="number" id="pc_area" value="180" style="width:100%"> ㎡</label>
+      <label style="display:block;margin-top:8px">建物の固定資産税評価額（例：200万円の場合は200）<br><input type="number" id="pc_bldg" value="200" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">駐車場の台数（例：4台の場合は4）<br><input type="number" id="pc_cars" value="4" style="width:100%"> 台</label>
+      <label style="display:block;margin-top:8px">1台あたりの月額料金（例：8000円なら0.8）<br><input type="number" id="pc_rent" value="0.8" step="0.1" style="width:100%"> 万円</label>
+      <button onclick="calcParkingConvert()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">駐車場転用の損益を計算する</button>
+      <div id="pc_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11075,6 +11092,44 @@ function calcAkiyaBatchRent() {
 }
 (function(){ calcAkiyaBatchRent(); })();
 
+function calcParkingConvert() {
+  var el = document.getElementById('pc_result');
+  if (!el) return;
+  var land  = parseFloat(document.getElementById('pc_land').value) || 0;
+  var area  = parseFloat(document.getElementById('pc_area').value) || 0;
+  var bldg  = parseFloat(document.getElementById('pc_bldg').value) || 0;
+  var cars  = parseFloat(document.getElementById('pc_cars').value) || 0;
+  var rent  = parseFloat(document.getElementById('pc_rent').value) || 0;
+  if (land <= 0) { el.innerHTML = '<p style="color:red">土地評価額を入力してください</p>'; el.style.display='block'; return; }
+  var small = area > 0 ? land * Math.min(area, 200) / area : land;
+  var large = area > 200 ? land * (area - 200) / area : 0;
+  var taxBefore   = Math.round((small / 6 + large / 3) * 0.014 + bldg * 0.014);
+  var taxAfter    = Math.round(land * 0.014);
+  var taxIncrease = taxAfter - taxBefore;
+  var annualPark  = Math.round(cars * rent * 12);
+  var netIncome   = annualPark - taxIncrease;
+  var isProfit = netIncome > 0;
+  var hc = isProfit ? '22,163,74' : '220,38,38';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">転用後の年間純収益</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+(netIncome>=0?'+':'')+netIncome+'<span style="font-size:20px">万円/年</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+(isProfit?'駐車場収入 > 増税額（転用が有利）':'駐車場収入 < 増税額（転用は赤字になる可能性）')+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">現在の固定資産税（住宅用地特例あり）</td><td style="padding:6px 8px;text-align:right">'+taxBefore+'万円/年</td></tr>';
+  html += '<tr><td style="padding:6px 8px">解体・転用後の固定資産税（特例喪失）</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">'+taxAfter+'万円/年</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">固定資産税の増加額</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">+'+taxIncrease+'万円/年</td></tr>';
+  html += '<tr><td style="padding:6px 8px">駐車場収入（'+cars+'台×'+rent+'万×12ヶ月）</td><td style="padding:6px 8px;text-align:right;color:rgba(22,163,74,1)">+'+annualPark+'万円/年</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"><strong>年間純収益</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+(netIncome>=0?'+':'')+netIncome+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 小規模住宅用地（200㎡以下）1/6軽減・一般住宅用地1/3軽減が解体で失われます。実際の税額は市町村にご確認ください。</p>';
+  var shareText = isProfit
+    ? '空き家を駐車場転用すると固定資産税が+'+taxIncrease+'万円/年増えるが駐車場収入'+annualPark+'万円で年間純収益+'+netIncome+'万円になると試算！ #不動産かんたんツール'
+    : '空き家を駐車場にすると固定資産税が+'+taxIncrease+'万円増えて駐車場収入'+annualPark+'万円では年間'+netIncome+'万円の赤字に。空き家活用は慎重に #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcParkingConvert(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
