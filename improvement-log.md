@@ -4154,3 +4154,16 @@
 - 売却益・年収・分割年数から一括売却税額と割賦分散税額の差（節税額）を計算
 - ヒーロー: green（大きな節税）/ gold（中程度の節税）
 
+
+## 2026-05-21 06:00（セッション継続11 Round 24）
+
+- **対象**: tools/1〜5.html, llms.txt
+- **フェーズ**: Phase 4 新計算カード追加（Round 24）
+- **改善内容**: 各ツールに高PLG新規カード1枚ずつ追加（計5枚）
+
+### Tool1: 買取オファー vs 仲介売却 手取り比較（calcOtherBuyerOffer）
+### Tool2: 空き家をサテライトオフィスとして貸す収益試算（calcAkiyaSatelliteOffice）
+### Tool3: 2025年金利上昇が月返済に与える影響試算（calcFixed2025Impact）
+### Tool4: 固定資産税 価格審査請求で税額を下げる可能性試算（calcPropertyTaxReview）
+### Tool5: 都心 新築ワンルーム vs 中古ワンルーム 10年収益比較（calcNewVsUsedWanRoom）
+
