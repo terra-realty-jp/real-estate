@@ -3423,6 +3423,25 @@
     </div>
   </div>
 
+  <!-- calcGiftHouseAid -->
+  <div class="calc-card" id="card-calcGiftHouseAid">
+    <div class="card-header" onclick="toggleCard('calcGiftHouseAid')">
+      <span>親から住宅購入の援助を受けると贈与税はいくら？ 非課税枠を最大活用する方法</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcGiftHouseAid">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">親から住宅購入資金を受け取るときは「住宅取得等資金の贈与税非課税特例」が使えます。省エネ住宅なら最大1000万円まで非課税。非課税枠を超えた分にかかる贈与税を確認できます。</p>
+      <label>親からもらう金額（例：1500万円なら1500）<br><input type="number" id="gha_amount" value="1500" min="0" max="10000" step="100" oninput="calcGiftHouseAid()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">住宅の種類<br>
+        <select id="gha_type" onchange="calcGiftHouseAid()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="1000">省エネ・耐震・バリアフリー住宅（非課税枠1000万円）</option>
+          <option value="500" selected>一般住宅（非課税枠500万円）</option>
+        </select>
+      </label>
+      <div id="gha_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11455,6 +11474,49 @@ function calcLoanScreenCheck() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcLoanScreenCheck(); })();
+
+function calcGiftHouseAid() {
+  var el = document.getElementById('gha_result');
+  if (!el) return;
+  var amount    = parseFloat(document.getElementById('gha_amount').value) || 0;
+  var exemption = parseInt(document.getElementById('gha_type').value) || 500;
+  var typeLabel = exemption === 1000 ? '省エネ等住宅' : '一般住宅';
+  var basic     = 110;
+  var totalExempt = exemption + basic;
+  var taxable     = Math.max(0, amount - totalExempt);
+  function giftTax(x) {
+    if (x <= 200) return x * 0.10;
+    if (x <= 400) return x * 0.15 - 10;
+    if (x <= 600) return x * 0.20 - 30;
+    if (x <= 1000) return x * 0.30 - 90;
+    if (x <= 1500) return x * 0.40 - 190;
+    if (x <= 3000) return x * 0.45 - 265;
+    if (x <= 4500) return x * 0.50 - 415;
+    return x * 0.55 - 640;
+  }
+  var tax = taxable > 0 ? Math.round(giftTax(taxable)) : 0;
+  var netGain = amount - tax;
+  var color = tax === 0 ? '22,163,74' : '220,38,38';
+  var label = tax === 0 ? '贈与税ゼロ！全額非課税枠内に収まります' : '贈与税'+tax+'万円が発生します';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">贈与税額</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+tax+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">受け取る金額</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+amount+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">住宅取得資金非課税枠（'+typeLabel+'）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">'+exemption+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">基礎控除</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">'+basic+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">課税対象額</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+taxable+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">贈与税</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+(tax>0?'220,38,38':'22,163,74')+',1)">'+tax+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px;font-weight:700">手元に残る実質金額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">'+netGain+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ この特例は受贈者の年収2000万円以下・翌年3月15日までに入居等の条件があります。要件は税務署にご確認ください</p>';
+  var shareText = '親から'+amount+'万円の住宅購入援助！省エネ住宅なら最大1000万円+基礎控除110万円まで贈与税ゼロ。非課税枠を超えた分は贈与税'+tax+'万円 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcGiftHouseAid(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
