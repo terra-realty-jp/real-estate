@@ -4138,6 +4138,23 @@
     </div>
   </div>
 
+  <div class="calc-card" id="card-calcIoTROI">
+    <div class="card-header" onclick="toggleCard('calcIoTROI')">
+      <span>スマートロック・宅配ボックス設置で空室が減る？ 設備投資の回収期間を計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcIoTROI">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">「スマートロック」「宅配ボックス」は今の入居者に人気の設備です。設置費用と空室率改善・家賃プレミアム効果を数字で比べて、投資すべきかどうか判断できます。</p>
+      <label style="font-size:13px">月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 8</span></label>
+      <input type="number" id="iot_rent" value="8" min="0" step="0.5" oninput="calcIoTROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の空室率（%）<span style="color:#888;font-size:11px"> 例: 15（年間で約2ヶ月空いている場合）</span></label>
+      <input type="number" id="iot_vacancy" value="15" min="0" max="100" step="1" oninput="calcIoTROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">設備投資額の合計（万円）<span style="color:#888;font-size:11px"> 例: 20（スマートロック5万＋宅配ボックス15万）</span></label>
+      <input type="number" id="iot_invest" value="20" min="0" step="1" oninput="calcIoTROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="iot_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14547,6 +14564,33 @@ function calcLongTenantDeal(){
 
 
 
+
+function calcIoTROI() {
+  var rent = parseFloat(document.getElementById('iot_rent').value) || 0;
+  var vacancy = parseFloat(document.getElementById('iot_vacancy').value) || 0;
+  var invest = parseFloat(document.getElementById('iot_invest').value) || 0;
+  var el = document.getElementById('iot_result');
+  if (rent <= 0) { el.innerHTML = '<p style="color:#888">月額家賃を入力してください</p>'; return; }
+  var vacancyImprove = Math.min(vacancy, 8);
+  var rentPremium = rent * 0.02;
+  var annualBeforeRent = rent * 12 * (1 - vacancy / 100);
+  var annualAfterRent = (rent + rentPremium) * 12 * (1 - (vacancy - vacancyImprove) / 100);
+  var annualGain = annualAfterRent - annualBeforeRent;
+  var paybackMonths = annualGain > 0 ? Math.ceil((invest * 10000) / (annualGain * 10000 / 12)) : 999;
+  var heroColor = paybackMonths <= 24 ? '#16a34a' : paybackMonths <= 48 ? '#c9a84c' : '#dc2626';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + paybackMonths + '<span style="font-size:20px">ヶ月</span></div>'
+    + '<div style="font-size:12px;color:#888;margin-bottom:14px">（投資回収期間）</div>'
+    + '<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px">'
+    + '<div style="margin-bottom:4px">📉 空室率改善: <strong>' + vacancy + '% → ' + (vacancy - vacancyImprove) + '%</strong>（-' + vacancyImprove + '% 改善想定）</div>'
+    + '<div style="margin-bottom:4px">💰 家賃プレミアム: <strong>+' + rentPremium.toFixed(1) + '万円/月</strong>（約2%）</div>'
+    + '<div style="margin-bottom:4px">📈 年間増収額: <strong style="color:#16a34a">+' + Math.round(annualGain * 10) / 10 + '万円/年</strong></div>'
+    + '<div style="margin-bottom:4px">⏱️ 回収期間: <strong style="color:' + heroColor + '">' + paybackMonths + 'ヶ月（約' + (paybackMonths / 12).toFixed(1) + '年）</strong></div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 スマートロックは内見対応の効率化にもなり空室期間短縮に効果的です。宅配ボックスは「再配達不要」を求める単身者・共働き世帯に特に人気です。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🔑 スマートロック・宅配ボックスを設置したら年間 +' + Math.round(annualGain * 10) / 10 + '万円 の増収になる試算が出た！\n\n投資回収期間は' + paybackMonths + 'ヶ月。設備投資を検討している大家さんは試してみて 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcIoTROI(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
