@@ -3619,6 +3619,25 @@
     </div>
   </div>
 
+  <div class="calc-card" id="card-calcFlat35VsVar">
+    <div class="card-header" onclick="toggleCard('calcFlat35VsVar')">
+      <span>フラット35（固定金利）vs 変動金利、20年間の総支払いはどちらが安い？ 金利上昇シナリオ込みで比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcFlat35VsVar">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">「今は変動が安いけど金利が上がったら？」という不安を解消。金利が5年ごとに上がり続ける最悪シナリオでも、どちらが結果的に安くなるかを比較します。</p>
+      <label style="font-size:13px">借入額（万円）<span style="color:#888;font-size:11px"> 例: 3500</span></label>
+      <input type="number" id="f35_loan" value="3500" min="0" oninput="calcFlat35VsVar()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の変動金利（%）<span style="color:#888;font-size:11px"> 例: 0.4（2024年水準）</span></label>
+      <input type="number" id="f35_var" value="0.4" min="0" step="0.1" oninput="calcFlat35VsVar()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">フラット35の金利（%）<span style="color:#888;font-size:11px"> 例: 1.8（2024年水準）</span></label>
+      <input type="number" id="f35_fix" value="1.8" min="0" step="0.1" oninput="calcFlat35VsVar()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">5年ごとの金利上昇幅（%）<span style="color:#888;font-size:11px"> 例: 0.5（毎5年0.5%ずつ上がる想定）</span></label>
+      <input type="number" id="f35_rise" value="0.5" min="0" step="0.1" oninput="calcFlat35VsVar()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="f35_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -12054,6 +12073,53 @@ function calcRepairFundOwner(){
 (function(){ calcRepairFundOwner(); })();
 
 
+
+function calcFlat35VsVar() {
+  var loan = parseFloat(document.getElementById('f35_loan').value) || 0;
+  var varRate = parseFloat(document.getElementById('f35_var').value) || 0;
+  var fixRate = parseFloat(document.getElementById('f35_fix').value) || 0;
+  var rise = parseFloat(document.getElementById('f35_rise').value) || 0;
+  var el = document.getElementById('f35_result');
+  if (loan <= 0) { el.innerHTML = '<p style="color:#888">借入額を入力してください</p>'; return; }
+  var months = 20 * 12;
+  var principal = loan * 10000;
+  function monthly(p, rAnn, n) {
+    if (rAnn <= 0) return p / n;
+    var r = rAnn / 100 / 12;
+    return p * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+  }
+  // フラット35: 固定
+  var fixMonthly = monthly(principal, fixRate, months);
+  var fixTotal = fixMonthly * months;
+  // 変動: 5年ごとに金利上昇、残高再計算
+  var balance = principal;
+  var varTotal = 0;
+  var varMonthly0 = monthly(balance, varRate, months);
+  for (var m = 0; m < months; m++) {
+    var elapsed = m;
+    var curRate = varRate + rise * Math.floor(elapsed / 60);
+    var remaining = months - elapsed;
+    var pmt = monthly(balance, curRate, remaining);
+    var interest = balance * curRate / 100 / 12;
+    balance -= (pmt - interest);
+    if (balance < 0) balance = 0;
+    varTotal += pmt;
+  }
+  var diff = fixTotal - varTotal;
+  var cheaper = diff > 0 ? '変動' : 'フラット35';
+  var heroColor = diff > 0 ? '#3b82f6' : '#dc2626';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">'
+    + Math.round(Math.abs(diff) / 10000) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:#888;margin-bottom:14px">（20年間の総支払い差額 — ' + cheaper + 'が安い）</div>'
+    + '<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🏦 フラット35（' + fixRate + '%固定）: <strong>' + Math.round(fixTotal / 10000) + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">📈 変動金利（' + varRate + '%→5年ごと+' + rise + '%）: <strong>' + Math.round(varTotal / 10000) + '万円</strong></div>'
+    + '<div style="font-size:11px;color:#888;margin-top:6px">※変動金利は5年ごとに' + rise + '%ずつ上昇するシナリオで計算</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 金利上昇が' + rise + '%/5年ペースの想定では' + cheaper + 'が有利です。実際には金利変動に応じて返済額が変わります。ライフプランと毎月の家計余裕度も合わせてご確認ください。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏦 フラット35 vs 変動金利、20年間の総支払い差を計算してみた\n\n金利が5年ごとに上昇するシナリオだと\n' + cheaper + 'が約' + Math.round(Math.abs(diff) / 10000) + '万円 安い結果に！\n\nあなたの数字で試してみて 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcFlat35VsVar(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
