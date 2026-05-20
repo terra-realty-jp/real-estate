@@ -4160,6 +4160,24 @@
     </div>
   </div>
 
+  <div class="card" data-category="税・控除" id="card-calcNoFilePenalty">
+    <div class="card-header" onclick="toggleCard('calcNoFilePenalty')">
+      <span>売却後の確定申告を忘れると追徴税はいくら？ 無申告加算税・延滞税を計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcNoFilePenalty">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#dc2626;line-height:1.7">⚠️ 不動産を売った年の翌年2〜3月が申告期限です。忘れると税金の上にペナルティが加算されます。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。実際の売却益・保有年数に変更して確認してください。</p>
+      <label style="font-size:13px">売却益（万円）<span style="color:#888;font-size:11px"> 例: 500（売却価格−取得費−諸費用）</span></label>
+      <input type="number" id="nfp_gain" value="500" min="0" oninput="calcNoFilePenalty()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">保有年数（年）<span style="color:#888;font-size:11px"> 例: 8（5年超で税率が下がります）</span></label>
+      <input type="number" id="nfp_years" value="8" min="0" oninput="calcNoFilePenalty()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">申告遅延日数（日）<span style="color:#888;font-size:11px"> 例: 365（1年放置した場合）</span></label>
+      <input type="number" id="nfp_days" value="365" min="0" oninput="calcNoFilePenalty()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="nfp_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12109,6 +12127,35 @@ function calcPriceReductionFee(){
 (function(){ calcPriceReductionFee(); })();
 
 
+
+function calcNoFilePenalty() {
+  var gain = parseFloat(document.getElementById('nfp_gain').value) || 0;
+  var years = parseFloat(document.getElementById('nfp_years').value) || 0;
+  var days = parseFloat(document.getElementById('nfp_days').value) || 0;
+  if (gain <= 0) { document.getElementById('nfp_result').innerHTML = '<p style="color:#888">売却益を入力してください</p>'; return; }
+  var taxRate = years > 5 ? 0.20315 : 0.39630;
+  var taxLabel = years > 5 ? '長期（5年超）20.315%' : '短期（5年以下）39.63%';
+  var baseTax = Math.round(gain * 10000 * taxRate);
+  var penalty1 = gain <= 300 ? Math.round(baseTax * 0.15) : Math.round(300 * 10000 * taxRate * 0.15 + (gain - 300) * 10000 * taxRate * 0.20);
+  var d1 = Math.min(days, 60);
+  var d2 = Math.max(days - 60, 0);
+  var lateTax = Math.round(baseTax * (d1 / 365 * 0.024 + d2 / 365 * 0.087));
+  var total = baseTax + penalty1 + lateTax;
+  var el = document.getElementById('nfp_result');
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:#dc2626;line-height:1;margin-bottom:4px">'
+    + Math.round(total / 10000) + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="font-size:12px;color:#888;margin-bottom:14px">（本税＋無申告加算税＋延滞税の合計追徴額）</div>'
+    + '<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px">'
+    + '<div style="margin-bottom:6px">📊 <strong>税率</strong>: ' + taxLabel + '</div>'
+    + '<div style="margin-bottom:4px">🧾 本来の税額: <strong>' + Math.round(baseTax / 10000) + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">⚠️ 無申告加算税: <strong style="color:#dc2626">+' + Math.round(penalty1 / 10000) + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">⏰ 延滞税（' + days + '日）: <strong style="color:#dc2626">+' + Math.round(lateTax / 10000) + '万円</strong></div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:#dc2626;font-weight:700;margin-bottom:8px">余分なペナルティが <strong>' + Math.round((penalty1 + lateTax) / 10000) + '万円</strong> 発生します</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 自分で気づいて申告すると加算税が5%に軽減される場合があります。申告期限を1日でも過ぎたら早めに税務署か税理士に相談しましょう。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('😱 不動産売却の確定申告を1年放置したら追徴税を計算してみた…\n\n本来の税額に無申告加算税＋延滞税が加わって\n合計 ' + Math.round(total / 10000) + '万円 になった！\n申告期限は忘れずに 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcNoFilePenalty(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
