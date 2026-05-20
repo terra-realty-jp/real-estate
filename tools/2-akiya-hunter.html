@@ -2871,6 +2871,22 @@
     </div>
   </div>
 
+  <!-- calcAkiyaVacancyTax -->
+  <div class="calc-card" id="card-calcAkiyaVacancyTax">
+    <div class="card-header" onclick="toggleCard('calcAkiyaVacancyTax')">
+      <span>空き家のまま放置で固定資産税が最大6倍に！——「住宅用地特例はずれ」後の税額を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaVacancyTax">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">空き家が「特定空家」に指定されると、住宅用地の固定資産税軽減特例（土地1/6）が外れて最大6倍になります。現状の税額と指定後の税額を比較して、放置リスクを確認しましょう。</p>
+      <label style="font-size:13px">現在の年間固定資産税（建物＋土地）（万円）<span style="color:#888;font-size:11px"> 例: 12</span></label>
+      <input type="number" id="avt_current" value="12" min="0" oninput="calcAkiyaVacancyTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">うち土地部分の税額（万円）<span style="color:#888;font-size:11px"> 例: 8（軽減適用中の額）</span></label>
+      <input type="number" id="avt_land" value="8" min="0" oninput="calcAkiyaVacancyTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="avt_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11509,6 +11525,34 @@ function calcGiftBeforeDeath() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcGiftBeforeDeath(); })();
+
+function calcAkiyaVacancyTax() {
+  var el = document.getElementById('avt_result');
+  if (!el) return;
+  var current = parseFloat(document.getElementById('avt_current').value) || 0;
+  var land    = parseFloat(document.getElementById('avt_land').value) || 0;
+  var building = Math.max(0, current - land);
+  // 特定空家指定後：土地の軽減特例（1/6）が外れて最大6倍になる
+  var landAfter = land * 6;
+  var taxAfter  = building + landAfter;
+  var increase  = Math.round((taxAfter - current) * 10) / 10;
+  var rateUp    = current > 0 ? Math.round(taxAfter / current * 10) / 10 : 0;
+  var color = '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">⚠ 特定空家指定後の固定資産税</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">年'+esc(taxAfter.toFixed(1))+'万円</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">現状より <strong style="color:#dc2626">+'+esc(increase.toFixed(1))+'万円増（約'+esc(rateUp)+'倍）</strong></div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">項目</th><th style="padding:6px;text-align:right">現在</th><th style="padding:6px;text-align:right">特定空家指定後</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">建物税額</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(building.toFixed(1))+'万円</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(building.toFixed(1))+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">土地税額</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(land.toFixed(1))+'万円</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">'+esc(landAfter.toFixed(1))+'万円（6倍）</td></tr>'
+    +'<tr><td style="padding:6px"><strong>合計</strong></td><td style="padding:6px;text-align:right"><strong>'+esc(current.toFixed(1))+'万円</strong></td><td style="padding:6px;text-align:right;color:#dc2626"><strong>'+esc(taxAfter.toFixed(1))+'万円</strong></td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 今のうちに売却・活用すれば特例の恩恵を受け続けられます。放置するほど負担が増します。</div>'
+    +'<button onclick="shareLine(\'空き家を放置して固定資産税が'+esc(rateUp)+'倍になった話を聞いてゾッとした😱 特定空家に指定されると土地の軽減特例がはずれて年'+esc(taxAfter.toFixed(1))+'万円に…早めに相談が正解👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcAkiyaVacancyTax(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
