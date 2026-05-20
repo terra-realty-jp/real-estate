@@ -2908,6 +2908,22 @@
     </div>
   </div>
 
+  <!-- calcAkiyaFamilyRent -->
+  <div class="calc-card" id="card-calcAkiyaFamilyRent">
+    <div class="card-header" onclick="toggleCard('calcAkiyaFamilyRent')">
+      <span>空き家を親族に「タダ同然」で貸すと税務リスクが！——適正家賃と使用貸借・低額賃貸の違い</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaFamilyRent">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">空き家を子どもや親戚に無償・低額で貸す「使用貸借」は、税務上のリスクがあります。適正賃料（固定資産税評価額の1%/月が目安）を下回ると贈与とみなされることがあります。</p>
+      <label style="font-size:13px">物件の固定資産税評価額（万円）<span style="color:#888;font-size:11px"> 例: 800（固定資産税の課税明細書に記載）</span></label>
+      <input type="number" id="afr_eval" value="800" min="0" oninput="calcAkiyaFamilyRent()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の月額賃料（万円）<span style="color:#888;font-size:11px"> 例: 3（無償の場合は0）</span></label>
+      <input type="number" id="afr_actual" value="3" min="0" step="0.1" oninput="calcAkiyaFamilyRent()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="afr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11602,6 +11618,37 @@ function calcFloodRisk() {
     +'<button onclick="shareLine(\'ハザードマップのリスクレベルで売却価格が'+esc(dropAmt.toLocaleString())+'万円も変わるって知らなかった😱 相続した実家の価格がいくらになるか確認してみた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcFloodRisk(); })();
+
+function calcAkiyaFamilyRent() {
+  var el = document.getElementById('afr_result');
+  if (!el) return;
+  var evalVal = parseFloat(document.getElementById('afr_eval').value)  || 0;
+  var actual  = parseFloat(document.getElementById('afr_actual').value) || 0;
+  // 適正賃料（相当家賃）: 固定資産税評価額 × 1% / 12ヶ月（税務上の目安）
+  var appropriate = Math.round(evalVal * 0.01 / 12 * 10) / 10;
+  var gap = Math.round((appropriate - actual) * 10) / 10;
+  var isLow = actual < appropriate * 0.5; // 相当家賃の50%未満で使用貸借リスク
+  var annualGap = Math.round(gap * 12 * 10) / 10;
+  var color = isLow ? '220,38,38' : actual >= appropriate ? '22,163,74' : '201,168,76';
+  var judgment = actual === 0 ? '無償（使用貸借）——贈与とみなされるリスクあり' :
+                 isLow ? '低額賃貸——相当家賃の50%未満。税務リスクあり' :
+                 actual >= appropriate ? '適正賃貸——相当家賃水準。問題なし' : '準低額賃貸——グレーゾーン。要確認';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">判定</div>'
+    +'<div style="font-size:24px;font-weight:900;color:rgba('+color+',1);line-height:1.3">'+esc(judgment)+'</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">適正賃料の目安: <strong>月'+esc(appropriate)+'万円</strong></div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">項目</th><th style="padding:6px;text-align:right">金額</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">固定資産税評価額</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(evalVal.toLocaleString())+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">相当家賃（目安）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">月'+esc(appropriate)+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">現在の家賃</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+(actual===0?'無償（0万円）':('月'+actual+'万円'))+'</td></tr>'
+    +'<tr><td style="padding:6px">不足分（年額）</td><td style="padding:6px;text-align:right;font-weight:700;color:#dc2626">'+(gap>0?annualGap+'万円/年のリスク':'リスクなし')+'</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 相当家賃の50%以上を受け取れば「低額賃貸」ではなく「有償賃貸」として認められやすくなります（所得税法基本通達36-45）。</div>'
+    +'<button onclick="shareLine(\'空き家を子どもにタダで貸すと税務リスクがあると初めて知った😱 適正家賃は月'+esc(appropriate)+'万円。無償・低額貸しのリスクを確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcAkiyaFamilyRent(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
