@@ -2837,6 +2837,20 @@
     </div>
   </div>
 
+  <!-- calcInheritWaiver -->
+  <div class="calc-card" id="card-calcInheritWaiver">
+    <div class="card-header" onclick="toggleCard('calcInheritWaiver')">
+      <span>相続放棄 vs 限定承認——借金が多い場合、どちらが手元に残る？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcInheritWaiver">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">相続した不動産に借金（ローン）が多い場合、「全財産を放棄する（相続放棄）」か「プラスの財産の範囲内でのみ借金を返す（限定承認）」かで対応が変わります。どちらが得かを確認できます。</p>
+      <label>プラスの財産（不動産・現金等　例：500万円なら500）<br><input type="number" id="iw_asset" value="500" min="0" max="50000" step="50" oninput="calcInheritWaiver()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">マイナスの財産（借金・ローン残債等　例：800万円なら800）<br><input type="number" id="iw_debt" value="800" min="0" max="50000" step="50" oninput="calcInheritWaiver()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <div id="iw_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11389,6 +11403,45 @@ function calcFarmConvert() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcFarmConvert(); })();
+
+function calcInheritWaiver() {
+  var el = document.getElementById('iw_result');
+  if (!el) return;
+  var asset = parseFloat(document.getElementById('iw_asset').value) || 0;
+  var debt  = parseFloat(document.getElementById('iw_debt').value) || 0;
+  var netWorth   = asset - debt;
+  var waiverNet  = 0;
+  var limitedNet = Math.max(0, asset - debt);
+  var isSurplus  = netWorth >= 0;
+  var limitedFee = Math.round(asset * 0.02 + 5);
+  var limitedNetAfterFee = Math.max(0, limitedNet - limitedFee);
+  var color, label, recommendation;
+  if (isSurplus) {
+    color = '22,163,74';
+    label = '財産の方が多い——通常相続が最もお得';
+    recommendation = '通常相続を選択。プラスが'+netWorth+'万円残ります';
+  } else {
+    color = '220,38,38';
+    label = '借金の方が多い——相続放棄が基本的に安全';
+    recommendation = '相続放棄で借金を全額回避。限定承認は費用負担あり';
+  }
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">相続した場合の純財産（プラスマイナス）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(netWorth>=0?'+':'')+netWorth+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"></td><td style="padding:6px 8px;text-align:center;font-weight:700">相続放棄</td><td style="padding:6px 8px;text-align:center;font-weight:700">限定承認</td><td style="padding:6px 8px;text-align:center;font-weight:700">通常相続</td></tr>';
+  html += '<tr><td style="padding:6px 8px">手取り額</td><td style="padding:6px 8px;text-align:right">0万円</td><td style="padding:6px 8px;text-align:right">'+limitedNetAfterFee+'万円</td><td style="padding:6px 8px;text-align:right">'+(netWorth>=0?netWorth:netWorth)+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">借金を引き継ぐか</td><td style="padding:6px 8px;text-align:center">なし</td><td style="padding:6px 8px;text-align:center">なし</td><td style="padding:6px 8px;text-align:center">'+(isSurplus?'なし（プラス）':'あり（'+Math.abs(netWorth)+'万円'+'）')+'</td></tr>';
+  html += '<tr><td style="padding:6px 8px">手続きの手間</td><td style="padding:6px 8px;text-align:center">簡単</td><td style="padding:6px 8px;text-align:center">複雑・費用あり</td><td style="padding:6px 8px;text-align:center">通常</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 相続放棄は相続を知った日から3ヶ月以内に手続きが必要です。弁護士や司法書士に相談することを推奨します</p>';
+  var shareText = '相続財産'+asset+'万円に対して借金'+debt+'万円。差し引き'+(netWorth>=0?'+':'')+netWorth+'万円。'+(isSurplus?'通常相続が有利':'借金超過なら相続放棄を検討') + ' #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcInheritWaiver(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
