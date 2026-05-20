@@ -3002,6 +3002,25 @@
     </div>
   </div>
 
+
+  <!-- calcDemolishVsRetrofit -->
+  <div class="calc-card" id="card-calcDemolishVsRetrofit">
+    <div class="card-header" onclick="toggleCard('calcDemolishVsRetrofit')">
+      <span>空き家の解体 vs 耐震改修——どちらがコスト・将来価値で得か比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcDemolishVsRetrofit">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">旧耐震基準（1981年以前）の空き家は解体するか耐震改修するか迷いがちです。費用と将来の資産価値・活用可能性を比較して判断しましょう。</p>
+      <label style="font-size:13px">土地の評価額（万円）<span style="color:#888;font-size:11px"> 例: 2000</span></label>
+      <input type="number" id="dvr_land" value="2000" min="0" oninput="calcDemolishVsRetrofit()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">解体費用（万円）<span style="color:#888;font-size:11px"> 例: 150（木造30坪の目安）</span></label>
+      <input type="number" id="dvr_demo" value="150" min="0" oninput="calcDemolishVsRetrofit()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">耐震改修費用（万円）<span style="color:#888;font-size:11px"> 例: 200（補助金差引後）</span></label>
+      <input type="number" id="dvr_retro" value="200" min="0" oninput="calcDemolishVsRetrofit()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="dvr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11872,6 +11891,46 @@ function calcMinsyukuVsRent(){
     +'<button onclick="shareLine(\'空き家の民泊収益を試算したら年間'+Math.round(netMinsyuku)+'万円！賃貸（'+Math.round(netRent)+'万円）と比べて'+( minsyukuWins?'民泊':'賃貸')+'が'+Math.abs(Math.round(diff))+'万円多い結果に😮 あなたの空き家は？👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcMinsyukuVsRent(); })();
+function calcDemolishVsRetrofit(){
+  var land=parseFloat(document.getElementById('dvr_land').value)||2000;
+  var demo=parseFloat(document.getElementById('dvr_demo').value)||150;
+  var retro=parseFloat(document.getElementById('dvr_retro').value)||200;
+  var r=document.getElementById('dvr_result');
+  if(!r)return;
+  var demoSaleValue=land*0.96;
+  var demoNetAsset=demoSaleValue-demo;
+  var buildingValue=500;
+  var retroSaleValue=(land+buildingValue)*0.96;
+  var retroNetAsset=retroSaleValue-retro;
+  var rentIncome=5*12*0.9*5;
+  var retroWithRent=retroNetAsset+rentIncome;
+  var demoWins=demoNetAsset>retroWithRent;
+  var diff=Math.abs(demoNetAsset-retroWithRent);
+  var heroColor=demoWins?'59,130,246':'22,163,74';
+  var winnerLabel=demoWins?'解体して土地活用':'耐震改修して賃貸';
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba('+heroColor+',0.12),rgba('+heroColor+',0.04));border:2px solid rgba('+heroColor+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">5年後の資産価値（売却想定+収益）</div>'
+    +'<div style="display:flex;justify-content:space-around;align-items:flex-end;gap:12px;margin-bottom:8px">'
+    +'<div style="text-align:center"><div style="font-size:11px;color:#888;margin-bottom:2px">解体→土地</div>'
+    +'<div style="font-size:40px;font-weight:900;color:rgba('+(demoWins?'59,130,246':'220,38,38')+',1);line-height:1">'+Math.round(demoNetAsset).toLocaleString()+'</div>'
+    +'<div style="font-size:11px;color:#888">万円</div></div>'
+    +'<div style="font-size:20px;font-weight:700;color:#9ca3af">vs</div>'
+    +'<div style="text-align:center"><div style="font-size:11px;color:#888;margin-bottom:2px">耐震改修→賃貸</div>'
+    +'<div style="font-size:40px;font-weight:900;color:rgba('+(!demoWins?'22,163,74':'220,38,38')+',1);line-height:1">'+Math.round(retroWithRent).toLocaleString()+'</div>'
+    +'<div style="font-size:11px;color:#888">万円</div></div>'
+    +'</div>'
+    +'<div style="font-size:14px;font-weight:700;color:rgb('+heroColor+')">→ '+esc(winnerLabel)+'の方が約'+Math.round(diff).toLocaleString()+'万円有利</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 費用と収益の内訳</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">解体: 費用→土地売却手取り</td><td style="padding:6px 8px;text-align:right">▲'+demo+'万円→+'+Math.round(demoSaleValue)+'万円</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">改修: 費用→売却手取り+5年賃料</td><td style="padding:6px 8px;text-align:right">▲'+retro+'万円→+'+Math.round(retroSaleValue)+'万円+'+Math.round(rentIncome)+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 自治体の耐震改修補助金（最大100〜150万円）を活用すると改修費が下がります。解体後は更地として駐車場・売却にも活用できます。</div>'
+    +'<button onclick="shareLine(\'空き家を解体vs耐震改修で試算！差額'+Math.round(diff).toLocaleString()+'万円😮 '+esc(winnerLabel)+'が有利かも！ 計算してみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcDemolishVsRetrofit(); })();
+
 
 
 
