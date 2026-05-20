@@ -4096,6 +4096,27 @@
     </div>
   </div>
 
+
+  <!-- calcDepositStrategy -->
+  <div class="calc-card" id="card-calcDepositStrategy">
+    <div class="card-header" onclick="toggleCard('calcDepositStrategy')">
+      <span>礼金ゼロ・フリーレントで客付けを早めると年間収益はどちらが得？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcDepositStrategy">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">空室が長引くのが怖くて礼金をゼロにしたり、フリーレント（最初の1〜2ヶ月無料）を提供する大家さんが増えています。どの選択が年間で一番得か計算します。</p>
+      <label style="font-size:13px">月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 7</span></label>
+      <input type="number" id="ds_rent" value="7" min="0" step="0.5" oninput="calcDepositStrategy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">通常の空室期間（ヶ月）<span style="color:#888;font-size:11px"> 例: 3</span></label>
+      <input type="number" id="ds_vacant_normal" value="3" min="0" max="12" step="0.5" oninput="calcDepositStrategy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">礼金ゼロ・フリーレント時の空室期間（ヶ月）<span style="color:#888;font-size:11px"> 例: 1</span></label>
+      <input type="number" id="ds_vacant_promo" value="1" min="0" max="12" step="0.5" oninput="calcDepositStrategy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">フリーレント月数（0=礼金ゼロのみ）<span style="color:#888;font-size:11px"> 例: 1</span></label>
+      <input type="number" id="ds_free_months" value="1" min="0" max="3" step="0.5" oninput="calcDepositStrategy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="ds_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14437,6 +14458,40 @@ function calcRepairCostRent(){
     +'<button onclick="shareLine(\'老朽化で経費が増えて、家賃を'+Math.round(hikeNeeded*10)/10+'万円値上げしないと手残りが減ってしまう！賃貸オーナーは要確認😮 計算してみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcRepairCostRent(); })();
+function calcDepositStrategy(){
+  var rent=parseFloat(document.getElementById('ds_rent').value)||7;
+  var vacantNormal=parseFloat(document.getElementById('ds_vacant_normal').value)||3;
+  var vacantPromo=parseFloat(document.getElementById('ds_vacant_promo').value)||1;
+  var freeMonths=parseFloat(document.getElementById('ds_free_months').value)||1;
+  var r=document.getElementById('ds_result');
+  if(!r)return;
+  // 比較期間: 24ヶ月（2年間）
+  var period=24;
+  // 通常: 空室期間の損失
+  var lossNormal=rent*vacantNormal;
+  var revenueNormal=rent*(period-vacantNormal);
+  // 優遇策: 空室期間短縮+フリーレント
+  var lossPromo=rent*vacantPromo+rent*freeMonths;
+  var revenuePromo=rent*(period-vacantPromo-freeMonths);
+  var diff=revenuePromo-revenueNormal;
+  var promoWins=diff>0;
+  var heroColor=promoWins?'22,163,74':'220,38,38';
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba('+heroColor+',0.12),rgba('+heroColor+',0.04));border:2px solid rgba('+heroColor+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">24ヶ月間の収益差（優遇策 - 通常）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+heroColor+',1);line-height:1">'+(diff>=0?'+':'')+Math.round(diff*10)/10+'</div>'
+    +'<div style="font-size:13px;color:#374151">万円（優遇策が'+(promoWins?'有利':'不利')+'）</div>'
+    +'<div style="font-size:14px;font-weight:700;color:rgb('+heroColor+');margin-top:8px">'+(promoWins?'礼金ゼロ・フリーレントで空室を早く埋める方が得':'空室損失よりフリーレント損失の方が大きい')+'</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f3ef"><td colspan="3" style="padding:6px 8px;font-weight:700">📊 24ヶ月間の収益比較</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">通常募集（空室'+vacantNormal+'ヶ月）</td><td style="padding:6px 8px;text-align:right">損失: '+lossNormal+'万円</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+Math.round(revenueNormal*10)/10+'万円</td></tr>'
+    +'<tr style="background:#f0fdf4"><td style="padding:6px 8px;border-bottom:1px solid #eee">優遇策（空室'+vacantPromo+'ヶ月+FR'+freeMonths+'ヶ月）</td><td style="padding:6px 8px;text-align:right">損失: '+Math.round(lossPromo*10)/10+'万円</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:#166534">'+Math.round(revenuePromo*10)/10+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 空室期間を短くする効果がフリーレント分を上回るとき、優遇策が得になります。地域の競合物件・季節（2〜3月は繁忙期）によって効果は変わります。</div>'
+    +'<button onclick="shareLine(\'礼金ゼロ・フリーレント戦略を試算！空室を早く埋めた方が24ヶ月で'+Math.abs(Math.round(diff*10)/10)+'万円'+(promoWins?'得':'損')+'という結果に😮 大家さんは確認必須👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcDepositStrategy(); })();
+
 
 
 var _kanriCat = '';
