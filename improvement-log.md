@@ -4181,3 +4181,16 @@
 - **理由**: 「知らないと損する制度・税金」系カードはLINEシェアを促す強い感情反応（驚き・損失恐怖）を生む
 - **仮ユーザーレビュー**: ペルソナ3（鈴木幸子さん・家売却検討中）— calcHealthInsAfterSaleのタイトル「翌年、健康保険料と住民税がいくら上がる？」は売却後の不安に直結。「翌年6月に追加請求が来る」という警告テキストが次の行動を促す ✅
 - **カード総数**: 617枚
+
+## 2026-05-21 Round 26（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 26）
+- **改善内容**:
+  - Tool1: calcSaleProceedsDrawdown — 売却代金の老後取り崩し年数（何年で底をつく？）運用利回り考慮付き
+  - Tool2: calcAkiyaEncroachment — 越境樹木・ブロック塀の撤去費用vs放置時の売却値引きリスク比較（民法2021年改正解説付き）
+  - Tool3: calcGroundImprovement — 地盤改良工事3工法（表層/柱状/鋼管杭）の費用比較試算
+  - Tool4: calcFreeWifiROI — インターネット無料Wi-Fi導入の月次収支改善効果（入居率+5pp・賃料+2%想定）
+  - Tool5: calcSmallLandSpecial — 小規模宅地等の特例による土地評価額最大80%減額と相続税節税額試算
+- **理由**: 「知らないと損する制度・隠れコスト」系カードは驚きを生んでLINEシェアを促す
+- **カード総数**: 622枚
