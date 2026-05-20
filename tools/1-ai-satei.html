@@ -3968,6 +3968,21 @@
     </div>
   </div>
 
+  <!-- calcMortDeductRemain -->
+  <div class="card" data-category="節税" id="card-calcMortDeductRemain">
+    <div class="card-header" onclick="toggleCard('calcMortDeductRemain')">
+      <span>住宅ローン控除はあと何年？ 残り控除総額と節税効果を確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcMortDeductRemain">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">住宅ローン控除（住宅借入金等特別控除）は最大13年間、年末ローン残高の0.7%を所得税から差し引ける制度です。あと何年受けられるか、残りの控除総額を確認しましょう。</p>
+      <label>住宅ローン控除を最初に受けた年（例：2022年なら2022）<br><input type="number" id="mdr_startYear" value="2022" min="2010" max="2030" step="1" oninput="calcMortDeductRemain()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 年</label>
+      <label style="display:block;margin-top:8px">現在の年末ローン残高（例：2500万円なら2500）<br><input type="number" id="mdr_balance" value="2500" min="100" max="50000" step="100" oninput="calcMortDeductRemain()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">毎年のローン残高の減少ペース（例：年80万円減るなら80）<br><input type="number" id="mdr_paydown" value="80" min="10" max="500" step="10" oninput="calcMortDeductRemain()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円/年</label>
+      <div id="mdr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11532,6 +11547,45 @@ function calcDoubleMortgage() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcDoubleMortgage(); })();
+
+function calcMortDeductRemain() {
+  var el = document.getElementById('mdr_result');
+  if (!el) return;
+  var startYear = parseInt(document.getElementById('mdr_startYear').value) || 2022;
+  var balance   = parseFloat(document.getElementById('mdr_balance').value) || 0;
+  var paydown   = parseFloat(document.getElementById('mdr_paydown').value) || 0;
+  var currentYear = new Date().getFullYear();
+  var maxYears    = 13;
+  var elapsedYears = currentYear - startYear;
+  var remainYears  = Math.max(0, maxYears - elapsedYears);
+  var totalDeduct = 0;
+  var bal = balance;
+  for (var i = 0; i < remainYears; i++) {
+    totalDeduct += Math.round(bal * 0.007);
+    bal = Math.max(0, bal - paydown);
+  }
+  totalDeduct = Math.round(totalDeduct * 10) / 10;
+  var thisYearDeduct = Math.round(balance * 0.007 * 10) / 10;
+  var color = remainYears > 0 ? '22,163,74' : '220,38,38';
+  var label = remainYears > 0 ? '残り'+remainYears+'年間で控除を受けられます' : '控除期間が終了しています';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">残り控除期間の累計節税額</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+totalDeduct+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">控除開始年</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+startYear+'年</td></tr>';
+  html += '<tr><td style="padding:6px 8px">控除終了年（最大13年後）</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+(startYear+maxYears-1)+'年</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">残り控除年数</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+remainYears+'年</td></tr>';
+  html += '<tr><td style="padding:6px 8px">今年の控除額（年末残高×0.7%）</td><td style="padding:6px 8px;text-align:right;font-weight:700">約'+thisYearDeduct+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">残り期間の累計節税額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">約'+totalDeduct+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 2022年以降入居は0.7%×13年が上限。実際の控除額は所得税+住民税の範囲に制限されます</p>';
+  var shareText = '住宅ローン控除があと'+remainYears+'年残っている！累計でまだ'+totalDeduct+'万円の節税が受けられる。売却や繰り上げ返済で控除が消えるので注意 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcMortDeductRemain(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
