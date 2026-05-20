@@ -3542,6 +3542,26 @@
     </div>
   </div>
 
+  <!-- calcBuyVsRentLifetime -->
+  <div class="calc-card" id="card-calcBuyVsRentLifetime">
+    <div class="card-header" onclick="toggleCard('calcBuyVsRentLifetime')">
+      <span>持ち家 vs 賃貸——35年間の「生涯住居費」を比較してどちらが得か確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcBuyVsRentLifetime">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">「買うのと借り続けるのどっちが得？」は多くの人が悩む問いです。住宅ローン返済・維持費と賃料を35年間で比較し、最終的に残る資産も含めて判断します。</p>
+      <label style="font-size:13px">【購入】物件価格（万円）<span style="color:#888;font-size:11px"> 例: 3500</span></label>
+      <input type="number" id="bvr_buy" value="3500" min="0" oninput="calcBuyVsRentLifetime()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">【購入】頭金（万円）<span style="color:#888;font-size:11px"> 例: 350</span></label>
+      <input type="number" id="bvr_down" value="350" min="0" oninput="calcBuyVsRentLifetime()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">【購入】ローン金利（年%）<span style="color:#888;font-size:11px"> 例: 0.8</span></label>
+      <input type="number" id="bvr_rate" value="0.8" min="0" step="0.1" oninput="calcBuyVsRentLifetime()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">【賃貸】月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 10</span></label>
+      <input type="number" id="bvr_rent" value="10" min="0" step="0.5" oninput="calcBuyVsRentLifetime()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="bvr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11795,6 +11815,61 @@ function calcSharedOwner() {
     +'<button onclick="shareLine(\'共有名義の不動産を解消する3つの方法で手取りが'+esc(fullSell.toLocaleString())+'万円/'+esc(partSell.toLocaleString())+'万円/'+esc(buyout.toLocaleString())+'万円と全然違う！最大手取りの方法を確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcSharedOwner(); })();
+
+function calcBuyVsRentLifetime(){
+  var buy=parseFloat(document.getElementById('bvr_buy').value)||3500;
+  var down=parseFloat(document.getElementById('bvr_down').value)||350;
+  var rate=parseFloat(document.getElementById('bvr_rate').value)||0.8;
+  var rent=parseFloat(document.getElementById('bvr_rent').value)||10;
+  var r=document.getElementById('bvr_result');
+  if(!r)return;
+  // 購入コスト
+  var loan=buy-down; // 借入額（万円）
+  var yr=rate/100/12; // 月利
+  var n=35*12; // 返済月数（35年）
+  var monthly=yr>0 ? loan*10000*yr*Math.pow(1+yr,n)/(Math.pow(1+yr,n)-1) : loan*10000/n;
+  var totalRepay=monthly*n/10000; // 35年返済総額（万円）
+  var initCost=down + buy*0.06; // 頭金 + 諸費用6%（登記・税等）
+  var maintenanceCost=buy*0.01*35; // 修繕・固定資産税等 年1%×35年（万円）
+  var buyCostTotal=initCost + totalRepay + maintenanceCost; // 購入総コスト
+  var saleReturn=buy*0.96*1.01; // 35年後売却手取り（資産価値年0.1%増×手数料4%引き）
+  var buyNet=buyCostTotal-saleReturn; // 購入の実質負担
+  // 賃貸コスト
+  var rentMonthly=rent; // 月額家賃（万円）
+  var rentRise=0.5; // 年0.5%値上がり（複利）
+  var rentTotal=0;
+  for(var i=0;i<35;i++){
+    rentTotal+=rentMonthly*12*Math.pow(1+rentRise/100,i);
+  }
+  // 比較
+  var diff=Math.abs(buyNet-rentTotal);
+  var buyWins=buyNet<rentTotal;
+  var monthlyBuy=Math.round(monthly/1000)/10; // 月返済額（万円）
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(59,130,246,0.04));border:2px solid rgba(59,130,246,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">35年間の実質住居費</div>'
+    +'<div style="display:flex;justify-content:space-around;align-items:flex-end;gap:12px;margin-bottom:8px">'
+    +'<div style="text-align:center"><div style="font-size:11px;color:#888;margin-bottom:2px">持ち家</div>'
+    +'<div style="font-size:44px;font-weight:900;color:rgba('+( buyWins?'22,163,74':'220,38,38')+',1);line-height:1">'+Math.round(buyNet).toLocaleString()+'</div>'
+    +'<div style="font-size:11px;color:#888">万円</div></div>'
+    +'<div style="font-size:22px;font-weight:700;color:#9ca3af">vs</div>'
+    +'<div style="text-align:center"><div style="font-size:11px;color:#888;margin-bottom:2px">賃貸</div>'
+    +'<div style="font-size:44px;font-weight:900;color:rgba('+(!buyWins?'22,163,74':'220,38,38')+',1);line-height:1">'+Math.round(rentTotal).toLocaleString()+'</div>'
+    +'<div style="font-size:11px;color:#888">万円</div></div>'
+    +'</div>'
+    +'<div style="font-size:15px;font-weight:700;color:'+(buyWins?'#166534':'#991b1b')+'">→ '+(buyWins?'持ち家':'賃貸')+'の方が約'+Math.round(diff).toLocaleString()+'万円お得</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 費用の内訳</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">月返済額（住宅ローン35年）</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+esc(monthlyBuy.toFixed(1))+'万円/月</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">ローン総返済額</td><td style="padding:6px 8px;text-align:right">'+Math.round(totalRepay).toLocaleString()+'万円</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">頭金＋諸費用（約6%）</td><td style="padding:6px 8px;text-align:right">'+Math.round(initCost).toLocaleString()+'万円</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">修繕・固定資産税（35年）</td><td style="padding:6px 8px;text-align:right">'+Math.round(maintenanceCost).toLocaleString()+'万円</td></tr>'
+    +'<tr style="background:#f0fdf4"><td style="padding:6px 8px;border-bottom:1px solid #eee">35年後の売却手取り（▲）</td><td style="padding:6px 8px;text-align:right;color:#166534;font-weight:700">▲'+Math.round(saleReturn).toLocaleString()+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 持ち家は35年後の売却益を差し引いた「実質負担」で比較しています。賃貸は年0.5%の家賃上昇を想定。どちらが得かはライフスタイル・物件の値上がりにより変わります。</div>'
+    +'<button onclick="shareLine(\'持ち家vs賃貸35年で試算！実質コストの差がなんと'+Math.round(diff).toLocaleString()+'万円。どちらが得かを確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcBuyVsRentLifetime(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
