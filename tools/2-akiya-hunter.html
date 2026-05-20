@@ -3077,6 +3077,24 @@
     </div>
   </div>
 
+  <div class="calc-card" data-category="リスク・費用" id="card-calcAkiyaEncroachment">
+    <div class="card-header" onclick="toggleCard('calcAkiyaEncroachment')">
+      <span>隣の土地に越境している木や塀、放置するとどれだけ損する？ 撤去費用と売却影響試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaEncroachment">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#dc2626;line-height:1.7">⚠️ 2021年の民法改正で隣人は「越境した枝を自分で切れる」ようになりました。越境物の放置は売却時の値引き交渉の原因になったり、隣人とのトラブルに発展するリスクがあります。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。空き家の状況に合わせて変更してください。</p>
+      <label style="font-size:13px">越境している樹木の本数（本）<span style="color:#888;font-size:11px"> 例: 3（庭木の枝が隣地に出ている）</span></label>
+      <input type="number" id="aec_trees" value="3" min="0" oninput="calcAkiyaEncroachment()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">越境しているブロック塀の長さ（m）<span style="color:#888;font-size:11px"> 例: 5（境界ラインを超えた部分）</span></label>
+      <input type="number" id="aec_wall" value="5" min="0" oninput="calcAkiyaEncroachment()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">物件の売却予定価格（万円）<span style="color:#888;font-size:11px"> 例: 1500</span></label>
+      <input type="number" id="aec_price" value="1500" min="0" oninput="calcAkiyaEncroachment()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="aec_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="calc-card" data-category="活用方法" id="card-calcAkiyaSharedKitchen">
     <div class="card-header" onclick="toggleCard('calcAkiyaSharedKitchen')">
       <span>空き家をシェアキッチン（レンタルキッチン）として貸す収益試算</span>
@@ -12133,6 +12151,34 @@ function calcAkiyaDIYRent() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🔨 空き家を「DIY可賃貸」にしたら5年間でいくら違う？計算してみた！\n\n通常賃貸: ' + Math.round(normalTotal / 10000) + '万円 vs DIY可: ' + Math.round(diyTotal / 10000) + '万円\n→ ' + winner + 'が約' + Math.round(diff / 10000) + '万円多い！\n空き家オーナー必見の試算です\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaDIYRent(); })();
+
+function calcAkiyaEncroachment() {
+  var trees = parseFloat(document.getElementById('aec_trees').value) || 0;
+  var wall = parseFloat(document.getElementById('aec_wall').value) || 0;
+  var price = parseFloat(document.getElementById('aec_price').value) || 0;
+  var el = document.getElementById('aec_result');
+  if (!el) return;
+  var treeRemoveCost = trees * 5;
+  var wallRemoveCost = Math.round(wall * 3);
+  var totalRemoveCost = treeRemoveCost + wallRemoveCost;
+  var saleDiscount = Math.round(price * 0.03);
+  var placeCost = saleDiscount - totalRemoveCost;
+  var heroColor = placeCost > 0 ? '#dc2626' : '#16a34a';
+  var judgment = placeCost > 0 ? '撤去が得！' : '現状渡しが得';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:#dc2626;line-height:1;margin-bottom:4px">-' + saleDiscount.toLocaleString() + '万円</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">越境物放置による売却時の値引き交渉リスク（概算）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🌳 樹木撤去費: <strong>' + treeRemoveCost + '万円</strong>（' + trees + '本 × 5万円）</div>'
+    + '<div style="margin-bottom:4px">🧱 ブロック塀撤去費: <strong>' + wallRemoveCost + '万円</strong>（' + wall + 'm × 3万円）</div>'
+    + '<div style="margin-bottom:4px;border-top:1px solid #eee;padding-top:6px">🔨 撤去コスト合計: <strong>' + totalRemoveCost + '万円</strong></div>'
+    + '<div style="margin-bottom:4px;color:#dc2626">📉 放置時の売却値引きリスク: <strong>-' + saleDiscount + '万円</strong>（売値の3%）</div>'
+    + '<div style="margin-bottom:4px;border-top:1px solid #eee;padding-top:6px">判定: <strong style="color:' + heroColor + '">' + judgment + '</strong>（差額' + Math.abs(placeCost) + '万円）</div>'
+    + '</div>'
+    + '<div style="background:#fff3cd;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px">⚠️ 越境は境界確定測量と組み合わせて解決するのが効果的です。売却前に「越境に関する覚書」を隣人と取り交わすことで売却がスムーズになります。</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 2021年民法改正により、越境された側の土地所有者は枝の撤去を請求（または自ら切除）できるようになりました。放置は隣人トラブルのリスクも高まります。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('😱 空き家の庭木が隣地に越境→売却時に' + saleDiscount + '万円値引きされるリスク！\n撤去費用' + totalRemoveCost + '万円をかければリスク回避できる計算。放置より撤去の方が' + Math.abs(placeCost) + '万円お得。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaEncroachment(); })();
 
 function calcAkiyaSharedKitchen() {
   var hours = parseFloat(document.getElementById('ask_hours').value) || 0;

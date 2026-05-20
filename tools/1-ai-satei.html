@@ -4236,6 +4236,24 @@
     </div>
   </div>
 
+  <div class="card" data-category="資金計画" id="card-calcSaleProceedsDrawdown">
+    <div class="card-header" onclick="toggleCard('calcSaleProceedsDrawdown')">
+      <span>売却代金を毎月取り崩す老後の生活費、何年で底をつく？ 取り崩しシミュレーション</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSaleProceedsDrawdown">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 「家を売った2000万円を毎月15万円ずつ生活費に使う」場合、何年もつかを試算。老後資金の枯渇リスクを事前に把握して、運用・節約計画に役立てましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の状況に合わせて変更してください。</p>
+      <label style="font-size:13px">売却後の手取り額（万円）<span style="color:#888;font-size:11px"> 例: 2000（仲介手数料・税金差引後）</span></label>
+      <input type="number" id="spd_capital" value="2000" min="0" oninput="calcSaleProceedsDrawdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">毎月の取り崩し額（万円）<span style="color:#888;font-size:11px"> 例: 15（年金を補う生活費の不足分）</span></label>
+      <input type="number" id="spd_monthly" value="15" min="1" oninput="calcSaleProceedsDrawdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">運用利回り（年利%）<span style="color:#888;font-size:11px"> 例: 1.5（預金・個人向け国債・低リスク運用の場合）</span></label>
+      <input type="number" id="spd_yield" value="1.5" min="0" max="10" step="0.1" oninput="calcSaleProceedsDrawdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="spd_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="税金計算" id="card-calcHealthInsAfterSale">
     <div class="card-header" onclick="toggleCard('calcHealthInsAfterSale')">
       <span>家を売った翌年、健康保険料と住民税がいくら上がる？ 隠れ追加負担を試算</span>
@@ -12314,6 +12332,43 @@ function calcBridgeLoanCost() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('🏠 住み替えで「先買い」vs「先売り・仮住まい」のコスト差を計算してみた！\n\nつなぎ融資: ' + Math.round(bridgeCost / 10000) + '万円 vs 仮住まい: ' + Math.round(tenantCost / 10000) + '万円\n→ ' + cheaper + 'が約' + Math.round(diff / 10000) + '万円お得\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcBridgeLoanCost(); })();
+
+function calcSaleProceedsDrawdown() {
+  var capital = parseFloat(document.getElementById('spd_capital').value) || 0;
+  var monthly = parseFloat(document.getElementById('spd_monthly').value) || 0;
+  var yieldRate = parseFloat(document.getElementById('spd_yield').value) || 0;
+  var el = document.getElementById('spd_result');
+  if (!el) return;
+  var years;
+  if (monthly <= 0) { el.innerHTML = '<p style="color:#888">毎月の取り崩し額を入力してください。</p>'; return; }
+  var r = yieldRate / 100 / 12;
+  if (r <= 0) {
+    years = capital / monthly;
+  } else {
+    var monthlyInterest = capital * r;
+    if (monthly <= monthlyInterest) {
+      years = 999;
+    } else {
+      var n = -Math.log(1 - (capital * r) / monthly) / Math.log(1 + r);
+      years = n / 12;
+    }
+  }
+  var heroColor = years >= 30 ? '#16a34a' : years >= 20 ? '#c9a84c' : '#dc2626';
+  var heroText = years >= 999 ? '永続可能' : Math.round(years) + '年';
+  var age60 = Math.round(60 + years);
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + heroText + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">' + (years >= 999 ? '運用益だけで取り崩しをまかなえます' : '60歳で取り崩し開始すると' + age60 + '歳頃に底をつく') + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">💰 元本: <strong>' + capital.toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">💸 毎月の取り崩し: <strong>-' + monthly + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">📈 運用利回り: <strong>' + yieldRate + '%/年</strong>（月利' + (r * 100).toFixed(3) + '%）</div>'
+    + (r > 0 ? '<div style="margin-bottom:4px;font-size:12px;color:#666">💡 月間運用益: 約' + Math.round(capital * r) + '万円 → 純取り崩し: 月' + Math.round(monthly - capital * r) + '万円相当</div>' : '')
+    + '</div>'
+    + (years < 25 && years < 999 ? '<div style="background:#fee2e2;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px;color:#991b1b">⚠️ ' + Math.round(years) + '年で底をつきます。取り崩し額を月' + Math.round(monthly * 0.8) + '万円に抑えると約' + Math.round(years * 1.25) + '年に延ばせます。</div>' : '')
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 年金収入がある場合はその分を月の生活費から差し引いて「不足分」のみを入力してください。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('😱 家を売った' + capital + '万円を月' + monthly + '万円ずつ取り崩すと…' + (years >= 999 ? '永続可能！（利回り' + yieldRate + '%で運用中）' : Math.round(years) + '年で底をつく計算！') + '\n\n老後の生活費計画、思ってたより厳しいかも。売る前に必ず確認を ↓\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcSaleProceedsDrawdown(); })();
 
 function calcHealthInsAfterSale() {
   var gain = parseFloat(document.getElementById('his_gain').value) || 0;

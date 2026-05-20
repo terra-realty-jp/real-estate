@@ -4215,6 +4215,26 @@
     </div>
   </div>
 
+  <div class="card" data-category="設備・リノベ" id="card-calcFreeWifiROI">
+    <div class="card-header" onclick="toggleCard('calcFreeWifiROI')">
+      <span>「インターネット無料」を導入すると入居率と賃料はどう変わる？ 費用対効果試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcFreeWifiROI">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 「インターネット無料」は若い入居者に人気で空室対策に効果的。月額数万円の通信費が、入居率アップ・賃料維持につながるかを計算してみましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">月額通信費（建物全体）（万円）<span style="color:#888;font-size:11px"> 例: 2（光回線の集合住宅向けプラン）</span></label>
+      <input type="number" id="wfi_cost" value="2" min="0" step="0.5" oninput="calcFreeWifiROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">総部屋数<span style="color:#888;font-size:11px"> 例: 8</span></label>
+      <input type="number" id="wfi_rooms" value="8" min="1" oninput="calcFreeWifiROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">1部屋あたりの月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 6</span></label>
+      <input type="number" id="wfi_rent" value="6" min="0" step="0.5" oninput="calcFreeWifiROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の入居率（%）<span style="color:#888;font-size:11px"> 例: 80</span></label>
+      <input type="number" id="wfi_occ" value="80" min="0" max="100" oninput="calcFreeWifiROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="wfi_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="修繕・メンテナンス" id="card-calcExteriorReserve">
     <div class="card-header" onclick="toggleCard('calcExteriorReserve')">
       <span>外壁・屋根の塗替えサイクルと毎月の積立必要額</span>
@@ -14758,6 +14778,33 @@ function calcRentDelinquency() {
   }
 }
 (function(){ calcRentDelinquency(); })();
+
+function calcFreeWifiROI() {
+  var cost = parseFloat(document.getElementById('wfi_cost').value) || 0;
+  var rooms = parseFloat(document.getElementById('wfi_rooms').value) || 1;
+  var rent = parseFloat(document.getElementById('wfi_rent').value) || 0;
+  var occ = parseFloat(document.getElementById('wfi_occ').value) || 0;
+  var el = document.getElementById('wfi_result');
+  if (!el) return;
+  var newOcc = Math.min(occ + 5, 100);
+  var rentUp = rent * 0.02;
+  var currentMonthly = rooms * rent * (occ / 100);
+  var newMonthly = rooms * (rent + rentUp) * (newOcc / 100) - cost;
+  var monthlyGain = newMonthly - currentMonthly;
+  var heroColor = monthlyGain > 0 ? '#16a34a' : '#dc2626';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + (monthlyGain >= 0 ? '+' : '') + Math.round(monthlyGain * 10) / 10 + '万円/月</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">Wi-Fi導入後の月次収支改善見込み（通信費差引後）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">📡 月額通信費: <strong>-' + cost + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">📈 入居率改善: <strong>' + occ + '% → ' + newOcc + '%</strong>（+5pp想定）</div>'
+    + '<div style="margin-bottom:4px">💰 賃料アップ効果: <strong>+' + Math.round(rentUp * 100) / 100 + '万円/部屋</strong>（+2%想定）</div>'
+    + '<div style="margin-bottom:4px;border-top:1px solid #eee;padding-top:6px">現在の月収: <strong>' + Math.round(currentMonthly * 10) / 10 + '万円</strong> → 導入後: <strong>' + Math.round(newMonthly * 10) / 10 + '万円</strong></div>'
+    + '</div>'
+    + (monthlyGain > 0 ? '<div style="background:#dcfce7;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px;color:#166534">✅ 月' + Math.round(monthlyGain * 10) / 10 + '万円のプラス。年間' + Math.round(monthlyGain * 12 * 10) / 10 + '万円の増収効果が期待できます。</div>' : '<div style="background:#fff3cd;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px">⚠️ 現状では導入コストが効果を上回っています。入居率や家賃水準を上げるための他の施策と組み合わせると効果的です。</div>')
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 入居率+5pp・賃料+2%は業界の一般的な試算値です。実際の効果は物件エリア・競合状況によって異なります。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('📶 賃貸物件に「ネット無料Wi-Fi」を月' + cost + '万円で導入したら入居率が' + occ + '%→' + newOcc + '%に改善して月' + (monthlyGain >= 0 ? '+' : '') + Math.round(monthlyGain * 10) / 10 + '万円の効果になる試算！\n通信費回収できて空室対策になるなら導入あり。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcFreeWifiROI(); })();
 
 function calcExteriorReserve() {
   var area = parseFloat(document.getElementById('exr_area').value) || 0;

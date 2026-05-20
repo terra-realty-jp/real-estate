@@ -3934,6 +3934,32 @@
     </div>
   </div>
 
+  <div class="card" data-category="相続・税金" id="card-calcSmallLandSpecial">
+    <div class="card-header" onclick="toggleCard('calcSmallLandSpecial')">
+      <span>「小規模宅地等の特例」で相続税が最大80%減！ 適用可否と節税額を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSmallLandSpecial">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 「小規模宅地等の特例」は相続した土地の評価額を最大80%減額できる強力な制度。多くの方が存在を知らずに多く税金を払っています。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の相続財産に変更してください。</p>
+      <label style="font-size:13px">相続した土地の評価額（万円）<span style="color:#888;font-size:11px"> 例: 5000（固定資産税評価額の約1.1倍が目安）</span></label>
+      <input type="number" id="sls_eval" value="5000" min="0" oninput="calcSmallLandSpecial()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">土地の面積（㎡）<span style="color:#888;font-size:11px"> 例: 200</span></label>
+      <input type="number" id="sls_area" value="200" min="0" oninput="calcSmallLandSpecial()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">土地の利用区分<span style="color:#888;font-size:11px"> 被相続人が住んでいた土地は「居住用」</span></label>
+      <select id="sls_type" onchange="calcSmallLandSpecial()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="home" selected>居住用（親が住んでいた自宅）</option>
+        <option value="rental">貸付用（賃貸に出していた土地・建物）</option>
+        <option value="business">事業用（被相続人が事業をしていた土地）</option>
+      </select>
+      <label style="font-size:13px">相続財産合計（この土地含む）（万円）<span style="color:#888;font-size:11px"> 例: 15000</span></label>
+      <input type="number" id="sls_total" value="15000" min="0" oninput="calcSmallLandSpecial()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">法定相続人の数（人）<span style="color:#888;font-size:11px"> 例: 2（子2人の場合）</span></label>
+      <input type="number" id="sls_heirs" value="2" min="1" max="10" oninput="calcSmallLandSpecial()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="sls_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="相続・税金" id="card-calcTowerMansionTax">
     <div class="card-header" onclick="toggleCard('calcTowerMansionTax')">
       <span>タワマン節税は2024年改正で大幅縮小！ 改正前後の相続税評価額を比較</span>
@@ -14688,6 +14714,46 @@ function calcInheritanceShareConflict() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😱 相続で不動産が共有名義になって揉めた場合の損失を計算してみた…\n\n' + years + '年間の税金・弁護士費用・値下がりを合計すると約' + Math.round(totalLoss) + '万円の損失！\n生前対策が重要すぎる…\n\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcInheritanceShareConflict(); })();
+
+function calcSmallLandSpecial() {
+  var evalAmount = parseFloat(document.getElementById('sls_eval').value) || 0;
+  var area = parseFloat(document.getElementById('sls_area').value) || 0;
+  var type = document.getElementById('sls_type').value;
+  var total = parseFloat(document.getElementById('sls_total').value) || 0;
+  var heirs = parseFloat(document.getElementById('sls_heirs').value) || 1;
+  var el = document.getElementById('sls_result');
+  if (!el) return;
+  var limitArea = type === 'home' ? 330 : type === 'rental' ? 200 : 400;
+  var reductionRate = type === 'rental' ? 0.50 : 0.80;
+  var typeName = type === 'home' ? '特定居住用宅地等' : type === 'rental' ? '貸付事業用宅地等' : '特定事業用宅地等';
+  var applicableArea = Math.min(area, limitArea);
+  var applicableRatio = area > 0 ? applicableArea / area : 0;
+  var reduction = Math.round(evalAmount * applicableRatio * reductionRate);
+  var reducedEval = evalAmount - reduction;
+  var totalAfter = total - reduction;
+  var basicDeduction = 3000 + 600 * heirs;
+  var taxableWithout = Math.max(0, total - basicDeduction);
+  var taxableWith = Math.max(0, totalAfter - basicDeduction);
+  var taxRate = 0.15;
+  var taxWithout = Math.round(taxableWithout * taxRate);
+  var taxWith = Math.round(taxableWith * taxRate);
+  var taxSaving = taxWithout - taxWith;
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:#16a34a;line-height:1;margin-bottom:4px">-' + taxSaving.toLocaleString() + '万円</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">小規模宅地特例による相続税の節税効果（概算）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🏷️ 適用区分: <strong>' + typeName + '</strong></div>'
+    + '<div style="margin-bottom:4px">📐 適用面積: <strong>' + applicableArea + '㎡ / 上限' + limitArea + '㎡</strong>（減額率' + (reductionRate * 100) + '%）</div>'
+    + '<div style="margin-bottom:4px">📉 土地評価額の減額: <strong style="color:#16a34a">-' + reduction.toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px;border-top:1px solid #eee;padding-top:6px">相続税（特例なし）: <strong>' + taxWithout.toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">相続税（特例あり）: <strong style="color:#16a34a">' + taxWith.toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">節税効果: <strong style="color:#16a34a">-' + taxSaving.toLocaleString() + '万円</strong></div>'
+    + '<div style="font-size:11px;color:#888;margin-top:4px">基礎控除: ' + basicDeduction + '万円（3,000万＋600万×' + heirs + '人）</div>'
+    + '</div>'
+    + '<div style="background:#dcfce7;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px;color:#166534">✅ 特例を使うと相続税が約' + taxSaving + '万円減らせる可能性があります。ただし「配偶者や同居親族が引き継ぐ」などの適用要件を事前に税理士へ確認してください。</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 相続税は15%の一律概算。実際は累進課税で異なります。この計算はあくまで目安として使ってください。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😲 「小規模宅地等の特例」を使えば相続税が' + taxSaving + '万円も節税できる可能性があると判明！\n\n多くの人が知らずに多く払っているらしい。相続した土地がある人は必チェック。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcSmallLandSpecial(); })();
 
 function calcTowerMansionTax() {
   var price = parseFloat(document.getElementById('tmt_price').value) || 0;
