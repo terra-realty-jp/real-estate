@@ -4041,6 +4041,22 @@
     </div>
   </div>
 
+  <!-- calcCapRateScenario -->
+  <div class="calc-card" id="card-calcCapRateScenario">
+    <div class="card-header" onclick="toggleCard('calcCapRateScenario')">
+      <span>家賃収入の楽観・中立・悲観シナリオ——3パターンで年間収益を事前に確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcCapRateScenario">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">「家賃が満室で入れば黒字」という皮算用は禁物です。満室・80%稼働・60%稼働の3シナリオで年間収益とキャッシュフローがどう変わるかを比較します。</p>
+      <label style="font-size:13px">月額満室想定家賃（万円）<span style="color:#888;font-size:11px"> 例: 20（全戸満室の場合）</span></label>
+      <input type="number" id="crs_rent" value="20" min="0" step="0.5" oninput="calcCapRateScenario()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">月々の固定費合計（ローン+管理費など）（万円）<span style="color:#888;font-size:11px"> 例: 14</span></label>
+      <input type="number" id="crs_fixed" value="14" min="0" step="0.5" oninput="calcCapRateScenario()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="crs_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14270,6 +14286,44 @@ function calcMonthlyCFBreakdown() {
     +'<button onclick="shareLine(\'家賃'+esc(rent)+'万円の物件の本当の手残りは月'+esc(cf)+'万円だった！ローン・管理費・税金全部引いたら思ったより'+(isProfit?'多くて':'少なくて')+'驚き😲 明細付きで確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcMonthlyCFBreakdown(); })();
+
+function calcCapRateScenario() {
+  var el = document.getElementById('crs_result');
+  if (!el) return;
+  var rent  = parseFloat(document.getElementById('crs_rent').value)  || 0;
+  var fixed = parseFloat(document.getElementById('crs_fixed').value) || 0;
+  var scenarios = [
+    { label: '楽観（満室100%）', occ: 1.0, color: '22,163,74' },
+    { label: '中立（稼働80%）',  occ: 0.8, color: '201,168,76' },
+    { label: '悲観（稼働60%）',  occ: 0.6, color: '220,38,38' }
+  ];
+  var bestS = scenarios[0];
+  var bestCF = Math.round((rent * bestS.occ - fixed) * 12 * 10) / 10;
+  var color = bestCF >= 0 ? '22,163,74' : '220,38,38';
+  var rows = scenarios.map(function(s) {
+    var annRent = Math.round(rent * s.occ * 12 * 10) / 10;
+    var annFixed = Math.round(fixed * 12 * 10) / 10;
+    var annCF = Math.round((rent * s.occ - fixed) * 12 * 10) / 10;
+    var isP = annCF >= 0;
+    return '<tr>'
+      +'<td style="padding:6px;border-bottom:1px solid #eee">'+s.label+'</td>'
+      +'<td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(annRent)+'万円</td>'
+      +'<td style="padding:6px;text-align:right;border-bottom:1px solid #eee;font-weight:700;color:rgba('+s.color+',1)">'+(isP?'+':'')+esc(annCF)+'万円</td>'
+      +'</tr>';
+  }).join('');
+  var worstCF = Math.round((rent * 0.6 - fixed) * 12 * 10) / 10;
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">悲観シナリオ（60%稼働）年間CF</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(worstCF>=0?'+':'')+esc(worstCF)+'万円</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">悲観シナリオでも黒字なら投資判断◎</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">シナリオ</th><th style="padding:6px;text-align:right">年間収入</th><th style="padding:6px;text-align:right">年間CF</th></tr>'
+    +rows+'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 60%稼働でも黒字（プラスCF）なら安全性の高い投資と言えます。悲観シナリオで赤字なら自己資金不足の可能性があります。</div>'
+    +'<button onclick="shareLine(\'家賃'+esc(rent)+'万円の物件、悲観シナリオ60%稼働だと年CF'+esc(worstCF)+'万円になる計算😳 3シナリオで投資可否を確認してみた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcCapRateScenario(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
