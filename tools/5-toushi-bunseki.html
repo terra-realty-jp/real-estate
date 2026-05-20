@@ -3625,6 +3625,21 @@
     </div>
   </div>
 
+  <div class="card" data-category="リスク分析" id="card-calcSensitivityRent">
+    <div class="card-header" onclick="toggleCard('calcSensitivityRent')">
+      <span>家賃が5%・10%・20%下がったら利回りはどう変わる？ リスク感度分析</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSensitivityRent">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">「この物件は家賃が下がってもプラスを維持できるか？」を確認するための計算です。家賃下落3シナリオの実質利回りと年間手取りを一覧で見られます。</p>
+      <label>物件購入価格（例：3000万円の場合は3000）<br><input type="number" id="sr_price" value="3000" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">現在の年間家賃収入（満室、例：180万円の場合は180）<br><input type="number" id="sr_rent" value="180" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">年間の経費合計（管理費・固都税・修繕、例：30万円の場合は30）<br><input type="number" id="sr_expense" value="30" style="width:100%"> 万円</label>
+      <button onclick="calcSensitivityRent()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">家賃下落シナリオ別の収支を確認する</button>
+      <div id="sr_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -13727,6 +13742,51 @@ function calcStructureCompare() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcStructureCompare(); })();
+
+function calcSensitivityRent() {
+  var el = document.getElementById('sr_result');
+  if (!el) return;
+  var price   = parseFloat(document.getElementById('sr_price').value) || 0;
+  var rent    = parseFloat(document.getElementById('sr_rent').value) || 0;
+  var expense = parseFloat(document.getElementById('sr_expense').value) || 0;
+  if (price <= 0 || rent <= 0) { el.innerHTML = '<p style="color:red">物件価格と家賃収入を入力してください</p>'; el.style.display='block'; return; }
+  var scenarios = [
+    { label: '現状維持（0%）',  rate: 0 },
+    { label: '▲5%下落',        rate: -5 },
+    { label: '▲10%下落',       rate: -10 },
+    { label: '▲20%下落',       rate: -20 }
+  ];
+  var baseNet  = rent - expense;
+  var baseYield = Math.round(baseNet / price * 100 * 100) / 100;
+  var minYield  = scenarios.reduce(function(min, s) {
+    var y = Math.round((rent * (1 + s.rate/100) - expense) / price * 100 * 100) / 100;
+    return y < min ? y : min;
+  }, baseYield);
+  var hc = baseYield >= 5 ? '22,163,74' : (baseYield >= 3 ? '201,168,76' : '220,38,38');
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">現在の実質利回り</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+baseYield+'<span style="font-size:20px">%</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">20%家賃下落後でも実質利回り'+Math.round((rent*0.8-expense)/price*100*100)/100+'%'+(minYield>0?'—— 耐久性あり':'—— ▲20%で赤字に')+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.06)"><th style="padding:6px 8px;text-align:left">シナリオ</th><th style="padding:6px 8px;text-align:right">年間家賃</th><th style="padding:6px 8px;text-align:right">年間手取り</th><th style="padding:6px 8px;text-align:right">実質利回り</th></tr>';
+  scenarios.forEach(function(s) {
+    var adjRent = Math.round(rent * (1 + s.rate / 100) * 10) / 10;
+    var netInc  = Math.round((adjRent - expense) * 10) / 10;
+    var yield_  = Math.round(netInc / price * 100 * 100) / 100;
+    var color   = yield_ >= 3 ? '22,163,74' : (yield_ >= 0 ? '201,168,76' : '220,38,38');
+    html += '<tr><td style="padding:6px 8px">'+s.label+'</td>';
+    html += '<td style="padding:6px 8px;text-align:right">'+adjRent+'万円</td>';
+    html += '<td style="padding:6px 8px;text-align:right;color:rgba('+color+',1)">'+netInc+'万円</td>';
+    html += '<td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+yield_+'%</td></tr>';
+  });
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 家賃下落は築年数や周辺競合物件の増加、人口減少で起こりやすいです。購入前に▲20%でも赤字にならないかを確認することを推奨します。</p>';
+  var shareText = '投資物件の家賃が▲20%下落しても利回り'+Math.round((rent*0.8-expense)/price*100*100)/100+'%——リスクに強い物件かどうかを事前に確認すべき #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcSensitivityRent(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
