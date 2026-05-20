@@ -3672,6 +3672,27 @@
     </div>
   </div>
 
+  <!-- calcBuildingAgeScore -->
+  <div class="calc-card" id="card-calcBuildingAgeScore">
+    <div class="card-header" onclick="toggleCard('calcBuildingAgeScore')">
+      <span>築年数と構造で「あと何年使える？ 将来の売却可能性」を診断</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcBuildingAgeScore">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">建物の構造によって法定耐用年数が異なります。残存耐用年数が短くなると銀行融資が通りにくくなり、売却が難しくなります。今の物件の「出口戦略上の残り時間」を確認しましょう。</p>
+      <label>建物の構造<br>
+        <select id="bas_structure" onchange="calcBuildingAgeScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">
+          <option value="22">木造（法定22年）</option>
+          <option value="27">軽量鉄骨（法定27年）</option>
+          <option value="34">重量鉄骨（法定34年）</option>
+          <option value="47" selected>RC造・鉄筋コンクリート（法定47年）</option>
+        </select>
+      </label>
+      <label style="display:block;margin-top:8px">築年数（例：15年なら15）<br><input type="number" id="bas_age" value="15" min="0" max="70" step="1" oninput="calcBuildingAgeScore()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 年</label>
+      <div id="bas_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -13897,6 +13918,37 @@ function calcRateImpact() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcRateImpact(); })();
+
+function calcBuildingAgeScore() {
+  var el = document.getElementById('bas_result');
+  if (!el) return;
+  var legalLife  = parseInt(document.getElementById('bas_structure').value) || 47;
+  var age        = parseFloat(document.getElementById('bas_age').value) || 0;
+  var structName = {22:'木造',27:'軽量鉄骨',34:'重量鉄骨',47:'RC造'}[legalLife] || 'RC造';
+  var remaining  = Math.max(0, legalLife - age);
+  var score      = remaining >= 20 ? '◎ 融資が通りやすく売却しやすい' : (remaining >= 10 ? '△ 融資条件が厳しくなり始める' : (remaining > 0 ? '▲ 融資が通りにくい・売却困難になる' : '× 法定耐用年数超過——融資はほぼ不可能'));
+  var color      = remaining >= 20 ? '22,163,74' : (remaining >= 10 ? '201,168,76' : '220,38,38');
+  var depRate    = age >= legalLife ? 0 : Math.round((1 - age / legalLife) * 100);
+  var sellTimeLabel = remaining >= 15 ? '今すぐ売却でも買い手がつきやすい' : (remaining >= 5 ? '早めの売却検討が推奨される' : '早急に売却か建て替えを検討する必要あり');
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">残存耐用年数（'+structName+'・築'+age+'年）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+remaining+'<span style="font-size:20px">年</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+score+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">構造</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+structName+'</td></tr>';
+  html += '<tr><td style="padding:6px 8px">法定耐用年数</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+legalLife+'年</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">築年数</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+age+'年</td></tr>';
+  html += '<tr><td style="padding:6px 8px">残存耐用年数</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+remaining+'年</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">建物残存価値率</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+depRate+'%</td></tr>';
+  html += '<tr><td style="padding:6px 8px">売却タイミング診断</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+sellTimeLabel+'</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 融資年数の目安は残存耐用年数の範囲内。耐用年数超でもアパートローンを組む金融機関はあります</p>';
+  var shareText = structName+'築'+age+'年の物件は残存耐用年数が'+remaining+'年。'+score+'——出口戦略を今のうちに考えることが大切 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcBuildingAgeScore(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
