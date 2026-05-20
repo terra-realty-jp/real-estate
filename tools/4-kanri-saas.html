@@ -3997,6 +3997,28 @@
     </div>
   </div>
 
+  <!-- calcRenovCost -->
+  <div class="calc-card" id="card-calcRenovCost">
+    <div class="card-header" onclick="toggleCard('calcRenovCost')">
+      <span>リノベーション費用は何年で回収できる？——家賃アップと入居率改善の効果を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcRenovCost">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">リノベーションで家賃を上げたり入居率を改善したりして増える年間収入が、工事費用を上回るまでの「投資回収期間」を計算します。</p>
+      <label style="font-size:13px">リノベーション費用（万円）<span style="color:#888;font-size:11px"> 例: 150</span></label>
+      <input type="number" id="rc_cost" value="150" min="0" oninput="calcRenovCost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 8</span></label>
+      <input type="number" id="rc_rent" value="8" min="0" step="0.1" oninput="calcRenovCost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">リノベ後の家賃アップ額（万円/月）<span style="color:#888;font-size:11px"> 例: 1</span></label>
+      <input type="number" id="rc_up" value="1" min="0" step="0.1" oninput="calcRenovCost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の年間空室月数（月）<span style="color:#888;font-size:11px"> 例: 2</span></label>
+      <input type="number" id="rc_vacant" value="2" min="0" max="12" oninput="calcRenovCost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">リノベ後の年間空室月数（月）<span style="color:#888;font-size:11px"> 例: 0.5</span></label>
+      <input type="number" id="rc_vacantnew" value="0.5" min="0" max="12" step="0.5" oninput="calcRenovCost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="rc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14163,6 +14185,38 @@ function calcDepositDeduct() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcDepositDeduct(); })();
+
+function calcRenovCost() {
+  var el = document.getElementById('rc_result');
+  if (!el) return;
+  var cost      = parseFloat(document.getElementById('rc_cost').value) || 0;
+  var rent      = parseFloat(document.getElementById('rc_rent').value) || 0;
+  var up        = parseFloat(document.getElementById('rc_up').value) || 0;
+  var vacant    = parseFloat(document.getElementById('rc_vacant').value) || 0;
+  var vacantnew = parseFloat(document.getElementById('rc_vacantnew').value) || 0;
+  var newRent   = rent + up;
+  var incomeOld = rent * (12 - vacant);
+  var incomeNew = newRent * (12 - vacantnew);
+  var annualGain = incomeNew - incomeOld;
+  var payback    = annualGain > 0 ? Math.round(cost / annualGain * 10) / 10 : null;
+  var isGood = payback !== null && payback <= 10;
+  var color = isGood ? '22,163,74' : '220,38,38';
+  var paybackText = payback === null ? '回収できない（収入増がない）' : payback+'年';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">投資回収期間</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+esc(paybackText)+'</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">年間収入増加: <strong>+'+esc(Math.round(annualGain*10)/10)+'万円/年</strong></div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">項目</th><th style="padding:6px;text-align:right">現状</th><th style="padding:6px;text-align:right">リノベ後</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">月額家賃</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(rent)+'万円</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#16a34a">'+esc(newRent)+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">年間空室</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(vacant)+'ヶ月</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#16a34a">'+esc(vacantnew)+'ヶ月</td></tr>'
+    +'<tr><td style="padding:6px">年間収入</td><td style="padding:6px;text-align:right">'+esc(Math.round(incomeOld*10)/10)+'万円</td><td style="padding:6px;text-align:right;color:#16a34a">'+esc(Math.round(incomeNew*10)/10)+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 回収期間10年以内が合理的なリノベーション投資の目安です。</div>'
+    +'<button onclick="shareLine(\'リノベ費用'+esc(cost)+'万円が'+esc(paybackText)+'で回収できると計算が出た！意外と早く元取れるかも💡 家賃アップ+空室改善の効果をシミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcRenovCost(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
