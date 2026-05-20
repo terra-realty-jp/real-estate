@@ -3842,6 +3842,27 @@
     </div>
   </div>
 
+
+  <!-- calcOneRoomVsFamily -->
+  <div class="calc-card" id="card-calcOneRoomVsFamily">
+    <div class="card-header" onclick="toggleCard('calcOneRoomVsFamily')">
+      <span>ワンルーム投資 vs ファミリー向け物件、20年間の収益はどちらが上？</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcOneRoomVsFamily">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">ワンルームは安く買えてすぐ始めやすい。ファミリー向けは入居期間が長い傾向。どちらが長期収益に優れているかを比較してみましょう。</p>
+      <label style="font-size:13px">ワンルームの物件価格（万円）<span style="color:#888;font-size:11px"> 例: 1800</span></label>
+      <input type="number" id="orf_or_price" value="1800" min="0" oninput="calcOneRoomVsFamily()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">ワンルームの表面利回り（年%）<span style="color:#888;font-size:11px"> 例: 6</span></label>
+      <input type="number" id="orf_or_yield" value="6" min="0" step="0.1" oninput="calcOneRoomVsFamily()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">ファミリー向けの物件価格（万円）<span style="color:#888;font-size:11px"> 例: 3500</span></label>
+      <input type="number" id="orf_fam_price" value="3500" min="0" oninput="calcOneRoomVsFamily()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">ファミリー向けの表面利回り（年%）<span style="color:#888;font-size:11px"> 例: 7</span></label>
+      <input type="number" id="orf_fam_yield" value="7" min="0" step="0.1" oninput="calcOneRoomVsFamily()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="orf_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -14377,6 +14398,56 @@ function calcActualYield(){
     +'<button onclick="shareLine(\'表面利回り'+yld+'%の物件の実際の手残りを計算したら月'+Math.round(cf*10)/10+'万円！広告の数字と全然違う😱 不動産投資前に必ず確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcActualYield(); })();
+function calcOneRoomVsFamily(){
+  var orPrice=parseFloat(document.getElementById('orf_or_price').value)||1800;
+  var orYield=parseFloat(document.getElementById('orf_or_yield').value)||6;
+  var famPrice=parseFloat(document.getElementById('orf_fam_price').value)||3500;
+  var famYield=parseFloat(document.getElementById('orf_fam_yield').value)||7;
+  var r=document.getElementById('orf_result');
+  if(!r)return;
+  var orVacancy=0.10; var orExpense=0.25;
+  var orNetYield=orYield/100*(1-orVacancy)*(1-orExpense);
+  var orCF20=orPrice*orNetYield*20;
+  var orSale=orPrice*0.7*0.96;
+  var orDown=orPrice*0.1;
+  var orTotal=orCF20+orSale-orDown;
+  var famVacancy=0.05; var famExpense=0.20;
+  var famNetYield=famYield/100*(1-famVacancy)*(1-famExpense);
+  var famCF20=famPrice*famNetYield*20;
+  var famSale=famPrice*0.6*0.96;
+  var famDown=famPrice*0.1;
+  var famTotal=famCF20+famSale-famDown;
+  var orROI=Math.round((orTotal/orDown)*100)/100;
+  var famROI=Math.round((famTotal/famDown)*100)/100;
+  var orWins=orROI>famROI;
+  var heroColor=orWins?'59,130,246':'22,163,74';
+  var winnerLabel=orWins?'ワンルーム（ROI '+orROI+'x）':'ファミリー向け（ROI '+famROI+'x）';
+  r.innerHTML='<div style="background:linear-gradient(135deg,rgba('+heroColor+',0.12),rgba('+heroColor+',0.04));border:2px solid rgba('+heroColor+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:#374151;margin-bottom:4px">20年間の自己資金ROI比較</div>'
+    +'<div style="display:flex;justify-content:space-around;align-items:flex-end;gap:12px;margin-bottom:8px">'
+    +'<div style="text-align:center"><div style="font-size:11px;color:#888;margin-bottom:2px">ワンルーム</div>'
+    +'<div style="font-size:40px;font-weight:900;color:rgba('+(orWins?'22,163,74':'220,38,38')+',1);line-height:1">'+orROI+'x</div>'
+    +'<div style="font-size:11px;color:#888">（20年ROI）</div></div>'
+    +'<div style="font-size:20px;font-weight:700;color:#9ca3af">vs</div>'
+    +'<div style="text-align:center"><div style="font-size:11px;color:#888;margin-bottom:2px">ファミリー</div>'
+    +'<div style="font-size:40px;font-weight:900;color:rgba('+(!orWins?'22,163,74':'220,38,38')+',1);line-height:1">'+famROI+'x</div>'
+    +'<div style="font-size:11px;color:#888">（20年ROI）</div></div>'
+    +'</div>'
+    +'<div style="font-size:14px;font-weight:700;color:rgb('+heroColor+')">→ '+esc(winnerLabel)+'の方が有利</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f3ef"><td colspan="3" style="padding:6px 8px;font-weight:700">📊 20年間の収益内訳</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee"></td><td style="padding:6px 8px;text-align:center;font-weight:700;border-bottom:1px solid #eee">ワンルーム</td><td style="padding:6px 8px;text-align:center;font-weight:700;border-bottom:1px solid #eee">ファミリー</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">頭金（10%）</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee">'+Math.round(orDown)+'万円</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee">'+Math.round(famDown)+'万円</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">20年間CF</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee">'+Math.round(orCF20)+'万円</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee">'+Math.round(famCF20)+'万円</td></tr>'
+    +'<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">売却手取り</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee">'+Math.round(orSale)+'万円</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid #eee">'+Math.round(famSale)+'万円</td></tr>'
+    +'<tr style="background:#fef9c3"><td style="padding:6px 8px;font-weight:700">ROI</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+orROI+'x</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+famROI+'x</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 ワンルームは空室リスクが高い分、初期投資が少ない。ファミリー向けは入居期間が長く安定収益が期待できますが多額の初期投資が必要です。</div>'
+    +'<button onclick="shareLine(\'ワンルームvsファミリー向け不動産投資を20年シミュレーション！'+esc(winnerLabel)+'が有利という結果に😮 投資前に確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcOneRoomVsFamily(); })();
+
 
 
 
