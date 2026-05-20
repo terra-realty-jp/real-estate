@@ -3347,6 +3347,22 @@
     </div>
   </div>
 
+  <div class="card" data-category="価格分析" id="card-calcLandVsBuilding">
+    <div class="card-header" onclick="toggleCard('calcLandVsBuilding')">
+      <span>売却価格の「土地分」と「建物分」はいくら？ 内訳比率と今後の価値変化を確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcLandVsBuilding">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">物件の価格が「土地と建物のどちらに由来するか」を知ることは、将来の資産価値を考えるうえで重要です。路線価から土地価格を推計して内訳を確認できます。</p>
+      <label>売却予定の金額（査定額）（例：2800万円の場合は2800）<br><input type="number" id="lvb_price" value="2800" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">土地面積（例：120㎡の場合は120）<br><input type="number" id="lvb_area" value="120" style="width:100%"> ㎡</label>
+      <label style="display:block;margin-top:8px">路線価（1㎡あたり、例：20万円/㎡の場合は20）<br><input type="number" id="lvb_rosenka" value="20" style="width:100%"> 万円/㎡</label>
+      <label style="display:block;margin-top:8px">建物の築年数（例：築20年の場合は20）<br><input type="number" id="lvb_age" value="20" style="width:100%"> 年</label>
+      <button onclick="calcLandVsBuilding()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">土地・建物の内訳を確認する</button>
+      <div id="lvb_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -11204,6 +11220,42 @@ function calcInheritedHomeSale() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcInheritedHomeSale(); })();
+
+function calcLandVsBuilding() {
+  var el = document.getElementById('lvb_result');
+  if (!el) return;
+  var price    = parseFloat(document.getElementById('lvb_price').value) || 0;
+  var area     = parseFloat(document.getElementById('lvb_area').value) || 0;
+  var rosenka  = parseFloat(document.getElementById('lvb_rosenka').value) || 0;
+  var age      = parseFloat(document.getElementById('lvb_age').value) || 0;
+  if (price <= 0 || area <= 0) { el.innerHTML = '<p style="color:red">売却価格と土地面積を入力してください</p>'; el.style.display='block'; return; }
+  // 路線価は公示価格の80%水準 → 時価換算
+  var landPrice = Math.round(rosenka * area / 0.8);
+  landPrice = Math.min(landPrice, price);
+  var buildingPrice = Math.max(0, price - landPrice);
+  var landPct    = Math.round(landPrice / price * 100);
+  var buildingPct = 100 - landPct;
+  // 建物の将来価値（木造22年で原価償却）
+  var deppRate = Math.min(age / 22, 1.0);
+  var buildingRemain = Math.round(buildingPrice * (1 - deppRate));
+  var hc = landPct >= 50 ? '22,163,74' : '201,168,76';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">土地価格の比率</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+landPct+'<span style="font-size:20px">%</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+(landPct>=50?'土地主体の物件（将来も価値が残りやすい）':'建物主体の物件（建物の劣化に注意）')+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">売却価格</td><td style="padding:6px 8px;text-align:right">'+price+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">土地価格（路線価から推計）</td><td style="padding:6px 8px;text-align:right;color:rgba(22,163,74,1)">'+landPrice+'万円（'+landPct+'%）</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">建物価格（差引）</td><td style="padding:6px 8px;text-align:right">'+buildingPrice+'万円（'+buildingPct+'%）</td></tr>';
+  html += '<tr><td style="padding:6px 8px">建物の残存価値（築'+age+'年 木造基準）</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">'+buildingRemain+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 路線価は国税庁が毎年7月に公表。路線価×面積÷0.8で時価換算。建物は木造22年で全額減価として試算。</p>';
+  var shareText = '自宅の売却価格'+price+'万円のうち土地が'+landPrice+'万円（'+landPct+'%）・建物が'+buildingPrice+'万円——土地比率が高いほど将来も資産として残る #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcLandVsBuilding(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
