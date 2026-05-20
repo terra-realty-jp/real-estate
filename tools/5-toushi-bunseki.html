@@ -3640,6 +3640,22 @@
     </div>
   </div>
 
+  <!-- calcEquityWithdraw -->
+  <div class="calc-card" id="card-calcEquityWithdraw">
+    <div class="card-header" onclick="toggleCard('calcEquityWithdraw')">
+      <span>物件の含み益を活用する方法 売却 vs 担保融資 比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcEquityWithdraw">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">物件の価値が上がった場合、「売って現金化する」か「担保に入れて次の融資を受ける」かで手元に残るお金と将来性が大きく変わります。どちらが自分に有利かを確認できます。</p>
+      <label>現在の物件の市場価値（例：5000万円なら5000）<br><input type="number" id="ew_market" value="5000" min="500" max="100000" step="100" oninput="calcEquityWithdraw()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">現在のローン残債（例：2000万円なら2000）<br><input type="number" id="ew_loan" value="2000" min="0" max="50000" step="100" oninput="calcEquityWithdraw()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">購入時の取得費（例：3800万円なら3800）<br><input type="number" id="ew_cost" value="3800" min="100" max="100000" step="100" oninput="calcEquityWithdraw()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">保有年数（例：6年なら6）<br><input type="number" id="ew_holdyears" value="6" min="1" max="30" step="1" oninput="calcEquityWithdraw()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 年</label>
+      <div id="ew_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -13787,6 +13803,47 @@ function calcSensitivityRent() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcSensitivityRent(); })();
+
+function calcEquityWithdraw() {
+  var el = document.getElementById('ew_result');
+  if (!el) return;
+  var market    = parseFloat(document.getElementById('ew_market').value) || 0;
+  var loan      = parseFloat(document.getElementById('ew_loan').value) || 0;
+  var cost      = parseFloat(document.getElementById('ew_cost').value) || 0;
+  var holdyears = parseFloat(document.getElementById('ew_holdyears').value) || 0;
+  var equity    = Math.max(0, market - loan);
+  // 売却シナリオ
+  var sellFee   = Math.round((market * 0.03 + 6) * 1.1);
+  var sellGain  = market - cost - sellFee;
+  var taxRate   = holdyears >= 5 ? 0.20315 : 0.39363;
+  var sellTax   = sellGain > 0 ? Math.round(sellGain * taxRate) : 0;
+  var sellNet   = Math.round(equity - sellFee - sellTax);
+  // 担保融資シナリオ（LTV 60%で融資）
+  var pledgeLoan = Math.round(market * 0.6);
+  var pledgeFree = Math.round(Math.max(0, pledgeLoan - loan));
+  var taxRateLabel = holdyears >= 5 ? '20.3%（長期）' : '39.4%（短期）';
+  var betterSell = sellNet >= pledgeFree;
+  var color = betterSell ? '22,163,74' : '59,130,246';
+  var label = betterSell ? '売却の方が現金化メリットが大きい' : '担保融資で手放さずに資金活用できる';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">含み益（ローン残債控除後）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+equity+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"></td><td style="padding:6px 8px;text-align:center;font-weight:700">売却</td><td style="padding:6px 8px;text-align:center;font-weight:700">担保融資</td></tr>';
+  html += '<tr><td style="padding:6px 8px">手元に入る金額</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+sellNet+'万円</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+pledgeFree+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">物件を手放すか</td><td style="padding:6px 8px;text-align:center">はい</td><td style="padding:6px 8px;text-align:center">いいえ</td></tr>';
+  html += '<tr><td style="padding:6px 8px">仲介手数料</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">−'+sellFee+'万円</td><td style="padding:6px 8px;text-align:right">−</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">譲渡所得税（'+taxRateLabel+'）</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">−'+sellTax+'万円</td><td style="padding:6px 8px;text-align:right">−</td></tr>';
+  html += '<tr><td style="padding:6px 8px">将来の家賃収入</td><td style="padding:6px 8px;text-align:center">なくなる</td><td style="padding:6px 8px;text-align:center">継続</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 担保融資は融資審査が必要です。LTV60%はあくまで目安。実際の条件は金融機関に確認してください</p>';
+  var shareText = '物件を売ると手取り'+sellNet+'万円。担保に入れると'+pledgeFree+'万円が手に入り物件も残せる！含み益'+equity+'万円の活用法を比較 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcEquityWithdraw(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
