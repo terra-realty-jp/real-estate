@@ -2944,6 +2944,26 @@
     </div>
   </div>
 
+  <!-- calcAkiyaRentReturn -->
+  <div class="calc-card" id="card-calcAkiyaRentReturn">
+    <div class="card-header" onclick="toggleCard('calcAkiyaRentReturn')">
+      <span>空き家をリフォームして貸す——初期費用の回収期間と20年間の利益を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaRentReturn">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">空き家をリフォームして賃貸に出す場合、入居者が見つかるまでの空室期間や管理費用を考慮した「実際の回収期間」と20年間の収益総額を計算します。</p>
+      <label style="font-size:13px">リフォーム費用（万円）<span style="color:#888;font-size:11px"> 例: 300（水回り+内装の場合）</span></label>
+      <input type="number" id="arr_reform" value="300" min="0" oninput="calcAkiyaRentReturn()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 6</span></label>
+      <input type="number" id="arr_rent" value="6" min="0" step="0.5" oninput="calcAkiyaRentReturn()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間維持費（固定資産税+管理費など）（万円）<span style="color:#888;font-size:11px"> 例: 10</span></label>
+      <input type="number" id="arr_maintain" value="10" min="0" oninput="calcAkiyaRentReturn()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間空室月数（月）<span style="color:#888;font-size:11px"> 例: 1.5（6〜8週の空室が平均的）</span></label>
+      <input type="number" id="arr_vacant" value="1.5" min="0" max="12" step="0.5" oninput="calcAkiyaRentReturn()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="arr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11709,6 +11729,36 @@ function calcAkiyaAllInOne() {
     +'<button onclick="shareLine(\'相続した空き家を売る・貸す・解体・放置で比べたら5年収支が全然違う！1番の選択肢は「'+esc(bestLbl)+'」と計算が出た😮👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcAkiyaAllInOne(); })();
+
+function calcAkiyaRentReturn() {
+  var el = document.getElementById('arr_result');
+  if (!el) return;
+  var reform   = parseFloat(document.getElementById('arr_reform').value)   || 0;
+  var rent     = parseFloat(document.getElementById('arr_rent').value)     || 0;
+  var maintain = parseFloat(document.getElementById('arr_maintain').value) || 0;
+  var vacant   = parseFloat(document.getElementById('arr_vacant').value)   || 0;
+  var annualRent = rent * (12 - vacant);
+  var annualNet  = annualRent - maintain;
+  var payback    = annualNet > 0 ? Math.round(reform / annualNet * 10) / 10 : null;
+  var profit20   = annualNet > 0 ? Math.round(annualNet * 20 - reform) : -reform;
+  var isGood     = payback !== null && payback <= 8;
+  var color      = isGood ? '22,163,74' : payback !== null ? '201,168,76' : '220,38,38';
+  var payText    = payback === null ? '回収不可（年間収支がマイナス）' : payback+'年';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">初期費用の回収期間</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+esc(payText)+'</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">20年間の累計利益: <strong>'+(profit20>=0?'+':'')+esc(profit20.toLocaleString())+'万円</strong></div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">項目</th><th style="padding:6px;text-align:right">年額</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">年間家賃収入（空室考慮後）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#16a34a">+'+esc(Math.round(annualRent*10)/10)+'万円</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">年間維持費</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">-'+esc(maintain)+'万円</td></tr>'
+    +'<tr><td style="padding:6px"><strong>年間純収益</strong></td><td style="padding:6px;text-align:right;font-weight:700">'+(annualNet>=0?'+':'')+esc(Math.round(annualNet*10)/10)+'万円</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 回収期間8年以内なら合理的な空き家活用です。8年を超える場合は売却も検討してください。</div>'
+    +'<button onclick="shareLine(\'空き家をリフォーム'+esc(reform)+'万円かけて貸したら回収期間'+esc(payText)+'・20年で'+esc(profit20.toLocaleString())+'万円の利益になる計算！空き家を放置するより全然いい💡 試算してみて👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcAkiyaRentReturn(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
