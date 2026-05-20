@@ -3982,6 +3982,21 @@
     </div>
   </div>
 
+  <!-- calcDepositDeduct -->
+  <div class="calc-card" id="card-calcDepositDeduct">
+    <div class="card-header" onclick="toggleCard('calcDepositDeduct')">
+      <span>退去時の敷金精算——原状回復費用のうちテナント負担と返還額を確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcDepositDeduct">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">テナント退去時の原状回復費用は「借主負担」と「オーナー負担（経年劣化）」に分けられます。敷金から引ける金額と返還すべき残額を確認しましょう。</p>
+      <label>敷金の合計額（例：16万円=2ヶ月×8万円なら16）<br><input type="number" id="dd_deposit" value="16" min="0" max="200" step="1" oninput="calcDepositDeduct()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">原状回復費用の合計見積もり（例：25万円なら25）<br><input type="number" id="dd_repairTotal" value="25" min="0" max="500" step="1" oninput="calcDepositDeduct()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">入居年数（例：3年なら3）<br><input type="number" id="dd_tenure" value="3" min="0.5" max="30" step="0.5" oninput="calcDepositDeduct()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 年</label>
+      <div id="dd_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14116,6 +14131,38 @@ function calcAdFeeROI() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcAdFeeROI(); })();
+
+function calcDepositDeduct() {
+  var el = document.getElementById('dd_result');
+  if (!el) return;
+  var deposit     = parseFloat(document.getElementById('dd_deposit').value) || 0;
+  var repairTotal = parseFloat(document.getElementById('dd_repairTotal').value) || 0;
+  var tenure      = parseFloat(document.getElementById('dd_tenure').value) || 0;
+  var ageFactor   = Math.max(0, Math.min(1, tenure / 6));
+  var ownerShare  = Math.round(repairTotal * ageFactor * 10) / 10;
+  var tenantShare = Math.round((repairTotal - ownerShare) * 10) / 10;
+  var refund      = Math.round((deposit - tenantShare) * 10) / 10;
+  var isShortage  = refund < 0;
+  var color       = isShortage ? '220,38,38' : '22,163,74';
+  var label       = isShortage ? '敷金が不足！テナントから追加請求が'+Math.abs(refund)+'万円必要です' : '敷金から差し引き後、テナントへ'+refund+'万円を返還します';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">'+(isShortage?'追加請求額':'テナントへの返還額')+'</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+Math.abs(refund)+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">原状回復費用合計</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+repairTotal+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">経年劣化によるオーナー負担（'+Math.round(ageFactor*100)+'%）</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+ownerShare+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">テナント負担額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">'+tenantShare+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">敷金</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+deposit+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">'+(isShortage?'追加請求額':'返還額')+'</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+Math.abs(refund)+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 国土交通省ガイドラインに基づく目安。経年劣化の割合は入居年数に応じて変動します</p>';
+  var shareText = '退去時の原状回復費用'+repairTotal+'万円のうち、入居'+tenure+'年の経年劣化分はオーナー負担'+ownerShare+'万円！テナント負担は'+tenantShare+'万円 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcDepositDeduct(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
