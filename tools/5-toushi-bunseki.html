@@ -3724,6 +3724,26 @@
     </div>
   </div>
 
+  <!-- calcSelfFundROI -->
+  <div class="calc-card" id="card-calcSelfFundROI">
+    <div class="card-header" onclick="toggleCard('calcSelfFundROI')">
+      <span>自己資金利回り（CCR）——頭金だけに対する実質リターンを表面利回りと比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSelfFundROI">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">「表面利回り5%」でも、頭金だけで見ると「自己資金利回り（CCR）」は大きく変わります。レバレッジの効果を数字で確認しましょう。</p>
+      <label style="font-size:13px">物件価格（万円）<span style="color:#888;font-size:11px"> 例: 5000</span></label>
+      <input type="number" id="sfr_price" value="5000" min="0" oninput="calcSelfFundROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">頭金（万円）<span style="color:#888;font-size:11px"> 例: 500</span></label>
+      <input type="number" id="sfr_down" value="500" min="0" oninput="calcSelfFundROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間家賃収入（万円）<span style="color:#888;font-size:11px"> 例: 250</span></label>
+      <input type="number" id="sfr_rent" value="250" min="0" oninput="calcSelfFundROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間ローン返済額（万円）<span style="color:#888;font-size:11px"> 例: 180</span></label>
+      <input type="number" id="sfr_loan" value="180" min="0" oninput="calcSelfFundROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="sfr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -14047,6 +14067,34 @@ function calcAfterTaxCF() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcAfterTaxCF(); })();
+
+function calcSelfFundROI() {
+  var el = document.getElementById('sfr_result');
+  if (!el) return;
+  var price = parseFloat(document.getElementById('sfr_price').value) || 0;
+  var down  = parseFloat(document.getElementById('sfr_down').value) || 0;
+  var rent  = parseFloat(document.getElementById('sfr_rent').value) || 0;
+  var loan  = parseFloat(document.getElementById('sfr_loan').value) || 0;
+  var grossYield = price > 0 ? Math.round(rent / price * 1000) / 10 : 0;
+  var cf     = rent - loan;
+  var ccr    = down > 0 ? Math.round(cf / down * 1000) / 10 : 0;
+  var isCCRGood = ccr >= 8;
+  var color = isCCRGood ? '22,163,74' : ccr >= 0 ? '201,168,76' : '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">自己資金利回り（CCR）</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+esc(ccr)+'%</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">表面利回り <strong>'+esc(grossYield)+'%</strong>　年間CF <strong>'+esc(cf.toLocaleString())+'万円</strong></div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    +'<tr style="background:#f5f5f5"><th style="padding:6px;text-align:left">指標</th><th style="padding:6px;text-align:right">数値</th><th style="padding:6px;text-align:right">目安</th></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">表面利回り（Gross Yield）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee">'+esc(grossYield)+'%</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#888">5〜8%以上</td></tr>'
+    +'<tr><td style="padding:6px;border-bottom:1px solid #eee">自己資金利回り（CCR）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;font-weight:700">'+esc(ccr)+'%</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#888">8%以上が優秀</td></tr>'
+    +'<tr><td style="padding:6px">年間キャッシュフロー</td><td style="padding:6px;text-align:right;font-weight:700"'+(cf<0?' style="color:#dc2626"':'')+'>'+esc(cf.toLocaleString())+'万円</td><td style="padding:6px;text-align:right;color:#888">プラスが必須</td></tr>'
+    +'</table>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 CCR（自己資金利回り）は頭金500万円で年'+esc(cf)+'万円のリターン。表面利回りより現実的な投資判断の指標です。</div>'
+    +'<button onclick="shareLine(\'表面利回り'+esc(grossYield)+'%でも自己資金利回りは'+esc(ccr)+'%！レバレッジの効果って凄い😲 頭金に対して実際にどれだけ稼げるか計算してみた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcSelfFundROI(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
