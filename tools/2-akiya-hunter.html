@@ -2822,6 +2822,21 @@
     </div>
   </div>
 
+  <!-- calcFarmConvert -->
+  <div class="calc-card" id="card-calcFarmConvert">
+    <div class="card-header" onclick="toggleCard('calcFarmConvert')">
+      <span>農地付き空き家を宅地に転用すると価値はいくら上がる？ 転用費用との損益</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcFarmConvert">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">相続した農地が付属する空き家は、農地転用の許可を取れば宅地として活用・売却できます。転用費用と地価上昇分を比べて、転用が割に合うかどうかを確認できます。</p>
+      <label>農地の面積（例：200㎡なら200）<br><input type="number" id="fc_area" value="200" min="10" max="10000" step="10" oninput="calcFarmConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> ㎡</label>
+      <label style="display:block;margin-top:8px">現在の農地としての評価額（例：150万円なら150）<br><input type="number" id="fc_farmVal" value="150" min="10" max="10000" step="10" oninput="calcFarmConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <label style="display:block;margin-top:8px">転用後の宅地評価額の見込み（例：500万円なら500）<br><input type="number" id="fc_landVal" value="500" min="10" max="50000" step="10" oninput="calcFarmConvert()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box"> 万円</label>
+      <div id="fc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -11341,6 +11356,39 @@ function calcAkiyaRegistrationDeadline() {
   el.innerHTML = html; el.style.display = 'block';
 }
 (function(){ calcAkiyaRegistrationDeadline(); })();
+
+function calcFarmConvert() {
+  var el = document.getElementById('fc_result');
+  if (!el) return;
+  var area    = parseFloat(document.getElementById('fc_area').value) || 0;
+  var farmVal = parseFloat(document.getElementById('fc_farmVal').value) || 0;
+  var landVal = parseFloat(document.getElementById('fc_landVal').value) || 0;
+  var convFee    = Math.round(area * 0.5 + 15);
+  var notaryCert = 5;
+  var totalCost  = convFee + notaryCert;
+  var gain       = Math.round(landVal - farmVal - totalCost);
+  var isProfit   = gain > 0;
+  var color      = isProfit ? '22,163,74' : '220,38,38';
+  var label      = isProfit ? '転用するとプラスになります' : '転用コストが上回ります。宅地化は慎重に検討を';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">農地転用後の純増益</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+gain+'<span style="font-size:20px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);margin-top:6px">'+label+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">農地面積</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+area+'㎡</td></tr>';
+  html += '<tr><td style="padding:6px 8px">現在の農地評価額</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+farmVal+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">転用後の宅地評価額</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+landVal+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">転用申請・造成費用（目安）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">約'+convFee+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">登記・証明書費用（目安）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">約'+notaryCert+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px;font-weight:700">純増益</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+(isProfit?'+':'')+gain+'万円</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 農地転用には農地法の許可（4条・5条）が必要です。市街化調整区域では許可が下りない場合があります</p>';
+  var shareText = '農地付き空き家を宅地に転用すると価値が'+farmVal+'→'+landVal+'万円に！転用費用約'+totalCost+'万円を差し引いても'+gain+'万円の純益 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcFarmConvert(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
