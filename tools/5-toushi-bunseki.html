@@ -3591,6 +3591,26 @@
     </div>
   </div>
 
+  <div class="card" data-category="税金・費用" id="card-calcNewBuildTaxCut">
+    <div class="card-header" onclick="toggleCard('calcNewBuildTaxCut')">
+      <span>新築優遇期間が終わると固定資産税がいくら増える？ 特例終了後の急増額をシミュレーション</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcNewBuildTaxCut">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">新築の戸建て・マンションは最初の数年間は固定資産税が半額になる特例があります。特例が終わったとたんに税額が跳ね上がります——いつ・いくら増えるかを事前に確認できます。</p>
+      <label>建物の固定資産税評価額（例：1200万円の場合は1200）<br><input type="number" id="nbtc_bldg" value="1200" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">物件タイプ
+        <select id="nbtc_type" style="width:100%;margin-top:4px;padding:8px;border:1px solid var(--border);border-radius:6px">
+          <option value="house">戸建て（特例3年間）</option>
+          <option value="mansion">マンション（特例5年間）</option>
+        </select>
+      </label>
+      <label style="display:block;margin-top:8px">購入後の経過年数（例：2年の場合は2）<br><input type="number" id="nbtc_aged" value="2" style="width:100%"> 年</label>
+      <button onclick="calcNewBuildTaxCut()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">特例終了後の増加額を確認する</button>
+      <div id="nbtc_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -13616,6 +13636,41 @@ function calcRefinanceBreak() {
   el.style.display = 'block';
 }
 (function(){ calcRefinanceBreak(); })();
+
+function calcNewBuildTaxCut() {
+  var el = document.getElementById('nbtc_result');
+  if (!el) return;
+  var bldg  = parseFloat(document.getElementById('nbtc_bldg').value) || 0;
+  var type  = document.getElementById('nbtc_type').value;
+  var aged  = parseInt(document.getElementById('nbtc_aged').value) || 0;
+  if (bldg <= 0) { el.innerHTML = '<p style="color:red">建物評価額を入力してください</p>'; el.style.display='block'; return; }
+  var specialYears = type === 'mansion' ? 5 : 3;
+  var remaining    = Math.max(0, specialYears - aged);
+  var normalTax    = Math.round(bldg * 0.014);
+  var reducedTax   = Math.round(normalTax * 0.5);
+  var increase     = normalTax - reducedTax;
+  var hc = '220,38,38';
+  var statusLabel = remaining > 0 ? '特例終了まであと'+remaining+'年' : '特例はすでに終了しています';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">特例終了後の固定資産税 増加額</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">+'+increase+'<span style="font-size:20px">万円/年</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+statusLabel+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">建物評価額</td><td style="padding:6px 8px;text-align:right">'+bldg+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">特例期間中の税額（半額）</td><td style="padding:6px 8px;text-align:right;color:rgba(22,163,74,1)">'+reducedTax+'万円/年</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">特例終了後の税額（通常）</td><td style="padding:6px 8px;text-align:right;color:rgba(220,38,38,1)">'+normalTax+'万円/年</td></tr>';
+  html += '<tr><td style="padding:6px 8px"><strong>増加額</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">+'+increase+'万円/年</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">特例残り期間</td><td style="padding:6px 8px;text-align:right">'+remaining+'年</td></tr>';
+  html += '</table>';
+  html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 新築戸建て3年・マンション5年（長期優良住宅は+2年）が半額。建物評価額は経年で下がるため実際の増加幅は小さくなる場合があります。</p>';
+  var shareText = remaining > 0
+    ? '新築の固定資産税優遇はあと'+remaining+'年で終了——終わったら年間+'+increase+'万円の急増！今のうちにキャッシュフローを確認しておかないと痛い目に #不動産かんたんツール'
+    : '新築優遇が終わって固定資産税が年間+'+increase+'万円に急増。収支計画の見直しが必要 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcNewBuildTaxCut(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
