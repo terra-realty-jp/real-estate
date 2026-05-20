@@ -3871,6 +3871,22 @@
     </div>
   </div>
 
+  <div class="card" data-category="家賃管理" id="card-calcRentHikeTiming">
+    <div class="card-header" onclick="toggleCard('calcRentHikeTiming')">
+      <span>今の家賃が近隣相場より安い？ 値上げ可能額と年間増収チャンスを試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcRentHikeTiming">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">「家賃を上げたいが根拠がない」オーナーへ。近隣相場と築年数から適正賃料を試算し、値上げ交渉の数字的な根拠を提供します。</p>
+      <label>現在の月額家賃（例：8万円の場合は8）<br><input type="number" id="rht_current" value="8" step="0.1" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">近隣の同条件物件の相場（例：9万円の場合は9）<br><input type="number" id="rht_market" value="9" step="0.1" style="width:100%"> 万円</label>
+      <label style="display:block;margin-top:8px">物件の築年数（例：築15年の場合は15）<br><input type="number" id="rht_age" value="15" style="width:100%"> 年</label>
+      <label style="display:block;margin-top:8px">最後の更新から何年経ちますか（例：1.5年の場合は1.5）<br><input type="number" id="rht_years" value="1.5" step="0.5" style="width:100%"> 年</label>
+      <button onclick="calcRentHikeTiming()" style="margin-top:12px;width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">値上げ余地を試算する</button>
+      <div id="rht_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -13766,7 +13782,41 @@ function calcMixedUseCalc() {
 }
 (function(){ calcMixedUseCalc(); })();
 
-
+function calcRentHikeTiming() {
+  var el = document.getElementById('rht_result');
+  if (!el) return;
+  var current = parseFloat(document.getElementById('rht_current').value) || 0;
+  var market  = parseFloat(document.getElementById('rht_market').value) || 0;
+  var age     = parseFloat(document.getElementById('rht_age').value) || 0;
+  var years   = parseFloat(document.getElementById('rht_years').value) || 2;
+  if (current <= 0 || market <= 0) { el.innerHTML = '<p style="color:red">現在の家賃と近隣相場を入力してください</p>'; el.style.display='block'; return; }
+  var ageAdj   = Math.max(0.70, 1 - age * 0.004);
+  var fairRent = Math.round(market * ageAdj * 10) / 10;
+  var gap      = Math.round((fairRent - current) * 10) / 10;
+  var annualGain = Math.round(gap * 12 * 10) / 10;
+  var isHike   = gap > 0.1;
+  var hc = isHike ? '22,163,74' : '201,168,76';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:4px">年間増収チャンス</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1)">'+(isHike?'+':'')+annualGain+'<span style="font-size:20px">万円/年</span></div>';
+  html += '<div style="font-size:13px;margin-top:4px">'+(isHike?'値上げ余地あり（月額+'+gap+'万円）':'現行家賃は相場に合っています')+'</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">現在の月額家賃</td><td style="padding:6px 8px;text-align:right">'+current+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">近隣相場</td><td style="padding:6px 8px;text-align:right">'+market+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px">築年数補正後の適正賃料（'+Math.round(ageAdj*100)+'%）</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+fairRent+'万円</td></tr>';
+  html += '<tr><td style="padding:6px 8px">値上げ可能額（月額）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+(gap>=0?'+':'')+gap+'万円</td></tr>';
+  html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"><strong>年間増収額</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+(annualGain>=0?'+':'')+annualGain+'万円</td></tr>';
+  html += '</table>';
+  var renewalMsg = years >= 1.5 ? '次回更新まで約'+Math.round((2-years)*12)+'ヶ月——今から準備を始めましょう' : '更新時期が近いです。今すぐ値上げ交渉を検討してください';
+  html += '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:10px;margin-top:10px;font-size:12px">💡 交渉タイミング: '+renewalMsg+'</div>';
+  var shareText = isHike
+    ? '現在の家賃'+current+'万円は適正賃料'+fairRent+'万円より安い——値上げ交渉で年間+'+annualGain+'万円の増収チャンスと試算 #不動産かんたんツール'
+    : '現在の家賃'+current+'万円は近隣相場に照らしてほぼ適正。次回更新は値上げより入居継続を優先が得策 #不動産かんたんツール';
+  html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcRentHikeTiming(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
