@@ -4031,6 +4031,22 @@
     </div>
   </div>
 
+  <!-- calcInheritTax -->
+  <div class="calc-card" id="card-calcInheritTax">
+    <div class="card-header" onclick="toggleCard('calcInheritTax')">
+      <span>不動産を相続したら相続税はいくら？——基礎控除・法定相続人数から早見計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcInheritTax">
+      <p style="font-size:13px;color:#555;margin-bottom:12px">相続財産の総額と法定相続人の人数を入力すると、基礎控除（3,000万円＋600万円×人数）と速算表から相続税の概算を計算します。</p>
+      <label style="font-size:13px">相続財産の総額（万円）<span style="color:#888;font-size:11px"> 例: 5000（不動産評価額＋預貯金など）</span></label>
+      <input type="number" id="iht_total" value="5000" min="0" oninput="calcInheritTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">法定相続人の人数（人）<span style="color:#888;font-size:11px"> 例: 2（配偶者＋子1人）</span></label>
+      <input type="number" id="iht_heirs" value="2" min="1" max="10" oninput="calcInheritTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="iht_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -11739,6 +11755,39 @@ function calcSell5Year() {
     +'<button onclick="shareLine(\'売却タイミングで'+esc(diff.toLocaleString())+'万円変わると知ってびっくり😱 5年以内に売ると短期譲渡税率39.63%！長期なら20.315%に下がるのに…急いで売って損しないために無料ツールで確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcSell5Year(); })();
+
+function calcInheritTax() {
+  var el = document.getElementById('iht_result');
+  if (!el) return;
+  var total = parseFloat(document.getElementById('iht_total').value) || 0;
+  var heirs = Math.max(1, Math.round(parseFloat(document.getElementById('iht_heirs').value) || 1));
+  var kiso  = 3000 + 600 * heirs;
+  var taxable = Math.max(0, total - kiso);
+  // 法定相続分に応じた速算表（各相続人等分で試算）
+  function taxByRate(amount) {
+    if (amount <= 1000)  return Math.round(amount * 0.10);
+    if (amount <= 3000)  return Math.round(amount * 0.15 - 50);
+    if (amount <= 5000)  return Math.round(amount * 0.20 - 200);
+    if (amount <= 10000) return Math.round(amount * 0.30 - 700);
+    if (amount <= 20000) return Math.round(amount * 0.40 - 1700);
+    if (amount <= 30000) return Math.round(amount * 0.45 - 2700);
+    if (amount <= 60000) return Math.round(amount * 0.50 - 4200);
+    return Math.round(amount * 0.55 - 7200);
+  }
+  var perShare = taxable / heirs;
+  var totalTax = taxByRate(perShare) * heirs;
+  var isZero = taxable <= 0;
+  var color = isZero ? '22,163,74' : '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba('+color+',0.12),rgba('+color+',0.04));border:2px solid rgba('+color+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    +'<div style="font-size:13px;color:rgba('+color+',1);margin-bottom:4px">'+(isZero?'✅ 相続税ゼロ（基礎控除以下）':'⚠ 相続税の概算')+'</div>'
+    +'<div style="font-size:52px;font-weight:900;color:rgba('+color+',1);line-height:1.1">'+(isZero?'0円':esc(totalTax.toLocaleString())+'万円')+'</div>'
+    +'<div style="font-size:14px;color:#555;margin-top:6px">基礎控除: <strong>'+esc(kiso.toLocaleString())+'万円</strong>　課税対象: <strong>'+(isZero?'0':esc(taxable.toLocaleString()))+'万円</strong></div>'
+    +'</div>'
+    +'<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px;font-size:12px;color:#0369a1;margin-bottom:12px">ℹ 計算式: 基礎控除 = 3,000万円 + 600万円 × 法定相続人'+esc(heirs)+'人 = '+esc(kiso.toLocaleString())+'万円</div>'
+    +'<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 不動産の相続税評価額は「路線価×面積」で計算し、市場価格より低くなることが多いです。小規模宅地等特例の適用で最大80%減額できます。</div>'
+    +'<button onclick="shareLine(\''+(isZero?'相続財産'+esc(total.toLocaleString())+'万円でも相続税がゼロ！基礎控除'+esc(kiso.toLocaleString())+'万円以下だから😮 自分の実家が相続税かかるか気になる人はチェックを👇':'相続税の概算が'+esc(totalTax.toLocaleString())+'万円と出た😱 財産'+esc(total.toLocaleString())+'万円・相続人'+esc(heirs)+'人で計算。早めに対策しないと大変💡 無料でシミュレーション👇')+' \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcInheritTax(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
