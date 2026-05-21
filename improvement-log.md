@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-05-21 Round 37（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 37）
+- **改善内容**:
+  - Tool1: calcNeighborhoodImpact — 嫌悪施設（工場・葬儀場・高圧線等）と距離から価格下落率・金額を試算
+  - Tool2: calcAkiyaSolarBattery — 空き家に太陽光+蓄電池後付けの年間売電+節電収益・回収期間試算
+  - Tool3: calcMoveInCostBreakdown — 家購入時ローン以外に必要な現金全費用一括試算
+  - Tool4: calcLateFeeIncome — 家賃滞納時の督促・弁護士・立退き・空室損失の総コスト試算
+  - Tool5: calcPropertySaleVsHold — 今すぐ売却 vs 5年保有後売却の手取り総額比較
+- **理由**: 「施設が近くて売れない？」「太陽光で稼げる？」「現金がいくら要る？」「滞納したら損失は？」「待つべき？」はどれも強い感情反応を生みPLGシェア効果が高い
+- **カード総数**: 682枚
+
+---
+
 ## 2026-05-21 Round 36（セッション継続）
 
 - **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
