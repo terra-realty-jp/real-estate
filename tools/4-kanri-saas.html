@@ -16141,12 +16141,12 @@ function calcEnergyRetrofit() {
     : payback <= 15
     ? '📊 回収まで10～15年かかりますが、光熱費上昇トレンドを考えると長期的に有利になる可能性があります。'
     : '⚠️ 回収期間が長めです。補助金の追加活用や別の断熱工法を検討してみてください。';
-  var shareText = '省エネリフォーム、補助金を使えば実質' + netCost.toFixed(0) + '万円で' + payback.toFixed(1) + '年で元が取れる！10年後には' + profit10.toFixed(0) + '万円得する計算。光熱費が上がる今こそ→';
-  var shareUrl  = 'https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html';
-  var lineUrl   = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText + '\n' + shareUrl);
-  var html = '<div style="background:' + heroColor + ';border-radius:10px;padding:18px;text-align:center;margin-bottom:12px">'
-    + '<div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:6px;opacity:0.9">費用回収年数（補助金適用後）</div>'
-    + '<div style="font-size:52px;font-weight:900;color:#fff;line-height:1">' + (payback < 999 ? payback.toFixed(1) : '—') + '<span style="font-size:18px">年</span></div>'
+  var heroRgb = payback <= 10 ? '22,163,74' : payback <= 15 ? '245,158,11' : '220,38,38';
+  var shareMsg = '省エネリフォームを補助金使って試算したら実質' + netCost.toFixed(0) + '万円で' + payback.toFixed(1) + '年で元が取れる！10年後に+' + profit10.toFixed(0) + '万円の利益。光熱費が上がる今こそ\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
+  var html = '<div style="background:linear-gradient(135deg,rgba(' + heroRgb + ',0.12),rgba(' + heroRgb + ',0.04));border:2px solid rgba(' + heroRgb + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">費用回収年数（補助金適用後）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgba(' + heroRgb + ',1);line-height:1.1">' + (payback < 999 ? payback.toFixed(1) : '—') + '<span style="font-size:22px">年</span></div>'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-top:4px">' + guide + '</div>'
     + '</div>'
     + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;font-size:12px;margin-bottom:12px;line-height:1.9">'
     + '<div>実質コスト（工事費 − 補助金）: <b>' + netCost.toFixed(0) + '万円</b></div>'
@@ -16154,8 +16154,7 @@ function calcEnergyRetrofit() {
     + '<div>10年間の光熱費節約合計: <b>' + save10.toFixed(0) + '万円</b></div>'
     + '<div>10年後の純利益: <b>' + (profit10 >= 0 ? '+' : '') + profit10.toFixed(0) + '万円</b></div>'
     + '</div>'
-    + '<div style="font-size:12px;color:#555;line-height:1.8;margin-bottom:12px">' + guide + '</div>'
-    + '<a href="' + lineUrl + '" target="_blank" rel="noopener" style="display:block;background:#06c755;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:6px">📤 LINEでシェアする</a>';
+    + '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEでシェア</button>';
   try { sbLogCardUsage(4,'card-calcEnergyRetrofit','calc','回収'+payback.toFixed(1)+'年・10年純益'+profit10.toFixed(0)+'万'); } catch(e) {}
   el.innerHTML = html; el.style.display = 'block';
 }
