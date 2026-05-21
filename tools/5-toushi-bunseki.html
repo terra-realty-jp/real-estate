@@ -15814,6 +15814,14 @@ function toggleCard(arg) {
   }
   if (card) card.classList.toggle('open');
 }
+function jumpToCard(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (el.querySelector('.card-header') && !el.classList.contains('open')) {
+    el.classList.add('open');
+  }
+  setTimeout(function() { el.scrollIntoView({behavior:'smooth', block:'center'}); }, 30);
+}
 
 var _toushiCat = '';
 var _toushiCatKw = {
@@ -15917,7 +15925,7 @@ renderReitCompare();
     info.cards.forEach(function(id,i){
       var el=document.getElementById(id);if(!el)return;
       el.classList.add('wiz-recommended');
-      if(i===0) setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'center'});},150);
+      if(i===0) setTimeout(function(){jumpToCard(id);},150);
     });
     var res=document.getElementById('toushi-wizard-result');if(!res)return;
     res.style.display='block';
@@ -15926,7 +15934,7 @@ renderReitCompare();
         var el=document.getElementById(id);
         var titleEl=el?el.querySelector('.card-title'):null;
         var label=titleEl?titleEl.textContent.replace(/[★☆]/g,'').trim().slice(0,16):id;
-        return '<button onclick="document.getElementById(\''+id+'\').scrollIntoView({behavior:\'smooth\',block:\'center\'})" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:4px 10px;color:var(--gold);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">▶ '+label+'</button>';
+        return '<button onclick="jumpToCard(\''+id+'\')" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:4px 10px;color:var(--gold);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">▶ '+label+'</button>';
       }).join('')+'</div><div style="margin-top:5px;font-size:10px;color:rgba(0,0,0,0.4)">'+info.hint+'</div>';
   };
 })();
@@ -15956,7 +15964,7 @@ renderReitCompare();
     if(favs.length===0){bar.style.display='none';return;}
     bar.style.display='block';
     bar.innerHTML='<div style="font-size:11px;color:rgba(212,175,55,0.65);margin-bottom:7px">★ あなたのよく使う機能</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+
-      favs.map(function(f){return '<button onclick="(function(){var el=document.getElementById(\''+f.id+'\');if(el)el.scrollIntoView({behavior:\'smooth\',block:\'center\'});})()" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:5px 12px;color:#d4af37;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">★ '+f.title+'</button>';}).join('')+'</div>';
+      favs.map(function(f){return '<button onclick="jumpToCard(\''+f.id+'\')" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:5px 12px;color:#d4af37;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">★ '+f.title+'</button>';}).join('')+'</div>';
   }
   function shortTitle(s){return s.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[^\x00-\x7F぀-鿿]/g,'').trim().slice(0,14);}
   function init(){
@@ -16126,7 +16134,7 @@ renderReitCompare();
       +'<div style="display:flex;gap:7px;flex-wrap:wrap">'
       +entries.map(function(e){
         var id=e[0],data=e[1];
-        return '<button onclick="(function(){var el=document.getElementById(\''+id+'\');if(el){el.scrollIntoView({behavior:\'smooth\',block:\'center\'});el.style.outline=\'2px solid rgba(212,175,55,0.6)\';setTimeout(function(){el.style.outline=\'\'},1800);}})()"'
+        return '<button onclick="jumpToCard(\''+id+'\')"'
           +' style="background:rgba(0,0,0,0.05);border:1px solid rgba(0,0,0,0.12);border-radius:20px;padding:5px 12px;color:rgba(0,0,0,0.7);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">'
           +data.title+(data.n>1?' ('+data.n+'回)':'')+'</button>';
       }).join('')+'</div>';
