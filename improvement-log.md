@@ -4341,3 +4341,16 @@
   - Tool5: calcREITComparison — REIT/クラウドファンディングvs直接購入の年間収益・ROE比較
 - **理由**: 「解除するとどうなる？」「倉庫貸しできる？」「どれくらいの需要がある？」「REIT vs 直接購入」は検討段階のユーザーが知りたい情報でPLG効果高
 - **カード総数**: 672枚
+
+## 2026-05-21 Round 38（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 38）
+- **改善内容**:
+  - Tool1: calcEstateInheritanceTax — 相続税概算（基礎控除・速算表・小規模宅地特例80%減額）
+  - Tool2: calcAkiyaRentalStorage — 空き家をトランクルームとして貸す収益・回収期間試算
+  - Tool3: calcBuyerMortgageQualify — 年収から住宅ローン審査通過可能額・返済比率を判定
+  - Tool4: calcPetDepositPolicy — ペット可転換の家賃アップvs退去修繕費増加の損益分岐
+  - Tool5: calcScaleUpROI — 1棟→2棟→3棟規模拡大時の年間CF・資産規模シミュレーション
+- **理由**: 「相続税がいくらかかる？」「空き家で倉庫ビジネス？」「ローン審査通る？」「ペット可は得？」「何棟持てばFIRE？」は検索頻度の高いPLG訴求テーマ
+- **カード総数**: 687枚
