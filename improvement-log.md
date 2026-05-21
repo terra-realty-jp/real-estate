@@ -4298,3 +4298,16 @@
   - Tool5: calcInterestOnlyMortgage — 元本据置ローンの月CF改善vs総返済コスト増加比較
 - **理由**: 「いつまでかかる？」「農泊で稼げる？」「値上げして損しない？」「据置ローンの落とし穴は？」など検討者の素朴な疑問に直接答えるPLG高カード
 - **カード総数**: 667枚
+
+## 2026-05-21 Round 35（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 35）
+- **改善内容**:
+  - Tool1: calcContractCancellation — 売買契約解除ペナルティ（手付金没収・倍返し）の金額試算
+  - Tool2: calcAkiyaWarehouse — 空き家を倉庫として個人に貸す月次収益・回収期間試算
+  - Tool3: calcBuyerPool — 価格帯・エリア・物件タイプから需要スコア・売却期間を推定
+  - Tool4: calcRentBonusMonth — フリーレント提供コストvs空室継続損失の比較
+  - Tool5: calcREITComparison — REIT/クラウドファンディングvs直接購入の年間収益・ROE比較
+- **理由**: 「解除するとどうなる？」「倉庫貸しできる？」「どれくらいの需要がある？」「REIT vs 直接購入」は検討段階のユーザーが知りたい情報でPLG効果高
+- **カード総数**: 672枚
