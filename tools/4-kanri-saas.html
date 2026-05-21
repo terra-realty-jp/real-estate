@@ -4347,6 +4347,25 @@
     </div>
   </div>
 
+  <div class="card" data-category="空室対策" id="card-calcBicycleParking">
+    <div class="card-header" onclick="toggleCard('calcBicycleParking')">
+      <span>駐輪場を整備すると空室は減る？ ラック設置費用と家賃維持効果の比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcBicycleParking">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">駐輪場ラック整備にかかる費用と、入居率改善・賃料維持によって回収できる期間を試算します。</p>
+      <label style="font-size:13px">管理物件の総戸数<span style="color:#888;font-size:11px"> 例: 20</span></label>
+      <input type="number" id="bp_units" value="20" min="1" max="200" oninput="calcBicycleParking()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">ラック設置費用（万円）<span style="color:#888;font-size:11px"> 例: 30（20台分のラック設置）</span></label>
+      <input type="number" id="bp_rack_cost" value="30" min="0" max="500" oninput="calcBicycleParking()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">1室あたり月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 7</span></label>
+      <input type="number" id="bp_rent" value="7" min="0" max="50" step="0.5" oninput="calcBicycleParking()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">整備後の空室短縮見込み（ヶ月）<span style="color:#888;font-size:11px"> 例: 1</span></label>
+      <input type="number" id="bp_shorten" value="1" min="0" max="6" step="0.5" oninput="calcBicycleParking()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="bp_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -15052,6 +15071,33 @@ function calcSmartLockROI() {
     + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('💡 スマートロック' + units + '台（' + totalCost + '万円）で空室が早く決まり純効果' + netEffect + '万円！\n\n女性・単身者に人気のセキュリティ設備。入居率アップに費用対効果あり。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcSmartLockROI(); })();
+
+function calcBicycleParking() {
+  var units = parseFloat(document.getElementById('bp_units').value) || 0;
+  var rackCost = parseFloat(document.getElementById('bp_rack_cost').value) || 0;
+  var rent = parseFloat(document.getElementById('bp_rent').value) || 0;
+  var shorten = parseFloat(document.getElementById('bp_shorten').value) || 0;
+  var el = document.getElementById('bp_result');
+  if (!el) return;
+  var annualSaved = Math.round(units * rent * shorten);
+  var paybackMonths = rackCost > 0 && annualSaved > 0 ? Math.ceil(rackCost / annualSaved * 12) : 0;
+  var heroColor = paybackMonths > 0 && paybackMonths <= 24 ? '#16a34a' : paybackMonths <= 48 ? '#c9a84c' : '#dc2626';
+  var heroLabel = paybackMonths <= 24 ? '2年以内に回収（優秀）' : paybackMonths <= 48 ? '4年以内に回収（普通）' : '回収に時間がかかる';
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">費用回収期間</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + (paybackMonths > 0 ? paybackMonths : '—') + '<span style="font-size:20px">ヶ月</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">' + heroLabel + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">ラック設置総費用</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">−' + rackCost + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">年間空室短縮で節減できる家賃損失</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#16a34a">+' + annualSaved + '万円/年</td></tr>'
+    + '<tr style="font-weight:700;background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">費用回収期間</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:' + heroColor + '">' + (paybackMonths > 0 ? paybackMonths + 'ヶ月' : '—') + '</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + (paybackMonths > 0 && paybackMonths <= 24 ? '✅ 2年以内に費用回収できる見込みです。駐輪場整備はファミリー層・自転車通勤者の入居検討率を高め、賃料値引き交渉を防ぐ効果も期待できます。' : '⚠️ 空室短縮効果が小さい場合、費用回収に時間がかかります。定期募集における「訴求ポイント」として活用するなど、他の効果も考慮して判断しましょう。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🚲 駐輪場ラック設置' + rackCost + '万円で空室が' + shorten + 'ヶ月短縮！\n\n年間' + annualSaved + '万円の家賃損失を回避→' + paybackMonths + 'ヶ月で回収できる計算。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcBicycleParking(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
