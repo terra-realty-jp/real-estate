@@ -4317,6 +4317,22 @@
     </div>
   </div>
 
+  <div class="card" data-category="税金・節税" id="card-calcRelativeSaleRisk">
+    <div class="card-header" onclick="toggleCard('calcRelativeSaleRisk')">
+      <span>親族に安く売ると贈与税がかかる？ みなし贈与リスクと適正価格の確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcRelativeSaleRisk">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#991b1b;line-height:1.7">⚠️ 親族に「相場より安く」売ると、差額が「みなし贈与」として扱われ、買い手（親族）に贈与税が課税される場合があります。適正価格から20%以上の乖離がリスクラインの目安です。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">物件の査定額・時価（万円）<span style="color:#888;font-size:11px"> 例: 3000（不動産会社の査定値）</span></label>
+      <input type="number" id="rsr_market" value="3000" min="100" max="100000" step="100" oninput="calcRelativeSaleRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">予定の売却価格（万円）<span style="color:#888;font-size:11px"> 例: 2200（「親族だから少し安くしてあげよう」という価格）</span></label>
+      <input type="number" id="rsr_price" value="2200" min="100" max="100000" step="100" oninput="calcRelativeSaleRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="rsr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12488,6 +12504,45 @@ function calcHealthInsAfterSale() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('😱 家を売った翌年の隠れコストが' + totalExtra + '万円と判明！\n\n住民税' + localTax + '万円' + (ins === 'kokuho' ? '＋国保料' + kokuhoInc + '万円' : '') + 'が翌年6月に追加請求される…売却代金を使い切る前に必ず確認を！\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcHealthInsAfterSale(); })();
+
+function calcRelativeSaleRisk() {
+  var market = parseFloat(document.getElementById('rsr_market').value) || 0;
+  var price = parseFloat(document.getElementById('rsr_price').value) || 0;
+  var el = document.getElementById('rsr_result');
+  if (!el) return;
+  if (market <= 0 || price <= 0) { el.innerHTML = '<p style="color:#888;font-size:13px">査定額と売却価格を入力してください</p>'; return; }
+  var diff = market - price;
+  var diffRatio = market > 0 ? Math.round(diff / market * 100 * 10) / 10 : 0;
+  var threshold = Math.round(market * 0.8);
+  var isRisk = price < threshold;
+  var giftTaxBase = isRisk ? diff : 0;
+  var giftTax = 0;
+  if (giftTaxBase > 0) {
+    var b = giftTaxBase - 110;
+    if (b <= 0) giftTax = 0;
+    else if (b <= 200) giftTax = Math.round(b * 0.10);
+    else if (b <= 400) giftTax = Math.round(b * 0.15 - 10);
+    else if (b <= 600) giftTax = Math.round(b * 0.20 - 30);
+    else if (b <= 1000) giftTax = Math.round(b * 0.30 - 90);
+    else if (b <= 1500) giftTax = Math.round(b * 0.40 - 190);
+    else if (b <= 3000) giftTax = Math.round(b * 0.45 - 265);
+    else if (b <= 4500) giftTax = Math.round(b * 0.50 - 415);
+    else giftTax = Math.round(b * 0.55 - 640);
+  }
+  var heroColor = isRisk ? '#dc2626' : '#16a34a';
+  var heroLabel = isRisk ? '買主が負担する推定贈与税' : 'みなし贈与リスク：なし';
+  var heroValue = isRisk ? giftTax + '<span style="font-size:20px">万円</span>' : '安全圏';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">' + heroLabel + '</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + heroValue + '</div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">査定額（時価）</td><td style="text-align:right;font-weight:700">' + market + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">売却予定価格</td><td style="text-align:right;font-weight:700">' + price + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">時価との乖離</td><td style="text-align:right;font-weight:700;color:' + (isRisk ? '#dc2626' : '#16a34a') + '">' + diffRatio + '%（' + diff + '万円安）</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">みなし贈与リスクライン（時価×80%）</td><td style="text-align:right;font-weight:700">' + threshold + '万円</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#555;line-height:1.7">'
+    + (isRisk ? '❌ 時価の80%を下回る売却価格です。差額' + diff + '万円が「みなし贈与」とされ、買主（親族）に贈与税が課税されるリスクがあります。適正価格での売却を検討してください。' : '✅ 時価の80%以上での売却価格です。みなし贈与と判定されるリスクは低い水準です。') + '</div>'
+    + '<div style="font-size:11px;color:#888;margin-top:8px;line-height:1.7">※ みなし贈与の認定基準は税務署の判断によります。実際の売買前に税理士への相談をお勧めします。</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent(isRisk ? '😱 親族に' + price + '万円で売ったら贈与税' + giftTax + '万円！？\n\n時価' + market + '万円の物件を' + diffRatio + '%安く売ると「みなし贈与」で税務署に目をつけられる可能性が。知らなかったでは済まされない！\n▶ 不動産かんたんツール（TERRA REALTY）' : '✅ 親族への不動産売却、みなし贈与リスクなしと確認！\n\n時価の80%以上（' + price + '万円）での売却なので安全圏。適正価格を知っておくだけで節税・トラブル回避に。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcRelativeSaleRisk(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {

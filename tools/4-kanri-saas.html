@@ -4287,6 +4287,26 @@
     </div>
   </div>
 
+  <div class="card" data-category="空室対策" id="card-calcLongVacancyROI">
+    <div class="card-header" onclick="toggleCard('calcLongVacancyROI')">
+      <span>6ヶ月以上の長期空室、今すぐ家賃を下げた方がトクかどうか計算する</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcLongVacancyROI">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#991b1b;line-height:1.7">⚠️ 空室が長引くほど機会損失が膨らみます。「家賃を下げたくない」気持ちより、「今すぐ入居者を決めた方が得か」を数字で比較してみましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">現在の月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 8（現在の募集家賃）</span></label>
+      <input type="number" id="lvr_rent" value="8" min="1" max="100" step="0.5" oninput="calcLongVacancyROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の空室期間（ヶ月）<span style="color:#888;font-size:11px"> 例: 6（すでに空いている月数）</span></label>
+      <input type="number" id="lvr_vacant" value="6" min="1" max="36" step="1" oninput="calcLongVacancyROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">このまま空室が続きそうな見込み月数（ヶ月）<span style="color:#888;font-size:11px"> 例: 3（あと3ヶ月で決まらなければ値下げ検討）</span></label>
+      <input type="number" id="lvr_forecast" value="3" min="0" max="24" step="1" oninput="calcLongVacancyROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">値下げ提案額（万円/月）<span style="color:#888;font-size:11px"> 例: 1（8万円→7万円に下げる場合は「1」）</span></label>
+      <input type="number" id="lvr_cut" value="1" min="0.5" max="10" step="0.5" oninput="calcLongVacancyROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="lvr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14917,6 +14937,33 @@ function calcModelRoomROI() {
     + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🏠 モデルルーム化で空室を' + shorten + 'ヶ月短縮→家賃' + savedRent + '万円を回収！\n\n家具費用' + cost + '万円に対して純効果は' + netEffect + '万円。空室が長引く前に試してみる価値アリ。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcModelRoomROI(); })();
+
+function calcLongVacancyROI() {
+  var rent = parseFloat(document.getElementById('lvr_rent').value) || 0;
+  var vacant = parseFloat(document.getElementById('lvr_vacant').value) || 0;
+  var forecast = parseFloat(document.getElementById('lvr_forecast').value) || 0;
+  var cut = parseFloat(document.getElementById('lvr_cut').value) || 0;
+  var el = document.getElementById('lvr_result');
+  if (!el) return;
+  var currentLoss = Math.round(rent * vacant * 10) / 10;
+  var futureLoss = Math.round(rent * forecast * 10) / 10;
+  var totalLossNoAction = currentLoss + futureLoss;
+  var newRent = rent - cut;
+  var annualCutLoss = Math.round(cut * 12 * 10) / 10;
+  var breakEvenMonths = cut > 0 ? Math.round((futureLoss / cut) * 10) / 10 : 0;
+  var isWorthCutting = futureLoss > annualCutLoss;
+  var heroColor = isWorthCutting ? '#16a34a' : '#c9a84c';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">このまま空室が続いた場合の累積損失</div><div style="font-size:52px;font-weight:900;color:#dc2626;line-height:1">' + totalLossNoAction + '<span style="font-size:20px">万円</span></div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">現在までの空室損失</td><td style="text-align:right;font-weight:700;color:#dc2626">' + currentLoss + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">このまま' + forecast + 'ヶ月続いた場合の追加損失</td><td style="text-align:right;font-weight:700;color:#dc2626">+' + futureLoss + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">値下げ後の月額家賃</td><td style="text-align:right;font-weight:700">' + newRent + '万円/月</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">値下げによる年間コスト</td><td style="text-align:right;font-weight:700;color:#c9a84c">-' + annualCutLoss + '万円/年</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">空室継続コストを値下げが上回る時期</td><td style="text-align:right;font-weight:700">' + breakEvenMonths + 'ヶ月後</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#555;line-height:1.7">'
+    + (isWorthCutting ? '✅ 値下げして早期決着の方が有利です。' + forecast + 'ヶ月分の空室損失（' + futureLoss + '万円）の方が、年間の値下げコスト（' + annualCutLoss + '万円）より大きいため。' : '⚠️ 値下げより現状維持の方が年間コストは低い計算です。ただし空室が続くほど損失は拡大します。') + '</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('😨 空室' + vacant + 'ヶ月で損失' + currentLoss + '万円！あと' + forecast + 'ヶ月続くとさらに' + futureLoss + '万円…\n\n月' + cut + '万円値下げして早期決着する方が' + (isWorthCutting ? 'トク' : '検討の余地あり') + 'という計算になった。空室長引かせてる場合じゃなかった！\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcLongVacancyROI(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {

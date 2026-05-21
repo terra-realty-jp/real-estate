@@ -4022,6 +4022,28 @@
     </div>
   </div>
 
+  <div class="card" data-category="購入判断" id="card-calcSpreadAnalysis">
+    <div class="card-header" onclick="toggleCard('calcSpreadAnalysis')">
+      <span>利回りと金利の「差（スプレッド）」で投資の安全マージンをチェックする</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSpreadAnalysis">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 不動産投資の基本は「利回り＞金利」。ただし空室・管理費・修繕費を考慮した実質スプレッドが1%を下回ると、金利上昇や空室増加ですぐに赤字になるリスクがあります。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">物件の表面利回り（%）<span style="color:#888;font-size:11px"> 例: 6.5（年間家賃収入÷購入価格×100）</span></label>
+      <input type="number" id="spa_yield" value="6.5" min="1" max="30" step="0.1" oninput="calcSpreadAnalysis()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">借入金利（%）<span style="color:#888;font-size:11px"> 例: 2.5（金融機関の提示金利）</span></label>
+      <input type="number" id="spa_rate" value="2.5" min="0.5" max="10" step="0.1" oninput="calcSpreadAnalysis()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">借入割合（%）<span style="color:#888;font-size:11px"> 例: 80（購入価格の80%を借入）</span></label>
+      <input type="number" id="spa_ltv" value="80" min="0" max="100" step="5" oninput="calcSpreadAnalysis()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">想定空室率（%）<span style="color:#888;font-size:11px"> 例: 10（年間の空室期間の割合）</span></label>
+      <input type="number" id="spa_vacancy" value="10" min="0" max="50" step="5" oninput="calcSpreadAnalysis()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間諸経費率（%）<span style="color:#888;font-size:11px"> 例: 15（管理費・修繕費・固定資産税合計の家賃収入比）</span></label>
+      <input type="number" id="spa_expense" value="15" min="0" max="50" step="5" oninput="calcSpreadAnalysis()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="spa_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -14897,6 +14919,33 @@ function calcOldBuildingCash() {
     + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💡 築古物件を現金' + price + '万円で購入！ 節税効果込みの実質利回りは' + effectiveYield + '%！\n\n表面利回り' + grossYield + '%に加えて初年度の節税額が約' + taxSaving + '万円。高所得者の節税戦略として注目。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcOldBuildingCash(); })();
+
+function calcSpreadAnalysis() {
+  var yieldPct = parseFloat(document.getElementById('spa_yield').value) || 0;
+  var rate = parseFloat(document.getElementById('spa_rate').value) || 0;
+  var ltv = parseFloat(document.getElementById('spa_ltv').value) || 0;
+  var vacancy = parseFloat(document.getElementById('spa_vacancy').value) || 0;
+  var expense = parseFloat(document.getElementById('spa_expense').value) || 0;
+  var el = document.getElementById('spa_result');
+  if (!el) return;
+  var effectiveYield = yieldPct * (1 - vacancy / 100) * (1 - expense / 100);
+  var borrowingCost = rate * ltv / 100;
+  var spread = Math.round((effectiveYield - borrowingCost) * 100) / 100;
+  var grossSpread = Math.round((yieldPct - rate) * 100) / 100;
+  var breakEvenVacancy = yieldPct > 0 ? Math.round((1 - (rate * ltv / 100 / yieldPct + expense / 100)) * 100) : 0;
+  var heroColor = spread >= 2 ? '#16a34a' : spread >= 1 ? '#c9a84c' : '#dc2626';
+  var heroLabel = spread >= 2 ? '安全マージン十分（スプレッド)' : spread >= 1 ? '許容範囲内（リスク注意）' : '危険水域（赤字リスク高）';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">' + heroLabel + '</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + spread + '<span style="font-size:20px">%</span></div><div style="font-size:12px;color:' + heroColor + ';margin-top:4px">実質スプレッド（空室・諸費用・金利コスト考慮後）</div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">表面利回り</td><td style="text-align:right;font-weight:700">' + yieldPct + '%</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">実質利回り（空室・諸費用控除）</td><td style="text-align:right;font-weight:700">' + Math.round(effectiveYield * 100) / 100 + '%</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">金利コスト（借入' + ltv + '%×' + rate + '%）</td><td style="text-align:right;font-weight:700;color:#dc2626">-' + Math.round(borrowingCost * 100) / 100 + '%</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">表面スプレッド（参考）</td><td style="text-align:right;font-weight:700;color:#3b82f6">' + grossSpread + '%</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">赤字になる空室率の閾値</td><td style="text-align:right;font-weight:700;color:#c9a84c">' + breakEvenVacancy + '%</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#555;line-height:1.7">'
+    + (spread >= 2 ? '✅ スプレッド2%以上は安全圏。金利が+1%上昇しても黒字を維持できる余裕があります。' : spread >= 1 ? '⚠️ スプレッドが薄め。金利上昇・空室増加でギリギリになるリスクがあります。' : '❌ 実質スプレッドがゼロ以下。金利上昇・空室1室増加で赤字に転落するリスクがあります。') + '</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💡 表面利回り' + yieldPct + '%の物件、空室・諸費用・金利を引くと実質スプレッドは' + spread + '%だった！\n\n' + (spread < 1 ? '危険水域！あと金利+1%上昇で赤字確定…' : 'この数字が1%を切ると一発の金利上昇でアウト。知らないと痛い！') + '\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcSpreadAnalysis(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {

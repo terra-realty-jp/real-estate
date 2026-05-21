@@ -3149,6 +3149,31 @@
     </div>
   </div>
 
+  <div class="calc-card" data-category="補助金・手続き" id="card-calcAkiyaLandBank">
+    <div class="card-header" onclick="toggleCard('calcAkiyaLandBank')">
+      <span>空き家バンクに登録するとどれだけ補助金がもらえる？ リフォーム費用の実質負担を計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaLandBank">
+      <div style="background:rgba(220,252,231,0.5);border:1px solid rgba(22,163,74,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#166534;line-height:1.7">💡 空き家バンクは市区町村が運営する物件紹介制度。登録することで国・自治体から空き家リフォーム補助金（最大200万円）を受けられる場合があります。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">空き家のリフォーム費用（万円）<span style="color:#888;font-size:11px"> 例: 300（内装・設備リフォームの見積もり）</span></label>
+      <input type="number" id="alb_reform" value="300" min="50" max="2000" step="50" oninput="calcAkiyaLandBank()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:13px">物件の所在地<span style="color:#888;font-size:11px"> 補助金の上限・補助率が変わります</span></label>
+      <select id="alb_area" onchange="calcAkiyaLandBank()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <option value="rural">地方・過疎地域（補助率50%・上限200万円）</option>
+        <option value="town">中核市・地方都市（補助率40%・上限150万円）</option>
+        <option value="city">大都市圏（補助率30%・上限100万円）</option>
+      </select>
+      <label style="font-size:13px">活用方法<span style="color:#888;font-size:11px"> 賃貸は追加補助が出る自治体が多い</span></label>
+      <select id="alb_use" onchange="calcAkiyaLandBank()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <option value="rent">賃貸（追加補助+50万円の自治体が多い）</option>
+        <option value="sell">売却</option>
+      </select>
+      <div id="alb_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -12288,6 +12313,32 @@ function calcAkiyaSharedKitchen() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🍳 空き家をシェアキッチンにしたら月' + monthlyNet + '万円の収益に！\n\n改修費' + reno + '万円の回収期間は約' + paybackYears + '年という計算結果が出た。料理教室・フードデリバリー向けの需要が増えているらしい。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaSharedKitchen(); })();
+
+function calcAkiyaLandBank() {
+  var reform = parseFloat(document.getElementById('alb_reform').value) || 0;
+  var area = document.getElementById('alb_area').value;
+  var use = document.getElementById('alb_use').value;
+  var el = document.getElementById('alb_result');
+  if (!el) return;
+  var rateMap = { rural: 0.5, town: 0.4, city: 0.3 };
+  var capMap  = { rural: 200, town: 150, city: 100 };
+  var rate = rateMap[area] || 0.4;
+  var cap = capMap[area] || 150;
+  var baseSubsidy = Math.min(Math.round(reform * rate), cap);
+  var rentBonus = use === 'rent' ? 50 : 0;
+  var totalSubsidy = Math.min(baseSubsidy + rentBonus, cap + 50);
+  var selfPay = Math.max(reform - totalSubsidy, 0);
+  var subsidyRate = reform > 0 ? Math.round(totalSubsidy / reform * 100) : 0;
+  var heroColor = '#16a34a';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">空き家バンク補助金（概算）</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + totalSubsidy + '<span style="font-size:20px">万円</span></div><div style="font-size:13px;color:' + heroColor + ';margin-top:4px">自己負担 ' + selfPay + '万円（補助率' + subsidyRate + '%）</div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">リフォーム費用</td><td style="text-align:right;font-weight:700">' + reform + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">基本補助金</td><td style="text-align:right;font-weight:700;color:#16a34a">' + baseSubsidy + '万円</td></tr>'
+    + (use === 'rent' ? '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">賃貸利用追加補助</td><td style="text-align:right;font-weight:700;color:#16a34a">最大+50万円</td></tr>' : '')
+    + '<tr><td style="padding:5px 0;color:#555">実質の自己負担</td><td style="text-align:right;font-weight:900;color:#c9a84c">' + selfPay + '万円</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f0fdf4;border-radius:8px;font-size:12px;color:#166534;line-height:1.7">✅ 空き家バンク登録＋リフォーム補助金を活用すれば実質' + selfPay + '万円の負担でリフォームが完成します。各市区町村の申請窓口に相談してみましょう。</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('💰 空き家バンク登録でリフォーム補助金' + totalSubsidy + '万円！\n\n' + reform + '万円のリフォームが実質' + selfPay + '万円に。空き家を放置せずに活用するだけでこんなに変わる！\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaLandBank(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {

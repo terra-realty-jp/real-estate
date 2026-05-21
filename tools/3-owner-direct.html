@@ -3777,6 +3777,26 @@
     </div>
   </div>
 
+  <div class="card" data-category="価格・査定" id="card-calcNewCondoValueDrop">
+    <div class="card-header" onclick="toggleCard('calcNewCondoValueDrop')">
+      <span>新築マンションを買ったら引き渡し後すぐに価値が下がる？ 5年後の推定価格と損失額を確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcNewCondoValueDrop">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#991b1b;line-height:1.7">⚠️ 新築マンションは「新築プレミアム」が乗っているため、鍵を受け取った瞬間から中古価格になります。一般的に引き渡し直後に10〜15%、その後も年1.5〜2%ずつ価値が下がる傾向があります。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">購入価格（万円）<span style="color:#888;font-size:11px"> 例: 5000（新築マンションの契約価格）</span></label>
+      <input type="number" id="ncv_price" value="5000" min="500" max="100000" step="100" oninput="calcNewCondoValueDrop()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">エリア<span style="color:#888;font-size:11px"> エリアで価値の下落率が変わります</span></label>
+      <select id="ncv_area" onchange="calcNewCondoValueDrop()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="central">都心・駅近（新築プレミアム10%・年間下落1.5%）</option>
+        <option value="suburb">郊外・駅歩10分以上（新築プレミアム15%・年間下落2%）</option>
+        <option value="rural">地方・郡部（新築プレミアム15%・年間下落3%）</option>
+      </select>
+      <div id="ncv_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -12469,6 +12489,33 @@ function calcShortTermSaleTax() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('😨 今すぐ売ると税金' + shortTax + '万円！でも' + (isLong ? '既に長期保有で' : waitYears + '年待てば') + longTax + '万円に減らせる…差額' + saving + '万円の節税を知らずに損している人が多いらしい\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcShortTermSaleTax(); })();
+
+function calcNewCondoValueDrop() {
+  var price = parseFloat(document.getElementById('ncv_price').value) || 0;
+  var area = document.getElementById('ncv_area').value;
+  var el = document.getElementById('ncv_result');
+  if (!el) return;
+  var premiumMap = { central: 0.10, suburb: 0.15, rural: 0.15 };
+  var annualDropMap = { central: 0.015, suburb: 0.02, rural: 0.03 };
+  var premium = premiumMap[area] || 0.12;
+  var annualDrop = annualDropMap[area] || 0.02;
+  var after1y = Math.round(price * (1 - premium));
+  var after3y = Math.round(after1y * Math.pow(1 - annualDrop, 2));
+  var after5y = Math.round(after1y * Math.pow(1 - annualDrop, 4));
+  var loss1y = price - after1y;
+  var loss5y = price - after5y;
+  var lossPct5y = Math.round(loss5y / price * 100 * 10) / 10;
+  var heroColor = '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">5年後の推定価値（購入価格との差）</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">-' + loss5y + '<span style="font-size:20px">万円</span></div><div style="font-size:13px;color:' + heroColor + ';margin-top:4px">下落率 ' + lossPct5y + '%</div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">購入価格（新築）</td><td style="text-align:right;font-weight:700">' + price + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">引き渡し後1年の推定価格</td><td style="text-align:right;font-weight:700;color:#dc2626">' + after1y + '万円（-' + loss1y + '万円）</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">3年後の推定価格</td><td style="text-align:right;font-weight:700;color:#c9a84c">' + after3y + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">5年後の推定価格</td><td style="text-align:right;font-weight:700;color:#dc2626">' + after5y + '万円</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#555;line-height:1.7">⚠️ 新築プレミアムは「住宅ローン控除」や「生活利便性」と引き換えです。5年以内に転売予定なら損失が出るリスクが高いため、中古物件との比較を慎重に行いましょう。</div>'
+    + '<div style="font-size:11px;color:#888;margin-top:8px;line-height:1.7">※ 実際の価格変動は立地・築年数・市況により大きく異なります。あくまで参考概算です。</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('😱 新築マンション' + price + '万円が5年後には' + after5y + '万円に…！\n\n引き渡し直後だけで' + loss1y + '万円消滅、5年間で' + loss5y + '万円（' + lossPct5y + '%）下落の試算。新築神話を信じる前にこの計算を！\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcNewCondoValueDrop(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
