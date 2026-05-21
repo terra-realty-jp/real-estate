@@ -4465,3 +4465,31 @@
   - Tool5: calcCashOnCash — 頭金パターン別のCoC自己資金利回り比較（レバレッジ効果の可視化）
 - **理由**: 「手取りはいくら？」「補助金もらえる？」「手続きのお金がいつ必要？」「配管が心配」「頭金はいくら入れるべき？」は実際の決断の前に知りたい情報でPLG効果高
 - **カード総数**: 697枚
+
+## 2026-05-22 Performance & PLG強化（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4（情報優位確立）+ PLG強化
+
+### 遅延初期化（Deferred Init）
+- toggleCard()を拡張: 初回open時にwindow[fnId]()を実行（_calcInitフラグで重複防止）
+- jumpToCard()も同様に初回ジャンプ時にdeferred initをトリガー
+- 非TOP3の折りたたみカード177枚のIIFEをページロードから除去
+- **効果**: 177回分の初期DOM更新がページロードから除外され体感速度向上
+
+### 「友達に試させる」LINEシェアボタン（全5ツール）
+- MutationObserverアクションバーに「友達に試させる」ボタンを追加
+- 個人データなしのページURL+カードID断片をLINEシェア（バイラルループ）
+- 「{カード名}が無料計算できた😲 あなたもやってみて👇」形式
+
+### URLハッシュカード自動展開（全5ツール）
+- #card-calcXxxフラグメントでページ遷移時に対象カードを自動展開・初期化
+- 友達がシェアリンクを開いたとき対象カードが自動表示される
+
+### Phase 4-C 強化
+- Tool1: AI査定ウィザード結果CTAにupdateCTALink追加
+
+### Phase 4-B: 都道府県1問バナー（全5ツール）
+- Tool2-5: 計算カードセクション上部に一回限りの都道府県選択バナーを追加
+- Tool1: AI査定フォームの都道府県選択をre_prefに自動保存
+- 選択後・スキップ後はlocalStorageで記録し以降非表示
