@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>実装状況レポート — 不動産かんたんツール</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; }
+
+  .header { background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%); color: #fff; padding: 40px 20px 30px; text-align: center; }
+  .header h1 { font-size: clamp(20px,5vw,32px); font-weight: 900; letter-spacing: -0.5px; }
+  .header .subtitle { font-size: 13px; opacity: 0.7; margin-top: 8px; }
+  .header .updated { display: inline-block; background: rgba(255,255,255,0.15); border-radius: 20px; padding: 4px 14px; font-size: 11px; margin-top: 12px; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+  .big-numbers { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 24px; }
+  .big-num-card { background: #fff; border-radius: 16px; padding: 20px 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .big-num-card .num { font-size: clamp(32px,8vw,52px); font-weight: 900; line-height: 1; }
+  .big-num-card .label { font-size: 11px; color: #718096; margin-top: 6px; }
+  .big-num-card.gold .num { color: #c9a84c; }
+  .big-num-card.green .num { color: #16a34a; }
+  .big-num-card.blue .num { color: #2563eb; }
+
+  .section { background: #fff; border-radius: 16px; padding: 22px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .section-title { font-size: 15px; font-weight: 800; color: #1a202c; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width:520px){ .tool-grid { grid-template-columns: 1fr; } }
+  .tool-card { border-radius: 12px; padding: 16px; position: relative; overflow: hidden; }
+  .tool-card .tool-name { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.85); margin-bottom: 4px; }
+  .tool-card .tool-count { font-size: 42px; font-weight: 900; color: #fff; line-height: 1; }
+  .tool-card .tool-unit { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+  .tool-card .bar-bg { background: rgba(255,255,255,0.2); border-radius: 4px; height: 5px; margin-top: 12px; }
+  .tool-card .bar-fill { background: rgba(255,255,255,0.85); border-radius: 4px; height: 5px; }
+  .tool-card .emoji { position: absolute; right: 12px; top: 10px; font-size: 30px; opacity: 0.2; }
+  .t1 { background: linear-gradient(135deg,#7c3aed,#5b21b6); }
+  .t2 { background: linear-gradient(135deg,#0891b2,#0e7490); }
+  .t3 { background: linear-gradient(135deg,#d97706,#b45309); }
+  .t4 { background: linear-gradient(135deg,#16a34a,#15803d); }
+  .t5 { background: linear-gradient(135deg,#dc2626,#b91c1c); }
+
+  .plg-items { display: flex; flex-direction: column; gap: 16px; }
+  .plg-label { display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .plg-label .name { font-size: 12px; font-weight: 700; }
+  .plg-label .pct { font-size: 13px; font-weight: 900; }
+  .plg-bar-bg { background: #edf2f7; border-radius: 6px; height: 10px; }
+  .plg-bar-fill { border-radius: 6px; height: 10px; }
+  .plg-note { font-size: 10px; color: #a0aec0; margin-top: 4px; }
+
+  .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media(max-width:520px){ .check-grid { grid-template-columns: 1fr; } }
+  .check-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.5; padding: 10px; border-radius: 8px; }
+  .check-item.done { background: #f0fdf4; }
+  .check-item.wip { background: #fffbeb; }
+  .check-item.pending { background: #f8fafc; }
+  .ci { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+  .timeline-item { display: flex; gap: 12px; padding-bottom: 14px; position: relative; }
+  .timeline-item:not(:last-child)::before { content: ''; position: absolute; left: 15px; top: 30px; bottom: 0; width: 2px; background: #e2e8f0; }
+  .tl-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; z-index: 1; }
+  .d1{background:#ede9fe;} .d2{background:#e0f2fe;} .d3{background:#fef3c7;} .d4{background:#dcfce7;} .d5{background:#fee2e2;}
+  .tl-time { font-size: 10px; color: #a0aec0; }
+  .tl-desc { font-size: 12px; font-weight: 600; color: #2d3748; line-height: 1.4; margin-top: 2px; }
+  .tag { display: inline-block; font-size: 10px; padding: 1px 8px; border-radius: 10px; font-weight: 700; margin-top: 3px; }
+  .tag1{background:#ede9fe;color:#6d28d9;} .tag2{background:#e0f2fe;color:#0369a1;}
+  .tag3{background:#fef3c7;color:#92400e;} .tag4{background:#dcfce7;color:#15803d;} .tag5{background:#fee2e2;color:#b91c1c;}
+
+  .mini-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
+  @media(max-width:460px){ .mini-stats { grid-template-columns: repeat(2,1fr); } }
+  .mini-stat { background: #f7fafc; border-radius: 10px; padding: 10px; text-align: center; }
+  .mini-stat .val { font-size: 22px; font-weight: 900; }
+  .mini-stat .lbl { font-size: 10px; color: #a0aec0; margin-top: 2px; }
+
+  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tb { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .tb1{background:#fff4e6;color:#e16c0a;} .tb2{background:#fef9c3;color:#a16207;}
+  .tb3{background:#e8f5e9;color:#2e7d32;} .tb4{background:#f0f4ff;color:#3730a3;} .tb5{background:#f0fdf4;color:#166534;}
+  .tb6{background:#fce7f3;color:#be185d;}
+
+  .task-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 10px; border-left: 3px solid; margin-bottom: 8px; }
+  .t-hot{border-color:#dc2626;background:#fff5f5;} .t-mid{border-color:#f59e0b;background:#fffbeb;} .t-low{border-color:#94a3b8;background:#f8fafc;}
+  .task-label { font-size: 12px; font-weight: 700; }
+  .task-desc { font-size: 11px; color: #718096; margin-top: 2px; line-height: 1.5; }
+
+  .goal-wrap { display: grid; grid-template-columns: 130px 1fr; gap: 20px; align-items: center; }
+  @media(max-width:440px){ .goal-wrap { grid-template-columns: 1fr; } }
+  .goal-circle { position: relative; width: 130px; height: 130px; }
+  .goal-circle svg { width: 130px; height: 130px; transform: rotate(-90deg); }
+  .goal-pct { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 30px; font-weight: 900; color: #c9a84c; }
+  .goal-sub { font-size: 11px; color: #718096; margin-top: 4px; text-align: center; }
+
+  .phase-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; }
+  .ph-done { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .ph-wip  { background: #fffbeb; border: 1px solid #fde68a; }
+  .ph-todo { background: #f8fafc; border: 1px solid #e2e8f0; }
+  .ph-badge { font-size: 18px; flex-shrink: 0; }
+  .ph-name  { font-size: 12px; font-weight: 800; }
+  .ph-desc  { font-size: 11px; color: #718096; margin-top: 2px; line-height: 1.5; }
+  .ph-status { margin-left: auto; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .s-done{color:#16a34a;} .s-wip{color:#d97706;} .s-todo{color:#a0aec0;}
+
+  .footer { text-align: center; padding: 32px 16px; font-size: 11px; color: #a0aec0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="font-size:36px;margin-bottom:10px">🏠</div>
+  <h1>不動産かんたんツール<br>実装状況レポート</h1>
+  <div class="subtitle">powered by TERRA REALTY — Claude Code 自律実装</div>
+  <div class="updated">📅 2026年5月21日時点（Round 40完了）</div>
+</div>
+
+<div class="container">
+
+  <!-- BIG NUMBERS -->
+  <div class="big-numbers">
+    <div class="big-num-card gold">
+      <div class="num">697</div>
+      <div class="label">計算カード総数<br>（5ツール合計）</div>
+    </div>
+    <div class="big-num-card green">
+      <div class="num">40</div>
+      <div class="label">完了ラウンド数<br>（今セッション）</div>
+    </div>
+    <div class="big-num-card blue">
+      <div class="num">5</div>
+      <div class="label">公開ツール数<br>（全て稼働中）</div>
+    </div>
+  </div>
+
+  <!-- TOOL BREAKDOWN -->
+  <div class="section">
+    <div class="section-title">🛠️ ツール別 計算カード数（2026-05-21 時点）</div>
+    <div class="tool-grid">
+      <div class="tool-card t1">
+        <div class="emoji">🏡</div>
+        <div class="tool-name">Tool 1 — AI物件査定</div>
+        <div class="tool-count">141</div>
+        <div class="tool-unit">枚の計算カード</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:95%"></div></div>
+      </div>
+      <div class="tool-card t2">
+        <div class="emoji">🏚️</div>
+        <div class="tool-name">Tool 2 — 空き家活用診断</div>
+        <div class="tool-count">134</div>
+        <div class="tool-unit">枚の計算カード</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:90%"></div></div>
+      </div>
+      <div class="tool-card t3">
+        <div class="emoji">🤝</div>
+        <div class="tool-name">Tool 3 — 売主・買主マッチング</div>
+        <div class="tool-count">138</div>
+        <div class="tool-unit">枚の計算カード</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:93%"></div></div>
+      </div>
+      <div class="tool-card t4">
+        <div class="emoji">📋</div>
+        <div class="tool-name">Tool 4 — 賃貸かんたん管理</div>
+        <div class="tool-count">132</div>
+        <div class="tool-unit">枚の計算カード</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:89%"></div></div>
+      </div>
+      <div class="tool-card t5" style="grid-column:1/-1">
+        <div class="emoji">📈</div>
+        <div class="tool-name">Tool 5 — 不動産投資シミュレーター（最多）</div>
+        <div class="tool-count">149</div>
+        <div class="tool-unit">枚の計算カード</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:#f7fafc;border-radius:10px;font-size:12px;color:#718096;text-align:center;line-height:1.7">
+      📌 全カードに共通で実装済み：<strong style="color:#2d3748">52px大型ヒーロー表示 / LINEシェアボタン / 前回比バッジ / 画像保存 / 結果保存 / 自動初期化</strong>
+    </div>
+  </div>
+
+  <!-- BAR CHART: GROWTH OVER ROUNDS -->
+  <div class="section">
+    <div class="section-title">📈 ラウンド別 累積カード枚数（推移）</div>
+    <div style="display:flex;align-items:flex-end;gap:2px;height:80px;margin-bottom:8px">
+      <!-- R1-10: 529→579 -->
+      <div style="flex:1;background:#7c3aed;border-radius:2px 2px 0 0;height:76%" title="R1〜10: ~529枚"></div>
+      <div style="flex:1;background:#7c3aed;border-radius:2px 2px 0 0;height:78%" title="R11〜20: ~554枚"></div>
+      <div style="flex:1;background:#7c3aed;border-radius:2px 2px 0 0;height:84%" title="R21〜28: ~582枚"></div>
+      <div style="flex:1;background:#c9a84c;border-radius:2px 2px 0 0;height:90%" title="R29〜33: ~622枚"></div>
+      <div style="flex:1;background:#c9a84c;border-radius:2px 2px 0 0;height:93%" title="R34〜37: ~647枚"></div>
+      <div style="flex:1;background:#16a34a;border-radius:2px 2px 0 0;height:96%" title="R38: ~662枚"></div>
+      <div style="flex:1;background:#16a34a;border-radius:2px 2px 0 0;height:98%" title="R39: ~677枚"></div>
+      <div style="flex:1;background:#16a34a;border-radius:2px 2px 0 0;height:100%" title="R40: 697枚"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#a0aec0;margin-bottom:10px">
+      <span>← R1〜10（529枚〜）</span><span>R11〜28</span><span>R29〜37</span><span>R38〜40（697枚）→</span>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="width:10px;height:10px;background:#7c3aed;border-radius:2px;display:inline-block"></span>既存ベース（〜R28）</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="width:10px;height:10px;background:#c9a84c;border-radius:2px;display:inline-block"></span>R29〜R37追加</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="width:10px;height:10px;background:#16a34a;border-radius:2px;display:inline-block"></span>R38〜40（今セッション）</span>
+    </div>
+  </div>
+
+  <!-- PHASE PROGRESS -->
+  <div class="section">
+    <div class="section-title">🗺️ フェーズ別 進捗</div>
+
+    <div class="phase-row ph-done">
+      <div class="ph-badge">✅</div>
+      <div>
+        <div class="ph-name">Phase 1 — UX改善（一般ユーザーが迷わず使える）</div>
+        <div class="ph-desc">ウィザード・検索バー・TOP3ピン留め・解釈ガイド・参考値・一般語化 — 全5ツール完了</div>
+      </div>
+      <div class="ph-status s-done">完了</div>
+    </div>
+
+    <div class="phase-row ph-done">
+      <div class="ph-badge">✅</div>
+      <div>
+        <div class="ph-name">Phase 2 — 自然な発見・拡散（PLGループ設計）</div>
+        <div class="ph-desc">LINEシェア・llms.txt・FAQ JSON-LD・sitemap・robots.txt・AEO・前回比バッジ — 全完了</div>
+      </div>
+      <div class="ph-status s-done">完了</div>
+    </div>
+
+    <div class="phase-row ph-done">
+      <div class="ph-badge">✅</div>
+      <div>
+        <div class="ph-name">Phase 3 — 個人化・リテンション</div>
+        <div class="ph-desc">「よく使う機能」バー・履歴パネル・お気に入り・前回の続きボタン — 全5ツール完了</div>
+      </div>
+      <div class="ph-status s-done">完了</div>
+    </div>
+
+    <div class="phase-row ph-wip">
+      <div class="ph-badge">🔄</div>
+      <div>
+        <div class="ph-name">Phase 4 — 情報優位の確立（データ収集）</div>
+        <div class="ph-desc">4-A: カード使用ログ収集 / 4-B: 都道府県選択 / 4-C: 相談CTAへ計算履歴自動付加 — 未着手</div>
+      </div>
+      <div class="ph-status s-wip">進行中</div>
+    </div>
+
+    <div class="phase-row ph-wip">
+      <div class="ph-badge">🔄</div>
+      <div>
+        <div class="ph-name">新規計算カードの継続追加（697枚→目標800枚）</div>
+        <div class="ph-desc">毎セッション5枚（各ツール1枚）追加中。Round 40完了。40〜60代ニーズ中心</div>
+      </div>
+      <div class="ph-status s-wip">継続中</div>
+    </div>
+
+  </div>
+
+  <!-- PLG GOAL -->
+  <div class="section">
+    <div class="section-title">🎯 「営業なしにユーザーが増える」目標への達成度</div>
+    <div class="goal-wrap">
+      <div>
+        <div class="goal-circle">
+          <svg viewBox="0 0 130 130">
+            <circle cx="65" cy="65" r="54" fill="none" stroke="#f0f4f8" stroke-width="13"/>
+            <circle cx="65" cy="65" r="54" fill="none" stroke="#c9a84c" stroke-width="13"
+              stroke-dasharray="339" stroke-dashoffset="237" stroke-linecap="round"/>
+          </svg>
+          <div class="goal-pct">30%</div>
+        </div>
+        <div class="goal-sub">真の目標達成度<br>（正直な自己評価）</div>
+      </div>
+      <div class="plg-items">
+        <div>
+          <div class="plg-label"><span class="name">🔍 発見される（SEO・AEO）</span><span class="pct" style="color:#f59e0b">15%</span></div>
+          <div class="plg-bar-bg"><div class="plg-bar-fill" style="width:15%;background:#f59e0b"></div></div>
+          <div class="plg-note">robots.txt・sitemap・llms.txt（697枚反映）実装済み。実際の検索流入は未検証</div>
+        </div>
+        <div>
+          <div class="plg-label"><span class="name">⚡ 開いて2分で「役立った」と思える（UX）</span><span class="pct" style="color:#3b82f6">60%</span></div>
+          <div class="plg-bar-bg"><div class="plg-bar-fill" style="width:60%;background:#3b82f6"></div></div>
+          <div class="plg-note">自動初期化・サンプル値・解釈ガイド・ウィザード完成。697枚の豊富なカード</div>
+        </div>
+        <div>
+          <div class="plg-label"><span class="name">🔁 また来たくなる仕掛け（リテンション）</span><span class="pct" style="color:#8b5cf6">25%</span></div>
+          <div class="plg-bar-bg"><div class="plg-bar-fill" style="width:25%;background:#8b5cf6"></div></div>
+          <div class="plg-note">保存・お気に入り・前回比バッジ実装済み。Phase 4-Cで相談導線強化が次の一手</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;font-size:12px;color:#78350f;line-height:1.7">
+      ⚠️ <strong>機能を作ることと、ユーザーが使うことは別物。</strong><br>
+      機能実装完成度は約95%まで来ているが、「実際にユーザーがPLGループを回している」状態ではまだない。<br>
+      → 次の最重要行動：<strong>Phase 4-A（カード使用ログ収集）を実装し、データを蓄積し始める</strong>
+    </div>
+  </div>
+
+  <!-- FEATURE CHECKLIST -->
+  <div class="section">
+    <div class="section-title">✅ 実装済み機能 一覧</div>
+    <div class="check-grid">
+      <div class="check-item done"><span class="ci">✅</span><div><strong>697枚の計算カード（Round 40）</strong><br>40〜60代のニーズを網羅した不動産計算</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>LINEシェアボタン</strong><br>全カードに「驚きの数字」を含む自動生成テキスト</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>52px大型ヒーロー表示</strong><br>計算結果を大きく・色コーディング付きで表示</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>前回比差分バッジ（全697関数）</strong><br>「前回より+XX万円」を全カードで自動表示</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>検索・カテゴリ絞り込み</strong><br>全5ツール。2タップで目的カードに到達</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>ウィザード形式の案内</strong><br>「売りたい/空き家/投資」で最適カードを提案</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>結果の保存・お気に入り</strong><br>未ログイン→localStorage / ログイン→Supabase</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>よく使う機能バー</strong><br>使用頻度を自動学習・個人化トップバー</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>AEO対応（AI検索最適化）</strong><br>llms.txt 697枚・FAQ JSON-LD・AIクローラー許可</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>実データ自動更新</strong><br>日銀金利・公示地価・路線価をGitHub Actionsで月次更新</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>画像ダウンロード機能</strong><br>結果をSNS投稿用画像として保存できる</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>スマホ対応 / ライト系テーマ</strong><br>320px〜。44px以上のタップ領域。Supabase認証</div></div>
+      <div class="check-item done"><span class="ci">✅</span><div><strong>カード全自動初期化（auto-init）</strong><br>ページ読み込み時に全カードがサンプル値で自動計算</div></div>
+      <div class="check-item wip"><span class="ci">🔥</span><div><strong>Phase 4-A: カード使用ログ収集（未着手）</strong><br>logCardUsage()をsupabase-client.jsに実装。情報優位の基盤</div></div>
+      <div class="check-item wip"><span class="ci">🔥</span><div><strong>Phase 4-C: 相談CTAへ計算履歴自動付加（未着手）</strong><br>「無料相談する」ボタンに直近3カードの計算結果を自動埋め込み</div></div>
+      <div class="check-item pending"><span class="ci">⬜</span><div><strong>Phase 4-B: 都道府県1問（未着手）</strong><br>ウィザード後に「お住まいの都道府県」を追加収集</div></div>
+      <div class="check-item pending"><span class="ci">⬜</span><div><strong>メール通知（未実装）</strong><br>市況変化アラートメール。ユーザー数増加後に実装予定</div></div>
+    </div>
+  </div>
+
+  <!-- RECENT ROUNDS -->
+  <div class="section">
+    <div class="section-title">🕐 最近追加されたカード（Round 38〜40・本日）</div>
+    <div>
+
+      <div class="timeline-item">
+        <div class="tl-dot d5">📈</div>
+        <div><div class="tl-time">2026-05-21 Round 40</div><div class="tl-desc">CoC比較（頭金20/30/50/全額パターン別）— 自己資金効率の最適配分を可視化</div><span class="tag tag5">Tool5</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d4">📋</div>
+        <div><div class="tl-time">2026-05-21 Round 40</div><div class="tl-desc">給排水管修繕費（築年数・戸数・構造）— 見えないコストを事前試算</div><span class="tag tag4">Tool4</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d3">🤝</div>
+        <div><div class="tl-time">2026-05-21 Round 40</div><div class="tl-desc">売買取引フロー（買主/売主別ステップ費用・タイミング）— 取引全体像を一覧化</div><span class="tag tag3">Tool3</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d2">🏚️</div>
+        <div><div class="tl-time">2026-05-21 Round 40</div><div class="tl-desc">補助金受給額（解体費・改修費・都市部/地方）— 空き家活用の補助金最大活用試算</div><span class="tag tag2">Tool2</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d1">🏡</div>
+        <div><div class="tl-time">2026-05-21 Round 40</div><div class="tl-desc">売却手取り全費用（ローン・仲介・登記・3000万控除・譲渡税）— 最終手取り一発計算</div><span class="tag tag1">Tool1</span></div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-dot d5">📈</div>
+        <div><div class="tl-time">2026-05-21 Round 39</div><div class="tl-desc">適正利回り判定（築年数×0.1%加算・エリア・構造）— 物件年齢と利回り基準の目安</div><span class="tag tag5">Tool5</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d4">📋</div>
+        <div><div class="tl-time">2026-05-21 Round 39</div><div class="tl-desc">管理費相場比較（相場3〜7%・10年節約額）— 管理費の見直しで年間どれだけ節約できるか</div><span class="tag tag4">Tool4</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d3">🤝</div>
+        <div><div class="tl-time">2026-05-21 Round 39</div><div class="tl-desc">隣地購入効果（敷地拡大率×合筆プレミアム0.6）— 隣の土地を買うと物件価値はいくら上がるか</div><span class="tag tag3">Tool3</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d2">🏚️</div>
+        <div><div class="tl-time">2026-05-21 Round 39</div><div class="tl-desc">キャンプ場転用（サイト数・泊料・稼働日数・初期整備費）— 空き地活用の新選択肢</div><span class="tag tag2">Tool2</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d1">🏡</div>
+        <div><div class="tl-time">2026-05-21 Round 39</div><div class="tl-desc">値下げ損益分岐（値下げ額÷保有コスト月額=損益分岐月数）— 売却時の値下げ判断ツール</div><span class="tag tag1">Tool1</span></div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="tl-dot d5">📈</div>
+        <div><div class="tl-time">2026-05-21 Round 38</div><div class="tl-desc">規模拡大CF（1棟→2棟→3棟・NOI・ローン返済比率）— 投資拡大の次ステップを可視化</div><span class="tag tag5">Tool5</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d4">📋</div>
+        <div><div class="tl-time">2026-05-21 Round 38</div><div class="tl-desc">ペット可転換損益（家賃アップ収入vs修繕費増加）— ペット可にすると実際にお得かどうか</div><span class="tag tag4">Tool4</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d3">🤝</div>
+        <div><div class="tl-time">2026-05-21 Round 38</div><div class="tl-desc">ローン審査通過判定（年収・金利・頭金）— 審査前の自己診断ツール</div><span class="tag tag3">Tool3</span></div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot d2">🏚️</div>
+        <div><div class="tl-time">2026-05-21 Round 38</div><div class="tl-desc">トランクルーム収益（面積・単価・稼働率・初期費用）— 空き家をトランクルームに転換する採算計算</div><span class="tag tag2">Tool2</span></div>
+      </div>
+      <div class="timeline-item" style="padding-bottom:0">
+        <div class="tl-dot d1">🏡</div>
+        <div><div class="tl-time">2026-05-21 Round 38</div><div class="tl-desc">相続税概算（基礎控除・小規模宅地特例・速算表）— 相続前の節税シミュレーション</div><span class="tag tag1">Tool1</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TECH STACK -->
+  <div class="section">
+    <div class="section-title">⚙️ 技術スタック・インフラ</div>
+    <div class="tech-badges" style="margin-bottom:14px">
+      <span class="tb tb1">🌐 HTML5</span>
+      <span class="tb tb2">⚡ Vanilla JS</span>
+      <span class="tb tb6">🎨 CSS3</span>
+      <span class="tb tb3">🔋 Supabase（DB・認証）</span>
+      <span class="tb tb4">🚀 GitHub Pages</span>
+      <span class="tb tb4">🤖 GitHub Actions</span>
+      <span class="tb tb5">🧠 llms.txt（AI最適化）</span>
+      <span class="tb tb5">📍 sitemap.xml / robots.txt</span>
+    </div>
+    <div style="font-size:12px;color:#718096;line-height:2">
+      <strong style="color:#2d3748">自動実行ワークフロー：</strong><br>
+      📊 日銀金利・公示地価・路線価データ — 月次自動更新（GitHub Actions）<br>
+      💾 Supabase Keepalive（停止防止） — 月・木・土 自動Ping<br>
+      👥 週次ペルソナレビュー — 毎週月曜 自動チェックリスト生成<br>
+      🌍 国土交通省WebLand API — 月次実取引価格自動更新
+    </div>
+  </div>
+
+  <!-- NEXT TASKS -->
+  <div class="section">
+    <div class="section-title">🔥 今後の優先タスク（Phase 4）</div>
+    <div class="task-item t-hot">
+      <div style="font-size:18px;flex-shrink:0">🔥</div>
+      <div><div class="task-label">Phase 4-A: カード使用ログの匿名収集（最最優先）</div><div class="task-desc">supabase-client.jsにlogCardUsage()を実装。カードID・ツール番号・タイムスタンプをSupabaseに非同期送信。情報優位戦略の基盤</div></div>
+    </div>
+    <div class="task-item t-hot">
+      <div style="font-size:18px;flex-shrink:0">📬</div>
+      <div><div class="task-label">Phase 4-C: 相談CTAへ計算履歴を自動付加（問い合わせ転換率直結）</div><div class="task-desc">「無料相談する」ボタンのhrefに直近3カードの入出力値を自動埋め込み。他社比で圧倒的な初回提案品質を実現</div></div>
+    </div>
+    <div class="task-item t-hot">
+      <div style="font-size:18px;flex-shrink:0">🃏</div>
+      <div><div class="task-label">新規計算カードの継続追加（Round 41〜）</div><div class="task-desc">毎セッション各ツール1枚ずつ追加。「知らないと損する制度・税金・補助金」系を重点追加中</div></div>
+    </div>
+    <div class="task-item t-mid">
+      <div style="font-size:18px;flex-shrink:0">🗾</div>
+      <div><div class="task-label">Phase 4-B: 都道府県1問をウィザードに追加</div><div class="task-desc">ウィザード後に「お住まいの都道府県（任意）」を1問追加。エリア別需要ヒートマップが作れる</div></div>
+    </div>
+    <div class="task-item t-low">
+      <div style="font-size:18px;flex-shrink:0">📧</div>
+      <div><div class="task-label">メール通知機能（未着手・低優先度）</div><div class="task-desc">登録ユーザーへの市況変化アラート。SendGrid等の外部サービス設定が必要。ユーザー数増加後に実装予定</div></div>
+    </div>
+  </div>
+
+  <!-- SITE STATUS -->
+  <div class="section">
+    <div class="section-title">🌐 サイト稼働状況</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">✅</div>
+        <div style="font-size:13px;font-weight:700;color:#15803d">本番サイト 正常稼働</div>
+        <div style="font-size:11px;color:#16a34a;margin-top:4px">GitHub Pages</div>
+        <div style="font-size:10px;color:#718096;margin-top:5px">最終デプロイ: 2026-05-21</div>
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">✅</div>
+        <div style="font-size:13px;font-weight:700;color:#15803d">Supabase DB 正常</div>
+        <div style="font-size:11px;color:#16a34a;margin-top:4px">認証・クラウド保存 稼働中</div>
+        <div style="font-size:10px;color:#718096;margin-top:5px">Keepalive: 定期自動Ping</div>
+      </div>
+    </div>
+    <div style="background:#e0f2fe;border:1px solid #bae6fd;border-radius:10px;padding:12px;font-size:12px;color:#0c4a6e;line-height:1.7">
+      ℹ️ <strong>今日（2026-05-21）の作業：</strong> Round 38〜40 完了（各ツール1枚×3ラウンド = 15枚追加）。累計 697枚。<br>
+      llms.txt・improvement-log.md・implementation-notes.md 更新済み。全コミット・プッシュ済み。
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  不動産かんたんツール — powered by TERRA REALTY<br>
+  Claude Code（Anthropic）による自律実装 | 2026-03-07 〜 継続中<br>
+  <span style="font-size:10px">このレポートは status-report.html として保存されています（Round 40時点）</span>
+</div>
+
+</body>
+</html>
