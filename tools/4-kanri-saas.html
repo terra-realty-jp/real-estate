@@ -4463,6 +4463,26 @@
     </div>
   </div>
 
+  <!-- calcPetDepositPolicy -->
+  <div class="card" data-category="空室対策・入居率" id="card-calcPetDepositPolicy">
+    <div class="card-header" onclick="toggleCard('calcPetDepositPolicy')">
+      <span class="card-title">「ペット可」にすると損する？得する？— 家賃アップvs修繕費増加の損益分岐を計算</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcPetDepositPolicy">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">ペット可に転換したときの家賃アップ効果と、退去時の修繕費増加・クリーニングコストを比較。何ヶ月で元が取れるか計算します。</p>
+      <label style="font-size:12px;color:#555">現在の月額家賃（万円）<span style="font-size:11px;color:#999"> 例: 8</span></label>
+      <input type="number" id="pdp_rent" value="8" min="1" max="100" step="0.5" oninput="calcPetDepositPolicy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">ペット可にしたときの家賃アップ額（万円）<span style="font-size:11px;color:#999"> 例: 0.5（相場は500〜1万円増）</span></label>
+      <input type="number" id="pdp_up" value="0.5" min="0" max="5" step="0.1" oninput="calcPetDepositPolicy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">退去時の追加クリーニング・修繕費見込み（万円）<span style="font-size:11px;color:#999"> 例: 15（消臭・床貼替・壁紙等）</span></label>
+      <input type="number" id="pdp_repair" value="15" min="0" max="200" oninput="calcPetDepositPolicy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">平均入居期間（年）<span style="font-size:11px;color:#999"> 例: 3</span></label>
+      <input type="number" id="pdp_years" value="3" min="1" max="20" oninput="calcPetDepositPolicy()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="pdp_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -15352,6 +15372,35 @@ function calcLateFeeIncome() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('😱 家賃滞納' + months + 'ヶ月で' + stageNames[stage] + 'まで進むと総損失' + totalCost + '万円！\n\n「まあ払ってくれるだろう」が命取り。賃貸オーナーは要確認。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcLateFeeIncome(); })();
+
+function calcPetDepositPolicy() {
+  var rent = parseFloat(document.getElementById('pdp_rent').value) || 8;
+  var up = parseFloat(document.getElementById('pdp_up').value) || 0.5;
+  var repair = parseFloat(document.getElementById('pdp_repair').value) || 15;
+  var years = parseFloat(document.getElementById('pdp_years').value) || 3;
+  var el = document.getElementById('pdp_result');
+  if (!el) return;
+  var extraIncome = up * 12 * years; // 入居期間中の追加収入
+  var net = Math.round((extraIncome - repair) * 10) / 10;
+  var breakeven = up > 0 ? Math.ceil(repair / up) : 9999; // 何ヶ月で回収か
+  var isProfit = net >= 0;
+  var heroColor = isProfit ? '22,163,74' : '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:13px;color:#374151;margin-bottom:4px">' + years + '年後の純損益（追加収入－修繕費）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1">' + (net >= 0 ? '+' : '') + net + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-top:4px">万円</div>'
+    + '<div style="font-size:13px;font-weight:700;color:rgba(' + heroColor + ',1);margin-top:6px">' + (isProfit ? '✅ ペット可が有利！' : '⚠️ 修繕費が家賃アップを上回る') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:12px">'
+    + '<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 内訳</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">家賃アップ追加収入（' + years + '年間）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">+' + extraIncome.toFixed(1) + '万円</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">退去時修繕費増加分</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(220,38,38,1)">-' + repair + '万円</td></tr>'
+    + '<tr style="background:#f5f3ef"><td style="padding:6px 8px;font-weight:700">回収にかかる期間</td><td style="padding:6px 8px;text-align:right;font-weight:700">' + (breakeven > 360 ? '家賃アップなし' : breakeven + 'ヶ月') + '</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 ペット可物件はペット不可より空室期間が短くなる傾向があります。入居期間が長いほど家賃アップの累積効果が大きくなります。敷金を通常の2倍に設定することで修繕リスクを一部カバーできます。</div>'
+    + '<button onclick="shareLine(\'ペット可に変えると' + years + '年で追加収入' + extraIncome.toFixed(1) + '万円！修繕費' + repair + '万円を引いても' + (net >= 0 ? '+' + net : net) + '万円。空室対策を数字で確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcPetDepositPolicy(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {

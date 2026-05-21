@@ -4505,6 +4505,30 @@
     </div>
   </div>
 
+  <div class="card" data-category="相続・税金" id="card-calcEstateInheritanceTax">
+    <div class="card-header" onclick="toggleCard('calcEstateInheritanceTax')">
+      <span class="card-title">不動産を相続したとき「相続税はいくら？」— 基礎控除・小規模宅地特例で試算</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcEstateInheritanceTax">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">不動産の評価額と相続人の数から相続税の概算額を試算します。小規模宅地等の特例（最大80%減額）も考慮します。</p>
+      <label style="font-size:12px;color:#555">土地の相続税評価額（万円）<span style="font-size:11px;color:#999"> 例: 3000（路線価×面積で算出）</span></label>
+      <input type="number" id="eit_land" value="3000" min="0" max="99999" oninput="calcEstateInheritanceTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">建物の固定資産税評価額（万円）<span style="font-size:11px;color:#999"> 例: 500（納税通知書に記載）</span></label>
+      <input type="number" id="eit_house" value="500" min="0" max="99999" oninput="calcEstateInheritanceTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">その他の財産（預金・株等、万円）<span style="font-size:11px;color:#999"> 例: 1000</span></label>
+      <input type="number" id="eit_other" value="1000" min="0" max="99999" oninput="calcEstateInheritanceTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">法定相続人の数（人）<span style="font-size:11px;color:#999"> 例: 2（配偶者+子1人）</span></label>
+      <input type="number" id="eit_heirs" value="2" min="1" max="10" oninput="calcEstateInheritanceTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">小規模宅地の特例を適用するか</label>
+      <select id="eit_tokurein" onchange="calcEstateInheritanceTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="1">適用する（同居・相続継続の場合・80%減額）</option>
+        <option value="0">適用しない</option>
+      </select>
+      <div id="eit_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12970,6 +12994,56 @@ function calcNeighborhoodImpact() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('😱 近くに' + typeName + 'があると家の価格が-' + discountAmt + '万円（-' + discountRate + '%）！\n\n' + dist + 'm先の施設がこんなに影響する。売却前に必ず確認を。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcNeighborhoodImpact(); })();
+
+function calcEstateInheritanceTax() {
+  var land = parseFloat(document.getElementById('eit_land').value) || 0;
+  var house = parseFloat(document.getElementById('eit_house').value) || 0;
+  var other = parseFloat(document.getElementById('eit_other').value) || 0;
+  var heirs = Math.max(1, Math.round(parseFloat(document.getElementById('eit_heirs').value) || 1));
+  var applySpecial = document.getElementById('eit_tokurein').value === '1';
+  var el = document.getElementById('eit_result');
+  if (!el) return;
+  var landAdj = applySpecial ? Math.round(land * 0.2) : land;
+  var totalEstate = landAdj + house + other;
+  var basicDeduction = 3000 + heirs * 600;
+  var taxableEstate = Math.max(0, totalEstate - basicDeduction);
+  var rates = [[1000,0.10,0],[3000,0.15,50],[5000,0.20,200],[10000,0.30,700],[20000,0.40,1700],[30000,0.45,2700],[60000,0.50,4200],[Infinity,0.55,7200]];
+  function calcTaxForAmount(amt) {
+    for (var i = 0; i < rates.length; i++) {
+      if (amt <= rates[i][0]) return Math.round(amt * rates[i][1] - rates[i][2]);
+    }
+    return Math.round(amt * 0.55 - 7200);
+  }
+  var totalTax = 0;
+  for (var h = 0; h < heirs; h++) {
+    var share = taxableEstate / heirs;
+    totalTax += calcTaxForAmount(share);
+  }
+  var taxNoSpecial = 0;
+  var totalEstateNoSpecial = land + house + other;
+  var taxableNoSpecial = Math.max(0, totalEstateNoSpecial - basicDeduction);
+  for (var h2 = 0; h2 < heirs; h2++) {
+    taxNoSpecial += calcTaxForAmount(taxableNoSpecial / heirs);
+  }
+  var saving = applySpecial ? taxNoSpecial - totalTax : 0;
+  var heroColor = totalTax > 500 ? '#dc2626' : totalTax > 0 ? '#c9a84c' : '#16a34a';
+  el.innerHTML = '<div style="background:' + heroColor + ';color:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">'
+    + '<div style="font-size:12px;opacity:0.9;margin-bottom:4px">相続税の概算額</div>'
+    + '<div style="font-size:52px;font-weight:900;line-height:1">' + totalTax + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;opacity:0.85;margin-top:4px">' + (applySpecial && saving > 0 ? '小規模宅地特例で ' + saving + '万円節税' : '特例なしの場合 ' + taxNoSpecial + '万円') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:12px;border-collapse:collapse">'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">遺産総額</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + totalEstate + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">基礎控除（3000+600×' + heirs + '人）</td><td style="padding:5px 8px;text-align:right">' + basicDeduction + ' 万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">課税遺産総額</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + taxableEstate + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">相続税（概算・全員分）</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:' + heroColor + '">' + totalTax + ' 万円</td></tr>'
+    + (applySpecial && saving > 0 ? '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">小規模宅地特例による節税額</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:#16a34a">-' + saving + ' 万円</td></tr>' : '')
+    + '</table>'
+    + '<div style="font-size:11px;color:#666;background:#f8f9fa;border-radius:6px;padding:8px;margin-top:8px">'
+    + (taxableEstate <= 0 ? '✅ 基礎控除の範囲内に収まっています。相続税の申告は不要です（ただし申告期限10ヶ月以内に確認を）。' : totalTax > 500 ? '⚠️ 相続税が高額になる可能性があります。生前対策（生命保険・贈与・法人化）を早めに検討することで大幅に削減できます。TERRA REALTYに相談ください。' : '💡 相続税が発生します。申告期限は相続開始から10ヶ月以内です。税理士への相談も検討しましょう。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('😱 不動産を相続したら相続税が' + totalTax + '万円！\n\n' + (saving > 0 ? '小規模宅地特例で' + saving + '万円節税できたけど、知らなかったら大損だった。' : '基礎控除や特例を理解して対策を。') + '\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcEstateInheritanceTax(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {

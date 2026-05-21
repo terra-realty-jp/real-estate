@@ -3978,6 +3978,25 @@
     </div>
   </div>
 
+  <div class="card" data-category="ローン・資金計画" id="card-calcBuyerMortgageQualify">
+    <div class="card-header" onclick="toggleCard('calcBuyerMortgageQualify')">
+      <span class="card-title">年収からローンの借入可能額と月返済額を試算 — 「実際に買える価格」を確認</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcBuyerMortgageQualify">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">銀行が年収に対して認めるローン限度額と、その場合の月返済額を試算します。「頭金をいくら用意すれば◯◯万円の物件が買えるか」まで確認できます。</p>
+      <label style="font-size:12px;color:#555">年収（万円）<span style="font-size:11px;color:#999"> 例: 600</span></label>
+      <input type="number" id="bmq_income" value="600" min="100" max="9999" oninput="calcBuyerMortgageQualify()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">ローン返済期間（年）<span style="font-size:11px;color:#999"> 例: 35（最長35年が一般的）</span></label>
+      <input type="number" id="bmq_years" value="35" min="1" max="50" oninput="calcBuyerMortgageQualify()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">金利（%）<span style="font-size:11px;color:#999"> 例: 0.5（変動）/ 1.5（固定）</span></label>
+      <input type="number" id="bmq_rate" value="0.5" min="0.1" max="10" step="0.1" oninput="calcBuyerMortgageQualify()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">用意できる頭金（万円）<span style="font-size:11px;color:#999"> 例: 500</span></label>
+      <input type="number" id="bmq_down" value="500" min="0" max="99999" oninput="calcBuyerMortgageQualify()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="bmq_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -12961,6 +12980,51 @@ function calcMoveInCostBreakdown() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('😲 家を買うとき「ローン以外」に' + totalCash + '万円の現金が必要！\n\n頭金' + downAmt + '万円＋諸費用' + totalExtras + '万円。知らずに契約すると大変なことに。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcMoveInCostBreakdown(); })();
+
+function calcBuyerMortgageQualify() {
+  var income = parseFloat(document.getElementById('bmq_income').value) || 0;
+  var years = parseFloat(document.getElementById('bmq_years').value) || 35;
+  var rate = parseFloat(document.getElementById('bmq_rate').value) || 0.5;
+  var down = parseFloat(document.getElementById('bmq_down').value) || 0;
+  var el = document.getElementById('bmq_result');
+  if (!el) return;
+  var dti = 0.35;
+  var maxAnnualRepay = income * dti;
+  var monthlyRate = rate / 100 / 12;
+  var n = years * 12;
+  var maxLoan, monthlyPayment;
+  if (monthlyRate === 0) {
+    maxLoan = Math.round(maxAnnualRepay / 12 * n);
+  } else {
+    maxLoan = Math.round((maxAnnualRepay / 12) * (1 - Math.pow(1 + monthlyRate, -n)) / monthlyRate);
+  }
+  if (monthlyRate === 0) {
+    monthlyPayment = Math.round(maxLoan / n);
+  } else {
+    monthlyPayment = Math.round(maxLoan * monthlyRate / (1 - Math.pow(1 + monthlyRate, -n)));
+  }
+  var maxBuyPrice = maxLoan + down;
+  var totalRepay = Math.round(monthlyPayment * n / 10000 * 10) / 10;
+  var totalInterest = Math.round((totalRepay - maxLoan / 10000) * 10) / 10;
+  el.innerHTML = '<div style="background:#3b82f6;color:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">'
+    + '<div style="font-size:12px;opacity:0.9;margin-bottom:4px">購入可能な物件の上限価格</div>'
+    + '<div style="font-size:52px;font-weight:900;line-height:1">' + maxBuyPrice + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;opacity:0.85;margin-top:4px">借入可能額 ' + maxLoan + '万円 ＋ 頭金 ' + down + '万円</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:12px;border-collapse:collapse">'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">年収</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + income + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">返済負担率（上限35%）</td><td style="padding:5px 8px;text-align:right">' + Math.round(dti * 100) + ' %</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">年間最大返済額</td><td style="padding:5px 8px;text-align:right">' + Math.round(maxAnnualRepay) + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">借入可能額</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:#3b82f6">' + maxLoan + ' 万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">月返済額（目安）</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + monthlyPayment + ' 円/月</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">総返済額</td><td style="padding:5px 8px;text-align:right">' + totalRepay + ' 万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">うち利息分</td><td style="padding:5px 8px;text-align:right;color:#dc2626">' + totalInterest + ' 万円</td></tr>'
+    + '</table>'
+    + '<div style="font-size:11px;color:#666;background:#f8f9fa;border-radius:6px;padding:8px;margin-top:8px">'
+    + (maxBuyPrice > income * 8 ? '⚠️ 返済額が年収の35%に達するため、生活費・教育費・老後資金に余裕がなくなるリスクがあります。余裕を持って年収の7〜8倍以内での購入を検討しましょう。' : '✅ 年収の' + Math.round(maxBuyPrice / income * 10) / 10 + '倍の購入価格です。一般的な目安（年収の7〜8倍）の範囲内です。ただし頭金・諸費用も別途必要です。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏠 年収' + income + '万円で買える家の上限は' + maxBuyPrice + '万円！\n\n借入' + maxLoan + '万円で月' + Math.round(monthlyPayment / 10000 * 10) / 10 + '万円の返済。知っておかないと予算オーバーに。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcBuyerMortgageQualify(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {
