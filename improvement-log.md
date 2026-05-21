@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-05-22 Round 46（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 46）
+- **改善内容**:
+  - Tool1: calcDivorceSplit — 離婚時の不動産売却vs維持の財産分与後手取り比較
+  - Tool2: calcAkiyaAirbnb — 空き家を民泊（Airbnb）運営した場合の月次収益・回収期間
+  - Tool3: calcSchoolDistrictPremium — 学区評判・偏差値帯による物件価格プレミアム試算
+  - Tool4: calcEnergyRetrofit — 省エネ改修費用・節約効果・補助金後の実質回収期間
+  - Tool5: calcLandValueRatio — 土地・建物価格構成比と築年数ごとの価値残存率
+- **理由**: 「離婚で家はどうする？」「民泊で稼げる？」「学区で価格が変わる？」「省エネ改修は得か？」「古い物件の実態価値は？」は具体的な疑問でPLG効果高
+- **カード総数**: 727枚
+
+---
+
 ## 2026-05-22 Round 45（セッション継続）
 
 - **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
