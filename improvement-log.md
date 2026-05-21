@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-05-21 Round 36（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 36）
+- **改善内容**:
+  - Tool1: calcSaleAfterDivorce — 離婚時売却・財産分与手取り試算（税額・ローン返済後の一人あたり手取り）
+  - Tool2: calcAkiyaBeekeeping — 空き地養蜂転用の年間収益試算（巣箱数・収穫量・販売価格から純利益と回収期間）
+  - Tool3: calcBeforeAfterRenovation — リノベ前後の物件価値変化と売却vs賃貸の費用対効果比較
+  - Tool4: calcRooftopParking — 空きスペース・駐車場の時間貸しコインパーキング転用収益試算
+  - Tool5: calcPropertyTaxLand6 — 住宅解体で固定資産税が最大6倍になる税負担増加の試算
+- **理由**: 「離婚で家を売ったらいくら残る？」「空き地で稼げる？」「解体前に税金を確認したい」は感情的インパクトが大きくPLGシェア効果が高い
+- **カード総数**: 677枚
+
+---
+
 ## 2026-05-18 （非TOP3カード ヒーロー表示強化 第46〜52弾）
 
 - **対象**: Tool1 (1-ai-satei.html)
