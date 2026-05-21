@@ -3997,6 +3997,26 @@
     </div>
   </div>
 
+  <!-- calcNeighborPurchase -->
+  <div class="calc-card" id="card-calcNeighborPurchase">
+    <div class="card-header" onclick="toggleCard('calcNeighborPurchase')">
+      <span>隣の土地を買うと家の価値が上がる？— 敷地拡大による売却価格アップ効果を計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcNeighborPurchase">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">隣地を購入して敷地を広げると容積率・建蔽率の有効活用や駐車場確保ができ、物件価値が上がる場合があります。購入コストと価値増加の損益を確認しましょう。</p>
+      <label style="font-size:12px;color:#555">現在の土地面積（㎡）<span style="font-size:11px;color:#999"> 例: 80</span></label>
+      <input type="number" id="np_current" value="80" min="10" max="5000" oninput="calcNeighborPurchase()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">隣地の面積（㎡）<span style="font-size:11px;color:#999"> 例: 30</span></label>
+      <input type="number" id="np_neighbor" value="30" min="5" max="2000" oninput="calcNeighborPurchase()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">隣地の購入価格（万円）<span style="font-size:11px;color:#999"> 例: 600</span></label>
+      <input type="number" id="np_buy" value="600" min="10" max="99999" oninput="calcNeighborPurchase()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">現在の自宅の市場価値（万円）<span style="font-size:11px;color:#999"> 例: 3000</span></label>
+      <input type="number" id="np_value" value="3000" min="100" max="99999" oninput="calcNeighborPurchase()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="np_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -13025,6 +13045,40 @@ function calcBuyerMortgageQualify() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏠 年収' + income + '万円で買える家の上限は' + maxBuyPrice + '万円！\n\n借入' + maxLoan + '万円で月' + Math.round(monthlyPayment / 10000 * 10) / 10 + '万円の返済。知っておかないと予算オーバーに。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcBuyerMortgageQualify(); })();
+
+function calcNeighborPurchase() {
+  var current = parseFloat(document.getElementById('np_current').value) || 80;
+  var neighbor = parseFloat(document.getElementById('np_neighbor').value) || 30;
+  var buy = parseFloat(document.getElementById('np_buy').value) || 600;
+  var value = parseFloat(document.getElementById('np_value').value) || 3000;
+  var el = document.getElementById('np_result');
+  if (!el) return;
+  var total = current + neighbor;
+  var areaGrowth = Math.round(neighbor / current * 1000) / 10; // 敷地拡大率%
+  // 価値増加の目安：敷地拡大率の50〜70%が価値増加に反映（合筆プレミアム）
+  var valueUp = Math.round(value * areaGrowth / 100 * 0.6);
+  var combinedValue = value + valueUp; // 合筆後の推定価値
+  var totalCost = Math.round(buy * 1.06); // 購入諸費用6%込み
+  var netGain = combinedValue - value - totalCost;
+  var isProfit = netGain >= 0;
+  var heroColor = isProfit ? '22,163,74' : '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:13px;color:#374151;margin-bottom:4px">隣地購入後の純資産増減</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1">' + (netGain >= 0 ? '+' : '') + netGain.toLocaleString() + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-top:4px">万円</div>'
+    + '<div style="font-size:13px;font-weight:700;color:rgba(' + heroColor + ',1);margin-top:6px">' + (isProfit ? '✅ 隣地購入で資産が増加！' : '⚠️ 現時点では取得コストの方が大きい') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:12px">'
+    + '<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 試算内訳</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">敷地拡大率</td><td style="padding:6px 8px;text-align:right;font-weight:700">' + areaGrowth + '%（' + current + '㎡→' + total + '㎡）</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">合筆後の推定物件価値</td><td style="padding:6px 8px;text-align:right;font-weight:700">' + combinedValue.toLocaleString() + '万円</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">隣地購入コスト（諸費用込）</td><td style="padding:6px 8px;text-align:right;color:#dc2626">-' + totalCost.toLocaleString() + '万円</td></tr>'
+    + '<tr style="background:#f5f3ef"><td style="padding:6px 8px;font-weight:700">実質的な資産増加</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(' + heroColor + ',1)">' + (netGain >= 0 ? '+' : '') + netGain.toLocaleString() + '万円</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 合筆後の価値増加は用途・建蔽率・駐車場確保などで変わります。この試算は参考目安で、実際の価値は不動産鑑定士・TERRA REALTYにご相談ください。</div>'
+    + '<button onclick="shareLine(\'隣の土地' + neighbor + '㎡を' + buy + '万円で購入すると資産が' + (netGain >= 0 ? '+' : '') + netGain.toLocaleString() + '万円変化！敷地を広げると家の価値はどう変わる？👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcNeighborPurchase(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {

@@ -4483,6 +4483,24 @@
     </div>
   </div>
 
+  <!-- calcManagementFeeAudit -->
+  <div class="card" data-category="費用管理・節約" id="card-calcManagementFeeAudit">
+    <div class="card-header" onclick="toggleCard('calcManagementFeeAudit')">
+      <span class="card-title">管理委託費が「高すぎる」か確認——相場比較と自主管理に切り替えた場合の年間節約額を計算</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcManagementFeeAudit">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">賃貸管理会社への委託費は月家賃の3〜10%が相場です。現在の費用が適正か確認し、切り替えた場合の年間節約額・リスクを比較します。</p>
+      <label style="font-size:12px;color:#555">月額家賃（万円）<span style="font-size:11px;color:#999"> 例: 8</span></label>
+      <input type="number" id="mfa_rent" value="8" min="1" max="100" step="0.5" oninput="calcManagementFeeAudit()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">現在の管理委託費率（%）<span style="font-size:11px;color:#999"> 例: 8</span></label>
+      <input type="number" id="mfa_current" value="8" min="1" max="20" step="0.5" oninput="calcManagementFeeAudit()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">物件数（戸・棟）<span style="font-size:11px;color:#999"> 例: 1</span></label>
+      <input type="number" id="mfa_units" value="1" min="1" max="50" oninput="calcManagementFeeAudit()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="mfa_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -15401,6 +15419,41 @@ function calcPetDepositPolicy() {
     + '<button onclick="shareLine(\'ペット可に変えると' + years + '年で追加収入' + extraIncome.toFixed(1) + '万円！修繕費' + repair + '万円を引いても' + (net >= 0 ? '+' + net : net) + '万円。空室対策を数字で確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcPetDepositPolicy(); })();
+
+function calcManagementFeeAudit() {
+  var rent = parseFloat(document.getElementById('mfa_rent').value) || 8;
+  var current = parseFloat(document.getElementById('mfa_current').value) || 8;
+  var units = Math.max(1, Math.round(parseFloat(document.getElementById('mfa_units').value) || 1));
+  var el = document.getElementById('mfa_result');
+  if (!el) return;
+  var marketLow = 3; // 相場下限%
+  var marketHigh = 7; // 相場上限%
+  var marketMid = 5;
+  var monthly = rent * current / 100;
+  var annualCurrent = monthly * 12 * units;
+  var annualMarket = rent * marketMid / 100 * 12 * units;
+  var saving = Math.round((annualCurrent - annualMarket) * 10) / 10;
+  var isOver = current > marketHigh;
+  var isFair = current >= marketLow && current <= marketHigh;
+  var heroColor = isOver ? '220,38,38' : isFair ? '22,163,74' : '59,130,246';
+  var verdict = isOver ? '⚠️ 相場より高い可能性あり！' : isFair ? '✅ 相場範囲内（適正）' : '💡 相場より低め（良好）';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:13px;color:#374151;margin-bottom:4px">現在の年間管理委託費</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1">' + Math.round(annualCurrent * 10) / 10 + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-top:4px">万円/年</div>'
+    + '<div style="font-size:14px;font-weight:700;color:rgba(' + heroColor + ',1);margin-top:6px">' + verdict + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:12px">'
+    + '<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 費用比較</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">現在の委託費率</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(' + heroColor + ',1)">' + current + '%</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">業界相場（' + marketLow + '〜' + marketHigh + '%）</td><td style="padding:6px 8px;text-align:right">' + marketLow + '〜' + marketHigh + '%</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">相場中央値（' + marketMid + '%）との差額/年</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:' + (saving > 0 ? '#dc2626' : '#16a34a') + '">' + (saving > 0 ? '+' + saving : saving) + '万円</td></tr>'
+    + '<tr style="background:#f5f3ef"><td style="padding:6px 8px;font-weight:700">見直しで10年節約できる額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(' + heroColor + ',1)">' + Math.round(saving * 10) + '万円</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 管理会社の変更は入居中でも可能です。変更時の注意点（敷金・契約の引き継ぎ）はTERRA REALTYにご相談ください。</div>'
+    + '<button onclick="shareLine(\'賃貸管理費が年' + Math.round(annualCurrent * 10) / 10 + '万円！相場（' + marketLow + '〜' + marketHigh + '%）と比べて' + (saving > 0 ? '+' + saving + '万円高い' : '適正か確認') + '。10年で' + Math.abs(Math.round(saving * 10)) + '万円の差👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcManagementFeeAudit(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {

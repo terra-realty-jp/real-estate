@@ -4224,6 +4224,34 @@
     </div>
   </div>
 
+  <!-- calcBuildingAgeYield -->
+  <div class="card" data-category="投資判断・利回り" id="card-calcBuildingAgeYield">
+    <div class="card-header" onclick="toggleCard('calcBuildingAgeYield')">
+      <span class="card-title">「この利回りは高い？低い？」— 築年数・構造・エリアから適正利回り目標を自動判定</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcBuildingAgeYield">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">不動産投資で「利回り◯%って良いの？」と迷ったら、築年数・構造・立地から「この物件に求めるべき最低利回り目標」を判定します。</p>
+      <label style="font-size:12px;color:#555">築年数（年）<span style="font-size:11px;color:#999"> 例: 20</span></label>
+      <input type="number" id="bay_age" value="20" min="0" max="60" oninput="calcBuildingAgeYield()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">構造</label>
+      <select id="bay_struct" onchange="calcBuildingAgeYield()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="rc">RC造（マンション）</option>
+        <option value="s">鉄骨造</option>
+        <option value="w" selected>木造</option>
+      </select>
+      <label style="font-size:12px;color:#555">エリア</label>
+      <select id="bay_area" onchange="calcBuildingAgeYield()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="metro">都市部（東京・大阪・名古屋）</option>
+        <option value="urban" selected>地方政令市（札幌・仙台・福岡等）</option>
+        <option value="rural">地方都市・郊外</option>
+      </select>
+      <label style="font-size:12px;color:#555">現在の表面利回り（%）<span style="font-size:11px;color:#999"> 例: 8.5</span></label>
+      <input type="number" id="bay_yield" value="8.5" min="1" max="30" step="0.1" oninput="calcBuildingAgeYield()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="bay_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -15467,6 +15495,41 @@ function calcScaleUpROI() {
     + '<button onclick="shareLine(\'不動産投資' + price.toLocaleString() + '万円×3棟で年間CF合計' + cf3.toFixed(1) + '万円！資産規模' + cf3Asset.toLocaleString() + '万円を目指すシミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcScaleUpROI(); })();
+
+function calcBuildingAgeYield() {
+  var age = parseFloat(document.getElementById('bay_age').value) || 20;
+  var struct = document.getElementById('bay_struct').value;
+  var area = document.getElementById('bay_area').value;
+  var actualYield = parseFloat(document.getElementById('bay_yield').value) || 8.5;
+  var el = document.getElementById('bay_result');
+  if (!el) return;
+  // 適正利回り基準テーブル（築年数・構造・エリア）
+  var base = { metro: { rc: 4.5, s: 5.5, w: 6.5 }, urban: { rc: 5.5, s: 6.5, w: 7.5 }, rural: { rc: 7.0, s: 8.0, w: 9.5 } };
+  var ageAdd = Math.min(age * 0.1, 3.0); // 築古は利回り加算（最大+3%）
+  var minYield = Math.round((base[area][struct] + ageAdd) * 10) / 10;
+  var diff = Math.round((actualYield - minYield) * 10) / 10;
+  var isOK = diff >= 0;
+  var grade = diff >= 2 ? '優良' : diff >= 0 ? '合格' : diff >= -1.5 ? '要注意' : '割高';
+  var heroColor = diff >= 2 ? '22,163,74' : diff >= 0 ? '59,130,246' : diff >= -1.5 ? '201,168,76' : '220,38,38';
+  var structNames = { rc: 'RC造（マンション）', s: '鉄骨造', w: '木造' };
+  var areaNames = { metro: '都市部', urban: '地方政令市', rural: '地方・郊外' };
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:13px;color:#374151;margin-bottom:4px">この物件の利回り判定</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1">' + grade + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-top:6px">目標最低利回り: <strong>' + minYield + '%</strong>　現在: <strong>' + actualYield + '%</strong></div>'
+    + '<div style="font-size:14px;font-weight:700;color:rgba(' + heroColor + ',1);margin-top:4px">目標比 ' + (diff >= 0 ? '+' : '') + diff + '%</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:12px">'
+    + '<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 判定根拠</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">エリア・構造</td><td style="padding:6px 8px;text-align:right">' + areaNames[area] + '／' + structNames[struct] + '</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">エリア基準利回り</td><td style="padding:6px 8px;text-align:right">' + base[area][struct] + '%</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">築年数加算（' + age + '年×0.1%）</td><td style="padding:6px 8px;text-align:right">+' + Math.min(age * 0.1, 3).toFixed(1) + '%</td></tr>'
+    + '<tr style="background:#f5f3ef"><td style="padding:6px 8px;font-weight:700">この物件に必要な最低利回り</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(' + heroColor + ',1)">' + minYield + '%</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 「利回りが高い=良い物件」とは限りません。築古・地方・木造は利回りが高くても修繕費・空室リスクが大きいため、それを補う分の上乗せが必要です。実質利回り（NOI÷物件価格）も合わせて確認しましょう。</div>'
+    + '<button onclick="shareLine(\'築' + age + '年・' + structNames[struct] + '・' + areaNames[area] + 'の物件の適正利回り目標は' + minYield + '%！今の利回り' + actualYield + '%は「' + grade + '」判定。投資判断の基準を確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcBuildingAgeYield(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
