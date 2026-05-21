@@ -3174,6 +3174,28 @@
     </div>
   </div>
 
+  <div class="calc-card" data-category="活用方法" id="card-calcAkiyaTrunkRoom">
+    <div class="card-header" onclick="toggleCard('calcAkiyaTrunkRoom')">
+      <span>空き家をトランクルームにすると月いくら儲かる？ 初期費用・月収・回収期間を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaTrunkRoom">
+      <div style="background:rgba(220,252,231,0.5);border:1px solid rgba(22,163,74,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#166534;line-height:1.7">💡 使わなくなった空き家や空き部屋をトランクルームに転用すると、内装工事不要・借り手不要・収益安定という特徴があります。近年需要が急増しており、都市部では満稼働しやすいと言われています。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">空きスペースの広さ（㎡）<span style="color:#888;font-size:11px"> 例: 50（部屋全体または一部を使う場合の面積）</span></label>
+      <input type="number" id="atr_area" value="50" min="10" max="500" step="5" oninput="calcAkiyaTrunkRoom()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:13px">エリア<span style="color:#888;font-size:11px"> 都市部ほど1㎡あたりの単価が高い</span></label>
+      <select id="atr_area_type" onchange="calcAkiyaTrunkRoom()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <option value="urban">都市部（月額1,500円/㎡）</option>
+        <option value="suburb">郊外（月額1,000円/㎡）</option>
+        <option value="rural">地方（月額700円/㎡）</option>
+      </select>
+      <label style="font-size:13px">区画化・棚設置の初期費用（万円）<span style="color:#888;font-size:11px"> 例: 30（棚・仕切り・セキュリティ設置費用）</span></label>
+      <input type="number" id="atr_setup" value="30" min="5" max="500" step="5" oninput="calcAkiyaTrunkRoom()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <div id="atr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -12339,6 +12361,31 @@ function calcAkiyaLandBank() {
     + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('💰 空き家バンク登録でリフォーム補助金' + totalSubsidy + '万円！\n\n' + reform + '万円のリフォームが実質' + selfPay + '万円に。空き家を放置せずに活用するだけでこんなに変わる！\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaLandBank(); })();
+
+function calcAkiyaTrunkRoom() {
+  var area = parseFloat(document.getElementById('atr_area').value) || 0;
+  var areaType = document.getElementById('atr_area_type').value;
+  var setup = parseFloat(document.getElementById('atr_setup').value) || 0;
+  var el = document.getElementById('atr_result');
+  if (!el) return;
+  var rateMap = { urban: 0.15, suburb: 0.10, rural: 0.07 };
+  var rate = rateMap[areaType] || 0.10;
+  var grossMonthly = Math.round(area * rate * 10) / 10;
+  var maintenanceMonthly = Math.round(grossMonthly * 0.10 * 10) / 10;
+  var netMonthly = Math.round((grossMonthly - maintenanceMonthly) * 10) / 10;
+  var paybackMonths = netMonthly > 0 ? Math.round((setup / netMonthly) * 10) / 10 : 0;
+  var annualIncome = Math.round(netMonthly * 12 * 10) / 10;
+  var heroColor = paybackMonths <= 24 ? '#16a34a' : paybackMonths <= 48 ? '#c9a84c' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">月間純収益（管理費10%控除後）</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + netMonthly + '<span style="font-size:20px">万円/月</span></div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">月間売上（満稼働）</td><td style="text-align:right;font-weight:700;color:#16a34a">' + grossMonthly + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">管理・清掃費（概算10%）</td><td style="text-align:right;font-weight:700;color:#dc2626">-' + maintenanceMonthly + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">年間純収益</td><td style="text-align:right;font-weight:700;color:#16a34a">' + annualIncome + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">初期費用の回収期間</td><td style="text-align:right;font-weight:700;color:' + heroColor + '">' + paybackMonths + 'ヶ月</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f0fdf4;border-radius:8px;font-size:12px;color:#166534;line-height:1.7">'
+    + (paybackMonths <= 24 ? '✅ 回収期間2年以内で優良投資。普通賃貸と違いリフォーム不要・借り手1人に依存しない分散収益が魅力です。' : paybackMonths <= 48 ? '⚠️ 回収期間2〜4年。エリアによっては稼働率が課題になるため、需要調査を先に行いましょう。' : '❌ 回収に4年以上かかる計算。初期費用を抑える工夫や別の活用方法も検討しましょう。') + '</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('💡 空き家' + area + '㎡をトランクルームに転用→月' + netMonthly + '万円の安定収入！\n\n初期費用' + setup + '万円も' + paybackMonths + 'ヶ月で回収できる計算。内装不要・入居者管理不要でラク。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaTrunkRoom(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {

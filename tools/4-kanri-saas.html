@@ -4307,6 +4307,26 @@
     </div>
   </div>
 
+  <div class="card" data-category="設備・リノベ" id="card-calcAirConReplace">
+    <div class="card-header" onclick="toggleCard('calcAirConReplace')">
+      <span>エアコンを全室取り替えると退去率は下がる？ 費用と空室減少効果の試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAirConReplace">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 エアコンは入居希望者が最も重視する設備の1つ。古いエアコン（10年以上）は入居率・退去率に影響し、空室原因の上位に挙げられます。交換費用と空室短縮効果を比較してみましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">部屋数（台）<span style="color:#888;font-size:11px"> 例: 4（エアコンを交換したい部屋の数）</span></label>
+      <input type="number" id="acr_rooms" value="4" min="1" max="50" step="1" oninput="calcAirConReplace()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">1台あたりの交換費用（万円）<span style="color:#888;font-size:11px"> 例: 10（取付工事込みの相場）</span></label>
+      <input type="number" id="acr_unitcost" value="10" min="5" max="50" step="1" oninput="calcAirConReplace()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 7（対象物件の家賃）</span></label>
+      <input type="number" id="acr_rent" value="7" min="1" max="100" step="0.5" oninput="calcAirConReplace()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">交換による空室短縮の見込み（ヶ月）<span style="color:#888;font-size:11px"> 例: 2（老朽エアコンがなくなり2ヶ月早く決まる）</span></label>
+      <input type="number" id="acr_shorten" value="2" min="0" max="12" step="1" oninput="calcAirConReplace()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="acr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14964,6 +14984,30 @@ function calcLongVacancyROI() {
     + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('😨 空室' + vacant + 'ヶ月で損失' + currentLoss + '万円！あと' + forecast + 'ヶ月続くとさらに' + futureLoss + '万円…\n\n月' + cut + '万円値下げして早期決着する方が' + (isWorthCutting ? 'トク' : '検討の余地あり') + 'という計算になった。空室長引かせてる場合じゃなかった！\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcLongVacancyROI(); })();
+
+function calcAirConReplace() {
+  var rooms = parseFloat(document.getElementById('acr_rooms').value) || 0;
+  var unitCost = parseFloat(document.getElementById('acr_unitcost').value) || 0;
+  var rent = parseFloat(document.getElementById('acr_rent').value) || 0;
+  var shorten = parseFloat(document.getElementById('acr_shorten').value) || 0;
+  var el = document.getElementById('acr_result');
+  if (!el) return;
+  var totalCost = Math.round(rooms * unitCost * 10) / 10;
+  var savedRent = Math.round(rent * shorten * 10) / 10;
+  var annualDepreciation = Math.round(totalCost / 10 * 10) / 10;
+  var netEffect = Math.round((savedRent - totalCost) * 10) / 10;
+  var paybackMonths = rent > 0 ? Math.round((totalCost / rent) * 10) / 10 : 0;
+  var heroColor = netEffect >= 0 ? '#16a34a' : '#c9a84c';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">空室短縮効果の純利益（効果－費用）</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + (netEffect >= 0 ? '+' : '') + netEffect + '<span style="font-size:20px">万円</span></div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">エアコン交換総費用</td><td style="text-align:right;font-weight:700;color:#dc2626">-' + totalCost + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">空室' + shorten + 'ヶ月短縮で回収できる家賃</td><td style="text-align:right;font-weight:700;color:#16a34a">+' + savedRent + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">費用回収期間（満室時）</td><td style="text-align:right;font-weight:700">' + paybackMonths + 'ヶ月</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">年次減価償却費（耐用年数10年）</td><td style="text-align:right;font-weight:700;color:#3b82f6">' + annualDepreciation + '万円/年</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#555;line-height:1.7">'
+    + (netEffect >= 0 ? '✅ エアコン交換は費用対効果あり。空室期間の短縮に加え、入居者の満足度向上・退去抑制にも長期的に貢献します。' : '⚠️ 空室短縮効果が小さい場合、費用回収に時間がかかります。ただし中長期の退去抑制効果も考慮しましょう。') + '</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('💡 エアコン' + rooms + '台交換（' + totalCost + '万円）で空室が' + shorten + 'ヶ月早く決まる→家賃' + savedRent + '万円回収！\n\n設備投資は「空室対策」として考えると費用対効果が見えてくる。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAirConReplace(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {

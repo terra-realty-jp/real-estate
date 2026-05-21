@@ -4044,6 +4044,30 @@
     </div>
   </div>
 
+  <div class="card" data-category="投資判断" id="card-calcNPVCheck">
+    <div class="card-header" onclick="toggleCard('calcNPVCheck')">
+      <span>NPV（正味現在価値）で投資物件の本当の価値を測る — 今の価格は「買い」か「割高」か</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcNPVCheck">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 NPV（Net Present Value・正味現在価値）がプラスなら投資価値あり、マイナスなら割高な買い物です。将来の賃料収入と売却益を「現在の価値」に換算して購入価格と比較します。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">購入価格（万円）<span style="color:#888;font-size:11px"> 例: 3000（物件価格＋諸費用）</span></label>
+      <input type="number" id="npv_price" value="3000" min="100" max="100000" step="100" oninput="calcNPVCheck()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間賃料収入（万円）<span style="color:#888;font-size:11px"> 例: 180（月15万円×12ヶ月）</span></label>
+      <input type="number" id="npv_rent" value="180" min="10" max="5000" step="10" oninput="calcNPVCheck()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間諸費用（万円）<span style="color:#888;font-size:11px"> 例: 30（管理費・修繕費・固定資産税）</span></label>
+      <input type="number" id="npv_expense" value="30" min="0" max="1000" step="5" oninput="calcNPVCheck()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">保有期間（年）<span style="color:#888;font-size:11px"> 例: 10（何年間保有して売却するか）</span></label>
+      <input type="number" id="npv_years" value="10" min="1" max="30" step="1" oninput="calcNPVCheck()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">売却予定価格（万円）<span style="color:#888;font-size:11px"> 例: 2400（保有年数後の想定売却額）</span></label>
+      <input type="number" id="npv_exit" value="2400" min="0" max="100000" step="100" oninput="calcNPVCheck()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">割引率（%）<span style="color:#888;font-size:11px"> 例: 5（期待利回り・機会費用。一般的に5〜8%）</span></label>
+      <input type="number" id="npv_discount" value="5" min="1" max="20" step="0.5" oninput="calcNPVCheck()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="npv_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -14946,6 +14970,41 @@ function calcSpreadAnalysis() {
     + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💡 表面利回り' + yieldPct + '%の物件、空室・諸費用・金利を引くと実質スプレッドは' + spread + '%だった！\n\n' + (spread < 1 ? '危険水域！あと金利+1%上昇で赤字確定…' : 'この数字が1%を切ると一発の金利上昇でアウト。知らないと痛い！') + '\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcSpreadAnalysis(); })();
+
+function calcNPVCheck() {
+  var price = parseFloat(document.getElementById('npv_price').value) || 0;
+  var rent = parseFloat(document.getElementById('npv_rent').value) || 0;
+  var expense = parseFloat(document.getElementById('npv_expense').value) || 0;
+  var years = parseFloat(document.getElementById('npv_years').value) || 0;
+  var exitPrice = parseFloat(document.getElementById('npv_exit').value) || 0;
+  var discount = parseFloat(document.getElementById('npv_discount').value) || 5;
+  var el = document.getElementById('npv_result');
+  if (!el) return;
+  var r = discount / 100;
+  var annualCF = rent - expense;
+  var pvCF = 0;
+  for (var i = 1; i <= years; i++) {
+    pvCF += annualCF / Math.pow(1 + r, i);
+  }
+  var pvExit = exitPrice / Math.pow(1 + r, years);
+  var totalPV = pvCF + pvExit;
+  var npv = Math.round((totalPV - price) * 10) / 10;
+  var pvCFRound = Math.round(pvCF * 10) / 10;
+  var pvExitRound = Math.round(pvExit * 10) / 10;
+  var totalPVRound = Math.round(totalPV * 10) / 10;
+  var heroColor = npv > 0 ? '#16a34a' : '#dc2626';
+  var heroLabel = npv > 0 ? 'NPV プラス（投資価値あり）' : 'NPV マイナス（割高の可能性）';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">' + heroLabel + '</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + (npv >= 0 ? '+' : '') + npv + '<span style="font-size:20px">万円</span></div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">賃料収入の現在価値（' + years + '年分）</td><td style="text-align:right;font-weight:700;color:#16a34a">' + pvCFRound + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">売却益の現在価値</td><td style="text-align:right;font-weight:700;color:#16a34a">' + pvExitRound + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">将来キャッシュフローの合計現在価値</td><td style="text-align:right;font-weight:700;color:#3b82f6">' + totalPVRound + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">購入価格（投資額）</td><td style="text-align:right;font-weight:700;color:#dc2626">-' + price + '万円</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#555;line-height:1.7">'
+    + (npv > 0 ? '✅ NPVプラス。割引率' + discount + '%の期待利回りをクリアした投資です。数字が大きいほど「割安な買い物」といえます。' : '❌ NPVマイナス。現在の購入価格では期待利回り' + discount + '%を達成できない計算です。価格交渉・賃料改善・費用削減の余地を検討しましょう。') + '</div>'
+    + '<div style="font-size:11px;color:#888;margin-top:8px;line-height:1.7">※ 割引率はリスクフリー利率＋リスクプレミアムで決まります。不動産投資では5〜8%が一般的な目安です。</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💡 ' + price + '万円の投資物件、NPVは' + npv + '万円！\n\n' + (npv > 0 ? '将来の家賃＋売却益を現在価値に換算するとプラス→「割安な買い物」の判定。' : '将来の家賃＋売却益を現在価値に換算するとマイナス→「割高」の可能性。') + 'NPVを知らずに投資するのは危ない！\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcNPVCheck(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
