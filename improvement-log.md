@@ -4207,3 +4207,16 @@
   - Tool5: calcVariableRateBomb — 変動金利の5年ルール・125%ルールで発生する未払い利息リスク試算
 - **理由**: 「知らないと損する」系（隠れコスト・制度の落とし穴）カードは特にPLG効果が高い
 - **カード総数**: 627枚
+
+## 2026-05-21 Round 28（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 28）
+- **改善内容**:
+  - Tool1: calcCondoArrearSale — マンション売却前の管理費・修繕積立金の滞納精算コスト（遅延損害金年14.6%込み）
+  - Tool2: calcAkiyaChildcare — 空き家を学童保育・放課後デイに転用した場合の収益試算（補助金200万円・通常賃貸比1.5〜2倍）
+  - Tool3: calcConsumptionTaxSplit — 不動産売買の消費税 土地/建物内訳と個人間売買の非課税判定
+  - Tool4: calcModelRoomROI — モデルルーム化（家具付き内見）で空室期間短縮の費用対効果試算
+  - Tool5: calcOldBuildingCash — 築古物件現金一括購入の減価償却節税効果込み実質利回り試算
+- **理由**: 「知らないと損する精算コスト」「補助金活用」「節税効果の可視化」系カードはLINEシェアを誘発しやすい
+- **カード総数**: 632枚
