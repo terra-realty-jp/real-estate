@@ -13590,6 +13590,23 @@ function calcAkiyaAirbnb() {
   function init(){document.querySelectorAll('[id$="-result"]').forEach(observe);}
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
 })();
+// ── 都道府県1問（匿名エリアデータ収集） ──
+function _reSavePref(){var v=document.getElementById('re-pref-sel');try{if(v&&v.value)localStorage.setItem('re_pref',v.value);localStorage.setItem('re_pref_skip','1');}catch(e){}var b=document.getElementById('re-pref-banner');if(b)b.remove();}
+function _reSkipPref(){try{localStorage.setItem('re_pref_skip','1');}catch(e){}var b=document.getElementById('re-pref-banner');if(b)b.remove();}
+(function(){
+  try{if(localStorage.getItem('re_pref')||localStorage.getItem('re_pref_skip'))return;}catch(e){return;}
+  var ctr=document.getElementById('akiya-calc-cards');
+  if(!ctr)return;
+  var PREFS='北海道,青森県,岩手県,宮城県,秋田県,山形県,福島県,茨城県,栃木県,群馬県,埼玉県,千葉県,東京都,神奈川県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県,沖縄県'.split(',');
+  var b=document.createElement('div');b.id='re-pref-banner';
+  b.style.cssText='max-width:800px;margin:0 auto 14px;padding:9px 14px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.18);border-radius:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+  b.innerHTML='<span style="font-size:12px;color:rgba(0,0,0,0.55);flex-shrink:0">📍 お住まいの地域（任意・サービス改善のため）</span>'
+    +'<select id="re-pref-sel" style="flex:1;min-width:130px;max-width:160px;background:#1a1a1a;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:5px 8px;color:#f0ede8;font-size:12px;font-family:inherit;cursor:pointer"><option value="">-- 都道府県 --</option>'
+    +PREFS.map(function(p){return'<option value="'+p+'">'+p+'</option>';}).join('')+'</select>'
+    +'<button onclick="_reSavePref()" style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);border-radius:6px;padding:5px 14px;color:#c9a84c;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">保存</button>'
+    +'<button onclick="_reSkipPref()" style="background:none;border:none;color:rgba(255,255,255,0.2);font-size:13px;cursor:pointer;font-family:inherit;padding:2px 6px;flex-shrink:0">✕</button>';
+  ctr.parentNode.insertBefore(b,ctr);
+})();
 </script>
 </body>
 </html>
