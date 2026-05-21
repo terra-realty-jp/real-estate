@@ -4272,3 +4272,16 @@
   - Tool5: calcFlipProfit — 中古物件購入→リフォーム→転売のフリップ投資 税引後利益・年率ROI試算
 - **理由**: 「ハザードマップの影響」「ゲストハウス収益」「買主へのサービス」「駐輪場整備」「フリップ投資」は具体的で共有したくなるPLG効果が高いカード
 - **カード総数**: 652枚（llms.txtは Rounds 31-32合算で657枚に更新）
+
+## 2026-05-21 Round 33（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 33）
+- **改善内容**:
+  - Tool1: calcPriceCutHistory — 値下げ幅と成約期間短縮の損得比較（保有コスト節減vs値下げ損失）
+  - Tool2: calcAkiyaElderCare — 空き家を高齢者向け住宅に転用した収益を通常賃貸と比較・改修費回収期間
+  - Tool3: calcBudgetOverrun — 家購入後の追加費用総額（引越し・カーテン・家具・修繕・外構）試算
+  - Tool4: calcEnergyRenovation — 断熱・省エネリフォームの投資回収期間（補助金考慮）
+  - Tool5: calcDepreciationBoost — 減価償却×損益通算の節税額試算（給与所得と合算）
+- **理由**: 「値下げすべきか？」「追加費用は？」「節税できる？」は一般ユーザーの強い疑問で、驚く数字が出やすくPLG効果が高い
+- **カード総数**: 662枚
