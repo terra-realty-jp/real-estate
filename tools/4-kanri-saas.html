@@ -45,6 +45,17 @@
     .page-title span { color: var(--gold); }
     .page-desc { color: var(--text-muted); font-size: 13px; margin-bottom: 32px; line-height: 1.8; }
     .card { background: var(--dark2); border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 24px; margin-bottom: 20px; position: relative; }
+    /* ── 折りたたみカード ── */
+    .card-header { cursor:pointer; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:0; }
+    .card-header:hover .card-title,
+    .card-header:hover > span:first-child { color:var(--blue,#3b82f6); }
+    .card-arrow, .toggle-icon { font-size:13px; color:rgba(0,0,0,0.3); transition:transform 0.22s; flex-shrink:0; margin-top:2px; }
+    .card-header ~ .card-body { display:none; }
+    .card.open > .card-body { display:block; }
+    .card:not(.open) .card-arrow,
+    .card:not(.open) .toggle-icon { transform:rotate(-90deg); }
+    /* ── スティッキー検索バー ── */
+    .calc-filter-sticky { position:sticky; top:0; z-index:20; background:var(--dark); padding:10px 0 6px; margin:-6px 0 12px; box-shadow:0 3px 10px rgba(0,0,0,0.08); }
     .wiz-recommended { border-color: rgba(59,130,246,0.6) !important; box-shadow: 0 0 0 2px rgba(59,130,246,0.12); transition: border-color 0.3s; }
     .card-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
@@ -1762,16 +1773,18 @@
       </button>
     </div>
   </div>
-  <div style="margin-bottom:8px;position:relative">
-    <input type="text" id="kanri-calc-search" placeholder="🔍 計算カードを検索..." oninput="filterKanriCalcCards(this.value)" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
-    <span id="kanri-calc-count" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
-  </div>
-  <div id="kanri-cat-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-    <button class="kanri-cat-btn" onclick="setKanriCat(this,'')" style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:20px;padding:4px 12px;color:#93c5fd;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">すべて</button>
-    <button class="kanri-cat-btn" onclick="setKanriCat(this,'rent')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:4px 12px;color:rgba(0,0,0,0.5);font-size:11px;cursor:pointer;font-family:inherit">収支・家賃</button>
-    <button class="kanri-cat-btn" onclick="setKanriCat(this,'tenant')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:4px 12px;color:rgba(0,0,0,0.5);font-size:11px;cursor:pointer;font-family:inherit">入居管理</button>
-    <button class="kanri-cat-btn" onclick="setKanriCat(this,'equip')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:4px 12px;color:rgba(0,0,0,0.5);font-size:11px;cursor:pointer;font-family:inherit">設備・修繕</button>
-    <button class="kanri-cat-btn" onclick="setKanriCat(this,'vacancy')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:4px 12px;color:rgba(0,0,0,0.5);font-size:11px;cursor:pointer;font-family:inherit">審査・空室</button>
+  <div class="calc-filter-sticky">
+    <div style="position:relative;margin-bottom:8px">
+      <input type="text" id="kanri-calc-search" placeholder="🔍 計算カードを検索（例: 家賃、空室、修繕）..." oninput="filterKanriCalcCards(this.value)" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:8px;padding:11px 50px 11px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      <span id="kanri-calc-count" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
+    </div>
+    <div id="kanri-cat-btns" style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="kanri-cat-btn" onclick="setKanriCat(this,'')" style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:20px;padding:5px 14px;color:#93c5fd;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">すべて</button>
+      <button class="kanri-cat-btn" onclick="setKanriCat(this,'rent')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:5px 14px;color:rgba(0,0,0,0.5);font-size:12px;cursor:pointer;font-family:inherit">収支・家賃</button>
+      <button class="kanri-cat-btn" onclick="setKanriCat(this,'tenant')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:5px 14px;color:rgba(0,0,0,0.5);font-size:12px;cursor:pointer;font-family:inherit">入居管理</button>
+      <button class="kanri-cat-btn" onclick="setKanriCat(this,'equip')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:5px 14px;color:rgba(0,0,0,0.5);font-size:12px;cursor:pointer;font-family:inherit">設備・修繕</button>
+      <button class="kanri-cat-btn" onclick="setKanriCat(this,'vacancy')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:5px 14px;color:rgba(0,0,0,0.5);font-size:12px;cursor:pointer;font-family:inherit">審査・空室</button>
+    </div>
   </div>
   <div id="kanri-calc-noresult" style="display:none;text-align:center;padding:20px;color:var(--text-muted);font-size:13px">該当する計算カードが見つかりません</div>
 
@@ -15696,6 +15709,18 @@ function calcVacancyRisk() {
     + '<button onclick="shareLine(\'賃貸物件の空室リスクを試算したら、年間' + annualLoss.toFixed(1) + '万円、' + yrs + '年で' + totalLoss.toFixed(0) + '万円の損失になる！空室対策は早めが大切です不動産かんたんツールhttps://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcVacancyRisk(); })();
+
+// ── 折りたたみカード ──
+function toggleCard(arg) {
+  var card;
+  if (typeof arg === 'string') {
+    var body = document.getElementById('body-' + arg);
+    if (body) card = body.parentElement;
+  } else if (arg && arg.classList && arg.classList.contains('card-header')) {
+    card = arg.parentElement;
+  }
+  if (card) card.classList.toggle('open');
+}
 
 var _kanriCat = '';
 var _kanriCatKw = {

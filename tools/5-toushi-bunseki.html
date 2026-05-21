@@ -49,6 +49,17 @@
     .page-title span { color: var(--gold); }
     .page-desc { color: var(--text-muted); font-size: 13px; margin-bottom: 28px; line-height: 1.8; }
     .card { background: var(--dark2); border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 24px; margin-bottom: 20px; position: relative; }
+    /* ── 折りたたみカード ── */
+    .card-header { cursor:pointer; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:0; }
+    .card-header:hover .card-title,
+    .card-header:hover > span:first-child { color:var(--gold); }
+    .card-arrow, .toggle-icon { font-size:13px; color:rgba(0,0,0,0.3); transition:transform 0.22s; flex-shrink:0; margin-top:2px; }
+    .card-header ~ .card-body { display:none; }
+    .card.open > .card-body { display:block; }
+    .card:not(.open) .card-arrow,
+    .card:not(.open) .toggle-icon { transform:rotate(-90deg); }
+    /* ── スティッキー検索バー ── */
+    .calc-filter-sticky { position:sticky; top:0; z-index:20; background:var(--dark); padding:10px 0 6px; margin:-6px 0 12px; box-shadow:0 3px 10px rgba(0,0,0,0.08); }
     .wiz-recommended { border-color: rgba(201,168,76,0.6) !important; box-shadow: 0 0 0 2px rgba(201,168,76,0.12); transition: border-color 0.3s; }
     .card-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -1038,16 +1049,18 @@
       </button>
     </div>
   </div>
-  <div style="margin-bottom:8px;position:relative">
-    <input type="text" id="toushi-calc-search" placeholder="🔍 計算カードを検索..." oninput="filterToushiCalcCards(this.value)" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
-    <span id="toushi-calc-count" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
-  </div>
-  <div id="toushi-cat-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-    <button class="toushi-cat-btn" onclick="setToushiCat(this,'')" style="background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);border-radius:20px;padding:4px 12px;color:#c9a84c;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">すべて</button>
-    <button class="toushi-cat-btn" onclick="setToushiCat(this,'cf')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:4px 12px;color:rgba(0,0,0,0.5);font-size:11px;cursor:pointer;font-family:inherit">収益・手残り計算</button>
-    <button class="toushi-cat-btn" onclick="setToushiCat(this,'risk')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:4px 12px;color:rgba(0,0,0,0.5);font-size:11px;cursor:pointer;font-family:inherit">リスク分析</button>
-    <button class="toushi-cat-btn" onclick="setToushiCat(this,'loan')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:4px 12px;color:rgba(0,0,0,0.5);font-size:11px;cursor:pointer;font-family:inherit">融資・税金</button>
-    <button class="toushi-cat-btn" onclick="setToushiCat(this,'exit')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:4px 12px;color:rgba(0,0,0,0.5);font-size:11px;cursor:pointer;font-family:inherit">出口・比較</button>
+  <div class="calc-filter-sticky">
+    <div style="position:relative;margin-bottom:8px">
+      <input type="text" id="toushi-calc-search" placeholder="🔍 計算カードを検索（例: 利回り、融資、リスク）..." oninput="filterToushiCalcCards(this.value)" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:8px;padding:11px 50px 11px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+      <span id="toushi-calc-count" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted)"></span>
+    </div>
+    <div id="toushi-cat-btns" style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="toushi-cat-btn" onclick="setToushiCat(this,'')" style="background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);border-radius:20px;padding:5px 14px;color:#c9a84c;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">すべて</button>
+      <button class="toushi-cat-btn" onclick="setToushiCat(this,'cf')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:5px 14px;color:rgba(0,0,0,0.5);font-size:12px;cursor:pointer;font-family:inherit">収益・手残り計算</button>
+      <button class="toushi-cat-btn" onclick="setToushiCat(this,'risk')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:5px 14px;color:rgba(0,0,0,0.5);font-size:12px;cursor:pointer;font-family:inherit">リスク分析</button>
+      <button class="toushi-cat-btn" onclick="setToushiCat(this,'loan')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:5px 14px;color:rgba(0,0,0,0.5);font-size:12px;cursor:pointer;font-family:inherit">融資・税金</button>
+      <button class="toushi-cat-btn" onclick="setToushiCat(this,'exit')" style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.1);border-radius:20px;padding:5px 14px;color:rgba(0,0,0,0.5);font-size:12px;cursor:pointer;font-family:inherit">出口・比較</button>
+    </div>
   </div>
   <div id="toushi-calc-noresult" style="display:none;text-align:center;padding:20px;color:var(--text-muted);font-size:13px">該当する計算カードが見つかりません</div>
 
@@ -15789,6 +15802,18 @@ function calcNetYieldAfterTax() {
     + '<button onclick="shareLine(\'不動産投資の表面利回り' + gross + '%、税引後は' + afterTaxYield.toFixed(2) + '%まで下がる事実。' + dropPct + '%の差が出る仕組みを不動産かんたんツールで確認https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcNetYieldAfterTax(); })();
+
+// ── 折りたたみカード ──
+function toggleCard(arg) {
+  var card;
+  if (typeof arg === 'string') {
+    var body = document.getElementById('body-' + arg);
+    if (body) card = body.parentElement;
+  } else if (arg && arg.classList && arg.classList.contains('card-header')) {
+    card = arg.parentElement;
+  }
+  if (card) card.classList.toggle('open');
+}
 
 var _toushiCat = '';
 var _toushiCatKw = {
