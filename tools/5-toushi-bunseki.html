@@ -4330,6 +4330,21 @@
     </div>
   </div>
 
+  <!-- R44: calcInterestRateRisk -->
+  <div class="card" id="card-calcInterestRateRisk" data-category="リスク">
+    <div class="card-header"><span class="card-icon">📈</span><h3 class="card-title">金利1%上昇でローン返済・月次CFはいくら変わる？</h3></div>
+    <div class="card-body">
+      <p class="card-desc">変動金利ローンを使っている場合、金利が1%・2%・3%上昇したときの月々の返済額増加とキャッシュフロー変化を試算します。「低金利が続く前提」の危険性を確認できます。</p>
+      <label style="font-size:12px;color:var(--text-muted)">借入残高（万円）（例: 3000万円）</label>
+      <input type="number" id="irr_loan" value="3000" min="100" max="100000" oninput="calcInterestRateRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">現在の金利（%）（例: 0.5%）</label>
+      <input type="number" id="irr_rate" value="0.5" min="0.1" max="10" step="0.1" oninput="calcInterestRateRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">残り返済年数（年）（例: 25年）</label>
+      <input type="number" id="irr_years" value="25" min="1" max="35" oninput="calcInterestRateRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="irr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -15650,6 +15665,42 @@ function calcCashOnCash() {
     + '<button onclick="shareLine(\'不動産投資' + price.toLocaleString() + '万円の物件、頭金の入れ方で自己資金利回りがこんなに変わる！レバレッジの効果をシミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcCashOnCash(); })();
+
+function calcInterestRateRisk() {
+  var loan = parseFloat(document.getElementById('irr_loan').value) || 0;
+  var rate = parseFloat(document.getElementById('irr_rate').value) || 0;
+  var years = parseInt(document.getElementById('irr_years').value) || 25;
+  var el = document.getElementById('irr_result');
+  if (!el) return;
+  if (loan <= 0 || rate <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">借入残高と金利を入力してください</p>'; return; }
+  var n = years * 12;
+  function monthly(r) {
+    var m = r / 100 / 12;
+    return m > 0 ? loan * 10000 * m * Math.pow(1+m,n) / (Math.pow(1+m,n)-1) : loan * 10000 / n;
+  }
+  var m0 = monthly(rate);
+  var m1 = monthly(rate + 1);
+  var m2 = monthly(rate + 2);
+  var m3 = monthly(rate + 3);
+  var d1 = (m1 - m0) / 10000;
+  var d2 = (m2 - m0) / 10000;
+  var d3 = (m3 - m0) / 10000;
+  try { sbLogCardUsage(5, 'card-calcInterestRateRisk', 'calc', '1%上昇で月' + d1.toFixed(1) + '万円増'); } catch(e) {}
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(220,38,38,0.12),rgba(220,38,38,0.04));border:2px solid rgba(220,38,38,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">金利1%上昇時の月々の増加額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(220,38,38);line-height:1">+' + d1.toFixed(1) + '<span style="font-size:18px">万円/月</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">年間' + (d1*12).toFixed(0) + '万円の負担増</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr><td style="padding:7px 10px">現在（' + rate + '%）</td><td style="padding:7px 10px;text-align:right;font-weight:700">' + (m0/10000).toFixed(1) + ' 万円/月</td></tr>'
+    + '<tr style="background:#fff5f5"><td style="padding:7px 10px">+1%（' + (rate+1) + '%）</td><td style="padding:7px 10px;text-align:right;color:#dc2626;font-weight:700">' + (m1/10000).toFixed(1) + ' 万円（+' + d1.toFixed(1) + '万円）</td></tr>'
+    + '<tr style="background:#fff5f5"><td style="padding:7px 10px">+2%（' + (rate+2) + '%）</td><td style="padding:7px 10px;text-align:right;color:#dc2626;font-weight:700">' + (m2/10000).toFixed(1) + ' 万円（+' + d2.toFixed(1) + '万円）</td></tr>'
+    + '<tr style="background:#fff5f5"><td style="padding:7px 10px">+3%（' + (rate+3) + '%）</td><td style="padding:7px 10px;text-align:right;color:#dc2626;font-weight:700">' + (m3/10000).toFixed(1) + ' 万円（+' + d3.toFixed(1) + '万円）</td></tr>'
+    + '</table>'
+    + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ 変動金利の「5年ルール・125%ルール」により急激な返済増は一時的に抑制されますが、未払い利息として積み上がります。金利3%台も想定した余裕資金の確保を。</p>'
+    + '<button onclick="shareLine(\'変動金利が1%上がるだけで月返済が' + d1.toFixed(1) + '万円増！3%上昇なら月' + d3.toFixed(1) + '万円増になる。金利リスクを確認https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcInterestRateRisk(); })();
 
 function calcSurveyFee() {
   var price = parseFloat(document.getElementById('sf_price').value) || 0;

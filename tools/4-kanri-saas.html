@@ -4567,6 +4567,25 @@
     </div>
   </div>
 
+  <!-- R44: calcDepositRefund -->
+  <div class="card" id="card-calcDepositRefund" data-category="退去精算">
+    <div class="card-header"><span class="card-icon">💰</span><h3 class="card-title">敷金・保証金の返還額 — 原状回復費用を引いたら手元にいくら戻る？</h3></div>
+    <div class="card-body">
+      <p class="card-desc">退去時の敷金・保証金から原状回復費用を差し引いた「返還額」を試算します。「敷金を返してもらえなかった」トラブルを防ぐための基礎知識に。</p>
+      <label style="font-size:12px;color:var(--text-muted)">預けた敷金・保証金（万円）（例: 16万円 = 月額8万×2か月）</label>
+      <input type="number" id="dr_deposit" value="16" min="0" max="500" oninput="calcDepositRefund()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">居住年数（年）（例: 3年）</label>
+      <input type="number" id="dr_years" value="3" min="1" max="30" oninput="calcDepositRefund()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">居室の状態</label>
+      <select id="dr_cond" onchange="calcDepositRefund()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="good">きれい（特に損傷なし）</option>
+        <option value="normal" selected>普通（軽微な傷・汚れあり）</option>
+        <option value="bad">傷・汚れが多い</option>
+      </select>
+      <div id="dr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -15557,6 +15576,37 @@ function calcWaterPipeSurvey() {
     + '<button onclick="shareLine(\'築' + age + '年の賃貸物件の給排水管交換費用は合計' + totalCost + '万円！今から年' + annualReserve + '万円ずつ積み立てないと一括負担になる😰 修繕費シミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcWaterPipeSurvey(); })();
+
+function calcDepositRefund() {
+  var deposit = parseFloat(document.getElementById('dr_deposit').value) || 0;
+  var years = parseInt(document.getElementById('dr_years').value) || 1;
+  var cond = document.getElementById('dr_cond').value;
+  var el = document.getElementById('dr_result');
+  if (!el) return;
+  if (deposit <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">敷金・保証金を入力してください</p>'; return; }
+  // 入居者負担割合（経年劣化を差し引く）
+  var condRate = cond === 'good' ? 0.05 : cond === 'normal' ? 0.20 : 0.40;
+  var ageDiscount = Math.min(0.6, years * 0.05); // 経年劣化割引（5年で25%の損耗を自然消耗とみなす）
+  var actualBurden = condRate * (1 - ageDiscount);
+  var deduction = deposit * actualBurden;
+  var refund = deposit - deduction;
+  var refundPct = (refund / deposit * 100).toFixed(0);
+  var heroColor = refund >= deposit * 0.8 ? '22,163,74' : refund >= deposit * 0.5 ? '201,168,76' : '220,38,38';
+  try { sbLogCardUsage(4, 'card-calcDepositRefund', 'calc', '返還見込み' + refund.toFixed(1) + '万円'); } catch(e) {}
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">敷金返還見込み額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroColor + ');line-height:1">' + refund.toFixed(1) + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">預け金の約' + refundPct + '%が返還見込み（居住' + years + '年・' + (cond==='good'?'きれい':cond==='normal'?'普通':'傷多め') + '）</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr><td style="padding:7px 10px">預け入れ敷金</td><td style="padding:7px 10px;text-align:right">' + deposit + ' 万円</td></tr>'
+    + '<tr style="background:#fafafa"><td style="padding:7px 10px">原状回復費用（入居者負担分）</td><td style="padding:7px 10px;text-align:right;color:#dc2626">−' + deduction.toFixed(1) + ' 万円</td></tr>'
+    + '<tr style="font-weight:800"><td style="padding:7px 10px">返還見込み額</td><td style="padding:7px 10px;text-align:right;color:rgb(' + heroColor + ')">' + refund.toFixed(1) + ' 万円</td></tr>'
+    + '</table>'
+    + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ ガイドラインでは「通常の生活で生じる汚れ・傷」は入居者負担外です。請求書に疑問があれば「国土交通省 原状回復ガイドライン」を確認しましょう。</p>'
+    + '<button onclick="shareLine(\'敷金' + deposit + '万円、退去時に返ってくるのは約' + refund.toFixed(1) + '万円の見込み！原状回復のルールを知らないと損します不動産かんたんツールhttps://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcDepositRefund(); })();
 
 function calcCondoMaintenance() {
   var mgmt = parseFloat(document.getElementById('cm_mgmt').value) || 0;

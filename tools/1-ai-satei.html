@@ -4614,6 +4614,23 @@
     </div>
   </div>
 
+  <!-- R44: calcRetirementSell -->
+  <div class="card" id="card-calcRetirementSell" data-category="資産計画">
+    <div class="card-header"><span class="card-icon">👴</span><h3 class="card-title">老後資金のために家を売ったらいくら残る？住み替え後の月々の生活費は？</h3></div>
+    <div class="card-body">
+      <p class="card-desc">老後に自宅を売却して賃貸または小さな家に住み替えた場合、手元に残る資金と月々の生活費の変化をシミュレーションします。「家を売って老後の安心を作る」判断に。</p>
+      <label style="font-size:12px;color:var(--text-muted)">現在の家の売却価格（万円）（例: 3000万円）</label>
+      <input type="number" id="rs_price" value="3000" min="100" max="50000" oninput="calcRetirementSell()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">ローン残高（万円）（完済の場合は0）</label>
+      <input type="number" id="rs_loan" value="500" min="0" max="50000" oninput="calcRetirementSell()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">住み替え先の月額家賃または管理費（万円）（例: 7万円）</label>
+      <input type="number" id="rs_new_rent" value="7" min="0" max="50" step="0.5" oninput="calcRetirementSell()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">現在の月々の住宅コスト（ローン+税+修繕費）（万円）（例: 10万円）</label>
+      <input type="number" id="rs_cur_cost" value="10" min="0" max="50" step="0.5" oninput="calcRetirementSell()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="rs_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -13196,6 +13213,38 @@ function calcSaleClosingFee() {
     + '<button onclick="shareLine(\'売却価格' + price.toLocaleString() + '万円でも手取りは' + net.toLocaleString() + '万円！仲介手数料+税金+ローン返済で大きく減る。全費用を計算してみた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcSaleClosingFee(); })();
+
+function calcRetirementSell() {
+  var price = parseFloat(document.getElementById('rs_price').value) || 0;
+  var loan = parseFloat(document.getElementById('rs_loan').value) || 0;
+  var newRent = parseFloat(document.getElementById('rs_new_rent').value) || 0;
+  var curCost = parseFloat(document.getElementById('rs_cur_cost').value) || 0;
+  var el = document.getElementById('rs_result');
+  if (!el) return;
+  if (price <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">売却価格を入力してください</p>'; return; }
+  var selling = price * 0.04; // 仲介手数料+諸費用概算4%
+  var net = price - loan - selling;
+  var monthlySave = curCost - newRent;
+  var annualSave = monthlySave * 12;
+  var net20yrs = net + annualSave * 20;
+  var heroColor = net > 0 ? '22,163,74' : '220,38,38';
+  try { sbLogCardUsage(1, 'card-calcRetirementSell', 'calc', '売却手取り' + net.toFixed(0) + '万円'); } catch(e) {}
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">売却後の手取り資金</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroColor + ');line-height:1">' + net.toFixed(0) + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">月々の住宅コスト差: ' + (monthlySave >= 0 ? '月' + monthlySave.toFixed(1) + '万円の節約' : '月' + Math.abs(monthlySave).toFixed(1) + '万円増加') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr><td style="padding:7px 10px">売却価格</td><td style="padding:7px 10px;text-align:right">' + price + ' 万円</td></tr>'
+    + '<tr style="background:#fafafa"><td style="padding:7px 10px">仲介手数料・諸費用（4%）</td><td style="padding:7px 10px;text-align:right;color:#dc2626">−' + selling.toFixed(0) + ' 万円</td></tr>'
+    + (loan > 0 ? '<tr><td style="padding:7px 10px">ローン返済</td><td style="padding:7px 10px;text-align:right;color:#dc2626">−' + loan + ' 万円</td></tr>' : '')
+    + '<tr style="background:#f0fdf4;font-weight:800"><td style="padding:7px 10px">手取り資金</td><td style="padding:7px 10px;text-align:right;color:rgb(' + heroColor + ')">' + net.toFixed(0) + ' 万円</td></tr>'
+    + '<tr><td style="padding:7px 10px">20年間の住居費節約/増加</td><td style="padding:7px 10px;text-align:right;font-weight:700">' + annualSave.toFixed(0) + ' 万円/年</td></tr>'
+    + '<tr style="background:#f0fdf4"><td style="padding:7px 10px">20年後の実質総資産（目安）</td><td style="padding:7px 10px;text-align:right;font-weight:700">' + net20yrs.toFixed(0) + ' 万円</td></tr>'
+    + '</table>'
+    + '<button onclick="shareLine(\'老後のために家を売ったら手取り' + net.toFixed(0) + '万円！さらに月々の住居費が' + Math.abs(monthlySave).toFixed(1) + '万円' + (monthlySave >= 0 ? '節約' : '増加') + 'になる。老後の住み替えを試算https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcRetirementSell(); })();
 
 function calcDemolitionCost() {
   var tsubo = parseFloat(document.getElementById('dc_tsubo').value) || 0;

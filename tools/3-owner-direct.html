@@ -4087,6 +4087,21 @@
     </div>
   </div>
 
+  <!-- R44: calcMoveCostCompare -->
+  <div class="card" id="card-calcMoveCostCompare" data-category="費用">
+    <div class="card-header"><span class="card-icon">🔄</span><h3 class="card-title">住み替え「先に買う」vs「先に売る」— 費用とリスクの比較</h3></div>
+    <div class="card-body">
+      <p class="card-desc">住み替えのとき「今の家を売ってから新居を買う」か「先に新居を買ってから売る」か、費用・つなぎ融資・リスクを比較して最適な選択肢を確認します。</p>
+      <label style="font-size:12px;color:var(--text-muted)">現在の家の売却価格（万円）（例: 3000万円）</label>
+      <input type="number" id="mcc_sell" value="3000" min="100" max="50000" oninput="calcMoveCostCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">新居の購入価格（万円）（例: 3500万円）</label>
+      <input type="number" id="mcc_buy" value="3500" min="100" max="100000" oninput="calcMoveCostCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">売却まで想定期間（か月）（例: 4か月）</label>
+      <input type="number" id="mcc_months" value="4" min="1" max="24" oninput="calcMoveCostCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="mcc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -13189,6 +13204,43 @@ function calcEscrowFlow() {
     + '<button onclick="shareLine(\'不動産' + (side === 'buyer' ? '購入' : '売却') + price.toLocaleString() + '万円で必要な総費用は' + totalCost + '万円！いつ・いくら必要か全ステップを確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcEscrowFlow(); })();
+
+function calcMoveCostCompare() {
+  var sell = parseFloat(document.getElementById('mcc_sell').value) || 0;
+  var buy = parseFloat(document.getElementById('mcc_buy').value) || 0;
+  var months = parseFloat(document.getElementById('mcc_months').value) || 4;
+  var el = document.getElementById('mcc_result');
+  if (!el) return;
+  if (sell <= 0 || buy <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">売却価格と購入価格を入力してください</p>'; return; }
+  // 先に売る場合: 賃貸仮住まい費用
+  var tempRent = 8; // 仮住まい月8万円想定
+  var tempTotal = tempRent * months;
+  var sellFirst = tempTotal + 10; // 引越し2回分
+  // 先に買う場合: つなぎ融資金利コスト（3.5%）+ 2重ローン期間
+  var bridgeLoan = sell * 0.035 / 12 * months;
+  var buyFirst = bridgeLoan + 5; // 引越し1回分
+  var diff = sellFirst - buyFirst;
+  var heroColor = '59,130,246';
+  try { sbLogCardUsage(3, 'card-calcMoveCostCompare', 'calc', diff > 0 ? '先に買う方が' + diff.toFixed(0) + '万円安い' : '先に売る方が' + Math.abs(diff).toFixed(0) + '万円安い'); } catch(e) {}
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">' + (diff > 0 ? '先に買う方が安い差額' : '先に売る方が安い差額') + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroColor + ');line-height:1">' + Math.abs(diff).toFixed(0) + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">' + (diff > 0 ? '先に買う方がお得（費用面）' : '先に売る方がお得（費用面）') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr><th style="padding:7px 10px;text-align:left;background:#f0f4f8" colspan="2">先に売る方法</th></tr>'
+    + '<tr><td style="padding:6px 10px">仮住まい・賃貸費用（' + months + 'か月）</td><td style="padding:6px 10px;text-align:right">' + (tempRent * months).toFixed(0) + ' 万円</td></tr>'
+    + '<tr style="background:#fafafa"><td style="padding:6px 10px">引越し2回分</td><td style="padding:6px 10px;text-align:right">10 万円</td></tr>'
+    + '<tr style="font-weight:700"><td style="padding:6px 10px">合計</td><td style="padding:6px 10px;text-align:right">' + sellFirst.toFixed(0) + ' 万円</td></tr>'
+    + '<tr><th style="padding:7px 10px;text-align:left;background:#f0f4f8" colspan="2">先に買う方法</th></tr>'
+    + '<tr><td style="padding:6px 10px">つなぎ融資金利（年3.5%・' + months + 'か月）</td><td style="padding:6px 10px;text-align:right">' + bridgeLoan.toFixed(0) + ' 万円</td></tr>'
+    + '<tr style="background:#fafafa"><td style="padding:6px 10px">引越し1回分</td><td style="padding:6px 10px;text-align:right">5 万円</td></tr>'
+    + '<tr style="font-weight:700"><td style="padding:6px 10px">合計</td><td style="padding:6px 10px;text-align:right">' + buyFirst.toFixed(0) + ' 万円</td></tr>'
+    + '</table>'
+    + '<div style="margin-top:10px;padding:10px;background:#fffbeb;border-radius:8px;font-size:11px;color:#78350f;line-height:1.7">⚠️ 費用だけでなく「売れない場合のリスク」も重要です。先に買う方は2重ローン・売り急ぎリスクがあります。</div>'
+    + '<button onclick="shareLine(\'住み替えの順番で費用が' + Math.abs(diff).toFixed(0) + '万円も変わる！「先に売る」か「先に買う」の判断を試算しました。不動産かんたんツールhttps://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcMoveCostCompare(); })();
 
 function calcMortgageInsurance() {
   var balance = parseFloat(document.getElementById('mi_balance').value) || 0;
