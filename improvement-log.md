@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-21 Round 42（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html, llms.txt
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 42）
+- **改善内容**:
+  - Tool1: `calcOwnerOccupied` — 3,000万円特別控除 要件チェック＋節税額試算
+  - Tool2: `calcAkiyaParking` — 空き地・庭を月極駐車場にした場合の収益試算
+  - Tool3: `calcJointNameTransfer` — 共有名義→単独名義 変更コスト（贈与税・登録免許税・司法書士費）
+  - Tool4: `calcSubleaseRisk` — サブリース保証家賃下落リスク10年累計損失試算（年次テーブル付き）
+  - Tool5: `calcBreakEvenRent` — 損益分岐家賃（ローン・管理費・修繕費をカバーする最低家賃）
+  - llms.txt: 702→707枚に更新
+- **理由**: 「知らないと損する制度・リスク」系のPLGカード。特にTool4のサブリースリスクは「保証と思っていたのに10年で○万円損」という驚きを生む設計
+
 ## 2026-05-21 Round 41（セッション継続）
 
 - **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html, llms.txt
