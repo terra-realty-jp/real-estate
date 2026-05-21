@@ -4367,3 +4367,16 @@
   - Tool5: calcBuildingAgeYield — 築年数・構造・エリアから適正利回り目標を4段階判定
 - **理由**: 「値下げすべき?」「空き地で稼ぐ方法」「隣を買う価値は?」「管理費高すぎ?」「この利回り高い低い?」は実際の決断に直結するPLG高テーマ
 - **カード総数**: 692枚
+
+## 2026-05-21 Round 40（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 40）
+- **改善内容**:
+  - Tool1: calcSaleClosingFee — 売却手取り全費用一括試算（ローン・手数料・税金・3000万控除対応）
+  - Tool2: calcAkiyaSubsidy — 空き家解体・改修の補助金受給可能額（国＋自治体補助率）
+  - Tool3: calcEscrowFlow — 売買取引フロー（契約→決済）のステップ別費用・タイミング一覧
+  - Tool4: calcWaterPipeSurvey — 給排水管の老朽化リスク・交換費用・緊急度・積立目標額
+  - Tool5: calcCashOnCash — 頭金パターン別のCoC自己資金利回り比較（レバレッジ効果の可視化）
+- **理由**: 「手取りはいくら？」「補助金もらえる？」「手続きのお金がいつ必要？」「配管が心配」「頭金はいくら入れるべき？」は実際の決断の前に知りたい情報でPLG効果高
+- **カード総数**: 697枚
