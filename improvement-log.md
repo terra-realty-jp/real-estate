@@ -4246,3 +4246,16 @@
   - Tool5: calcNPVCheck — NPV（正味現在価値）で投資物件が割安か割高かを判定
 - **理由**: 「接道リスク」「DIYリフォームROI」「NPV」など、プロ知識を一般人にわかりやすく提供するカードはPLG効果が高い
 - **カード総数**: 642枚
+
+## 2026-05-21 Round 31（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 31）
+- **改善内容**:
+  - Tool1: calcResidualEquity — 残ローン・仲介手数料・諸費用全額引きの売却後手取り額試算
+  - Tool2: calcAkiyaArtStudio — アトリエ・ダンス・音楽スタジオ転用の月次収益・回収期間試算
+  - Tool3: calcOldSeismicRisk — 旧耐震（1981年以前）物件の売却価格影響と耐震改修費比較
+  - Tool4: calcSmartLockROI — スマートロック・オートロック導入費用vs入居率向上・空室短縮効果
+  - Tool5: calcRequiredYield — 金利・諸費用・空室率から「最低限必要な利回り」逆算
+- **理由**: 「売ったら実際いくら残る？」「旧耐震の影響は？」「必要な利回りは何%?」は検討者が必ず知りたい重要情報
+- **カード総数**: 647枚
