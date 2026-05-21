@@ -4120,6 +4120,29 @@
     </div>
   </div>
 
+  <!-- 値下げ履歴が買主に与える印象スコア（calcPriceHistoryScore） -->
+  <div class="card" id="card-calcPriceHistoryScore" data-category="交渉・成約" data-title="値下げ履歴が買主に与える印象スコア——次の価格戦略を立てる" data-tags="値下げ 売れない 印象 スコア 交渉 価格戦略" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">値下げ履歴が買主に与える印象スコア——次の価格戦略を立てる</div>
+        <div class="card-desc">「なぜこの物件は売れないのか」と思われると成約率が下がります。値下げ回数と下げ幅から、買主目線の印象を数値化します</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(147,197,253,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">値下げは「売れていない証拠」とも受け取られます。何度も値下げするほど「何か問題があるのでは」と疑われやすくなります。このカードで現在の状態を客観的に評価しましょう。</div>
+      <label style="font-size:12px;color:var(--text-muted)">当初売り出し価格（万円 例: 3500）</label>
+      <input id="phs_orig" type="number" value="3500" min="500" max="50000" oninput="calcPriceHistoryScore()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">現在の価格（万円 例: 3100）</label>
+      <input id="phs_now" type="number" value="3100" min="500" max="50000" oninput="calcPriceHistoryScore()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">売り出し期間（ヶ月 例: 5）</label>
+      <input id="phs_months" type="number" value="5" min="1" max="60" oninput="calcPriceHistoryScore()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">値下げ回数（回 例: 2）</label>
+      <input id="phs_count" type="number" value="2" min="0" max="20" oninput="calcPriceHistoryScore()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <div id="phs_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -13712,6 +13735,37 @@ calcFee();
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){attachTrackers();renderBar();});}
   else{attachTrackers();renderBar();}
 })();
+function calcPriceHistoryScore() {
+  var el = document.getElementById('phs_result'); if (!el) return;
+  var orig   = parseFloat(document.getElementById('phs_orig').value)   || 3500;
+  var now    = parseFloat(document.getElementById('phs_now').value)    || 3100;
+  var months = parseFloat(document.getElementById('phs_months').value) || 5;
+  var count  = parseFloat(document.getElementById('phs_count').value)  || 2;
+  var discRate = (orig - now) / orig * 100;
+  // Score: start 10, deduct for discount rate, months, count
+  var score = 10 - Math.min(3, discRate / 3) - Math.min(2, months / 4) - Math.min(3, count * 1.5);
+  score = Math.max(1, Math.min(10, score));
+  var scoreRound = Math.round(score * 10) / 10;
+  var hc = scoreRound >= 7 ? '22,163,74' : scoreRound >= 5 ? '251,146,60' : '248,113,113';
+  var label = scoreRound >= 7 ? '良好：買主に好印象を与えています' : scoreRound >= 5 ? '注意：少し警戒されている可能性' : '要対策：値下げ疲れが疑われています';
+  var nextPrice = now - (orig * 0.03);
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">買主目線 印象スコア</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1);line-height:1.1">'+scoreRound+'<span style="font-size:22px">/10点</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:4px">'+label+'</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:10px;padding:14px;font-size:13px;color:var(--text);line-height:1.8;margin-bottom:12px">';
+  html += '<strong>現状分析</strong><br>';
+  html += '値下げ幅: '+(orig-now)+'万円（当初比'+discRate.toFixed(1)+'%）／ 売り出し期間: '+months+'ヶ月 ／ 値下げ回数: '+count+'回<br>';
+  html += '次に値下げするなら: <strong>'+Math.round(nextPrice)+'万円</strong>（約'+Math.round(orig*0.03)+'万円 = 当初の3%程度）が心理的節目として効果的です';
+  html += '</div>';
+  var st = encodeURIComponent('🏠【売れない物件の買主印象スコア試算】\n'+orig+'万→'+now+'万（'+discRate.toFixed(1)+'%値下げ）\n'+months+'ヶ月売り出し中、値下げ'+count+'回\n→ 買主目線スコア: '+scoreRound+'/10点\n▶ 不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html')+'&text='+st+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;text-decoration:none">LINEでシェア</a></div>';
+  try { sbLogCardUsage(3,'card-calcPriceHistoryScore','calc','印象スコア'+scoreRound+'/10点'); } catch(e) {}
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcPriceHistoryScore(); })();
+
 // ===== 全ヒーローボックス 前回比バッジ自動注入（非TOP3カード対応） =====
 (function(){
   var PRE='hd3_';

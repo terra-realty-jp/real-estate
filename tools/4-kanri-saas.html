@@ -4604,6 +4604,29 @@
     </div>
   </div>
 
+  <!-- EV充電器設置の費用対効果・回収期間試算（calcEVChargerROI） -->
+  <div class="card" id="card-calcEVChargerROI" data-category="設備・修繕" data-title="EV充電器設置で家賃アップ・空室短縮——初期費用の回収期間と10年純利益" data-tags="EV 電気自動車 充電器 設備投資 家賃 空室 費用対効果" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">EV充電器設置で家賃アップ・空室短縮——初期費用の回収期間と10年純利益</div>
+        <div class="card-desc">電気自動車（EV）所有者が増えるなか、駐車場に充電器があると差別化に。設置費用と家賃収益増加を比べて費用対効果を確認します</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(147,197,253,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">EV充電器（200V普通充電）の設置費用は1基15〜40万円程度。家賃を月3,000〜5,000円アップできれば3〜8年で回収可能です。入居者の囲い込みや空室期間短縮の効果も期待できます。</div>
+      <label style="font-size:12px;color:var(--text-muted)">充電器設置費用（万円 目安: 20〜40万）</label>
+      <input id="ev_cost" type="number" value="25" min="5" max="200" oninput="calcEVChargerROI()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">月額家賃アップ見込み（円 目安: 3000〜5000円）</label>
+      <input id="ev_rentup" type="number" value="3000" min="0" max="50000" step="500" oninput="calcEVChargerROI()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">空室期間短縮の見込み（日 目安: 15〜30日）</label>
+      <input id="ev_vacancy" type="number" value="20" min="0" max="180" oninput="calcEVChargerROI()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">現在の月額家賃（万円 例: 8）</label>
+      <input id="ev_rent" type="number" value="8" min="1" max="100" oninput="calcEVChargerROI()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <div id="ev_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -16034,6 +16057,35 @@ initApp();
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){attachTrackers();renderBar();});}
   else{attachTrackers();renderBar();}
 })();
+function calcEVChargerROI() {
+  var el = document.getElementById('ev_result'); if (!el) return;
+  var cost    = parseFloat(document.getElementById('ev_cost').value)    || 25;
+  var rentup  = parseFloat(document.getElementById('ev_rentup').value)  || 3000;
+  var vacancy = parseFloat(document.getElementById('ev_vacancy').value) || 20;
+  var rent    = parseFloat(document.getElementById('ev_rent').value)    || 8;
+  var annualRentGain = rentup * 12 / 10000;
+  var annualVacancyGain = vacancy * rent / 30;
+  var annualTotal = annualRentGain + annualVacancyGain;
+  var breakEvenYears = annualTotal > 0 ? cost / annualTotal : 99;
+  var net10 = annualTotal * 10 - cost;
+  var hc = net10 > 0 ? '22,163,74' : '248,113,113';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">10年間の純利益</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1);line-height:1.1">'+(net10>=0?'+':'')+net10.toFixed(1)+'<span style="font-size:22px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:4px">初期費用回収まで約'+breakEvenYears.toFixed(1)+'年</div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  html += '<div style="background:rgba(22,163,74,0.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">家賃アップ収益（年）</div><div style="font-size:18px;font-weight:900;color:#16a34a">+'+annualRentGain.toFixed(1)+'万円</div></div>';
+  html += '<div style="background:rgba(59,130,246,0.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">空室短縮効果（年）</div><div style="font-size:18px;font-weight:900;color:#3b82f6">+'+annualVacancyGain.toFixed(1)+'万円</div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">💡 年間収益増加合計: '+annualTotal.toFixed(1)+'万円 ／ 設置費: '+cost+'万円 → 回収期間'+breakEvenYears.toFixed(1)+'年。10年保有なら純利益'+net10.toFixed(1)+'万円。2030年頃には新車の約3割がEVになるとの予測もあり、先行投資の価値があります。</div>';
+  var st = encodeURIComponent('🏠【EV充電器設置の費用対効果を試算！】\n設置費'+cost+'万円→年間収益+'+annualTotal.toFixed(1)+'万円\n回収期間'+breakEvenYears.toFixed(1)+'年、10年純利益'+net10.toFixed(1)+'万円\nEV時代の不動産差別化策として注目！\n▶ 不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html')+'&text='+st+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;text-decoration:none">LINEでシェア</a></div>';
+  try { sbLogCardUsage(4,'card-calcEVChargerROI','calc','10年純利益'+net10.toFixed(1)+'万円'); } catch(e) {}
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcEVChargerROI(); })();
+
 // ===== 全ヒーローボックス 前回比バッジ自動注入（非TOP3カード対応） =====
 (function(){
   var PRE='hd4_';

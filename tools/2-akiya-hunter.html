@@ -3485,6 +3485,29 @@
     </div>
   </div>
 
+  <!-- 空き家をスペース貸し（撮影スタジオ等）で時間貸し月収試算（calcAkiyaEventSpace） -->
+  <div class="card" id="card-calcAkiyaEventSpace" data-category="活用プラン" data-title="空き家を「撮影スタジオ・イベントスペース」で時間貸しした月収試算" data-tags="空き家 撮影スタジオ イベントスペース 時間貸し 収益 スペース貸し" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">空き家を「撮影スタジオ・イベントスペース」で時間貸しした月収試算</div>
+        <div class="card-desc">改修不要で始めやすい！1日単位で貸し出す「スペース貸し」の月収・年収・初期改修費の回収期間を計算します</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(251,146,60,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">SNS時代に急増する撮影スタジオ・ポップアップショップ・ワークショップスペース需要。空き家を清潔にするだけで月数万円の収入になるケースも。1日の貸出料金と稼働日数を入力してください。</div>
+      <label style="font-size:12px;color:var(--text-muted)">物件面積（㎡ 例: 50）</label>
+      <input id="aes_area" type="number" value="50" min="10" max="500" oninput="calcAkiyaEventSpace()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">1日あたりの貸出料金（万円 目安: 都市3〜8万・郊外1〜3万）</label>
+      <input id="aes_dayrate" type="number" value="3" min="0.5" max="30" step="0.5" oninput="calcAkiyaEventSpace()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">月間稼働日数（日 例: 週末のみ=8日）</label>
+      <input id="aes_days" type="number" value="8" min="1" max="31" oninput="calcAkiyaEventSpace()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">初期改修・清掃費用（万円 最低限の清掃のみなら10万程度）</label>
+      <input id="aes_reno" type="number" value="30" min="0" max="500" oninput="calcAkiyaEventSpace()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <div id="aes_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -13459,6 +13482,34 @@ renderPipeline();
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){attachTrackers();renderBar();});}
   else{attachTrackers();renderBar();}
 })();
+function calcAkiyaEventSpace() {
+  var el = document.getElementById('aes_result'); if (!el) return;
+  var area    = parseFloat(document.getElementById('aes_area').value)    || 50;
+  var dayrate = parseFloat(document.getElementById('aes_dayrate').value) || 3;
+  var days    = parseFloat(document.getElementById('aes_days').value)    || 8;
+  var reno    = parseFloat(document.getElementById('aes_reno').value)    || 30;
+  var monthly = dayrate * days;
+  var annual  = monthly * 12;
+  var breakEven = reno > 0 ? (reno / monthly) : 0;
+  var hc = '251,146,60';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">スペース貸し月収（週末のみ'+days+'日稼働）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1);line-height:1.1">'+monthly.toFixed(1)+'<span style="font-size:22px">万円/月</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:4px">年間収益 約'+annual.toFixed(0)+'万円 ／ 初期費用回収 約'+breakEven.toFixed(1)+'ヶ月</div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+  html += '<div style="background:rgba(251,146,60,0.06);border-radius:10px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted)">月収</div><div style="font-size:18px;font-weight:900;color:rgba(251,146,60,1)">'+monthly.toFixed(1)+'万円</div></div>';
+  html += '<div style="background:rgba(22,163,74,0.06);border-radius:10px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted)">年収</div><div style="font-size:18px;font-weight:900;color:#16a34a">'+annual.toFixed(0)+'万円</div></div>';
+  html += '<div style="background:rgba(59,130,246,0.06);border-radius:10px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text-muted)">回収期間</div><div style="font-size:18px;font-weight:900;color:#3b82f6">'+(reno>0?breakEven.toFixed(1)+'ヶ月':'すぐ')+'</div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">💡 通常賃貸より単価が高く、空室期間でも利用可能。掲載は「スペースマーケット」「インスタベース」等で無料で始められます。実際の収入は立地・物件の状態・集客力で大きく変わります。</div>';
+  var st = encodeURIComponent('🏠【空き家が撮影スタジオに！】\n1日'+dayrate+'万円×月'+days+'日=月収'+monthly.toFixed(1)+'万円\n初期費用'+reno+'万円→'+breakEven.toFixed(1)+'ヶ月で回収\n空き家の意外な活用法を試算してみた！\n▶ 不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html')+'&text='+st+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;text-decoration:none">LINEでシェア</a></div>';
+  try { sbLogCardUsage(2,'card-calcAkiyaEventSpace','calc','月収'+monthly.toFixed(1)+'万円'); } catch(e) {}
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcAkiyaEventSpace(); })();
+
 // ===== 全ヒーローボックス 前回比バッジ自動注入（非TOP3カード対応） =====
 (function(){
   var PRE='hd2_';

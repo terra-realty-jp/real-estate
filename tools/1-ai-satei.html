@@ -4649,6 +4649,27 @@
     </div>
   </div>
 
+  <!-- 値引き交渉の損益分岐（calcNegotiationMargin） -->
+  <div class="card" id="card-calcNegotiationMargin" data-category="売却判断" data-title="値引き交渉「どこまで下げるか」の損得を数字で確認する" data-tags="値引き 交渉 保有コスト 損得 売却" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">値引き交渉「どこまで下げるか」の損得を数字で確認する</div>
+        <div class="card-desc">買主から「200万円値引きして」と言われたら？ 値引き額と毎月の保有コストを比べて、応じるべきか待つべきかを判断できます</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(201,168,76,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">値引き要求の金額と、売れなかった場合に毎月かかる保有コスト（ローン返済・固定資産税・管理費）を入力すると、「何ヶ月待つと値引き分と同じ損になるか」が分かります。</div>
+      <label style="font-size:12px;color:var(--text-muted)">売り出し価格（万円 例: 3000）</label>
+      <input id="nm_price" type="number" value="3000" min="500" max="50000" oninput="calcNegotiationMargin()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">買主からの値引き要求額（万円 例: 200）</label>
+      <input id="nm_disc" type="number" value="200" min="10" max="3000" oninput="calcNegotiationMargin()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">月間保有コスト合計（ローン+固定資産税+管理費 万円/月 例: 12）</label>
+      <input id="nm_cost" type="number" value="12" min="1" max="100" oninput="calcNegotiationMargin()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <div id="nm_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -14634,6 +14655,34 @@ function calcDivisionSale() {
 (function(){ calcDivisionSale(); })();
 
 
+
+function calcNegotiationMargin() {
+  var el = document.getElementById('nm_result'); if (!el) return;
+  var price = parseFloat(document.getElementById('nm_price').value) || 3000;
+  var disc  = parseFloat(document.getElementById('nm_disc').value)  || 200;
+  var cost  = parseFloat(document.getElementById('nm_cost').value)  || 12;
+  if (!disc || !cost) { el.style.display='none'; el.innerHTML=''; return; }
+  var be = disc / cost;
+  var hc = be <= 3 ? '248,113,113' : be <= 6 ? '251,146,60' : '22,163,74';
+  var advice = be <= 3 ? '値引きに応じた方が得！ ' + be.toFixed(1) + 'ヶ月で保有コストが値引き額に並びます' :
+               be <= 6 ? '状況次第。' + be.toFixed(1) + 'ヶ月以内に売れるか見極めどころです' :
+               '強気で交渉を！ ' + Math.ceil(be) + 'ヶ月売れなくて初めて値引き分と同じ損になります';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">値引き vs 待つ 損益分岐</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1);line-height:1.1">'+be.toFixed(1)+'<span style="font-size:22px">ヶ月</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:4px">'+be.toFixed(1)+'ヶ月売れないと、値引きした方が得になります</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:10px;padding:14px;font-size:13px;color:var(--text);line-height:1.8;margin-bottom:12px">💡 <strong>'+advice+'</strong></div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  html += '<div style="background:rgba(248,113,113,0.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">今すぐ値引きした場合</div><div style="font-size:20px;font-weight:900;color:#ef4444">▲'+disc+'万円</div><div style="font-size:10px;color:var(--text-muted)">確定損失</div></div>';
+  html += '<div style="background:rgba(59,130,246,0.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">3ヶ月待ち続けると…</div><div style="font-size:20px;font-weight:900;color:#3b82f6">▲'+(cost*3).toFixed(0)+'万円</div><div style="font-size:10px;color:var(--text-muted)">保有コスト累積</div></div>';
+  html += '</div>';
+  var st = encodeURIComponent('🏠【値引き交渉どこまで下げる？】\n売り出し価格'+price+'万円、値引き要求'+disc+'万円\n月間保有コスト'+cost+'万円\n→ '+be.toFixed(1)+'ヶ月売れないと値引きした方が得！\n▶ あなたも試してみて\n不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html')+'&text='+st+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;text-decoration:none">LINEでシェア</a></div>';
+  try { sbLogCardUsage(1,'card-calcNegotiationMargin','calc','損益分岐'+be.toFixed(1)+'ヶ月'); } catch(e) {}
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcNegotiationMargin(); })();
 
 // ===== 全ヒーローボックス 前回比バッジ自動注入（非TOP3カード対応） =====
 (function(){

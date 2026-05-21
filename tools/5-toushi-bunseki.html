@@ -4363,6 +4363,31 @@
     </div>
   </div>
 
+  <!-- インフレ下の不動産vs金融資産10年比較（calcInflationHedge） -->
+  <div class="card" id="card-calcInflationHedge" data-category="投資戦略" data-title="インフレが続いた場合の不動産 vs 金融資産——10年後の実質資産価値比較" data-tags="インフレ 物価上昇 不動産 金融資産 株式 資産価値 比較" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div>
+        <div class="card-title">インフレが続いた場合の不動産 vs 金融資産——10年後の実質資産価値比較</div>
+        <div class="card-desc">物価が上がると不動産の実質価値は高まります。株・投資信託と比べて、インフレが続いた場合の10年後の差を計算します</div>
+      </div>
+      <span class="card-arrow">▼</span>
+    </div>
+    <div class="card-body">
+      <div style="background:rgba(201,168,76,0.08);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-muted);line-height:1.6">2024〜2025年にかけて日本の物価は上昇しています。インフレ下では「現金・預金」の実質価値は下がり、不動産など実物資産が有利になりやすいと言われます。あなたの資産状況で比較してみましょう。</div>
+      <label style="font-size:12px;color:var(--text-muted)">保有不動産の現在価値（万円 例: 3000）</label>
+      <input id="ih_prop" type="number" value="3000" min="500" max="100000" oninput="calcInflationHedge()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">ローン残高（万円 完済なら0）</label>
+      <input id="ih_loan" type="number" value="1500" min="0" max="100000" oninput="calcInflationHedge()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">想定インフレ率（%/年 目安: 2〜3%）</label>
+      <input id="ih_inf" type="number" value="2" min="0.5" max="10" step="0.5" oninput="calcInflationHedge()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">金融資産額（株・投資信託等 万円 例: 500）</label>
+      <input id="ih_fin" type="number" value="500" min="0" max="100000" oninput="calcInflationHedge()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text-muted)">金融資産の期待利回り（%/年 目安: NISA全世界株7%程度）</label>
+      <input id="ih_ret" type="number" value="5" min="0" max="20" step="0.5" oninput="calcInflationHedge()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:10px">
+      <div id="ih_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -16169,6 +16194,41 @@ renderReitCompare();
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){attachTrackers();renderBar();});}
   else{attachTrackers();renderBar();}
 })();
+function calcInflationHedge() {
+  var el = document.getElementById('ih_result'); if (!el) return;
+  var prop = parseFloat(document.getElementById('ih_prop').value) || 3000;
+  var loan = parseFloat(document.getElementById('ih_loan').value) || 1500;
+  var inf  = parseFloat(document.getElementById('ih_inf').value)  || 2;
+  var fin  = parseFloat(document.getElementById('ih_fin').value)  || 500;
+  var ret  = parseFloat(document.getElementById('ih_ret').value)  || 5;
+  // 10年後不動産価値（インフレで名目上昇）
+  var prop10 = prop * Math.pow(1 + inf/100, 10);
+  // ローン残高は名目固定（インフレで実質軽くなる）
+  var equity10 = prop10 - loan;
+  // 10年後金融資産
+  var fin10 = fin * Math.pow(1 + ret/100, 10);
+  var totalProp = equity10;
+  var totalFin  = fin10;
+  var diff = totalProp - totalFin;
+  var hc = diff > 0 ? '22,163,74' : '59,130,246';
+  var label = diff > 0 ? '不動産が有利' : '金融資産が有利';
+  var html = '<div style="background:linear-gradient(135deg,rgba('+hc+',0.12),rgba('+hc+',0.04));border:2px solid rgba('+hc+',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">10年後の差額（'+label+'）</div>';
+  html += '<div style="font-size:52px;font-weight:900;color:rgba('+hc+',1);line-height:1.1">'+(diff>=0?'+':'')+Math.round(diff)+'<span style="font-size:22px">万円</span></div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:4px">インフレ率'+inf+'%/年の場合、'+label+' '+Math.abs(Math.round(diff))+'万円</div>';
+  html += '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  html += '<div style="background:rgba(201,168,76,0.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">10年後 不動産純資産</div><div style="font-size:18px;font-weight:900;color:#c9a84c">'+Math.round(equity10)+'万円</div><div style="font-size:10px;color:var(--text-muted)">（物件'+Math.round(prop10)+'万 - ローン'+loan+'万）</div></div>';
+  html += '<div style="background:rgba(59,130,246,0.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--text-muted)">10年後 金融資産</div><div style="font-size:18px;font-weight:900;color:#3b82f6">'+Math.round(fin10)+'万円</div><div style="font-size:10px;color:var(--text-muted)">（利回り'+ret+'%/年複利）</div></div>';
+  html += '</div>';
+  html += '<div style="background:rgba(128,128,128,0.05);border-radius:8px;padding:10px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:10px">💡 インフレは「ローンの実質負担を軽くする」効果もあります。不動産は家賃収入も期待でき、また両方を組み合わせた資産配分が一般的にはリスク分散になります。これはシミュレーションであり投資助言ではありません。</div>';
+  var st = encodeURIComponent('🏠【インフレ下での不動産vs金融資産を比較！】\n物件'+prop+'万・インフレ'+inf+'%/年想定\n10年後: 不動産'+Math.round(equity10)+'万円 vs 金融資産'+Math.round(fin10)+'万円\n→ '+label+' '+Math.abs(Math.round(diff))+'万円の差！\n▶ 不動産かんたんツール（TERRA REALTY）');
+  html += '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html')+'&text='+st+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;text-decoration:none">LINEでシェア</a></div>';
+  try { sbLogCardUsage(5,'card-calcInflationHedge','calc',label+Math.abs(Math.round(diff))+'万円'); } catch(e) {}
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcInflationHedge(); })();
+
 // ===== 全ヒーローボックス 前回比バッジ自動注入（非TOP3カード対応） =====
 (function(){
   var PRE='hd5_';
