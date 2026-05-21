@@ -4259,3 +4259,16 @@
   - Tool5: calcRequiredYield — 金利・諸費用・空室率から「最低限必要な利回り」逆算
 - **理由**: 「売ったら実際いくら残る？」「旧耐震の影響は？」「必要な利回りは何%?」は検討者が必ず知りたい重要情報
 - **カード総数**: 647枚
+
+## 2026-05-21 Round 32（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 32）
+- **改善内容**:
+  - Tool1: calcDisasterZoneDiscount — ハザードマップ指定（浸水/土砂/津波）の売却価格影響試算（最大20%割引）
+  - Tool2: calcAkiyaGuestHouse — 外国人観光客向けゲストハウス（1棟貸し）の月次収益試算
+  - Tool3: calcSellerConcession — 売主が修繕費・引越費用を負担した場合の早期成約・保有コスト節減効果
+  - Tool4: calcBicycleParking — 駐輪場ラック整備費用vs空室短縮による家賃損失回避の費用回収期間試算
+  - Tool5: calcFlipProfit — 中古物件購入→リフォーム→転売のフリップ投資 税引後利益・年率ROI試算
+- **理由**: 「ハザードマップの影響」「ゲストハウス収益」「買主へのサービス」「駐輪場整備」「フリップ投資」は具体的で共有したくなるPLG効果が高いカード
+- **カード総数**: 652枚（llms.txtは Rounds 31-32合算で657枚に更新）
