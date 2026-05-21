@@ -4354,3 +4354,16 @@
   - Tool5: calcScaleUpROI — 1棟→2棟→3棟規模拡大時の年間CF・資産規模シミュレーション
 - **理由**: 「相続税がいくらかかる？」「空き家で倉庫ビジネス？」「ローン審査通る？」「ペット可は得？」「何棟持てばFIRE？」は検索頻度の高いPLG訴求テーマ
 - **カード総数**: 687枚
+
+## 2026-05-21 Round 39（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 39）
+- **改善内容**:
+  - Tool1: calcPriceDropTimeValue — 値下げ額vs保有コストの損益分岐（何ヶ月待てるか）
+  - Tool2: calcAkiyaCampSite — 空き家の庭をソロキャンプ場に転用する月次収益・回収期間
+  - Tool3: calcNeighborPurchase — 隣地購入による資産価値増加と購入コストの純損益
+  - Tool4: calcManagementFeeAudit — 管理委託費の相場比較・10年節約額
+  - Tool5: calcBuildingAgeYield — 築年数・構造・エリアから適正利回り目標を4段階判定
+- **理由**: 「値下げすべき?」「空き地で稼ぐ方法」「隣を買う価値は?」「管理費高すぎ?」「この利回り高い低い?」は実際の決断に直結するPLG高テーマ
+- **カード総数**: 692枚
