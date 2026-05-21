@@ -4385,6 +4385,25 @@
     </div>
   </div>
 
+  <div class="card" data-category="家賃管理" id="card-calcOccupancyOptimize">
+    <div class="card-header" onclick="toggleCard('calcOccupancyOptimize')">
+      <span>家賃を値上げ・値下げした場合の年間収益はどう変わる？ 入居率との損得比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcOccupancyOptimize">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">家賃を変更した場合に入居率がどう変化するかを踏まえて、年間収益の増減を試算します。値上げで空室が増えると逆効果になる場合があります。</p>
+      <label style="font-size:13px">現在の月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 7</span></label>
+      <input type="number" id="oopt_rent" value="7" min="1" max="100" step="0.5" oninput="calcOccupancyOptimize()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">管理物件の総戸数</label>
+      <input type="number" id="oopt_units" value="10" min="1" max="200" oninput="calcOccupancyOptimize()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の入居率（%）<span style="color:#888;font-size:11px"> 例: 80</span></label>
+      <input type="number" id="oopt_occupancy" value="80" min="0" max="100" step="5" oninput="calcOccupancyOptimize()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">家賃変更幅（万円）<span style="color:#888;font-size:11px"> 例: 0.5（+0.5なら値上げ・-0.5なら値下げ）</span></label>
+      <input type="number" id="oopt_change" value="0.5" min="-5" max="5" step="0.5" oninput="calcOccupancyOptimize()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="oopt_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -15148,6 +15167,38 @@ function calcEnergyRenovation() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('💡 断熱リフォーム' + cost + '万円→補助金' + subsidy + '万円で実質' + netCost + '万円！\n\n月' + totalMonthlySaving + '万円の光熱費節約で' + paybackMonths + 'ヶ月で回収できる計算。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcEnergyRenovation(); })();
+
+function calcOccupancyOptimize() {
+  var rent = parseFloat(document.getElementById('oopt_rent').value) || 0;
+  var units = parseFloat(document.getElementById('oopt_units').value) || 0;
+  var occupancy = parseFloat(document.getElementById('oopt_occupancy').value) || 0;
+  var change = parseFloat(document.getElementById('oopt_change').value) || 0;
+  var el = document.getElementById('oopt_result');
+  if (!el) return;
+  var newRent = rent + change;
+  var occupancyElasticity = change > 0 ? -0.05 : 0.04;
+  var newOccupancy = Math.max(0, Math.min(100, occupancy + (change / rent) * 100 * occupancyElasticity * 10));
+  var currentAnnual = Math.round(rent * units * occupancy / 100 * 12);
+  var newAnnual = Math.round(newRent * units * newOccupancy / 100 * 12);
+  var annualDiff = newAnnual - currentAnnual;
+  var heroColor = annualDiff > 0 ? '#16a34a' : annualDiff === 0 ? '#c9a84c' : '#dc2626';
+  var heroLabel = annualDiff > 0 ? '年収増（家賃変更が有利）' : annualDiff === 0 ? '収益変化なし' : '年収減（家賃変更は逆効果）';
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">年間収益の変化</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + (annualDiff >= 0 ? '+' : '') + annualDiff + '<span style="font-size:20px">万円/年</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">' + heroLabel + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">現在の家賃・入居率</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + rent + '万円 / ' + occupancy + '%</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">変更後の家賃・入居率（推定）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + newRent.toFixed(1) + '万円 / ' + Math.round(newOccupancy) + '%</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">現在の年間収益</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + currentAnnual + '万円</td></tr>'
+    + '<tr style="font-weight:700"><td style="padding:7px 10px;border:1px solid #dee2e6">変更後の年間収益（推定）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:' + heroColor + '">' + newAnnual + '万円（' + (annualDiff >= 0 ? '+' : '') + annualDiff + '万円）</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + (change > 0 ? (annualDiff > 0 ? '✅ 家賃値上げによる年収増が見込めます。ただし値上げ幅が大きすぎると退去・空室増のリスクがあるため、段階的な値上げ（5,000円刻み）が安全です。' : '⚠️ 家賃値上げすると空室が増え、年収は逆に減る可能性があります。現状維持か入居率改善策（設備投資）を先に検討しましょう。') : '💡 家賃値下げで入居率が上がる分の増収効果を試算しています。値下げ前に「設備改善で募集強化」も検討してみてください。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('💡 家賃を' + (change >= 0 ? '+' : '') + change + '万円変えると年間収益が' + (annualDiff >= 0 ? '+' : '') + annualDiff + '万円変わる！\n\n値上げで空室が増えると逆効果になることも。入居率と家賃設定の最適バランスを数字で確認。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcOccupancyOptimize(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {

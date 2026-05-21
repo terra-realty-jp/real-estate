@@ -4415,6 +4415,31 @@
     </div>
   </div>
 
+  <div class="card" data-category="売却プロセス" id="card-calcSaleLeadTime">
+    <div class="card-header" onclick="toggleCard('calcSaleLeadTime')">
+      <span>家を売るのにどのくらいかかる？ 準備〜成約までの全工程スケジュールを確認</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSaleLeadTime">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">不動産売却には査定・媒介契約・売出し・契約・決済と複数の工程があります。現在の物件の状態から全体の目安期間を試算します。</p>
+      <label style="font-size:13px">物件の現在の状況</label>
+      <select id="slt_condition" onchange="calcSaleLeadTime()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="ready">すぐに売れる状態（書類・状態ともに問題なし）</option>
+        <option value="paperwork">書類整理が必要（相続登記・抵当権抹消等）</option>
+        <option value="repair">修繕・リフォームが必要</option>
+        <option value="occupied">現在も居住中（引越し日程を調整する必要あり）</option>
+        <option value="complex">複数の問題あり（書類＋居住中＋修繕）</option>
+      </select>
+      <label style="font-size:13px">物件タイプ</label>
+      <select id="slt_type" onchange="calcSaleLeadTime()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="house">戸建て</option>
+        <option value="condo">マンション</option>
+        <option value="land">土地</option>
+      </select>
+      <div id="slt_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12733,6 +12758,41 @@ function calcPriceCutHistory() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('🏠 3000万円の家を' + cut + '%値下げ（' + cutAmt + '万円）すると' + shortenMonths + 'ヶ月早く売れる！\n\n保有コスト' + holdSaving + '万円節減で差引' + (netEffect >= 0 ? 'プラス' + netEffect + '万円の得' : 'マイナス' + Math.abs(netEffect) + '万円') + '。値下げすべきか数字で判断。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcPriceCutHistory(); })();
+
+function calcSaleLeadTime() {
+  var condition = document.getElementById('slt_condition').value;
+  var type = document.getElementById('slt_type').value;
+  var el = document.getElementById('slt_result');
+  if (!el) return;
+  var baseWeeks = type === 'condo' ? 12 : type === 'land' ? 16 : 14;
+  var addWeeks = condition === 'ready' ? 0 : condition === 'paperwork' ? 4 : condition === 'repair' ? 6 : condition === 'occupied' ? 3 : 10;
+  var totalWeeks = baseWeeks + addWeeks;
+  var minMonths = Math.floor(totalWeeks / 4);
+  var maxMonths = Math.ceil((totalWeeks + 4) / 4);
+  var heroColor = totalWeeks <= 16 ? '#16a34a' : totalWeeks <= 24 ? '#c9a84c' : '#dc2626';
+  var steps = [
+    {name: '査定・不動産会社選び', weeks: 1},
+    {name: '媒介契約・売出し準備', weeks: 2},
+    {name: '書類整理・登記等', weeks: condition === 'paperwork' || condition === 'complex' ? 4 : 0},
+    {name: '修繕・クリーニング', weeks: condition === 'repair' || condition === 'complex' ? 4 : 0},
+    {name: '売出し〜内見・交渉', weeks: type === 'land' ? 8 : 6},
+    {name: '売買契約締結', weeks: 1},
+    {name: '引渡し・決済', weeks: type === 'condo' ? 4 : 3},
+  ].filter(s => s.weeks > 0);
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">売却完了までの目安期間</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + minMonths + '〜' + maxMonths + '<span style="font-size:20px">ヶ月</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">（約' + totalWeeks + '週間〜' + (totalWeeks + 4) + '週間）</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + steps.map((s, i) => '<tr style="' + (i % 2 === 0 ? 'background:#f8f9fa' : '') + '"><td style="padding:7px 10px;border:1px solid #dee2e6">STEP ' + (i+1) + ' ' + s.name + '</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">約' + s.weeks + '週間</td></tr>').join('')
+    + '<tr style="font-weight:700"><td style="padding:7px 10px;border:1px solid #dee2e6">合計（目安）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + totalWeeks + '〜' + (totalWeeks + 4) + '週間</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + (condition === 'complex' ? '⚠️ 複数の課題がある物件は時間がかかります。書類整理を先に進めながら、修繕の要否を検討しましょう。' : totalWeeks <= 16 ? '✅ 比較的スムーズに進む条件です。売出し時期（春・秋の繁忙期）を狙うとさらに早く売れる可能性があります。' : '💡 準備期間が必要な状態です。早めに動き始めることで希望のタイミングに売却が間に合います。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('🏠 家を売るのに' + minMonths + '〜' + maxMonths + 'ヶ月かかる！\n\n査定→契約→引渡しまでの全工程スケジュールを確認。早く売りたいなら今から動き出すことが大事。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcSaleLeadTime(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {

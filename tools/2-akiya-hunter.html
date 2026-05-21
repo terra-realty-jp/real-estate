@@ -3255,6 +3255,25 @@
     </div>
   </div>
 
+  <div class="calc-card" data-category="空き家活用法" id="card-calcAkiyaFarmStay">
+    <div class="card-header" onclick="toggleCard('calcAkiyaFarmStay')">
+      <span>農家民泊（農業体験・田舎体験）で空き家を活用した場合の収益試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaFarmStay">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px">農家民泊は農林水産省の規制緩和で許可が取りやすくなりました。1泊2食付きの農業体験宿泊として活用した場合の月次収益を試算します。</p>
+      <label style="font-size:12px;color:var(--text2)">収容定員（人）<span style="color:#888;font-size:11px"> 例: 6（1棟6人まで）</span></label>
+      <input type="number" id="afs_capacity" value="6" min="1" max="20" oninput="calcAkiyaFarmStay()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">1人1泊の料金（万円）<span style="color:#888;font-size:11px"> 例: 1.2（2食付き農業体験）</span></label>
+      <input type="number" id="afs_rate" value="1.2" min="0.5" max="5" step="0.1" oninput="calcAkiyaFarmStay()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">月間稼働日数（日）<span style="color:#888;font-size:11px"> 例: 8（週末のみ）</span></label>
+      <input type="number" id="afs_days" value="8" min="1" max="30" oninput="calcAkiyaFarmStay()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">改修・初期費用（万円）<span style="color:#888;font-size:11px"> 例: 80（水回り・設備更新）</span></label>
+      <input type="number" id="afs_init" value="80" min="0" max="2000" oninput="calcAkiyaFarmStay()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <div id="afs_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -12529,6 +12548,37 @@ function calcAkiyaElderCare() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🏠 空き家を高齢者向け住宅に転用！通常賃貸と比べて月' + monthlyDiff + '万円多い収益。\n\n改修費' + cost + '万円の回収期間は' + paybackMonths + 'ヶ月の見込み。2025年問題で需要急増中！\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaElderCare(); })();
+
+function calcAkiyaFarmStay() {
+  var capacity = parseFloat(document.getElementById('afs_capacity').value) || 0;
+  var rate = parseFloat(document.getElementById('afs_rate').value) || 0;
+  var days = parseFloat(document.getElementById('afs_days').value) || 0;
+  var init = parseFloat(document.getElementById('afs_init').value) || 0;
+  var el = document.getElementById('afs_result');
+  if (!el) return;
+  var avgOccupancy = 0.65;
+  var grossMonthly = Math.round(capacity * rate * days * avgOccupancy * 10) / 10;
+  var foodCost = Math.round(grossMonthly * 0.30 * 10) / 10;
+  var misc = Math.round(grossMonthly * 0.10 * 10) / 10;
+  var netMonthly = Math.round((grossMonthly - foodCost - misc) * 10) / 10;
+  var paybackMonths = netMonthly > 0 ? Math.ceil(init / netMonthly) : 0;
+  var heroColor = netMonthly >= 10 ? '#16a34a' : netMonthly >= 0 ? '#c9a84c' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">月間純収益（経費差引後）</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + netMonthly + '<span style="font-size:20px">万円/月</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">' + (paybackMonths > 0 ? '初期費用回収まで' + paybackMonths + 'ヶ月' : '採算に注意') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">月間粗収益（稼働率65%想定）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#16a34a">+' + grossMonthly + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">食材・食事提供コスト（30%）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">−' + foodCost + '万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">光熱費・雑費（10%）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">−' + misc + '万円</td></tr>'
+    + '<tr style="font-weight:700"><td style="padding:7px 10px;border:1px solid #dee2e6">月間純収益</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:' + heroColor + '">' + netMonthly + '万円/月</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + '🌾 農家民泊は農林水産省の「農泊」推進政策により、農家でなくても農村地域であれば自治体の認可で運営できます。地域の農業体験プログラムと組み合わせると集客しやすくなります。' + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🌾 空き家で農家民泊！週末' + days + '日稼働で月' + netMonthly + '万円の収益に。\n\n農林水産省の農泊推進で許可も取りやすくなった。初期費用' + init + '万円の回収は' + paybackMonths + 'ヶ月。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaFarmStay(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
