@@ -4267,6 +4267,26 @@
     </div>
   </div>
 
+  <div class="card" data-category="空室対策" id="card-calcModelRoomROI">
+    <div class="card-header" onclick="toggleCard('calcModelRoomROI')">
+      <span>モデルルーム化（家具付き内見）で空室期間を短縮できる？ 費用対効果試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcModelRoomROI">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 家具・家電をそろえた「モデルルーム内見」は、入居希望者が生活イメージを描きやすくなり、空室期間を短縮する効果があります。費用と回収期間を確認しましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 8（空室中の物件の家賃）</span></label>
+      <input type="number" id="mrr_rent" value="8" min="1" max="100" step="0.5" oninput="calcModelRoomROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">現在の空室期間（ヶ月）<span style="color:#888;font-size:11px"> 例: 4（すでに空いている月数）</span></label>
+      <input type="number" id="mrr_vacant" value="4" min="1" max="36" step="1" oninput="calcModelRoomROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">家具・家電の導入費用（万円）<span style="color:#888;font-size:11px"> 例: 30（ソファ・ベッド・テレビ等一式）</span></label>
+      <input type="number" id="mrr_cost" value="30" min="5" max="200" step="5" oninput="calcModelRoomROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">モデルルーム化による空室短縮の見込み（ヶ月）<span style="color:#888;font-size:11px"> 例: 2（2ヶ月早く入居が決まる）</span></label>
+      <input type="number" id="mrr_shorten" value="2" min="0" max="12" step="1" oninput="calcModelRoomROI()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="mrr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -14875,6 +14895,28 @@ function calcExteriorReserve() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🏠 賃貸物件の外壁・屋根修繕に備えて月' + monthly + '万円積み立て必要と計算！\n\n' + elapsed + '年経過で次回修繕まであと' + remaining + '年、費用概算' + repairCost + '万円。毎月コツコツ積み立てておけば急な出費で慌てなくて済む。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcExteriorReserve(); })();
+
+function calcModelRoomROI() {
+  var rent = parseFloat(document.getElementById('mrr_rent').value) || 0;
+  var vacant = parseFloat(document.getElementById('mrr_vacant').value) || 0;
+  var cost = parseFloat(document.getElementById('mrr_cost').value) || 0;
+  var shorten = parseFloat(document.getElementById('mrr_shorten').value) || 0;
+  var el = document.getElementById('mrr_result');
+  if (!el) return;
+  var savedRent = Math.round(rent * shorten * 10) / 10;
+  var netEffect = Math.round((savedRent - cost) * 10) / 10;
+  var paybackMonths = savedRent > 0 ? Math.round((cost / rent) * 10) / 10 : 0;
+  var heroColor = netEffect >= 0 ? '#16a34a' : '#dc2626';
+  var heroLabel = netEffect >= 0 ? '費用対効果（回収後の純利益）' : '費用対効果（回収できない損失）';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">' + heroLabel + '</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + netEffect + '<span style="font-size:20px">万円</span></div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">空室短縮による家賃回収額</td><td style="text-align:right;font-weight:700;color:#16a34a">+' + savedRent + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">家具・家電の導入費用</td><td style="text-align:right;font-weight:700;color:#dc2626">-' + cost + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">家具費用の回収期間</td><td style="text-align:right;font-weight:700">' + (shorten > 0 ? paybackMonths + 'ヶ月' : '短縮なし') + '</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#555;line-height:1.7">'
+    + (netEffect >= 0 ? '✅ モデルルーム化は費用対効果あり。家具は次の入居者が退去後も再利用でき、累積効果はさらに高まります。' : '⚠️ 短縮効果が小さく、費用回収に時間がかかります。空室期間をさらに短縮できるか、家具費用を見直しましょう。') + '</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🏠 モデルルーム化で空室を' + shorten + 'ヶ月短縮→家賃' + savedRent + '万円を回収！\n\n家具費用' + cost + '万円に対して純効果は' + netEffect + '万円。空室が長引く前に試してみる価値アリ。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcModelRoomROI(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {

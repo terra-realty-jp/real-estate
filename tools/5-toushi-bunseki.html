@@ -4000,6 +4000,28 @@
     </div>
   </div>
 
+  <div class="card" data-category="購入判断" id="card-calcOldBuildingCash">
+    <div class="card-header" onclick="toggleCard('calcOldBuildingCash')">
+      <span>築古物件を現金一括で買ったら本当に得？ 減価償却の節税効果込みで採算を計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcOldBuildingCash">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 築古（木造20年超・RC30年超）物件は減価償却を短期一括計上でき、高所得者の節税に使われます。現金購入の実質利回りと節税効果を合わせた「真の利益」を確認できます。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">購入価格（万円）<span style="color:#888;font-size:11px"> 例: 800（築古戸建の相場目安）</span></label>
+      <input type="number" id="obc_price" value="800" min="100" max="50000" step="100" oninput="calcOldBuildingCash()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">建物割合（%）<span style="color:#888;font-size:11px"> 例: 60（残りは土地。固定資産税評価書から確認）</span></label>
+      <input type="number" id="obc_bldg_ratio" value="60" min="10" max="100" step="5" oninput="calcOldBuildingCash()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間家賃収入（万円）<span style="color:#888;font-size:11px"> 例: 72（月6万×12ヶ月）</span></label>
+      <input type="number" id="obc_rent" value="72" min="10" max="5000" step="5" oninput="calcOldBuildingCash()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間諸費用（万円）<span style="color:#888;font-size:11px"> 例: 12（修繕・管理費・固定資産税）</span></label>
+      <input type="number" id="obc_expense" value="12" min="0" max="1000" step="5" oninput="calcOldBuildingCash()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">所得税率（%）<span style="color:#888;font-size:11px"> 例: 33（課税所得900万円超の方）</span></label>
+      <input type="number" id="obc_tax_rate" value="33" min="5" max="55" step="1" oninput="calcOldBuildingCash()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="obc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -14843,6 +14865,38 @@ function calcTowerMansionTax() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😱 タワマン節税が2024年改正で大幅縮小！\n\n' + price + '万円のタワマン、改正前の評価額' + oldEval + '万円 → 改正後は' + newEval + '万円に。相続税負担が' + inheritTaxIncrease + '万円増える計算に…\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcTowerMansionTax(); })();
+
+function calcOldBuildingCash() {
+  var price = parseFloat(document.getElementById('obc_price').value) || 0;
+  var bldgRatio = parseFloat(document.getElementById('obc_bldg_ratio').value) || 60;
+  var rent = parseFloat(document.getElementById('obc_rent').value) || 0;
+  var expense = parseFloat(document.getElementById('obc_expense').value) || 0;
+  var taxRate = parseFloat(document.getElementById('obc_tax_rate').value) || 0;
+  var el = document.getElementById('obc_result');
+  if (!el) return;
+  var bldgValue = Math.round(price * bldgRatio / 100);
+  var depYears = 4;
+  var annualDep = Math.round(bldgValue / depYears);
+  var annualNOI = rent - expense;
+  var taxableIncome = annualNOI - annualDep;
+  var taxSaving = taxableIncome < 0 ? Math.round(Math.abs(taxableIncome) * taxRate / 100) : 0;
+  var netIncomeY1 = annualNOI + taxSaving;
+  var grossYield = price > 0 ? Math.round(rent / price * 100 * 10) / 10 : 0;
+  var netYield = price > 0 ? Math.round(annualNOI / price * 100 * 10) / 10 : 0;
+  var effectiveYield = price > 0 ? Math.round((annualNOI + taxSaving) / price * 100 * 10) / 10 : 0;
+  var heroColor = effectiveYield >= 8 ? '#16a34a' : effectiveYield >= 5 ? '#c9a84c' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">節税効果込み実質利回り</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + effectiveYield + '<span style="font-size:20px">%</span></div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">表面利回り</td><td style="text-align:right;font-weight:700">' + grossYield + '%</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">実質利回り（諸費用控除後）</td><td style="text-align:right;font-weight:700">' + netYield + '%</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">建物の減価償却費（年）</td><td style="text-align:right;font-weight:700;color:#3b82f6">' + annualDep + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">節税額（初年度、概算）</td><td style="text-align:right;font-weight:700;color:#16a34a">' + taxSaving + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">1年目の手取り（NOI＋節税）</td><td style="text-align:right;font-weight:700;color:#16a34a">' + netIncomeY1 + '万円</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#555;line-height:1.7">'
+    + (effectiveYield >= 8 ? '✅ 節税効果を加えると高利回り。ただし减価償却終了後の税負担増と出口戦略（売却益課税）も考慮して。' : effectiveYield >= 5 ? '⚠️ 中程度の利回り。物件価格・修繕コストの変動リスクも想定しましょう。' : '❌ 利回りが低めです。購入価格の見直しや修繕費削減の余地を検討してください。') + '</div>'
+    + '<div style="font-size:11px;color:#888;margin-top:8px;line-height:1.7">※ 木造20年超・RC30年超は耐用年数4年として計算。実際の申告は税理士に依頼してください。</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💡 築古物件を現金' + price + '万円で購入！ 節税効果込みの実質利回りは' + effectiveYield + '%！\n\n表面利回り' + grossYield + '%に加えて初年度の節税額が約' + taxSaving + '万円。高所得者の節税戦略として注目。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcOldBuildingCash(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {

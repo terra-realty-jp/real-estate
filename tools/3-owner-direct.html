@@ -3700,6 +3700,27 @@
     </div>
   </div>
 
+  <div class="card" data-category="費用・諸費用" id="card-calcConsumptionTaxSplit">
+    <div class="card-header" onclick="toggleCard('calcConsumptionTaxSplit')">
+      <span>住宅購入の消費税、どの部分にかかる？ 土地は非課税・建物だけに10%の内訳試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcConsumptionTaxSplit">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 不動産の消費税は「建物部分のみ」にかかります。土地には消費税がかかりません。個人から購入する中古住宅なら消費税ゼロの場合もあります。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。購入予定の物件情報に変更してください。</p>
+      <label style="font-size:13px">購入価格（万円）<span style="color:#888;font-size:11px"> 例: 4000</span></label>
+      <input type="number" id="cts_price" value="4000" min="0" oninput="calcConsumptionTaxSplit()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">土地の割合（%）<span style="color:#888;font-size:11px"> 例: 50（マンションは30〜40%、一戸建ては40〜60%が目安）</span></label>
+      <input type="number" id="cts_land_ratio" value="50" min="0" max="100" oninput="calcConsumptionTaxSplit()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">売主の種類<span style="color:#888;font-size:11px"> 個人売主の中古住宅なら消費税ゼロ</span></label>
+      <select id="cts_seller" onchange="calcConsumptionTaxSplit()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="biz" selected>不動産会社・法人（新築・業者売主中古）</option>
+        <option value="indiv">個人（個人間売買の中古住宅）</option>
+      </select>
+      <div id="cts_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="card" data-category="物件調査" id="card-calcEnergyStandardImpact">
     <div class="card-header" onclick="toggleCard('calcEnergyStandardImpact')">
       <span>2024年から省エネ基準が義務化！ 既存住宅の資産価値割引リスクと改修費を試算</span>
@@ -12341,6 +12362,32 @@ function calcEcoHomeSubsidy() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🌿 子育てエコホーム支援事業の補助金を試算してみた！\n\n' + note + '→ 約' + Math.round(subsidy) + '万円の補助金が受け取れる！\n' + (isFamily ? '子育て・若者世帯は上乗せあり' : '') + '\n\n新築・リフォームを考えているなら必ずチェック 👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcEcoHomeSubsidy(); })();
+
+function calcConsumptionTaxSplit() {
+  var price = parseFloat(document.getElementById('cts_price').value) || 0;
+  var landRatio = parseFloat(document.getElementById('cts_land_ratio').value) || 0;
+  var seller = document.getElementById('cts_seller').value;
+  var el = document.getElementById('cts_result');
+  if (!el) return;
+  var landPrice = Math.round(price * landRatio / 100);
+  var buildingWithTax = price - landPrice;
+  var tax = seller === 'biz' ? Math.round(buildingWithTax / 1.10 * 0.10) : 0;
+  var buildingExTax = seller === 'biz' ? Math.round(buildingWithTax / 1.10) : buildingWithTax;
+  var heroColor = tax > 0 ? '#dc2626' : '#16a34a';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1;margin-bottom:4px">' + tax.toLocaleString() + '万円</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">' + (tax > 0 ? '消費税額（建物部分にかかる10%）' : '消費税: ゼロ（個人間売買のため非課税）') + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🌱 土地価格（非課税）: <strong>' + landPrice.toLocaleString() + '万円</strong>（' + landRatio + '%）</div>'
+    + '<div style="margin-bottom:4px">🏠 建物価格（税込）: <strong>' + buildingWithTax.toLocaleString() + '万円</strong>（' + (100 - landRatio) + '%）</div>'
+    + (tax > 0 ? '<div style="margin-bottom:4px">　└ 建物（税抜）: <strong>' + buildingExTax.toLocaleString() + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">　└ 消費税額: <strong style="color:#dc2626">' + tax.toLocaleString() + '万円</strong>（10%）</div>' : '')
+    + '<div style="border-top:1px solid #eee;padding-top:6px;margin-top:4px">合計（税込）: <strong>' + price.toLocaleString() + '万円</strong></div>'
+    + '</div>'
+    + (seller === 'indiv' ? '<div style="background:#dcfce7;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px;color:#166534">✅ 個人からの中古住宅購入は消費税がかかりません。同じ予算なら業者物件より実質的に' + Math.round(price * (1 - landRatio / 100) / 1.10 * 0.10) + '万円分お得です。</div>' : '<div style="background:#fff3cd;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px">💡 住宅ローン控除の控除額計算も建物価格ベースで行われます。消費税額の確認は重要な諸費用の一つです。</div>')
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 土地の割合は売買契約書の「土地・建物内訳」で確認できます。不明な場合は固定資産税評価証明書の土地・建物割合を参考にします。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏠 住宅購入の消費税は建物部分にしかかからない！\n\n購入価格' + price + '万円でも土地' + landRatio + '%は非課税で、消費税は' + tax + '万円だけ。個人間売買の中古住宅なら消費税ゼロになることを初めて知った！\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcConsumptionTaxSplit(); })();
 
 function calcEnergyStandardImpact() {
   var age = parseFloat(document.getElementById('esi_age').value) || 0;

@@ -3077,6 +3077,26 @@
     </div>
   </div>
 
+  <div class="calc-card" data-category="活用方法" id="card-calcAkiyaChildcare">
+    <div class="card-header" onclick="toggleCard('calcAkiyaChildcare')">
+      <span>空き家を「学童保育・放課後デイサービス」として貸すと家賃はいくら？ 収益試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaChildcare">
+      <div style="background:rgba(219,234,254,0.5);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d4ed8;line-height:1.7">💡 学童保育や放課後デイサービスは社会福祉法人・NPO法人が賃借人のため家賃滞納リスクが低く安定収入が期待できます。一般賃貸より高い賃料設定も可能です。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。空き家の情報に変更してください。</p>
+      <label style="font-size:13px">延床面積（㎡）<span style="color:#888;font-size:11px"> 例: 80（学童保育は20〜80㎡が多い）</span></label>
+      <input type="number" id="acc_area" value="80" min="20" oninput="calcAkiyaChildcare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">立地エリア<span style="color:#888;font-size:11px"> 駅から近いほど需要が高い</span></label>
+      <select id="acc_location" onchange="calcAkiyaChildcare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="urban">駅近・住宅地（徒歩10分以内）</option>
+        <option value="suburb" selected>郊外住宅地（徒歩10〜20分）</option>
+        <option value="rural">農村・郊外（車でのアクセス）</option>
+      </select>
+      <div id="acc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <div class="calc-card" data-category="リスク・費用" id="card-calcAkiyaPipingRisk">
     <div class="card-header" onclick="toggleCard('calcAkiyaPipingRisk')">
       <span>空き家の水道管・配管の老朽化リスクと修繕費試算（全交換 vs 部分補修）</span>
@@ -12167,6 +12187,31 @@ function calcAkiyaDIYRent() {
   el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🔨 空き家を「DIY可賃貸」にしたら5年間でいくら違う？計算してみた！\n\n通常賃貸: ' + Math.round(normalTotal / 10000) + '万円 vs DIY可: ' + Math.round(diyTotal / 10000) + '万円\n→ ' + winner + 'が約' + Math.round(diff / 10000) + '万円多い！\n空き家オーナー必見の試算です\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaDIYRent(); })();
+
+function calcAkiyaChildcare() {
+  var area = parseFloat(document.getElementById('acc_area').value) || 0;
+  var loc = document.getElementById('acc_location').value;
+  var el = document.getElementById('acc_result');
+  if (!el) return;
+  var ratePerSqm = loc === 'urban' ? 0.2 : loc === 'suburb' ? 0.15 : 0.1;
+  var normalRent = Math.round(area * 0.08);
+  var childcareRent = Math.round(area * ratePerSqm);
+  var diff = childcareRent - normalRent;
+  var subsidy = 200;
+  var heroColor = diff >= 0 ? '#16a34a' : '#c9a84c';
+  el.innerHTML = '<div style="font-size:52px;font-weight:900;color:#16a34a;line-height:1;margin-bottom:4px">' + childcareRent.toLocaleString() + '万円/月</div>'
+    + '<div style="font-size:14px;color:#555;margin-bottom:12px">学童保育・放課後デイサービスとして貸した場合の月額賃料（概算）</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">'
+    + '<div style="margin-bottom:4px">🏠 一般賃貸での月額賃料（比較）: <strong>' + normalRent + '万円</strong></div>'
+    + '<div style="margin-bottom:4px">📚 学童保育の月額賃料: <strong style="color:#16a34a">' + childcareRent + '万円</strong></div>'
+    + '<div style="margin-bottom:4px;border-top:1px solid #eee;padding-top:6px">一般賃貸との差: <strong style="color:' + heroColor + '">' + (diff >= 0 ? '+' : '') + diff + '万円/月</strong></div>'
+    + '<div style="margin-bottom:4px;color:#3b82f6">🎌 自治体の改修補助金（目安）: <strong>最大' + subsidy + '万円</strong></div>'
+    + '</div>'
+    + '<div style="background:#dcfce7;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:8px;color:#166534">✅ 社会福祉法人・NPO法人は家賃支払い能力が比較的安定しており、長期契約が見込めます。バリアフリー改修費用は自治体補助金でカバーできるケースがあります。</div>'
+    + '<div style="font-size:11px;color:#888;line-height:1.7">💡 放課後デイサービスは建築基準法上の「特殊建築物」(寄宿舎等)への用途変更が必要な場合があります。事前に市区町村への相談を推奨します。</div>';
+  el.innerHTML += '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🏫 空き家を学童保育として貸すと月' + childcareRent + '万円の収入になる試算！一般賃貸より月' + diff + '万円高く、補助金最大' + subsidy + '万円も活用できるらしい。空き家の活用選択肢として初めて知った。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaChildcare(); })();
 
 function calcAkiyaPipingRisk() {
   var age = parseFloat(document.getElementById('apr_age').value) || 0;
