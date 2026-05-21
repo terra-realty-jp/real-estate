@@ -13654,7 +13654,17 @@ calcFee();
       lineA.style.cssText='display:inline-flex;align-items:center;gap:5px;background:rgba(6,199,85,0.1);border:1px solid rgba(6,199,85,0.3);border-radius:8px;padding:5px 12px;color:#06C755;font-size:11px;font-weight:700;text-decoration:none;font-family:inherit;transition:all 0.15s';
       lineA.onmouseover=function(){this.style.background='rgba(6,199,85,0.2)';};
       lineA.onmouseout=function(){this.style.background='rgba(6,199,85,0.1)';};
-      wrap.appendChild(btn);wrap.appendChild(imgBtn);wrap.appendChild(lineA);
+      var trialA=document.createElement('a');
+      var trialTitle=title.replace(/^[^\p{L}\p{N}]/u,'').replace(/[^\p{L}\p{N}\s]/gu,'').trim().slice(0,18)||'これ';
+      var trialText=encodeURIComponent('「'+trialTitle+'」が無料計算できた😲 あなたもやってみて👇');
+      var trialUrl=encodeURIComponent(location.origin+location.pathname+'#'+cid);
+      trialA.href='https://social-plugins.line.me/lineit/share?url='+trialUrl+'&text='+trialText;
+      trialA.target='_blank';trialA.rel='noopener';
+      trialA.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.630 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.630 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.070 9.436-6.969C23.176 14.393 24 12.458 24 10.314"/></svg> 友達に試させる';
+      trialA.style.cssText='display:inline-flex;align-items:center;gap:5px;background:rgba(6,199,85,0.06);border:1px solid rgba(6,199,85,0.18);border-radius:8px;padding:5px 12px;color:#06C755;font-size:11px;font-weight:700;text-decoration:none;font-family:inherit;transition:all 0.15s;opacity:0.8';
+      trialA.onmouseover=function(){this.style.background='rgba(6,199,85,0.15)';this.style.opacity='1';};
+      trialA.onmouseout=function(){this.style.background='rgba(6,199,85,0.06)';this.style.opacity='0.8';};
+      wrap.appendChild(btn);wrap.appendChild(imgBtn);wrap.appendChild(lineA);wrap.appendChild(trialA);
       div.appendChild(wrap);
       if(typeof sbLogCardUsage==='function'){var tid=location.pathname.split('/').pop().replace('.html','');sbLogCardUsage(tid,cid);}
     });
@@ -13662,6 +13672,25 @@ calcFee();
   }
   document.querySelectorAll('[id$="-result"]').forEach(watchDiv);
   renderHistPanel();
+})();
+
+// ── URLハッシュからカードを自動展開 ──
+(function(){
+  function openFromHash(){
+    var hash=location.hash.slice(1);
+    if(!hash)return;
+    var el=document.getElementById(hash);
+    if(!el)return;
+    if(el.classList&&el.classList.contains('card')&&!el.classList.contains('open')){
+      el.classList.add('open');
+      var fnId=hash.replace(/^card-/,'');
+      var body=document.getElementById('body-'+fnId);
+      if(body&&!body._calcInit&&typeof window[fnId]==='function'){body._calcInit=true;window[fnId]();}
+    }
+    setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'center'});},200);
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',openFromHash);}else{openFromHash();}
+  window.addEventListener('hashchange',openFromHash);
 })();
 
 // ── Auto-save: フォーム入力値を自動保存・次回訪問時に復元 ──
