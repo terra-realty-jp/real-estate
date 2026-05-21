@@ -4220,3 +4220,16 @@
   - Tool5: calcOldBuildingCash — 築古物件現金一括購入の減価償却節税効果込み実質利回り試算
 - **理由**: 「知らないと損する精算コスト」「補助金活用」「節税効果の可視化」系カードはLINEシェアを誘発しやすい
 - **カード総数**: 632枚
+
+## 2026-05-21 Round 29（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 29）
+- **改善内容**:
+  - Tool1: calcRelativeSaleRisk — 親族への安売りみなし贈与リスクと贈与税試算（時価80%ラインチェック）
+  - Tool2: calcAkiyaLandBank — 空き家バンク登録補助金の実質自己負担額（地域別補助率30〜50%）
+  - Tool3: calcNewCondoValueDrop — 新築マンション5年後の価値低下試算（新築プレミアム消失+経年下落）
+  - Tool4: calcLongVacancyROI — 長期空室の機会損失vs値下げ早期決着のコスト比較
+  - Tool5: calcSpreadAnalysis — 利回りと金利のスプレッド（実質安全マージン）試算
+- **理由**: 「みなし贈与」「新築価値下落」「スプレッド」など、知らないと損する知識系カードはPLG効果が高い
+- **カード総数**: 637枚
