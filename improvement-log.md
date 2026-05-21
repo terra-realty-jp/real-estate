@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-05-22 Round 45（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 45）
+- **改善内容**:
+  - Tool1: calcNegotiationMargin — 値引き交渉「どこまで下げるか」損益分岐（値引き額÷月保有コストで回収ヶ月数）
+  - Tool2: calcAkiyaEventSpace — 空き家をスペース貸し月収試算（1日単価×稼働日数）
+  - Tool3: calcPriceHistoryScore — 値下げ履歴の買主印象スコア（値下げ率・期間・回数から1〜10点判定）
+  - Tool4: calcEVChargerROI — EV充電器導入費用対効果（10年純利益・回収年数・入居率改善効果）
+  - Tool5: calcInflationHedge — インフレ下不動産vs金融資産10年比較（実質資産価値・CF累計）
+- **理由**: 「値引き交渉の損益は？」「空き家でイベント貸し？」「この値下げ履歴は印象悪い？」「EV充電器は元取れる？」「インフレに強い資産は？」は検討者の実際の悩みに直結するPLGテーマ
+- **カード総数**: 722枚
+
+---
+
 ## 2026-05-21 Round 44（セッション継続）
 
 - **対象**: tools/1-ai-satei.html〜5, llms.txt
