@@ -4017,6 +4017,25 @@
     </div>
   </div>
 
+  <!-- calcEscrowFlow -->
+  <div class="calc-card" id="card-calcEscrowFlow">
+    <div class="card-header" onclick="toggleCard('calcEscrowFlow')">
+      <span>不動産売買の「手付金→決済」まで全費用・期間を一覧表示——いつ・いくら必要かが一目でわかる</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcEscrowFlow">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">不動産売買では契約〜決済まで複数回にわたって費用が発生します。売買価格を入力するだけで各ステップの費用と発生タイミングを一覧で確認できます。</p>
+      <label style="font-size:12px;color:#555">売買価格（万円）<span style="font-size:11px;color:#999"> 例: 3000</span></label>
+      <input type="number" id="ef_price" value="3000" min="100" max="99999" oninput="calcEscrowFlow()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">買主 or 売主のどちらの立場ですか？</label>
+      <select id="ef_side" onchange="calcEscrowFlow()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="buyer">買主（不動産を購入する）</option>
+        <option value="seller">売主（不動産を売却する）</option>
+      </select>
+      <div id="ef_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -13079,6 +13098,46 @@ function calcNeighborPurchase() {
     + '<button onclick="shareLine(\'隣の土地' + neighbor + '㎡を' + buy + '万円で購入すると資産が' + (netGain >= 0 ? '+' : '') + netGain.toLocaleString() + '万円変化！敷地を広げると家の価値はどう変わる？👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcNeighborPurchase(); })();
+
+function calcEscrowFlow() {
+  var price = parseFloat(document.getElementById('ef_price').value) || 3000;
+  var side = document.getElementById('ef_side').value;
+  var el = document.getElementById('ef_result');
+  if (!el) return;
+  var deposit = Math.round(price * 0.1); // 手付金10%
+  var commission = Math.round(price * 0.033 + 6.6); // 仲介手数料
+  var stampTax = price >= 5000 ? 2 : price >= 1000 ? 1 : 0.5; // 印紙税（万円）
+  var steps = side === 'buyer' ? [
+    { label: '①契約時', cost: Math.round(deposit + commission * 0.5 + stampTax), note: '手付金' + deposit + '万円＋仲介手数料半金＋印紙税', timing: '契約日当日' },
+    { label: '②残金決済', cost: Math.round(price - deposit + commission * 0.5 + 8), note: '残代金＋仲介残金＋登記費用（登録免許税等）', timing: '契約から1〜2ヶ月後' },
+    { label: '③引渡し後', cost: 5, note: '引越費用・火災保険等（目安）', timing: '引渡し日前後' }
+  ] : [
+    { label: '①契約時', cost: 0, note: '手付金' + deposit + '万円を受け取る（収入）', timing: '契約日当日', recv: deposit },
+    { label: '②残金決済', cost: Math.round(commission + 10), note: '仲介手数料・抵当権抹消・司法書士費用', timing: '契約から1〜2ヶ月後' },
+    { label: '③引渡し後', cost: 0, note: '残代金' + (price - deposit) + '万円が入金される', timing: '決済日', recv: price - deposit }
+  ];
+  var totalCost = steps.reduce(function(sum, s) { return sum + (s.cost || 0); }, 0);
+  var totalRecv = steps.reduce(function(sum, s) { return sum + (s.recv || 0); }, 0);
+  var heroColor = side === 'seller' ? '22,163,74' : '59,130,246';
+  var rows = steps.map(function(s) {
+    return '<tr style="border-bottom:1px solid #eee"><td style="padding:8px;font-weight:700;color:rgba(' + heroColor + ',1)">' + s.label + '</td>'
+      + '<td style="padding:8px;text-align:right;font-weight:700;color:' + (s.recv ? '#16a34a' : s.cost > 0 ? '#dc2626' : '#555') + '">'
+      + (s.recv ? '＋' + s.recv.toLocaleString() + '万円入金' : s.cost > 0 ? '▲' + s.cost + '万円' : '—') + '</td>'
+      + '<td style="padding:8px;font-size:11px;color:#666">' + s.note + '</td>'
+      + '<td style="padding:8px;font-size:11px;color:#888">' + s.timing + '</td></tr>';
+  }).join('');
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:16px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:13px;color:#374151;margin-bottom:4px">【' + (side === 'buyer' ? '買主' : '売主') + '】総費用合計</div>'
+    + '<div style="font-size:44px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1">' + totalCost.toLocaleString() + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-top:4px">万円（手持ち現金として必要）</div>'
+    + '</div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse;min-width:300px">'
+    + '<tr style="background:#f5f3ef"><th style="padding:6px 8px;text-align:left">ステップ</th><th style="padding:6px 8px;text-align:right">金額</th><th style="padding:6px 8px;text-align:left">内容</th><th style="padding:6px 8px;text-align:left">時期</th></tr>'
+    + rows + '</table></div>'
+    + '<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-top:12px;margin-bottom:12px">💡 ' + (side === 'buyer' ? '買主は契約時に手付金+仲介手数料半金の現金が必要です。住宅ローンの融資は決済当日に実行されるため、契約時分は自己資金を用意してください。' : '売主は契約時には費用負担なし（手付金を受取）。仲介手数料は決済時に一括で支払います。') + '</div>'
+    + '<button onclick="shareLine(\'不動産' + (side === 'buyer' ? '購入' : '売却') + price.toLocaleString() + '万円で必要な総費用は' + totalCost + '万円！いつ・いくら必要か全ステップを確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcEscrowFlow(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {

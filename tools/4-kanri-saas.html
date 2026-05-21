@@ -4501,6 +4501,27 @@
     </div>
   </div>
 
+  <!-- calcWaterPipeSurvey -->
+  <div class="card" data-category="修繕・設備管理" id="card-calcWaterPipeSurvey">
+    <div class="card-header" onclick="toggleCard('calcWaterPipeSurvey')">
+      <span class="card-title">「給排水管が古い」と言われたら？— 築年数から修繕・交換費用と緊急度を試算</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcWaterPipeSurvey">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">給排水管の寿命は一般的に20〜30年です。築年数と戸数から交換費用の目安・修繕積立の必要額・緊急度を確認します。</p>
+      <label style="font-size:12px;color:#555">築年数（年）<span style="font-size:11px;color:#999"> 例: 25</span></label>
+      <input type="number" id="wps_age" value="25" min="0" max="60" oninput="calcWaterPipeSurvey()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">戸数（戸）<span style="font-size:11px;color:#999"> 例: 6</span></label>
+      <input type="number" id="wps_units" value="6" min="1" max="200" oninput="calcWaterPipeSurvey()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">建物の構造</label>
+      <select id="wps_struct" onchange="calcWaterPipeSurvey()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="rc">RC造（マンション・コンクリート）</option>
+        <option value="w" selected>木造（アパート・戸建）</option>
+      </select>
+      <div id="wps_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -15454,6 +15475,43 @@ function calcManagementFeeAudit() {
     + '<button onclick="shareLine(\'賃貸管理費が年' + Math.round(annualCurrent * 10) / 10 + '万円！相場（' + marketLow + '〜' + marketHigh + '%）と比べて' + (saving > 0 ? '+' + saving + '万円高い' : '適正か確認') + '。10年で' + Math.abs(Math.round(saving * 10)) + '万円の差👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcManagementFeeAudit(); })();
+
+function calcWaterPipeSurvey() {
+  var age = parseFloat(document.getElementById('wps_age').value) || 25;
+  var units = Math.max(1, Math.round(parseFloat(document.getElementById('wps_units').value) || 6));
+  var struct = document.getElementById('wps_struct').value;
+  var el = document.getElementById('wps_result');
+  if (!el) return;
+  // 給排水管の寿命目安
+  var lifespan = struct === 'rc' ? 35 : 25;
+  var remaining = Math.max(0, lifespan - age);
+  var urgency = age >= lifespan ? 3 : age >= lifespan * 0.85 ? 2 : age >= lifespan * 0.7 ? 1 : 0;
+  var urgencyLabels = ['様子見', '準備開始', '早急に検討', '即時交換が必要'];
+  var urgencyColors = ['22,163,74', '201,168,76', '220,38,38', '220,38,38'];
+  var heroColor = urgencyColors[urgency];
+  // 更新費用目安（戸数×単価）
+  var unitCost = struct === 'rc' ? 30 : 25; // 1戸あたり給水管更新（万円）
+  var drainCost = struct === 'rc' ? 20 : 15; // 1戸あたり排水管更新（万円）
+  var totalCost = (unitCost + drainCost) * units;
+  var annualReserve = Math.round(totalCost / Math.max(remaining, 5) * 10) / 10; // 残余年数で積立
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:13px;color:#374151;margin-bottom:4px">修繕費の見積もり合計</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1">' + totalCost.toLocaleString() + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-top:4px">万円（' + units + '戸分・給排水管交換）</div>'
+    + '<div style="font-size:14px;font-weight:700;color:rgba(' + heroColor + ',1);margin-top:6px">緊急度: ' + urgencyLabels[urgency] + '（残寿命約' + remaining + '年）</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:12px">'
+    + '<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 修繕計画</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">配管寿命目安</td><td style="padding:6px 8px;text-align:right">' + lifespan + '年（' + (struct === 'rc' ? 'RC造' : '木造') + '）</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">現在の築年数</td><td style="padding:6px 8px;text-align:right">' + age + '年（残' + remaining + '年）</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">給水管更新費</td><td style="padding:6px 8px;text-align:right">' + (unitCost * units) + '万円</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">排水管更新費</td><td style="padding:6px 8px;text-align:right">' + (drainCost * units) + '万円</td></tr>'
+    + '<tr style="background:#f5f3ef"><td style="padding:6px 8px;font-weight:700">今から毎年の積立目標</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(' + heroColor + ',1)">' + annualReserve + '万円/年</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 給排水管の老朽化は水漏れ・腐食・水質悪化を招き、入居者トラブルに直結します。' + (urgency >= 2 ? '早急に専門業者による内視鏡診断（1〜5万円/戸）を実施しましょう。' : '5年ごとの定期点検で早期発見・低コスト修繕が可能です。') + '</div>'
+    + '<button onclick="shareLine(\'築' + age + '年の賃貸物件の給排水管交換費用は合計' + totalCost + '万円！今から年' + annualReserve + '万円ずつ積み立てないと一括負担になる😰 修繕費シミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcWaterPipeSurvey(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {

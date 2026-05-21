@@ -4252,6 +4252,26 @@
     </div>
   </div>
 
+  <!-- calcCashOnCash -->
+  <div class="card" data-category="投資判断・利回り" id="card-calcCashOnCash">
+    <div class="card-header" onclick="toggleCard('calcCashOnCash')">
+      <span class="card-title">「頭金をいくら入れるか」で年利は変わる？— 自己資金利回り（Cash on Cash）をレバレッジ別に比較</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcCashOnCash">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">不動産投資の「本当の自己資金利回り（CoC）」は、頭金を少なくするほど高くなります。複数の頭金パターンで利回りを比較しましょう。</p>
+      <label style="font-size:12px;color:#555">物件価格（万円）<span style="font-size:11px;color:#999"> 例: 3000</span></label>
+      <input type="number" id="coc_price" value="3000" min="100" max="99999" oninput="calcCashOnCash()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">年間家賃収入（万円）<span style="font-size:11px;color:#999"> 例: 240（月20万円×12ヶ月）</span></label>
+      <input type="number" id="coc_rent" value="240" min="10" max="9999" oninput="calcCashOnCash()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">経費率（%）<span style="font-size:11px;color:#999"> 例: 30</span></label>
+      <input type="number" id="coc_expense" value="30" min="0" max="80" oninput="calcCashOnCash()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">ローン金利（%）<span style="font-size:11px;color:#999"> 例: 2.5</span></label>
+      <input type="number" id="coc_rate" value="2.5" min="0.1" max="15" step="0.1" oninput="calcCashOnCash()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="coc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -15530,6 +15550,48 @@ function calcBuildingAgeYield() {
     + '<button onclick="shareLine(\'築' + age + '年・' + structNames[struct] + '・' + areaNames[area] + 'の物件の適正利回り目標は' + minYield + '%！今の利回り' + actualYield + '%は「' + grade + '」判定。投資判断の基準を確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcBuildingAgeYield(); })();
+
+function calcCashOnCash() {
+  var price = parseFloat(document.getElementById('coc_price').value) || 3000;
+  var rent = parseFloat(document.getElementById('coc_rent').value) || 240;
+  var expense = parseFloat(document.getElementById('coc_expense').value) || 30;
+  var rate = parseFloat(document.getElementById('coc_rate').value) || 2.5;
+  var el = document.getElementById('coc_result');
+  if (!el) return;
+  var noi = rent * (1 - expense / 100); // 年間NOI
+  var patterns = [
+    { label: '頭金20%', down: Math.round(price * 0.2), loan: Math.round(price * 0.8) },
+    { label: '頭金30%', down: Math.round(price * 0.3), loan: Math.round(price * 0.7) },
+    { label: '頭金50%', down: Math.round(price * 0.5), loan: Math.round(price * 0.5) },
+    { label: '全額自己資金', down: price, loan: 0 }
+  ];
+  var rows = patterns.map(function(p) {
+    var annualRepay = p.loan > 0 ? p.loan * rate / 100 * 1.2 : 0; // 簡略化：金利×1.2で元利均等返済近似
+    var cf = noi - annualRepay;
+    var coc = p.down > 0 ? Math.round(cf / p.down * 1000) / 10 : 0;
+    var cfColor = cf >= 0 ? '#16a34a' : '#dc2626';
+    return '<tr style="border-bottom:1px solid #eee"><td style="padding:6px 8px;font-weight:700">' + p.label + '</td>'
+      + '<td style="padding:6px 8px;text-align:right">' + p.down.toLocaleString() + '万円</td>'
+      + '<td style="padding:6px 8px;text-align:right;color:' + cfColor + ';font-weight:700">' + Math.round(cf * 10) / 10 + '万円</td>'
+      + '<td style="padding:6px 8px;text-align:right;font-weight:900;color:' + cfColor + '">' + coc + '%</td></tr>';
+  }).join('');
+  var bestPattern = patterns.reduce(function(best, p) {
+    var ar = p.loan > 0 ? p.loan * rate / 100 * 1.2 : 0;
+    var cf = noi - ar;
+    var coc = p.down > 0 ? cf / p.down * 100 : 0;
+    return coc > best.coc ? { coc: coc, label: p.label } : best;
+  }, { coc: -999, label: '' });
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(59,130,246,0.04));border:2px solid rgba(59,130,246,0.4);border-radius:14px;padding:16px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:13px;color:#374151;margin-bottom:8px">頭金パターン別の自己資金利回り（CoC）比較</div>'
+    + '<div style="font-size:16px;font-weight:700;color:rgba(59,130,246,1)">✅ ' + bestPattern.label + 'が最も高い自己資金利回り</div>'
+    + '</div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;font-size:13px;border-collapse:collapse;min-width:280px">'
+    + '<tr style="background:#f5f3ef"><th style="padding:6px 8px;text-align:left">頭金</th><th style="padding:6px 8px;text-align:right">自己資金</th><th style="padding:6px 8px;text-align:right">年間CF</th><th style="padding:6px 8px;text-align:right">CoC利回り</th></tr>'
+    + rows + '</table></div>'
+    + '<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-top:12px;margin-bottom:12px">💡 CoC（Cash on Cash）は「投じた自己資金に対して年間いくら返ってくるか」の指標。レバレッジ（融資）を使うほどCoCは高くなりますが、ローン返済が滞るリスクも増します。表面利回りとCoCを両方で判断しましょう。</div>'
+    + '<button onclick="shareLine(\'不動産投資' + price.toLocaleString() + '万円の物件、頭金の入れ方で自己資金利回りがこんなに変わる！レバレッジの効果をシミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcCashOnCash(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {

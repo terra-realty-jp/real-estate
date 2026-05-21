@@ -4547,6 +4547,26 @@
     </div>
   </div>
 
+  <!-- calcSaleClosingFee -->
+  <div class="card" data-category="売却費用・手取り" id="card-calcSaleClosingFee">
+    <div class="card-header" onclick="toggleCard('calcSaleClosingFee')">
+      <span class="card-title">家を売ると最終的にいくら手元に残る？— 諸費用・税金を全部引いた「本当の手取り」を計算</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSaleClosingFee">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">売却額からローン残債・仲介手数料・登記費用・引越費用・税金を全て引いた「本当の手取り額」を試算します。</p>
+      <label style="font-size:12px;color:#555">売却価格（万円）<span style="font-size:11px;color:#999"> 例: 3500</span></label>
+      <input type="number" id="scf_price" value="3500" min="100" max="99999" oninput="calcSaleClosingFee()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">ローン残債（万円）<span style="font-size:11px;color:#999"> 例: 1200（完済済みなら0）</span></label>
+      <input type="number" id="scf_loan" value="1200" min="0" max="99999" oninput="calcSaleClosingFee()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">購入時の取得費（万円）<span style="font-size:11px;color:#999"> 例: 2800（不明なら売却額×5%の概算も可）</span></label>
+      <input type="number" id="scf_cost" value="2800" min="0" max="99999" oninput="calcSaleClosingFee()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">保有期間（年）<span style="font-size:11px;color:#999"> 例: 8（5年超で税率が大幅に下がります）</span></label>
+      <input type="number" id="scf_years" value="8" min="0" max="60" oninput="calcSaleClosingFee()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="scf_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -13092,6 +13112,43 @@ function calcPriceDropTimeValue() {
     + '<button onclick="shareLine(\'売却価格を' + drop + '万円下げるか迷い中...保有コスト月' + monthly + '万円なら' + breakevenMonths + 'ヶ月分の損失と同じ。値下げすべきか数字で確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcPriceDropTimeValue(); })();
+
+function calcSaleClosingFee() {
+  var price = parseFloat(document.getElementById('scf_price').value) || 3500;
+  var loan = parseFloat(document.getElementById('scf_loan').value) || 1200;
+  var cost = parseFloat(document.getElementById('scf_cost').value) || 2800;
+  var years = parseFloat(document.getElementById('scf_years').value) || 8;
+  var el = document.getElementById('scf_result');
+  if (!el) return;
+  var commission = Math.round(price * 0.033 + 6.6); // 仲介手数料（税込）
+  var registration = Math.round(price * 0.002 + 5); // 抵当権抹消・司法書士費用
+  var moving = 15; // 引越費用目安
+  var otherCost = commission + registration + moving;
+  var gain = price - cost;
+  var taxRate = years > 5 ? 0.20315 : 0.39363; // 長期/短期譲渡税
+  var taxableGain = Math.max(0, gain - 3000); // 3000万控除（居住用前提）
+  var tax = gain <= 3000 ? 0 : Math.round(taxableGain * taxRate);
+  var net = price - loan - otherCost - tax;
+  var heroColor = net >= 0 ? '22,163,74' : '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:13px;color:#374151;margin-bottom:4px">最終手取り額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1">' + net.toLocaleString() + '</div>'
+    + '<div style="font-size:14px;color:#555;margin-top:4px">万円</div>'
+    + '<div style="font-size:13px;font-weight:700;color:rgba(' + heroColor + ',1);margin-top:6px">' + (net >= 0 ? '✅ プラス手取りあり' : '⚠️ 手取りがマイナス（追い金が必要）') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:12px">'
+    + '<tr style="background:#f5f3ef"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 費用内訳</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">売却価格</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:#16a34a">+' + price.toLocaleString() + '万円</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">ローン残債</td><td style="padding:6px 8px;text-align:right;color:#dc2626">-' + loan.toLocaleString() + '万円</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">仲介手数料（3.3%+税）</td><td style="padding:6px 8px;text-align:right;color:#dc2626">-' + commission.toLocaleString() + '万円</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">登記・司法書士・引越費用</td><td style="padding:6px 8px;text-align:right;color:#dc2626">-' + (registration + moving) + '万円</td></tr>'
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">譲渡所得税（' + (years > 5 ? '長期20.3%' : '短期39.4%') + '）' + (gain <= 3000 ? '※3000万控除適用' : '') + '</td><td style="padding:6px 8px;text-align:right;color:#dc2626">-' + tax.toLocaleString() + '万円</td></tr>'
+    + '<tr style="background:#f5f3ef"><td style="padding:6px 8px;font-weight:700">最終手取り</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(' + heroColor + ',1)">' + net.toLocaleString() + '万円</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff9e6;border:1px solid #f0c040;border-radius:8px;padding:10px;font-size:12px;color:#7a5c00;margin-bottom:12px">💡 居住用財産の3000万円特別控除を適用すると譲渡益3000万円以下は非課税になります。保有5年超かどうかで税率が約2倍変わります（1月1日時点で判定）。</div>'
+    + '<button onclick="shareLine(\'売却価格' + price.toLocaleString() + '万円でも手取りは' + net.toLocaleString() + '万円！仲介手数料+税金+ローン返済で大きく減る。全費用を計算してみた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcSaleClosingFee(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {

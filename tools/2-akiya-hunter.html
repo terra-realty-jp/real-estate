@@ -3374,6 +3374,27 @@
     </div>
   </div>
 
+  <!-- calcAkiyaSubsidy -->
+  <div class="calc-card" data-category="補助金・制度活用" id="card-calcAkiyaSubsidy">
+    <div class="card-header" onclick="toggleCard('calcAkiyaSubsidy')">
+      <span>空き家の解体・リフォームでもらえる補助金はいくら？— 国・自治体補助金の合計受給可能額を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaSubsidy">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">空き家の解体・改修には国や市区町村からの補助金制度があります。対象となる主要補助金の合計受給可能額の目安を試算します。</p>
+      <label style="font-size:12px;color:var(--text2)">解体費（万円）<span style="color:#888;font-size:11px"> 例: 150（木造2階建て・100㎡の目安）</span></label>
+      <input type="number" id="asub_demolish" value="150" min="0" max="3000" oninput="calcAkiyaSubsidy()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">リフォーム費（万円）<span style="color:#888;font-size:11px"> 例: 200（耐震・省エネ改修含む）</span></label>
+      <input type="number" id="asub_reform" value="200" min="0" max="3000" oninput="calcAkiyaSubsidy()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">都市部か地方か</label>
+      <select id="asub_area" onchange="calcAkiyaSubsidy()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <option value="urban">政令市・特別区</option>
+        <option value="rural" selected>地方都市・町村</option>
+      </select>
+      <div id="asub_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -12835,6 +12856,48 @@ function calcAkiyaCampSite() {
     + '<div style="text-align:center;margin-top:12px"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('⛺ 空き家の庭をソロキャンプ場にしたら月' + monthlyRev + '万円！\n\n週末だけで年' + annualRev + '万円の副収入。空き地の新しい活用術を確認👇\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaCampSite(); })();
+
+function calcAkiyaSubsidy() {
+  var demolish = parseFloat(document.getElementById('asub_demolish').value) || 0;
+  var reform = parseFloat(document.getElementById('asub_reform').value) || 0;
+  var area = document.getElementById('asub_area').value;
+  var el = document.getElementById('asub_result');
+  if (!el) return;
+  // 解体補助金（国+自治体）
+  var demolishSubsidy = 0;
+  if (demolish > 0) {
+    var natl = Math.min(demolish * 0.23, 50); // 国の空き家対策補助（最大23%・上限50万円）
+    var local = area === 'rural' ? Math.min(demolish * 0.1, 30) : Math.min(demolish * 0.05, 20); // 自治体上乗せ
+    demolishSubsidy = Math.round((natl + local) * 10) / 10;
+  }
+  // リフォーム補助金
+  var reformSubsidy = 0;
+  if (reform > 0) {
+    var eco = Math.min(reform * 0.1, 45); // 子育て・省エネ改修（最大45万円）
+    var seishin = Math.min(reform * 0.23, 100); // 耐震改修補助（最大100万円）
+    var localRf = area === 'rural' ? Math.min(reform * 0.1, 50) : Math.min(reform * 0.05, 30);
+    reformSubsidy = Math.round(Math.min(eco + seishin + localRf, reform * 0.5) * 10) / 10; // 上限は費用の50%
+  }
+  var total = Math.round((demolishSubsidy + reformSubsidy) * 10) / 10;
+  var selfPay = Math.round((demolish + reform - total) * 10) / 10;
+  var heroColor = total > 100 ? '22,163,74' : total > 30 ? '201,168,76' : '59,130,246';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:13px;color:var(--text2);margin-bottom:4px">受け取れる補助金合計（目安）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgba(' + heroColor + ',1);line-height:1">' + total + '</div>'
+    + '<div style="font-size:14px;color:var(--text2);margin-top:4px">万円</div>'
+    + '<div style="font-size:13px;font-weight:700;color:rgba(' + heroColor + ',1);margin-top:6px">自己負担 ' + selfPay + '万円（補助率 ' + Math.round(total / (demolish + reform || 1) * 100) + '%）</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:12px">'
+    + '<tr style="background:rgba(0,0,0,0.03)"><td colspan="2" style="padding:6px 8px;font-weight:700">📊 補助金内訳</td></tr>'
+    + (demolish > 0 ? '<tr><td style="padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.08)">解体補助金（国＋自治体）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">+' + demolishSubsidy + '万円</td></tr>' : '')
+    + (reform > 0 ? '<tr><td style="padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.08)">改修補助金（省エネ・耐震・自治体）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">+' + reformSubsidy + '万円</td></tr>' : '')
+    + '<tr><td style="padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.08)">費用合計</td><td style="padding:6px 8px;text-align:right">' + (demolish + reform) + '万円</td></tr>'
+    + '<tr style="background:rgba(0,0,0,0.03)"><td style="padding:6px 8px;font-weight:700">自己負担額</td><td style="padding:6px 8px;text-align:right;font-weight:700">' + selfPay + '万円</td></tr>'
+    + '</table>'
+    + '<div style="font-size:11px;color:var(--text2);background:rgba(0,0,0,0.03);border-radius:6px;padding:8px;margin-top:8px">⚠️ 補助金は年度・自治体によって異なります。申請期間・予算上限があるため早めの確認が重要です。TERRA REALTYでは自治体別の補助金情報をご案内しています。</div>'
+    + '<div style="text-align:center;margin-top:12px"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('💰 空き家の解体・改修費用の最大' + Math.round(total / (demolish + reform || 1) * 100) + '%が補助金でカバーできる！\n\n総費用' + (demolish + reform) + '万円のうち' + total + '万円が補助対象。申請しないと損。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaSubsidy(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
