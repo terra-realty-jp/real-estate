@@ -3820,6 +3820,28 @@
     </div>
   </div>
 
+  <div class="card" data-category="価格・査定" id="card-calcOldSeismicRisk">
+    <div class="card-header" onclick="toggleCard('calcOldSeismicRisk')">
+      <span>1981年以前の旧耐震の家は新耐震と比べていくら安く売れる？ 耐震改修費との比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcOldSeismicRisk">
+      <div style="background:rgba(254,226,226,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#991b1b;line-height:1.7">⚠️ 1981年6月以前の建築確認物件は「旧耐震基準」で、住宅ローン控除や住宅瑕疵担保保険の対象外になる場合があります。売却価格への影響と耐震改修費を比較してみましょう。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">物件の現在価格（万円）<span style="color:#888;font-size:11px"> 例: 2500（新耐震と仮定した場合の査定額）</span></label>
+      <input type="number" id="osr_base" value="2500" min="100" max="100000" step="100" oninput="calcOldSeismicRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">耐震基準<span style="color:#888;font-size:11px"> 建築確認の日付で判定します</span></label>
+      <select id="osr_standard" onchange="calcOldSeismicRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="new">新耐震基準（1981年7月以降の建築確認）</option>
+        <option value="old">旧耐震基準（1981年6月以前の建築確認）</option>
+        <option value="old_improved">旧耐震だが耐震診断・改修済み</option>
+      </select>
+      <label style="font-size:13px">建物の延床面積（㎡）<span style="color:#888;font-size:11px"> 例: 100（耐震改修費の目安計算に使用）</span></label>
+      <input type="number" id="osr_area" value="100" min="20" max="1000" step="10" oninput="calcOldSeismicRisk()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="osr_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -12568,6 +12590,32 @@ function calcDiyResaleValue() {
     + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent(netEffect > 0 ? '💡 売る前のリフォーム' + reform + '万円で売値が' + priceUp + '万円アップ→純利益' + netEffect + '万円！\n\n全面リフォームは逆効果。部分改修なら費用対効果1.5倍が狙えるという計算になった。\n▶ 不動産かんたんツール（TERRA REALTY）' : '😱 売る前のリフォームは費用' + reform + '万円かけても回収できない計算に！\n\nROI' + roi + '倍では費用を下回る…現状渡しの方が手取りが多い場合も。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcDiyResaleValue(); })();
+
+function calcOldSeismicRisk() {
+  var base = parseFloat(document.getElementById('osr_base').value) || 0;
+  var standard = document.getElementById('osr_standard').value;
+  var area = parseFloat(document.getElementById('osr_area').value) || 0;
+  var el = document.getElementById('osr_result');
+  if (!el) return;
+  var discountMap = { new: 0, old: 0.20, old_improved: 0.05 };
+  var discount = discountMap[standard] || 0;
+  var priceImpact = Math.round(base * discount);
+  var estimatedPrice = base - priceImpact;
+  var seismicCostLow = Math.round(area * 0.5);
+  var seismicCostHigh = Math.round(area * 1.5);
+  var netAfterImprove = base - seismicCostLow - Math.round(base * 0.05);
+  var heroColor = standard === 'new' ? '#16a34a' : standard === 'old_improved' ? '#c9a84c' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">耐震基準による推定価格割引</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">-' + priceImpact + '<span style="font-size:20px">万円</span></div><div style="font-size:13px;color:' + heroColor + ';margin-top:4px">推定売却価格 ' + estimatedPrice + '万円</div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">新耐震基準での推定価格</td><td style="text-align:right;font-weight:700">' + base + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">旧耐震による価格下落（概算' + Math.round(discount * 100) + '%）</td><td style="text-align:right;font-weight:700;color:#dc2626">-' + priceImpact + '万円</td></tr>'
+    + (standard === 'old' ? '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">耐震改修費用（概算）</td><td style="text-align:right;font-weight:700;color:#c9a84c">' + seismicCostLow + '〜' + seismicCostHigh + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">改修後の推定売却価格</td><td style="text-align:right;font-weight:700;color:#3b82f6">' + netAfterImprove + '万円程度</td></tr>' : '')
+    + '</table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f8fafc;border-radius:8px;font-size:12px;color:#555;line-height:1.7">'
+    + (standard === 'new' ? '✅ 新耐震基準物件です。住宅ローン控除・すまい給付金の対象になり、買主が住宅ローンを使いやすくなります。' : standard === 'old' ? '⚠️ 旧耐震基準物件です。耐震改修（' + seismicCostLow + '〜' + seismicCostHigh + '万円）を行うと住宅ローン控除対象になり、売却価格の改善が期待できます。' : '✅ 耐震診断・改修済みのため、旧耐震でも住宅ローン対象になる場合があります。改修証明書を準備しましょう。') + '</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent(standard === 'old' ? '😱 旧耐震の家、新耐震と比べて' + priceImpact + '万円（20%）も安く売れてしまうことが発覚！\n\n耐震改修費' + seismicCostLow + '万円をかけてでも改修した方が得かもしれない…\n▶ 不動産かんたんツール（TERRA REALTY）' : '✅ 耐震基準チェック完了！新耐震基準で問題なし。\n\nローン控除・買主の資金調達に有利な条件。売却時のアドバンテージを活かそう。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcOldSeismicRisk(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {

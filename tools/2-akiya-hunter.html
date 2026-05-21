@@ -3196,6 +3196,28 @@
     </div>
   </div>
 
+  <div class="calc-card" data-category="活用方法" id="card-calcAkiyaArtStudio">
+    <div class="card-header" onclick="toggleCard('calcAkiyaArtStudio')">
+      <span>空き家をアトリエ・ダンス・音楽スタジオとして貸し出すといくら稼げる？ 収益と回収期間を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaArtStudio">
+      <div style="background:rgba(220,252,231,0.5);border:1px solid rgba(22,163,74,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#166534;line-height:1.7">💡 アトリエ・ダンス・音楽スタジオとしての時間貸しは、通常の住宅賃貸より1.5〜3倍の時間単価が見込めます。防音設備が必要な音楽スタジオ以外は初期費用が低く、需要も安定しています。</div>
+      <p style="font-size:13px;color:#555;margin-bottom:12px">下の数字はサンプル値です。ご自身の物件情報に変更してください。</p>
+      <label style="font-size:13px">スペースの広さ（㎡）<span style="color:#888;font-size:11px"> 例: 40（1フロアの使用可能面積）</span></label>
+      <input type="number" id="aas_area" value="40" min="10" max="500" step="5" oninput="calcAkiyaArtStudio()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:13px">スタジオの用途<span style="color:#888;font-size:11px"> 用途によって時間単価と初期費用が変わります</span></label>
+      <select id="aas_type" onchange="calcAkiyaArtStudio()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <option value="art">アトリエ・写真スタジオ（時間1,000〜2,000円・初期費用低）</option>
+        <option value="dance">ダンス・ヨガスタジオ（時間2,000〜3,000円・床工事必要）</option>
+        <option value="music">音楽練習スタジオ（時間1,500〜2,500円・防音工事必要）</option>
+      </select>
+      <label style="font-size:13px">週あたりの稼働時間（時間）<span style="color:#888;font-size:11px"> 例: 20（週5日×4時間稼働）</span></label>
+      <input type="number" id="aas_hours" value="20" min="1" max="84" step="1" oninput="calcAkiyaArtStudio()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <div id="aas_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -12386,6 +12408,34 @@ function calcAkiyaTrunkRoom() {
     + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('💡 空き家' + area + '㎡をトランクルームに転用→月' + netMonthly + '万円の安定収入！\n\n初期費用' + setup + '万円も' + paybackMonths + 'ヶ月で回収できる計算。内装不要・入居者管理不要でラク。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaTrunkRoom(); })();
+
+function calcAkiyaArtStudio() {
+  var area = parseFloat(document.getElementById('aas_area').value) || 0;
+  var type = document.getElementById('aas_type').value;
+  var hours = parseFloat(document.getElementById('aas_hours').value) || 0;
+  var el = document.getElementById('aas_result');
+  if (!el) return;
+  var rateMap = { art: 1500, dance: 2500, music: 2000 };
+  var setupMap = { art: 20, dance: 80, music: 150 };
+  var rate = rateMap[type] || 1500;
+  var setup = setupMap[type] || 50;
+  var monthlyGross = Math.round(rate * hours * 4 / 10000 * 10) / 10;
+  var maintenanceFee = Math.round(monthlyGross * 0.10 * 10) / 10;
+  var monthlyNet = Math.round((monthlyGross - maintenanceFee) * 10) / 10;
+  var annualNet = Math.round(monthlyNet * 12 * 10) / 10;
+  var paybackMonths = monthlyNet > 0 ? Math.round((setup / monthlyNet) * 10) / 10 : 0;
+  var heroColor = paybackMonths <= 18 ? '#16a34a' : paybackMonths <= 36 ? '#c9a84c' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + '1a;border:2px solid ' + heroColor + '33;border-radius:12px;padding:16px;text-align:center;margin-bottom:12px"><div style="font-size:12px;color:' + heroColor + ';font-weight:700;margin-bottom:4px">月間純収益</div><div style="font-size:52px;font-weight:900;color:' + heroColor + ';line-height:1">' + monthlyNet + '<span style="font-size:20px">万円/月</span></div></div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">時間単価（目安）</td><td style="text-align:right;font-weight:700">' + (rate / 100) + '円/時間</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">月間売上（週' + hours + '時間×4週）</td><td style="text-align:right;font-weight:700;color:#16a34a">' + monthlyGross + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">年間純収益</td><td style="text-align:right;font-weight:700;color:#16a34a">' + annualNet + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;border-bottom:1px solid #eee;color:#555">初期設備費用（目安）</td><td style="text-align:right;font-weight:700;color:#dc2626">-' + setup + '万円</td></tr>'
+    + '<tr><td style="padding:5px 0;color:#555">回収期間</td><td style="text-align:right;font-weight:700;color:' + heroColor + '">' + paybackMonths + 'ヶ月</td></tr></table>'
+    + '<div style="margin-top:12px;padding:10px;background:#f0fdf4;border-radius:8px;font-size:12px;color:#166534;line-height:1.7">'
+    + (paybackMonths <= 18 ? '✅ 1年半以内で回収できる高収益活用です。普通の賃貸より時間単価が高く、近年需要が増加しています。' : paybackMonths <= 36 ? '⚠️ 2〜3年で回収できる計算です。稼働率を高める集客戦略（SNS・スペースマーケット等）を並行して検討しましょう。' : '❌ 回収に3年以上かかります。稼働時間を増やすか、別の活用方法と比較してみましょう。') + '</div>'
+    + '<div style="margin-top:10px;text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('💡 空き家をスタジオに転用→月' + monthlyNet + '万円の収益！\n\n週' + hours + '時間稼働で年' + annualNet + '万円。初期費用' + setup + '万円も' + paybackMonths + 'ヶ月で回収できる計算。眠っている空き家を活かす時代。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaArtStudio(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
