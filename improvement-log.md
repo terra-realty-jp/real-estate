@@ -4521,3 +4521,17 @@
 ### llms.txt AEO情報更新
 - 全483カード → 全727カードに修正
 - 遅延初期化・「友達に試させる」バイラルシェア・URLハッシュナビを最新の特徴に追記
+
+## 2026-05-22 （セッション継続・ID重複バグ修正）
+
+- **対象**: tools/1-ai-satei.html / 2-akiya-hunter.html / 3-owner-direct.html / 4-kanri-saas.html / 5-toushi-bunseki.html
+- **フェーズ**: 品質改善・バグ修正
+- **改善内容**: 全5ツールで重複HTML ID（約30箇所）を発見・修正。getElementById()が別カードのDOM要素を参照してしまい、入力値の読み取りミスや結果表示の上書きが発生していた。
+- **具体的な修正**:
+  - Tool1: calcDivorceSplit(dsv_), calcSellTiming(stm_), calcSaleTimeline(stl_), calcInheritanceSale(inh_), calcInheritanceSplit(isp_), calcDownsizeChoice(dsc_), calcAgencyFeeCompare(afcp_)
+  - Tool2: ars_/afs_/aec_/acp_/amc_ 重複を各カード固有プレフィックスに変更
+  - Tool3: card-deposit-risk-top3/dep_/bov_/insrisk_ に変更
+  - Tool4: 10種類の重複ID（rck_/rst_/arr_/drf_/ltd2_/rfs2_/sub_等）を修正
+  - Tool5: irisk_/eit_/prk_/lvrat_ に変更
+  - Tool5 LTV専門用語: 「LTV60%はあくまで目安」→「担保融資の上限は市場価格の60%程度が目安」
+- **理由**: 重複IDはブラウザが最初のDOM要素のみ返すため、後半のカードが前半のカードの値を読み取るサイレントバグ。ユーザーには画面上の変化がないが、計算結果が誤っていた。
