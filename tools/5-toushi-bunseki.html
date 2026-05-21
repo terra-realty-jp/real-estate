@@ -4570,6 +4570,7 @@
 
 <script>
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
+function shareLine(text){window.open('https://social-plugins.line.me/lineit/share?url='+encodeURIComponent(location.origin+location.pathname)+'&text='+encodeURIComponent(text),'_blank','noopener,noreferrer');}
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxLgo-Ghf31C6SyBxh4BiIVC3lz1CfVXplJIqIxoT1-7YDF8T54Uu5IjkcVvU3LQkBglQ/exec';
 
 // 金利参考データ（data/interest-rates.json から起動時ロード）
@@ -14473,8 +14474,8 @@ function calcNewBuildTaxCut() {
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 新築戸建て3年・マンション5年（長期優良住宅は+2年）が半額。建物評価額は経年で下がるため実際の増加幅は小さくなる場合があります。</p>';
   var shareText = remaining > 0
-    ? '新築の固定資産税優遇はあと'+remaining+'年で終了——終わったら年間+'+increase+'万円の急増！今のうちにキャッシュフローを確認しておかないと痛い目に #不動産かんたんツール'
-    : '新築優遇が終わって固定資産税が年間+'+increase+'万円に急増。収支計画の見直しが必要 #不動産かんたんツール';
+    ? '新築の固定資産税優遇はあと'+remaining+'年で終了——終わったら年間+'+increase+'万円の急増！今のうちにキャッシュフローを確認しておかないと痛い目に\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）'
+    : '新築優遇が終わって固定資産税が年間+'+increase+'万円に急増。収支計画の見直しが必要\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
 }
@@ -14515,7 +14516,7 @@ function calcStructureCompare() {
   });
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 耐用年数は税法上の法定耐用年数。建物価格の90%を耐用年数で定額法で計算。実際の節税効果は所得状況により異なります。</p>';
-  var shareText = '木造耐用22年 vs RC造47年——投資物件の構造で年間節税額が最大'+rows[0].annualSaving+'〜'+rows[2].annualSaving+'万円も違う！20年後の残存価値も差が出る #不動産かんたんツール';
+  var shareText = '木造耐用22年 vs RC造47年——投資物件の構造で年間節税額が最大'+rows[0].annualSaving+'〜'+rows[2].annualSaving+'万円も違う！20年後の残存価値も差が出る\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
 }
@@ -14559,7 +14560,7 @@ function calcSensitivityRent() {
   });
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 家賃下落は築年数や周辺競合物件の増加、人口減少で起こりやすいです。購入前に▲20%でも赤字にならないかを確認することを推奨します。</p>';
-  var shareText = '投資物件の家賃が▲20%下落しても利回り'+Math.round((rent*0.8-expense)/price*100*100)/100+'%——リスクに強い物件かどうかを事前に確認すべき #不動産かんたんツール';
+  var shareText = '投資物件の家賃が▲20%下落しても利回り'+Math.round((rent*0.8-expense)/price*100*100)/100+'%——リスクに強い物件かどうかを事前に確認すべき\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
 }
@@ -14599,7 +14600,7 @@ function calcEquityWithdraw() {
   html += '<tr><td style="padding:6px 8px">将来の家賃収入</td><td style="padding:6px 8px;text-align:center">なくなる</td><td style="padding:6px 8px;text-align:center">継続</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 担保融資は融資審査が必要です。LTV60%はあくまで目安。実際の条件は金融機関に確認してください</p>';
-  var shareText = '物件を売ると手取り'+sellNet+'万円。担保に入れると'+pledgeFree+'万円が手に入り物件も残せる！含み益'+equity+'万円の活用法を比較 #不動産かんたんツール';
+  var shareText = '物件を売ると手取り'+sellNet+'万円。担保に入れると'+pledgeFree+'万円が手に入り物件も残せる！含み益'+equity+'万円の活用法を比較\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
 }
@@ -14635,7 +14636,7 @@ function calcRateImpact() {
   html += '<tr><td style="padding:6px 8px">総支払い利息</td><td style="padding:6px 8px;text-align:right">'+Math.round(totalLow-p)+'万円</td><td style="padding:6px 8px;text-align:right">'+Math.round(totalHigh-p)+'万円</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 元利均等返済で計算。変動金利は金利上昇により差がさらに広がる場合があります</p>';
-  var shareText = '借入'+p+'万円で金利が'+rLow+'%から'+rHigh+'%に上がると'+years+'年間で総返済額が'+diff+'万円も増える！金利交渉は絶対にすべき #不動産かんたんツール';
+  var shareText = '借入'+p+'万円で金利が'+rLow+'%から'+rHigh+'%に上がると'+years+'年間で総返済額が'+diff+'万円も増える！金利交渉は絶対にすべき\n▶ あなたのローンでも無料試算\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
 }
@@ -14665,7 +14666,7 @@ function calcBuildingAgeScore() {
   html += '<tr><td style="padding:6px 8px">売却タイミング診断</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+sellTimeLabel+'</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 融資年数の目安は残存耐用年数の範囲内。耐用年数超でもアパートローンを組む金融機関はあります</p>';
-  var shareText = structName+'築'+age+'年の物件は残存耐用年数が'+remaining+'年。'+score+'——出口戦略を今のうちに考えることが大切 #不動産かんたんツール';
+  var shareText = structName+'築'+age+'年の物件は残存耐用年数が'+remaining+'年。'+score+'——出口戦略を今のうちに考えることが大切\n▶ あなたの物件でも無料診断\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
 }
@@ -14696,7 +14697,7 @@ function calcJointSaleExit() {
   html += '<tr><td style="padding:6px 8px;font-weight:700">手取り額</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">'+netFull+'万円</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+netPartial+'万円</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 持分売却の価格ディスカウントは市場・相手次第で変動します。共同者との協議が困難な場合は裁判所を通じた「共有物分割」も選択肢です</p>';
-  var shareText = '共有物件の持分（'+share+'%）だけを売ると'+discount+'%安くなり、全体で売るより'+diff+'万円損する！共同者を説得して一緒に売る価値がある #不動産かんたんツール';
+  var shareText = '共有物件の持分（'+share+'%）だけを売ると'+discount+'%安くなり、全体で売るより'+diff+'万円損する！共同者を説得して一緒に売る価値がある\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
 }
@@ -14730,7 +14731,7 @@ function calcAfterTaxCF() {
   html += '<tr><td style="padding:6px 8px;font-weight:700">税引き後CF（真の手残り）</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+(isProfit?'+':'')+cfAfter+'万円</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 経費に減価償却を計上するとネット収入（課税所得）が下がり税金を抑えられます</p>';
-  var shareText = '不動産投資、家賃'+rent+'万円でも所得税'+tax+'万円を引くと実際の手残りは'+cfAfter+'万円！税引き前'+cfBefore+'万円との差に驚く #不動産かんたんツール';
+  var shareText = '不動産投資、家賃'+rent+'万円でも所得税'+tax+'万円を引くと実際の手残りは'+cfAfter+'万円！税引き前'+cfBefore+'万円との差に驚く\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
 }
