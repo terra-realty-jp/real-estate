@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-05-21 Round 44（セッション継続）
+
+- **対象**: tools/1-ai-satei.html〜5, llms.txt
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 44）
+- **改善内容**:
+  - Tool1: `calcRetirementSell` — 老後に家を売ったらいくら手元に残るか（ローン残高・住み替え先家賃・現費用比較）
+  - Tool2: `calcAkiyaOffice` — 空き家をシェアオフィスに転用した場合の月次収益・回収期間
+  - Tool3: `calcMoveCostCompare` — 住み替え「先買い」vs「先売り」の費用・リスク比較
+  - Tool4: `calcDepositRefund` — 賃貸退去時の敷金返還見込み額（築年数・状態別）
+  - Tool5: `calcInterestRateRisk` — 変動金利上昇リスク：1〜3%上昇時の月次返済増額・総支払差
+  - llms.txt: 712→717枚に更新
+- **理由**: 「老後資金として家を売るべき？」「空き家でビジネス？」「どっちで動くべき？」「敷金は戻る？」「金利が上がったら？」は40〜60代が今まさに悩むテーマでPLG高
+- **カード総数**: 717枚
+
 ## 2026-05-21 Round 43（セッション継続）
 
 - **対象**: tools/1-ai-satei.html〜5, llms.txt
