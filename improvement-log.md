@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-21 Round 43（セッション継続）
+
+- **対象**: tools/1-ai-satei.html〜5, llms.txt
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 43）
+- **改善内容**:
+  - Tool1: `calcDemolitionCost` — 解体費用（坪数・構造別）＋解体後の固定資産税6倍化の落とし穴
+  - Tool2: `calcAkiyaElderHousing` — 空き家をサ高住に転用した月収・補助金・回収期間
+  - Tool3: `calcMortgageInsurance` — 団信の保障を民間保険に換算した価値試算
+  - Tool4: `calcCondoMaintenance` — マンション管理費・修繕積立金の値上がりリスク10〜20年試算
+  - Tool5: `calcSurveyFee` — 投資物件デューデリジェンス費用の総額試算（規模別）
+  - llms.txt: 707→712枚に更新
+- **理由**: 「購入後に後悔する」「知らないと損する」系のカード。特にTool1の固定資産税6倍化の落とし穴はSNSで広がりやすい驚き型設計
+
 ## 2026-05-21 Round 42（セッション継続）
 
 - **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html, llms.txt
