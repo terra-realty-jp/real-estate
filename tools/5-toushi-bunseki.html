@@ -4168,6 +4168,23 @@
     </div>
   </div>
 
+  <div class="card" data-category="税・節税" id="card-calcPropertyTaxLand6">
+    <div class="card-header" onclick="toggleCard('calcPropertyTaxLand6')">
+      <span class="card-title">家を取り壊すと固定資産税が6倍になる — 解体前に必ず確認する税負担増</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcPropertyTaxLand6">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">住宅が建っている土地には「住宅用地特例」で固定資産税が最大1/6に軽減されています。取り壊すとこの特例がなくなり、税額が一気に増加します。</p>
+      <label style="font-size:12px;color:#555">土地の固定資産税評価額（万円）<span style="font-size:11px;color:#999"> 例: 2000（納税通知書に記載）</span></label>
+      <input type="number" id="ptl_land" value="2000" min="100" max="99999" oninput="calcPropertyTaxLand6()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">建物の固定資産税評価額（万円）<span style="font-size:11px;color:#999"> 例: 500（同じく納税通知書に記載）</span></label>
+      <input type="number" id="ptl_house" value="500" min="0" max="99999" oninput="calcPropertyTaxLand6()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">土地面積（㎡）<span style="font-size:11px;color:#999"> 例: 100（200㎡以下なら最大1/6特例）</span></label>
+      <input type="number" id="ptl_area" value="100" min="10" max="9999" oninput="calcPropertyTaxLand6()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="ptl_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -15280,6 +15297,44 @@ function calcREITComparison() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💰 不動産直接購入 vs REIT、年間収益の差は' + Math.abs(diff) + '万円！\n\n' + (diff > 0 ? '直接購入が有利だが管理の手間も大きい。' : 'REITの方が手間ゼロで収益が高い場合も。') + '\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcREITComparison(); })();
+
+function calcPropertyTaxLand6() {
+  var land = parseFloat(document.getElementById('ptl_land').value) || 0;
+  var house = parseFloat(document.getElementById('ptl_house').value) || 0;
+  var area = parseFloat(document.getElementById('ptl_area').value) || 0;
+  var el = document.getElementById('ptl_result');
+  if (!el) return;
+  var taxRate = 0.014;
+  var smallLot = Math.min(area, 200);
+  var largeLot = Math.max(area - 200, 0);
+  var landWithSmall = land * (smallLot / area) * (1 / 6);
+  var landWithLarge = land * (largeLot / area) * (1 / 3);
+  var landTaxWith = Math.round((landWithSmall + landWithLarge) * taxRate * 10) / 10;
+  var houseTax = Math.round(house * taxRate * 10) / 10;
+  var totalWith = Math.round((landTaxWith + houseTax) * 10) / 10;
+  var landTaxWithout = Math.round(land * taxRate * 10) / 10;
+  var totalWithout = landTaxWithout;
+  var increase = Math.round((totalWithout - totalWith) * 10) / 10;
+  var ratio = totalWith > 0 ? Math.round(totalWithout / totalWith * 10) / 10 : 0;
+  el.innerHTML = '<div style="background:#dc2626;color:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">'
+    + '<div style="font-size:12px;opacity:0.9;margin-bottom:4px">解体後の年間税負担増加額</div>'
+    + '<div style="font-size:52px;font-weight:900;line-height:1">+' + increase + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;opacity:0.85;margin-top:4px">現在 ' + totalWith + '万円/年 → 解体後 ' + totalWithout + '万円/年（約' + ratio + '倍）</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:12px;border-collapse:collapse">'
+    + '<tr style="background:#f8f9fa"><th style="padding:5px 8px;text-align:left;font-weight:600;color:#333" colspan="2">【現在：家あり】</th></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">土地の固定資産税（住宅特例適用）</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + landTaxWith + ' 万円/年</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">建物の固定資産税</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + houseTax + ' 万円/年</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555;font-weight:700">合計（家あり）</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:#16a34a">' + totalWith + ' 万円/年</td></tr>'
+    + '<tr style="background:#f8f9fa"><th style="padding:5px 8px;text-align:left;font-weight:600;color:#333" colspan="2">【解体後：更地】</th></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">土地の固定資産税（特例なし）</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:#dc2626">' + landTaxWithout + ' 万円/年</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555;font-weight:700">合計（更地）</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:#dc2626">' + totalWithout + ' 万円/年</td></tr>'
+    + '</table>'
+    + '<div style="font-size:11px;color:#666;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px;margin-top:8px">'
+    + '⚠️ 解体すると「住宅用地特例」（土地税額を最大1/6に軽減）が失われ、土地の固定資産税が急増します。解体を検討するなら、税負担増を見込んだ活用計画と同時に進めましょう。TERRA REALTYにご相談ください。' + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😱 家を取り壊すと固定資産税が約' + ratio + '倍！年間' + increase + '万円の負担増！\n\n知らずに解体するのは危険。住宅用地特例の仕組みを確認しよう。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcPropertyTaxLand6(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {

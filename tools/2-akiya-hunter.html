@@ -3295,6 +3295,25 @@
     </div>
   </div>
 
+  <div class="calc-card" data-category="転用・活用" id="card-calcAkiyaBeekeeping">
+    <div class="card-header" onclick="toggleCard('calcAkiyaBeekeeping')">
+      <span class="card-title">空き地に巣箱を置いて蜂蜜販売 — 養蜂転用の年間収益試算</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaBeekeeping">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">農地・庭・空き地を養蜂場として貸し出す（または自営する）副収入モデルを試算します。</p>
+      <label style="font-size:12px;color:var(--text2)">巣箱の数（箱）<span style="color:#888;font-size:11px"> 例: 10（初心者は5〜15箱から）</span></label>
+      <input type="number" id="abk_hives" value="10" min="1" max="100" oninput="calcAkiyaBeekeeping()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">1箱あたり年間蜂蜜収穫量（kg）<span style="color:#888;font-size:11px"> 例: 20（セイヨウミツバチの平均）</span></label>
+      <input type="number" id="abk_yield" value="20" min="1" max="100" oninput="calcAkiyaBeekeeping()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">蜂蜜の販売価格（円/kg）<span style="color:#888;font-size:11px"> 例: 3000（道の駅・直売の相場）</span></label>
+      <input type="number" id="abk_price" value="3000" min="500" max="20000" oninput="calcAkiyaBeekeeping()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">初期設備費（万円）<span style="color:#888;font-size:11px"> 例: 30（巣箱・防護服・採蜜器等）</span></label>
+      <input type="number" id="abk_init" value="30" min="0" max="500" oninput="calcAkiyaBeekeeping()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <div id="abk_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -12629,6 +12648,35 @@ function calcAkiyaWarehouse() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🏚 空き家を倉庫として貸すだけで月' + monthlyRent + '万円の収入！\n\n改装ほぼ不要・トラブルも少ない。' + area + '㎡の空き家を活用する選択肢として検討中。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaWarehouse(); })();
+
+function calcAkiyaBeekeeping() {
+  var hives = parseFloat(document.getElementById('abk_hives').value) || 0;
+  var yieldKg = parseFloat(document.getElementById('abk_yield').value) || 0;
+  var price = parseFloat(document.getElementById('abk_price').value) || 0;
+  var init = parseFloat(document.getElementById('abk_init').value) || 0;
+  var el = document.getElementById('abk_result');
+  if (!el) return;
+  var annualRevenue = Math.round(hives * yieldKg * price / 10000 * 10) / 10;
+  var annualCost = Math.round((hives * 0.5 + 2) * 10) / 10;
+  var annualProfit = Math.round((annualRevenue - annualCost) * 10) / 10;
+  var payback = annualProfit > 0 ? Math.round(init / annualProfit * 10) / 10 : 999;
+  var heroColor = annualProfit > 0 ? '#16a34a' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + ';color:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">'
+    + '<div style="font-size:12px;opacity:0.9;margin-bottom:4px">年間純利益</div>'
+    + '<div style="font-size:52px;font-weight:900;line-height:1">' + annualProfit + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;opacity:0.85;margin-top:4px">年間売上 ' + annualRevenue + '万円 ／ 年間経費 ' + annualCost + '万円</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:12px;border-collapse:collapse">'
+    + '<tr style="background:rgba(255,255,255,0.05)"><td style="padding:5px 8px;color:var(--text2)">総収穫量</td><td style="padding:5px 8px;text-align:right;color:var(--text)">' + Math.round(hives * yieldKg) + ' kg/年</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:var(--text2)">年間売上</td><td style="padding:5px 8px;text-align:right;color:var(--text)">' + annualRevenue + ' 万円</td></tr>'
+    + '<tr style="background:rgba(255,255,255,0.05)"><td style="padding:5px 8px;color:var(--text2)">年間経費（維持・消耗品）</td><td style="padding:5px 8px;text-align:right;color:var(--text)">' + annualCost + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:var(--text2)">初期費用回収期間</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:var(--text)">' + (payback < 100 ? payback + ' 年' : '採算困難') + '</td></tr>'
+    + '</table>'
+    + '<div style="font-size:11px;color:var(--text2);background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;margin-top:8px">'
+    + (annualProfit > 5 ? '✅ 養蜂は農地・庭・空き地を活かした低コスト副収入です。許可不要（趣味の範囲）から始め、軌道に乗れば農業として本格化も可能です。' : annualProfit > 0 ? '💡 利益は出ますが薄めです。蜂蜜の付加価値販売（ギフト用・加工品）や巣箱数を増やすと収益改善が見込めます。' : '⚠️ 現在の設定では採算が厳しい状況です。販売価格の引き上げや巣箱数の最適化を検討しましょう。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🍯 空き地に巣箱' + hives + '箱で年間' + annualProfit + '万円の副収入！\n\n養蜂転用は農薬・農地問題もなく始めやすい。設備費' + init + '万円で' + (payback < 100 ? payback + '年で回収。' : '収支改善が課題。') + '\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaBeekeeping(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {

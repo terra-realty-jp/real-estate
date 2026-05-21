@@ -4423,6 +4423,25 @@
     </div>
   </div>
 
+  <div class="card" data-category="収益・副収入" id="card-calcRooftopParking">
+    <div class="card-header" onclick="toggleCard('calcRooftopParking')">
+      <span class="card-title">空きスペース・屋上を時間貸し駐車場にすると年間いくら稼げるか</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcRooftopParking">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">賃貸物件の空き駐車場・屋上・共有スペースをコインパーキング転用した場合の収益を試算します。</p>
+      <label style="font-size:12px;color:#555">駐車可能台数（台）<span style="font-size:11px;color:#999"> 例: 4</span></label>
+      <input type="number" id="rtp_spaces" value="4" min="1" max="50" oninput="calcRooftopParking()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">時間単価（円/時間）<span style="font-size:11px;color:#999"> 例: 200（郊外）〜 500（都心）</span></label>
+      <input type="number" id="rtp_rate" value="200" min="50" max="2000" oninput="calcRooftopParking()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">1台あたり平均稼働時間（時間/日）<span style="font-size:11px;color:#999"> 例: 4（郊外）〜 8（駅近）</span></label>
+      <input type="number" id="rtp_hours" value="4" min="0.5" max="24" oninput="calcRooftopParking()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">初期整備費（万円）<span style="font-size:11px;color:#999"> 例: 50（舗装・精算機・看板）</span></label>
+      <input type="number" id="rtp_init" value="50" min="0" max="500" oninput="calcRooftopParking()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="rtp_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -15247,6 +15266,38 @@ function calcRentBonusMonth() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('💡 フリーレント' + free + 'ヶ月提供で空室が' + (vacancy - withFree) + 'ヶ月短縮！\n\n空室損失' + costWithout + '万円 vs フリーレントコスト' + costWith + '万円。差引' + (netSaving >= 0 ? 'プラス' + netSaving + '万円の得' : 'マイナス' + Math.abs(netSaving) + '万円') + '。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcRentBonusMonth(); })();
+
+function calcRooftopParking() {
+  var spaces = parseFloat(document.getElementById('rtp_spaces').value) || 0;
+  var rate = parseFloat(document.getElementById('rtp_rate').value) || 0;
+  var hours = parseFloat(document.getElementById('rtp_hours').value) || 0;
+  var init = parseFloat(document.getElementById('rtp_init').value) || 0;
+  var el = document.getElementById('rtp_result');
+  if (!el) return;
+  var dailyRev = Math.round(spaces * rate * hours / 10000 * 10) / 10;
+  var monthlyRev = Math.round(dailyRev * 30 * 10) / 10;
+  var annualRev = Math.round(monthlyRev * 12 * 10) / 10;
+  var annualCost = Math.round((init * 0.05 + 1) * 10) / 10;
+  var annualProfit = Math.round((annualRev - annualCost) * 10) / 10;
+  var payback = annualProfit > 0 ? Math.round(init / annualProfit * 10) / 10 : 999;
+  var heroColor = annualProfit > 0 ? '#16a34a' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + ';color:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">'
+    + '<div style="font-size:12px;opacity:0.9;margin-bottom:4px">年間純利益</div>'
+    + '<div style="font-size:52px;font-weight:900;line-height:1">' + annualProfit + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;opacity:0.85;margin-top:4px">月収 ' + monthlyRev + '万円 ／ 1日 ' + dailyRev + '万円</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:12px;border-collapse:collapse">'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">1日あたり売上</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + dailyRev + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">月間売上</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + monthlyRev + ' 万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">年間売上</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + annualRev + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">年間維持費（整備費×5%+管理）</td><td style="padding:5px 8px;text-align:right;color:#dc2626">' + annualCost + ' 万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">初期費用回収期間</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + (payback < 100 ? payback + ' 年' : '採算困難') + '</td></tr>'
+    + '</table>'
+    + '<div style="font-size:11px;color:#666;background:#f8f9fa;border-radius:6px;padding:8px;margin-top:8px">'
+    + (payback <= 5 ? '✅ 5年以内で回収できる見込みです。空き駐車場はコインパーキング業者へ一括委託（初期費無料・収益シェア）という方法もあります。自分で管理するより手軽に始められます。' : payback <= 10 ? '💡 10年以内での回収が見込めます。業者委託 vs 自己運営を比較し、手間とコストのバランスで判断しましょう。' : '⚠️ 回収期間が長くなっています。時間単価・稼働時間の改善、または業者への土地貸し（固定賃料）も検討してみましょう。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🚗 空き駐車場' + spaces + '台をコインパーキングにすると年間' + annualProfit + '万円の副収入！\n\n初期費用' + init + '万円で' + (payback < 100 ? payback + '年で回収。' : '収益改善が課題。') + '今すぐ試算してみよう。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcRooftopParking(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {

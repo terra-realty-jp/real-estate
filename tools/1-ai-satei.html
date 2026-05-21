@@ -4462,6 +4462,25 @@
     </div>
   </div>
 
+  <div class="card" data-category="税・節税" id="card-calcSaleAfterDivorce">
+    <div class="card-header" onclick="toggleCard('calcSaleAfterDivorce')">
+      <span>離婚時に家を売ると財産分与でいくら受け取れる？ 税金・ローンを引いた手取りを計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcSaleAfterDivorce">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">離婚時に不動産を売却して財産分与する場合、ローン残高・仲介手数料・譲渡税を引いた後に双方が受け取れる金額を試算します。</p>
+      <label style="font-size:13px">物件の売却価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="sad_price" value="3000" min="100" max="99999" oninput="calcSaleAfterDivorce()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">住宅ローン残高（万円）<span style="color:#888;font-size:11px"> 例: 2000</span></label>
+      <input type="number" id="sad_loan" value="2000" min="0" max="99999" oninput="calcSaleAfterDivorce()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">購入時の価格（取得費）（万円）<span style="color:#888;font-size:11px"> 例: 2800</span></label>
+      <input type="number" id="sad_cost" value="2800" min="0" max="99999" oninput="calcSaleAfterDivorce()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">保有年数（年）<span style="color:#888;font-size:11px"> 例: 8</span></label>
+      <input type="number" id="sad_years" value="8" min="0" max="50" oninput="calcSaleAfterDivorce()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="sad_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12859,6 +12878,41 @@ function calcContractCancellation() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent(reason === 'seller_voluntary' ? '😱 売主が契約解除すると手付金' + deposit + '万円を倍返しで' + (deposit * 2) + '万円支払う義務！\n\n「別の買主が来たから」という理由での解除は法律上認められていない。\n▶ 不動産かんたんツール（TERRA REALTY）' : '📋 不動産売買契約の解除ペナルティを確認。\n\n理由によって「手付金没収・倍返し・ペナルティなし」の3パターン。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcContractCancellation(); })();
+
+function calcSaleAfterDivorce() {
+  var price = parseFloat(document.getElementById('sad_price').value) || 0;
+  var loan = parseFloat(document.getElementById('sad_loan').value) || 0;
+  var cost = parseFloat(document.getElementById('sad_cost').value) || 0;
+  var years = parseFloat(document.getElementById('sad_years').value) || 0;
+  var el = document.getElementById('sad_result');
+  if (!el) return;
+  var agencyFee = Math.round(price * 0.03 + 6);
+  var taxableGain = price - cost - agencyFee;
+  var isLongTerm = years >= 5;
+  var taxRate = isLongTerm ? 0.20315 : 0.39363;
+  var taxAmt = taxableGain > 0 ? Math.round(taxableGain * taxRate) : 0;
+  var netProceeds = price - agencyFee - taxAmt;
+  var equityAfterLoan = netProceeds - loan;
+  var eachPerson = equityAfterLoan > 0 ? Math.round(equityAfterLoan / 2) : 0;
+  var heroColor = equityAfterLoan > 0 ? '#16a34a' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">一人あたりの財産分与（手取り）</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + eachPerson + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">' + (equityAfterLoan > 0 ? '売却後残額を2等分' : 'オーバーローン（残債がある）') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">売却価格</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + price + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">仲介手数料</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">−' + agencyFee + '万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">譲渡税（' + (isLongTerm ? '長期20%' : '短期39%') + '）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">−' + taxAmt + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">ローン残高</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">−' + loan + '万円</td></tr>'
+    + '<tr style="font-weight:700;background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">残額（財産分与の元本）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:' + heroColor + '">' + equityAfterLoan + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">一人あたり（2等分）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;font-weight:700">' + eachPerson + '万円</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + (equityAfterLoan > 0 ? '✅ 売却益からローン・税金を引いた後の残額を2等分します。なお、3,000万円特別控除（居住用財産）が使えれば譲渡税はゼロになります。詳細はTERRA REALTYにご相談ください。' : '⚠️ オーバーローン（売却価格がローン残高を下回る）の場合、売却しても残債が残ります。任意売却や銀行交渉が必要になる可能性があります。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('😱 離婚時に家を売ると一人' + eachPerson + '万円しか手元に残らない！\n\nローン・仲介手数料・税金を全部引くと思ったより少ない。財産分与の前に計算必須。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcSaleAfterDivorce(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {
