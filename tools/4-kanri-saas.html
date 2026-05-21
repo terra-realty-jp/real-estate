@@ -4442,6 +4442,27 @@
     </div>
   </div>
 
+  <div class="card" data-category="トラブル・管理" id="card-calcLateFeeIncome">
+    <div class="card-header" onclick="toggleCard('calcLateFeeIncome')">
+      <span class="card-title">入居者が家賃を滞納したら — 督促・弁護士・立退き費用の総コスト試算</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcLateFeeIncome">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">家賃滞納が発生した場合にオーナーが負担するコスト（機会損失・督促・法的手続き・立退き）の総額を試算します。</p>
+      <label style="font-size:12px;color:#555">月額家賃（万円）<span style="font-size:11px;color:#999"> 例: 8</span></label>
+      <input type="number" id="lfi_rent" value="8" min="1" max="200" oninput="calcLateFeeIncome()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">滞納月数（ヶ月）<span style="font-size:11px;color:#999"> 例: 3（3ヶ月で法的手続きが一般的）</span></label>
+      <input type="number" id="lfi_months" value="3" min="1" max="24" oninput="calcLateFeeIncome()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">対応の段階</label>
+      <select id="lfi_stage" onchange="calcLateFeeIncome()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="remind">自力督促のみ（電話・手紙）</option>
+        <option value="lawyer">弁護士・司法書士に依頼</option>
+        <option value="eviction">裁判・強制執行まで</option>
+      </select>
+      <div id="lfi_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -15298,6 +15319,39 @@ function calcRooftopParking() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('🚗 空き駐車場' + spaces + '台をコインパーキングにすると年間' + annualProfit + '万円の副収入！\n\n初期費用' + init + '万円で' + (payback < 100 ? payback + '年で回収。' : '収益改善が課題。') + '今すぐ試算してみよう。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcRooftopParking(); })();
+
+function calcLateFeeIncome() {
+  var rent = parseFloat(document.getElementById('lfi_rent').value) || 0;
+  var months = parseFloat(document.getElementById('lfi_months').value) || 0;
+  var stage = document.getElementById('lfi_stage').value;
+  var el = document.getElementById('lfi_result');
+  if (!el) return;
+  var lostRent = Math.round(rent * months * 10) / 10;
+  var remindCost = 1;
+  var lawyerCost = stage === 'lawyer' || stage === 'eviction' ? 15 : 0;
+  var evictionCost = stage === 'eviction' ? 30 : 0;
+  var vacancyAfter = Math.round(rent * 1.5 * 10) / 10;
+  var cleanupCost = 5;
+  var totalCost = Math.round((lostRent + remindCost + lawyerCost + evictionCost + vacancyAfter + cleanupCost) * 10) / 10;
+  var stageNames = { remind: '自力督促', lawyer: '弁護士依頼', eviction: '強制執行' };
+  el.innerHTML = '<div style="background:#dc2626;color:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">'
+    + '<div style="font-size:12px;opacity:0.9;margin-bottom:4px">滞納トータル損失額</div>'
+    + '<div style="font-size:52px;font-weight:900;line-height:1">' + totalCost + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;opacity:0.85;margin-top:4px">家賃損失 ' + lostRent + '万円 ＋ 手続き・立退き費用 ' + Math.round((remindCost + lawyerCost + evictionCost + vacancyAfter + cleanupCost) * 10) / 10 + '万円</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:12px;border-collapse:collapse">'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">滞納家賃の損失</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:#dc2626">' + lostRent + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">督促・通知費用</td><td style="padding:5px 8px;text-align:right">' + remindCost + ' 万円</td></tr>'
+    + (lawyerCost > 0 ? '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">弁護士・司法書士費用</td><td style="padding:5px 8px;text-align:right">' + lawyerCost + ' 万円</td></tr>' : '')
+    + (evictionCost > 0 ? '<tr><td style="padding:5px 8px;color:#555">強制執行・立退き費用</td><td style="padding:5px 8px;text-align:right">' + evictionCost + ' 万円</td></tr>' : '')
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">退去後の空室損失（推定1.5ヶ月）</td><td style="padding:5px 8px;text-align:right">' + vacancyAfter + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">原状回復・清掃費用</td><td style="padding:5px 8px;text-align:right">' + cleanupCost + ' 万円</td></tr>'
+    + '<tr style="border-top:2px solid #ddd"><td style="padding:6px 8px;color:#333;font-weight:700">損失合計</td><td style="padding:6px 8px;text-align:right;font-weight:900;color:#dc2626">' + totalCost + ' 万円</td></tr>'
+    + '</table>'
+    + '<div style="font-size:11px;color:#666;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px;margin-top:8px">⚠️ 家賃滞納1件で' + totalCost + '万円の損失になることがあります。賃貸管理会社や家賃保証会社の利用で初期段階の回収率が大幅に改善します。TERRA REALTYに管理委託相談を。</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('😱 家賃滞納' + months + 'ヶ月で' + stageNames[stage] + 'まで進むと総損失' + totalCost + '万円！\n\n「まあ払ってくれるだろう」が命取り。賃貸オーナーは要確認。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcLateFeeIncome(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {

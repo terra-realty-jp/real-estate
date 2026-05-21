@@ -4185,6 +4185,25 @@
     </div>
   </div>
 
+  <div class="card" data-category="売却タイミング" id="card-calcPropertySaleVsHold">
+    <div class="card-header" onclick="toggleCard('calcPropertySaleVsHold')">
+      <span class="card-title">今すぐ売る vs あと5年保有してから売る — 手取り総額の比較</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcPropertySaleVsHold">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">今すぐ売った場合と5年間賃貸して価格変動後に売った場合の手取り総額を比較します。「待つべきか、今売るべきか」を数字で判断できます。</p>
+      <label style="font-size:12px;color:#555">現在の物件価格（万円）<span style="font-size:11px;color:#999"> 例: 5000</span></label>
+      <input type="number" id="psvh_price" value="5000" min="100" max="99999" oninput="calcPropertySaleVsHold()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">5年後の価格変動予測（%）<span style="font-size:11px;color:#999"> 例: -10（下落）/ +5（上昇）</span></label>
+      <input type="number" id="psvh_change" value="-10" min="-50" max="50" oninput="calcPropertySaleVsHold()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">月額家賃収入（保有中、万円）<span style="font-size:11px;color:#999"> 例: 12（賃貸に出した場合）</span></label>
+      <input type="number" id="psvh_rent" value="12" min="0" max="200" oninput="calcPropertySaleVsHold()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">年間維持費・管理費（万円）<span style="font-size:11px;color:#999"> 例: 20（固定資産税・修繕積立等）</span></label>
+      <input type="number" id="psvh_hold" value="20" min="0" max="200" oninput="calcPropertySaleVsHold()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="psvh_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -15335,6 +15354,46 @@ function calcPropertyTaxLand6() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('😱 家を取り壊すと固定資産税が約' + ratio + '倍！年間' + increase + '万円の負担増！\n\n知らずに解体するのは危険。住宅用地特例の仕組みを確認しよう。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcPropertyTaxLand6(); })();
+
+function calcPropertySaleVsHold() {
+  var price = parseFloat(document.getElementById('psvh_price').value) || 0;
+  var change = parseFloat(document.getElementById('psvh_change').value) || 0;
+  var rent = parseFloat(document.getElementById('psvh_rent').value) || 0;
+  var holdCost = parseFloat(document.getElementById('psvh_hold').value) || 0;
+  var el = document.getElementById('psvh_result');
+  if (!el) return;
+  var agencyFeeNow = Math.round(price * 0.03 + 6);
+  var sellNowNet = price - agencyFeeNow;
+  var futurePrice = Math.round(price * (1 + change / 100));
+  var agencyFeeFuture = Math.round(futurePrice * 0.03 + 6);
+  var sellFutureNet = futurePrice - agencyFeeFuture;
+  var rentIncome = Math.round(rent * 12 * 5 * 10) / 10;
+  var holdCostTotal = holdCost * 5;
+  var holdNetIncome = Math.round((rentIncome - holdCostTotal) * 10) / 10;
+  var holdTotalNet = Math.round((sellFutureNet + holdNetIncome) * 10) / 10;
+  var diff = Math.round((holdTotalNet - sellNowNet) * 10) / 10;
+  var winnerLabel = diff > 0 ? '保有→売却が有利' : diff < 0 ? '今すぐ売却が有利' : '差なし';
+  var heroColor = diff > 0 ? '#16a34a' : diff < 0 ? '#dc2626' : '#c9a84c';
+  el.innerHTML = '<div style="background:' + heroColor + ';color:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">'
+    + '<div style="font-size:12px;opacity:0.9;margin-bottom:4px">5年保有 vs 今すぐ売却の差額</div>'
+    + '<div style="font-size:52px;font-weight:900;line-height:1">' + (diff >= 0 ? '+' : '') + diff + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;opacity:0.85;margin-top:4px">' + winnerLabel + '（手取り差額）</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:12px;border-collapse:collapse">'
+    + '<tr style="background:#f8f9fa"><th style="padding:5px 8px;text-align:left;color:#333" colspan="2">【今すぐ売却】</th></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">売却手取り</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + sellNowNet + ' 万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><th style="padding:5px 8px;text-align:left;color:#333" colspan="2">【5年保有→売却】</th></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">5年後売却手取り</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + sellFutureNet + ' 万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">家賃収入（5年合計）</td><td style="padding:5px 8px;text-align:right;color:#16a34a">+' + rentIncome + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">維持・管理費（5年合計）</td><td style="padding:5px 8px;text-align:right;color:#dc2626">-' + holdCostTotal + ' 万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555;font-weight:700">保有→売却の総手取り</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + holdTotalNet + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#333;font-weight:700">差額（保有有利 or 即売有利）</td><td style="padding:5px 8px;text-align:right;font-weight:900;color:' + heroColor + '">' + (diff >= 0 ? '+' : '') + diff + ' 万円</td></tr>'
+    + '</table>'
+    + '<div style="font-size:11px;color:#666;background:#f8f9fa;border-radius:6px;padding:8px;margin-top:8px">'
+    + (diff > 100 ? '✅ 保有して賃貸収入を得ながら5年後に売る方が大幅に有利です。ただし、空室リスク・修繕費の変動・価格予測の誤差を考慮して判断しましょう。' : diff < -100 ? '⚠️ 今すぐ売却する方が有利な試算結果です。価格下落が見込まれる場合は早めの売却が得策です。TERRA REALTYで最新の市場動向を確認しましょう。' : '💡 差額は小さく、どちらでも大きな差はありません。ライフプランや資金需要に合わせて判断しましょう。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('🤔 今すぐ売る vs 5年保有して売る、手取り差は' + Math.abs(diff) + '万円！\n\n' + (diff > 0 ? '保有が有利！家賃収入で稼ぎながら売却タイミングを待つ戦略。' : '今すぐ売る方が有利！価格下落前に動くことが重要。') + '\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcPropertySaleVsHold(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {

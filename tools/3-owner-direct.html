@@ -3956,6 +3956,28 @@
     </div>
   </div>
 
+  <div class="card" data-category="購入費用・諸経費" id="card-calcMoveInCostBreakdown">
+    <div class="card-header" onclick="toggleCard('calcMoveInCostBreakdown')">
+      <span class="card-title">家を買うとき「ローン以外に」いくら現金が必要か — 全費用の総整理</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcMoveInCostBreakdown">
+      <p style="font-size:12px;color:#666;margin-bottom:10px">頭金・諸費用・引越し・家具購入まで、購入時に準備すべき現金の総額を一括試算します。「ローンが通れば大丈夫」と思っていたら諸費用が払えなかった…を防ぎます。</p>
+      <label style="font-size:12px;color:#555">購入価格（万円）<span style="font-size:11px;color:#999"> 例: 4000</span></label>
+      <input type="number" id="micb_price" value="4000" min="100" max="99999" oninput="calcMoveInCostBreakdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">頭金の割合（%）<span style="font-size:11px;color:#999"> 例: 10（フルローンなら0）</span></label>
+      <input type="number" id="micb_down" value="10" min="0" max="50" oninput="calcMoveInCostBreakdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:#555">物件の種類</label>
+      <select id="micb_type" onchange="calcMoveInCostBreakdown()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="mansion">新築マンション</option>
+        <option value="used_mansion">中古マンション</option>
+        <option value="house">新築一戸建て</option>
+        <option value="used_house">中古一戸建て</option>
+      </select>
+      <div id="micb_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -12897,6 +12919,48 @@ function calcBeforeAfterRenovation() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🔨 リノベ' + reno + '万円かけると売却手取りが' + (sellDiff >= 0 ? '+' : '') + sellDiff + '万円変わる！\n\n賃貸なら年' + rentDiff + '万円増で' + (rentPayback < 100 ? rentPayback + '年で回収。' : '回収に時間がかかる。') + '\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcBeforeAfterRenovation(); })();
+
+function calcMoveInCostBreakdown() {
+  var price = parseFloat(document.getElementById('micb_price').value) || 0;
+  var downPct = parseFloat(document.getElementById('micb_down').value) || 0;
+  var type = document.getElementById('micb_type').value;
+  var el = document.getElementById('micb_result');
+  if (!el) return;
+  var downAmt = Math.round(price * downPct / 100);
+  var isUsed = type === 'used_mansion' || type === 'used_house';
+  var isMansion = type === 'mansion' || type === 'used_mansion';
+  var loanAmt = price - downAmt;
+  var registrationFee = Math.round(price * (isUsed ? 0.015 : 0.004));
+  var agencyFee = isUsed ? Math.round(price * 0.03 + 6) : 0;
+  var loanFee = Math.round(loanAmt * 0.02);
+  var insurance = Math.round(loanAmt * 0.002);
+  var moveCost = isMansion ? 15 : 20;
+  var furnitureCost = isMansion ? 50 : 80;
+  var repairBudget = isUsed ? Math.round(price * 0.03) : 0;
+  var miscFee = Math.round(price * 0.005);
+  var totalExtras = registrationFee + agencyFee + loanFee + insurance + moveCost + furnitureCost + repairBudget + miscFee;
+  var totalCash = downAmt + totalExtras;
+  el.innerHTML = '<div style="background:#c9a84c;color:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">'
+    + '<div style="font-size:12px;opacity:0.9;margin-bottom:4px">ローン以外に必要な現金の合計</div>'
+    + '<div style="font-size:52px;font-weight:900;line-height:1">' + totalCash + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;opacity:0.85;margin-top:4px">頭金 ' + downAmt + '万円 ＋ 諸費用等 ' + totalExtras + '万円</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:12px;border-collapse:collapse">'
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">頭金</td><td style="padding:5px 8px;text-align:right;font-weight:700">' + downAmt + ' 万円</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:#555">登録免許税・登記費用</td><td style="padding:5px 8px;text-align:right">' + registrationFee + ' 万円</td></tr>'
+    + (agencyFee > 0 ? '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">仲介手数料</td><td style="padding:5px 8px;text-align:right">' + agencyFee + ' 万円</td></tr>' : '')
+    + '<tr' + (agencyFee > 0 ? '' : ' style="background:#f8f9fa"') + '><td style="padding:5px 8px;color:#555">ローン手数料・印紙税</td><td style="padding:5px 8px;text-align:right">' + loanFee + ' 万円</td></tr>'
+    + '<tr' + (agencyFee > 0 ? ' style="background:#f8f9fa"' : '') + '><td style="padding:5px 8px;color:#555">火災・地震保険料（初年）</td><td style="padding:5px 8px;text-align:right">' + insurance + ' 万円</td></tr>'
+    + '<tr' + (agencyFee > 0 ? '' : ' style="background:#f8f9fa"') + '><td style="padding:5px 8px;color:#555">引越し費用</td><td style="padding:5px 8px;text-align:right">' + moveCost + ' 万円</td></tr>'
+    + '<tr' + (agencyFee > 0 ? ' style="background:#f8f9fa"' : '') + '><td style="padding:5px 8px;color:#555">カーテン・家具等</td><td style="padding:5px 8px;text-align:right">' + furnitureCost + ' 万円</td></tr>'
+    + (repairBudget > 0 ? '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">中古リフォーム予算</td><td style="padding:5px 8px;text-align:right">' + repairBudget + ' 万円</td></tr>' : '')
+    + '<tr style="background:#f8f9fa"><td style="padding:5px 8px;color:#555">その他雑費</td><td style="padding:5px 8px;text-align:right">' + miscFee + ' 万円</td></tr>'
+    + '<tr style="border-top:2px solid #ddd"><td style="padding:6px 8px;color:#333;font-weight:700">現金合計（頭金含む）</td><td style="padding:6px 8px;text-align:right;font-weight:900;color:#c9a84c">' + totalCash + ' 万円</td></tr>'
+    + '</table>'
+    + '<div style="font-size:11px;color:#666;background:#f8f9fa;border-radius:6px;padding:8px;margin-top:8px">⚠️ 「ローンが通れば買える」は誤解です。諸費用・引越し・家具だけで' + totalExtras + '万円の現金が必要です。不足すると契約後に困ることがあります。TERRA REALTYに相談すれば事前に資金計画を整理できます。</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('😲 家を買うとき「ローン以外」に' + totalCash + '万円の現金が必要！\n\n頭金' + downAmt + '万円＋諸費用' + totalExtras + '万円。知らずに契約すると大変なことに。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcMoveInCostBreakdown(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {

@@ -3314,6 +3314,25 @@
     </div>
   </div>
 
+  <div class="calc-card" data-category="省エネ・太陽光" id="card-calcAkiyaSolarBattery">
+    <div class="card-header" onclick="toggleCard('calcAkiyaSolarBattery')">
+      <span class="card-title">空き家に太陽光パネル＋蓄電池を後付け — 売電＋電気代節約の年間収支</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaSolarBattery">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">空き家に太陽光発電システムと蓄電池を設置した場合の売電収入・電気代節約額と初期費用の回収期間を試算します。</p>
+      <label style="font-size:12px;color:var(--text2)">太陽光パネル容量（kW）<span style="color:#888;font-size:11px"> 例: 4（一戸建て標準は4〜6kW）</span></label>
+      <input type="number" id="asb_kw" value="4" min="1" max="50" oninput="calcAkiyaSolarBattery()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">設置費用（万円）<span style="color:#888;font-size:11px"> 例: 120（パネル+蓄電池セット）</span></label>
+      <input type="number" id="asb_cost" value="120" min="30" max="1000" oninput="calcAkiyaSolarBattery()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">補助金額（万円）<span style="color:#888;font-size:11px"> 例: 20（自治体補助。0でもOK）</span></label>
+      <input type="number" id="asb_subsidy" value="20" min="0" max="200" oninput="calcAkiyaSolarBattery()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">売電単価（円/kWh）<span style="color:#888;font-size:11px"> 例: 16（2024年のFIT単価）</span></label>
+      <input type="number" id="asb_fit" value="16" min="5" max="50" oninput="calcAkiyaSolarBattery()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <div id="asb_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -12677,6 +12696,40 @@ function calcAkiyaBeekeeping() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🍯 空き地に巣箱' + hives + '箱で年間' + annualProfit + '万円の副収入！\n\n養蜂転用は農薬・農地問題もなく始めやすい。設備費' + init + '万円で' + (payback < 100 ? payback + '年で回収。' : '収支改善が課題。') + '\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaBeekeeping(); })();
+
+function calcAkiyaSolarBattery() {
+  var kw = parseFloat(document.getElementById('asb_kw').value) || 0;
+  var cost = parseFloat(document.getElementById('asb_cost').value) || 0;
+  var subsidy = parseFloat(document.getElementById('asb_subsidy').value) || 0;
+  var fit = parseFloat(document.getElementById('asb_fit').value) || 0;
+  var el = document.getElementById('asb_result');
+  if (!el) return;
+  var annualGenKwh = kw * 1000;
+  var sellRatio = 0.5;
+  var selfUseRatio = 0.5;
+  var sellIncome = Math.round(annualGenKwh * sellRatio * fit / 10000 * 10) / 10;
+  var elecSave = Math.round(annualGenKwh * selfUseRatio * 27 / 10000 * 10) / 10;
+  var annualBenefit = Math.round((sellIncome + elecSave) * 10) / 10;
+  var netCost = cost - subsidy;
+  var payback = annualBenefit > 0 ? Math.round(netCost / annualBenefit * 10) / 10 : 999;
+  var heroColor = payback <= 15 ? '#16a34a' : '#c9a84c';
+  el.innerHTML = '<div style="background:' + heroColor + ';color:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">'
+    + '<div style="font-size:12px;opacity:0.9;margin-bottom:4px">年間収益（売電＋節電）</div>'
+    + '<div style="font-size:52px;font-weight:900;line-height:1">' + annualBenefit + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:12px;opacity:0.85;margin-top:4px">実質投資額 ' + netCost + '万円 ／ 回収期間 ' + (payback < 100 ? payback + '年' : '採算困難') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:12px;border-collapse:collapse">'
+    + '<tr style="background:rgba(255,255,255,0.05)"><td style="padding:5px 8px;color:var(--text2)">年間発電量（推定）</td><td style="padding:5px 8px;text-align:right;color:var(--text)">' + annualGenKwh + ' kWh</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:var(--text2)">売電収入</td><td style="padding:5px 8px;text-align:right;color:var(--text)">' + sellIncome + ' 万円/年</td></tr>'
+    + '<tr style="background:rgba(255,255,255,0.05)"><td style="padding:5px 8px;color:var(--text2)">電気代節約額</td><td style="padding:5px 8px;text-align:right;color:var(--text)">' + elecSave + ' 万円/年</td></tr>'
+    + '<tr><td style="padding:5px 8px;color:var(--text2)">補助金後の実質費用</td><td style="padding:5px 8px;text-align:right;color:var(--text)">' + netCost + ' 万円</td></tr>'
+    + '<tr style="background:rgba(255,255,255,0.05)"><td style="padding:5px 8px;color:var(--text2)">費用回収期間</td><td style="padding:5px 8px;text-align:right;font-weight:700;color:var(--text)">' + (payback < 100 ? payback + ' 年' : '採算困難') + '</td></tr>'
+    + '</table>'
+    + '<div style="font-size:11px;color:var(--text2);background:rgba(255,255,255,0.04);border-radius:6px;padding:8px;margin-top:8px">'
+    + (payback <= 10 ? '✅ 10年以内で回収できる見込みです。空き家を賃貸・売却する前に設置すると「省エネ住宅」として付加価値が上がるケースもあります。' : payback <= 15 ? '💡 15年以内で回収できます。補助金の活用や売電単価の見直しで回収期間を縮められます。' : '⚠️ 回収期間が長くなっています。補助金の増額または容量・単価の見直しを検討しましょう。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('☀️ 空き家に太陽光' + kw + 'kWで年間' + annualBenefit + '万円の売電＋節電効果！\n\n補助金後の実費' + netCost + '万円で' + (payback < 100 ? payback + '年回収。' : '回収に時間がかかる。') + '\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaSolarBattery(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
