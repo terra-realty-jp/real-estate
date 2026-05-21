@@ -3274,6 +3274,27 @@
     </div>
   </div>
 
+  <div class="calc-card" data-category="空き家活用法" id="card-calcAkiyaWarehouse">
+    <div class="card-header" onclick="toggleCard('calcAkiyaWarehouse')">
+      <span>空き家を農機具・趣味品の個人倉庫として貸す収益試算（改装ほぼ不要）</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcAkiyaWarehouse">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px">倉庫貸しは人が住まないため設備投資が少なく、クレームも少ない空き家活用の選択肢です。床面積・エリアから月収を試算します。</p>
+      <label style="font-size:12px;color:var(--text2)">床面積（㎡）<span style="color:#888;font-size:11px"> 例: 60（一般的な空き家の1階部分）</span></label>
+      <input type="number" id="awh_area" value="60" min="10" max="500" oninput="calcAkiyaWarehouse()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text2)">エリア</label>
+      <select id="awh_area_type" onchange="calcAkiyaWarehouse()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <option value="urban">都市部（1500円/㎡/月）</option>
+        <option value="suburban" selected>郊外（800円/㎡/月）</option>
+        <option value="rural">地方（400円/㎡/月）</option>
+      </select>
+      <label style="font-size:12px;color:var(--text2)">初期整備費用（万円）<span style="color:#888;font-size:11px"> 例: 10（清掃・シャッター補修等）</span></label>
+      <input type="number" id="awh_init" value="10" min="0" max="200" oninput="calcAkiyaWarehouse()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <div id="awh_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -12579,6 +12600,35 @@ function calcAkiyaFarmStay() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🌾 空き家で農家民泊！週末' + days + '日稼働で月' + netMonthly + '万円の収益に。\n\n農林水産省の農泊推進で許可も取りやすくなった。初期費用' + init + '万円の回収は' + paybackMonths + 'ヶ月。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaFarmStay(); })();
+
+function calcAkiyaWarehouse() {
+  var area = parseFloat(document.getElementById('awh_area').value) || 0;
+  var areaType = document.getElementById('awh_area_type').value;
+  var init = parseFloat(document.getElementById('awh_init').value) || 0;
+  var el = document.getElementById('awh_result');
+  if (!el) return;
+  var rateMap = {urban: 0.15, suburban: 0.08, rural: 0.04};
+  var rate = rateMap[areaType] || 0.08;
+  var monthlyRent = Math.round(area * rate);
+  var annualRent = Math.round(monthlyRent * 12);
+  var paybackMonths = monthlyRent > 0 ? Math.ceil(init / monthlyRent) : 0;
+  var heroColor = monthlyRent >= 5 ? '#16a34a' : monthlyRent >= 2 ? '#c9a84c' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">月間賃料（倉庫貸し）</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + monthlyRent + '<span style="font-size:20px">万円/月</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">年間' + annualRent + '万円 | 初期費用回収' + (paybackMonths > 0 ? paybackMonths + 'ヶ月' : '—') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">面積</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + area + '㎡</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">㎡単価（倉庫相場）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + Math.round(rate * 10000) + '円/㎡/月</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">月間賃料</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#16a34a">' + monthlyRent + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">初期整備費用</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">−' + init + '万円</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + '✅ 倉庫貸しは設備投資が少なく、退去・修繕のトラブルも少ない空き家活用の選択肢です。農機具・バイク・自転車・キャンプ用品など地域のニーズに合わせた募集が効果的です。' + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('🏚 空き家を倉庫として貸すだけで月' + monthlyRent + '万円の収入！\n\n改装ほぼ不要・トラブルも少ない。' + area + '㎡の空き家を活用する選択肢として検討中。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcAkiyaWarehouse(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {

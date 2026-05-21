@@ -3910,6 +3910,31 @@
     </div>
   </div>
 
+  <div class="card" data-category="需要・エリア分析" id="card-calcBuyerPool">
+    <div class="card-header" onclick="toggleCard('calcBuyerPool')">
+      <span>この物件、買い手はどれくらいいる？ 価格帯・エリア別の購入希望者数から売却期間を推定</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcBuyerPool">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">価格帯・エリア・物件タイプから購入希望者の多さを5段階で推定し、売却にかかる目安期間を試算します。需要の高さを事前に確認できます。</p>
+      <label style="font-size:13px">売却希望価格（万円）<span style="color:#888;font-size:11px"> 例: 2500</span></label>
+      <input type="number" id="bp2_price" value="2500" min="100" max="99999" oninput="calcBuyerPool()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">エリア</label>
+      <select id="bp2_area" onchange="calcBuyerPool()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="metro">首都圏・大都市（東京・大阪・名古屋周辺）</option>
+        <option value="regional">地方都市（政令指定都市・県庁所在地）</option>
+        <option value="rural">地方・郊外（その他エリア）</option>
+      </select>
+      <label style="font-size:13px">物件タイプ</label>
+      <select id="bp2_type" onchange="calcBuyerPool()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="condo">マンション</option>
+        <option value="house">戸建て</option>
+        <option value="land">土地</option>
+      </select>
+      <div id="bp2_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -12782,6 +12807,37 @@ function calcHomeStagingROI() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏠 ホームステージング費用' + cost + '万円で売却価格が' + priceUp + '万円アップ！\n\n差引' + (netEffect >= 0 ? 'プラス' + netEffect + '万円の得（ROI ' + roi + '%）' : 'マイナス' + Math.abs(netEffect) + '万円') + '。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcHomeStagingROI(); })();
+
+function calcBuyerPool() {
+  var price = parseFloat(document.getElementById('bp2_price').value) || 0;
+  var area = document.getElementById('bp2_area').value;
+  var type = document.getElementById('bp2_type').value;
+  var el = document.getElementById('bp2_result');
+  if (!el) return;
+  var baseScore = area === 'metro' ? 5 : area === 'regional' ? 3 : 1;
+  var typeScore = type === 'condo' ? 1.2 : type === 'house' ? 1.0 : 0.7;
+  var priceScore = price <= 1000 ? 1.3 : price <= 2000 ? 1.2 : price <= 3000 ? 1.0 : price <= 5000 ? 0.7 : 0.4;
+  var demandScore = Math.min(5, Math.max(1, Math.round(baseScore * typeScore * priceScore)));
+  var demandLabels = ['', '需要低（慎重な価格設定が必要）', '需要やや低', '需要普通（相場価格で3〜6ヶ月）', '需要高（相場価格で1〜3ヶ月）', '需要非常に高（相場なら即決の可能性）'];
+  var monthsMap = [0, 9, 6, 4, 2, 1];
+  var estimatedMonths = monthsMap[demandScore];
+  var stars = '★'.repeat(demandScore) + '☆'.repeat(5 - demandScore);
+  var heroColor = demandScore >= 4 ? '#16a34a' : demandScore >= 3 ? '#c9a84c' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">需要レベル</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + stars + '</div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">' + demandLabels[demandScore] + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">需要スコア</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + demandScore + ' / 5</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">売却期間の目安（相場価格の場合）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;font-weight:700">約' + estimatedMonths + 'ヶ月</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">エリア需要</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + (area === 'metro' ? '高（首都圏・大都市）' : area === 'regional' ? '中（地方都市）' : '低（地方・郊外）') + '</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + (demandScore >= 4 ? '✅ 需要が高いエリア・価格帯です。相場価格であれば短期間で成約できる可能性があります。値引き交渉に応じすぎないことが重要です。' : demandScore >= 3 ? '💡 需要は標準的です。適正価格での売出しと積極的な内見受付（週末対応等）が成約を早めるポイントです。' : '⚠️ 需要が低いエリア・価格帯です。売却期間が長引く可能性があります。TERRA REALTYへの早めの相談で対策を立てましょう。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('🏠 この価格帯・エリアの需要レベルは' + demandScore + '/5（' + stars + '）！\n\n売却期間の目安は約' + estimatedMonths + 'ヶ月。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcBuyerPool(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {

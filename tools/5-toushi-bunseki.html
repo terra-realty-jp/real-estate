@@ -4149,6 +4149,25 @@
     </div>
   </div>
 
+  <div class="card" data-category="投資判断" id="card-calcREITComparison">
+    <div class="card-header" onclick="toggleCard('calcREITComparison')">
+      <span>不動産クラウドファンディング・REITと直接物件購入の利回り・手間・リスクを比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcREITComparison">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">少額から始められるREIT・クラウドファンディングと、実物不動産を直接購入した場合の利回り・手間・リスクの違いを数字で比較します。</p>
+      <label style="font-size:13px">投資元本（万円）<span style="color:#888;font-size:11px"> 例: 500</span></label>
+      <input type="number" id="rc_capital" value="500" min="10" max="99999" oninput="calcREITComparison()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">直接購入の表面利回り（%）<span style="color:#888;font-size:11px"> 例: 6</span></label>
+      <input type="number" id="rc_direct_yield" value="6" min="1" max="30" step="0.5" oninput="calcREITComparison()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">REITの分配利回り（%）<span style="color:#888;font-size:11px"> 例: 4（J-REIT平均は約3〜5%）</span></label>
+      <input type="number" id="rc_reit_yield" value="4" min="0.5" max="20" step="0.5" oninput="calcREITComparison()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">直接購入の借入割合（%）<span style="color:#888;font-size:11px"> 例: 70（自己資本30%）</span></label>
+      <input type="number" id="rc_ltv" value="70" min="0" max="100" step="10" oninput="calcREITComparison()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="rc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -15225,6 +15244,42 @@ function calcInterestOnlyMortgage() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💰 投資ローンの元本据置' + ioYears + '年間で月' + ioBenefit + '万円CF改善！\n\nただし据置終了後に月返済が' + amortMonthly + '万円に激増。トータルで' + extraCost + '万円余分にかかる計算。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcInterestOnlyMortgage(); })();
+
+function calcREITComparison() {
+  var capital = parseFloat(document.getElementById('rc_capital').value) || 0;
+  var directYield = parseFloat(document.getElementById('rc_direct_yield').value) || 0;
+  var reitYield = parseFloat(document.getElementById('rc_reit_yield').value) || 0;
+  var ltv = parseFloat(document.getElementById('rc_ltv').value) || 0;
+  var el = document.getElementById('rc_result');
+  if (!el) return;
+  var totalProperty = ltv > 0 ? Math.round(capital / (1 - ltv / 100)) : capital;
+  var directAnnualGross = Math.round(totalProperty * directYield / 100);
+  var managementCost = Math.round(directAnnualGross * 0.20);
+  var loanInterest = ltv > 0 ? Math.round(totalProperty * (ltv / 100) * 0.025) : 0;
+  var directAnnualNet = directAnnualGross - managementCost - loanInterest;
+  var directROE = capital > 0 ? Math.round(directAnnualNet / capital * 100 * 10) / 10 : 0;
+  var reitAnnual = Math.round(capital * reitYield / 100);
+  var reitAfterTax = Math.round(reitAnnual * 0.80);
+  var diff = directAnnualNet - reitAfterTax;
+  var heroColor = diff > 0 ? '#16a34a' : diff === 0 ? '#c9a84c' : '#dc2626';
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">直接購入 vs REIT 年間収益差</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + (diff >= 0 ? '+' : '') + diff + '<span style="font-size:20px">万円/年</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">' + (diff > 0 ? '直接購入が年' + diff + '万円多い' : diff === 0 ? '収益は同程度' : 'REITの方が年' + Math.abs(diff) + '万円多い') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa;font-weight:700"><td style="padding:7px 10px;border:1px solid #dee2e6" colspan="2">直接購入（レバレッジあり）</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">物件購入額（借入' + ltv + '%）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + totalProperty + '万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">年間純収益（管理費・利息差引後）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#16a34a">' + directAnnualNet + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">自己資金ROE</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + directROE + '%</td></tr>'
+    + '<tr style="font-weight:700;background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6" colspan="2">REIT（税引後）</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">年間分配金（税引後20%）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#3b82f6">' + reitAfterTax + '万円</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + '💡 直接購入はレバレッジで高い利回りが狙える一方、管理の手間・空室リスク・修繕費が伴います。REITは少額・分散・手間ゼロですが分配利回りは低め。投資目的と手間許容度で選択しましょう。' + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💰 不動産直接購入 vs REIT、年間収益の差は' + Math.abs(diff) + '万円！\n\n' + (diff > 0 ? '直接購入が有利だが管理の手間も大きい。' : 'REITの方が手間ゼロで収益が高い場合も。') + '\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcREITComparison(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {

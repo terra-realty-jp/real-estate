@@ -4440,6 +4440,28 @@
     </div>
   </div>
 
+  <div class="card" data-category="売却リスク" id="card-calcContractCancellation">
+    <div class="card-header" onclick="toggleCard('calcContractCancellation')">
+      <span>売買契約を解除した場合のペナルティはいくら？ 手付金没収・違約金を試算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcContractCancellation">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">不動産売買契約後に解除する場合、誰が・なぜ解除するかによって手付金没収か違約金支払いかが変わります。解除ペナルティの金額を試算します。</p>
+      <label style="font-size:13px">売買価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="cc_price" value="3000" min="100" max="99999" oninput="calcContractCancellation()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">手付金（万円）<span style="color:#888;font-size:11px"> 例: 100（売買価格の5〜10%が一般的）</span></label>
+      <input type="number" id="cc_deposit" value="100" min="0" max="9999" oninput="calcContractCancellation()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">解除理由</label>
+      <select id="cc_reason" onchange="calcContractCancellation()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="buyer_voluntary">買主の都合（気が変わった・ローン審査通過後）</option>
+        <option value="buyer_loan_fail">買主のローン審査否決（ローン特約あり）</option>
+        <option value="seller_voluntary">売主の都合（別の買主が見つかった等）</option>
+        <option value="mutual">双方合意による解除</option>
+      </select>
+      <div id="cc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -12793,6 +12815,50 @@ function calcSaleLeadTime() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent('🏠 家を売るのに' + minMonths + '〜' + maxMonths + 'ヶ月かかる！\n\n査定→契約→引渡しまでの全工程スケジュールを確認。早く売りたいなら今から動き出すことが大事。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcSaleLeadTime(); })();
+
+function calcContractCancellation() {
+  var price = parseFloat(document.getElementById('cc_price').value) || 0;
+  var deposit = parseFloat(document.getElementById('cc_deposit').value) || 0;
+  var reason = document.getElementById('cc_reason').value;
+  var el = document.getElementById('cc_result');
+  if (!el) return;
+  var penaltyAmt = 0, penaltyType = '', heroColor = '#c9a84c', explanation = '';
+  var violationAmt = Math.round(price * 0.20);
+  if (reason === 'buyer_voluntary') {
+    penaltyAmt = deposit;
+    penaltyType = '手付金没収（' + deposit + '万円を売主が受け取る）';
+    heroColor = '#dc2626';
+    explanation = '⚠️ 買主が自己都合で解除すると手付金は戻りません。ローン審査否決の場合はローン特約が使えます。解除前に必ず不動産会社に相談しましょう。';
+  } else if (reason === 'buyer_loan_fail') {
+    penaltyAmt = 0;
+    penaltyType = 'ペナルティなし（ローン特約による解除）';
+    heroColor = '#16a34a';
+    explanation = '✅ ローン特約がある契約ではローン審査否決による解除にペナルティはありません。ただしローン特約の期限内に申請した場合に限ります。';
+  } else if (reason === 'seller_voluntary') {
+    penaltyAmt = deposit * 2;
+    penaltyType = '手付金倍返し（売主が' + (deposit * 2) + '万円を買主に支払う）';
+    heroColor = '#dc2626';
+    explanation = '😱 売主が自己都合で解除すると、受け取った手付金の2倍を返還する義務があります。' + deposit + '万円受取 → ' + (deposit * 2) + '万円返還（差額' + deposit + '万円の損失）。';
+  } else {
+    penaltyAmt = 0;
+    penaltyType = 'ペナルティなし（双方合意による解除）';
+    heroColor = '#16a34a';
+    explanation = '✅ 双方合意による解除の場合、ペナルティは通常生じません。ただし別途実費（仲介手数料の一部）を負担する場合があります。';
+  }
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">解除ペナルティ</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + penaltyAmt + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">' + penaltyType + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">売買価格</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + price + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">手付金</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + deposit + '万円（売買価格の' + (price > 0 ? (deposit / price * 100).toFixed(1) : '—') + '%）</td></tr>'
+    + '<tr style="font-weight:700"><td style="padding:7px 10px;border:1px solid #dee2e6">解除ペナルティ</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:' + heroColor + '">' + penaltyAmt + '万円</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">' + explanation + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html') + '&text=' + encodeURIComponent(reason === 'seller_voluntary' ? '😱 売主が契約解除すると手付金' + deposit + '万円を倍返しで' + (deposit * 2) + '万円支払う義務！\n\n「別の買主が来たから」という理由での解除は法律上認められていない。\n▶ 不動産かんたんツール（TERRA REALTY）' : '📋 不動産売買契約の解除ペナルティを確認。\n\n理由によって「手付金没収・倍返し・ペナルティなし」の3パターン。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcContractCancellation(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {

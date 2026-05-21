@@ -4404,6 +4404,25 @@
     </div>
   </div>
 
+  <div class="card" data-category="空室対策" id="card-calcRentBonusMonth">
+    <div class="card-header" onclick="toggleCard('calcRentBonusMonth')">
+      <span>フリーレント（入居初月無料）を提供すると早く決まる？ 空室継続コストとの比較</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcRentBonusMonth">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">入居希望者に「1〜2ヶ月家賃無料」を提示することで成約が早まる効果と、空室が続いた場合の損失を比較します。</p>
+      <label style="font-size:13px">月額家賃（万円）<span style="color:#888;font-size:11px"> 例: 7</span></label>
+      <input type="number" id="rbm_rent" value="7" min="1" max="100" step="0.5" oninput="calcRentBonusMonth()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">フリーレント期間（ヶ月）<span style="color:#888;font-size:11px"> 例: 2</span></label>
+      <input type="number" id="rbm_free" value="2" min="0" max="6" oninput="calcRentBonusMonth()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">フリーレントなしの場合に見込まれる空室期間（ヶ月）<span style="color:#888;font-size:11px"> 例: 3</span></label>
+      <input type="number" id="rbm_vacancy" value="3" min="0" max="24" oninput="calcRentBonusMonth()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">フリーレント提供時の想定空室期間（ヶ月）<span style="color:#888;font-size:11px"> 例: 1（フリーレントで早く決まる想定）</span></label>
+      <input type="number" id="rbm_with_free" value="1" min="0" max="24" oninput="calcRentBonusMonth()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="rbm_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -15199,6 +15218,35 @@ function calcOccupancyOptimize() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('💡 家賃を' + (change >= 0 ? '+' : '') + change + '万円変えると年間収益が' + (annualDiff >= 0 ? '+' : '') + annualDiff + '万円変わる！\n\n値上げで空室が増えると逆効果になることも。入居率と家賃設定の最適バランスを数字で確認。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcOccupancyOptimize(); })();
+
+function calcRentBonusMonth() {
+  var rent = parseFloat(document.getElementById('rbm_rent').value) || 0;
+  var free = parseFloat(document.getElementById('rbm_free').value) || 0;
+  var vacancy = parseFloat(document.getElementById('rbm_vacancy').value) || 0;
+  var withFree = parseFloat(document.getElementById('rbm_with_free').value) || 0;
+  var el = document.getElementById('rbm_result');
+  if (!el) return;
+  var costWithout = Math.round(vacancy * rent);
+  var costWith = Math.round(withFree * rent + free * rent);
+  var netSaving = costWithout - costWith;
+  var heroColor = netSaving > 0 ? '#16a34a' : '#dc2626';
+  var heroLabel = netSaving > 0 ? 'フリーレント提供が得（' + netSaving + '万円お得）' : 'フリーレントなしの方が得';
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">フリーレント提供による損益</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + (netSaving >= 0 ? '+' : '') + netSaving + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">' + heroLabel + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">フリーレントなし：空室' + vacancy + 'ヶ月の損失</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">−' + costWithout + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">フリーレントあり：空室' + withFree + 'ヶ月の損失</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">−' + Math.round(withFree * rent) + '万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">フリーレント分のコスト</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">−' + Math.round(free * rent) + '万円</td></tr>'
+    + '<tr style="font-weight:700"><td style="padding:7px 10px;border:1px solid #dee2e6">差引</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:' + heroColor + '">' + (netSaving >= 0 ? '+' : '') + netSaving + '万円</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + (netSaving > 0 ? '✅ フリーレント提供で早期成約する方が、空室が続くよりトータルで得です。フリーレントは「実質値下げ」ではなく「先払いの空室損失対策」として考えましょう。' : '⚠️ 現在の設定では空室継続の方がコストが低くなっています。フリーレント期間を短くするか、空室期間の差を大きく見積もると採算が変わります。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html') + '&text=' + encodeURIComponent('💡 フリーレント' + free + 'ヶ月提供で空室が' + (vacancy - withFree) + 'ヶ月短縮！\n\n空室損失' + costWithout + '万円 vs フリーレントコスト' + costWith + '万円。差引' + (netSaving >= 0 ? 'プラス' + netSaving + '万円の得' : 'マイナス' + Math.abs(netSaving) + '万円') + '。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcRentBonusMonth(); })();
 
 var _kanriCat = '';
 var _kanriCatKw = {
