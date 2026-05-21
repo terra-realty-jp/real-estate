@@ -4627,6 +4627,33 @@
     </div>
   </div>
 
+  <div class="card" id="card-calcEnergyRetrofit" data-category="修繕・リフォーム" data-title="省エネリフォームの費用回収年数——補助金を使って断熱・太陽光の元が取れるまで何年？" data-tags="省エネ リフォーム 断熱 太陽光 補助金 光熱費 回収期間" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)" style="min-height:44px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 14px">
+      <div>
+        <div class="card-title" style="font-weight:700;font-size:14px;line-height:1.4">省エネリフォームの費用回収年数（補助金対応）</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">断熱・太陽光の工事費から補助金を引いた実質コストと、光熱費削減で何年で元が取れるか計算</div>
+      </div>
+      <span class="card-arrow" style="font-size:12px;color:var(--text-muted);margin-left:8px">▼</span>
+    </div>
+    <div class="card-body" style="padding:14px;border-top:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">工事費（例: 150）万円</label>
+          <input type="number" id="er_cost" value="150" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcEnergyRetrofit()">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">補助金額（例: 50）万円</label>
+          <input type="number" id="er_subsidy" value="50" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcEnergyRetrofit()">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間光熱費削減額（例: 12）万円</label>
+          <input type="number" id="er_save" value="12" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcEnergyRetrofit()">
+        </div>
+      </div>
+      <button onclick="calcEnergyRetrofit()" style="width:100%;padding:11px;background:#3b82f6;color:#fff;font-weight:700;font-size:14px;border:none;border-radius:8px;cursor:pointer;font-family:inherit">費用回収年数を計算する</button>
+      <div id="er_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -16091,6 +16118,41 @@ function calcEVChargerROI() {
   var PRE='hd4_';
   function extractNum(el){var big=el.querySelector('[style*="font-size:52px"]');if(!big)return NaN;var c=big.cloneNode(true);c.querySelectorAll('span').forEach(function(s){s.remove();});return parseFloat(c.textContent.replace(/[^0-9.\-]/g,'').trim());}
   function injectBadge(el){var val=extractNum(el);if(isNaN(val))return;var key=PRE+el.id;var prev=parseFloat(localStorage.getItem(key)||'NaN');localStorage.setItem(key,val);if(isNaN(prev)||Math.abs(val-prev)<0.01)return;var big=el.querySelector('[style*="font-size:52px"]');if(!big)return;var box=big.parentElement;if(!box)return;var sub=box.lastElementChild;if(!sub||sub===big)return;var diff=val-prev;var bgS=box.getAttribute('style')||'';var goodUp=bgS.indexOf('74,222,128')!==-1;var badUp=bgS.indexOf('248,113,113')!==-1;var clr=goodUp?(diff>0?'#16a34a':'#dc2626'):badUp?(diff>0?'#dc2626':'#16a34a'):'rgba(0,0,0,0.55)';var badge='<span style="color:'+clr+';font-size:10px;margin-left:8px;background:rgba(0,0,0,0.08);border-radius:8px;padding:1px 6px">'+(diff>0?'↑':'↓')+Math.abs(Math.round(diff*10)/10).toLocaleString()+' 前回比</span>';if(sub.innerHTML.indexOf('前回比')===-1)sub.innerHTML+=badge;}
+
+function calcEnergyRetrofit() {
+  var el = document.getElementById('er_result'); if (!el) return;
+  var cost    = parseFloat(document.getElementById('er_cost').value)    || 150;
+  var subsidy = parseFloat(document.getElementById('er_subsidy').value) || 50;
+  var save    = parseFloat(document.getElementById('er_save').value)    || 12;
+  var netCost = Math.max(0, cost - subsidy);
+  var payback = save > 0 ? netCost / save : 999;
+  var save10  = save * 10;
+  var profit10 = save10 - netCost;
+  var heroColor = payback <= 10 ? '#22c55e' : payback <= 15 ? '#f59e0b' : '#ef4444';
+  var guide = payback <= 10
+    ? '✅ 10年以内に回収できる優良投賄です。補助金活用で実質コストを大幅に圧縮できています。'
+    : payback <= 15
+    ? '📊 回収まで10～15年かかりますが、光熱費上昇トレンドを考えると長期的に有利になる可能性があります。'
+    : '⚠️ 回収期間が長めです。補助金の追加活用や別の断熱工法を検討してみてください。';
+  var shareText = '省エネリフォーム、補助金を使えば実質' + netCost.toFixed(0) + '万円で' + payback.toFixed(1) + '年で元が取れる！10年後には' + profit10.toFixed(0) + '万円得する計算。光熱費が上がる今こそ→';
+  var shareUrl  = 'https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html';
+  var lineUrl   = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText + '\n' + shareUrl);
+  var html = '<div style="background:' + heroColor + ';border-radius:10px;padding:18px;text-align:center;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:6px;opacity:0.9">費用回収年数（補助金適用後）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#fff;line-height:1">' + (payback < 999 ? payback.toFixed(1) : '—') + '<span style="font-size:18px">年</span></div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;font-size:12px;margin-bottom:12px;line-height:1.9">'
+    + '<div>実質コスト（工事費 − 補助金）: <b>' + netCost.toFixed(0) + '万円</b></div>'
+    + '<div>年間節約額: <b>' + save.toFixed(0) + '万円</b></div>'
+    + '<div>10年間の光熱費節約合計: <b>' + save10.toFixed(0) + '万円</b></div>'
+    + '<div>10年後の純利益: <b>' + (profit10 >= 0 ? '+' : '') + profit10.toFixed(0) + '万円</b></div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:#555;line-height:1.8;margin-bottom:12px">' + guide + '</div>'
+    + '<a href="' + lineUrl + '" target="_blank" rel="noopener" style="display:block;background:#06c755;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:6px">📤 LINEでシェアする</a>';
+  try { sbLogCardUsage(4,'card-calcEnergyRetrofit','calc','回収'+payback.toFixed(1)+'年・10年純益'+profit10.toFixed(0)+'万'); } catch(e) {}
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcEnergyRetrofit(); })();
   function observe(el){var obs=new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==='childList')injectBadge(el);});});obs.observe(el,{childList:true});}
   function init(){document.querySelectorAll('[id$="-result"]').forEach(observe);}
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}

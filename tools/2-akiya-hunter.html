@@ -3508,6 +3508,37 @@
     </div>
   </div>
 
+  <div class="card" id="card-calcAkiyaAirbnb" data-category="活用診断" data-title="空き家を民泊（Airbnb）に転用——180日制限を守った場合の年収試算" data-tags="民泊 Airbnb 空き家 旅館業法 180日 年収 副業" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)" style="min-height:44px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 14px">
+      <div>
+        <div class="card-title" style="font-weight:700;font-size:14px;line-height:1.4">空き家を民泊転用の年収試算（180日ルール）</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">住宅宿泊事業法の年間180日上限を守りながら、実際にいくら稼げるか確認する</div>
+      </div>
+      <span class="card-arrow" style="font-size:12px;color:var(--text-muted);margin-left:8px">▼</span>
+    </div>
+    <div class="card-body" style="padding:14px;border-top:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">1泊の料金（例: 1.5）万円</label>
+          <input type="number" id="ab_rate" value="1.5" step="0.1" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcAkiyaAirbnb()">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">年間稼働日数（上限180日）</label>
+          <input type="number" id="ab_days" value="120" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcAkiyaAirbnb()">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">1泊当たり清掃費（例: 0.5）万円</label>
+          <input type="number" id="ab_clean" value="0.5" step="0.1" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcAkiyaAirbnb()">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">プラットフォーム手数料（例: 3）%</label>
+          <input type="number" id="ab_fee" value="3" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcAkiyaAirbnb()">
+        </div>
+      </div>
+      <button onclick="calcAkiyaAirbnb()" style="width:100%;padding:11px;background:#fb923c;color:#fff;font-weight:700;font-size:14px;border:none;border-radius:8px;cursor:pointer;font-family:inherit">民泊年収を試算する</button>
+      <div id="ab_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -13515,6 +13546,40 @@ function calcAkiyaEventSpace() {
   var PRE='hd2_';
   function extractNum(el){var big=el.querySelector('[style*="font-size:52px"]');if(!big)return NaN;var c=big.cloneNode(true);c.querySelectorAll('span').forEach(function(s){s.remove();});return parseFloat(c.textContent.replace(/[^0-9.\-]/g,'').trim());}
   function injectBadge(el){var val=extractNum(el);if(isNaN(val))return;var key=PRE+el.id;var prev=parseFloat(localStorage.getItem(key)||'NaN');localStorage.setItem(key,val);if(isNaN(prev)||Math.abs(val-prev)<0.01)return;var big=el.querySelector('[style*="font-size:52px"]');if(!big)return;var box=big.parentElement;if(!box)return;var sub=box.lastElementChild;if(!sub||sub===big)return;var diff=val-prev;var bgS=box.getAttribute('style')||'';var goodUp=bgS.indexOf('74,222,128')!==-1;var badUp=bgS.indexOf('248,113,113')!==-1;var clr=goodUp?(diff>0?'#16a34a':'#dc2626'):badUp?(diff>0?'#dc2626':'#16a34a'):'rgba(0,0,0,0.55)';var badge='<span style="color:'+clr+';font-size:10px;margin-left:8px;background:rgba(0,0,0,0.08);border-radius:8px;padding:1px 6px">'+(diff>0?'↑':'↓')+Math.abs(Math.round(diff*10)/10).toLocaleString()+' 前回比</span>';if(sub.innerHTML.indexOf('前回比')===-1)sub.innerHTML+=badge;}
+
+function calcAkiyaAirbnb() {
+  var el = document.getElementById('ab_result'); if (!el) return;
+  var rate  = parseFloat(document.getElementById('ab_rate').value)  || 1.5;
+  var days  = parseFloat(document.getElementById('ab_days').value)  || 120;
+  var clean = parseFloat(document.getElementById('ab_clean').value) || 0.5;
+  var fee   = parseFloat(document.getElementById('ab_fee').value)   || 3;
+  var daysActual = Math.min(days, 180);
+  var overLimit  = days > 180;
+  var netPerDay  = rate * (1 - fee/100) - clean;
+  var annual     = netPerDay * daysActual;
+  var monthly    = annual / 12;
+  var remaining  = 180 - daysActual;
+  var heroColor  = annual > 0 ? '#22c55e' : '#ef4444';
+  var shareText  = '空き家をAirbnbに出したら年間' + annual.toFixed(0) + '万円になる試算！180日ルールを守っても月' + monthly.toFixed(1) + '万円。空き家、眠らせてるだけじゃ損かも→';
+  var shareUrl   = 'https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html';
+  var lineUrl    = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText + '\n' + shareUrl);
+  var overMsg    = overLimit ? '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:7px;padding:9px 12px;font-size:12px;color:#92400e;margin-bottom:12px">⚠️ 入力は' + days + '日ですが、住宅宿泊事業法により年間180日が上限です。180日で計算しています。</div>' : '';
+  var html = overMsg
+    + '<div style="background:' + heroColor + ';border-radius:10px;padding:18px;text-align:center;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:6px;opacity:0.9">年間純収入（180日ルール適用後）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#fff;line-height:1">' + annual.toFixed(0) + '<span style="font-size:18px">万円/年</span></div>'
+    + '<div style="font-size:14px;color:#fff;opacity:0.9;margin-top:4px">月平均 ' + monthly.toFixed(1) + '万円</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;font-size:12px;margin-bottom:12px;line-height:1.9">'
+    + '<div>稼働日数: <b>' + daysActual + '日</b>（残り利用可能: <b>' + remaining + '日</b>）</div>'
+    + '<div>1泊手取り（手数料・清掃費控除後）: <b>' + netPerDay.toFixed(2) + '万円</b></div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:#555;line-height:1.8;margin-bottom:12px">💡 初期費用（設備・申請費）は別途30～100万円が目安。自治体により営業できるエリアが制限される場合があります。</div>'
+    + '<a href="' + lineUrl + '" target="_blank" rel="noopener" style="display:block;background:#06c755;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:6px">📤 LINEでシェアする</a>';
+  try { sbLogCardUsage(2,'card-calcAkiyaAirbnb','calc','民泊年収'+annual.toFixed(0)+'万円'); } catch(e) {}
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcAkiyaAirbnb(); })();
   function observe(el){var obs=new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==='childList')injectBadge(el);});});obs.observe(el,{childList:true});}
   function init(){document.querySelectorAll('[id$="-result"]').forEach(observe);}
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}

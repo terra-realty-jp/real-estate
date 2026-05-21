@@ -4670,6 +4670,33 @@
     </div>
   </div>
 
+  <div class="card" id="card-calcDivorceSplit" data-category="売却判断" data-title="離婚時の不動産財産分与——オーバーローンなら売っても借金が残る？" data-tags="離婚 財産分与 不動産 オーバーローン 売却 ローン残債" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)" style="min-height:44px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 14px">
+      <div>
+        <div class="card-title" style="font-weight:700;font-size:14px;line-height:1.4">離婚時の不動産財産分与</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">売却後の手取りをふたりで分けるといくら？オーバーローンの場合は残る借金も確認</div>
+      </div>
+      <span class="card-arrow" style="font-size:12px;color:var(--text-muted);margin-left:8px">▼</span>
+    </div>
+    <div class="card-body" style="padding:14px;border-top:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">査定額（例: 3000）万円</label>
+          <input type="number" id="ds_assess" value="3000" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcDivorceSplit()">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">ローン残債（例: 1800）万円</label>
+          <input type="number" id="ds_loan" value="1800" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcDivorceSplit()">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">売却諸費用（仲介手数料等、例: 90）万円</label>
+          <input type="number" id="ds_cost" value="90" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcDivorceSplit()">
+        </div>
+      </div>
+      <button onclick="calcDivorceSplit()" style="width:100%;padding:11px;background:var(--gold);color:#000;font-weight:700;font-size:14px;border:none;border-radius:8px;cursor:pointer;font-family:inherit">財産分与額を計算する</button>
+      <div id="ds_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -14689,6 +14716,40 @@ function calcNegotiationMargin() {
   var PRE='hd1_';
   function extractNum(el){var big=el.querySelector('[style*="font-size:52px"]');if(!big)return NaN;var c=big.cloneNode(true);c.querySelectorAll('span').forEach(function(s){s.remove();});return parseFloat(c.textContent.replace(/[^0-9.\-]/g,'').trim());}
   function injectBadge(el){var val=extractNum(el);if(isNaN(val))return;var key=PRE+el.id;var prev=parseFloat(localStorage.getItem(key)||'NaN');localStorage.setItem(key,val);if(isNaN(prev)||Math.abs(val-prev)<0.01)return;var big=el.querySelector('[style*="font-size:52px"]');if(!big)return;var box=big.parentElement;if(!box)return;var sub=box.lastElementChild;if(!sub||sub===big)return;var diff=val-prev;var bgS=box.getAttribute('style')||'';var goodUp=bgS.indexOf('74,222,128')!==-1;var badUp=bgS.indexOf('248,113,113')!==-1;var clr=goodUp?(diff>0?'#16a34a':'#dc2626'):badUp?(diff>0?'#dc2626':'#16a34a'):'rgba(0,0,0,0.55)';var badge='<span style="color:'+clr+';font-size:10px;margin-left:8px;background:rgba(0,0,0,0.08);border-radius:8px;padding:1px 6px">'+(diff>0?'↑':'↓')+Math.abs(Math.round(diff*10)/10).toLocaleString()+' 前回比</span>';if(sub.innerHTML.indexOf('前回比')===-1)sub.innerHTML+=badge;}
+
+function calcDivorceSplit() {
+  var el = document.getElementById('ds_result'); if (!el) return;
+  var assess = parseFloat(document.getElementById('ds_assess').value) || 3000;
+  var loan   = parseFloat(document.getElementById('ds_loan').value)   || 1800;
+  var cost   = parseFloat(document.getElementById('ds_cost').value)   || 90;
+  var equity = assess - loan - cost;
+  var share  = equity / 2;
+  var isOver = equity < 0;
+  var heroColor = isOver ? '#ef4444' : '#22c55e';
+  var heroLabel = isOver ? 'オーバーローン（売却後の残債）' : 'ひとり当たりの受取額';
+  var heroVal   = isOver ? Math.abs(equity).toFixed(0) + '万円の借金が残る' : share.toFixed(0) + '万円';
+  var guide = isOver
+    ? '⚠️ 売却しても借金が残るオーバーローン状態です。任意売却・金融機関との交渉が必要になる場合があります。'
+    : '✅ 売却して得た手取りをふたりで折半するとこの金額です。税務上の取扱い（3,000万円控除の適用可否）は状況により異なります。';
+  var shareText = isOver
+    ? '離婚して家を売ろうと試算したら…オーバーローンで' + Math.abs(equity).toFixed(0) + '万円の借金が残ることが判明！この計算、知っておいてよかった→'
+    : '離婚時の財産分与を計算したらひとり' + share.toFixed(0) + '万円になった。不動産の分け方、思ったより複雑→';
+  var shareUrl  = 'https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html';
+  var lineUrl   = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText + '\n' + shareUrl);
+  var html = '<div style="background:' + heroColor + ';border-radius:10px;padding:18px;text-align:center;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:6px;opacity:0.9">' + heroLabel + '</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#fff;line-height:1">' + Math.abs(isOver ? equity : share).toFixed(0) + '<span style="font-size:18px">万円</span></div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;font-size:12px;margin-bottom:12px;line-height:1.7">'
+    + '<div>査定額: <b>' + assess.toFixed(0) + '万円</b>　ローン残債: <b>' + loan.toFixed(0) + '万円</b>　諸費用: <b>' + cost.toFixed(0) + '万円</b></div>'
+    + '<div>売却手取り合計: <b>' + equity.toFixed(0) + '万円</b></div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:#555;line-height:1.8;margin-bottom:12px">' + guide + '</div>'
+    + '<a href="' + lineUrl + '" target="_blank" rel="noopener" style="display:block;background:#06c755;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:6px">📤 LINEでシェアする</a>';
+  try { sbLogCardUsage(1,'card-calcDivorceSplit','calc', isOver?'オーバー'+Math.abs(equity).toFixed(0)+'万':'分与'+share.toFixed(0)+'万'); } catch(e) {}
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcDivorceSplit(); })();
   function observe(el){var obs=new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==='childList')injectBadge(el);});});obs.observe(el,{childList:true});}
   function init(){document.querySelectorAll('[id$="-result"]').forEach(observe);}
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}

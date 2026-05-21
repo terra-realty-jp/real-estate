@@ -4143,6 +4143,33 @@
     </div>
   </div>
 
+  <div class="card" id="card-calcSchoolDistrictPremium" data-category="価格・相場" data-title="人気学区の物件価値プレミアム——学校区ランクが価格に上乗せする金額を試算" data-tags="学区 小学校 人気 プレミアム 価格 ファミリー 子育て" style="margin-bottom:18px">
+    <div class="card-header" onclick="toggleCard(this)" style="min-height:44px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 14px">
+      <div>
+        <div class="card-title" style="font-weight:700;font-size:14px;line-height:1.4">人気学区の物件価値プレミアム試算</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">学校区のランクと徒歩距離で、相場よりいくら高く売れるかを概算する</div>
+      </div>
+      <span class="card-arrow" style="font-size:12px;color:var(--text-muted);margin-left:8px">▼</span>
+    </div>
+    <div class="card-body" style="padding:14px;border-top:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">周辺相場（例: 4000）万円</label>
+          <input type="number" id="sdp_price" value="4000" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcSchoolDistrictPremium()">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">学区人気ランク（1=普通〜5=超人気）</label>
+          <input type="number" id="sdp_rank" value="3" min="1" max="5" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcSchoolDistrictPremium()">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">小学校まで徒歩（例: 8）分</label>
+          <input type="number" id="sdp_walk" value="8" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:14px;box-sizing:border-box" oninput="calcSchoolDistrictPremium()">
+        </div>
+      </div>
+      <button onclick="calcSchoolDistrictPremium()" style="width:100%;padding:11px;background:var(--gold);color:#000;font-weight:700;font-size:14px;border:none;border-radius:8px;cursor:pointer;font-family:inherit">学区プレミアムを計算する</button>
+      <div id="sdp_result" style="display:none;margin-top:14px"></div>
+    </div>
+  </div>
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -13771,6 +13798,38 @@ function calcPriceHistoryScore() {
   var PRE='hd3_';
   function extractNum(el){var big=el.querySelector('[style*="font-size:52px"]');if(!big)return NaN;var c=big.cloneNode(true);c.querySelectorAll('span').forEach(function(s){s.remove();});return parseFloat(c.textContent.replace(/[^0-9.\-]/g,'').trim());}
   function injectBadge(el){var val=extractNum(el);if(isNaN(val))return;var key=PRE+el.id;var prev=parseFloat(localStorage.getItem(key)||'NaN');localStorage.setItem(key,val);if(isNaN(prev)||Math.abs(val-prev)<0.01)return;var big=el.querySelector('[style*="font-size:52px"]');if(!big)return;var box=big.parentElement;if(!box)return;var sub=box.lastElementChild;if(!sub||sub===big)return;var diff=val-prev;var bgS=box.getAttribute('style')||'';var goodUp=bgS.indexOf('74,222,128')!==-1;var badUp=bgS.indexOf('248,113,113')!==-1;var clr=goodUp?(diff>0?'#16a34a':'#dc2626'):badUp?(diff>0?'#dc2626':'#16a34a'):'rgba(0,0,0,0.55)';var badge='<span style="color:'+clr+';font-size:10px;margin-left:8px;background:rgba(0,0,0,0.08);border-radius:8px;padding:1px 6px">'+(diff>0?'↑':'↓')+Math.abs(Math.round(diff*10)/10).toLocaleString()+' 前回比</span>';if(sub.innerHTML.indexOf('前回比')===-1)sub.innerHTML+=badge;}
+
+function calcSchoolDistrictPremium() {
+  var el = document.getElementById('sdp_result'); if (!el) return;
+  var price = parseFloat(document.getElementById('sdp_price').value) || 4000;
+  var rank  = Math.min(5, Math.max(1, parseInt(document.getElementById('sdp_rank').value) || 3));
+  var walk  = parseFloat(document.getElementById('sdp_walk').value) || 8;
+  var baseRates = [0, 0.02, 0.05, 0.08, 0.12, 0.16];
+  var baseRate  = baseRates[rank];
+  var walkPenalty = Math.max(0, (walk - 10) * 0.005);
+  var finalRate = Math.max(0, baseRate - walkPenalty);
+  var premium   = price * finalRate;
+  var salePrice = price + premium;
+  var rankLabels = ['', '普通', 'やや人気', '人気', '非常に人気', '超人気（引越し需要あり）'];
+  var shareText = '学区ランク' + rank + 'の人気エリアの物件、相場より' + premium.toFixed(0) + '万円高く売れる計算！子育て世帯の需要がこんなに価格を動かすとは→';
+  var shareUrl  = 'https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html';
+  var lineUrl   = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText + '\n' + shareUrl);
+  var html = '<div style="background:#22c55e;border-radius:10px;padding:18px;text-align:center;margin-bottom:12px">'
+    + '<div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:6px;opacity:0.9">学区プレミアム（相場上乗せ額）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:#fff;line-height:1">+' + premium.toFixed(0) + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:14px;color:#fff;opacity:0.9;margin-top:4px">想定売出価格: ' + salePrice.toFixed(0) + '万円</div>'
+    + '</div>'
+    + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:12px;font-size:12px;margin-bottom:12px;line-height:1.9">'
+    + '<div>学区ランク: <b>' + rankLabels[rank] + '（Rank ' + rank + '）</b></div>'
+    + '<div>プレミアム率: <b>' + (finalRate*100).toFixed(1) + '%</b>（徒歩' + walk + '分ペナルティ控除後）</div>'
+    + '<div>周辺相場: <b>' + price.toFixed(0) + '万円</b> ＋ プレミアム <b>' + premium.toFixed(0) + '万円</b></div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:#555;line-height:1.8;margin-bottom:12px">💡 学区プレミアムはファミリー层の需要が多い地域で顕著。中学受験率の高い都市部・越境入学が可能なエリアでは特に影響が大きいです。</div>'
+    + '<a href="' + lineUrl + '" target="_blank" rel="noopener" style="display:block;background:#06c755;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:6px">📤 LINEでシェアする</a>';
+  try { sbLogCardUsage(3,'card-calcSchoolDistrictPremium','calc','学区プレミアム'+premium.toFixed(0)+'万円'); } catch(e) {}
+  el.innerHTML = html; el.style.display = 'block';
+}
+(function(){ calcSchoolDistrictPremium(); })();
   function observe(el){var obs=new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==='childList')injectBadge(el);});});obs.observe(el,{childList:true});}
   function init(){document.querySelectorAll('[id$="-result"]').forEach(observe);}
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
