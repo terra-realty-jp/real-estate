@@ -4285,3 +4285,16 @@
   - Tool5: calcDepreciationBoost — 減価償却×損益通算の節税額試算（給与所得と合算）
 - **理由**: 「値下げすべきか？」「追加費用は？」「節税できる？」は一般ユーザーの強い疑問で、驚く数字が出やすくPLG効果が高い
 - **カード総数**: 662枚
+
+## 2026-05-21 Round 34（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 34）
+- **改善内容**:
+  - Tool1: calcSaleLeadTime — 売却スケジュール（査定〜決済の全工程・目安期間）試算
+  - Tool2: calcAkiyaFarmStay — 農家民泊（農業体験ツーリズム）の月次収益・初期費用回収期間試算
+  - Tool3: calcHomeStagingROI — ホームステージング費用と価格アップ・早期成約効果のROI比較
+  - Tool4: calcOccupancyOptimize — 家賃値上げ/値下げと入居率・年間収益の損得比較
+  - Tool5: calcInterestOnlyMortgage — 元本据置ローンの月CF改善vs総返済コスト増加比較
+- **理由**: 「いつまでかかる？」「農泊で稼げる？」「値上げして損しない？」「据置ローンの落とし穴は？」など検討者の素朴な疑問に直接答えるPLG高カード
+- **カード総数**: 667枚
