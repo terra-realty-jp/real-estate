@@ -4552,6 +4552,21 @@
     </div>
   </div>
 
+  <!-- R43: calcCondoMaintenance -->
+  <div class="card" id="card-calcCondoMaintenance" data-category="費用">
+    <div class="card-header"><span class="card-icon">🏢</span><h3 class="card-title">マンション管理費・修繕積立金の値上がりリスク — 10年後はいくらになる？</h3></div>
+    <div class="card-body">
+      <p class="card-desc">分譲マンションの管理費と修繕積立金は築年数とともに値上がりします。10年後・20年後の月額負担と累計支払総額を試算します。</p>
+      <label style="font-size:12px;color:var(--text-muted)">現在の管理費（月額）（万円）（例: 1.5万円）</label>
+      <input type="number" id="cm_mgmt" value="1.5" min="0.1" max="20" step="0.1" oninput="calcCondoMaintenance()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">現在の修繕積立金（月額）（万円）（例: 1万円）</label>
+      <input type="number" id="cm_repair" value="1" min="0.1" max="20" step="0.1" oninput="calcCondoMaintenance()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">修繕積立金の年間値上がり率（%）（例: 5〜10%）</label>
+      <input type="number" id="cm_rise" value="7" min="0" max="30" oninput="calcCondoMaintenance()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="cm_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏢</div>
@@ -15542,6 +15557,39 @@ function calcWaterPipeSurvey() {
     + '<button onclick="shareLine(\'築' + age + '年の賃貸物件の給排水管交換費用は合計' + totalCost + '万円！今から年' + annualReserve + '万円ずつ積み立てないと一括負担になる😰 修繕費シミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcWaterPipeSurvey(); })();
+
+function calcCondoMaintenance() {
+  var mgmt = parseFloat(document.getElementById('cm_mgmt').value) || 0;
+  var repair = parseFloat(document.getElementById('cm_repair').value) || 0;
+  var rise = parseFloat(document.getElementById('cm_rise').value) || 7;
+  var el = document.getElementById('cm_result');
+  if (!el) return;
+  if (mgmt <= 0 || repair <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">管理費と修繕積立金を入力してください</p>'; return; }
+  var cur = mgmt + repair;
+  var r10 = repair * Math.pow(1 + rise/100, 10);
+  var r20 = repair * Math.pow(1 + rise/100, 20);
+  var total10 = 0;
+  for (var i = 0; i < 10; i++) total10 += (mgmt + repair * Math.pow(1 + rise/100, i)) * 12;
+  var total20 = total10;
+  for (var j = 10; j < 20; j++) total20 += (mgmt + repair * Math.pow(1 + rise/100, j)) * 12;
+  var diff10 = (mgmt + r10) - cur;
+  try { sbLogCardUsage(4, 'card-calcCondoMaintenance', 'calc', '10年後月額' + (mgmt + r10).toFixed(1) + '万円'); } catch(e) {}
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(220,38,38,0.12),rgba(220,38,38,0.04));border:2px solid rgba(220,38,38,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">10年後の月額負担</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(220,38,38);line-height:1">' + (mgmt + r10).toFixed(1) + '<span style="font-size:18px">万円/月</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">現在の' + cur.toFixed(1) + '万円から月' + diff10.toFixed(1) + '万円増加</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr><td style="padding:7px 10px">現在の月額（管理費+積立）</td><td style="padding:7px 10px;text-align:right">' + cur.toFixed(1) + ' 万円</td></tr>'
+    + '<tr style="background:#fff5f5"><td style="padding:7px 10px">10年後の月額</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#dc2626">' + (mgmt + r10).toFixed(1) + ' 万円</td></tr>'
+    + '<tr><td style="padding:7px 10px">20年後の月額</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#dc2626">' + (mgmt + r20).toFixed(1) + ' 万円</td></tr>'
+    + '<tr style="background:#fafafa"><td style="padding:7px 10px">10年間の累計支払</td><td style="padding:7px 10px;text-align:right">' + (total10/10000).toFixed(0) + ' 万円</td></tr>'
+    + '<tr><td style="padding:7px 10px">20年間の累計支払</td><td style="padding:7px 10px;text-align:right">' + (total20/10000).toFixed(0) + ' 万円</td></tr>'
+    + '</table>'
+    + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ 分譲マンションの修繕積立金は、長期修繕計画の見直しのたびに段階的に値上がりするのが一般的です。購入前に長期修繕計画の値上がり予定を確認しましょう。</p>'
+    + '<button onclick="shareLine(\'マンションの管理費・修繕積立金、今は月' + cur.toFixed(1) + '万円でも10年後は月' + (mgmt+r10).toFixed(1) + '万円になる可能性！知らないと後悔します不動産かんたんツールhttps://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcCondoMaintenance(); })();
 
 function calcSubleaseRisk() {
   var rent = parseFloat(document.getElementById('slr_rent').value) || 0;

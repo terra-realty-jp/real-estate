@@ -4595,6 +4595,25 @@
     </div>
   </div>
 
+  <!-- R43: calcDemolitionCost -->
+  <div class="card" id="card-calcDemolitionCost" data-category="費用">
+    <div class="card-header"><span class="card-icon">🏗️</span><h3 class="card-title">家の解体費用＋解体後の固定資産税増加 — 解体前に必ず確認</h3></div>
+    <div class="card-body">
+      <p class="card-desc">古い家を解体する前に、解体費用と「解体後に固定資産税が最大6倍になる」仕組みの両方を確認します。解体が得か損かを判断できます。</p>
+      <label style="font-size:12px;color:var(--text-muted)">延床面積（坪）（例: 30坪）</label>
+      <input type="number" id="dc_tsubo" value="30" min="5" max="300" oninput="calcDemolitionCost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">構造</label>
+      <select id="dc_struct" onchange="calcDemolitionCost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="wood">木造（1坪3〜5万円）</option>
+        <option value="light_steel">軽量鉄骨（1坪4〜6万円）</option>
+        <option value="rc">RC・重量鉄骨（1坪6〜8万円）</option>
+      </select>
+      <label style="font-size:12px;color:var(--text-muted)">土地の固定資産税評価額（万円）（例: 1000万円）</label>
+      <input type="number" id="dc_land" value="1000" min="100" max="50000" oninput="calcDemolitionCost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="dc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -13177,6 +13196,38 @@ function calcSaleClosingFee() {
     + '<button onclick="shareLine(\'売却価格' + price.toLocaleString() + '万円でも手取りは' + net.toLocaleString() + '万円！仲介手数料+税金+ローン返済で大きく減る。全費用を計算してみた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcSaleClosingFee(); })();
+
+function calcDemolitionCost() {
+  var tsubo = parseFloat(document.getElementById('dc_tsubo').value) || 0;
+  var struct = document.getElementById('dc_struct').value;
+  var land = parseFloat(document.getElementById('dc_land').value) || 0;
+  var el = document.getElementById('dc_result');
+  if (!el) return;
+  if (tsubo <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">延床面積を入力してください</p>'; return; }
+  var unitLow = struct === 'wood' ? 3 : struct === 'light_steel' ? 4 : 6;
+  var unitHigh = struct === 'wood' ? 5 : struct === 'light_steel' ? 6 : 8;
+  var costLow = Math.round(tsubo * unitLow);
+  var costHigh = Math.round(tsubo * unitHigh);
+  // 固定資産税 解体前（住宅用地特例 1/6）vs 解体後
+  var taxBefore = land * 1.4 / 100 / 6;
+  var taxAfter = land * 1.4 / 100;
+  var taxIncrease = taxAfter - taxBefore;
+  var structLabel = struct === 'wood' ? '木造' : struct === 'light_steel' ? '軽量鉄骨' : 'RC・重量鉄骨';
+  try { sbLogCardUsage(1, 'card-calcDemolitionCost', 'calc', '解体費' + costLow + '〜' + costHigh + '万円'); } catch(e) {}
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));border:2px solid rgba(201,168,76,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">解体費用の目安（' + structLabel + '・' + tsubo + '坪）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(201,168,76);line-height:1">' + costLow + '〜' + costHigh + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">1坪' + unitLow + '〜' + unitHigh + '万円の相場</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr style="background:#f0fdf4"><td style="padding:7px 10px">解体前の固定資産税（年）</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#16a34a">' + taxBefore.toFixed(1) + ' 万円</td></tr>'
+    + '<tr style="background:#fff5f5"><td style="padding:7px 10px">解体後の固定資産税（年）</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#dc2626">' + taxAfter.toFixed(1) + ' 万円</td></tr>'
+    + '<tr><td style="padding:7px 10px">年間税負担の増加</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#dc2626">+' + taxIncrease.toFixed(1) + ' 万円</td></tr>'
+    + '</table>'
+    + '<div style="margin-top:10px;padding:10px;background:#fffbeb;border-radius:8px;font-size:11px;color:#78350f;line-height:1.7">⚠️ 家を解体すると「住宅用地特例（1/6軽減）」が外れ、固定資産税が最大6倍になります。解体後に売却・活用計画がない場合は逆効果になる可能性があります。</div>'
+    + '<button onclick="shareLine(\'家の解体費用（' + tsubo + '坪・' + structLabel + '）は約' + costLow + '〜' + costHigh + '万円。さらに解体すると固定資産税が年' + taxIncrease.toFixed(1) + '万円増加する落とし穴！不動産かんたんツールhttps://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcDemolitionCost(); })();
 
 function calcOwnerOccupied() {
   var price = parseFloat(document.getElementById('oo_price').value) || 0;

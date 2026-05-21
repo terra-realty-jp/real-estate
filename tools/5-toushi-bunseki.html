@@ -4313,6 +4313,23 @@
     </div>
   </div>
 
+  <!-- R43: calcSurveyFee -->
+  <div class="card" id="card-calcSurveyFee" data-category="費用">
+    <div class="card-header"><span class="card-icon">🔍</span><h3 class="card-title">投資物件の調査費用（デューデリジェンス）— 総額と必要性の確認</h3></div>
+    <div class="card-body">
+      <p class="card-desc">物件購入前に必要な建物調査・法律調査・土壌汚染調査などの「デューデリジェンス費用」の総額を試算し、物件価格に対する割合を確認します。</p>
+      <label style="font-size:12px;color:var(--text-muted)">物件価格（万円）（例: 5000万円）</label>
+      <input type="number" id="sf_price" value="5000" min="100" max="200000" oninput="calcSurveyFee()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">物件の用途</label>
+      <select id="sf_type" onchange="calcSurveyFee()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="small">戸建て・小規模アパート（〜1億円）</option>
+        <option value="mid" selected>中規模マンション・ビル（1〜5億円）</option>
+        <option value="large">大規模物件（5億円超）</option>
+      </select>
+      <div id="sf_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -15633,6 +15650,33 @@ function calcCashOnCash() {
     + '<button onclick="shareLine(\'不動産投資' + price.toLocaleString() + '万円の物件、頭金の入れ方で自己資金利回りがこんなに変わる！レバレッジの効果をシミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcCashOnCash(); })();
+
+function calcSurveyFee() {
+  var price = parseFloat(document.getElementById('sf_price').value) || 0;
+  var type = document.getElementById('sf_type').value;
+  var el = document.getElementById('sf_result');
+  if (!el) return;
+  if (price <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">物件価格を入力してください</p>'; return; }
+  var items = type === 'small'
+    ? [{n:'建物状況調査（ホームインスペクション）',v:5},{n:'境界確認・測量（簡易）',v:10},{n:'法律リスクチェック（弁護士）',v:10},{n:'登記・権利関係調査',v:3}]
+    : type === 'mid'
+    ? [{n:'建物調査（構造・設備）',v:30},{n:'土壌汚染調査（Phase I）',v:20},{n:'法律デューデリ（弁護士）',v:30},{n:'会計・税務調査（税理士）',v:20},{n:'登記・権利関係調査',v:5}]
+    : [{n:'建物調査（構造・設備）',v:80},{n:'土壌汚染調査（Phase I+II）',v:50},{n:'法律デューデリ（弁護士）',v:80},{n:'会計・税務調査（税理士）',v:50},{n:'不動産鑑定（鑑定士）',v:50},{n:'登記・権利関係調査',v:10}];
+  var total = items.reduce(function(s,i){ return s + i.v; }, 0);
+  var pct = (total / price * 100).toFixed(2);
+  var typeLabel = type === 'small' ? '小規模' : type === 'mid' ? '中規模' : '大規模';
+  try { sbLogCardUsage(5, 'card-calcSurveyFee', 'calc', 'DD費用' + total + '万円'); } catch(e) {}
+  var rows = items.map(function(i){ return '<tr><td style="padding:6px 8px">' + i.n + '</td><td style="padding:6px 8px;text-align:right">' + i.v + ' 万円</td></tr>'; }).join('');
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));border:2px solid rgba(201,168,76,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">デューデリジェンス費用の目安（' + typeLabel + '）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(201,168,76);line-height:1">' + total + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">物件価格' + price + '万円の' + pct + '%</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:12px;border-collapse:collapse">' + rows + '</table>'
+    + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ デューデリジェンスは「購入後に後悔しないための保険」です。瑕疵・土壌・権利問題が事前に発見できれば、費用を大幅に上回る損失を防げます。</p>'
+    + '<button onclick="shareLine(\'不動産投資の調査費用（デューデリジェンス）、' + typeLabel + '物件で約' + total + '万円かかる。でも事前調査をサボると後で数百万円の損失リスク！https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcSurveyFee(); })();
 
 function calcBreakEvenRent() {
   var loan = parseFloat(document.getElementById('ber_loan').value) || 0;
