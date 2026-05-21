@@ -4233,3 +4233,16 @@
   - Tool5: calcSpreadAnalysis — 利回りと金利のスプレッド（実質安全マージン）試算
 - **理由**: 「みなし贈与」「新築価値下落」「スプレッド」など、知らないと損する知識系カードはPLG効果が高い
 - **カード総数**: 637枚
+
+## 2026-05-21 Round 30（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 30）
+- **改善内容**:
+  - Tool1: calcLandlockRisk — 袋地・旗竿地・再建築不可の接道条件別 売却価格割引試算（最大40%割引）
+  - Tool2: calcAkiyaTrunkRoom — 空き家をトランクルームに転用した月次収益・初期費用回収期間試算
+  - Tool3: calcDiyResaleValue — 売却前リフォームのROI比較（部分改修1.5倍vs全面リフォーム0.7倍）
+  - Tool4: calcAirConReplace — エアコン全室交換費用と空室短縮・退去防止効果の費用対効果試算
+  - Tool5: calcNPVCheck — NPV（正味現在価値）で投資物件が割安か割高かを判定
+- **理由**: 「接道リスク」「DIYリフォームROI」「NPV」など、プロ知識を一般人にわかりやすく提供するカードはPLG効果が高い
+- **カード総数**: 642枚
