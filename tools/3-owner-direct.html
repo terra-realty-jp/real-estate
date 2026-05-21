@@ -3862,6 +3862,33 @@
     </div>
   </div>
 
+  <div class="card" data-category="購入費用・諸費用" id="card-calcBudgetOverrun">
+    <div class="card-header" onclick="toggleCard('calcBudgetOverrun')">
+      <span>家を買った後に出てくる追加費用の総額は？ 見落としがちなコストを全部計算</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcBudgetOverrun">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">引越し費用・カーテン・家具・修繕・造園など、購入後に必ずかかる「想定外コスト」の総額を試算します。</p>
+      <label style="font-size:13px">物件購入価格（万円）<span style="color:#888;font-size:11px"> 例: 3000</span></label>
+      <input type="number" id="bor_price" value="3000" min="100" max="99999" oninput="calcBudgetOverrun()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">物件タイプ</label>
+      <select id="bor_type" onchange="calcBudgetOverrun()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="new_house">新築戸建て</option>
+        <option value="used_house">中古戸建て</option>
+        <option value="new_condo">新築マンション</option>
+        <option value="used_condo">中古マンション</option>
+      </select>
+      <label style="font-size:13px">家族人数</label>
+      <select id="bor_family" onchange="calcBudgetOverrun()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="1">1人</option>
+        <option value="2" selected>2人</option>
+        <option value="3">3〜4人</option>
+        <option value="4">5人以上</option>
+      </select>
+      <div id="bor_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -12664,6 +12691,45 @@ function calcSellerConcession() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('売主が修繕費' + service + '万円負担で' + shorten + 'ヶ月早く成約→保有コスト' + savedCost + '万円節減！\n\n差引' + (netEffect >= 0 ? 'プラス' + netEffect + '万円の得' : 'マイナス' + Math.abs(netEffect) + '万円の損') + 'になる計算。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcSellerConcession(); })();
+
+function calcBudgetOverrun() {
+  var price = parseFloat(document.getElementById('bor_price').value) || 0;
+  var type = document.getElementById('bor_type').value;
+  var family = document.getElementById('bor_family').value;
+  var el = document.getElementById('bor_result');
+  if (!el) return;
+  var movingBase = {'1': 10, '2': 15, '3': 25, '4': 35};
+  var curtainBase = {'new_house': 30, 'used_house': 20, 'new_condo': 25, 'used_condo': 15};
+  var furnitureBase = {'1': 30, '2': 50, '3': 80, '4': 120};
+  var repairBase = {'new_house': 0, 'used_house': 50, 'new_condo': 10, 'used_condo': 30};
+  var gardenBase = {'new_house': 30, 'used_house': 20, 'new_condo': 0, 'used_condo': 0};
+  var moving = movingBase[family] || 15;
+  var curtain = curtainBase[type] || 20;
+  var furniture = furnitureBase[family] || 50;
+  var repair = repairBase[type] || 20;
+  var garden = gardenBase[type] || 0;
+  var lightFix = type === 'new_house' || type === 'new_condo' ? 15 : 5;
+  var total = moving + curtain + furniture + repair + garden + lightFix;
+  var ratio = price > 0 ? (total / price * 100).toFixed(1) : 0;
+  el.innerHTML = '<div style="background:#dc2626;border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">購入後に追加でかかる費用</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + total + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">購入価格の' + ratio + '%が追加でかかる</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">引越し費用</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + moving + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">カーテン・ブラインド</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + curtain + '万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">家具・家電の買い替え</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + furniture + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">入居前の修繕・クリーニング</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + repair + '万円</td></tr>'
+    + (garden > 0 ? '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">外構・庭工事</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + garden + '万円</td></tr>' : '')
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">照明・設備取付け</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + lightFix + '万円</td></tr>'
+    + '<tr style="font-weight:700"><td style="padding:7px 10px;border:1px solid #dee2e6">合計（目安）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#dc2626">' + total + '万円</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + '⚠️ 住宅購入の予算計画に「その後の追加費用' + total + '万円」を加えておくと、資金ショートを防げます。住宅ローンの借入額は購入価格に合わせがちですが、追加費用は現金で準備するのが鉄則です。' + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html') + '&text=' + encodeURIComponent('😱 家を買った後の追加費用が' + total + '万円！\n\n引越し・カーテン・家具・修繕など、購入価格の' + ratio + '%が「見えないコスト」として後から来る。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcBudgetOverrun(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {

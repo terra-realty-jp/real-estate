@@ -4109,6 +4109,27 @@
     </div>
   </div>
 
+  <div class="card" data-category="税金・費用" id="card-calcDepreciationBoost">
+    <div class="card-header" onclick="toggleCard('calcDepreciationBoost')">
+      <span>不動産の減価償却で給与の税金を減らす節税額を計算（総合課税・損益通算）</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="card-body" id="body-calcDepreciationBoost">
+      <p style="font-size:13px;color:#555;margin-bottom:14px">不動産所得が赤字の場合、給与所得と損益通算して所得税・住民税を節税できます。減価償却費による「帳簿上の赤字」が生み出す節税効果を試算します。</p>
+      <label style="font-size:13px">物件の建物購入価格（万円）<span style="color:#888;font-size:11px"> 例: 800（土地代は除く）</span></label>
+      <input type="number" id="dab_building" value="800" min="0" max="99999" oninput="calcDepreciationBoost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">耐用年数（年）<span style="color:#888;font-size:11px"> 例: 22（木造）・47（RC）・34（鉄骨）</span></label>
+      <input type="number" id="dab_life" value="22" min="4" max="50" oninput="calcDepreciationBoost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">給与年収（万円）<span style="color:#888;font-size:11px"> 例: 700</span></label>
+      <input type="number" id="dab_salary" value="700" min="0" max="9999" oninput="calcDepreciationBoost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間家賃収入（万円）<span style="color:#888;font-size:11px"> 例: 120</span></label>
+      <input type="number" id="dab_rent" value="120" min="0" max="9999" oninput="calcDepreciationBoost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:13px">年間実費経費（万円・ローン利息・管理費・固都税等）<span style="color:#888;font-size:11px"> 例: 80</span></label>
+      <input type="number" id="dab_expense" value="80" min="0" max="9999" oninput="calcDepreciationBoost()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="dab_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -15110,6 +15131,42 @@ function calcFlipProfit() {
     + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('🏠 中古物件' + buy + '万円購入→リフォーム' + reform + '万円→' + sell + '万円で売却！\n\n税引後手取り利益' + netProfit + '万円（年率ROI ' + annualROI + '%）の計算結果。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcFlipProfit(); })();
+
+function calcDepreciationBoost() {
+  var building = parseFloat(document.getElementById('dab_building').value) || 0;
+  var life = parseFloat(document.getElementById('dab_life').value) || 22;
+  var salary = parseFloat(document.getElementById('dab_salary').value) || 0;
+  var rent = parseFloat(document.getElementById('dab_rent').value) || 0;
+  var expense = parseFloat(document.getElementById('dab_expense').value) || 0;
+  var el = document.getElementById('dab_result');
+  if (!el) return;
+  var depreciation = Math.round(building / life);
+  var realEstateIncome = rent - expense - depreciation;
+  var taxableIncome = salary - (salary <= 180 ? Math.round(salary * 0.40) : salary <= 360 ? Math.round(salary * 0.30 + 18) : salary <= 660 ? Math.round(salary * 0.20 + 54) : salary <= 850 ? Math.round(salary * 0.10 + 120) : salary <= 1000 ? 195 : Math.round(salary * 0.05 + 170));
+  var taxBase = Math.max(0, taxableIncome + realEstateIncome);
+  var taxSaving = 0;
+  if (realEstateIncome < 0) {
+    var loss = Math.abs(realEstateIncome);
+    var marginalRate = taxableIncome >= 900 ? 0.43 : taxableIncome >= 700 ? 0.40 : taxableIncome >= 500 ? 0.33 : taxableIncome >= 330 ? 0.30 : taxableIncome >= 195 ? 0.23 : 0.15;
+    taxSaving = Math.round(loss * marginalRate);
+  }
+  var heroColor = taxSaving > 0 ? '#16a34a' : '#c9a84c';
+  el.innerHTML = '<div style="background:' + heroColor + ';border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">'
+    + '<div style="color:#fff;font-size:13px;margin-bottom:4px">損益通算による年間節税額</div>'
+    + '<div style="color:#fff;font-size:52px;font-weight:900;line-height:1">' + taxSaving + '<span style="font-size:20px">万円</span></div>'
+    + '<div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px">' + (taxSaving > 0 ? '給与所得との損益通算で節税可能' : '不動産所得が黒字のため損益通算不可') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">年間減価償却費</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + depreciation + '万円/年</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">不動産所得（家賃−経費−減価償却）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:' + (realEstateIncome >= 0 ? '#16a34a' : '#dc2626') + '">' + (realEstateIncome >= 0 ? '+' : '') + realEstateIncome + '万円</td></tr>'
+    + '<tr style="background:#f8f9fa"><td style="padding:7px 10px;border:1px solid #dee2e6">損益通算による年間節税額</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right;color:#16a34a">+' + taxSaving + '万円</td></tr>'
+    + '<tr><td style="padding:7px 10px;border:1px solid #dee2e6">実際の手取り収支（家賃−実費経費+節税）</td><td style="padding:7px 10px;border:1px solid #dee2e6;text-align:right">' + Math.round(rent - expense + taxSaving) + '万円/年</td></tr>'
+    + '</table>'
+    + '<div style="background:#fff8e1;border-left:4px solid #c9a84c;padding:10px 14px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px">'
+    + (taxSaving > 0 ? '✅ 減価償却費' + depreciation + '万円が帳簿上の赤字を生み、給与と損益通算することで所得税・住民税を' + taxSaving + '万円節税できます。「現金は動かないのに税金が減る」不動産投資の最大の優位性です。' : '💡 現在は不動産所得が黒字のため損益通算の節税効果はありません。経費の見直し・建物割合を高めることで節税効果が生まれる場合があります。') + '</div>'
+    + '<div style="text-align:center"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html') + '&text=' + encodeURIComponent('💰 不動産の減価償却で年間' + taxSaving + '万円の節税！\n\n現金は動かないのに税金が減る「損益通算」の仕組み。年収700万円の会社員が投資物件を持つと節税できる理由。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
+}
+(function(){ calcDepreciationBoost(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {
