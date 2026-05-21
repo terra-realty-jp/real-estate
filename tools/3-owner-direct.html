@@ -4053,6 +4053,25 @@
     </div>
   </div>
 
+  <!-- R42: calcJointNameTransfer -->
+  <div class="card" id="card-calcJointNameTransfer" data-category="相続・税金">
+    <div class="card-header"><span class="card-icon">👥</span><h3 class="card-title">共有名義→単独名義への変更コスト（贈与税・登録免許税）</h3></div>
+    <div class="card-body">
+      <p class="card-desc">夫婦や親子の共有名義不動産を一方に名義変更する場合の「贈与税」「登録免許税」「司法書士費用」の合計コストを試算します。</p>
+      <label style="font-size:12px;color:var(--text-muted)">不動産の固定資産税評価額（万円）（例: 1500万円）</label>
+      <input type="number" id="jnt_val" value="1500" min="100" max="50000" oninput="calcJointNameTransfer()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">移転する持分（%）（例: 50%）</label>
+      <input type="number" id="jnt_share" value="50" min="1" max="99" oninput="calcJointNameTransfer()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">名義変更の方法</label>
+      <select id="jnt_method" onchange="calcJointNameTransfer()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="gift">贈与（無償で名義を渡す）</option>
+        <option value="sale">売買（時価で売買する）</option>
+        <option value="divorce">財産分与（離婚に伴う）</option>
+      </select>
+      <div id="jnt_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -13155,6 +13174,48 @@ function calcEscrowFlow() {
     + '<button onclick="shareLine(\'不動産' + (side === 'buyer' ? '購入' : '売却') + price.toLocaleString() + '万円で必要な総費用は' + totalCost + '万円！いつ・いくら必要か全ステップを確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcEscrowFlow(); })();
+
+function calcJointNameTransfer() {
+  var val = parseFloat(document.getElementById('jnt_val').value) || 0;
+  var share = parseFloat(document.getElementById('jnt_share').value) || 50;
+  var method = document.getElementById('jnt_method').value;
+  var el = document.getElementById('jnt_result');
+  if (!el) return;
+  if (val <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">評価額を入力してください</p>'; return; }
+  var transferVal = val * share / 100;
+  // 登録免許税（贈与2%・売買2%・財産分与2%・相続0.4%）
+  var regTax = transferVal * 0.02;
+  // 贈与税（基礎控除110万円、暦年課税）
+  var giftTax = 0;
+  if (method === 'gift') {
+    var taxable = Math.max(0, transferVal - 110);
+    if (taxable <= 200) giftTax = taxable * 0.10;
+    else if (taxable <= 400) giftTax = taxable * 0.15 - 10;
+    else if (taxable <= 600) giftTax = taxable * 0.20 - 30;
+    else if (taxable <= 1000) giftTax = taxable * 0.30 - 90;
+    else if (taxable <= 1500) giftTax = taxable * 0.40 - 190;
+    else if (taxable <= 3000) giftTax = taxable * 0.45 - 265;
+    else giftTax = taxable * 0.55 - 415;
+  }
+  var judicial = 8; // 司法書士費用目安
+  var total = regTax + giftTax + judicial;
+  var methodLabel = method === 'gift' ? '贈与' : method === 'divorce' ? '財産分与' : '売買';
+  var heroColor = total > 100 ? '220,38,38' : '201,168,76';
+  try { sbLogCardUsage(3, 'card-calcJointNameTransfer', 'calc', '名義変更コスト' + total.toFixed(0) + '万円'); } catch(e) {}
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">名義変更にかかる費用合計（' + methodLabel + '）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroColor + ');line-height:1">' + total.toFixed(0) + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">移転評価額 ' + transferVal.toFixed(0) + '万円（' + share + '%持分）</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr><td style="padding:7px 10px">登録免許税（2%）</td><td style="padding:7px 10px;text-align:right;font-weight:700">' + regTax.toFixed(0) + ' 万円</td></tr>'
+    + (method === 'gift' ? '<tr style="background:#fff5f5"><td style="padding:7px 10px">贈与税（暦年課税）</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#dc2626">' + giftTax.toFixed(0) + ' 万円</td></tr>' : '<tr style="background:#f0fdf4"><td style="padding:7px 10px">贈与税</td><td style="padding:7px 10px;text-align:right;color:#16a34a">0 万円（' + methodLabel + 'は非課税）</td></tr>')
+    + '<tr style="background:#fafafa"><td style="padding:7px 10px">司法書士費用（目安）</td><td style="padding:7px 10px;text-align:right">' + judicial + ' 万円</td></tr>'
+    + '</table>'
+    + (method === 'gift' && giftTax > 0 ? '<div style="margin-top:10px;padding:10px;background:#fffbeb;border-radius:8px;font-size:11px;color:#78350f;line-height:1.7">⚠️ 贈与税が高額な場合、「相続時精算課税制度（2500万円まで非課税）」の利用を検討できます。</div>' : '')
+    + '<button onclick="shareLine(\'共有名義の不動産（' + share + '%部分）を名義変更したら、' + methodLabel + 'で費用が' + total.toFixed(0) + '万円かかる。方法で大きく変わります！不動産かんたんツールhttps://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcJointNameTransfer(); })();
 
 function calcRenovationLoan() {
   var reno = parseFloat(document.getElementById('rl_reno').value) || 0;

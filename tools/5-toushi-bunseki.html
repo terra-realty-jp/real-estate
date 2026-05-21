@@ -4296,6 +4296,23 @@
     </div>
   </div>
 
+  <!-- R42: calcBreakEvenRent -->
+  <div class="card" id="card-calcBreakEvenRent" data-category="収支">
+    <div class="card-header"><span class="card-icon">⚖️</span><h3 class="card-title">損益分岐家賃 — ローン・管理費・修繕費をカバーする最低家賃</h3></div>
+    <div class="card-body">
+      <p class="card-desc">不動産投資の「赤字にならない最低限の家賃」を逆算します。この家賃を下回ると毎月赤字になります。物件購入前の安全ラインを確認できます。</p>
+      <label style="font-size:12px;color:var(--text-muted)">月々のローン返済額（万円）（例: 7万円）</label>
+      <input type="number" id="ber_loan" value="7" min="0" max="200" step="0.5" oninput="calcBreakEvenRent()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">管理費・共益費（万円/月）（例: 0.5万円）</label>
+      <input type="number" id="ber_mgmt" value="0.5" min="0" max="20" step="0.1" oninput="calcBreakEvenRent()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">月割り修繕積立・固定資産税（万円/月）（例: 1万円）</label>
+      <input type="number" id="ber_repair" value="1" min="0" max="20" step="0.1" oninput="calcBreakEvenRent()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">現在の家賃収入（万円/月）（例: 9万円）</label>
+      <input type="number" id="ber_actual" value="9" min="0" max="200" step="0.5" oninput="calcBreakEvenRent()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="ber_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -15616,6 +15633,35 @@ function calcCashOnCash() {
     + '<button onclick="shareLine(\'不動産投資' + price.toLocaleString() + '万円の物件、頭金の入れ方で自己資金利回りがこんなに変わる！レバレッジの効果をシミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcCashOnCash(); })();
+
+function calcBreakEvenRent() {
+  var loan = parseFloat(document.getElementById('ber_loan').value) || 0;
+  var mgmt = parseFloat(document.getElementById('ber_mgmt').value) || 0;
+  var repair = parseFloat(document.getElementById('ber_repair').value) || 0;
+  var actual = parseFloat(document.getElementById('ber_actual').value) || 0;
+  var el = document.getElementById('ber_result');
+  if (!el) return;
+  var breakEven = loan + mgmt + repair;
+  var margin = actual - breakEven;
+  var cushion = breakEven > 0 ? (margin / breakEven * 100) : 0;
+  var heroColor = margin >= 0 ? '22,163,74' : '220,38,38';
+  try { sbLogCardUsage(5, 'card-calcBreakEvenRent', 'calc', '損益分岐家賃' + breakEven.toFixed(1) + '万円'); } catch(e) {}
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">損益分岐家賃（最低限必要な家賃）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroColor + ');line-height:1">' + breakEven.toFixed(1) + '<span style="font-size:18px">万円/月</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">' + (margin >= 0 ? '現在の家賃は損益分岐を' + margin.toFixed(1) + '万円上回っています（安全マージン' + cushion.toFixed(0) + '%）' : '現在の家賃は損益分岐を' + Math.abs(margin).toFixed(1) + '万円下回り赤字です') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr><td style="padding:7px 10px">ローン返済</td><td style="padding:7px 10px;text-align:right">' + loan.toFixed(1) + ' 万円/月</td></tr>'
+    + '<tr style="background:#fafafa"><td style="padding:7px 10px">管理費</td><td style="padding:7px 10px;text-align:right">' + mgmt.toFixed(1) + ' 万円/月</td></tr>'
+    + '<tr><td style="padding:7px 10px">修繕積立・固定資産税</td><td style="padding:7px 10px;text-align:right">' + repair.toFixed(1) + ' 万円/月</td></tr>'
+    + '<tr style="background:#f0f4f8;font-weight:800"><td style="padding:7px 10px">損益分岐家賃</td><td style="padding:7px 10px;text-align:right;color:rgb(' + heroColor + ')">' + breakEven.toFixed(1) + ' 万円</td></tr>'
+    + (actual > 0 ? '<tr><td style="padding:7px 10px">現在の家賃収入</td><td style="padding:7px 10px;text-align:right;font-weight:700">' + actual.toFixed(1) + ' 万円</td></tr>' : '')
+    + '</table>'
+    + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ 損益分岐を' + cushion.toFixed(0) + '%上回るとゆとりの投資です。空室率・家賃下落リスクを考えると、損益分岐の10〜20%以上の余裕が目安です。</p>'
+    + '<button onclick="shareLine(\'不動産投資の損益分岐家賃を計算したら月' + breakEven.toFixed(1) + '万円。この家賃を下回ると赤字になる。購入前に必ず確認すべき数字！https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcBreakEvenRent(); })();
 
 function calcNetYieldAfterTax() {
   var price = parseFloat(document.getElementById('nyt_price').value) || 0;
