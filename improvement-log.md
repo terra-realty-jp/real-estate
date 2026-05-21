@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-05-21 Round 41（セッション継続）
+
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html, llms.txt
+- **フェーズ**: Phase 4 新規高PLGカードの追加（Round 41）
+- **改善内容**:
+  - Tool1: `calcAgencyFeeCompare` — 仲介手数料「3%+6万円」vs 定額制 差額比較（sbLogCardUsage組込み）
+  - Tool2: `calcAkiyaFarmConvert` — 農地転用コスト（田んぼ・畑→宅地・駐車場・太陽光用地）
+  - Tool3: `calcRenovationLoan` — リフォームローンvs住宅ローン組込み 総支払い比較
+  - Tool4: `calcVacancyRisk` — 空室リスク10年損失試算（空室率・損失可視化）
+  - Tool5: `calcNetYieldAfterTax` — 税引後実質利回り（所得税+住民税控除後）
+  - llms.txt: 697→702枚に更新
+- **理由**: 「知らないと損する差額」を可視化するPLG型カード。特にTool4の空室リスクとTool5の税引後利回りは「表面数字と実態の差」という驚きを生む設計
+
+---
+
 ## 2026-05-21 Round 37（セッション継続）
 
 - **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
