@@ -4036,6 +4036,23 @@
     </div>
   </div>
 
+  <!-- R41: calcRenovationLoan -->
+  <div class="card" id="card-calcRenovationLoan" data-category="住宅ローン">
+    <div class="card-header"><span class="card-icon">🔧</span><h3 class="card-title">リフォームローン vs 住宅ローン組み込み — 月々の返済はどちらが安い？</h3></div>
+    <div class="card-body">
+      <p class="card-desc">中古住宅購入時のリフォーム費用を「住宅ローンに組み込む」か「別途リフォームローン」にするかで、月々の返済額と総支払額がどれだけ変わるか比較します。</p>
+      <label style="font-size:12px;color:var(--text-muted)">リフォーム費用（万円）（例: 300万円）</label>
+      <input type="number" id="rl_reno" value="300" min="50" max="3000" oninput="calcRenovationLoan()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">住宅ローン金利（%）（例: 0.5%）</label>
+      <input type="number" id="rl_hrate" value="0.5" min="0.1" max="5" step="0.1" oninput="calcRenovationLoan()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">リフォームローン金利（%）（例: 2.5%）</label>
+      <input type="number" id="rl_rrate" value="2.5" min="0.5" max="10" step="0.1" oninput="calcRenovationLoan()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">返済年数（年）（住宅ローン組込の場合）（例: 30年）</label>
+      <input type="number" id="rl_years" value="30" min="5" max="35" oninput="calcRenovationLoan()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="rl_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🤝</div>
@@ -13138,6 +13155,44 @@ function calcEscrowFlow() {
     + '<button onclick="shareLine(\'不動産' + (side === 'buyer' ? '購入' : '売却') + price.toLocaleString() + '万円で必要な総費用は' + totalCost + '万円！いつ・いくら必要か全ステップを確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcEscrowFlow(); })();
+
+function calcRenovationLoan() {
+  var reno = parseFloat(document.getElementById('rl_reno').value) || 0;
+  var hrate = parseFloat(document.getElementById('rl_hrate').value) || 0;
+  var rrate = parseFloat(document.getElementById('rl_rrate').value) || 0;
+  var years = parseInt(document.getElementById('rl_years').value) || 30;
+  var el = document.getElementById('rl_result');
+  if (!el) return;
+  if (reno <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">リフォーム費用を入力してください</p>'; return; }
+  // 住宅ローン組み込み
+  var hn = years * 12;
+  var hm = hrate / 100 / 12;
+  var hMonthly = hm > 0 ? reno * 10000 * hm * Math.pow(1+hm, hn) / (Math.pow(1+hm, hn) - 1) : reno * 10000 / hn;
+  var hTotal = hMonthly * hn / 10000;
+  // リフォームローン（10年想定）
+  var rn = 10 * 12;
+  var rm = rrate / 100 / 12;
+  var rMonthly = rm > 0 ? reno * 10000 * rm * Math.pow(1+rm, rn) / (Math.pow(1+rm, rn) - 1) : reno * 10000 / rn;
+  var rTotal = rMonthly * rn / 10000;
+  var totalDiff = rTotal - hTotal;
+  var monthDiff = (rMonthly - hMonthly) / 10000;
+  try { sbLogCardUsage(3, 'card-calcRenovationLoan', 'calc', '総支払差額' + totalDiff.toFixed(0) + '万円'); } catch(e) {}
+  var heroColor = totalDiff > 0 ? '22,163,74' : '220,38,38';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">住宅ローン組込みの方が安い（総支払差額）</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroColor + ');line-height:1">' + Math.abs(totalDiff).toFixed(0) + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">' + (totalDiff > 0 ? '住宅ローン組込みが安い' : 'リフォームローンの方が安い') + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr style="background:#f0fdf4"><td style="padding:7px 10px">住宅ローン組込み（月）</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#16a34a">' + Math.round(hMonthly/10000*10)/10 + ' 万円</td></tr>'
+    + '<tr style="background:#f0fdf4"><td style="padding:7px 10px">住宅ローン組込み（総返済）</td><td style="padding:7px 10px;text-align:right">' + hTotal.toFixed(0) + ' 万円</td></tr>'
+    + '<tr><td style="padding:7px 10px">リフォームローン（月・10年）</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#dc2626">' + Math.round(rMonthly/10000*10)/10 + ' 万円</td></tr>'
+    + '<tr><td style="padding:7px 10px">リフォームローン（総返済）</td><td style="padding:7px 10px;text-align:right">' + rTotal.toFixed(0) + ' 万円</td></tr>'
+    + '</table>'
+    + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ 住宅ローン組込みは返済期間が長い分、月々の負担は軽いですが、リフォームローンは短期完済で総利息を抑えられる場合があります。</p>'
+    + '<button onclick="shareLine(\'リフォーム費用' + reno + '万円、住宅ローン組込みとリフォームローンで総支払いが' + Math.abs(totalDiff).toFixed(0) + '万円も違う！不動産かんたんツールで確認https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcRenovationLoan(); })();
 
 var _ownerCat = '';
 var _ownerCatKw = {

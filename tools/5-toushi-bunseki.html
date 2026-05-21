@@ -4272,6 +4272,30 @@
     </div>
   </div>
 
+  <!-- R41: calcNetYieldAfterTax -->
+  <div class="card" id="card-calcNetYieldAfterTax" data-category="利回り">
+    <div class="card-header"><span class="card-icon">🧮</span><h3 class="card-title">税引後実質利回り — 表面利回り5%は手元にいくら残るか</h3></div>
+    <div class="card-body">
+      <p class="card-desc">物件の表面利回りから所得税・住民税・管理費・修繕費を引いた「税引後の実質利回り」を計算します。「利回り5%と聞いて買ったけど実際は？」を確認できます。</p>
+      <label style="font-size:12px;color:var(--text-muted)">物件価格（万円）（例: 2000万円）</label>
+      <input type="number" id="nyt_price" value="2000" min="100" max="100000" oninput="calcNetYieldAfterTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">表面利回り（%）（例: 5%）</label>
+      <input type="number" id="nyt_gross" value="5" min="1" max="30" step="0.1" oninput="calcNetYieldAfterTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">管理費・修繕費（家賃収入の何%）（例: 20%）</label>
+      <input type="number" id="nyt_cost" value="20" min="0" max="60" oninput="calcNetYieldAfterTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">所得税率（%）（給与所得合算後の課税率。例: 20%）</label>
+      <select id="nyt_tax" onchange="calcNetYieldAfterTax()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="5">5%（課税所得195万円以下）</option>
+        <option value="10">10%（〜330万円）</option>
+        <option value="20" selected>20%（〜695万円）</option>
+        <option value="23">23%（〜900万円）</option>
+        <option value="33">33%（〜1800万円）</option>
+        <option value="40">40%（〜4000万円）</option>
+      </select>
+      <div id="nyt_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">📊</div>
@@ -15592,6 +15616,38 @@ function calcCashOnCash() {
     + '<button onclick="shareLine(\'不動産投資' + price.toLocaleString() + '万円の物件、頭金の入れ方で自己資金利回りがこんなに変わる！レバレッジの効果をシミュレーション👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcCashOnCash(); })();
+
+function calcNetYieldAfterTax() {
+  var price = parseFloat(document.getElementById('nyt_price').value) || 0;
+  var gross = parseFloat(document.getElementById('nyt_gross').value) || 0;
+  var costPct = parseFloat(document.getElementById('nyt_cost').value) || 0;
+  var taxRate = parseFloat(document.getElementById('nyt_tax').value) || 20;
+  var el = document.getElementById('nyt_result');
+  if (!el) return;
+  if (price <= 0 || gross <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">物件価格と表面利回りを入力してください</p>'; return; }
+  var annualRent = price * gross / 100;
+  var netIncome = annualRent * (1 - costPct / 100);
+  var tax = netIncome * (taxRate + 10) / 100; // 所得税+住民税10%
+  var afterTaxIncome = netIncome - tax;
+  var afterTaxYield = (afterTaxIncome / price * 100);
+  var dropPct = ((gross - afterTaxYield) / gross * 100).toFixed(0);
+  try { sbLogCardUsage(5, 'card-calcNetYieldAfterTax', 'calc', '税引後利回り' + afterTaxYield.toFixed(2) + '%'); } catch(e) {}
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(220,38,38,0.12),rgba(220,38,38,0.04));border:2px solid rgba(220,38,38,0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">税引後実質利回り</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(220,38,38);line-height:1">' + afterTaxYield.toFixed(2) + '<span style="font-size:18px">%</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">表面利回り' + gross + '%から' + dropPct + '%減少</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr><td style="padding:7px 10px">年間家賃収入（表面）</td><td style="padding:7px 10px;text-align:right">' + annualRent.toFixed(1) + ' 万円</td></tr>'
+    + '<tr style="background:#fafafa"><td style="padding:7px 10px">管理費・修繕費（' + costPct + '%）</td><td style="padding:7px 10px;text-align:right;color:#dc2626">−' + (annualRent * costPct / 100).toFixed(1) + ' 万円</td></tr>'
+    + '<tr><td style="padding:7px 10px">手取り（税前）</td><td style="padding:7px 10px;text-align:right;font-weight:700">' + netIncome.toFixed(1) + ' 万円</td></tr>'
+    + '<tr style="background:#fafafa"><td style="padding:7px 10px">所得税+住民税（' + (taxRate+10) + '%）</td><td style="padding:7px 10px;text-align:right;color:#dc2626">−' + tax.toFixed(1) + ' 万円</td></tr>'
+    + '<tr style="background:#fff5f5;font-weight:800"><td style="padding:7px 10px">税引後手取り</td><td style="padding:7px 10px;text-align:right;color:#dc2626">' + afterTaxIncome.toFixed(1) + ' 万円</td></tr>'
+    + '</table>'
+    + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ 表面利回り' + gross + '%と聞いていても、税引後は' + afterTaxYield.toFixed(2) + '%まで下がります。税率が高い方ほど法人化や減価償却の活用で改善できます。</p>'
+    + '<button onclick="shareLine(\'不動産投資の表面利回り' + gross + '%、税引後は' + afterTaxYield.toFixed(2) + '%まで下がる事実。' + dropPct + '%の差が出る仕組みを不動産かんたんツールで確認https://shinji-japaaaan.github.io/real-estate/tools/5-toushi-bunseki.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcNetYieldAfterTax(); })();
 
 var _toushiCat = '';
 var _toushiCatKw = {

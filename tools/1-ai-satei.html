@@ -4567,6 +4567,19 @@
     </div>
   </div>
 
+  <!-- R41: calcAgencyFeeCompare -->
+  <div class="card" id="card-calcAgencyFeeCompare" data-category="費用">
+    <div class="card-header"><span class="card-icon">💸</span><h3 class="card-title">仲介手数料「3%+6万円」vs 定額制 — どちらが安い？</h3></div>
+    <div class="card-body">
+      <p class="card-desc">売却額によって、定額制仲介が有利になる分岐点を計算します。「仲介手数料を少しでも節約したい」方に。</p>
+      <label style="font-size:12px;color:var(--text-muted)">売却価格（例: 3500万円の場合は3500）</label>
+      <input type="number" id="afc_price" value="3500" min="100" max="50000" oninput="calcAgencyFeeCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">定額制仲介の手数料（万円）（例: 50万円）</label>
+      <input type="number" id="afc_flat" value="50" min="0" max="500" oninput="calcAgencyFeeCompare()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <div id="afc_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🏠</div>
@@ -13149,6 +13162,31 @@ function calcSaleClosingFee() {
     + '<button onclick="shareLine(\'売却価格' + price.toLocaleString() + '万円でも手取りは' + net.toLocaleString() + '万円！仲介手数料+税金+ローン返済で大きく減る。全費用を計算してみた👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcSaleClosingFee(); })();
+
+function calcAgencyFeeCompare() {
+  var price = parseFloat(document.getElementById('afc_price').value) || 0;
+  var flat = parseFloat(document.getElementById('afc_flat').value) || 0;
+  var el = document.getElementById('afc_result');
+  if (!el) return;
+  if (price <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">売却価格を入力してください</p>'; return; }
+  var trad = Math.ceil((price * 0.03 + 6) * 1.1);
+  var diff = trad - flat;
+  var cheaper = diff > 0 ? '定額制が' + diff.toFixed(0) + '万円お得' : diff < 0 ? '従来型が' + Math.abs(diff).toFixed(0) + '万円お得' : '同額';
+  var heroColor = diff > 0 ? '22,163,74' : '220,38,38';
+  try { sbLogCardUsage(1, 'card-calcAgencyFeeCompare', 'calc', '節約額' + diff.toFixed(0) + '万円'); } catch(e) {}
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">定額制の方が安い差額</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroColor + ');line-height:1">' + diff.toFixed(0) + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">' + cheaper + '</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr style="background:#f0fdf4"><td style="padding:7px 10px">定額制手数料</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#16a34a">' + flat.toFixed(0) + ' 万円</td></tr>'
+    + '<tr><td style="padding:7px 10px">従来型（3%+6万×1.1）</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#dc2626">' + trad.toFixed(0) + ' 万円</td></tr>'
+    + '</table>'
+    + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ ' + (diff > 0 ? '定額制仲介を選ぶと、この差額分の手取りが増えます。ただし、定額制でも売却力（集客・交渉）が重要です。' : diff < 0 ? '売却価格が低いほど従来型が有利になります。定額制の場合は成約実績も確認しましょう。' : 'この売却価格では両者が同額になります。') + '</p>'
+    + '<button onclick="shareLine(\'仲介手数料、従来型は' + trad.toFixed(0) + '万円かかるところ、定額制なら' + flat.toFixed(0) + '万円。差額' + diff.toFixed(0) + '万円の節約になります！不動産かんたんツールで確認https://shinji-japaaaan.github.io/real-estate/tools/1-ai-satei.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcAgencyFeeCompare(); })();
 
 var _sateiCat = '';
 var _sateiCatKw = {

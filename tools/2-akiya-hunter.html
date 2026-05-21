@@ -3395,6 +3395,29 @@
     </div>
   </div>
 
+  <!-- R41: calcAkiyaFarmConvert -->
+  <div class="card" id="card-calcAkiyaFarmConvert" data-category="費用">
+    <div class="card-header"><span class="card-icon">🌾</span><h3 class="card-title">農地転用コスト — 田んぼ・畑を宅地・駐車場にする費用</h3></div>
+    <div class="card-body">
+      <p class="card-desc">相続した農地を活用したい方向け。農地転用の申請費用・造成費用・期間の目安を試算します。</p>
+      <label style="font-size:12px;color:var(--text-muted)">農地の面積（㎡）（例: 300㎡）</label>
+      <input type="number" id="afc2_area" value="300" min="10" max="10000" oninput="calcAkiyaFarmConvert()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+      <label style="font-size:12px;color:var(--text-muted)">転用後の用途</label>
+      <select id="afc2_use" onchange="calcAkiyaFarmConvert()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="parking">駐車場（舗装のみ）</option>
+        <option value="house">宅地（住宅建築用）</option>
+        <option value="solar">太陽光発電用地</option>
+      </select>
+      <label style="font-size:12px;color:var(--text-muted)">農地区分</label>
+      <select id="afc2_class" onchange="calcAkiyaFarmConvert()" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px">
+        <option value="5">第1種農地（転用困難）</option>
+        <option value="4" selected>第2種農地（許可必要）</option>
+        <option value="3">第3種農地（比較的容易）</option>
+      </select>
+      <div id="afc2_result" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- TERRA REALTY 相談CTA -->
   <div style="background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.35);border-radius:14px;padding:22px;margin-top:24px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">🌿</div>
@@ -12898,6 +12921,39 @@ function calcAkiyaSubsidy() {
     + '<div style="text-align:center;margin-top:12px"><a href="https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '&text=' + encodeURIComponent('💰 空き家の解体・改修費用の最大' + Math.round(total / (demolish + reform || 1) * 100) + '%が補助金でカバーできる！\n\n総費用' + (demolish + reform) + '万円のうち' + total + '万円が補助対象。申請しないと損。\n▶ 不動産かんたんツール（TERRA REALTY）') + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>';
 }
 (function(){ calcAkiyaSubsidy(); })();
+
+function calcAkiyaFarmConvert() {
+  var area = parseFloat(document.getElementById('afc2_area').value) || 0;
+  var use = document.getElementById('afc2_use').value;
+  var cls = parseInt(document.getElementById('afc2_class').value) || 4;
+  var el = document.getElementById('afc2_result');
+  if (!el) return;
+  if (area <= 0) { el.innerHTML = '<p style="color:#888;font-size:12px">面積を入力してください</p>'; return; }
+  // 申請費用（行政書士等）: 15〜25万円
+  var appFee = 20;
+  // 造成費用: 用途別単価（万円/㎡）
+  var constUnit = use === 'parking' ? 0.8 : use === 'solar' ? 0.5 : 1.2;
+  var constCost = Math.round(area * constUnit);
+  // 農地区分難易度係数（第1種は転用ほぼ不可）
+  var clsNote = cls === 5 ? '※第1種農地は原則転用不可。農業委員会に相談が必要です。' : cls === 4 ? '農業委員会への許可申請が必要です（2〜4か月）。' : '比較的申請が通りやすい農地です。';
+  var total = appFee + constCost;
+  var useLabel = use === 'parking' ? '駐車場' : use === 'solar' ? '太陽光発電用地' : '宅地（住宅建築用）';
+  try { sbLogCardUsage(2, 'card-calcAkiyaFarmConvert', 'calc', '転用総費用' + total + '万円'); } catch(e) {}
+  var heroColor = '59,130,246';
+  el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(' + heroColor + ',0.12),rgba(' + heroColor + ',0.04));border:2px solid rgba(' + heroColor + ',0.4);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:4px">農地転用 総費用の目安</div>'
+    + '<div style="font-size:52px;font-weight:900;color:rgb(' + heroColor + ');line-height:1">' + total + '<span style="font-size:18px">万円</span></div>'
+    + '<div style="font-size:11px;color:#555;margin-top:6px">' + area + '㎡を' + useLabel + 'に転用する場合</div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr style="background:#f0f9ff"><td style="padding:7px 10px">申請費用（行政書士等）</td><td style="padding:7px 10px;text-align:right;font-weight:700">' + appFee + ' 万円</td></tr>'
+    + '<tr><td style="padding:7px 10px">造成・整地工事費</td><td style="padding:7px 10px;text-align:right;font-weight:700">' + constCost + ' 万円</td></tr>'
+    + '<tr style="background:#fafafa;font-weight:800"><td style="padding:7px 10px">合計</td><td style="padding:7px 10px;text-align:right;color:rgb(' + heroColor + ')">' + total + ' 万円</td></tr>'
+    + '</table>'
+    + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ ' + clsNote + ' 転用後の活用収益と比較して投資対効果を確認しましょう。</p>'
+    + '<button onclick="shareLine(\'相続した農地（' + area + '㎡）の転用コストを試算したら、申請＋造成で約' + total + '万円かかることがわかりました！不動産かんたんツールhttps://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
+}
+(function(){ calcAkiyaFarmConvert(); })();
 
 var _akiyaCat = '';
 var _akiyaCatKw = {
