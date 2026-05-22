@@ -13888,9 +13888,10 @@ function calcLonelyDeath() {
     + '<div style="font-size:20px;font-weight:900;color:var(--red)">' + totalNoInsurance.toLocaleString() + '万円</div>'
     + (isInsured ? '<div style="font-size:11px;color:var(--green);margin-top:4px">✅ 保険加入で約' + saving.toLocaleString() + '万円の損失を回避できます</div>' : '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">孤独死保険（月額数百円〜）への加入で大半をカバー可能</div>')
     + '</div>';
+  var guideHtml = '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>孤独死リスクへの備え:</strong> 高齢入居者の入居を拒否するより「孤独死保険」への加入が実用的な対策です。月額数百円〜で特殊清掃・空室損失をカバーできます。高齢化が進む今、高齢入居者受け入れと保険加入はセットで検討しましょう。</div>';
   var shareMsg = '【賃貸オーナー衝撃】孤独死1件の総損失' + totalNoInsurance.toLocaleString() + '万円！特殊清掃' + cleanCost + '万円＋空室12ヶ月＋家賃下落3年…保険なしで全額自己負担。高齢入居者受け入れ前にシミュレーション！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEで仲間のオーナーに教える</button>';
-  r.innerHTML = heroHtml + gridHtml + totalHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+  r.innerHTML = heroHtml + gridHtml + totalHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcLonelyDeath(); })();
 
@@ -14635,6 +14636,7 @@ function calcEarlyPayoff() {
   html += '<tr><td style="padding:6px 8px"><strong>差額（運用 - 繰り上げ）</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+(diff>=0?'+':'')+diff+'万円</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 運用利益には20.315%の税金がかかります（NISA口座利用で非課税化が可能）。投資にはリスクがあります。繰り上げ返済は確実な利息軽減効果があります。</p>';
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>繰り上げ返済 vs 運用の目安:</strong> ローン金利が1%台ならNISA等での長期運用が有利になりやすいです。3%超なら繰り上げ返済の方が確実。リスクを取りたくない場合・精神的な安心を重視する場合は繰り上げ返済が正解です。</div>';
   var shareText = isInvest
     ? '繰り上げ返済より年利'+invest+'%で運用の方が'+Math.abs(diff)+'万円お得な試算！ローン金利'+loanRate+'%より運用利回りが高ければ投資が有利\n▶ あなたの数字でも無料試算\n不動産かんたんツール（TERRA REALTY）'
     : 'ローン金利'+loanRate+'%の場合は繰り上げ返済が運用より'+Math.abs(diff)+'万円確実に得——リスクなしで確実な節約\n▶ あなたの数字でも無料試算\n不動産かんたんツール（TERRA REALTY）';
@@ -14673,6 +14675,7 @@ function calcPetDamageRisk() {
   html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px"><strong>年間純収支</strong></td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+hc+',1)">'+(netPerYear>=0?'+':'')+netPerYear+'万円</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 原状回復費用は退去ごとに発生。敷金の範囲内に収まることが多いですが、超過分はオーナー負担になります。</p>';
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>ペット可切替の判断基準:</strong> 年間純収支がプラスかつ空室が長引いている場合は切替が有効です。ペット可にすると入居者の選択肢が約18%広がります。敷金1ヶ月上乗せ＋ペット飼育特約の契約書記載でトラブルリスクを減らせます。</div>';
   var shareText = isProfit
     ? 'ペット可にして家賃+'+premium+'%→年間収益+'+annualGain+'万円、修繕リスクを引いても年間+'+netPerYear+'万円のプラスになる試算！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）'
     : 'ペット可で家賃+'+premium+'%でも修繕コストが年間'+perYearCost+'万円かかり、年間'+Math.abs(netPerYear)+'万円の損になる試算\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
@@ -14706,6 +14709,7 @@ function calcRentIncomeVsJob() {
   html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">手取り</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba(22,163,74,1)">'+handRent+'万円</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+handJob+'万円</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 経費（減価償却・管理費・ローン利息等）を計上することで課税対象が下がります。青色申告ならさらに65万円控除が加わります</p>';
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>家賃収入の税メリット:</strong> 同じ収入でも「家賃収入」は経費を差し引いてから課税されるため、給与収入より実質的な税負担が軽くなります。青色申告に切り替えると最大65万円の特別控除が加わります。管理費・ローン利息・減価償却が全て経費になります。</div>';
   var shareText = '同じ'+rent+'万円でも家賃収入なら経費'+expense+'万円を引いた後に課税！給与より税負担が'+saved+'万円少なくなる\n▶ あなたの収入でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
@@ -14735,6 +14739,7 @@ function calcRepairFundShortage() {
   html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">1戸あたりの追加負担</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+(isSafe?'22,163,74':'220,38,38')+',1)">'+(isSafe?'なし':perUnit+'万円')+'</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 大規模修繕は築12〜15年周期が目安。積立金が不足すると一時金徴収または借入が必要になります</p>';
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>修繕積立金不足のリスク:</strong> 積立不足が判明すると「一時金の徴収」か「工事の先送り」しかなくなります。一時金は1戸あたり数十〜百万円になることも。築10年を超えたら長期修繕計画書で不足の有無を確認し、早めに管理組合で対策を議論しましょう。</div>';
   var shareText = 'マンションの大規模修繕で積立金が'+shortage+'万円不足！'+units+'戸で割ると1戸あたり'+perUnit+'万円の追加徴収になる可能性\n▶ あなたの物件でも無料確認\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
@@ -14768,6 +14773,7 @@ function calcRentHikeBreakeven() {
   html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">損失回収期間</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">約'+breakMonths+'ヶ月（'+breakYears+'年）</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 3年以内に元が取れる値上げは合理的。長期入居者への値上げは退去リスクが低いため有利になりやすい</p>';
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>値上げ判断の目安:</strong> 回収期間3年以内なら値上げは合理的です。長期入居者（5年超）は退去リスクが低く、値上げが通りやすい状況です。「市場家賃と比較して現状が安い」という客観的な根拠を示すと入居者も受け入れやすくなります。</div>';
   var shareText = '家賃を'+hike+'万円値上げして退去が1件出ると'+totalLoss+'万円の損失。値上げ分で元を取るのに'+breakYears+'年もかかる！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
@@ -14800,6 +14806,7 @@ function calcAdFeeROI() {
   html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">合計コスト</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+noAdLoss+'万円</td><td style="padding:6px 8px;text-align:right;font-weight:700">'+adTotal+'万円</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ ADによる空室短縮効果はエリアや物件条件によります。仲介業者との事前確認が重要です</p>';
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>ADの効果的な活用法:</strong> ADの相場は家賃1ヶ月分。2ヶ月以上払うと仲介業者に優先的に案内してもらいやすくなります。ADを増やしても決まらない場合は、写真の刷新・間取り図の改善・ポータル掲載サイト追加の方が効果的なことも多いです。</div>';
   var shareText = '家賃'+rent+'万円の空室。広告料（AD）を払うと空室が'+noAdM+'→'+adM+'ヶ月に短縮。AD費用と空室損失を比べると'+(isWorth?'プラス'+netBenefit+'万円お得！':'マイナス'+Math.abs(netBenefit)+'万円の損')+'\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
@@ -14831,6 +14838,7 @@ function calcDepositDeduct() {
   html += '<tr style="background:rgba(0,0,0,0.04)"><td style="padding:6px 8px;font-weight:700">'+(isShortage?'追加請求額':'返還額')+'</td><td style="padding:6px 8px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+Math.abs(refund)+'万円</td></tr>';
   html += '</table>';
   html += '<p style="font-size:12px;color:var(--text-secondary);margin-top:10px">※ 国土交通省ガイドラインに基づく目安。経年劣化の割合は入居年数に応じて変動します</p>';
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>退去精算でよくある誤解:</strong> 経年劣化（日焼け・壁の薄い傷・フローリングの軽い傷）は入居者負担外です。借主負担になるのはタバコ・ペット・カビ放置など故意・過失による損傷だけ。入居時の部屋の写真記録が退去精算のトラブル防止に直結します。</div>';
   var shareText = '退去時の原状回復費用'+repairTotal+'万円のうち、入居'+tenure+'年の経年劣化分はオーナー負担'+ownerShare+'万円！テナント負担は'+tenantShare+'万円\n▶ あなたの物件でも無料確認\n不動産かんたんツール（TERRA REALTY）';
   html += '<button onclick="shareLine(\''+shareText+'\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
   el.innerHTML = html; el.style.display = 'block';
@@ -14894,6 +14902,7 @@ function calcMonthlyCFBreakdown() {
     +'<tr><td style="padding:6px;border-bottom:1px solid #eee">固定資産税（月割）</td><td style="padding:6px;text-align:right;border-bottom:1px solid #eee;color:#dc2626">-'+esc(taxMon)+'万円</td></tr>'
     +'<tr style="background:#f5f5f5"><td style="padding:6px"><strong>手残り</strong></td><td style="padding:6px;text-align:right;font-weight:700;color:rgba('+color+',1)">'+(isProfit?'+':'')+esc(cf)+'万円</td></tr>'
     +'</table>'
+    +'<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>月次CFの健全水準:</strong> 家賃収入の50%以上が手残りになれば健全です（コスト率50%以下）。ローン除く実CFがプラスなら物件自体は収益を生んでいます。マイナスが続く場合はまず「空室率改善」か「ローン借換え」から対策を。</div>'
     +'<button onclick="shareLine(\'家賃'+esc(rent)+'万円の物件の本当の手残りは月'+esc(cf)+'万円だった！ローン・管理費・税金全部引いたら思ったより'+(isProfit?'多くて':'少なくて')+'驚き😲 明細付きで確認👇 \'+location.href)" style="width:100%;padding:11px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 
@@ -15660,6 +15669,7 @@ function calcDepositRefund() {
     + '<tr style="font-weight:800"><td style="padding:7px 10px">返還見込み額</td><td style="padding:7px 10px;text-align:right;color:rgb(' + heroColor + ')">' + refund.toFixed(1) + ' 万円</td></tr>'
     + '</table>'
     + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ ガイドラインでは「通常の生活で生じる汚れ・傷」は入居者負担外です。請求書に疑問があれば「国土交通省 原状回復ガイドライン」を確認しましょう。</p>'
+    + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>敷金返還のポイント:</strong> 「通常の生活で生じる汚れ・傷」（日焼け・画鋲穴・家具跡）は貸主負担が原則です。入居時・退去時の写真記録が最大の証拠になります。納得できない請求には「国土交通省ガイドラインに基づく確認を」と伝えましょう。</div>'
     + '<button onclick="shareLine(\'敷金' + deposit + '万円、退去時に返ってくるのは約' + refund.toFixed(1) + '万円の見込み！原状回復のルールを知らないと損します不動産かんたんツールhttps://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcDepositRefund(); })();
@@ -15693,6 +15703,7 @@ function calcCondoMaintenance() {
     + '<tr><td style="padding:7px 10px">20年間の累計支払</td><td style="padding:7px 10px;text-align:right">' + (total20/10000).toFixed(0) + ' 万円</td></tr>'
     + '</table>'
     + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ 分譲マンションの修繕積立金は、長期修繕計画の見直しのたびに段階的に値上がりするのが一般的です。購入前に長期修繕計画の値上がり予定を確認しましょう。</p>'
+    + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>修繕積立金が上がる理由:</strong> 最初は低め設定（入居者獲得のため）で、後から段階的に引き上げられるのが一般的です。長期修繕計画書を管理組合から取り寄せると今後の値上がり予定が確認できます。購入前の確認が重要です。</div>'
     + '<button onclick="shareLine(\'マンションの管理費・修繕積立金、今は月' + cur.toFixed(1) + '万円でも10年後は月' + (mgmt+r10).toFixed(1) + '万円になる可能性！知らないと後悔します不動産かんたんツールhttps://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcCondoMaintenance(); })();
@@ -15721,6 +15732,7 @@ function calcSubleaseRisk() {
     + '</div>'
     + '<table style="width:100%;font-size:12px;border-collapse:collapse"><tr style="background:#f0f4f8"><th style="padding:5px 8px;text-align:left">年</th><th style="padding:5px 8px;text-align:right">保証家賃</th><th style="padding:5px 8px;text-align:right">年間損失</th></tr>' + rows + '</table>'
     + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ サブリース契約は空室保証のメリットがありますが、2年ごとの見直しで保証家賃が下がる契約が多いです。自主管理や一般管理委託との比較も重要です。</p>'
+    + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>サブリース契約の見直しポイント:</strong> 保証家賃の見直し条項・解約条件・違約金を必ず確認しましょう。「家賃保証」という言葉に安心せず、2年ごとに保証家賃が下がり続けると10年後の手取りは大幅に減ります。自主管理・通常管理委託との比較試算が大切です。</div>'
     + '<button onclick="shareLine(\'サブリース契約のリスクを計算したら、10年間で市場家賃との差額が' + totalDiff.toFixed(0) + '万円に！「家賃保証」の落とし穴を確認https://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcSubleaseRisk(); })();
@@ -15749,6 +15761,7 @@ function calcVacancyRisk() {
     + '<tr style="background:#fff5f5"><td style="padding:7px 10px">実効年間収入</td><td style="padding:7px 10px;text-align:right;font-weight:700">' + (annualRent - annualLoss).toFixed(1) + ' 万円</td></tr>'
     + '</table>'
     + '<p style="font-size:11px;color:#888;margin-top:10px;line-height:1.6">▶ 空室1か月ごとに家賃' + rent + '万円の損失。例えば家賃を月5,000円値下げして即入居が決まれば、空室2か月分の損失を防げます。早期決定が有利かどうか試算してみましょう。</p>'
+    + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>空室対策の優先順位:</strong> ①賃料が相場より高い場合は値下げを検討 ②物件写真・間取り図のリニューアル ③AD（広告料）増加 ④礼金なし・ペット可などの条件緩和。空室3ヶ月を超えたら家賃水準の再検討がベストです。</div>'
     + '<button onclick="shareLine(\'賃貸物件の空室リスクを試算したら、年間' + annualLoss.toFixed(1) + '万円、' + yrs + '年で' + totalLoss.toFixed(0) + '万円の損失になる！空室対策は早めが大切です不動産かんたんツールhttps://shinji-japaaaan.github.io/real-estate/tools/4-kanri-saas.html\')" style="margin-top:10px;width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📤 LINEで共有する</button>';
 }
 (function(){ calcVacancyRisk(); })();
@@ -16176,6 +16189,7 @@ function calcEnergyRetrofit() {
     + '<div>10年間の光熱費節約合計: <b>' + save10.toFixed(0) + '万円</b></div>'
     + '<div>10年後の純利益: <b>' + (profit10 >= 0 ? '+' : '') + profit10.toFixed(0) + '万円</b></div>'
     + '</div>'
+    + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>省エネリフォームの補助金活用:</strong> 国・自治体の補助金を活用すると実質コストが大幅に下がります。代表的なのは「給付型補助金（子育てエコホーム支援事業等）」「省エネ設備設置補助」など。回収期間10年以内を目安に投資判断しましょう。光熱費上昇トレンドが続くほど有利になります。</div>'
     + '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEでシェア</button>';
   try { sbLogCardUsage(4,'card-calcEnergyRetrofit','calc','回収'+payback.toFixed(1)+'年・10年純益'+profit10.toFixed(0)+'万'); } catch(e) {}
   el.innerHTML = html; el.style.display = 'block';
