@@ -6913,7 +6913,8 @@ function calcAgencyScore() {
   html += '</div>';
   var best = scores.reduce(function(a,b){ return a.total >= b.total ? a : b; });
   html += '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px;font-size:12px">💡 総合評価1位: <strong style="color:var(--gold)">' + best.col + '</strong>（' + best.total + '点）— 担当者との相性と価格の根拠説明を最終判断の軸にしてください。</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'⭐️ 不動産仲介業者の信頼度スコアを採点！\n\n担当エージェントは信頼できるか5項目で評価してみました！\n\n#不動産会社選び #仲介業者 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var asShareMsg = ('⭐️ 仲介会社3社の評価スコアを採点！\n\n総合評価1位: ' + best.col + '（' + best.total + '/25点）\n\n3社比較で信頼できる担当者を見つけましょう▶\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + asShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcAgencyScore(); })();
@@ -7172,7 +7173,8 @@ function calcKessai() {
     html += '</div>';
   }
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'✅ 不動産決済の準備チェック！\n\n引渡し当日までに準備すべき書類・費用を確認してみました！\n\n#不動産決済 #引渡し #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var kessaiShareMsg = ('✅ 不動産決済の準備チェック！\n\n準備進捗: ' + pct + '%（' + done + '/' + total + '項目 完了）\n判定: ' + verdict + '\n\n▶ 決済日前に必要な書類・費用を確認\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + kessaiShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcKessai(); })();
@@ -7218,7 +7220,8 @@ function calcHikiwatashi() {
     html += '</div>';
   }
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🔑 物件引き渡しの流れをシミュレーション！\n\n引き渡し当日のスケジュールと準備リストを整理しました！\n\n#物件引渡し #不動産購入 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var hikiwatashiShareMsg = ('🔑 引き渡し前 設備確認チェック結果！\n\n確認進捗: ' + pct + '%（' + done + '/' + total + '設備 確認済み）\n判定: ' + verdict + '\n\n▶ 引き渡し当日のトラブルを防ぐ準備を\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + hikiwatashiShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcHikiwatashi(); })();
@@ -7575,7 +7578,8 @@ function calcDisclosureCheck() {
     + (mandatory > 0
       ? '<div style="background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);border-radius:10px;padding:12px;font-size:12px;line-height:1.7;color:#fca5a5">⚖️ <strong>契約不適合責任について</strong>：2020年民法改正により、売主が知っていた欠陥を告知しなかった場合は<strong>契約不適合責任</strong>が問われます。買主は修繕請求・代金減額請求・損害賠償請求・契約解除が可能です。必ず不動産会社に相談してから告知書を作成してください。</div>'
       : '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:12px;line-height:1.7">💡 推奨告知事項は法的義務ではありませんが、後のトラブル防止のため積極的に開示することをおすすめします。誠実な情報開示は買主との信頼関係にもつながります。</div>');
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'📄 不動産告知事項のリスクチェック！\n\n購入前に確認すべき告知事項と重大度を診断しました！\n\n#不動産購入 #告知事項 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var dcShareMsg = ('📄 物件の告知事項チェック結果！\n\n告知事項 合計: ' + total + '件（必須' + mandatory + '件 ＋ 推奨' + recommended + '件）\n\n▶ 売却前に確認必須の告知事項を診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + dcShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcDisclosureCheck(); })();
 
@@ -8169,7 +8173,8 @@ function calcLandBuildSplit() {
   html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">';
   html += '💡 土地は減価償却できません。建物部分のみが毎年の経費として計上できます。法人・個人事業主として不動産を取得した場合は税理士に相談し、正確な按分方法を確認してください。';
   html += '</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🏠 土地・建物の取得費按分を計算！\n\n消費税から逆算した土地建物の正確な按分比率がわかります！\n\n#消費税 #取得費 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var lbsShareMsg = ('🏠 土地建物の取得費按分を計算！\n\n年間減価償却費: ' + Math.round(annualDepr*10)/10 + '万円/年\n建物比率: ' + (buildRatio * 100).toFixed(1) + '%（耐用年数' + life + '年）\n\n税金の節税につながる按分計算はこちら▶\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + lbsShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcLandBuildSplit(); })();
@@ -8493,7 +8498,8 @@ function calcMoveOrder() {
   html += '</table>';
   html += '<div style="font-size:11px;color:#f9a825;margin-top:8px">📌 資金力・市場動向・住み替え先の在庫状況によって有利な順序が変わります。つなぎ融資（ブリッジローン）の利率は高め（3〜4%/年）なので期間を短くする工夫が重要です。</div>';
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🔄 売却と購入どちらを先にするか診断！\n\n自分の状況では売り先行・買い先行どちらが有利かわかります！\n\n#住み替え #不動産売却 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var moShareMsg = ('🔄 住み替え 売り先行vs買い先行を診断！\n\nおすすめ: ' + moRec + '\n追加費用目安: 約' + moRecCost.toFixed(0) + '万円\n判定スコア: 売却先行' + sellScore + 'pt vs 購入先行' + buyScore + 'pt\n\n▶ あなたの状況で最適な順序を診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + moShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcMoveOrder(); })();
@@ -8617,7 +8623,8 @@ function calcInspectionROI() {
   html += '</div>';
   html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 インスペクションは宅建業法改正（2018年）により仲介業者の説明義務化。JSHI・日本ホームインスペクターズ協会認定士に依頼することが推奨されます。</div>';
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🔬 ホームインスペクションの費用対効果を試算！\n\n検査費用と発見されるリスクの金額的価値を比較しました！\n\n#ホームインスペクション #不動産購入 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var iroiShareMsg = ('🔬 インスペクション費用対効果（ROI）！\n\nROI: ' + Math.round(roi).toLocaleString() + '%\n検査費用' + cost.toFixed(1) + '万円 → 期待リターン' + (totalBenefit - cost).toFixed(0) + '万円\n\n▶ 検査費用は安心への投資かを確認\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + iroiShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcInspectionROI(); })();
@@ -8778,7 +8785,8 @@ function calcOfferTiming() {
   html += '<div style="font-size:12px;margin-bottom:6px">💰 <b style="color:' + ACCENT + '">交渉余地の目安: 約' + negoAmt + '万円（' + negoRate.toFixed(1) + '%）</b></div>';
   html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">' + advice + '</div>';
   html += '</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'⏰ 物件の申し込みタイミングを診断！\n\n今すぐ申し込むべきか待つべきか、市場状況から判断してみました！\n\n#不動産購入 #申し込み #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var otShareMsg = ('⏰ 物件の申し込みタイミング診断！\n\n判定: ' + timingLabel + '\nタイミング指数: ' + totalScore + '/100\n交渉余地の目安: 約' + negoAmt.toLocaleString() + '万円\n\n▶ 今申し込むべきか？無料で診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + otShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcOfferTiming(); })();
@@ -8830,7 +8838,8 @@ function calcBuyerProfile() {
     html += '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">' + t.body + '</div></div>';
   });
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'👤 買主プロフィール診断！\n\n自分はどんな買主タイプ？不動産会社への印象と融資通過率を診断しました！\n\n#住宅購入 #買主診断 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var bpShareMsg = ('👤 売却物件の想定ターゲット層を診断！\n\n物件タイプ: ' + pLabel + '\nメインターゲット: ' + profiles[pType].main + '\n（駅徒歩' + station + '分）\n\n▶ 売れやすいターゲット層を把握しよう\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + bpShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcBuyerProfile(); })();
@@ -9010,7 +9019,8 @@ function calcMoveInReform() {
     + '<span style="font-size:12px;color:rgba(0,0,0,0.7)">合計目安</span>'
     + '<span style="font-size:18px;font-weight:700;color:' + ACCENT + '">' + displayTotal + '万円</span></div>'
     + msg + '</div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🔨 入居前リフォームの費用対効果を試算！\n\nリフォームにかけていい予算の上限と優先順位がわかります！\n\n#リフォーム #不動産購入 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var mirShareMsg = ('🔨 入居前リフォームの費用を試算！\n\n推奨リフォーム費用合計: ' + displayTotal + '万円\n（' + occLabel + '向け・' + prioLabel + '）\n\n▶ リフォーム予算の上限と優先順位を確認\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + mirShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcMoveInReform(); })();
 
@@ -9055,7 +9065,8 @@ function calcRenovFinance() {
     + '<div style="padding:8px 12px;background:rgba(0,0,0,0.15);border-radius:8px;font-size:12px;color:rgba(0,0,0,0.7)">'
     + '返済総額 ' + totalRepay + '万円（うち利息分 ' + interestPct + '%） / ' + term + '年間</div>' : '')
     + '<p style="font-size:11px;color:rgba(0,0,0,0.4);margin-top:8px">※ 元利均等返済方式で試算。保証料・事務手数料は含みません。住宅ローンの借り増し・リフォームローン・不動産担保ローン等が主な選択肢です。</p></div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'💰 リノベーションローンの試算！\n\n購入+リノベの合計コストと月々の返済額を計算してみました！\n\n#リノベーション #住宅ローン #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var rfShareMsg = ('💰 リノベーションローンを試算！\n\nリノベ費用: ' + cost + '万円\n' + (selfOnly ? '手元資金のみで対応可（ローン不要）' : '借入' + + loanNeeded + + '万円 · 月' + + monthly + + '万円×返済 · 総利息' + + totalInterest + + '万円') + '\n\n▶ リノベ費用の資金計画を無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + rfShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcRenovFinance(); })();
 
@@ -9092,7 +9103,8 @@ function calcClosingAdj() {
     + '<div style="padding:8px 12px;background:rgba(0,0,0,0.15);border-radius:8px;font-size:12px;color:rgba(0,0,0,0.7);line-height:1.6">'
     + '💡 固定資産税は1月1日時点の所有者が年間分を払いますが、決済日以降は買主が負担する慣行があります。管理費は月初め起算が一般的です。</div>'
     + '<p style="font-size:11px;color:rgba(0,0,0,0.4);margin-top:8px">※ 精算方法は売買契約書の条項・当事者合意によります。マンション等の場合は管理規約も確認が必要です。</p></div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'📊 売買決済の精算計算！\n\n固定資産税・管理費の日割り精算額を正確に計算しました！\n\n#不動産決済 #精算計算 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var caShareMsg = ('📊 売買決済の日割精算を計算！\n\n精算合計: ' + totalAdj + '万円\n（固定資産税' + taxAdj + '万＋管理費' + mgmtAdj + '万 · ' + remainDays + '日分）\n\n▶ 決済日の精算額を事前に確認\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + caShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcClosingAdj(); })();
 
@@ -9240,7 +9252,8 @@ function calcNewHomeDeduction() {
   html += '⏳ 控除期間: <b style="color:var(--text)">13年間</b>（2022年〜2025年入居の場合）<br>';
   html += '<span style="font-size:10px">⚠️ 年収が低いほど控除しきれない場合があります。初年度は確定申告が必要です。</span>';
   html += '</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🏠 新築住宅の住宅ローン控除シミュレーション！\n\n13年間の節税合計額と毎年の還付額がわかります！控除上限に要注意！\n\n#住宅ローン控除 #節税 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var nhdShareMsg = ('🏠 住宅ローン控除シミュレーション！\n\n13年間の節税総額: ' + totalDeduction.toFixed(0) + '万円\n年間平均還付額: ' + avgYearly.toFixed(1) + '万円\n借入額: ' + loan.toLocaleString() + '万円\n\n▶ あなたの借入でも無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + nhdShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcNewHomeDeduction(); })();
@@ -9278,7 +9291,8 @@ function calcBuyerInspection() {
   html += '✅ 特に <b style="color:var(--text)">雨漏り・白アリ・基礎ひび割れ</b> は後から発覚すると100〜500万円の出費になります<br>';
   html += '<span style="font-size:10px">⚠️ 築' + age + '年・' + (type === 'house' ? '一戸建て' : 'マンション') + 'への検査は' + (age >= 25 ? '特に強くお勧めします' : 'お勧めします') + '。検査後に価格交渉に使えることもあります。</span>';
   html += '</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🔍 買主目線で物件の現地チェック！\n\n内見時に確認すべきポイントと注意度を採点してみました！\n\n#物件内見 #不動産購入 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var biShareMsg = ('🔍 購入前インスペクションの費用対効果！\n\nROI: ' + roi.toFixed(0) + '倍\n検査費' + cost + '万円 → 期待節約' + preventedCost.toFixed(0) + '万円\nリスク水準: ' + riskLevel + '\n\n▶ 築' + age + '年物件の隠れリスクを診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + biShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcBuyerInspection(); })();
@@ -9318,7 +9332,8 @@ function calcSellThenRent() {
   }
   html += '<span style="font-size:10px">⚠️ 売却諸費用（5%）・引越し費・敷金礼金・新生活費用も別途かかります。</span>';
   html += '</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🤔 家を売ったあと賃貸に住むのはどう？\n\n売却後に賃貸暮らしに切り替えた場合の収支シミュレーション！\n\n#不動産売却 #賃貸 #住み替え #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var strShareMsg = ('🤔 売却後に賃貸に切り替えたら？\n\n売却手取り: ' + netProceeds.toLocaleString() + '万円\n月間支出変化: ' + (monthlyDiff > 0 ? '+' : '') + monthlyDiff.toFixed(1) + '万円/月\n損益分岐: ' + (breakeven >= 999 ? '永久に有利' : Math.ceil(breakeven / 12) + '年後') + '\n\n▶ 売却vs住み続けるを比較\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + strShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcSellThenRent(); })();
@@ -9439,7 +9454,8 @@ function calcTitleTransferCost() {
   html += '</div>';
   html += '<div style="background:rgba(251,191,36,0.08);border-radius:6px;padding:8px;font-size:10px;color:#fbbf24">💡 登録免許税は固定資産税評価額をもとに計算されます。売買の建物は2024年3月まで0.3%の軽減税率が適用されます</div>';
   html += '</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'📋 不動産名義変更（所有権移転）の費用を試算！\n\n登録免許税・司法書士報酬の概算がわかります！\n\n#名義変更 #不動産費用 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var ttcShareMsg = ('📋 不動産名義変更の費用を試算！\n\n費用合計: 約' + total.toLocaleString() + '万円\n（登録免許税' + regTax.toLocaleString() + '万＋司法書士' + scrivener + '万）\n理由: ' + reasonLabel + '\n\n▶ 名義変更コストを事前に確認\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + ttcShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcTitleTransferCost(); })();
@@ -9485,7 +9501,8 @@ function calcDownPaymentPlan() {
   html += '</div>';
   html += '<div style="background:rgba(251,191,36,0.08);border-radius:6px;padding:8px;font-size:10px;color:#fbbf24">💡 頭金が20%以上あると住宅ローンの審査が通りやすく、金利優遇も受けやすくなります。月返済額目安は金利0.5%・35年で試算</div>';
   html += '</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'💰 頭金の積み立て計画を試算！\n\n目標物件価格に対して月々いくら積み立てれば間に合うかわかります！\n\n#頭金 #住宅購入計画 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var dppShareMsg = ('💰 頭金の積み立て計画を試算！\n\n頭金目標: ' + target.toLocaleString() + '万円\nあと不足: ' + remaining.toLocaleString() + '万円（' + pct + '%達成）\n' + + dppLabel + + '\n\n▶ あなたの住宅購入プランも無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + dppShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcDownPaymentPlan(); })();
@@ -9787,7 +9804,8 @@ function calcHomeLoanDeduction() {
     '<tbody>' + rows + '</tbody>' +
     '</table></div>' +
     '<p style="font-size:11px;color:var(--text-muted);line-height:1.5">※ 2024年以降の控除率0.7%・最長13年で試算。年収や物件によって実際の控除額は異なります。確定申告が必要です。</p>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🏠 住宅ローン控除（既存住宅）の試算！\n\n中古住宅購入での税額控除額がわかります！\n\n#住宅ローン控除 #中古住宅 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var ehdShareMsg = ('🏠 住宅ローン控除（中古住宅）を試算！\n\n13年間の節税総額: ' + totalDeduction.toFixed(0) + '万円\n借入額: ' + loanAmount + '万円 · 月返済' + monthly.toFixed(1) + '万円\n\n▶ 中古住宅購入でいくら戻るか無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + ehdShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 
 function calcPensionLoanCheck() {
@@ -10039,7 +10057,8 @@ function calcPurchaseExtraCosts() {
     '💡 <strong>用意すべき手持ち資金の目安：</strong>頭金 + 諸費用 ＝ 合計 <strong style="color:#facc15">' + (price - loan + total).toFixed(0) + '万円</strong>。このほか引越し後の家具・家電代も別途ご用意ください。' +
     '</div>' +
     '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 各費用は概算値です。物件の詳細・金融機関・自治体の補助制度によって大きく変わります。必ず事前に担当者に確認してください。</p>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'💸 不動産購入の諸費用を試算！\n\n仲介手数料・登記費用・税金など「見えないコスト」の合計がわかります！\n\n#不動産購入費用 #諸費用 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var pcShareMsg = ('💸 不動産購入の諸費用を試算！\n\n諸費用合計: ' + total.toFixed(0) + '万円\n物件価格' + price + '万円 → 総予算' + totalBudget.toFixed(0) + '万円\n（物件価格の' + (total / price * 100).toFixed(1) + '%相当）\n\n▶「見えないコスト」を事前に把握\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + pcShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 
 
@@ -10416,7 +10435,8 @@ function calcFutureValueEstimate() {
     + '<div style="font-size:24px;font-weight:900;color:' + color + '">' + (change >= 0 ? '+' : '') + change.toLocaleString() + '万円（' + (changeRatio >= 0 ? '+' : '') + changeRatio + '%）</div>'
     + '</div>'
     + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">※エリア特性・築年数・物件種別をもとにした統計的な目安です。実際の相場変動・金利環境・需給によって大きく異なります。</div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'📈 物件の将来価値を予測！\n\n築年数・エリア特性から10〜20年後の資産価値の変化を試算しました！\n\n#資産価値 #不動産購入 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var fveShareMsg = ('📈 物件の10年後価値を予測！\n\n現在: ' + price.toLocaleString() + '万円 → 10年後: ' + futureVal.toLocaleString() + '万円\n変化: ' + (change >= 0 ? '+' : '') + change.toLocaleString() + '万円（' + (changeRatio >= 0 ? '+' : '') + changeRatio + '%）\n\n▶ 資産価値の見通しを今すぐ確認\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + fveShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 function calcRateTypeSwitch() {
   var el = document.getElementById('rate-type-switch-result');
@@ -10515,7 +10535,8 @@ function calcRentToOwnPlan() {
   html += '<div style="font-size:9px;color:#64748b;margin-top:4px">※購入の場合、売却時に資産が残ります。賃貸は引越しの自由度があります</div>';
   html += '</div>';
   html += '</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🏡 賃貸から持ち家への切り替えタイミング診断！\n\n今の家賃を払い続けるコストと購入した場合を比較してみました！\n\n#賃貸vs購入 #マイホーム計画 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var rtoShareMsg = ('🏡 賃貸vs購入 35年間コスト比較！\n\n' + + rtoWinner + + 'の方が約' + + Math.abs(diff).toFixed(0) + + '万円安い\n購入コスト合計: ' + totalOwn.toFixed(0) + '万円 vs 賃貸: ' + totalRent.toFixed(0) + '万円\n\n▶ 今の家賃を払い続けるのとどちらが得？\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + rtoShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcRentToOwnPlan(); })();
@@ -10716,7 +10737,8 @@ function calcMaxPurchase() {
   var advice = multiplier <= 5 ? '✅ 年収倍率5倍以下で健全な借入範囲です。' : multiplier <= 7 ? '⚠️ 年収倍率7倍以内。ギリギリ許容範囲ですが生活費のゆとりを確認を。' : '🔴 年収倍率'+Math.round(multiplier*10)/10+'倍は高めです。購入価格を下げるか頭金を増やすことを検討してください。';
   html += '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;font-size:12px;color:rgba(0,0,0,0.7)">'+advice+'</div>';
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🎯 買える物件の上限価格を計算！\n\n年収・頭金・月々の返済許容額から安全な物件価格上限がわかります！\n\n#住宅購入予算 #上限価格 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var mpShareMsg = ('🎯 買える物件の上限価格を計算！\n\n無理のない購入価格: ' + recPrice.toLocaleString() + '万円\n年収倍率: ' + Math.round(recPrice/income*10)/10 + '倍\n銀行審査の最大融資額上限: ' + maxPrice35.toLocaleString() + '万円\n\n▶ あなたの購入予算を無料で計算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + mpShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcMaxPurchase(); })();
