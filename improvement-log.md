@@ -4599,3 +4599,29 @@
   - `806ba87` UX: 全ツールのシェアテキスト末尾を標準形式に統一（7件）
   - `7846a58` UX: Tool1シェアテキスト4件に不動産かんたんツール（TERRA REALTY）追加
   - `470fe79` UX: シェアテキスト未対応3件に不動産かんたんツール（TERRA REALTY）追加
+
+## 2026-05-22（セッション継続・LINE URL形式統一）
+
+- **対象**: tools/1-ai-satei.html, 2-akiya-hunter.html, 3-owner-direct.html, 4-kanri-saas.html, 5-toushi-bunseki.html
+- **フェーズ**: Phase 2 シェア機能品質向上
+- **改善内容**: 全5ツールで旧LINE URL形式（`line.me/R/msg/text/?shareText%0AshareUrl`）を廃止し、`shareLine()`ボタン形式（social-plugins.line.me）に統一。計30箇所を変換。
+  - Type A（shareText=encodeURIComponent形式）: 22件 → shareMsg変数＋shareLine()ボタン
+  - Type B（inline encodeURIComponent形式）: 5件 → 同上
+  - Type C（lineUrl変数＋<a>タグ形式）: 3件 → lineUrl削除＋<button onclick="shareLine()">
+  - CTAなし6カードにバイラルCTA追加（▶ あなたの〜でも無料試算\n不動産かんたんツール（TERRA REALTY））
+  - `<a>`タグからfull-width`<button>`へ変更（モバイルで押しやすい全幅ボタン）
+- **理由**: 旧URL形式はLINEの古いAPIで現在も動くが、新形式より信頼性が低い。shareLine()で一元管理することでメンテ性も向上。
+
+## 2026-05-22（セッション継続・破損LINEボタン修正）
+
+- **対象**: tools/2-akiya-hunter.html, 3-owner-direct.html, 4-kanri-saas.html, 5-toushi-bunseki.html, index.html
+- **フェーズ**: Phase 2 バグ修正・品質向上
+- **改善内容**:
+  - index.html: 3つのレンダリングバグを修正（重複FAQ ID・テスト声カードの背景色・無料相談の流れ欄のJSテンプレートリテラル誤用）
+  - 全ツール計72件の破損LINEシェアボタン（`social-plugins.line.me`旧形式+`\'`エスケープバグ）を`shareLine()`ボタン形式に変換
+  - Tool5のcalcScreening関数での二重バグ修正（Pythonスクリプトによる部分的な文字列破壊）
+  - Tool5のcalcBudgetFit関数の復元（単引符エスケープ汚染をgit HEADから復元）
+- **理由**: href属性にJSコードのリテラルが埋め込まれていた状態（LINEシェアが全く機能しなかった）を解消
+- **コミット**:
+  - `888157c` Fix: index.html 3つのレンダリングバグを修正
+  - `cde5476` Fix: 全ツールの破損LINEシェアボタン（72件）をshareLine()形式に変換
