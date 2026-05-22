@@ -7808,7 +7808,8 @@ function calcBuildCost() {
     + '</div>'
     + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">※概算値です。実際の費用は設計・建設会社にご確認ください。</div>'
     + '</div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🏗️ 注文住宅の建築費用を試算！\n\n坪数・仕様別の概算費用と諸経費の合計がわかります！\n\n#注文住宅 #建築費用 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var bcShareMsg = ('🏗️ 注文住宅 建築費用概算\n\n建築費用合計: ' + total.toLocaleString() + '万円\n（' + tsubo.toFixed(1) + '坪 / 坪単価' + perTsuboTotal + '万円）\n\n本体工事: ' + buildBase.toLocaleString() + '万円\n付帯・諸費用込み: ' + total.toLocaleString() + '万円\n\n▶ あなたの家の建築費用も無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + bcShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcBuildCost(); })();
 
@@ -7943,9 +7944,11 @@ function calcInspectionCost() {
     + '<ul style="margin:0;padding-left:16px;font-size:12px;color:var(--text)">'
     + roleAdvice[role].map(function(a){ return '<li style="margin-bottom:4px">' + a + '</li>'; }).join('')
     + '</ul>'
+    + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>ROIの読み方:</strong> ROI2倍以上なら費用対効果が高い（例: 検査費5万円で期待節約額10万円以上）。欠陥が見つかれば値下げ交渉の根拠になり、見つからなければ安心して購入できます。築20年以上の戸建で特に効果的です。</div>'
     + '<div style="margin-top:10px;font-size:11px;color:var(--text-muted)">※費用・確率は一般的な目安です。実際は検査機関（建築士・ホームインスペクター）にお問い合わせください。</div>'
     + '</div>';
-  r.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🔬 ホームインスペクション費用の試算！\n\n建物検査にかかる費用と役割別のアドバイスがわかります！\n\n#ホームインスペクション #不動産購入 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var insShareMsg = ('🔬 ホームインスペクション 費用対効果: ' + roi.toFixed(1) + '倍\n\n' + grade.label + '\n費用目安: ' + range[0] + '〜' + range[1] + '万円\n欠陥発見確率: ' + Math.round(defectProb * 100) + '%\n期待節約額: ' + Math.round(expectedSaving).toLocaleString() + '万円\n\n' + (roi >= 2 ? '→ 費用対効果が高い！購入前に検査を強く推奨' : roi >= 1 ? '→ 費用に見合う期待値あり' : '→ リスクが低めの物件（若い築年数）') + '\n\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  r.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + insShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcInspectionCost(); })();
 
@@ -8541,8 +8544,10 @@ function calcMortgageRelease() {
     html += '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + s.note + '</div></div>';
   });
   html += '<div style="font-size:11px;color:#f9a825;margin-top:6px">📌 抹消登記は完済後5年以内に行うことが推奨されます。放置すると相続登記時や売却時に手続きが複雑化します。</div>';
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>自己申請 vs 司法書士:</strong> ' + savingAmt.toLocaleString() + '円節約できますが、書類準備と法務局への来庁（半日〜1日）が必要です。複数筆・忙しい場合・手続きに不安がある場合は司法書士への依頼も合理的な選択です。</div>';
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🔓 住宅ローン完済・抵当権抹消の手続き費用を試算！\n\n完済時に必要な手続きと費用の概算がわかります！\n\n#ローン完済 #抵当権抹消 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var mrShareMsg = ('🔓 住宅ローン完済 抵当権抹消費用\n\n司法書士依頼: ' + scrivenerGrand.toLocaleString() + '円\n自己申請: ' + selfTotal.toLocaleString() + '円\n→ 自己申請で' + savingAmt.toLocaleString() + '円節約！\n\n申請から完了まで1〜2週間\n（完済後5年以内に手続きを）\n\n▶ あなたのローンでも無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + mrShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcMortgageRelease(); })();
