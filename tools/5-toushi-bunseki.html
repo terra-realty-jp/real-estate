@@ -9024,7 +9024,8 @@ function calcRevPrice() {
     + '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:10px 12px">'
     + '<div style="font-size:12px;color:var(--text-muted)">NOI（年間純収益） = 年間家賃'+rent+'万円 × (1−経費率'+opex+'%) = <strong style="color:var(--text)">'+Math.round(noi*10)/10+'万円</strong></div></div>'
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; この価格以下での購入交渉を目指してください。実際には築年・立地・空室率・ローン条件も考慮して総合判断を。</div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🎯 物件の最高購入価格を逆算してみた！\n\n目標利回りから計算した「この価格以下で買えれば投資が成立する」上限価格がわかります！\n\n#不動産購入 #価格交渉 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var rvShareMsg = ('🎯 投資成立する物件の最高購入価格を逆算！\n\n家賃' + rent + '万円/年 × 目標利回り' + gross + '% → 上限価格: ' + maxByGross.toLocaleString() + '万円\n' + (maxByNet > 0 ? '実質利回り' + net + '%での上限: ' + maxByNet.toLocaleString() + '万円\n' : '') + '→ この価格以下で買えれば投資成立！値引き交渉の根拠になる\n\n物件を買う前に「いくらまでなら得か」を無料試算！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + rvShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcRevPrice(); })();
 
@@ -11670,7 +11671,8 @@ function calcIRRCalc() {
   });
   html += '</div></div>';
   html += '<div style="font-size:10px;color:var(--text-muted);padding:4px 0">※ IRRはNewton-Raphson法で反復計算。税金・ローン返済・空室リスクは含みません。</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'📈 不動産投資のIRR（内部収益率）を計算！\n\n出口売却まで含めた真の投資収益率。表面利回りだけでは見えない本当の収益力がわかります！\n\n#IRR #不動産投資 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+    var irrShareMsg = ('📈 不動産投資のIRR（内部収益率）を計算！\n\nIRR: ' + irrPct.toFixed(2) + '% — ' + irrLabel + '（目安: 5%以上で合格・8%以上で優良）\n' + period + '年保有・総利益（税前）: ' + (totalProfit >= 0 ? '+' : '') + Math.round(totalProfit).toLocaleString() + '万円\n\n表面利回りだけじゃわからない「本当の収益力」を無料計算！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + irrShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcIRRCalc(); })();
