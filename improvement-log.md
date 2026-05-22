@@ -4,6 +4,40 @@
 
 ---
 
+## 2026-05-22 09:26（セッション継続・TOP3カード全面UX完成）
+
+- **対象**: tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 1 UX改善（引き算のUX）
+- **改善内容**:
+
+### 全5ツール TOP3カード「サンプル値です」バナーを全15枚に完備
+- Tool2: card-demolish・card-souzokuに緑バナー追加（card-akiya3は既存）
+- Tool3: card-price-gap・card-rate-riseに青バナー追加（card-purchase-feesは既存）
+- Tool4: card-renewal-schedule・card-long-repair-planに青バナー追加（card-vacancy-simは既存）
+- Tool5: card-cf-stability・card-loan-term-cfにゴールドバナー追加（card-quick-checkは既存）
+- 全15枚のTOP3カード（初めて開いた人が最初に触れる計算カード）に「数字を変えてOK」が表示される
+
+### TOP3カードの入力ラベルに参考値を追加（4ツール分）
+- Tool3 card-price-gap: 売主希望価格・買主想定価格・ローン残高に参考例を追加
+- Tool4 card-long-repair-plan: 築年数・延床面積（「延床面積」→「建物全体の広さ」に平易化）・戸数に参考例を追加
+- Tool5 card-cf-stability: 空室率・平均入居年数・修繕費の備え（「修繕積立充足率」→「修繕費の備え」に平易化）・駅徒歩分に参考例を追加
+
+### 仮ユーザーレビュー（ペルソナ1・田中みちこさん52歳・空き家相続）
+- 対象カード: Tool2 card-souzoku「亡くなった方の土地の相続税が最大80%減る特例を使えるか確認する」
+- [✅] タイトルを見て「これは自分のことだ」とわかるか: 「亡くなった方の土地」の言葉で即座に関連性を把握
+- [✅] 入力ラベルを見て「何を入れればいいか」が即わかるか: 「固定資産税通知書の評価額か、わからなければ査定額」と説明あり
+- [✅] 結果の数字を見て判断基準がわかるか: 「評価額 → 圧縮後評価額」のビフォーアフターが明示
+- [✅] 「で、私はどうすればいい？」の誘導があるか: 「税理士に相談し確定申告時に申請しましょう」と明確なアクション指示あり
+- [✅] スマホ幅での視認性: レスポンシブCSS確認済み
+- **結果**: 全5項目合格。修正不要。
+
+- **コミット**:
+  - `116203d` UX: 全5ツール TOP3カード「サンプル値です」緑・青バナーを全15枚に完備
+  - `daca344` UX: Tool3 card-price-gap 入力ラベルに参考値を追加（ペルソナ改善）
+  - `38e3ef2` UX: Tool4・5 TOP3カードの入力ラベルに参考値を追加（ペルソナ改善）
+
+---
+
 ## 2026-05-22 Round 46（セッション継続）
 
 - **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html
