@@ -11186,9 +11186,8 @@ function calcAkiyaFourPrices() {
   });
   tableHtml += '</div>';
   var noteHtml = '<div style="background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.08);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--text-muted)">💡 これらはすべて<b>土地のみの概算</b>です。建物の価値（古い場合はほぼゼロ）は別途。地方・過疎地では実勢価格が評価額を大きく下回る場合もあります。正確な価格はTERRA REALTYへ無料相談を。</div>';
-  var shareText = encodeURIComponent('【空き家の価格の謎】固定資産税評価額' + fix.toLocaleString() + '万円の土地、実際に売れる金額の目安は' + jissei.toLocaleString() + '万円！4種類の価格の違いをやっと理解した！相続した家を持っている人に教えたい');
-  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
-  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで家族に教える</a>';
+  var shareMsg = '【空き家の価格の謎】固定資産税評価額' + fix.toLocaleString() + '万円の土地、実際に売れる金額の目安は' + jissei.toLocaleString() + '万円！4種類の価格の違いをやっと理解した！\n▶ あなたの空き家でも無料試算\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEで家族に教える</button>';
   r.innerHTML = heroHtml + tableHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcAkiyaFourPrices(); })();
@@ -11244,13 +11243,12 @@ function calcAkiyaShopConvert() {
     + '⚠️ 住宅用の固定資産税軽減（1/6〜1/3）が外れる場合があります。事前に市区町村に確認を。'
     + '</div>';
 
-  var shareText = encodeURIComponent('🏪 空き家を事務所・店舗に転用したら？\n\n'
+  var shareMsg = '🏪 空き家を事務所・店舗に転用したら？\n\n'
     + '転用費' + reform + '万円 → 月' + rentNew + '万円（居住用の月' + rentRes + '万円より' + monthlyDiff.toFixed(1) + '万円多い）\n'
     + '投資回収: ' + (paybackMonths === Infinity ? '回収困難' : Math.ceil(paybackYears) + '年') + '\n'
     + '10年累計: 居住用' + fmt(net10yRes) + '万円 → 店舗転用' + fmt(net10yNew) + '万円\n\n'
-    + '空き家の活用方法、テレワーク需要で事務所転用が増えています！\n▶ 無料で比較する\n不動産かんたんツール（TERRA REALTY）');
-  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
-  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+    + '空き家の活用方法、テレワーク需要で事務所転用が増えています！\n▶ 無料で比較する\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEでシェア</button>';
 
   el.innerHTML = heroHtml + gridHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
@@ -11323,9 +11321,8 @@ function calcInheritanceWaiverCost() {
     + '<br><a href="mailto:terra.realty.iam@gmail.com?subject=相続放棄後の空き家管理について相談したい" style="color:var(--gold)">→ TERRA REALTYに無料相談</a></div>';
 
   var shareVal = eligible ? diff : totalMgmtCost;
-  var shareText = encodeURIComponent('相続放棄したのに管理費が' + totalMgmtCost + '万円！国庫帰属申請（' + (eligible ? kokukoTotal : '不可') + '万円）との差は' + Math.abs(diff) + '万円。知らないと大損する制度を試算しました\n▶ 無料で試算する\n不動産かんたんツール（TERRA REALTY）');
-  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
-  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+  var shareMsg = '相続放棄したのに管理費が' + totalMgmtCost + '万円！国庫帰属申請（' + (eligible ? kokukoTotal : '不可') + '万円）との差は' + Math.abs(diff) + '万円。知らないと大損する制度を試算しました\n▶ 無料で試算する\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEでシェア</button>';
 
   el.style.display = 'block';
   el.innerHTML = heroHtml + gridHtml + condNoteHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
@@ -11383,9 +11380,8 @@ function calcNeighborBuyPremium() {
     + '💡 まず隣人に「売却を検討中」と伝えることが第一歩です。断られても市場売却に進めばOK。プレミアムは土地の合算メリットが大きいほど高くなります（旗竿地が整形地になる場合が最大）。不動産会社に相談すると「隣地交渉の代行」サービスを行っているところもあります。'
     + '<br><a href="mailto:terra.realty.iam@gmail.com?subject=隣地への売却交渉について相談したい" style="color:var(--gold)">→ TERRA REALTYに無料相談</a></div>';
 
-  var shareText = encodeURIComponent('空き家を隣の人に売ると市場価格より' + Math.round(effectivePremium * 100) + '%（' + premiumAmt + '万円）高く売れるかも！仲介手数料も節約でき合計' + totalAdvantage + '万円トク。知らないと損！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
-  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html');
-  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+  var shareMsg = '空き家を隣の人に売ると市場価格より' + Math.round(effectivePremium * 100) + '%（' + premiumAmt + '万円）高く売れるかも！仲介手数料も節約でき合計' + totalAdvantage + '万円トク。知らないと損！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEでシェア</button>';
 
   el.style.display = 'block';
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
@@ -11635,8 +11631,8 @@ function calcAkiyaNeglectCost() {
     + '<span style="font-size:10px;color:var(--text-muted)">※修繕費は経年劣化シミュレーション（累積増加）で試算。資産価値は10年で25%減で計算しています。</span>'
     + '</div>';
 
-  var shareText = '⏳ 空き家を10年放置するとトータル' + fmt(Math.round(totalRealCost)) + '万円の損失！\n\n固定資産税等: ' + fmt(baseCostAnnual * years) + '万円\n修繕費: ' + fmt(Math.round(repairAccum)) + '万円\n資産価値の目減り: ' + fmt(Math.round(opportunityCost)) + '万円\n\n「とりあえず放置」が一番損！今すぐ活用を検討を\n▶ 無料で試算する\n不動産かんたんツール（TERRA REALTY）';
-  var lineBtn = '<a href="https://line.me/R/msg/text/?' + encodeURIComponent(shareText) + '%0A' + encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html') + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで空き家を持つ家族に知らせる</a>';
+  var shareMsg = '⏳ 空き家を10年放置するとトータル' + fmt(Math.round(totalRealCost)) + '万円の損失！\n\n固定資産税等: ' + fmt(baseCostAnnual * years) + '万円\n修繕費: ' + fmt(Math.round(repairAccum)) + '万円\n資産価値の目減り: ' + fmt(Math.round(opportunityCost)) + '万円\n\n「とりあえず放置」が一番損！今すぐ活用を検討を\n▶ 無料で試算する\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEで空き家を持つ家族に知らせる</button>';
 
   var el = document.getElementById('anc_result');
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
@@ -13580,7 +13576,6 @@ function calcAkiyaAirbnb() {
   var heroColor  = annual > 0 ? '#22c55e' : '#ef4444';
   var shareText  = '空き家をAirbnbに出したら年間' + annual.toFixed(0) + '万円になる試算！180日ルールを守っても月' + monthly.toFixed(1) + '万円。空き家、眠らせてるだけじゃ損かも\n▶ あなたの空き家でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   var shareUrl   = 'https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html';
-  var lineUrl    = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText + '\n' + shareUrl);
   var overMsg    = overLimit ? '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:7px;padding:9px 12px;font-size:12px;color:#92400e;margin-bottom:12px">⚠️ 入力は' + days + '日ですが、住宅宿泊事業法により年間180日が上限です。180日で計算しています。</div>' : '';
   var html = overMsg
     + '<div style="background:' + heroColor + ';border-radius:10px;padding:18px;text-align:center;margin-bottom:12px">'
@@ -13593,7 +13588,7 @@ function calcAkiyaAirbnb() {
     + '<div>1泊手取り（手数料・清掃費控除後）: <b>' + netPerDay.toFixed(2) + '万円</b></div>'
     + '</div>'
     + '<div style="font-size:12px;color:#555;line-height:1.8;margin-bottom:12px">💡 初期費用（設備・申請費）は別途30～100万円が目安。自治体により営業できるエリアが制限される場合があります。</div>'
-    + '<a href="' + lineUrl + '" target="_blank" rel="noopener" style="display:block;background:#06c755;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:6px">📤 LINEでシェアする</a>';
+    + '<button onclick="shareLine(\'' + shareText.replace(/'/g,'\\\'') + '\')" style="display:block;width:100%;background:#06c755;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px;border:none;cursor:pointer;text-align:center;margin-bottom:6px">📤 LINEでシェアする</button>';
   try { sbLogCardUsage(2,'card-calcAkiyaAirbnb','calc','民泊年収'+annual.toFixed(0)+'万円'); } catch(e) {}
   el.innerHTML = html; el.style.display = 'block';
 }

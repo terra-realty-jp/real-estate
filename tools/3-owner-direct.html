@@ -11005,9 +11005,8 @@ function calcSeiSanVsReki() {
   var warnColor = estate === 'large' ? 'rgba(220,38,38,0.05)' : 'rgba(22,163,74,0.06)';
   var warnBorder = estate === 'large' ? 'rgba(220,38,38,0.2)' : 'rgba(22,163,74,0.2)';
   var noteHtml = '<div style="background:' + warnColor + ';border:1px solid ' + warnBorder + ';border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--text-muted)">' + warningMsg + '</div>';
-  var shareText = encodeURIComponent('【贈与税の節税】' + amount.toLocaleString() + '万円を子どもに渡すなら、通常の贈与税▲' + rekiTax.toLocaleString() + '万円→相続時精算課税なら' + seiSanTax.toLocaleString() + '万円！差額' + saving.toLocaleString() + '万円！知らないと大損する制度、シミュレーションしてみて！');
-  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
-  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで家族に教える</a>';
+  var shareMsg = '【贈与税の節税】' + amount.toLocaleString() + '万円を子どもに渡すなら、通常の贈与税▲' + rekiTax.toLocaleString() + '万円→相続時精算課税なら' + seiSanTax.toLocaleString() + '万円！差額' + saving.toLocaleString() + '万円！知らないと大損する制度\n▶ あなたの状況でも無料試算\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEで家族に教える</button>';
   r.innerHTML = heroHtml + gridHtml + savingHtml + noteHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcSeiSanVsReki(); })();
@@ -11125,13 +11124,12 @@ function calcMortgageOverhaul() {
     + '固定金利は「保険」として考える — 金利上昇に備えたコストとして捉えましょう。'
     + '</div>';
 
-  var shareText = encodeURIComponent('💳 住宅ローン改善3択を比較！\n\n'
+  var shareMsg = '💳 住宅ローン改善3択を比較！\n\n'
     + 'ローン残' + balance + '万円・金利' + (rate * 100).toFixed(1) + '%・残' + term + '年\n'
     + '📌 繰り上げ返済（年' + prepayAnnual + '万円）: ▲' + fmt(Math.round(Math.max(0, savingB))) + '万円節約\n'
     + '📌 借り換え（金利-0.7%）: ▲' + fmt(Math.round(Math.max(0, savingC))) + '万円節約\n\n'
-    + '最も効果的: ' + bestMethod + ' で10年間' + fmt(Math.round(Math.max(0, bestSaving))) + '万円節約！\n▶ あなたのローンでも無料比較\n不動産かんたんツール（TERRA REALTY）');
-  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
-  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで住宅ローンを持つ友人に教える</a>';
+    + '最も効果的: ' + bestMethod + ' で10年間' + fmt(Math.round(Math.max(0, bestSaving))) + '万円節約！\n▶ あなたのローンでも無料比較\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEで住宅ローンを持つ友人に教える</button>';
 
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
@@ -11217,14 +11215,13 @@ function calcRetirementLumpPayoff() {
   }
   guideHtml += '<br><span style="font-size:10px;color:var(--text-muted)">※ローン控除率0.7%・上限21万円/年（中古住宅基準）で試算。新築・ZEH住宅は上限が異なります。実際の控除額は年収や物件種類によって異なります。</span></div>';
 
-  var shareTextStr = '💰 退職金でローン一括返済すべきか試算！\n\n'
+  var shareMsgStr = '💰 退職金でローン一括返済すべきか試算！\n\n'
     + 'ローン残' + balance + '万円・金利' + ratePct + '%・残' + term + '年\n'
     + '節約できる利息: ' + fmt(totalInterestMan) + '万円\n'
     + '失う住宅ローン控除: ' + fmt(deductTotalMan) + '万円\n\n'
     + (lumpWins ? '→ 一括返済が' + fmt(diffAbs) + '万円お得！退職前に必ず計算を' : '→ 控除を使い切る方が' + fmt(diffAbs) + '万円お得！逆転現象に注意')
     + '\n▶ あなたのローンでも計算\n不動産かんたんツール（TERRA REALTY）';
-  var shareUrl2 = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
-  var lineBtn2 = '<a href="https://line.me/R/msg/text/?' + encodeURIComponent(shareTextStr) + '%0A' + shareUrl2 + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEで退職前の友人に教える</a>';
+  var lineBtn2 = '<button onclick="shareLine(\'' + shareMsgStr.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEで退職前の友人に教える</button>';
 
   var el2 = document.getElementById('rlp_result');
   el2.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn2 + '</div>';
@@ -11367,9 +11364,8 @@ function calcCondoRepairFundSurge() {
     + '💡 中古マンション購入時は「長期修繕計画書」の提出を必ず求めてください。計画がない・大規模修繕の積立不足が判明した場合、将来的に一時金（数十〜百万円）の追加徴収が発生します。'
     + '<br><a href="mailto:terra.realty.iam@gmail.com?subject=マンション修繕積立金について相談したい" style="color:var(--gold)">→ TERRA REALTYに無料相談</a></div>';
 
-  var shareText = encodeURIComponent('マンションの修繕積立金、20年後は今の' + Math.round(finalMonthly / current * 10) / 10 + '倍の月' + Math.round(finalMonthly / 100) / 10 + '万円に！20年間の総負担は' + totalRepairMan + '万円。知らずに買うと後悔します\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）');
-  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
-  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+  var shareMsg = 'マンションの修繕積立金、20年後は今の' + Math.round(finalMonthly / current * 10) / 10 + '倍の月' + Math.round(finalMonthly / 100) / 10 + '万円に！20年間の総負担は' + totalRepairMan + '万円。知らずに買うと後悔します\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEでシェア</button>';
 
   el.style.display = 'block';
   el.innerHTML = heroHtml + gridHtml + schedHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
@@ -11444,9 +11440,8 @@ function calcAssetAtRetirement() {
       : '注意：物件価値の下落がローン残債を上回る「オーバーローン」になる可能性があります。売却に制約が生じる場合があります。')
     + '</div>';
 
-  var shareText = encodeURIComponent(age + '歳で' + price + '万円の家を買うと65歳の時点で住宅純資産' + netAsset + '万円！老後の資産になるか計算してみました\n▶ あなたの場合でも無料試算\n不動産かんたんツール（TERRA REALTY）');
-  var shareUrl = encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html');
-  var lineBtn = '<a href="https://line.me/R/msg/text/?' + shareText + '%0A' + shareUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#06C755;color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none">📤 LINEでシェア</a>';
+  var shareMsg = age + '歳で' + price + '万円の家を買うと65歳の時点で住宅純資産' + netAsset + '万円！老後の資産になるか計算してみました\n▶ あなたの場合でも無料試算\n不動産かんたんツール（TERRA REALTY）';
+  var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEでシェア</button>';
 
   el.style.display = 'block';
   el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
@@ -13833,7 +13828,6 @@ function calcSchoolDistrictPremium() {
   var rankLabels = ['', '普通', 'やや人気', '人気', '非常に人気', '超人気（引越し需要あり）'];
   var shareText = '学区ランク' + rank + 'の人気エリアの物件、相場より' + premium.toFixed(0) + '万円高く売れる計算！子育て世帯の需要がこんなに価格を動かすとは\n▶ あなたのエリアでも無料確認\n不動産かんたんツール（TERRA REALTY）';
   var shareUrl  = 'https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html';
-  var lineUrl   = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText + '\n' + shareUrl);
   var html = '<div style="background:#22c55e;border-radius:10px;padding:18px;text-align:center;margin-bottom:12px">'
     + '<div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:6px;opacity:0.9">学区プレミアム（相場上乗せ額）</div>'
     + '<div style="font-size:52px;font-weight:900;color:#fff;line-height:1">+' + premium.toFixed(0) + '<span style="font-size:18px">万円</span></div>'
@@ -13845,7 +13839,7 @@ function calcSchoolDistrictPremium() {
     + '<div>周辺相場: <b>' + price.toFixed(0) + '万円</b> ＋ プレミアム <b>' + premium.toFixed(0) + '万円</b></div>'
     + '</div>'
     + '<div style="font-size:12px;color:#555;line-height:1.8;margin-bottom:12px">💡 学区プレミアムはファミリー层の需要が多い地域で顕著。中学受験率の高い都市部・越境入学が可能なエリアでは特に影響が大きいです。</div>'
-    + '<a href="' + lineUrl + '" target="_blank" rel="noopener" style="display:block;background:#06c755;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:6px">📤 LINEでシェアする</a>';
+    + '<button onclick="shareLine(\'' + shareText.replace(/'/g,'\\\'') + '\')" style="display:block;width:100%;background:#06c755;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px;border:none;cursor:pointer;text-align:center;margin-bottom:6px">📤 LINEでシェアする</button>';
   try { sbLogCardUsage(3,'card-calcSchoolDistrictPremium','calc','学区プレミアム'+premium.toFixed(0)+'万円'); } catch(e) {}
   el.innerHTML = html; el.style.display = 'block';
 }
