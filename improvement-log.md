@@ -4625,3 +4625,27 @@
 - **コミット**:
   - `888157c` Fix: index.html 3つのレンダリングバグを修正
   - `cde5476` Fix: 全ツールの破損LINEシェアボタン（72件）をshareLine()形式に変換
+
+## 2026-05-22（セッション継続・Tool5 残存LINEボタン4件修正）
+
+- **対象**: tools/5-toushi-bunseki.html
+- **フェーズ**: Phase 1 UX改善（モバイル操作性）
+- **改善内容**: 全ツールで最後に残っていたナロー形式（padding:8px 18px）のLINEシェアボタン4件を全幅shareLine()形式に変換。これで全5ツール・全カードのLINEシェアボタンが完全統一された。
+  - CF安定性診断: shareUrl/shareText変数 → cfsShareMsgに統合してshareLine()ボタン
+  - 投資物件クイックチェック: qcShareUrl/qcShareText変数 → qcShareMsgに統合
+  - 返済期間CF比較: ltcShareUrl/ltcShareText変数 → ltcShareMsgに統合
+  - 損益通算節税（テンプレートリテラル内）: encodeURIComponent形式 → shareLine()ボタン
+- **コミット**: `a98dd62`
+
+## 2026-05-22（セッション継続・LINEボタンモバイル改善）
+
+- **対象**: 全5ツール
+- **フェーズ**: Phase 1 UX改善（モバイル操作性）
+- **改善内容**: 全ツールのLINEシェアボタンをnarrow inline-flex形式からfull-width block形式に統一
+  - Tool1: 108件変換（display:inline-flex → display:block;text-align:center、padding:10px 20px → 11px、font-size:13px → 14px）
+  - Tool2: 107件、Tool3: 76件、Tool4: 92件、Tool5: 83件（計466件）
+  - コンテナdivの text-align:center も削除（block要素は不要）
+- **理由**: inline-flex+padding:10px 20px の幅はカードの60-70%程度。スマホで操作しやすいボタンサイズ（44px以上・全幅）という品質基準に準拠するための修正。40-60代のスマホユーザーがより押しやすくなる。
+- **コミット**:
+  - `20f23f8` UX: Tool1 LINEシェアボタンをfull-width block形式に変換（108件）
+  - `d50d9bf` UX: 全ツールのLINEシェアボタンをfull-width block形式に統一（358件）
