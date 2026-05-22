@@ -7808,7 +7808,8 @@ function calcAreaScore() {
     + barsHtml
     + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>エリア選定の判断ポイント:</strong> 最も重要なのは「人口動態」と「賃貸需要」で、この2項目が低いエリアは将来的に空室が増えるリスクがあります。グレードA/Bでも物件価格が割高なら投資妙味が薄れます。逆にグレードCでも価格が安く利回りが高ければ成立することも。エリアスコアと利回りを必ずセットで判断してください。</div>'
     + '<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.6">&#8251; 自己評価に基づくスコアです。人口統計・空室率・開発計画は市区町村・国土交通省のデータで確認することをお勧めします。</div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'📍 投資エリアのスコアを診断！\n\n人口動態・賃貸需要・利回りポテンシャルを総合評価してみました！\n\n#エリア分析 #不動産投資 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var asShareMsg = ('📍 投資エリアのスコアを診断！\n\nエリア評価: グレード' + grade + '（' + pct + '点）\n' + advice + (weakAxes.length > 0 ? '\n⚠ 要注意ポイント: ' + weakAxes.join('・') : '') + '\n\n不動産投資前にエリアの需要・リスクを5軸で無料診断！\n▶ あなたのエリアも無料診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + asShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcAreaScore(); })();
 
@@ -7868,7 +7869,8 @@ function calcRateRisk() {
     + '<tbody>' + tableRows + '</tbody></table>'
     + '<p style="font-size:10px;color:var(--text-muted);margin-bottom:8px">DSCR（Debt Service Coverage Ratio）: 1.2以上が安全圏 / 1.0未満は返済不能リスク</p>'
     + advice;
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'📉 金利上昇リスクをシミュレーション！\n\n金利が2%上昇しても月々のCFはプラスを維持できるか確認してみました！\n\n#金利リスク #不動産投資 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var rrsShareMsg = ('📉 金利上昇リスクシミュレーション\n\n借入' + loan + '万円・現金利' + baseRate + '% → 金利+2%時の年間CF: ' + (worstCF >= 0 ? '+' : '▲') + Math.abs(Math.round(worstCF/10000)) + '万円\n' + (worstCF >= 0 ? '✅ 金利2%上昇でもプラスを維持できる見込みです！' : '⚠️ 金利上昇時にCFがマイナスに！繰上返済・固定金利化を要検討') + '\n\n変動金利ローンの金利リスクを今すぐ無料試算！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + rrsShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcRateRisk(); })();
 
@@ -7987,7 +7989,8 @@ function calcScreening() {
   html += '</div>'
     + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>5軸の見方:</strong> 全て高スコアの物件は価格が高く、「利回り」だけが低い場合がほとんどです。「利回り×立地」のバランスが重要で、利回り7%以上・駅10分以内・LTV70%以下が揃えば一般的に高評価です。スコアが低い軸の改善策（価格交渉・頭金増加・立地見直し）を検討してください。</div>'
     + '<div style="font-size:10px;color:var(--text-muted);line-height:1.6">※ スクリーニングはあくまで参考指標です。実際の購入判断は物件調査・融資審査・専門家への相談の上で行ってください。</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'📊 不動産投資物件スクリーニング診断！\n\n5軸総合評価で物件の投資適正をチェックしてみました。利回り×立地×融資の基準が一目でわかります！\n\n#不動産投資 #物件選び #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+    var scShareMsg = ('📊 不動産投資 物件スクリーニング診断！\n\n5軸総合スコア: ' + total + '/' + maxScore + '点（' + pct + '%）\n判定: ' + verdict.label + '\n利回り' + yield_ + '%・築' + age + '年・駅' + walk + '分・LTV' + ltv + '%で採点\n\n購入を迷っている物件を5軸診断！\n▶ あなたの物件も無料診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + scShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcScreening(); })();
@@ -8037,7 +8040,8 @@ function calcBudgetFit() {
       + '<div style="text-align:right;flex-shrink:0;padding-left:8px"><div style="font-size:11px;color:var(--gold);font-weight:700">' + t.yield + '</div><div style="font-size:10px;color:var(--text-muted)">想定利回り</div></div></div></div>';
   });
   html += '</div><div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>はじめての投資におすすめの進め方:</strong> 自己資金が500万円未満ならまずJ-REITやREIT型投信で不動産の感覚を掴むことをおすすめします。500〜2000万円なら戸建て投資（地方・築古）が少ない資金で始められ高利回りを狙えます。区分マンションは管理が楽ですが首都圏は利回りが低く、融資を使わないと収益が出にくい点に注意。</div><div style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 利回りはあくまで目安です。融資条件・物件状態・エリアにより大きく異なります。</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'💰 自己資金に合った投資スタイル診断！\n\n自分の資金力に最適な不動産投資法がわかりました。初心者でも始められる方法が見つかる！\n\n#不動産投資入門 #資金計画 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+    var bfShareMsg = ('💰 自己資金' + total.toLocaleString() + '万円での不動産投資スタイル診断！\n\n購入力（融資込み）: 約' + buyingPower.toLocaleString() + '万円\nおすすめ投資スタイル: ' + ranked[0].name + '（利回り' + ranked[0].yield + '）\n\n「自分の資金でどんな物件が買える？」を即診断！\n▶ あなたの資金力でも無料診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + bfShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 
@@ -8432,7 +8436,8 @@ function calcMatrix() {
   html += '</tbody></table></div>';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; DSCR=NOI/年間返済額。1.2以上が融資審査の目安。CF・利回りは概算（経費率25%・LTV80%・30年ローン）。</div>';
   html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>各指標の判断基準:</strong> 表面利回りは7%以上が目安（地方は9%↑・都心は4〜6%）。DSCR1.2以上で融資審査通過の可能性大。年間CFがプラスかつDSCR1.2以上の物件は「安全圏」の投資と言えます。👑マークの物件がトータルスコア最高ですが、エリア・管理のしやすさも必ず現地で確認してください。</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'📋 複数物件を一覧比較してみた！\n\n表面利回り・DSCR・年間CFで各物件を採点。最良物件を選ぶ基準が一目瞭然！\n\n#不動産投資 #物件比較 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+    var mxShareMsg = ('📋 複数物件を一覧比較してみた！\n\n' + props.length + '件比較の総合最高スコア: 物件' + bestIdx + '（' + bestProp.totalScore + '/12点）\n利回り' + bestProp.grossYield + '% / 年間CF ' + Math.round(bestProp.annualCF).toLocaleString() + '万円 / DSCR ' + bestProp.dscr + '\n\n「どの物件を買うべきか」を利回り・CF・DSCRで即比較！\n▶ あなたの物件候補も無料比較\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + mxShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcMatrix(); })();
@@ -8905,7 +8910,8 @@ function calcTaxSaving() {
   html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>節税の優先順位:</strong> まず「青色申告への切り替え」が手間が少なく即効性が高い（年65万円控除）。次に「減価償却費の計上漏れをなくす」。法人化は所得が500〜600万円を超えてから効果が出やすく、設立・維持コスト（年20〜30万円）を差し引いた実質メリットで判断してください。</div>';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 概算計算です。実際の節税効果は収入・控除・事業実態により異なります。税理士にご相談ください。</div>';
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'💡 不動産投資の節税効果を試算！\n\n青色申告・減価償却・法人化で年間どれだけ節税できるか計算してみました！\n\n#不動産節税 #確定申告 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+    var txShareMsg = ('💡 不動産投資の節税効果を試算してみた！\n\n現在の税負担: 年' + Math.round(baseTax).toLocaleString() + '万円\n青色申告＋減価償却で最大▲' + Math.round(fullSaving).toLocaleString() + '万円/年の節税！\n' + (fullSaving > 50 ? '節税効果が大きい → 今すぐ青色申告に切り替えを！' : fullSaving > 0 ? 'まず青色申告への切り替えがお勧め（年65万円控除）' : '個人申告継続が有利。収入増加後に再検討を') + '\n▶ あなたの不動産収入でも無料節税試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + txShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcTaxSaving(); })();
@@ -9247,7 +9253,8 @@ function calcFirstYear() {
   });
   html += '</div>';
   html += '<div style="font-size:11px;color:var(--text-muted);background:rgba(0,0,0,0.02);border-radius:6px;padding:8px;line-height:1.6">⚠️ 初年度は購入諸費用（登記・仲介手数料・ローン手数料等）が発生するため実態CFがマイナスになることが多いです。2年目以降のCFで回収できるか確認しましょう。節税効果の実額は確定申告状況により異なります。</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'📅 不動産投資1年目シミュレーション！\n\n購入初年度のCFと節税効果を詳細試算。初年度のリアルな手残り額がわかります！\n\n#不動産投資 #初年度CF #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+    var fyShareMsg = ('📅 不動産投資 購入初年度シミュレーション！\n\n初年度の実態CF（諸費用・節税込み）: ' + (firstYearCF >= 0 ? '+' : '▲') + Math.abs(firstYearCF).toLocaleString() + '万円\n税引前CF: ' + (cf >= 0 ? '+' : '') + cf + '万円 ／ 節税効果: ' + taxEffect + '万円\n' + (firstYearCF >= 0 ? '✅ 初年度からプラスCF！有利な物件です' : '初年度は諸費用でマイナス → 2年目以降の回収計画を確認') + '\n\n「購入初年度の手残り」を諸費用込みで無料試算！\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + fyShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcFirstYear(); })();
@@ -9346,7 +9353,8 @@ function calcKubuIttou() {
   html += '<div style="font-size:11px;color:var(--text-muted);background:rgba(0,0,0,0.02);border-radius:6px;padding:8px;line-height:1.6">';
   html += '⚠️ 年間収益は表面利回りの概算です。空室損失・修繕費・税金・ローン返済は含みません。実質収益は別途計算を。';
   html += '</div></div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🏢 区分マンション vs 一棟アパートを比較！\n\nどちらの投資スタイルが自分に向いているか診断してみました！\n\n#区分投資 #一棟投資 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+    var kiShareMsg = ('🏢 区分マンション vs 一棟アパート 投資比較診断！\n\n自己資金' + equity + '万円・物件価格' + price + '万円（LTV:' + ltv + '%）の場合\n→ ' + winner.name + 'がより適合度が高い\n\n「区分か一棟か」を資金・リスク許容度・管理のしやすさで無料診断！\n▶ あなたの資金計画でも無料診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + kiShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcKubuIttou(); })();
@@ -9515,7 +9523,8 @@ function calcFusaiCheck() {
   html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>スコア改善の優先順位:</strong> LTV（自己資金比率）は最も改善効果が大きく、頭金を10%増やすだけでスコアが跳ね上がります。利回りが低い場合は「収益が出る物件か」を再検討する必要があります。築年数が古いと融資期間が短くなり返済比率が上がるため、地方銀行・信金への相談も有効です。</div>';
   html += '<div style="font-size:11px;color:#666;margin-top:6px">※ 参考値。実際の審査は金融機関の独自基準・信用情報・物件評価による</div>';
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🏦 ローン審査スコアを診断してみた！\n\nLTV・利回り・返済比率でローン審査通過の可能性を採点。融資が通りやすい物件の条件がわかります！\n\n#不動産融資 #ローン審査 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+    var faShareMsg = ('🏦 不動産ローン審査スコアを診断！\n\n融資審査スコア: グレード' + grade + '（' + pct + '点）— ' + label + '\nLTV ' + ltv.toFixed(0) + '% / DSCR ' + dscr.toFixed(2) + '\n' + faGuide + '\n\n「この物件は融資が通る？」を5項目で即診断！\n▶ あなたの物件でも無料診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + faShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcFusaiCheck(); })();
