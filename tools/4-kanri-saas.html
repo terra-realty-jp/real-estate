@@ -8606,7 +8606,8 @@ function calcBusinessScale() {
     + '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px"><span>進捗</span><span style="font-weight:700;color:'+barColor+'">'+ pct +'%</span></div><div style="height:10px;background:rgba(0,0,0,0.08);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:5px;transition:width 0.4s"></div></div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">スコアの計算式：アパート・マンション1室=1点、一戸建て1棟=2点、駐車場5台=1点、事務所1室=2点</div></div>'
     + verdict
     + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--dark3)"><th style="padding:7px 10px;border:1px solid rgba(0,0,0,0.06);text-align:left;color:var(--text-muted)">税務上のメリット</th><th style="padding:7px 10px;border:1px solid rgba(0,0,0,0.06);color:var(--gold)">事業的規模</th><th style="padding:7px 10px;border:1px solid rgba(0,0,0,0.06);color:var(--text-muted)">それ以外</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'📊 賃貸管理の事業規模診断！\n\n物件数・戸数から最適な管理スタイル（自主管理 vs 委託）を判断しました！\n\n#賃貸管理 #不動産経営 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var bsShareMsg = ('📊 賃貸物件の事業的規模を診断！\n\nスコア: ' + score + '/10点\n' + (isScale ? '✅ 事業的規模に該当！青色申告65万円控除・家族給与・赤字繰越が全部使えます\n節税効果は年間数十万円になる可能性あり！' : 'まだ事業的規模に未達（残り' + (10 - score) + 'ポイント）\n物件を増やすと最大65万円控除が使えます') + '\n\n賃貸オーナーなら必ず確認！\n▶ あなたの物件でも無料診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + bsShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcBusinessScale(); })();
 
@@ -8749,7 +8750,8 @@ function calcVacancyCost() {
   html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>空室コストの目安:</strong> リフォーム費は「空室が何ヶ月短縮されるか」で判断します。例えばリフォーム30万円で1.5ヶ月早く入居が決まるなら、月家賃20万円の物件では元が取れます（損益分岐＝リフォーム費÷月家賃）。広告料（AD）は家賃1ヶ月が相場で、2ヶ月以上は交渉の余地あり。</div>';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; 累積コスト＝機会損失＋月間維持費＋広告料（AD）。リフォーム含む列はリフォーム費を追加した場合の合計です。空室6ヶ月超は行動を検討してください。</div>';
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'💸 空室のコストを計算！\n\n空室が続くと月々いくらの損失が発生しているか試算してみました！空室対策の優先度がわかります。\n\n#空室対策 #賃貸管理 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var vcShareMsg = ('💸 空室の累積コストを試算！\n\n月家賃' + (rent/10000).toFixed(1) + '万円の物件、空室3ヶ月で累積コスト▲' + cost3m + '万円！\n' + vcMsg + '\n\n空室を放置するほど損失は積み上がります。今すぐ対策を！\n▶ 空室対策の無料相談\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + vcShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcVacancyCost(); })();
@@ -8827,7 +8829,8 @@ function calcHealthCheck() {
     +'<thead><tr style="background:rgba(0,0,0,0.05)"><th style="padding:8px 10px;font-size:11px;text-align:left">指標</th><th style="padding:8px 10px;font-size:11px;text-align:right">現在値</th><th style="padding:8px 10px;font-size:11px;text-align:center">評価</th><th style="padding:8px 10px;font-size:11px;text-align:left">目安</th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table></div>'
     +'<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>5指標の優先改善順:</strong> ①DSCR1.0未満は返済が収入を超えており最優先で見直しを。②空室率10%超は入居者募集強化が急務。③経費率50%超はローン返済・管理費・修繕費を精査して節減余地を探しましょう。まずスコアが「危険」「要注意」の項目から1つ選んで改善行動に移してください。</div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🏥 物件の健全性チェック！\n\n収益・修繕・空室の3軸で物件の今の状態を採点しました！\n\n#物件管理 #不動産経営 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var hcShareMsg = ('🏥 賃貸物件の健全性スコアを採点！\n\n総合スコア: ' + totalScore + '点\n5指標中' + goodCount + '項目が良好 / 年間CF: ' + (cf >= 0 ? '+' : '') + cf.toFixed(0) + '万円\n判定: ' + hcMsg + '\n\n利回り・空室率・DSCRを一括チェック！\n▶ あなたの物件でも無料診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + hcShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcHealthCheck(); })();
 
@@ -9025,7 +9028,8 @@ function calcRestoreCost() {
     + '<div style="font-size:16px;font-weight:900;color:#16a34a">' + totalLandlord.toLocaleString() + '円</div></div></div>'
     + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>精算で揉めないために:</strong> 退去時の立会いで借主に「借主負担の根拠」を説明し、修繕項目ごとに合意書を作成するのがベストです。クリーニング費用は契約書に特約として明記していない場合、請求できないケースがあります（大阪高裁2000年判決など）。精算金額が敷金を超える場合は書面での請求が必要です。</div>'
     + '<div style="font-size:11px;color:var(--text-muted);line-height:1.7">&#8251; 国土交通省ガイドライン基準の概算です。実際の請求額は専門業者の見積もりや入居時の写真・契約内容によります。特約がない場合、通常損耗は貸主負担が原則です。</div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🔧 退去時の原状回復費用を試算！\n\n入居年数・条件別に原状回復の目安費用と負担割合がわかります！\n\n#原状回復 #賃貸管理 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var rcrShareMsg = ('🔧 退去時の原状回復費用を試算！\n\n修繕費総額: ' + Math.round(totalGross/10000).toFixed(1) + '万円\n借主への請求目安: ' + Math.round(totalTenant/10000).toFixed(1) + '万円\n貸主負担: ' + Math.round(totalLandlord/10000).toFixed(1) + '万円\n\n「知らなかった」では損する原状回復のルール！\n退去トラブルゼロにするには？\n▶ 無料相談\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + rcrShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 
 // ===== リノベーション費用対効果 =====
@@ -9731,7 +9735,8 @@ function calcScreeningScore() {
     + rowHtml
     + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>スコアの活用法:</strong> 75点以上なら一般的な審査通過水準です。低スコアの原因が「収入比率が高い」場合は保証会社加入で補完できます。「過去履歴に問題」は減点が大きく(-10点)、最終判断では書類確認が必須です。収入比率は家賃÷月収で25%以内が理想・33%超は融資審査でも否決されやすい水準です。</div>'
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">&#8251; あくまで参考スコアです。最終判断は総合的な面談・書類確認を経てオーナー様が行ってください。</div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'📋 入居審査スコアを採点！\n\n申込者の年収・職業・信用情報から審査通過率をスコア化してみました！\n\n#入居審査 #賃貸管理 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var ssShareMsg = ('📋 入居申込者の審査スコアを採点！\n\n総合スコア: ' + score + '点（100点満点）\n審査判定: ' + verdict.label + '\n\n年収比率・雇用形態・過去履歴を数値化！\n感覚でなく根拠をもって審査判断ができます\n▶ 賃貸管理の無料相談\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + ssShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcScreeningScore(); })();
 
@@ -9937,7 +9942,8 @@ function calcMonthlyHealth() {
   if (unpaid > 0) html += '<div style="font-size:11px;color:var(--red);background:rgba(239,68,68,0.08);border-radius:6px;padding:8px">⚠️ 未入金テナントが' + unpaid + '件あります。督促連絡を行い、2ヶ月以上続く場合は法的対応を検討してください</div>';
   html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>グレード改善の優先順位:</strong> 入居率が最重要（収入に直結）で95%以上が安全圏です。次に未入金テナントの早期対処（2ヶ月放置で回収困難になります）。修繕費率が20%超の場合は長期修繕計画を作り計画的な対応で改善できます。これらの指標が改善すると月次CFは自然に上がります。毎月この画面を確認することで問題の早期発見ができます。</div>';
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'📅 賃貸物件の月次健全性チェック！\n\n今月の入金状況・修繕・空室を総合評価してみました！\n\n#賃貸管理 #月次確認 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var mhShareMsg = ('📅 賃貸物件の月次ヘルスチェック！\n\n総合グレード: ' + grade + '（' + totalScore + '点 · ' + gradeMsg + '）\n入居率: ' + occupancyRate + '% · 月CF: ' + (cf >= 0 ? '+' : '') + cf + '万円\n\n毎月チェックで問題の早期発見！\n未入金・更新・修繕を一画面で確認できます\n▶ 無料相談\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + mhShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcMonthlyHealth(); })();
@@ -10055,7 +10061,8 @@ function calcMgmtCompare() {
   html += '</div>';
   html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>管理委託を選ぶ目安:</strong> 物件が自宅から1時間以上離れている・複数棟所有・本業が忙しい場合は委託が合理的です。委託費5%以下の会社を探すか、入居付けのみ仲介に依頼して管理は自主管理にするハイブリッド方式も有効です。委託先を選ぶ際は「入居率の実績・クレーム対応時間・解約条件」を必ず確認してください。</div>';
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'⚖️ 自主管理 vs 管理委託を比較診断！\n\n管理費・手間・リスクを総合評価。どちらが得かすぐにわかります！\n\n#賃貸管理 #自主管理 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var mcShareMsg = ('⚖️ 自主管理 vs 管理委託を比較診断！\n\n年間差額: ' + (diff >= 0 ? '+' : '') + diff.toFixed(0) + '万円\n' + recommendation + '\n（委託費' + annualDelegation.toFixed(0) + '万円/年 vs 自主管理時間コスト' + annualSelfTotal.toFixed(0) + '万円/年）\n\n管理委託の見直しで年間コストが変わるかも！\n▶ 無料相談\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + mcShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcMgmtCompare(); })();
@@ -11133,7 +11140,8 @@ function calcEquipAgeRisk() {
     html += '</div>';
   }
   html += '</div>';
-    html += '<div style="margin-top:10px"><button onclick="shareLine(\'🔩 設備の劣化リスクを診断！\n\n給湯器・エアコン・給排水の築年数から修繕リスクを先読みしました！\n\n#設備管理 #修繕費 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var eaShareMsg = ('🔩 賃貸物件の設備劣化リスクを診断！\n\n寿命超過: ' + urgentCount + '件 · 要注意: ' + warnCount + '件\n' + eaHeroMsg + '\n\n故障してからでは遅い！修繕費を計画的に確保しよう\n▶ 修繕計画の無料相談\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+    html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + eaShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   el.innerHTML = html;
 }
 (function(){ calcEquipAgeRisk(); })();
@@ -12777,7 +12785,8 @@ function calcRentRaiseImpact() {
     '💡 <strong>判断のポイント：</strong>' + units + '戸中' + breakEvenRetired + '戸以上が退去すると値上げの効果がなくなります。値上げ後に1戸退去した場合、退去コスト（原状回復+空室期間損失）の目安は約<strong>' + turnoverCostPerUnit.toFixed(0) + '万円</strong>です。周辺相場と空室状況を確認してから判断しましょう。' +
     '</div>' +
     '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 空室3ヶ月・原状回復費30万円を仮定した概算です。実際の状況によって異なります。</p>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'📈 家賃値上げの収益インパクトを試算！\n\n賃料を○○円上げると年収入がどれだけ変わるか計算してみました！\n\n#家賃値上げ #賃貸管理 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var rriShareMsg = ('📈 家賃値上げの収益インパクトを試算！\n\n値上げ後の年間収益増加: +' + gainFull.toFixed(0) + '万円\n（' + units + '戸中' + breakEvenRetired + '戸が退去すると値上げが無意味に）\n\n値上げは何戸退去まで耐えられるか？\n賃貸オーナー必見の試算ツール！\n▶ 無料相談\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + rriShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 
 function calcVacancyRecovery() {
@@ -12840,7 +12849,8 @@ function calcVacancyRecovery() {
     '💡 <strong>対策しないリスク：</strong>このまま放置するとさらに6ヶ月で約<strong style="color:#dc2626">' + noActionLoss.toFixed(0) + '万円</strong>の損失が追加されます。リフォーム費用' + totalCost.toFixed(0) + '万円を投じることで<strong>' + breakEvenMonths + 'ヶ月後には収益がプラス</strong>に転じます。' +
     '</div>' +
     '<p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ 入居後すぐに満室になると仮定した概算です。実際の入居付けには仲介会社との連携が重要です。</p>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🔄 空室回復シミュレーション！\n\n空室期間を短縮するための施策と収益回復の試算がわかります！\n\n#空室対策 #賃貸管理 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var vrcShareMsg = ('🔄 空室回復シミュレーション！\n\nすでに失った家賃: ▲' + alreadyLost.toFixed(0) + '万円\n対策コスト: ' + totalCost.toFixed(0) + '万円 → コスト回収: ' + breakEvenMonths + 'ヶ月\n対策しないとあと6ヶ月でさらに▲' + noActionLoss.toFixed(0) + '万円の損失！\n\n空室を長引かせるほど損失は雪だるま式に増えます\n▶ 空室対策の無料相談\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + vrcShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 
 
