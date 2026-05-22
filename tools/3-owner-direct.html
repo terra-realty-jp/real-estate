@@ -6140,8 +6140,10 @@ function calcDDCheck() {
     +'<div style="flex:1"><div style="background:rgba(0,0,0,0.07);border-radius:4px;height:12px;overflow:hidden;margin-bottom:6px"><div style="width:'+pct+'%;height:100%;background:'+barColor+';border-radius:4px;transition:width 0.4s"></div></div>'
     +'<div style="font-size:13px;font-weight:700;color:'+gradeColor+'">'+grade+'</div></div></div>'
     +(riskRows?riskRows:'<p style="font-size:13px;color:var(--green);text-align:center;padding:8px 0">✅ すべての確認が完了しています</p>')
+    +'<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>チェックの読み方:</strong> 90%以上（A評価）なら購入準備OK。高リスク項目（🔴）が1件でも残っていれば契約前に解消を。契約後に発覚した問題は買主負担になるケースがあります。</div>'
     +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ あくまで確認漏れ防止のガイドです。専門家（宅建士・司法書士・ホームインスペクター）の確認を合わせて行ってください。</p>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🔍 不動産デューデリジェンスチェックリスト！\n\n購入前に確認すべき項目を網羅的にチェック。見落としがちなリスクが一目でわかります。\n\n#不動産購入 #デューデリ #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var ddShareMsg = ('🔍 不動産購入前チェック完了率: ' + pct + '%（' + done + '/' + total + '項目）\n\n' + grade + '\n' + (unchecked.high.length ? '⚠️ 高リスク未確認: ' + unchecked.high.length + '件あり\n' : '✅ 高リスク項目はすべて確認済み\n') + '\n▶ 購入前に全項目確認してみよう\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + ddShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 
 // ===== マンション 管理費・修繕積立金 適正チェック =====
@@ -6189,8 +6191,10 @@ function calcMgmtCheck() {
     +'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">目安:'+recommendedRepairPerSqm.toFixed(0)+'円/㎡ 前後</div>'
     +'<div style="font-size:11px;margin-top:4px">'+repairRating.note+'</div></div></div>'
     +(repairRating.label==='不足' ? '<div style="padding:10px 12px;background:rgba(255,80,80,0.1);border-left:3px solid var(--red);border-radius:0 6px 6px 0;font-size:12px">⚠️ 修繕積立金が不足水準です。購入前に長期修繕計画と積立金残高を重要事項説明書で確認してください。</div>' : '')
+    +'<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>修繕積立金チェックが重要な理由:</strong> 積立金が「不足」のマンションは、将来の大規模修繕で1戸あたり50〜100万円以上の一時金徴収が起きることがあります。購入前に長期修繕計画書と積立残高を必ず確認してください。</div>'
     +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 国土交通省「マンション標準管理規約」および修繕積立ガイドラインを参考にした目安値です。</p>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🏢 管理組合の健全性チェック！\n\nマンション購入前に管理状態が良好かどうか診断してみました！\n\n#マンション購入 #管理組合 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var mcShareMsg = ('🏢 マンション管理費・修繕積立金チェック\n\n月間負担: ' + (totalMonthly/10000).toFixed(1) + '万円（年間' + annualCost.toFixed(0) + '万円）\n管理費: ' + mgmtRating.label + '（' + mgmtPerSqm.toFixed(0) + '円/㎡）\n修繕積立金: ' + repairRating.label + '（' + repairPerSqm.toFixed(0) + '円/㎡）\n' + (repairRating.label === '不足' ? '\n⚠️ 修繕積立金不足！一時金徴収リスクあり\n' : '') + '\n▶ あなたの物件でも無料チェック\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + mcShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcMgmtCheck(); })();
 
@@ -7443,8 +7447,10 @@ function calcLoanPreApproval() {
     + '<div style="font-size:10px;color:var(--text-muted)">返済比率</div>'
     + '<div style="font-size:16px;font-weight:900;color:' + (repayRatio<=30?'#16a34a':repayRatio<=35?'#facc15':'#dc2626') + '">' + repayRatio.toFixed(1) + '%</div>'
     + '<div style="font-size:10px;color:var(--text-muted)">推奨 30〜35%以内</div></div></div>'
-    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:12px;line-height:1.7">' + grade.advice + '</div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🏦 住宅ローン事前審査の通過率を診断！\n\n年収・頭金・借入額から融資審査通過の可能性をチェックしました！\n\n#住宅ローン #事前審査 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+    + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:12px;line-height:1.7">' + grade.advice + '</div>'
+    + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>スコアの読み方:</strong> 70点以上（B以上）なら多くの銀行で通過見込みがあります。返済比率は収入の30%以内・年収倍率は7倍以内が銀行の目安。スコアが低い場合は「頭金を増やす」「借入額を減らす」「フラット35に変える」の3つが改善策です。</div>';
+  var lpaShareMsg = ('🏦 住宅ローン事前審査スコア: ' + total + '点（' + grade.label + '評価）\n\n' + grade.msg + '\n年収倍率: ' + loanMultiple.toFixed(1) + '倍（推奨7倍以内）\n返済比率: ' + repayRatio.toFixed(1) + '%（推奨35%以内）\n\n' + grade.advice + '\n\n▶ あなたのローン条件でも無料診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + lpaShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcLoanPreApproval(); })();
 
@@ -7516,8 +7522,10 @@ function calcNewUsedComp() {
     + '<span style="font-size:12px;font-weight:700">10年合計</span>'
     + '<span style="font-size:18px;font-weight:900;color:#16a34a">' + usedTotal.toLocaleString() + '万円</span></div></div></div>'
     + '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px;font-size:13px;line-height:1.7">' + conclusion + '</div>'
+    + '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>この比較の読み方:</strong> 10年間の「ローン返済・修繕費・諸費用」の合計比較です（将来の売却価格は含みません）。中古は価値の下落が緩やかなため長期保有ほど有利になる傾向があります。差額が大きいほど選択の意味が大きく、差額が小さい（100万円未満）場合は「住みやすさ・立地」で決めて問題ありません。</div>'
     + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※修繕費は新築0.5%/年・中古1.5%/年で概算。資産価値（売却想定価格）は考慮していません。個別の条件により大きく異なります。</div>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'🆚 新築 vs 中古物件を徹底比較！\n\n総コスト・資産価値・メリットデメリットを10年スパンで比較してみました！\n\n#新築 #中古 #不動産購入 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var nucShareMsg = ('🆚 新築 vs 中古+リフォーム 10年コスト比較\n\n新築: ' + newTotal.toLocaleString() + '万円\n中古+リフォーム: ' + usedTotal.toLocaleString() + '万円\n差額: ' + diff.toLocaleString() + '万円\n\n→ ' + (winner==='new'?'この条件では新築の方が10年トータルで安い！':'この条件では中古+リフォームの方が10年トータルで安い！') + '\n\n▶ あなたの物件でも無料比較\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + nucShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcNewUsedComp(); })();
 
@@ -7876,6 +7884,7 @@ function calcFutureValue() {
       </tbody>
     </table>
     <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">※建物は残存耐用年数による直線償却で試算。土地は複利で変動。概算値のため参考程度にご利用ください。</div>
+    <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>資産価値の読み方:</strong> 建物は毎年少しずつ価値が下がり（耐用年数で0に近づく）、土地は地価変動に連動します。売却価格に最も影響するのは「土地の比率・立地・築年数」の3つです。20年後も価値が残りやすい物件は「土地割合が高い・駅近・再開発エリア」。逆に価値が大きく落ちるのは「木造・築25年超・郊外」の組み合わせです。</div>
     <div style="margin-top:10px"><a href="https://social-plugins.line.me/lineit/share?url=${encodeURIComponent('https://shinji-japaaaan.github.io/real-estate/tools/3-owner-direct.html')}&text=${encodeURIComponent('📉 不動産の将来価値シミュレーション\n\n購入価格: ' + price + '万円（' + structName + '・築' + age + '年）\n地価変動: ' + landChgLabel + '\n20年後の想定価値: ' + fv20.toLocaleString() + '万円（' + (fv20diff>=0?'+':'') + fv20pct + '%）\n\n「この家、20年後にいくらになる？」を今すぐ試算\n▶ あなたの不動産でも無料試算\n不動産かんたんツール（TERRA REALTY）')}" target="_blank" rel="noopener" style="display:block;text-align:center;background:#06C755;color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;box-sizing:border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg>LINEでシェア</a></div>
   </div>`;
 }

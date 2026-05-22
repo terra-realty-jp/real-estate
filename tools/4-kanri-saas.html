@@ -8649,8 +8649,10 @@ function calcTenantRisk() {
     +'</div>'
     +(actions.length ? '<p style="font-size:11px;color:var(--text-muted);margin-bottom:6px">推奨アクション</p>'
       +actions.map(function(a){return '<div style="font-size:12px;padding:6px 10px;background:rgba(0,0,0,0.03);border-radius:6px;margin-bottom:4px">'+a+'</div>';}).join(''):'')
+    +'<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>スコアの読み方:</strong> スコア3以下なら安定入居者（心配なし）。4〜7は更新時期に注意が必要な中リスク。8以上は退去の可能性が高く、早めのコミュニケーションや設備改善で対処を。退去後の空室コストは家賃2〜4ヶ月分かかるため、既存入居者を繋ぎ止める投資は費用対効果が高いです。</div>'
     +'<p style="font-size:10px;color:var(--text-muted);margin-top:8px">※ 参考目安です。実際の退去は複合的要因で決まります。</p>';
-  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'⚠️ 入居者リスクスコアを診断！\n\n滞納リスク・トラブル発生率をスコア化。入居審査の判断材料に！\n\n#入居者審査 #賃貸管理 #TERRA_REALTY\n\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
+  var trShareMsg = ('⚠️ 入居者の退去リスクを診断！\n\n退去リスク: ' + grade + '（スコア: ' + score.toFixed(1) + '/' + maxScore + '）\n' + verdict + '\n\n' + (actions.length > 0 ? '推奨アクション: ' + actions[0] + '\n' : '') + '\n▶ あなたの物件でも無料診断\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  el.innerHTML += '<div style="margin-top:10px"><button onclick="shareLine(\'' + trShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
 }
 (function(){ calcTenantRisk(); })();
 
