@@ -4719,3 +4719,17 @@
   - JSシンタックスチェック: OK
 - **理由**: 前回の孤立行修正スクリプトが`html +=`に変換したが、その関数には`html`変数がなくRuntimeErrorになる状態だった
 - **コミット**: `8ac140c`
+
+## 2026-05-23（セッション継続・品質改善）
+
+- **対象**: tools/1-ai-satei.html, tools/5-toushi-bunseki.html, tools/2-akiya-hunter.html
+- **フェーズ**: Phase 1 UX改善・バグ修正
+- **改善内容**:
+  1. Tool1 FAQ JSON-LD: 仲介手数料計算エラー修正（111万→105.6万円）
+  2. Tool5 card-quick-check: 入力ラベルの例を初期値と整合（月8万×12=96→月30万×12=360）
+  3. Tool5 card-quick-check: シェアテキスト「月家賃」に年間値を使っていたバグ修正（monthRent変数に変換）
+  4. Tool5 card-quick-check: CTAメール本文の月額家賃表記も修正
+  5. Tool5 card-quick-check: 解釈ガイドの「CC（キャッシュカバレッジ）」を実際の3指標の説明に変更
+  6. Tool2 card-akiya3: 解釈ガイドが「解体」を誤言及→実際の3択（放置/売却/活用）の正確な説明に修正
+- **仮ユーザーレビュー**: 田中みちこさん視点でTool2 card-akiya3をチェック → 全5項目クリア
+- **コミット**: `dc3618a`, `b617e43`, `096fad5`, `4856c0c`
