@@ -13749,10 +13749,10 @@ function calcLoanDeductionLoss() {
     + '</div>';
 
   var shareVal = encodeURIComponent('⚠️ 自宅を賃貸に出すと住宅ローン控除が消える！\n\n賃貸中に失う控除額: ▲' + totalLost.toLocaleString() + '万円\n賃貸収入（' + actualRentYears + '年）: +' + totalRent.toLocaleString() + '万円\n実質差引: ' + (netGain >= 0 ? '+' : '') + Math.round(netGain).toLocaleString() + '万円\n\n転勤・住み替えを考えている人は必読！\n▶ 無料で計算\n不動産かんたんツール（TERRA REALTY）');
-  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>ローン控除との併用注意:</strong> 住宅ローン控除を受けている物件を賃貸に出すと控除の適用が外れる場合があります。転勤等やむを得ない場合の例外規定もありますので、事前に税理士または金融機関に確認しましょう。</div>'
+  var blueGuideHtml = '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>ローン控除との併用注意:</strong> 住宅ローン控除を受けている物件を賃貸に出すと控除の適用が外れる場合があります。転勤等やむを得ない場合の例外規定もありますので、事前に税理士または金融機関に確認しましょう。</div>';
   var lineUrl = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(location.href) + '&text=' + shareVal;
 
-  el.innerHTML = heroHtml + compHtml + verdictHtml + noteHtml
+  el.innerHTML = heroHtml + compHtml + verdictHtml + noteHtml + blueGuideHtml
     + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
     + '<a href="' + lineUrl + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#00B900;color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none">📤 LINEでシェア</a>'
     + '<a href="mailto:terra.realty.iam@gmail.com?subject=転勤・住み替えでローン控除について相談したい&body=' + encodeURIComponent('住宅ローン控除が賃貸に出すと消える件について相談したいです。\nローン残高: ' + balance + '万円\n残余控除年数: ' + years + '年\n賃貸予定期間: ' + rentYears + '年') + '" style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);color:var(--green);border:1px solid rgba(34,197,94,0.25);font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none">→ TERRA REALTYに相談</a>'
@@ -14015,10 +14015,10 @@ function calcFixedTermLease() {
     + '10年間の累計差額: ' + (diff >= 0 ? '+' : '') + shareAmt + '万円\n\n'
     + 'インフレ時代は定期借家で家賃改定の自由度を確保！\n▶ 無料で比較する\n不動産かんたんツール（TERRA REALTY）';
   
-  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>定期借家契約の活用:</strong> 定期借家は期間終了で確実に退去してもらえる反面、入居者が集まりにくい場合があります。特定の期間だけ貸したい場合（転勤・建て替え予定等）に有効な手段です。</div>'
+  var blueGuideHtml = '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>定期借家契約の活用:</strong> 定期借家は期間終了で確実に退去してもらえる反面、入居者が集まりにくい場合があります。特定の期間だけ貸したい場合（転勤・建て替え予定等）に有効な手段です。</div>';
 var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEで仲間のオーナーに教える</button>';
 
-  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+  el.innerHTML = heroHtml + gridHtml + guideHtml + blueGuideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcFixedTermLease(); })();
 
@@ -14081,11 +14081,11 @@ function calcLongTermDiscount() {
 
   var shareMsg = '家賃' + disc + '%割引を付けると、退去コスト削減で10年で' + Math.abs(diff) + '万円' + (isWin ? '得' : '損') + 'になる！長期入居特典の損得を試算しました\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   
-  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>長期入居者への優遇:</strong> 3〜5年以上の長期入居者に家賃割引や設備改善を提供することで、退去を防ぎ入替えコスト（家賃3〜6ヶ月分）を節約できます。</div>'
+  var blueGuideHtml = '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>長期入居者への優遇:</strong> 3〜5年以上の長期入居者に家賃割引や設備改善を提供することで、退去を防ぎ入替えコスト（家賃3〜6ヶ月分）を節約できます。</div>';
 var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEでシェア</button>';
 
   el.style.display = 'block';
-  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+  el.innerHTML = heroHtml + gridHtml + guideHtml + blueGuideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcLongTermDiscount(); })();
 
@@ -14152,11 +14152,11 @@ function calcProactiveRepair() {
 
   var shareMsg = d.name + '（' + age + '年使用）を今すぐ交換（' + proactiveCost + '万円）vs 壊れてから直す（期待コスト' + expectedTotalOnBreakdown + '万円）差額' + Math.abs(saving) + '万円！予防修繕で損を防ごう\n▶ あなたの物件でも無料試算\n不動産かんたんツール（TERRA REALTY）';
   
-  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>予防修繕の費用対効果:</strong> 小さな修繕を早期に行うことで、後の大規模修繕を防げます。定期点検（年1〜2回）を実施し、問題を早期発見することが長期的なコスト削減につながります。</div>'
+  var blueGuideHtml = '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>予防修繕の費用対効果:</strong> 小さな修繕を早期に行うことで、後の大規模修繕を防げます。定期点検（年1〜2回）を実施し、問題を早期発見することが長期的なコスト削減につながります。</div>';
 var lineBtn = '<button onclick="shareLine(\'' + shareMsg.replace(/'/g,'\\\'') + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">📤 LINEでシェア</button>';
 
   el.style.display = 'block';
-  el.innerHTML = heroHtml + gridHtml + guideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
+  el.innerHTML = heroHtml + gridHtml + guideHtml + blueGuideHtml + '<div style="text-align:center;margin-top:8px">' + lineBtn + '</div>';
 }
 (function(){ calcProactiveRepair(); })();
 
