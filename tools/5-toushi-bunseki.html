@@ -1810,7 +1810,7 @@
         <input type="number" id="qc_price" value="5000" min="100" max="100000" step="100" oninput="calcQuickCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
-        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">年間の家賃収入（万円）（例: 月8万円なら96と入力）</label>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">年間の家賃収入（万円）（例: 月30万×12ヶ月=360と入力）</label>
         <input type="number" id="qc_rent" value="360" min="10" max="10000" step="10" oninput="calcQuickCheck()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
       </div>
       <div>
@@ -10494,8 +10494,9 @@ function calcQuickCheck() {
   html += '</div>';
   html += '<div style="margin-top:10px;font-size:11px;color:var(--text-muted);padding:8px;background:rgba(0,0,0,0.03);border-radius:6px">💡 このチェックはあくまで簡易基準です。詳細分析（上部タブ「物件入力」）で正確なシミュレーションを行ってください。</div>';
   var verdictShort = passed === 3 ? '✅ 詳細分析の価値あり' : passed === 2 ? '⚠️ 条件付きで検討可能' : '❌ この条件では慎重に';
-  var qcShareMsg = ('📊 投資物件 購入判断チェック\n\n物件価格' + price + '万円・月家賃' + rent + '万円\n表面利回り: ' + grossYield.toFixed(1) + '%\n毎月の手残り（概算）: ' + (cfMan >= 0 ? '+' : '') + cfMan + '万円\n\n判定: ' + verdictShort + '\n\n▶ あなたの検討物件でも無料チェック\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
-  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>投資物件の簡易チェック:</strong> 表面利回り・CC（キャッシュカバレッジ）・自己資金比率の3指標を最初に確認しましょう。一つでも基準を外れる物件は詳細分析が必要です。</div>'
+  var monthRent = Math.round(rent / 12 * 10) / 10;
+  var qcShareMsg = ('📊 投資物件 購入判断チェック\n\n物件価格' + price + '万円・月家賃' + monthRent + '万円\n表面利回り: ' + grossYield.toFixed(1) + '%\n毎月の手残り（概算）: ' + (cfMan >= 0 ? '+' : '') + cfMan + '万円\n\n判定: ' + verdictShort + '\n\n▶ あなたの検討物件でも無料チェック\n不動産かんたんツール（TERRA REALTY）').replace(/\n/g,'\\n').replace(/'/g,"\\'");
+  html += '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.8">💡 <strong>3指標の見方:</strong> ①表面利回り6%以上 ②借入比率75%以下 ③月手残りプラス — この3つが揃って初めて「詳細分析を進める価値あり」です。一つでも外れる場合は購入条件の見直しを検討しましょう。</div>'
   html += '<div style="margin-top:10px"><button onclick="shareLine(\'' + qcShareMsg + '\')" style="width:100%;padding:10px;background:#06C755;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📤 LINEでシェアする</button></div>';
   html += '<div style="margin-top:12px;padding:12px 14px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.3);border-radius:10px;text-align:center">';
   html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">この物件について、プロの投資家目線で詳しく分析してもらえます</div>';
