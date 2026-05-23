@@ -4708,3 +4708,14 @@
   2. **新機能ティッカー更新**: 「賃貸管理追加」→「2026年5月最新UPD」（解釈ガイド・LINEシェア動的化・モバイル最適化等）
   3. **llms.txt更新**: 全727カードに解釈ガイド追加を反映、日付を2026-05-23に更新
 - **コミット**: `f956e53`, `eb76cba`, `308c74a`
+
+## 2026-05-23（セッション継続・Tool1残存バグ修正）
+
+- **対象**: tools/1-ai-satei.html
+- **フェーズ**: バグ修正
+- **改善内容**: `calcAndShowResult()`内の`html +=`残存バグを修正
+  - Line 6571: `html +=` がスコープに`html`変数が存在しない関数内に残っていた
+  - → `var _resultCard = document.getElementById('resultCard'); if(_resultCard) _resultCard.insertAdjacentHTML('beforeend', '...')` に変更
+  - JSシンタックスチェック: OK
+- **理由**: 前回の孤立行修正スクリプトが`html +=`に変換したが、その関数には`html`変数がなくRuntimeErrorになる状態だった
+- **コミット**: `8ac140c`
