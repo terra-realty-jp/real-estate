@@ -249,6 +249,7 @@
   <button class="tab-btn" onclick="switchTab('dm')">📋 相談準備リスト</button>
   <button class="tab-btn" onclick="switchTab('pipeline')">📌 進捗管理</button>
   <button class="tab-btn" onclick="switchTab('script')">❓ よくある質問</button>
+  <button class="tab-btn" onclick="switchTab('inage')" style="color:#c9a84c">🏚 稲毛団地チェック</button>
 </div>
 
 <!-- スコアリングタブ -->
@@ -4337,6 +4338,115 @@
 </div>
 </div>
 
+<!-- 稲毛団地チェッカータブ -->
+<div id="tab-inage" class="tab-content">
+<div class="main">
+  <h1 class="page-title">稲毛区<span>団地・古い戸建てチェッカー</span></h1>
+  <p class="page-desc">管理費・修繕積立金・築年数・建替え計画などを入力すると、「今売るべきか・賃貸に出すか・待つか」をスコアで診断します。稲毛団地をはじめとした昭和40〜50年代の物件に特化しています。</p>
+
+  <div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:16px 20px;margin-bottom:28px;font-size:13px;color:var(--text-muted);line-height:1.7">
+    <strong style="color:var(--gold)">稲毛区の状況：</strong>稲毛団地（築50年超）をはじめ、区内には昭和40〜50年代の公団分譲・戸建てが多く残っています。管理費・修繕積立金の上昇、建替え計画の不透明さ、相続による空き家化——今まさに「どうするか」を決める時期が来ています。
+  </div>
+
+  <div class="form-card" style="margin-bottom:24px">
+    <div class="form-section-title">物件の基本情報</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>築年数<span class="req">*</span></label>
+        <input type="number" id="ic_age" placeholder="例: 52（年）" min="0" max="100" oninput="calcInageChecker()">
+      </div>
+      <div class="form-group">
+        <label>物件種別<span class="req">*</span></label>
+        <select id="ic_type" onchange="calcInageChecker()">
+          <option value="">選択してください</option>
+          <option value="danchi">公団・分譲団地（マンション）</option>
+          <option value="kodate">一戸建て</option>
+          <option value="kodan_kodate">公団戸建て（テラスハウス等）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>月額管理費（円）<span style="color:#888;font-size:11px"> 一戸建ての場合は0</span></label>
+        <input type="number" id="ic_kanrihi" placeholder="例: 15000" min="0" oninput="calcInageChecker()">
+      </div>
+      <div class="form-group">
+        <label>月額修繕積立金（円）<span style="color:#888;font-size:11px"> 一戸建ての場合は0</span></label>
+        <input type="number" id="ic_tsumitate" placeholder="例: 12000" min="0" oninput="calcInageChecker()">
+      </div>
+      <div class="form-group">
+        <label>建替え計画の有無</label>
+        <select id="ic_rebuild" onchange="calcInageChecker()">
+          <option value="none">なし（予定なし）</option>
+          <option value="discussing">検討・話し合い中</option>
+          <option value="decided">建替え決定済み</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>賃貸に出せそうか</label>
+        <select id="ic_rent" onchange="calcInageChecker()">
+          <option value="yes">需要ありそう（駅近・間取りが標準的）</option>
+          <option value="maybe">わからない</option>
+          <option value="no">難しそう（駅遠・老朽化が激しい）</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:16px">
+      <label>稲毛区内のエリア（任意）</label>
+      <select id="ic_area" onchange="calcInageChecker()">
+        <option value="">選択しない</option>
+        <option value="anakawa">穴川（モノレール沿線）</option>
+        <option value="konakadai">小仲台</option>
+        <option value="tendai">天台</option>
+        <option value="naganuma">長沼町</option>
+        <option value="sakusabe">作草部</option>
+        <option value="inage_honcho">稲毛本町</option>
+        <option value="other">その他の稲毛区内</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="ic-result" style="display:none">
+    <div id="ic-hero" style="border-radius:16px;padding:28px 32px;margin-bottom:24px;text-align:center">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;opacity:0.8" id="ic-verdict-label">診断結果</div>
+      <div style="font-size:42px;font-weight:900;margin-bottom:8px;line-height:1.1" id="ic-verdict">—</div>
+      <div style="font-size:14px;opacity:0.85;line-height:1.7" id="ic-verdict-sub"></div>
+    </div>
+
+    <div style="background:var(--dark2);border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:20px 24px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px">スコア詳細</div>
+      <div id="ic-score-bars"></div>
+    </div>
+
+    <div style="background:var(--dark2);border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:20px 24px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--gold)">解釈ガイド</div>
+      <div id="ic-guide" style="font-size:13px;color:var(--text-muted);line-height:1.8"></div>
+    </div>
+
+    <div style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:20px 24px;margin-bottom:28px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">稲毛区の行政支援情報</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
+        <div>・<strong>千葉市空き家活用補助金</strong>：空き家を改修して賃貸・売却する場合に最大100万円の補助（要問い合わせ）</div>
+        <div>・<strong>相続登記義務化</strong>：2024年4月より相続登記が義務化。未登記のまま放置すると10万円以下の過料</div>
+        <div>・<strong>稲毛区役所 まちづくり課</strong>：空き家の相談窓口あり。管理不全空き家に関する相談も受付</div>
+        <div>・<strong>固定資産税の特例撤廃リスク</strong>：居住用として認定されなくなると固定資産税が最大6倍に</div>
+      </div>
+    </div>
+
+    <div style="background:#1a1812;border-radius:16px;padding:28px;text-align:center">
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:8px">稲毛区専門のTERRAに相談する</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:20px;line-height:1.7">このスコアと入力内容を持って、無料相談してみませんか？<br>稲毛区の取引実績を持つスタッフが対応します。</div>
+      <a id="ic-cta-btn" href="#" style="display:inline-flex;align-items:center;gap:8px;background:#c9a84c;color:#000;border-radius:10px;padding:13px 28px;font-size:14px;font-weight:700;text-decoration:none">
+        稲毛区専門の無料相談をする
+      </a>
+    </div>
+  </div>
+
+  <div id="ic-placeholder" style="background:var(--dark2);border:1px dashed rgba(0,0,0,0.15);border-radius:12px;padding:40px;text-align:center;color:var(--text-muted);font-size:14px">
+    ↑ 上の項目を入力すると診断結果が表示されます
+  </div>
+
+</div>
+</div>
+
 <!-- 案件登録モーダル -->
 <div class="modal-overlay" id="dealModal" style="display:none;" onclick="closeDealModal(event)">
   <div class="modal" onclick="event.stopPropagation()">
@@ -6358,12 +6468,131 @@ function toggleFAQ(i) {
 
 // ===== タブ切替 =====
 function switchTab(tab) {
-  const tabs = ['score','dm','pipeline','script'];
+  const tabs = ['score','dm','pipeline','script','inage'];
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', tabs[i]===tab));
   tabs.forEach(t => document.getElementById('tab-'+t).classList.toggle('active', t===tab));
   if(tab==='pipeline') renderPipeline();
   if(tab==='dm') buildPrepList();
   if(tab==='script') buildFAQ();
+}
+
+// ===== 稲毛団地チェッカー =====
+function calcInageChecker() {
+  var age = parseInt(document.getElementById('ic_age').value) || 0;
+  var type = document.getElementById('ic_type').value;
+  var kanrihi = parseInt(document.getElementById('ic_kanrihi').value) || 0;
+  var tsumitate = parseInt(document.getElementById('ic_tsumitate').value) || 0;
+  var rebuild = document.getElementById('ic_rebuild').value;
+  var rent = document.getElementById('ic_rent').value;
+  var area = document.getElementById('ic_area').value;
+
+  if (!type || age < 1) {
+    document.getElementById('ic-result').style.display = 'none';
+    document.getElementById('ic-placeholder').style.display = 'block';
+    return;
+  }
+
+  // ---- スコア計算（各0〜10点、合計50点満点） ----
+  // 1. 築年数スコア（古いほど高い）
+  var ageScore = age >= 55 ? 10 : age >= 45 ? 8 : age >= 35 ? 5 : age >= 25 ? 3 : 1;
+
+  // 2. 月額費用スコア（管理費+積立金の合計）
+  var monthlyTotal = kanrihi + tsumitate;
+  var costScore = monthlyTotal >= 70000 ? 10 : monthlyTotal >= 50000 ? 8 : monthlyTotal >= 30000 ? 5 : monthlyTotal >= 10000 ? 3 : 1;
+
+  // 3. 建替え計画スコア
+  var rebuildScore = rebuild === 'decided' ? 10 : rebuild === 'discussing' ? 6 : 2;
+
+  // 4. 賃貸難易度スコア（難しいほど売却推奨）
+  var rentScore = rent === 'no' ? 8 : rent === 'maybe' ? 5 : 2;
+
+  // 5. 物件種別スコア（団地の方が流動性リスク高め）
+  var typeScore = type === 'danchi' ? 7 : type === 'kodan_kodate' ? 5 : 3;
+
+  var total = ageScore + costScore + rebuildScore + rentScore + typeScore;
+
+  // ---- エリア補正 ----
+  var areaBonus = 0;
+  if (area === 'anakawa' || area === 'konakadai') areaBonus = 3; // 需要高く売りやすい
+  if (area === 'sakusabe' || area === 'tendai') areaBonus = 0;
+  if (area === 'other') areaBonus = -2;
+
+  // ---- 判定 ----
+  var adjustedTotal = total;
+  var verdict, verdictSub, bgColor, guide;
+
+  if (total >= 33) {
+    verdict = '今が売りどきです';
+    verdictSub = '物件の価値が下がる前に、早めの売却検討をおすすめします';
+    bgColor = 'linear-gradient(135deg,#7f1d1d,#991b1b)';
+    guide = '築年数・管理コスト・建替えリスクのいずれかが高い水準にあります。' +
+      '稲毛区では築50年超の公団住宅の価値が今後さらに下落する可能性があります。' +
+      (areaBonus > 0 ? '一方、お選びのエリアは買い手需要が比較的高いため、今なら相場に近い価格で売却できる可能性があります。' : '') +
+      '「今すぐ売る」と決めなくても、まず査定だけ取って相場を把握することをおすすめします。';
+  } else if (total >= 20) {
+    verdict = '賃貸活用も検討できます';
+    verdictSub = '売却か賃貸か、両方の可能性を比べてみましょう';
+    bgColor = 'linear-gradient(135deg,#78350f,#92400e)';
+    guide = '管理コストや老朽化は気になりますが、まだ選択肢が複数あります。' +
+      '賃貸に出す場合は「入居者がつくか」「リフォーム費用に見合うか」を確認してください。' +
+      '売却する場合は仲介手数料・譲渡所得税の計算も合わせて行うと判断しやすくなります。';
+  } else {
+    verdict = 'もう少し様子を見てもよさそうです';
+    verdictSub = '物件の状態・市場環境を引き続きチェックしましょう';
+    bgColor = 'linear-gradient(135deg,#14532d,#166534)';
+    guide = '現時点では管理コストも低く、建替えリスクも低い状態です。' +
+      'ただし稲毛区全体で高齢化・人口減少が進んでいるため、数年後に同じ判断ができるとは限りません。' +
+      '年に1度は相場チェックを行い、市場の変化を見逃さないようにしましょう。';
+  }
+
+  // ---- 表示 ----
+  var resultEl = document.getElementById('ic-result');
+  var placeholderEl = document.getElementById('ic-placeholder');
+  resultEl.style.display = 'block';
+  placeholderEl.style.display = 'none';
+
+  var hero = document.getElementById('ic-hero');
+  hero.style.background = bgColor;
+  hero.style.color = '#fff';
+  document.getElementById('ic-verdict').textContent = verdict;
+  document.getElementById('ic-verdict-sub').textContent = verdictSub;
+
+  var scores = [
+    { label: '築年数リスク', score: ageScore, note: age + '年築' },
+    { label: '月額費用負担', score: costScore, note: monthlyTotal > 0 ? '月' + (monthlyTotal/10000).toFixed(1) + '万円' : '管理費なし' },
+    { label: '建替えリスク', score: rebuildScore, note: rebuild === 'decided' ? '建替え決定' : rebuild === 'discussing' ? '検討中' : '予定なし' },
+    { label: '賃貸転用難度', score: rentScore, note: rent === 'no' ? '難しい' : rent === 'maybe' ? '不明' : '需要あり' },
+    { label: '物件流動性', score: typeScore, note: type === 'danchi' ? '団地' : type === 'kodan_kodate' ? '公団戸建て' : '一戸建て' }
+  ];
+
+  var barsHtml = scores.map(function(s) {
+    var pct = (s.score / 10) * 100;
+    var barColor = s.score >= 8 ? '#ef4444' : s.score >= 5 ? '#f59e0b' : '#22c55e';
+    return '<div style="margin-bottom:12px">' +
+      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">' +
+      '<span>' + s.label + '</span>' +
+      '<span style="color:var(--text-muted)">' + s.note + ' <strong style="color:var(--text)">' + s.score + '/10</strong></span>' +
+      '</div>' +
+      '<div style="height:8px;background:var(--dark3);border-radius:4px;overflow:hidden">' +
+      '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:4px;transition:width 0.5s ease"></div>' +
+      '</div></div>';
+  }).join('');
+  barsHtml += '<div style="font-size:12px;color:var(--text-muted);margin-top:8px;border-top:1px solid rgba(0,0,0,0.06);padding-top:8px">合計スコア: <strong>' + total + '/50</strong>（33以上：売却推奨 / 20〜32：要検討 / 19以下：様子見）</div>';
+  document.getElementById('ic-score-bars').innerHTML = barsHtml;
+  document.getElementById('ic-guide').textContent = guide;
+
+  // CTA URL
+  var ctaBody = '【稲毛区 団地・古い戸建て 相談】\n\n' +
+    '診断結果：' + verdict + '（スコア' + total + '/50）\n' +
+    '築年数：' + age + '年\n' +
+    '物件種別：' + (type === 'danchi' ? '公団・分譲団地' : type === 'kodan_kodate' ? '公団戸建て' : '一戸建て') + '\n' +
+    '月額費用：' + (monthlyTotal > 0 ? (monthlyTotal/10000).toFixed(1) + '万円/月' : 'なし') + '\n' +
+    'エリア：' + (area || '未指定') + '\n\n' +
+    'ご相談内容：';
+  document.getElementById('ic-cta-btn').href =
+    'mailto:info@terra-realty.jp?subject=稲毛区団地チェッカー相談（スコア' + total + '）&body=' + encodeURIComponent(ctaBody);
+
+  try { logCardUsage('card-inage-checker', 'calc'); } catch(e) {}
 }
 
 // Escape key でモーダルを閉じる
