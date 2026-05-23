@@ -308,6 +308,94 @@ try { new Function(combined); console.log('JS OK'); } catch(e) { console.error('
 
 ---
 
+## 実装ループ（トークンが尽きるまで繰り返す）
+
+**このセクションを毎ループ開始時に読み、次のアクションを自律判断すること。**
+
+### ループ開始時の確認手順
+
+```bash
+git status && git branch
+git fetch origin
+git log origin/dev --oneline -5
+tail -50 /home/sishizaw/real-estate-project/improvement-log.md
+```
+
+### 優先順位（この順番を守る）
+
+1. **重大バグ・動作不良** → 最優先で修正
+2. **施策① 稲毛区相場マップ** (`feature/inage-map`) → /inage/index.html + /inage/map.html
+3. **施策② 稲毛団地チェッカー** (`feature/inage-checker`) → /tools/2-akiya-hunter.html に追加
+4. **施策③ Q&A掲示板** (`feature/qa-board`) → /inage/qa.html
+5. **施策⑤ ローカルマッチング** (`feature/local-matching`) → /tools/3-owner-direct.html 改修
+6. **施策④ メール通知** (`feature/email-notify`) → /inage/notify.html
+
+### 1サイクルの手順
+
+1. 現在のfeatureブランチで作業中の機能を確認
+2. 未実装の部分を1つ選んで実装
+3. JS構文チェック（必須）
+4. `git add [ファイル名]` → `git commit` → `git push`
+5. improvement-log.md に記録
+6. 次の実装へ。止まらない
+
+### 各サイクル後に必ず記録（improvement-log.md）
+
+```
+## YYYY-MM-DD HH:MM
+
+- **対象**: ファイル名
+- **施策**: 施策①〜⑤
+- **実装内容**: 何をどう作ったか
+- **次のアクション**: 次に何をするか
+```
+
+---
+
+## 価格算定の現状と改善ロードマップ
+
+### 現在の問題点
+
+**現在の実装:** `AREA_UNIT['chiba'] = 350,000円/㎡` の固定値1つで千葉県全域を計算。
+
+これは正確ではない。理由：
+- 千葉県全域（市川・船橋・銚子・館山）を一律に扱っている
+- 稲毛区の住宅地実勢は約16〜20万円/㎡（国土交通省2024年データ）で、現在の35万円は約2倍の過大評価
+- 長沼町・天台・穴川など町丁目間の価格差（最大30%）が反映されない
+
+### Phase 1: 稲毛区専用の基準単価を追加（即実装可能）
+
+`AREA_UNIT` に `chiba_inage_*` キーを追加し、町丁目別の実勢に基づく値を設定する。
+
+| キー | 基準単価（㎡） | 対象エリア |
+|------|-------------|----------|
+| `chiba_inage_anakai` | 210,000円 | 穴川・モノレール沿線 |
+| `chiba_inage_kodai` | 195,000円 | 小仲台・天台 |
+| `chiba_inage_naganuma` | 185,000円 | 長沼町・稲毛本町 |
+| `chiba_inage_other` | 175,000円 | 稲毛区その他 |
+
+これは国土交通省公示地価（2024年）と取引事例から導出した近似値。
+
+### Phase 2: 施策①完成後（実取引データで動的更新）
+
+`inage_properties` テーブルに実取引データが蓄積されたら：
+- 町丁目 × 物件種別 × 築年帯 の組み合わせで実測 `price_per_sqm` を計算
+- AREA_UNITの静的値をSupabaseの集計結果で上書き
+- 「この計算に使用した実取引件数：○件」を結果に表示（信頼性の可視化）
+
+### Phase 3: ユーザー報告データの活用（6ヶ月後）
+
+通知登録ユーザーへのアンケート「実際にいくらで売れましたか？」で成約データを収集。
+公的データ（国土交通省）+ TERRA独自データ（成約報告）の2層構造で精度を上げる。
+
+### 重要な設計方針
+
+**ツールの役割は「正確な査定」ではなく「相場感の取得と相談動機づけ」。**
+精度を上げながらも「より正確な価格はTERRAに相談」という導線は維持する。
+誤差±20%の概算でも、「自分のエリアの相場感が初めてわかった」という価値は十分ある。
+
+---
+
 ## 実装ルール
 
 - **Supabaseアクセスは `supabase-client.js` 経由のみ**。直接fetchでSupabaseを呼ばない
