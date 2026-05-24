@@ -369,38 +369,41 @@ const DEMAND_DATA = {
   '稲毛本町': { house: 5, mansion: 8, land: 3 },
 };
 
-// -------- 稲毛区 町丁目別 価格データ（国土交通省2022-2024年取引データ参考値）--------
+// -------- 稲毛区 町丁目別 価格データ（2024〜2025年参考値）--------
+// 座標はOpenStreetMap Overpass APIで取得した駅座標を基準に補正済み
+// JR稲毛駅:35.6371,140.0926 / モノレール穴川駅:35.6396,140.1119
+// モノレール天台駅:35.6314,140.1128 / 作草部駅:35.6257,140.1153
 const TOWN_DATA = [
   {
     id: 'anakawa', name: '穴川',
-    lat: 35.6202, lng: 140.0872,  // 修正: モノレール穴川駅(140.0897)付近の地区中心
-    sqm: 200000,   // 円/㎡ 中央値（2025年参考値）
+    lat: 35.6382, lng: 140.1092,  // モノレール穴川駅(35.6396,140.1119)南西の住宅地
+    sqm: 200000,
     trend: 'up', trendLabel: '↑ 上昇',
     trades: 42,
     types: { house: 196000, mansion: 212000, land: 186000 },
-    note: 'モノレール穴川駅周辺。新築マンション供給が多く区内最高値帯。'
+    note: 'モノレール穴川駅徒歩圏。新築マンション供給多く区内最高値帯。'
   },
   {
     id: 'konakadai', name: '小仲台',
-    lat: 35.6388, lng: 140.0995,
+    lat: 35.6455, lng: 140.1025,  // 稲毛区中北部の閑静な住宅街
     sqm: 190000,
     trend: 'up', trendLabel: '↑ 上昇',
     trades: 38,
     types: { house: 187000, mansion: 202000, land: 176000 },
-    note: '閑静な住宅街。千葉大学への近さから安定した需要。'
+    note: '閑静な住宅街。モノレール沿線エリアへのアクセスも良好。'
   },
   {
     id: 'tendai', name: '天台',
-    lat: 35.6402, lng: 140.0872,
+    lat: 35.6315, lng: 140.1118,  // モノレール天台駅(35.6314,140.1128)直近
     sqm: 176000,
     trend: 'flat', trendLabel: '→ 横ばい',
     trades: 35,
     types: { house: 173000, mansion: 186000, land: 164000 },
-    note: '千葉大学・千葉県立保健医療大学周辺の住宅地。'
+    note: '千葉県立保健医療大学周辺。モノレール天台駅徒歩圏の住宅地。'
   },
   {
     id: 'naganuma', name: '長沼町',
-    lat: 35.6248, lng: 140.1028,
+    lat: 35.6388, lng: 140.1005,  // JR稲毛駅(35.6371,140.0926)東側の住宅密集地
     sqm: 172000,
     trend: 'up', trendLabel: '↑ 上昇',
     trades: 51,
@@ -409,16 +412,16 @@ const TOWN_DATA = [
   },
   {
     id: 'sakusabe', name: '作草部',
-    lat: 35.6462, lng: 140.0918,
+    lat: 35.6268, lng: 140.1143,  // モノレール作草部駅(35.6257,140.1153)北側
     sqm: 166000,
     trend: 'flat', trendLabel: '→ 横ばい',
     trades: 22,
     types: { house: 164000, mansion: null, land: 156000 },
-    note: '区北部。比較的広い一戸建てが多い。'
+    note: 'モノレール作草部駅周辺。比較的広い一戸建てが多い。'
   },
   {
     id: 'inage_honcho', name: '稲毛本町',
-    lat: 35.6215, lng: 140.0918,  // 修正: JR稲毛駅(35.6244, 140.0900)南側に近づける
+    lat: 35.6352, lng: 140.0928,  // JR稲毛駅(35.6371,140.0926)直近
     sqm: 185000,
     trend: 'up', trendLabel: '↑ 上昇',
     trades: 29,
@@ -427,7 +430,7 @@ const TOWN_DATA = [
   },
   {
     id: 'miyanogi', name: '宮野木町',
-    lat: 35.6488, lng: 140.0715,  // 千葉北IC北側・花見川沿いの稲毛区北西部
+    lat: 35.6488, lng: 140.0715,  // 千葉北IC付近・稲毛区北西部
     sqm: 156000,
     trend: 'flat', trendLabel: '→ 横ばい',
     trades: 18,
@@ -436,25 +439,25 @@ const TOWN_DATA = [
   },
   {
     id: 'midori', name: '緑町',
-    lat: 35.6295, lng: 140.1082,
+    lat: 35.6418, lng: 140.1012,  // JR稲毛駅北東の住宅地
     sqm: 172000,
     trend: 'up', trendLabel: '↑ 上昇',
     trades: 24,
     types: { house: 170000, mansion: 180000, land: 160000 },
-    note: 'JR稲毛駅北東エリア。生活利便性が高い。'
+    note: 'JR稲毛駅北東。買い物・学校が揃う生活利便性の高いエリア。'
   },
   {
     id: 'todoroki', name: '轟町',
-    lat: 35.6328, lng: 140.1118,
+    lat: 35.6338, lng: 140.1135,  // 天台・穴川間のモノレール沿線
     sqm: 176000,
     trend: 'up', trendLabel: '↑ 上昇',
     trades: 19,
     types: { house: 173000, mansion: 185000, land: 163000 },
-    note: '稲毛区東部。京成稲毛駅周辺。'
+    note: '稲毛区南東部。モノレール沿線の住宅地。'
   },
   {
     id: 'hagidai', name: '萩台町',
-    lat: 35.6472, lng: 140.0862,
+    lat: 35.6478, lng: 140.0862,  // 稲毛区北部・JR稲毛駅北西
     sqm: 158000,
     trend: 'down', trendLabel: '↓ 軟調',
     trades: 14,
@@ -463,7 +466,7 @@ const TOWN_DATA = [
   },
   {
     id: 'chigusadai', name: '千草台',
-    lat: 35.6435, lng: 140.1032,
+    lat: 35.6438, lng: 140.1108,  // モノレール スポーツセンター駅(35.6432,140.1162)南西
     sqm: 161000,
     trend: 'flat', trendLabel: '→ 横ばい',
     trades: 16,
@@ -472,7 +475,7 @@ const TOWN_DATA = [
   },
   {
     id: 'kashiwadai', name: '柏台',
-    lat: 35.6412, lng: 140.1065,
+    lat: 35.6440, lng: 140.1065,  // 小仲台・千草台間の住宅地
     sqm: 163000,
     trend: 'flat', trendLabel: '→ 横ばい',
     trades: 12,
@@ -504,7 +507,7 @@ function sqmToTsubo(sqm) {
 }
 
 // マップ初期化
-var map = L.map('map').setView([35.632, 140.093], 13);
+var map = L.map('map').setView([35.636, 140.102], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   maxZoom: 18
