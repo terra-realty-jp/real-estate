@@ -13864,11 +13864,19 @@ renderPipeline();
   renderHistPanel();
 })();
 
-// ── URLハッシュからカードを自動展開 ──
+// ── URLハッシュからカードまたはタブを自動展開 ──
 (function(){
   function openFromHash(){
     var hash=location.hash.slice(1);
     if(!hash)return;
+    // タブ切り替え: #tab-inage など
+    if(hash.startsWith('tab-')){
+      var tabName=hash.replace(/^tab-/,'');
+      if(typeof switchTab==='function') switchTab(tabName);
+      var el=document.getElementById(hash);
+      if(el) setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'start'});},200);
+      return;
+    }
     var el=document.getElementById(hash);
     if(!el)return;
     if(el.classList&&el.classList.contains('card')&&!el.classList.contains('open')){

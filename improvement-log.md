@@ -4773,3 +4773,14 @@
   3. 施策⑤ ローカルマッチング（Tool3「稲毛区需要」タブ）: 9エリア×3種別の買い手候補数表示・需要サマリーテーブル
 - **完了ブランチ**: feature/qa-board, feature/email-notify, feature/local-matching → すべてdevにマージ済み
 - **次のアクション**: devをmainにマージして本番リリース、またはPhase1価格算定改善（稲毛区専用AREA_UNIT追加）
+
+## 2026-05-24（Tool1 稲毛区価格精度改善）
+
+- **対象**: tools/1-ai-satei.html
+- **フェーズ**: 稲毛区ローカライゼーション Phase 1 価格精度
+- **改善内容**:
+  - 千葉県を単一値(350,000円/㎡)から稲毛区4サブエリアに細分化
+  - 追加エリア: chiba_inage(290k)・chiba_inage_anakai(310k)・chiba_inage_station(305k)・chiba_inage_other(250k)
+  - AREA_UNIT/AREA_LABEL/AREA_NEIGHBORS/AREA_HINT/プルダウンすべて更新
+  - 根拠: 国交省WebLand 2024年 稲毛区実勢地価(162,452円/㎡土地)、建物込みマンション実勢から試算
+- **ブランチ**: feature/inage-price → dev → main
