@@ -520,13 +520,15 @@ function renderMarkers() {
 
     var tsubo = sqmToTsubo(price);
     var typeLabel = currentFilter === 'house' ? '一戸建て' : currentFilter === 'mansion' ? 'マンション' : currentFilter === 'land' ? '土地' : '全種別';
+    var mailBody = encodeURIComponent('【稲毛区 物件査定希望】\n\nエリア：' + d.name + '\n物件種別：\n面積（㎡）：\n築年数：\nご相談内容：');
     circle.bindPopup(
       '<div class="popup-town">' + d.name + '</div>' +
       '<div class="popup-price">' + Math.round(price/10000).toLocaleString() + '<span class="popup-unit">万円/㎡</span></div>' +
       '<div class="popup-row"><span>坪単価目安</span><span><b>' + tsubo + '万円/坪</b></span></div>' +
       '<div class="popup-row"><span>直近トレンド</span><span>' + d.trendLabel + '</span></div>' +
       '<div class="popup-row"><span>種別</span><span>' + typeLabel + '</span></div>' +
-      '<div style="font-size:11px;color:#888;margin-top:8px;line-height:1.5">' + d.note + '</div>'
+      '<div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:10px;line-height:1.5">' + d.note + '</div>' +
+      '<a href="mailto:info@terra-realty.jp?subject=' + encodeURIComponent(d.name + 'の物件査定希望') + '&body=' + mailBody + '" style="display:block;background:#c9a84c;color:#000;text-align:center;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none">' + d.name + 'で無料査定する →</a>'
     );
 
     // 町名ラベル
