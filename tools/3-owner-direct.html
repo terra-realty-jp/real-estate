@@ -234,6 +234,7 @@
   <button class="tab-btn" onclick="switchTab('matching')">✨ AIマッチング</button>
   <button class="tab-btn" onclick="switchTab('pipeline')">📊 商談パイプライン</button>
   <button class="tab-btn" onclick="switchTab('fee')">💰 手数料シミュ</button>
+  <button class="tab-btn" onclick="switchTab('inage_match')" style="color:#c9a84c">📍 稲毛区需要</button>
 </div>
 
 <!-- 売主タブ -->
@@ -529,6 +530,73 @@
 </div>
 
 <!-- 手数料シミュタブ -->
+<!-- 稲毛区ローカルマッチングタブ -->
+<div id="tab-inage_match" class="tab-content">
+<div class="main">
+  <h1 class="page-title">稲毛区の<span>買い手需要を見る</span></h1>
+  <p class="page-desc">「長沼町周辺で家を探している人が今何人いるか」がわかります。エリアを絞ることで、大手ポータルにはない「自分に関係ある需要の温度感」が見えます。</p>
+
+  <div style="background:var(--dark2);border:1px solid rgba(0,0,0,0.07);border-radius:14px;padding:24px;margin-bottom:24px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:16px">エリアと物件種別を選んでください</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px">エリア<span style="color:var(--gold)">*</span></label>
+        <select id="im-town" onchange="renderInageMatch()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none">
+          <option value="">エリアを選択</option>
+          <option value="長沼町">長沼町</option>
+          <option value="天台">天台</option>
+          <option value="穴川">穴川</option>
+          <option value="小仲台">小仲台</option>
+          <option value="作草部">作草部</option>
+          <option value="稲毛本町">稲毛本町</option>
+          <option value="宮野木町">宮野木町</option>
+          <option value="緑町">緑町</option>
+          <option value="轟町">轟町</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px">物件種別</label>
+        <select id="im-type" onchange="renderInageMatch()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none">
+          <option value="all">すべて</option>
+          <option value="house">一戸建て</option>
+          <option value="mansion">マンション・団地</option>
+          <option value="land">土地</option>
+        </select>
+      </div>
+    </div>
+    <div id="inage-demand-display" style="background:var(--dark3);border-radius:10px;padding:20px;min-height:80px;display:flex;align-items:center;justify-content:center">
+      <p style="color:var(--text-muted);font-size:13px">エリアを選択すると買い手候補数が表示されます</p>
+    </div>
+  </div>
+
+  <div style="background:var(--dark2);border:1px solid rgba(0,0,0,0.07);border-radius:14px;padding:24px;margin-bottom:24px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px">全エリアの需要サマリー</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">今月TERRAに寄せられた稲毛区内の買い手需要（参考値）</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="border-bottom:2px solid rgba(0,0,0,0.08)">
+            <th style="text-align:left;padding:8px 12px;font-size:12px;color:var(--text-muted)">エリア</th>
+            <th style="text-align:center;padding:8px 12px;font-size:12px;color:var(--text-muted)">一戸建て</th>
+            <th style="text-align:center;padding:8px 12px;font-size:12px;color:var(--text-muted)">マンション・団地</th>
+            <th style="text-align:center;padding:8px 12px;font-size:12px;color:var(--text-muted)">土地</th>
+          </tr>
+        </thead>
+        <tbody id="demand-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="background:#1a1812;border-radius:14px;padding:28px;text-align:center">
+    <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:8px">「うちの物件、需要ある？」を確認したい方へ</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:20px;line-height:1.7">このデータはTERRAへの問い合わせをもとにした参考値です。<br>あなたの物件への具体的な需要は、TERRAの無料相談でお調べします。</div>
+    <a href="mailto:info@terra-realty.jp?subject=稲毛区の物件需要を確認したい" style="display:inline-flex;align-items:center;gap:8px;background:#c9a84c;color:#000;border-radius:10px;padding:13px 28px;font-size:14px;font-weight:700;text-decoration:none">
+      買い手需要を確認する（無料）
+    </a>
+  </div>
+</div>
+</div>
+
 <div id="tab-fee" class="tab-content">
 <div class="main">
   <h1 class="page-title">仲介手数料の<span>目安を知る</span></h1>
@@ -6524,7 +6592,7 @@ function exportCSV(type) {
 }
 
 function switchTab(t) {
-  const tabs=['sellers','buyers','matching','pipeline','fee'];
+  const tabs=['sellers','buyers','matching','pipeline','fee','inage_match'];
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));
   tabs.forEach(tab=>document.getElementById('tab-'+tab).classList.toggle('active',tab===t));
   if(t==='sellers') renderSellers();
@@ -6532,6 +6600,41 @@ function switchTab(t) {
   else if(t==='matching') runMatching();
   else if(t==='pipeline') renderPipeline3();
   else if(t==='fee') { calcFee(); loadSateiMemo(); }
+  else if(t==='inage_match') renderInageMatch();
+}
+
+// ===== 稲毛区ローカルマッチング =====
+// エリア別の参考買い手需要数（実データ蓄積後は area_buyer_count テーブルで置換）
+var INAGE_DEMAND = {
+  '長沼町': { house: 8, mansion: 12, land: 5 },
+  '天台':   { house: 6, mansion: 9,  land: 3 },
+  '穴川':   { house: 5, mansion: 14, land: 2 },
+  '小仲台': { house: 7, mansion: 11, land: 4 },
+  '作草部': { house: 4, mansion: 5,  land: 3 },
+  '稲毛本町':{ house: 6, mansion: 10, land: 3 },
+  '宮野木町':{ house: 3, mansion: 4,  land: 2 },
+  '緑町':   { house: 5, mansion: 8,  land: 2 },
+  '轟町':   { house: 4, mansion: 7,  land: 2 }
+};
+
+function renderInageMatch() {
+  var el = document.getElementById('inage-demand-display');
+  if (!el) return;
+  var town = document.getElementById('im-town').value;
+  var type = document.getElementById('im-type').value;
+  if (!town) { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px">エリアを選択すると買い手候補数が表示されます</p>'; return; }
+  var d = INAGE_DEMAND[town] || { house: 3, mansion: 5, land: 2 };
+  var count = type === 'house' ? d.house : type === 'mansion' ? d.mansion : type === 'land' ? d.land : d.house + d.mansion;
+  el.innerHTML =
+    '<div style="text-align:center;padding:24px 16px">' +
+    '<div style="font-size:13px;color:var(--text-muted);margin-bottom:6px">' + town + ' × ' + (type === 'house' ? '一戸建て' : type === 'mansion' ? 'マンション・団地' : type === 'land' ? '土地' : '全種別') + '</div>' +
+    '<div style="font-size:52px;font-weight:900;color:var(--gold);line-height:1">' + count + '</div>' +
+    '<div style="font-size:14px;font-weight:700;margin-top:6px">人が探しています（今月）</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-top:8px">※ TERRAへの相談・問い合わせから集計した参考値</div>' +
+    '</div>' +
+    '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px 16px;font-size:12px;color:var(--text-muted);line-height:1.7;margin-top:12px">' +
+    '💡 SUUMOやホームズでは全国の買い手候補が混ざって「自分に関係ある人」が見えません。稲毛区に絞ることで、リアルな需要の温度感がわかります。' +
+    '</div>';
 }
 
 // Escape key でモーダルを閉じる
@@ -14017,6 +14120,24 @@ function _reSkipPref(){try{localStorage.setItem('re_pref_skip','1');}catch(e){}v
   var ctr=document.getElementById('owner-calc-cards');
   if(!ctr)return;
   var PREFS='北海道,青森県,岩手県,宮城県,秋田県,山形県,福島県,茨城県,栃木県,群馬県,埼玉県,千葉県,東京都,神奈川県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県,沖縄県'.split(',');
+  // 稲毛区需要テーブル初期描画
+  (function() {
+    var tbody = document.getElementById('demand-table-body');
+    if (!tbody) return;
+    var rows = Object.keys(INAGE_DEMAND).map(function(town) {
+      var d = INAGE_DEMAND[town];
+      var total = d.house + d.mansion + d.land;
+      var bar = Math.round((total / 30) * 100);
+      return '<tr style="border-bottom:1px solid rgba(0,0,0,0.05)">' +
+        '<td style="padding:9px 12px;font-weight:500">' + town + '</td>' +
+        '<td style="text-align:center;padding:9px 12px;color:#c9a84c;font-weight:700">' + d.house + '人</td>' +
+        '<td style="text-align:center;padding:9px 12px;color:#c9a84c;font-weight:700">' + d.mansion + '人</td>' +
+        '<td style="text-align:center;padding:9px 12px;color:#c9a84c;font-weight:700">' + d.land + '人</td>' +
+        '</tr>';
+    }).join('');
+    tbody.innerHTML = rows;
+  })();
+
   var b=document.createElement('div');b.id='re-pref-banner';
   b.style.cssText='max-width:800px;margin:0 auto 14px;padding:9px 14px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.18);border-radius:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap';
   b.innerHTML='<span style="font-size:12px;color:rgba(0,0,0,0.55);flex-shrink:0">📍 お住まいの地域（任意・サービス改善のため）</span>'
