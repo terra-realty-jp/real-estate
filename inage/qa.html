@@ -570,7 +570,7 @@ function renderQA(data) {
   list.innerHTML = filtered.map(function(q, i) {
     var hasAnswer = q.answer && q.answer.length > 0;
     return '<div class="qa-card">' +
-      '<div class="qa-card-header" onclick="toggleQA(' + i + ')">' +
+      '<div class="qa-card-header" onclick="toggleQA(' + i + ', \'' + (q.id || '') + '\')">' +
         catBadge(q.category) +
         '<div style="flex:1">' +
           '<div class="qa-title">' + q.title + '</div>' +
@@ -598,11 +598,17 @@ function renderQA(data) {
   }).join('');
 }
 
-function toggleQA(i) {
+function toggleQA(i, qid) {
   var body = document.getElementById('qa-body-' + i);
   var arrow = document.getElementById('qa-arrow-' + i);
   var isOpen = body.classList.toggle('open');
   arrow.style.transform = isOpen ? 'rotate(180deg)' : '';
+  if (isOpen && qid && qid.indexOf('sample-') === -1) {
+    try {
+      var client = getSupabaseClient ? getSupabaseClient() : null;
+      if (client) client.rpc('increment_qa_view', { qid: qid }).catch(function() {});
+    } catch(e) {}
+  }
 }
 
 // ---- Supabaseから取得（接続できる場合） ----
