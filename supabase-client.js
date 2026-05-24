@@ -25,6 +25,7 @@ const _sbListeners = [];
 // ─────────────────────────────────────────────
 function sbIsConfigured() { return _sbOK; }
 function sbCurrentUser()  { return _sbUser; }
+function getSupabaseClient() { return _db; }
 
 // ─────────────────────────────────────────────
 // 初期化（各ツールのscript先頭で await sbInit() する）
