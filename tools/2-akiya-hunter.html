@@ -4416,6 +4416,11 @@
       <div id="ic-score-bars"></div>
     </div>
 
+    <div id="ic-cost-calc" style="display:none;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:12px;padding:20px 24px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:#dc2626">⏱️ 「待つことのコスト」試算</div>
+      <div id="ic-cost-rows" style="font-size:13px;color:var(--text);line-height:2"></div>
+    </div>
+
     <div style="background:var(--dark2);border:1px solid rgba(0,0,0,0.07);border-radius:12px;padding:20px 24px;margin-bottom:20px">
       <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--gold)">解釈ガイド</div>
       <div id="ic-guide" style="font-size:13px;color:var(--text-muted);line-height:1.8"></div>
@@ -6586,6 +6591,24 @@ function calcInageChecker() {
   barsHtml += '<div style="font-size:12px;color:var(--text-muted);margin-top:8px;border-top:1px solid rgba(0,0,0,0.06);padding-top:8px">合計スコア: <strong>' + total + '/50</strong>（33以上：売却推奨 / 20〜32：要検討 / 19以下：様子見）</div>';
   document.getElementById('ic-score-bars').innerHTML = barsHtml;
   document.getElementById('ic-guide').textContent = guide;
+
+  // 「待つことのコスト」試算（管理費+積立金がある場合のみ表示）
+  var costCalcEl = document.getElementById('ic-cost-calc');
+  if (monthlyTotal > 0) {
+    costCalcEl.style.display = 'block';
+    var annual = monthlyTotal * 12;
+    var cost5yr = Math.round(annual * 5 / 10000);
+    var cost10yr = Math.round(annual * 10 / 10000);
+    var declineRate = age >= 50 ? 4 : age >= 40 ? 2.5 : 1.5;
+    var rows = '<div>月額の維持費用（管理費＋積立金）: <strong>' + (monthlyTotal/10000).toFixed(1) + ' 万円/月</strong></div>' +
+      '<div>年間の維持費合計: <strong>' + (annual/10000).toFixed(1) + ' 万円/年</strong></div>' +
+      '<div>5年間のトータル維持費: <strong style="color:#dc2626">' + cost5yr + ' 万円</strong></div>' +
+      '<div>10年間のトータル維持費: <strong style="color:#dc2626">' + cost10yr + ' 万円</strong></div>' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;border-top:1px solid rgba(0,0,0,0.08);padding-top:6px">※ 築' + age + '年の物件は年間約' + declineRate + '%の価値下落が想定されます。5年待つだけで維持費＋価値下落のダブルパンチになる可能性があります。</div>';
+    document.getElementById('ic-cost-rows').innerHTML = rows;
+  } else {
+    costCalcEl.style.display = 'none';
+  }
 
   // CTA URL
   var ctaBody = '【稲毛区 団地・古い戸建て 相談】\n\n' +
