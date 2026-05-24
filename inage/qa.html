@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>稲毛区 不動産Q&A掲示板 | TERRA REALTY</title>
+  <meta name="description" content="稲毛区で家を売った体験談・賃貸経営の悩み・相続の疑問など、稲毛区住民の生の声を投稿・閲覧。TERRAが専門家として回答します。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "name": "稲毛区 不動産Q&A掲示板",
+    "description": "千葉市稲毛区の不動産に関する質問・体験談の掲示板。売却・相続・賃貸・購入の実例が集まります。"
+  }
+  </script>
+  <style>
+    :root {
+      --gold: #c9a84c; --gold-light: #e8c97a;
+      --dark: #f5f3ef; --dark2: #ffffff; --dark3: #ede9e3;
+      --text: #1a1917; --text-muted: #6b6058;
+      --green: #16a34a; --red: #dc2626; --blue: #1d4ed8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--dark); color: var(--text); }
+
+    .topnav {
+      background: #1a1812; border-bottom: 2px solid rgba(201,168,76,0.3);
+      padding: 14px 32px; display: flex; align-items: center; gap: 16px;
+    }
+    .back-link { color: var(--gold); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+    .back-link:hover { opacity: 0.75; }
+    .nav-title { font-size: 14px; color: rgba(255,255,255,0.5); }
+
+    .page-header {
+      background: linear-gradient(135deg,#1a1812 0%,#2d2515 100%);
+      padding: 36px 32px 32px; color: #fff;
+    }
+    .page-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .page-header h1 span { color: var(--gold); }
+    .page-header p { font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.7; max-width: 600px; }
+
+    .main { max-width: 860px; margin: 0 auto; padding: 32px 20px 80px; }
+
+    /* フィルターバー */
+    .filter-wrap {
+      background: var(--dark2); border: 1px solid rgba(0,0,0,0.07); border-radius: 12px;
+      padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+    }
+    .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .filter-label { font-size: 12px; color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+    .filter-chip {
+      padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.12);
+      background: none; font-size: 12px; font-family: inherit; cursor: pointer; color: var(--text);
+      transition: all 0.15s;
+    }
+    .filter-chip.active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 700; }
+    .filter-chip:hover:not(.active) { border-color: var(--gold); color: var(--gold); }
+
+    /* Q&Aカード */
+    .qa-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; }
+
+    .qa-card {
+      background: var(--dark2); border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 14px; overflow: hidden; transition: box-shadow 0.15s;
+    }
+    .qa-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+    .qa-card-header {
+      padding: 18px 20px 14px; cursor: pointer;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .qa-cat-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 3px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+    }
+    .cat-sell { background: rgba(220,38,38,0.1); color: var(--red); }
+    .cat-inherit { background: rgba(124,58,237,0.1); color: #7c3aed; }
+    .cat-rent { background: rgba(22,163,74,0.1); color: var(--green); }
+    .cat-buy { background: rgba(29,78,216,0.1); color: var(--blue); }
+    .cat-invest { background: rgba(201,168,76,0.15); color: #92400e; }
+
+    .qa-title { font-size: 15px; font-weight: 700; line-height: 1.45; flex: 1; }
+    .qa-meta {
+      padding: 0 20px 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    }
+    .qa-town { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
+    .qa-date { font-size: 11px; color: var(--text-muted); }
+    .qa-answered {
+      font-size: 11px; font-weight: 700; color: var(--green);
+      display: flex; align-items: center; gap: 3px;
+    }
+    .qa-pending { font-size: 11px; color: var(--text-muted); }
+
+    .qa-body {
+      border-top: 1px solid rgba(0,0,0,0.06); padding: 16px 20px;
+      display: none;
+    }
+    .qa-body.open { display: block; }
+    .qa-question-text { font-size: 13px; color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+
+    .qa-answer {
+      background: rgba(22,163,74,0.06); border-left: 3px solid var(--green);
+      border-radius: 0 8px 8px 0; padding: 14px 16px;
+    }
+    .qa-answer-label {
+      font-size: 11px; font-weight: 700; color: var(--green); margin-bottom: 8px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .qa-answer-text { font-size: 13px; line-height: 1.8; color: var(--text); }
+
+    /* 投稿フォーム */
+    .post-section {
+      background: var(--dark2); border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 14px; padding: 24px; margin-bottom: 32px;
+    }
+    .post-section h2 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .post-section .sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+
+    .form-row { margin-bottom: 16px; }
+    .form-row label { font-size: 12px; color: var(--text-muted); font-weight: 500; display: block; margin-bottom: 6px; }
+    .form-row label span.req { color: var(--gold); margin-left: 3px; }
+    .form-row select, .form-row input, .form-row textarea {
+      width: 100%; background: var(--dark3); border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 8px; padding: 10px 14px; color: var(--text);
+      font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s;
+    }
+    .form-row select:focus, .form-row input:focus, .form-row textarea:focus { border-color: var(--gold); }
+    .form-row textarea { min-height: 100px; resize: vertical; }
+    .form-row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+
+    .post-note { font-size: 11px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.7; }
+
+    .btn-submit {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--gold); color: #000; border: none;
+      padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-submit:hover { background: var(--gold-light); }
+    .btn-submit:disabled { background: rgba(0,0,0,0.1); color: rgba(0,0,0,0.3); cursor: not-allowed; }
+
+    #post-success {
+      display: none; background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.3);
+      border-radius: 10px; padding: 16px 20px; font-size: 13px; line-height: 1.7;
+    }
+    #post-success strong { color: var(--green); }
+
+    .empty-state {
+      text-align: center; padding: 48px 20px; color: var(--text-muted);
+    }
+    .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    @media(max-width:640px) {
+      .topnav, .page-header { padding-left: 16px; padding-right: 16px; }
+      .page-header h1 { font-size: 18px; }
+      .form-row-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="back-link">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    稲毛区トップ
+  </a>
+  <span class="nav-title">Q&A掲示板</span>
+</nav>
+
+<div class="page-header">
+  <h1>稲毛区 不動産<span>Q&A掲示板</span></h1>
+  <p>「天台で家を売った体験談」「稲毛団地の相続、どうした？」「穴川のアパート経営で困っていること」——稲毛区住民の生の声を投稿・閲覧できます。TERRAが専門家として回答します。</p>
+</div>
+
+<main class="main">
+
+  <!-- フィルター -->
+  <div class="filter-wrap">
+    <div class="filter-group">
+      <span class="filter-label">カテゴリ：</span>
+      <button class="filter-chip active" onclick="setFilter('cat','all',this)">すべて</button>
+      <button class="filter-chip" onclick="setFilter('cat','売却',this)">売却</button>
+      <button class="filter-chip" onclick="setFilter('cat','相続',this)">相続</button>
+      <button class="filter-chip" onclick="setFilter('cat','賃貸',this)">賃貸</button>
+      <button class="filter-chip" onclick="setFilter('cat','購入',this)">購入</button>
+      <button class="filter-chip" onclick="setFilter('cat','投資',this)">投資</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">エリア：</span>
+      <button class="filter-chip active" onclick="setFilter('town','all',this)">全エリア</button>
+      <button class="filter-chip" onclick="setFilter('town','長沼町',this)">長沼町</button>
+      <button class="filter-chip" onclick="setFilter('town','天台',this)">天台</button>
+      <button class="filter-chip" onclick="setFilter('town','穴川',this)">穴川</button>
+      <button class="filter-chip" onclick="setFilter('town','小仲台',this)">小仲台</button>
+    </div>
+  </div>
+
+  <!-- Q&A一覧 -->
+  <div class="qa-list" id="qa-list"></div>
+  <div id="qa-empty" class="empty-state" style="display:none">
+    <div class="icon">💬</div>
+    <p>このカテゴリ・エリアの投稿はまだありません。<br>最初の投稿者になってみませんか？</p>
+  </div>
+
+  <!-- 質問投稿フォーム -->
+  <div class="post-section">
+    <h2>質問・体験談を投稿する</h2>
+    <p class="sub">稲毛区の不動産について知りたいこと・経験したことを投稿してください。TERRAが1〜2営業日で回答します。投稿は匿名で公開されます（個人情報は含めないでください）。</p>
+
+    <div class="form-row-grid">
+      <div class="form-row" style="margin-bottom:0">
+        <label>カテゴリ<span class="req">*</span></label>
+        <select id="post-cat">
+          <option value="">選択してください</option>
+          <option value="売却">売却（家を売りたい・売った）</option>
+          <option value="相続">相続（実家・空き家をどうするか）</option>
+          <option value="賃貸">賃貸（貸したい・借りたい）</option>
+          <option value="購入">購入（家を買いたい）</option>
+          <option value="投資">投資（収益物件を検討中）</option>
+        </select>
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label>関連エリア（任意）</label>
+        <select id="post-town">
+          <option value="">稲毛区全般</option>
+          <option value="長沼町">長沼町</option>
+          <option value="天台">天台</option>
+          <option value="穴川">穴川</option>
+          <option value="小仲台">小仲台</option>
+          <option value="作草部">作草部</option>
+          <option value="稲毛本町">稲毛本町</option>
+          <option value="宮野木町">宮野木町</option>
+          <option value="緑町">緑町</option>
+          <option value="その他">その他の稲毛区内</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>タイトル（質問の要点）<span class="req">*</span></label>
+      <input type="text" id="post-title" placeholder="例: 稲毛団地を相続したが、売るべき？賃貸に出すべき？" maxlength="80">
+    </div>
+
+    <div class="form-row">
+      <label>詳細（状況・背景・具体的な質問）<span class="req">*</span></label>
+      <textarea id="post-body" placeholder="例: 義母が亡くなり、稲毛団地（築45年・管理費1.5万円・修繕積立金1.2万円）を相続しました。自分は賃貸暮らしなので使う予定がなく、どう活用するか悩んでいます。このまま持ち続けるのと売るのでは、10年でどれくらい差が出るか知りたいです。" maxlength="1000"></textarea>
+    </div>
+
+    <p class="post-note">
+      ※ 投稿内容は1〜2営業日以内にTERRAが確認し、問題がなければ公開されます。<br>
+      ※ 個人が特定できる情報（住所の番地・氏名・電話番号等）は含めないでください。<br>
+      ※ 投稿はTERRAが専門家として回答するための参考にします。
+    </p>
+
+    <button class="btn-submit" id="post-btn" onclick="submitPost()">投稿する</button>
+
+    <div id="post-success" style="margin-top:16px">
+      <strong>投稿ありがとうございます。</strong><br>
+      1〜2営業日以内に内容を確認し、公開いたします。TERRAからの回答もお待ちください。
+    </div>
+  </div>
+
+</main>
+
+<script src="../supabase-client.js"></script>
+<script>
+// ---- サンプルデータ（Supabaseが未接続のときのフォールバック）----
+var SAMPLE_QA = [
+  {
+    id: 'sample-1',
+    category: '相続',
+    town_name: '天台',
+    title: '親が亡くなり天台の一戸建て（築38年）を相続。売るか貸すか迷っています',
+    body: '父が3月に亡くなり、天台の一戸建て（4LDK・延床120㎡・築38年・ローンなし）を相続しました。自分は千葉市内の別の場所に住んでいて使う予定がありません。固定資産税が年間16万円かかっています。売却か賃貸か迷っていますが、古い家でも貸せるでしょうか？',
+    status: 'published',
+    created_at: '2026-05-10',
+    answer: '天台エリアは千葉大学への近さから賃貸需要が比較的安定しています。ただし築38年の木造一戸建てを賃貸に出すには、最低限のリフォーム（給湯器・トイレ・内装）で100〜200万円程度の費用が見込まれます。\n\n売却の場合、天台エリアの一戸建て（築35〜40年・120㎡）の成約実績は1,500〜2,200万円程度（土地値ベース）です。\n\n「空室リスクを取りたくない」「すぐ現金化したい」なら売却、「毎月の収入が欲しい」「将来戻る可能性がある」なら賃貸が向いています。まず査定を取ってから判断することをおすすめします。'
+  },
+  {
+    id: 'sample-2',
+    category: '売却',
+    town_name: '長沼町',
+    title: '長沼町のマンションを売ろうと思っているが、今が売りどきか知りたい',
+    body: '長沼町のマンション（2LDK・62㎡・築22年・8階・管理費1.6万円・積立金1.1万円）を所有しています。子どもが独立して夫婦2人には広すぎるので住み替えを考えています。相場が上がっているうちに売った方がいいのか、もう少し待つべきか迷っています。',
+    body: '長沼町のマンション（2LDK・62㎡・築22年・8階）を所有。子どもが独立して住み替えを検討中。今が売りどきか迷っています。',
+    status: 'published',
+    created_at: '2026-05-15',
+    answer: '稲毛区全体で2024年は前年比+2.1%の地価上昇が続いており、長沼町も同様の傾向です。ただし2025年以降は日銀の利上げ動向・人口動態の影響で上昇ペースが鈍化する可能性があります。\n\n築22年・8階・62㎡のマンションは稲毛区内でも流動性が高い条件です。現在の相場では2,000〜2,500万円程度の売出価格が想定されます。\n\n「もう少し待つ」よりも「今動いて次の物件を探す時間を確保する」方が、住み替え全体の満足度が高い傾向があります。まず無料査定で数字を確認してから判断されることをおすすめします。'
+  },
+  {
+    id: 'sample-3',
+    category: '投資',
+    town_name: '穴川',
+    title: '穴川エリアでワンルームマンションへの投資を検討。利回りの目安を教えてください',
+    body: '穴川エリアでワンルームマンション（1K・25㎡前後）への不動産投資を検討しています。モノレール沿線で都心通勤者の需要がありそうだと思っているのですが、実際の利回りはどのくらい期待できるでしょうか？また、稲毛区内で投資目的に向いているエリアはどこでしょうか？',
+    status: 'published',
+    created_at: '2026-05-18',
+    answer: '穴川エリアのワンルームマンションは、稲毛区内でも比較的投資適性が高いエリアです。モノレール穴川駅徒歩圏であれば、1K・25㎡の物件は月額5.5〜7万円程度の賃料が期待できます。\n\n表面利回りの目安：物件価格1,200万円・月額6万円の賃料なら表面利回り約6%。ただし管理費・固定資産税・空室期間を考慮すると実質利回りは4〜4.5%程度になります。\n\n稲毛区内での投資適性が高いエリア順：①穴川（モノレール沿線）②小仲台（千葉大学周辺・学生需要）③長沼町（JR稲毛駅近・ファミリー需要）。詳しい物件情報はTERRAの無料相談でご確認ください。'
+  }
+];
+
+// ---- フィルター状態 ----
+var filterCat = 'all';
+var filterTown = 'all';
+
+function setFilter(type, val, btn) {
+  if (type === 'cat') {
+    filterCat = val;
+    document.querySelectorAll('.filter-group:first-child .filter-chip').forEach(function(b) { b.classList.remove('active'); });
+  } else {
+    filterTown = val;
+    document.querySelectorAll('.filter-group:last-child .filter-chip').forEach(function(b) { b.classList.remove('active'); });
+  }
+  btn.classList.add('active');
+  renderQA(SAMPLE_QA);
+}
+
+// ---- カテゴリバッジ ----
+function catBadge(cat) {
+  var map = { '売却': 'cat-sell', '相続': 'cat-inherit', '賃貸': 'cat-rent', '購入': 'cat-buy', '投資': 'cat-invest' };
+  return '<span class="qa-cat-badge ' + (map[cat] || 'cat-sell') + '">' + cat + '</span>';
+}
+
+// ---- 日付フォーマット ----
+function fmtDate(str) {
+  return str ? str.slice(0, 10) : '';
+}
+
+// ---- Q&A描画 ----
+function renderQA(data) {
+  var filtered = data.filter(function(q) {
+    if (filterCat !== 'all' && q.category !== filterCat) return false;
+    if (filterTown !== 'all' && q.town_name !== filterTown) return false;
+    return true;
+  });
+
+  var list = document.getElementById('qa-list');
+  var empty = document.getElementById('qa-empty');
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = filtered.map(function(q, i) {
+    var hasAnswer = q.answer && q.answer.length > 0;
+    return '<div class="qa-card">' +
+      '<div class="qa-card-header" onclick="toggleQA(' + i + ')">' +
+        catBadge(q.category) +
+        '<div style="flex:1">' +
+          '<div class="qa-title">' + q.title + '</div>' +
+        '</div>' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;transition:transform 0.2s" id="qa-arrow-' + i + '"><path d="M6 9l6 6 6-6"/></svg>' +
+      '</div>' +
+      '<div class="qa-meta">' +
+        (q.town_name ? '<span class="qa-town">📍 ' + q.town_name + '</span>' : '') +
+        '<span class="qa-date">' + fmtDate(q.created_at) + '</span>' +
+        (hasAnswer
+          ? '<span class="qa-answered">✓ TERRAが回答済み</span>'
+          : '<span class="qa-pending">回答待ち</span>') +
+      '</div>' +
+      '<div class="qa-body" id="qa-body-' + i + '">' +
+        '<p class="qa-question-text">' + (q.body || q.title) + '</p>' +
+        (hasAnswer
+          ? '<div class="qa-answer">' +
+              '<div class="qa-answer-label">🏢 TERRA REALTYの回答</div>' +
+              '<div class="qa-answer-text">' + q.answer.replace(/\n/g, '<br>') + '</div>' +
+            '</div>'
+          : '<div style="font-size:13px;color:var(--text-muted);padding:8px 0">TERRAが回答を準備中です（1〜2営業日）</div>') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleQA(i) {
+  var body = document.getElementById('qa-body-' + i);
+  var arrow = document.getElementById('qa-arrow-' + i);
+  var isOpen = body.classList.toggle('open');
+  arrow.style.transform = isOpen ? 'rotate(180deg)' : '';
+}
+
+// ---- Supabaseから取得（接続できる場合） ----
+function loadFromSupabase() {
+  try {
+    var client = getSupabaseClient ? getSupabaseClient() : null;
+    if (!client) { renderQA(SAMPLE_QA); return; }
+    client
+      .from('qa_questions')
+      .select('*, qa_answers(*)')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .then(function(res) {
+        if (res.error || !res.data || res.data.length === 0) {
+          renderQA(SAMPLE_QA);
+          return;
+        }
+        var data = res.data.map(function(q) {
+          var ans = q.qa_answers && q.qa_answers.length > 0 ? q.qa_answers[0].body : null;
+          return Object.assign({}, q, { answer: ans });
+        });
+        renderQA(data);
+      })
+      .catch(function() { renderQA(SAMPLE_QA); });
+  } catch(e) {
+    renderQA(SAMPLE_QA);
+  }
+}
+
+// ---- 投稿処理 ----
+function submitPost() {
+  var cat = document.getElementById('post-cat').value;
+  var title = document.getElementById('post-title').value.trim();
+  var body = document.getElementById('post-body').value.trim();
+  var town = document.getElementById('post-town').value;
+
+  if (!cat) { alert('カテゴリを選択してください'); return; }
+  if (!title) { alert('タイトルを入力してください'); return; }
+  if (body.length < 20) { alert('詳細を20文字以上入力してください'); return; }
+
+  var btn = document.getElementById('post-btn');
+  btn.disabled = true;
+  btn.textContent = '送信中…';
+
+  var sessionId = (function() {
+    try {
+      var s = localStorage.getItem('inage_qa_session');
+      if (!s) { s = crypto.randomUUID(); localStorage.setItem('inage_qa_session', s); }
+      return s;
+    } catch(e) { return 'anon-' + Date.now(); }
+  })();
+
+  var record = { category: cat, title: title, body: body, town_name: town || null, session_id: sessionId, status: 'pending' };
+
+  try {
+    var client = getSupabaseClient ? getSupabaseClient() : null;
+    if (client) {
+      client.from('qa_questions').insert(record)
+        .then(function(res) {
+          if (res.error) { fallbackSubmit(); } else { showSuccess(); }
+        })
+        .catch(fallbackSubmit);
+    } else {
+      fallbackSubmit();
+    }
+  } catch(e) {
+    fallbackSubmit();
+  }
+
+  function fallbackSubmit() {
+    // Supabase未接続時はメール送信にフォールバック
+    var mailto = 'mailto:info@terra-realty.jp?subject=' + encodeURIComponent('【Q&A投稿】' + title) +
+      '&body=' + encodeURIComponent(
+        '【稲毛区Q&A投稿】\n\nカテゴリ：' + cat + '\nエリア：' + (town || '未指定') +
+        '\nタイトル：' + title + '\n\n' + body
+      );
+    window.location.href = mailto;
+    showSuccess();
+  }
+
+  function showSuccess() {
+    btn.style.display = 'none';
+    document.getElementById('post-success').style.display = 'block';
+    document.getElementById('post-cat').value = '';
+    document.getElementById('post-title').value = '';
+    document.getElementById('post-body').value = '';
+    document.getElementById('post-town').value = '';
+  }
+}
+
+// 初期描画
+loadFromSupabase();
+</script>
+
+</body>
+</html>
