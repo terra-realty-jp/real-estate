@@ -49,6 +49,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="window._noSupabase=true"></script>
+  <script src="../supabase-client.js"></script>
   <style>
     :root {
       --gold: #c9a84c; --gold-light: #e8c97a;
@@ -207,6 +209,10 @@
   <div class="data-badge">
     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
     国土交通省「不動産取引価格情報」を使用
+  </div>
+  <div class="data-badge" id="live-price-badge" style="display:none;background:rgba(29,78,216,0.1);border-color:rgba(29,78,216,0.25);color:#1d4ed8;margin-top:4px">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+    <span id="live-price-text">最新データ読込中…</span>
   </div>
 </div>
 
@@ -613,6 +619,32 @@ function highlightFromUrl() {
 renderMarkers();
 renderTable();
 highlightFromUrl();
+
+// Supabaseから最新相場データを取得してTOWN_DATAを更新
+(function() {
+  if (typeof sbGetTownPrices !== 'function') return;
+  var townNames = TOWN_DATA.map(function(t) { return t.name; });
+  sbGetTownPrices(townNames).then(function(liveData) {
+    if (!liveData) return;
+    var maxYear = 0, maxQ = 0, updated = false;
+    TOWN_DATA.forEach(function(t) {
+      var d = liveData[t.name];
+      if (!d) return;
+      if (d.house)   { t.types.house   = d.house;   updated = true; }
+      if (d.mansion) { t.types.mansion = d.mansion; updated = true; }
+      if (d.land)    { t.types.land    = d.land;    updated = true; }
+      if (d.sqm)     { t.sqm           = d.sqm;     updated = true; }
+      if (d.year > maxYear || (d.year === maxYear && d.quarter > maxQ)) { maxYear = d.year; maxQ = d.quarter; }
+    });
+    if (!updated) return;
+    renderMarkers();
+    renderTable();
+    var badge = document.getElementById('live-price-badge');
+    var badgeText = document.getElementById('live-price-text');
+    if (badge) badge.style.display = 'inline-flex';
+    if (badgeText && maxYear) badgeText.textContent = '最新データ反映済（' + maxYear + '年第' + maxQ + '四半期）';
+  }).catch(function() {});
+})();
 
 // Supabaseから実需要数を取得してDEMAND_DATAを更新
 (function() {
