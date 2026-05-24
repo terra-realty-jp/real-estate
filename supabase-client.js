@@ -118,6 +118,42 @@ async function sbDelete(table, id) {
 }
 
 // ─────────────────────────────────────────────
+// 稲毛区 買い手候補数（匿名集計）
+// ─────────────────────────────────────────────
+// area_buyer_count テーブルから町丁目×物件種別の件数を取得（認証不要・RLS SELECT許可）
+async function sbGetBuyerCount(townName, propertyType) {
+  if (!_sbOK || !_db) return null;
+  try {
+    let q = _db.from('area_buyer_count').select('id', { count: 'exact', head: true }).eq('town_name', townName);
+    if (propertyType && propertyType !== 'all') q = q.eq('property_type', propertyType);
+    const { count, error } = await q;
+    if (error) { console.warn('[Supabase] sbGetBuyerCount:', error.message); return null; }
+    return count || 0;
+  } catch (e) {
+    console.warn('[Supabase] sbGetBuyerCount exception:', e.message);
+    return null;
+  }
+}
+
+// 買い手候補を登録（匿名・area_buyer_count INSERT）
+async function sbInsertBuyerInterest(townName, propertyType, budgetMax) {
+  if (!_sbOK || !_db) return false;
+  try {
+    const { error } = await _db.from('area_buyer_count').insert({
+      town_name: townName,
+      property_type: propertyType || 'any',
+      budget_max: budgetMax || null,
+      session_id: _getSessionId()
+    });
+    if (error) { console.warn('[Supabase] sbInsertBuyerInterest:', error.message); return false; }
+    return true;
+  } catch (e) {
+    console.warn('[Supabase] sbInsertBuyerInterest exception:', e.message);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────
 // 匿名利用ログ（Phase 4-A データ収集戦略）
 // ─────────────────────────────────────────────
 // localStorage: re_usage_stats → { cardId: count, ... } per tool
