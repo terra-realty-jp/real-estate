@@ -514,61 +514,117 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 var markers = [];
+var geojsonData = null;
+
+// 町名 → TOWN_DATA の逆引きマップ
+var TOWN_MAP = {};
+TOWN_DATA.forEach(function(d) { TOWN_MAP[d.name] = d; });
+
+// OSMの丁目名（例: 穴川一丁目）→ TOWN_DATAキー（穴川）に正規化
+function normalizeTownName(osmName) {
+  if (TOWN_MAP[osmName]) return osmName;
+  var base = osmName.replace(/[一二三四五六七八九十\d]+丁目$/, '');
+  if (TOWN_MAP[base]) return base;
+  var ALIAS = { '長沼': '長沼町', '宮野木': '宮野木町', '萩台': '萩台町', '轟': '轟町' };
+  return ALIAS[base] || null;
+}
 
 function getFilteredPrice(d) {
   if (currentFilter === 'all') return d.sqm;
   return d.types[currentFilter] || d.sqm;
 }
 
+function buildPopupHtml(d, price) {
+  var tsubo = sqmToTsubo(price);
+  var typeLabel = currentFilter === 'house' ? '一戸建て' : currentFilter === 'mansion' ? 'マンション' : currentFilter === 'land' ? '土地' : '全種別';
+  var mailBody = encodeURIComponent('【稲毛区 物件査定希望】\n\nエリア：' + d.name + '\n物件種別：\n面積（㎡）：\n築年数：\nご相談内容：');
+  var demandInfo = DEMAND_DATA[d.name];
+  var demandHtml = '';
+  if (demandInfo) {
+    var demandKey = currentFilter === 'house' ? 'house' : currentFilter === 'mansion' ? 'mansion' : currentFilter === 'land' ? 'land' : null;
+    var demandCount = demandKey ? demandInfo[demandKey] : (demandInfo.house + demandInfo.mansion + demandInfo.land);
+    demandHtml = '<div style="margin-top:6px;padding:5px 8px;background:rgba(22,163,74,0.08);border-radius:5px;font-size:11px;display:flex;justify-content:space-between;align-items:center">'
+      + '<span style="color:#555">👥 買い手候補（推定）</span>'
+      + '<span style="font-weight:700;color:#16a34a">' + demandCount + '人</span></div>';
+  }
+  return '<div class="popup-town">' + d.name + '</div>' +
+    '<div class="popup-price">' + Math.round(price/10000).toLocaleString() + '<span class="popup-unit">万円/㎡</span></div>' +
+    '<div class="popup-row"><span>坪単価目安</span><span><b>' + tsubo + '万円/坪</b></span></div>' +
+    '<div class="popup-row"><span>直近トレンド</span><span>' + d.trendLabel + '</span></div>' +
+    '<div class="popup-row"><span>種別</span><span>' + typeLabel + '</span></div>' +
+    demandHtml +
+    '<div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:10px;line-height:1.5">' + d.note + '</div>' +
+    '<a href="../tools/1-ai-satei.html" style="display:block;background:#c9a84c;color:#000;text-align:center;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;margin-bottom:6px">AI査定で概算を試算する →</a>' +
+    '<a href="mailto:info@terra-realty.jp?subject=' + encodeURIComponent(d.name + 'の物件査定希望') + '&body=' + mailBody + '" style="display:block;background:rgba(0,0,0,0.06);color:#333;text-align:center;padding:6px 12px;border-radius:7px;font-size:11px;text-decoration:none">' + d.name + 'で無料相談する</a>';
+}
+
 function renderMarkers() {
   markers.forEach(function(m) { map.removeLayer(m); });
   markers = [];
 
-  TOWN_DATA.forEach(function(d) {
-    var price = getFilteredPrice(d);
-    if (!price) return;
-    var radius = 10 + Math.min(d.trades, 50) * 0.5;
-    var color = priceToColor(price);
-    var circle = L.circleMarker([d.lat, d.lng], {
-      radius: radius,
-      fillColor: color,
-      color: '#fff',
-      weight: 2,
-      fillOpacity: 0.82
-    }).addTo(map);
+  if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
+    // --- GeoJSONポリゴンモード ---
+    var labeledTowns = {};
 
-    var tsubo = sqmToTsubo(price);
-    var typeLabel = currentFilter === 'house' ? '一戸建て' : currentFilter === 'mansion' ? 'マンション' : currentFilter === 'land' ? '土地' : '全種別';
-    var mailBody = encodeURIComponent('【稲毛区 物件査定希望】\n\nエリア：' + d.name + '\n物件種別：\n面積（㎡）：\n築年数：\nご相談内容：');
-    var demandInfo = DEMAND_DATA[d.name];
-    var demandHtml = '';
-    if (demandInfo) {
-      var demandKey = currentFilter === 'house' ? 'house' : currentFilter === 'mansion' ? 'mansion' : currentFilter === 'land' ? 'land' : null;
-      var demandCount = demandKey ? demandInfo[demandKey] : (demandInfo.house + demandInfo.mansion + demandInfo.land);
-      demandHtml = '<div style="margin-top:6px;padding:5px 8px;background:rgba(22,163,74,0.08);border-radius:5px;font-size:11px;display:flex;justify-content:space-between;align-items:center">'
-        + '<span style="color:#555">👥 買い手候補（推定）</span>'
-        + '<span style="font-weight:700;color:#16a34a">' + demandCount + '人</span></div>';
-    }
-    circle.bindPopup(
-      '<div class="popup-town">' + d.name + '</div>' +
-      '<div class="popup-price">' + Math.round(price/10000).toLocaleString() + '<span class="popup-unit">万円/㎡</span></div>' +
-      '<div class="popup-row"><span>坪単価目安</span><span><b>' + tsubo + '万円/坪</b></span></div>' +
-      '<div class="popup-row"><span>直近トレンド</span><span>' + d.trendLabel + '</span></div>' +
-      '<div class="popup-row"><span>種別</span><span>' + typeLabel + '</span></div>' +
-      demandHtml +
-      '<div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:10px;line-height:1.5">' + d.note + '</div>' +
-      '<a href="../tools/1-ai-satei.html" style="display:block;background:#c9a84c;color:#000;text-align:center;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;margin-bottom:6px">AI査定で概算を試算する →</a>' +
-      '<a href="mailto:info@terra-realty.jp?subject=' + encodeURIComponent(d.name + 'の物件査定希望') + '&body=' + mailBody + '" style="display:block;background:rgba(0,0,0,0.06);color:#333;text-align:center;padding:6px 12px;border-radius:7px;font-size:11px;text-decoration:none">' + d.name + 'で無料相談する</a>'
-    );
+    geojsonData.features.forEach(function(feature) {
+      var osmName = (feature.properties && feature.properties.name) || '';
+      var townName = normalizeTownName(osmName);
+      if (!townName) return;
+      var d = TOWN_MAP[townName];
+      if (!d) return;
 
-    // 町名ラベル
-    var label = L.divIcon({
-      html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none">' + d.name + '</div>',
-      className: '', iconAnchor: [-radius - 4, 8]
+      var price = getFilteredPrice(d);
+      if (!price) return;
+
+      var poly = L.geoJSON(feature, {
+        style: {
+          fillColor: priceToColor(price),
+          fillOpacity: 0.65,
+          color: '#fff',
+          weight: 1.5
+        }
+      }).bindPopup(buildPopupHtml(d, price)).addTo(map);
+      poly._townName = townName;
+      markers.push(poly);
+
+      // 町ごとに1つだけラベルを置く（複数丁目があっても重複しない）
+      if (!labeledTowns[townName]) {
+        var props = feature.properties;
+        var center = (props.centroid_lat && props.centroid_lng)
+          ? L.latLng(props.centroid_lat, props.centroid_lng)
+          : poly.getBounds().getCenter();
+        var tsubo = sqmToTsubo(price);
+        var label = L.divIcon({
+          html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none;text-align:center">'
+            + townName + '<br><span style="font-size:10px">' + tsubo + '万/坪</span></div>',
+          className: '', iconAnchor: [24, 14]
+        });
+        markers.push(L.marker([center.lat, center.lng], { icon: label, interactive: false }).addTo(map));
+        labeledTowns[townName] = true;
+      }
     });
-    var labelMarker = L.marker([d.lat, d.lng], { icon: label, interactive: false }).addTo(map);
-    markers.push(circle, labelMarker);
-  });
+
+  } else {
+    // --- フォールバック: circleMarker ---
+    TOWN_DATA.forEach(function(d) {
+      var price = getFilteredPrice(d);
+      if (!price) return;
+      var radius = 10 + Math.min(d.trades, 50) * 0.5;
+      var circle = L.circleMarker([d.lat, d.lng], {
+        radius: radius,
+        fillColor: priceToColor(price),
+        color: '#fff',
+        weight: 2,
+        fillOpacity: 0.82
+      }).bindPopup(buildPopupHtml(d, price)).addTo(map);
+
+      var label = L.divIcon({
+        html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none">' + d.name + '</div>',
+        className: '', iconAnchor: [-radius - 4, 8]
+      });
+      markers.push(circle, L.marker([d.lat, d.lng], { icon: label, interactive: false }).addTo(map));
+    });
+  }
 }
 
 function setFilter(type, btn) {
@@ -609,19 +665,33 @@ function highlightFromUrl() {
   var town = params.get('town');
   if (!town) return;
   var d = TOWN_DATA.find(function(x) { return x.id === town; });
-  if (d) {
-    map.setView([d.lat, d.lng], 15);
-    setTimeout(function() {
+  if (!d) return;
+
+  setTimeout(function() {
+    if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
+      markers.forEach(function(m) {
+        if (m._townName === d.name && m.getBounds) {
+          map.fitBounds(m.getBounds(), { maxZoom: 15 });
+          m.openPopup(m.getBounds().getCenter());
+        }
+      });
+    } else {
+      map.setView([d.lat, d.lng], 15);
       markers.forEach(function(m) {
         if (m.getLatLng && m.getLatLng().lat === d.lat) m.openPopup();
       });
-    }, 500);
-  }
+    }
+  }, 500);
 }
 
-renderMarkers();
-renderTable();
-highlightFromUrl();
+// GeoJSONを読み込んでから描画（失敗時はcircleMarkerフォールバック）
+(function() {
+  function init() { renderMarkers(); renderTable(); highlightFromUrl(); }
+  fetch('../data/inage-geojson.json')
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(data) { geojsonData = data; init(); })
+    .catch(function() { init(); });
+})();
 
 // Supabaseから最新相場データを取得してTOWN_DATAを更新
 (function() {
