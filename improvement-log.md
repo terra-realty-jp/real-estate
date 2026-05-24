@@ -51,6 +51,15 @@
 - **確認**: inage/index.html → map.htmlの全12町丁目URLパラメータと TOWN_DATA.id が完全一致
 - **次のアクション**: Q&A掲示板サンプルをさらに追加（宮野木町・緑町エリアをカバー）/ Tool3のInageマッチングに需要トレンド表示追加
 
+## 2026-05-24（map.html・inage/index.html Supabase動的データ連携）
+
+- **対象**: inage/map.html, inage/index.html
+- **実装内容**:
+  1. map.html: ページロード後にSupabase area_buyer_countから全エリアの需要数を一括取得（.in()クエリ）→ DEMAND_DATA更新 → renderMarkers()再実行でポップアップを最新需要数に反映
+  2. inage/index.html: Q&Aカウンターをアニメーション後にsupabase qa_questionsの公開済み件数で上書き（12件を超えた場合のみ更新）
+  3. 両機能ともSupabase未接続・テーブル未作成時は静的参考値にフォールバック
+- **次のアクション**: Supabaseテーブル作成（上記SQLを実行）で全機能が本番稼働する
+
 ## 2026-05-24（Supabase セットアップ手順まとめ）
 
 - **対象**: Supabase管理コンソール（手動作業）
