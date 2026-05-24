@@ -51,6 +51,18 @@
 - **確認**: inage/index.html → map.htmlの全12町丁目URLパラメータと TOWN_DATA.id が完全一致
 - **次のアクション**: Q&A掲示板サンプルをさらに追加（宮野木町・緑町エリアをカバー）/ Tool3のInageマッチングに需要トレンド表示追加
 
+## 2026-05-24（Supabase連携強化 + Tool3動的需要数取得）
+
+- **対象**: supabase-client.js, tools/3-owner-direct.html
+- **実装内容**:
+  1. supabase-client.js: `getSupabaseClient()` を追加（notify.html・qa.htmlで使用していたが未定義だったバグを修正）
+  2. supabase-client.js: `sbGetBuyerCount(townName, propertyType)` 追加 — area_buyer_count テーブルから匿名集計（認証不要）
+  3. supabase-client.js: `sbInsertBuyerInterest(townName, propertyType, budgetMax)` 追加 — 買い手候補を匿名登録
+  4. Tool3 renderInageMatch(): 非同期に変更 → Supabaseから実需要数を取得（取得成功時は「✓ リアルタイム」バッジ表示、失敗時は静的データへフォールバック）
+  5. Tool3: 「私もこのエリアを探しています（登録する）」ボタン追加 → area_buyer_count にINSERT → 即時カウント反映
+- **バグ修正**: notify.html・qa.htmlのSupabase接続が getSupabaseClient() 未定義のためメールフォールバックのみだった問題を解消
+- **次のアクション**: Supabase テーブルを実際に作成すると全機能が稼働する
+
 ## 2026-05-24（Q&Aサンプル追加 + map.html需要データ連携）
 
 - **対象**: inage/qa.html, inage/index.html, inage/map.html
