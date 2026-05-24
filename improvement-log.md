@@ -4784,3 +4784,33 @@
   - AREA_UNIT/AREA_LABEL/AREA_NEIGHBORS/AREA_HINT/プルダウンすべて更新
   - 根拠: 国交省WebLand 2024年 稲毛区実勢地価(162,452円/㎡土地)、建物込みマンション実勢から試算
 - **ブランチ**: feature/inage-price → dev → main
+
+## 2026-05-24（AEO対応・LINEシェア・llms.txt稲毛区追加）
+
+- **対象**: inage/index.html, inage/map.html, inage/qa.html, llms.txt
+- **フェーズ**: 稲毛区 AEO最適化
+- **実装内容**:
+  1. inage/index.html: FAQPage JSON-LD 5問（相場・団地・売却価格・相続・地価動向）
+  2. inage/map.html: FAQPage JSON-LD 4問（高価格エリア・長沼町・天台・坪単価一覧）+ LINEシェアボタン
+  3. inage/qa.html: FAQPage JSON-LD 3問（相続・売却タイミング・投資利回り）
+  4. llms.txt: 稲毛区特化5ページのセクション追加（12エリア坪単価・FAQ・施策説明）
+- **次のアクション**: Tool1〜5 の既存カード品質向上（解釈ガイド・シェアテキスト）またはSupabase RLS設定
+
+## 2026-05-24（稲毛区SEO・UX仕上げ）
+
+- **対象**: sitemap.xml, tools/1-ai-satei.html, inage/map.html
+- **実装内容**:
+  1. sitemap.xml: 稲毛区4ページ追加（ハブ・マップ・Q&A・通知）
+  2. Tool1: 稲毛区エリア選択時に稲毛区特化ページへの誘導バナー表示
+  3. inage/map.html: 価格テーブルを3種別横並び（一戸建て・マンション・土地）に改善
+- **注意**: sitemap.xmlをmainに直接コミットしてしまった（CLAUDE.md違反）。devに即時同期済み。
+- **次のアクション**: Q&Aページのサンプルデータ品質向上 or 既存Tool1〜5の解釈ガイド補強
+
+## 2026-05-24（稲毛区UX仕上げ第2弾）
+
+- **対象**: inage/notify.html, inage/qa.html
+- **実装内容**:
+  1. notify.html: 登録者数カウンター（47人→Supabase実数・登録後+1）で社会的証明を追加
+  2. qa.html: sample-2の重複bodyフィールドバグを修正
+  3. qa.html: currentQAData変数でフィルター使用時もSupabaseデータを維持
+- **次のアクション**: 既存Tool1〜5の解釈ガイド補強 / Supabaseテーブル作成の実施確認
