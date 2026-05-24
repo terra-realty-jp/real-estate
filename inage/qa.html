@@ -451,6 +451,23 @@ function fmtDate(str) {
   return str ? str.slice(0, 10) : '';
 }
 
+// ---- 回答後CTA（カテゴリ別） ----
+function answerCta(category, townName) {
+  var town = townName || '稲毛区';
+  var ctaMap = {
+    '売却': { text: town + 'の物件を無料査定する', href: '../tools/1-ai-satei.html', color: '#c9a84c' },
+    '相続': { text: '相続不動産を無料査定する', href: '../tools/1-ai-satei.html', color: '#c9a84c' },
+    '賃貸': { text: '賃貸管理ツールで試算する', href: '../tools/4-kanri-saas.html', color: '#3b82f6' },
+    '購入': { text: 'AI査定で物件の参考価格を調べる', href: '../tools/1-ai-satei.html', color: '#c9a84c' },
+    '投資': { text: '投資分析ツールで利回りを試算する', href: '../tools/5-toushi-bunseki.html', color: '#22c55e' }
+  };
+  var cta = ctaMap[category] || { text: '無料査定・相談する', href: '../tools/1-ai-satei.html', color: '#c9a84c' };
+  return '<div style="margin-top:14px;padding:12px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
+    '<div style="font-size:12px;color:var(--text-muted)">この回答について、さらに詳しく知りたい方は：</div>' +
+    '<a href="' + cta.href + '" style="display:inline-flex;align-items:center;gap:6px;background:' + cta.color + ';color:' + (cta.color === '#c9a84c' || cta.color === '#22c55e' ? '#000' : '#fff') + ';border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none;flex-shrink:0">' + cta.text + ' →</a>' +
+    '</div>';
+}
+
 // ---- Q&A描画 ----
 function renderQA(data) {
   var filtered = data.filter(function(q) {
@@ -498,6 +515,7 @@ function renderQA(data) {
           ? '<div class="qa-answer">' +
               '<div class="qa-answer-label">🏢 TERRA REALTYの回答</div>' +
               '<div class="qa-answer-text">' + q.answer.replace(/\n/g, '<br>') + '</div>' +
+              answerCta(q.category, q.town_name) +
             '</div>'
           : '<div style="font-size:13px;color:var(--text-muted);padding:8px 0">TERRAが回答を準備中です（1〜2営業日）</div>') +
       '</div>' +
