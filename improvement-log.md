@@ -51,6 +51,22 @@
 - **確認**: inage/index.html → map.htmlの全12町丁目URLパラメータと TOWN_DATA.id が完全一致
 - **次のアクション**: Q&A掲示板サンプルをさらに追加（宮野木町・緑町エリアをカバー）/ Tool3のInageマッチングに需要トレンド表示追加
 
+## 2026-05-24（Q&Aサンプル追加 + map.html需要データ連携）
+
+- **対象**: inage/qa.html, inage/index.html, inage/map.html
+- **実装内容**:
+  1. qa.html: Q&Aサンプル2件追加（計12件）
+     - sample-11: 宮野木町/売却 — 駅遠・千葉北IC近・1,200〜1,800万円売却相場・農地転用事例
+     - sample-12: 緑町/購入 — ファミリー向け・緑町小学区・2,000〜3,500万円・子育て環境
+  2. qa.html: FAQPage JSON-LDに2件追加（宮野木町・緑町の内容を含む）
+  3. inage/index.html: 実績カウンターのQ&A件数を10→12に更新（実データと一致）
+  4. map.html: DEMAND_DATA オブジェクト追加（穴川14人・小仲台11人・天台9人・長沼町12人など）
+  5. map.html: renderMarkers()のポップアップに「👥 買い手候補（推定）: ○人」を表示
+     - 物件種別フィルター連動（house/mansion/land/all 各カウント）
+     - Tool3のInageマッチング需要データと同一数値で一貫性確保
+- **ブランチ**: dev → main（JS OK確認済み）
+- **次のアクション**: Supabaseテーブル作成（qa_questions等）の実施確認 / Tool3需要数をSupabase area_buyer_countと動的連携
+
 ---
 
 ## 2026-05-22 09:26（セッション継続・TOP3カード全面UX完成）
