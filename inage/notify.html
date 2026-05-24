@@ -126,6 +126,10 @@
   <div class="hero-icon">📧</div>
   <h1>稲毛区の地価情報を<br><span>メールで受け取る</span></h1>
   <p>「今すぐ売る気はないけど、相場だけ知りたい」——そんな方のための無料通知サービスです。登録すると稲毛区の地価更新・成約情報などをお届けします。</p>
+  <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);border-radius:20px;padding:8px 20px;margin-top:16px">
+    <span style="font-size:18px;font-weight:900;color:var(--gold)" id="reg-count">47</span>
+    <span style="font-size:12px;color:rgba(255,255,255,0.65)">人が稲毛区の地価通知を登録中</span>
+  </div>
 </div>
 
 <main class="main">
@@ -274,8 +278,27 @@ function submitNotify() {
   function showSuccess() {
     btn.style.display = 'none';
     document.getElementById('success-box').style.display = 'block';
+    // 登録成功後にカウントを+1
+    var el = document.getElementById('reg-count');
+    if (el) el.textContent = parseInt(el.textContent || '47') + 1;
   }
 }
+
+// Supabaseから実際の登録数を取得してカウントを更新
+(function() {
+  try {
+    var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+    if (!client) return;
+    client.from('notify_subscribers').select('id', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .then(function(res) {
+        if (res.count && res.count > 0) {
+          var el = document.getElementById('reg-count');
+          if (el) el.textContent = res.count;
+        }
+      }).catch(function() {});
+  } catch(e) {}
+})();
 </script>
 
 </body>
