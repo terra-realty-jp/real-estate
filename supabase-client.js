@@ -119,6 +119,64 @@ async function sbDelete(table, id) {
 }
 
 // ─────────────────────────────────────────────
+// 稲毛区 相場データ（inage_properties）
+// ─────────────────────────────────────────────
+// 戻り値: { '穴川': { house:196000, mansion:212000, land:186000, sqm:202000, year:2025, quarter:3 }, ... }
+// DB の price_per_sqm は 万円/㎡ で保存 → ×10000 で 円/㎡ に変換
+async function sbGetTownPrices(townNames) {
+  if (!_sbOK || !_db) return null;
+  try {
+    const { data, error } = await _db
+      .from('inage_properties')
+      .select('town_name,property_type,price_per_sqm,trade_year,trade_quarter')
+      .in('town_name', townNames)
+      .order('trade_year', { ascending: false })
+      .order('trade_quarter', { ascending: false })
+      .limit(800);
+    if (error) { console.warn('[Supabase] sbGetTownPrices:', error.message); return null; }
+    if (!data || data.length === 0) return null;
+
+    // 直近2四半期を特定
+    const qNums = [...new Set(data.map(r => r.trade_year * 10 + r.trade_quarter))].sort((a,b) => b-a).slice(0, 2);
+
+    const groups = {};
+    let maxYear = 0, maxQ = 0;
+    data.forEach(function(r) {
+      const qNum = r.trade_year * 10 + r.trade_quarter;
+      if (!qNums.includes(qNum) || !r.price_per_sqm) return;
+      const key = r.town_name + '::' + r.property_type;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(Math.round(r.price_per_sqm * 10000)); // 万円/㎡ → 円/㎡
+      if (r.trade_year > maxYear || (r.trade_year === maxYear && r.trade_quarter > maxQ)) {
+        maxYear = r.trade_year; maxQ = r.trade_quarter;
+      }
+    });
+
+    const result = {};
+    Object.keys(groups).forEach(function(key) {
+      const parts = key.split('::');
+      const town = parts[0], type = parts[1];
+      const vals = groups[key].slice().sort((a,b) => a-b);
+      const med = vals[Math.floor(vals.length / 2)];
+      if (!result[town]) result[town] = { year: maxYear, quarter: maxQ };
+      result[town][type] = med;
+    });
+
+    // sqm = house/mansion/land の平均
+    Object.keys(result).forEach(function(town) {
+      const r = result[town];
+      const vals = [r.house, r.mansion, r.land].filter(Boolean);
+      if (vals.length) r.sqm = Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
+    });
+
+    return Object.keys(result).length > 0 ? result : null;
+  } catch (e) {
+    console.warn('[Supabase] sbGetTownPrices exception:', e.message);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────
 // 稲毛区 買い手候補数（匿名集計）
 // ─────────────────────────────────────────────
 // area_buyer_count テーブルから町丁目×物件種別の件数を取得（認証不要・RLS SELECT許可）
