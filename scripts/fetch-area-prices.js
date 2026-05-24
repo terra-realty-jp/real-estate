@@ -55,8 +55,10 @@ const CITY_MAP = {
   kanagawa_other:['14150', '14201'],
   // 埼玉（さいたま・川口）
   saitama:       ['11101', '11202'],
-  // 千葉（千葉市・市川・船橋）
+  // 千葉（千葉市中央区・市川・船橋）
   chiba:         ['12101', '12203', '12204'],
+  // 千葉市稲毛区（全域）
+  chiba_inage:   ['12103'],
   // 大阪都心（大阪市北区・中央区）
   osaka_central: ['27102', '27128'],
   // 大阪その他（堺・東大阪）
@@ -103,6 +105,7 @@ const FALLBACK_PRICES = {
   kanagawa_other:   420000,
   saitama:          380000,
   chiba:            350000,
+  chiba_inage:      290000,
   osaka_central:    720000,
   osaka_other:      450000,
   kyoto:            520000,

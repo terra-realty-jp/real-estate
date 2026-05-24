@@ -1,0 +1,27 @@
+name: 月次 稲毛区取引データ取得（Supabase保存）
+
+on:
+  schedule:
+    # 毎月5日 12:00 JST (= UTC 03:00) — area-prices更新の4日後
+    - cron: '0 3 5 * *'
+  workflow_dispatch:
+    # 手動実行も可能
+
+jobs:
+  fetch-inage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 国土交通省 WebLand API から稲毛区取引データを取得してSupabaseに保存
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node scripts/fetch-inage-properties.js
