@@ -51,6 +51,76 @@
 - **確認**: inage/index.html → map.htmlの全12町丁目URLパラメータと TOWN_DATA.id が完全一致
 - **次のアクション**: Q&A掲示板サンプルをさらに追加（宮野木町・緑町エリアをカバー）/ Tool3のInageマッチングに需要トレンド表示追加
 
+## 2026-05-24（Supabase セットアップ手順まとめ）
+
+- **対象**: Supabase管理コンソール（手動作業）
+- **実施者**: 石澤さん（開発者）がSupabaseのTable Editorで実施
+- **必要なSQL**（Supabase SQL Editorで実行）:
+
+```sql
+-- 1. inage_properties（相場データ）
+CREATE TABLE inage_properties (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  town_name TEXT NOT NULL, property_type TEXT NOT NULL,
+  price INTEGER, area_sqm NUMERIC, price_per_sqm NUMERIC,
+  trade_year INTEGER, trade_quarter INTEGER,
+  source TEXT DEFAULT 'mlit', created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE inage_properties ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public read" ON inage_properties FOR SELECT USING (true);
+
+-- 2. qa_questions（Q&A質問）
+CREATE TABLE qa_questions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  session_id TEXT, category TEXT, town_name TEXT,
+  title TEXT NOT NULL, body TEXT NOT NULL,
+  status TEXT DEFAULT 'pending', view_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE qa_questions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public insert" ON qa_questions FOR INSERT WITH CHECK (true);
+CREATE POLICY "published select" ON qa_questions FOR SELECT USING (status = 'published');
+
+-- 3. qa_answers（Q&A回答）
+CREATE TABLE qa_answers (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  question_id UUID REFERENCES qa_questions(id) ON DELETE CASCADE,
+  body TEXT NOT NULL, is_official BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE qa_answers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public read" ON qa_answers FOR SELECT USING (true);
+
+-- 4. notify_subscribers（メール通知登録）
+CREATE TABLE notify_subscribers (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email TEXT NOT NULL, town_interests TEXT[], property_type TEXT,
+  notify_freq TEXT DEFAULT 'monthly', is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE notify_subscribers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public insert" ON notify_subscribers FOR INSERT WITH CHECK (true);
+CREATE POLICY "count select" ON notify_subscribers FOR SELECT USING (true);
+
+-- 5. area_buyer_count（買い手候補数）
+CREATE TABLE area_buyer_count (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  town_name TEXT NOT NULL, property_type TEXT, budget_max INTEGER,
+  session_id TEXT, created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE area_buyer_count ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public insert" ON area_buyer_count FOR INSERT WITH CHECK (true);
+CREATE POLICY "count select" ON area_buyer_count FOR SELECT USING (true);
+
+-- 6. RPC: view_count増分（qa.htmlのtoggleQAで呼び出し）
+CREATE OR REPLACE FUNCTION increment_qa_view(qid UUID)
+RETURNS void LANGUAGE sql SECURITY DEFINER AS $$
+  UPDATE qa_questions SET view_count = view_count + 1 WHERE id = qid;
+$$;
+```
+
+- **次のアクション**: 上記SQLを実行するとmap.html・Tool3・qa.html・notify.htmlがリアルタイムデータで動作する
+
 ## 2026-05-24（Supabase連携強化 + Tool3動的需要数取得）
 
 - **対象**: supabase-client.js, tools/3-owner-direct.html
