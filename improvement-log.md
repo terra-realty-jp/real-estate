@@ -4762,3 +4762,14 @@
   4. index.html: 稲毛区特化バナーをヒーロー直下に追加
 - **価格算定改善**: 現在の県レベル単価（chiba=35万円/㎡）は稲毛区実勢の約2倍。Phase1で町丁目別の実勢値に差し替え予定
 - **次のアクション**: 施策② 稲毛団地チェッカー（feature/inage-checker）を実装
+
+## 2026-05-24（稲毛区特化フェーズ 全5施策完了）
+
+- **対象**: inage/qa.html, inage/notify.html, tools/3-owner-direct.html
+- **フェーズ**: 稲毛区ローカライゼーション Phase 1 全完了
+- **実装内容**:
+  1. 施策③ Q&A掲示板（/inage/qa.html）: カテゴリ/エリアフィルター・サンプル3件・Supabase連携・投稿フォーム・メールフォールバック
+  2. 施策④ メール通知登録（/inage/notify.html）: エリア別チェックボックス・通知頻度選択・Supabase/メールフォールバック
+  3. 施策⑤ ローカルマッチング（Tool3「稲毛区需要」タブ）: 9エリア×3種別の買い手候補数表示・需要サマリーテーブル
+- **完了ブランチ**: feature/qa-board, feature/email-notify, feature/local-matching → すべてdevにマージ済み
+- **次のアクション**: devをmainにマージして本番リリース、またはPhase1価格算定改善（稲毛区専用AREA_UNIT追加）
