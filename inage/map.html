@@ -243,11 +243,11 @@
       <thead>
         <tr>
           <th>エリア</th>
-          <th>物件種別</th>
-          <th>㎡単価（中央値）</th>
+          <th>一戸建て</th>
+          <th>マンション</th>
+          <th>土地</th>
           <th>坪単価目安</th>
-          <th>直近トレンド</th>
-          <th>取引件数（参考）</th>
+          <th>トレンド</th>
         </tr>
       </thead>
       <tbody id="priceTableBody">
@@ -509,24 +509,26 @@ function setFilter(type, btn) {
   renderTable();
 }
 
-// テーブル描画
+// テーブル描画（種別3列横並び）
 function renderTable() {
   var tbody = document.getElementById('priceTableBody');
   var sorted = TOWN_DATA.slice().sort(function(a, b) { return getFilteredPrice(b) - getFilteredPrice(a); });
+  function fmtPrice(p) {
+    if (!p) return '<span style="color:#ccc">—</span>';
+    return '<span class="' + priceToClass(p) + '">' + Math.round(p/10000).toFixed(1) + '万</span>';
+  }
   tbody.innerHTML = sorted.map(function(d) {
     var price = getFilteredPrice(d);
     if (!price) return '';
     var tsubo = sqmToTsubo(price);
-    var cls = priceToClass(price);
     var trendCls = d.trend === 'up' ? 'trend-up' : d.trend === 'down' ? 'trend-down' : 'trend-flat';
-    var typeLabel = currentFilter === 'house' ? '一戸建て' : currentFilter === 'mansion' ? 'マンション' : currentFilter === 'land' ? '土地' : 'すべて';
     return '<tr>' +
-      '<td><strong>' + d.name + '</strong></td>' +
-      '<td>' + typeLabel + '</td>' +
-      '<td class="' + cls + '">' + Math.round(price / 10000).toLocaleString() + '万円/㎡</td>' +
+      '<td><strong>' + d.name + '</strong><br><span style="font-size:10px;color:var(--text-muted)">' + d.note.slice(0,16) + '…</span></td>' +
+      '<td style="text-align:center">' + fmtPrice(d.types.house) + '<br><span style="font-size:10px;color:var(--text-muted)">円/㎡</span></td>' +
+      '<td style="text-align:center">' + fmtPrice(d.types.mansion) + '<br><span style="font-size:10px;color:var(--text-muted)">円/㎡</span></td>' +
+      '<td style="text-align:center">' + fmtPrice(d.types.land) + '<br><span style="font-size:10px;color:var(--text-muted)">円/㎡</span></td>' +
       '<td>' + tsubo + '万円/坪</td>' +
       '<td class="' + trendCls + '">' + d.trendLabel + '</td>' +
-      '<td style="color:var(--text-muted)">' + d.trades + '件</td>' +
       '</tr>';
   }).join('');
 }
