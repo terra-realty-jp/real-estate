@@ -1,0 +1,42 @@
+name: 月次 稲毛区メール通知送信（Resend API）
+
+on:
+  schedule:
+    # 毎月10日 10:00 JST (= UTC 01:00) — 取引データ取得の5日後
+    - cron: '0 1 10 * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'DRY RUN（送信せずに内容確認）'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+      notify_freq:
+        description: '通知頻度（monthly / weekly）'
+        required: false
+        default: 'monthly'
+        type: choice
+        options: ['monthly', 'weekly']
+
+jobs:
+  send-notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 稲毛区メール通知を送信
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          NOTIFY_FREQ: ${{ github.event.inputs.notify_freq || 'monthly' }}
+        run: node scripts/send-inage-notify.js
