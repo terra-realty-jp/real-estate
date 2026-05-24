@@ -51,6 +51,24 @@
 - **確認**: inage/index.html → map.htmlの全12町丁目URLパラメータと TOWN_DATA.id が完全一致
 - **次のアクション**: Q&A掲示板サンプルをさらに追加（宮野木町・緑町エリアをカバー）/ Tool3のInageマッチングに需要トレンド表示追加
 
+## 2026-05-24（施策①②③④⑤ 全データパイプライン完成）
+
+- **対象**: scripts/fetch-inage-properties.js, scripts/send-inage-notify.js, .github/workflows/
+- **施策**: 施策① データ自動取得パイプライン完成 / 施策④ Phase2メール通知自動化
+- **実装内容**:
+  1. scripts/fetch-inage-properties.js: MLIT WebLand API → 千葉市稲毛区(コード12103)の取引データ取得・変換・Supabase inage_properties INSERT（3物件タイプ・町丁目正規化・異常値除去）
+  2. .github/workflows/fetch-inage-properties.yml: 毎月5日自動実行（手動実行も可能）。SUPABASE_URL/SUPABASE_SERVICE_KEY をGitHub Secretsから取得
+  3. scripts/fetch-area-prices.js: chiba_inage: ['12103'] を CITY_MAP に追加（Tool1の価格算定が実データで更新されるように）
+  4. scripts/send-inage-notify.js: Supabase notify_subscribers から有効登録者を取得 → エリア別最新相場・新着Q&Aを取得 → Resend APIでHTMLメール送信。DRY_RUN=1 でテスト可能。
+  5. .github/workflows/inage-email-notify.yml: 毎月10日自動実行。手動実行時は dry_run・notify_freq を選択可能
+- **GitHub Secrets（設定必要）**:
+  - SUPABASE_URL: Supabase プロジェクトURL
+  - SUPABASE_SERVICE_KEY: Supabase Service Role Key（管理者権限）
+  - RESEND_API_KEY: Resend APIキー（https://resend.com で無料取得可）
+- **完全自動化フロー**:
+  毎月1日: area-prices更新 → 毎月5日: 稲毛区取引データ取得 → 毎月10日: 通知メール送信
+- **次のアクション**: Supabaseテーブル作成SQL実行 → GitHub Secrets設定 → 初回DRY RUN実行で確認
+
 ## 2026-05-24（map.html・inage/index.html Supabase動的データ連携）
 
 - **対象**: inage/map.html, inage/index.html
