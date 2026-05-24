@@ -614,6 +614,31 @@ renderMarkers();
 renderTable();
 highlightFromUrl();
 
+// Supabaseから実需要数を取得してDEMAND_DATAを更新
+(function() {
+  var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+  if (!client) return;
+  var towns = Object.keys(DEMAND_DATA);
+  client.from('area_buyer_count').select('town_name,property_type')
+    .in('town_name', towns)
+    .then(function(res) {
+      if (res.error || !res.data || res.data.length === 0) return;
+      var counts = {};
+      res.data.forEach(function(row) {
+        if (!counts[row.town_name]) counts[row.town_name] = { house: 0, mansion: 0, land: 0 };
+        var pt = row.property_type;
+        if (pt === 'house' || pt === 'mansion' || pt === 'land') counts[row.town_name][pt]++;
+        else if (pt === 'any') { counts[row.town_name].house++; counts[row.town_name].mansion++; }
+      });
+      var updated = false;
+      Object.keys(counts).forEach(function(town) {
+        var c = counts[town];
+        if (c.house + c.mansion + c.land > 0) { DEMAND_DATA[town] = c; updated = true; }
+      });
+      if (updated) renderMarkers();
+    }).catch(function() {});
+})();
+
 function toggleFaq(i) {
   var items = document.querySelectorAll('.faq-item');
   items[i].classList.toggle('open');
