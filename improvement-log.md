@@ -4,15 +4,23 @@
 
 ---
 
-## 2026-05-24（品質向上・バグ修正）
+## 2026-05-24（品質向上・バグ修正 第2弾 + Q&A追加）
 
-- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html
-- **施策**: 全ツール品質向上（解釈ガイド・シェアテキスト・バグ修正）
+- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, inage/qa.html
+- **施策**: 全ツール品質向上（解釈ガイド・シェアテキスト・バグ修正）+ Q&Aコンテンツ強化
 - **実装内容**:
-  1. Tool1: `chiba_inage`（稲毛区一般）ヒントにサブエリア選択ガイドを追加（精度向上の導線）
-  2. Tool3: `renderInageMatch()` に需要レベル判定バッジ・解釈ガイド・LINEシェアボタンを追加
-  3. Tool2: 孤立した `html+=` バグを32箇所修正（LINEシェアボタンと解釈ガイドが実際には非表示になっていた）
-- **次のアクション**: Tool1の稲毛区AI査定結果に稲毛区ハブへの誘導メッセージ追加 / Tool2の残カード品質チェック
+  1. Tool1: `chiba_inage`（稲毛区一般）ヒントにサブエリア選択ガイドを追加
+  2. Tool1: 稲毛区エリア選択時の査定結果に「稲毛区専用ハブへの誘導バナー」を追加
+  3. Tool3: `renderInageMatch()` に需要レベル判定バッジ・解釈ガイド・LINEシェアボタンを追加
+  4. Tool2: 孤立した `html+=` バグを合計72箇所修正（パターン別: 単純32件+二重加算30件+その他9件+SharedKitchen1件）
+     - LINEシェアボタンと解釈ガイドが実際には非表示になっていた（return/const/el.innerHTML+=パターン）
+     - `calcAkiyaSharedKitchen()` の `el.innerHTML += + '<str1>' '<str2>'` バグ（最後の1件）を追加修正
+  5. Q&A掲示板: サンプルデータ3件追加（計8件に拡充）
+     - sample-6: 稲毛団地相続（修繕積立金不足・建替え計画）
+     - sample-7: 長沼町土地100坪の分割売却（試算・費用目安）
+     - sample-8: 天台の自宅売却と確定申告・3,000万円控除
+     - FAQPage JSON-LDも3件追加（AEO・AI検索向け）
+- **次のアクション**: Tool2 新カード追加 or inage/map.html 改善 or index.htmlの稲毛区バナー追加
 
 ---
 
