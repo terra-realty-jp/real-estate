@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>実装レポート 2026-05-24</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:#0f172a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif; min-height:100vh; }
+.header { background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%); border-bottom:3px solid #c9a84c; padding:36px 40px; }
+.header-inner { max-width:860px; margin:0 auto; }
+.header h1 { font-size:28px; font-weight:900; color:#c9a84c; margin-bottom:6px; }
+.header .date { font-size:15px; color:#94a3b8; margin-bottom:16px; }
+.stats { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+.stat { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 20px; text-align:center; min-width:100px; }
+.stat .num { font-size:28px; font-weight:900; color:#c9a84c; }
+.stat .lbl { font-size:11px; color:#64748b; margin-top:2px; }
+.chips { display:flex; gap:8px; flex-wrap:wrap; }
+.body { max-width:860px; margin:0 auto; padding:28px 24px; }
+.section-title { font-size:11px; font-weight:700; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }
+.commit-row { background:#1e293b; border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:14px 18px; margin-bottom:10px; transition:background 0.15s; }
+.commit-row:hover { background:#243347; }
+.commit-meta { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+.sha { background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:4px; font-size:11px; color:#64748b; }
+.tag { border:1px solid; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:600; }
+.time { font-size:11px; color:#475569; margin-left:auto; }
+.commit-msg { font-size:13px; color:#cbd5e1; line-height:1.6; }
+.footer { max-width:860px; margin:0 auto; padding:0 24px 32px; display:flex; gap:12px; flex-wrap:wrap; }
+.btn { display:inline-block; border-radius:8px; padding:11px 22px; font-size:13px; font-weight:600; text-decoration:none; cursor:pointer; }
+.btn-gold { background:#c9a84c; color:#000; }
+.btn-ghost { background:rgba(255,255,255,0.06); color:#94a3b8; border:1px solid rgba(255,255,255,0.1); }
+@media(max-width:600px){ .header{ padding:24px 16px; } .body,.footer{ padding-left:16px; padding-right:16px; } .stats{ gap:8px; } .stat{ min-width:80px; padding:10px 14px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="date">📅 2026年05月24日 の実装レポート</div>
+    <h1>不動産ツール 実装サマリー</h1>
+    <div class="stats">
+      <div class="stat"><div class="num">93</div><div class="lbl">コミット数</div></div>
+      <div class="stat"><div class="num">4</div><div class="lbl">追加カード数</div></div>
+      <div class="stat"><div class="num">7</div><div class="lbl">カテゴリ</div></div>
+    </div>
+    <div class="chips"><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">• その他: 55件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">🤝 Tool3 売買: 6件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">🏢 Tool4 管理: 4件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">🏚️ Tool2 空き家: 10件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">📊 Tool5 投資: 2件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">✨ UX改善: 11件</span><span style="background:rgba(255,255,255,0.06);border-radius:16px;padding:4px 12px;font-size:12px;color:#cbd5e1">🏠 Tool1 AI査定: 5件</span></div>
+  </div>
+</div>
+<div class="body">
+  <div class="section-title">本日のコミット一覧</div>
+  
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">a36fe97</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 19:03</span>
+  </div>
+  <div class="commit-msg">Merge branch 'dev'</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">aac2d4c</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 19:03</span>
+  </div>
+  <div class="commit-msg">fix: map.html 宮野木町の座標を大幅補正（美浜区→稲毛区北西部）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">2e015bd</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 19:02</span>
+  </div>
+  <div class="commit-msg">Merge branch 'dev'</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">8ec6d9c</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 19:02</span>
+  </div>
+  <div class="commit-msg">feat: map.html Supabase動的価格取得対応（inage_propertiesから最新四半期データを反映）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">e6c2f66</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 18:45</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（2026-05-24 map.html座標補正・価格2025年更新）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">8fc992e</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 18:45</span>
+  </div>
+  <div class="commit-msg">Merge branch 'dev'</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">36365d2</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 18:45</span>
+  </div>
+  <div class="commit-msg">fix: map.html 座標補正（穴川・稲毛本町・宮野木町）+ 価格2025年更新</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">3b73c2b</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 17:06</span>
+  </div>
+  <div class="commit-msg">merge: improvement-log 全パイプライン完成記録</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">0109b34</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 17:06</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log 施策①②③④⑤ 全データパイプライン完成記録</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">7241a96</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 17:06</span>
+  </div>
+  <div class="commit-msg">merge: 施策④Phase2 メール通知自動化完成（Resend+GitHub Actions）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">67a1716</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 17:06</span>
+  </div>
+  <div class="commit-msg">feat: 施策④Phase2 メール通知自動化 send-inage-notify.js + GitHub Actions ワークフロー（Resend API連携・月次自動送信）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">32a5ce4</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 17:04</span>
+  </div>
+  <div class="commit-msg">merge: 稲毛区MLIT月次取得ワークフロー・fetch-area-pricesに稲毛区コード追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">2049703</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 17:04</span>
+  </div>
+  <div class="commit-msg">feat: 稲毛区MLIT取引データ取得スクリプト＋GitHub Actionsワークフロー追加（月次自動取得→Supabase inage_properties）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">93c9c50</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:35</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（map.html・inage/index.html Supabase動的データ連携記録）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">eb34a1e</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:35</span>
+  </div>
+  <div class="commit-msg">merge: inage/index.html Q&Aカウンター Supabase動的取得</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">a3d5830</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:34</span>
+  </div>
+  <div class="commit-msg">feat: inage/index.html Q&Aカウンターを公開済み件数がある場合Supabaseから動的取得</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">fd133a2</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:34</span>
+  </div>
+  <div class="commit-msg">merge: map.html Supabase動的需要数連携</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">9b502ef</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:34</span>
+  </div>
+  <div class="commit-msg">feat: map.html Supabase area_buyer_countから動的需要数を取得・DEMAND_DATA更新（フォールバック付き）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">ba24f79</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:33</span>
+  </div>
+  <div class="commit-msg">merge: Supabaseセットアップ手順追記</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">a87ea4e</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:32</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log SupabaseセットアップSQL手順を追記（テーブル5個+RPC1個）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">6bdbfe7</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:31</span>
+  </div>
+  <div class="commit-msg">merge: llms.txt Q&A12件・稲毛区施策⑤動的需要データ連携記載</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">c3c915a</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-24 14:31</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt更新（Q&A12件・宮野木町/緑町FAQ追加・Tool3動的需要数連携を記載）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">3543eb2</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:30</span>
+  </div>
+  <div class="commit-msg">merge: qa.html view_count追跡・Supabase RPC連携</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">0784a6c</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:30</span>
+  </div>
+  <div class="commit-msg">feat: qa.html 質問開封時にview_count増分（Supabase RPC経由・サンプルデータはスキップ）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">0ad3601</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-24 14:28</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（Supabase連携強化・getSupabaseClient修正・Tool3動的需要数）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">aa457af</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:28</span>
+  </div>
+  <div class="commit-msg">fix: getSupabaseClient()追加でnotify.html・qa.htmlのSupabase接続を修正</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">4f20ba9</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:28</span>
+  </div>
+  <div class="commit-msg">fix: supabase-client.js getSupabaseClient()を追加（notify.html・qa.html のSupabase接続が機能していなかった修正）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">124e467</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-24 14:27</span>
+  </div>
+  <div class="commit-msg">merge: Tool3 Supabase動的需要数連携 + sbGetBuyerCount/sbInsertBuyerInterest追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">7ae8dfe</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-24 14:27</span>
+  </div>
+  <div class="commit-msg">feat: Tool3 Inage需要数をSupabase area_buyer_countから動的取得・買い手登録ボタン追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">e41da40</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:25</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（2026-05-24 Q&Aサンプル12件・map.html需要データ連携）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">8c675a8</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:24</span>
+  </div>
+  <div class="commit-msg">merge: map.html 買い手候補数ポップアップ表示</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">3bcfe1b</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-24 14:24</span>
+  </div>
+  <div class="commit-msg">feat: map.html ポップアップに買い手候補数表示追加（Tool3需要データ連携）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">ec36e03</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:21</span>
+  </div>
+  <div class="commit-msg">merge: dev → main (2026-05-24 実績カウンター12件更新)</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">6a68ef8</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:20</span>
+  </div>
+  <div class="commit-msg">fix: inage/index.html 実績カウンターQ&A件数を10→12に更新</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">179df17</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:20</span>
+  </div>
+  <div class="commit-msg">merge: dev → main (2026-05-24 Q&A 12件達成・宮野木町・緑町追加)</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">dc2c186</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:20</span>
+  </div>
+  <div class="commit-msg">feat: Q&A掲示板 sample-11(宮野木町・売却)・sample-12(緑町・購入)追加で計12件に</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">581971e</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:18</span>
+  </div>
+  <div class="commit-msg">merge: dev → main (2026-05-24 llms.txt稲毛区更新)</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">7e9b01a</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-24 14:18</span>
+  </div>
+  <div class="commit-msg">docs: llms.txt 稲毛区Q&A10件・Tool4/5稲毛区強化・実績カウンターを追記</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">4b519c4</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-24 14:16</span>
+  </div>
+  <div class="commit-msg">merge: dev → main (2026-05-24 Tool2 稲毛区補助金・路線価情報追加)</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">2af7448</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-24 14:16</span>
+  </div>
+  <div class="commit-msg">feat: Tool2 card-demolish 千葉市補助金情報・card-souzoku 稲毛区路線価参考値追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">12e9878</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-24 14:15</span>
+  </div>
+  <div class="commit-msg">merge: dev → main (2026-05-24 Tool2 card-akiya3 稲毛区ガイド)</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">d8a6c5f</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-24 14:15</span>
+  </div>
+  <div class="commit-msg">feat: Tool2 card-akiya3 稲毛区向けプレースホルダー・解釈ガイド追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">9780576</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-24 14:14</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（2026-05-24 Tool4/5稲毛区強化・inage実績カウンター）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">2dcabb0</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-24 14:13</span>
+  </div>
+  <div class="commit-msg">merge: dev → main (2026-05-24 Tool4稲毛区賃料相場追加)</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">055ccae</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🏢 Tool4 管理</span>
+    <span class="time">2026-05-24 14:13</span>
+  </div>
+  <div class="commit-msg">feat: Tool4 賃料相場チェッカーに稲毛区オプション追加（家賃相場ガイド付き）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">2be5792</code>
+    <span class="tag" style="background:#d4af3722;color:#d4af37;border-color:#d4af3744">📊 Tool5 投資</span>
+    <span class="time">2026-05-24 14:11</span>
+  </div>
+  <div class="commit-msg">merge: dev → main (2026-05-24 Tool5稲毛区対応 + inage実績カウンター)</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">37128be</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:11</span>
+  </div>
+  <div class="commit-msg">feat: inage/index.html 実績カウンターセクション追加（5ツール・10Q&A・12町丁目・無料）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">19c8e13</code>
+    <span class="tag" style="background:#d4af3722;color:#d4af37;border-color:#d4af3744">📊 Tool5 投資</span>
+    <span class="time">2026-05-24 14:09</span>
+  </div>
+  <div class="commit-msg">feat: Tool5 稲毛区向け相場ガイド・テンプレート・解釈ノートを追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">f4ce017</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:07</span>
+  </div>
+  <div class="commit-msg">merge: dev → main (2026-05-24 improvement-log完成)</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">21eb562</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:07</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（2026-05-24 全セッション作業完了記録）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">b810140</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:04</span>
+  </div>
+  <div class="commit-msg">Merge dev: Q&A 10件・稲毛チェッカー強化（2026-05-24）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">3dd7dd5</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:04</span>
+  </div>
+  <div class="commit-msg">Fix: Q&A sample-9 の HOME'sシングルクォートによるJSエラーを修正</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">f9c878c</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:04</span>
+  </div>
+  <div class="commit-msg">feat: Q&A掲示板 サンプルデータ2件追加（穴川賃貸管理・小仲台固定資産税、計10件に）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">c3828b3</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:03</span>
+  </div>
+  <div class="commit-msg">Merge dev: 稲毛団地チェッカーLINEシェア・コスト試算追加（2026-05-24）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">4c3289b</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 14:03</span>
+  </div>
+  <div class="commit-msg">UX: 稲毛団地チェッカーに「待つことのコスト試算」パネルを追加（維持費5年・10年合計）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">d526338</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 14:01</span>
+  </div>
+  <div class="commit-msg">UX: 稲毛団地チェッカーにLINEシェアボタンを追加（診断結果のシェア機能）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">cc44d48</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:00</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（2026-05-24 Q&A大幅強化・map改善）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">aa2ec67</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 14:00</span>
+  </div>
+  <div class="commit-msg">Merge dev: Q&Aフィルター拡張・エリア追加（2026-05-24）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">c1dbbc8</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 13:59</span>
+  </div>
+  <div class="commit-msg">UX: Q&A掲示板 エリアフィルターに作草部・稲毛本町を追加（サンプルデータに合わせて）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">3e3168e</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 13:59</span>
+  </div>
+  <div class="commit-msg">Merge dev: Q&A CTA追加・マップポップアップ改善（2026-05-24）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">e56eccf</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 13:58</span>
+  </div>
+  <div class="commit-msg">UX: Q&A掲示板 回答展開後にカテゴリ別CTAを追加（売却→AI査定・投資→投資分析等）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">ed73902</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 13:57</span>
+  </div>
+  <div class="commit-msg">Merge dev: 稲毛区相場マップのポップアップCTA改善（2026-05-24）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">c88b716</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-24 13:57</span>
+  </div>
+  <div class="commit-msg">UX: 稲毛区相場マップ ポップアップにTool1 AI査定CTAを追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">107d863</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-24 13:56</span>
+  </div>
+  <div class="commit-msg">Merge dev: Tool2バグ修正+Q&A掲示板サンプル追加（2026-05-24）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">86c19b0</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 13:55</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（2026-05-24 バグ修正+Q&A追加）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">6e12a0c</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 13:55</span>
+  </div>
+  <div class="commit-msg">feat: Q&A掲示板 サンプルデータ3件追加（稲毛団地相続・長沼町土地分割・天台売却税金）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">e775e5d</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-24 13:53</span>
+  </div>
+  <div class="commit-msg">Fix: Tool2 calcAkiyaSharedKitchen の html+= バグ修正（解釈ガイド・LINEシェアが未表示）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">80ece0d</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-24 13:49</span>
+  </div>
+  <div class="commit-msg">Fix: Tool2 残存バグ9箇所修正（const/return/binary-chainパターンのLINEシェアボタン非表示）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">c078397</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-24 13:47</span>
+  </div>
+  <div class="commit-msg">Fix: Tool2 二重+パターンのhtml+=バグを追加30箇所修正（LINEシェアボタン・解釈ガイドが非表示だった）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">b549da9</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-24 13:44</span>
+  </div>
+  <div class="commit-msg">UX: Tool1 稲毛区エリア選択時に査定結果へ稲毛区ハブ誘導バナーを追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">b6b0884</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-24 13:42</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（2026-05-24 品質向上・Tool2バグ32箇所修正）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">9552870</code>
+    <span class="tag" style="background:#fb923c22;color:#fb923c;border-color:#fb923c44">🏚️ Tool2 空き家</span>
+    <span class="time">2026-05-24 13:40</span>
+  </div>
+  <div class="commit-msg">Fix: Tool2 孤立したhtml+=バグを32箇所修正（LINEシェアボタン・解釈ガイドが表示されていなかった）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">8c535e3</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-24 13:37</span>
+  </div>
+  <div class="commit-msg">UX: Tool1稲毛区一般ヒントにサブエリア選択ガイド追加・Tool3需要表示に解釈ガイド+LINEシェア追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">72fbd6e</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 12:10</span>
+  </div>
+  <div class="commit-msg">UX: 相場マップのポップアップにエリア別無料査定リンクを追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">900c2ef</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 12:09</span>
+  </div>
+  <div class="commit-msg">UX: 稲毛区ハブに最新データ4枚カード追加（穴川最高値・長沼町取引数・地価上昇率・将来人口）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">ce2ae53</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 12:08</span>
+  </div>
+  <div class="commit-msg">UX: notify.htmlにFAQ追加 / qa.htmlのJSON-LDを5件に拡張</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">a4b1f15</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 12:07</span>
+  </div>
+  <div class="commit-msg">UX: 稲毛区ページ総合ポリッシュ（Q&A拡充・FAQ表示・文字数カウンター）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">cae7522</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 11:09</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log更新（2026-05-24 稲毛区AEO・UX改善記録）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">eb4fe4b</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 11:08</span>
+  </div>
+  <div class="commit-msg">UX: 通知登録ページに登録者数カウンター追加（社会的証明）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">5125733</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 11:05</span>
+  </div>
+  <div class="commit-msg">Fix: Q&A sample-2の重複bodyフィールド削除 + フィルターがSupabaseデータを保持するよう修正</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">f066bf6</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-24 11:02</span>
+  </div>
+  <div class="commit-msg">UX: Tool1 稲毛区エリア選択時に稲毛区特化ページへの誘導リンクを表示</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">9a74b81</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 11:00</span>
+  </div>
+  <div class="commit-msg">SEO: sitemap.xmlに稲毛区4ページを追加（ハブ・マップ・Q&A・通知）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">17ae08d</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 10:57</span>
+  </div>
+  <div class="commit-msg">UX: 稲毛区相場マップ テーブルを3種別横並び表示に改善</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">a0e36cc</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 10:51</span>
+  </div>
+  <div class="commit-msg">AEO: llms.txt に稲毛区特化5ページのセクションを追加</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">7f8aac1</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 10:48</span>
+  </div>
+  <div class="commit-msg">AEO: 稲毛区3ページにFAQ JSON-LD追加 + 相場マップにLINEシェアボタン実装</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">1d45576</code>
+    <span class="tag" style="background:#34d39922;color:#34d399;border-color:#34d39944">✨ UX改善</span>
+    <span class="time">2026-05-24 09:30</span>
+  </div>
+  <div class="commit-msg">UX: 稲毛区ハブから団地チェッカー・需要タブへのディープリンク実装</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">af19051</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 09:27</span>
+  </div>
+  <div class="commit-msg">Merge branch 'dev'</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">626f5e1</code>
+    <span class="tag" style="background:#4ade8022;color:#4ade80;border-color:#4ade8044">🏠 Tool1 AI査定</span>
+    <span class="time">2026-05-24 09:26</span>
+  </div>
+  <div class="commit-msg">Tool1: 稲毛区4サブエリアの価格精度改善（穴川・稲毛駅近・一般・駅遠）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">3fa1e1e</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 09:22</span>
+  </div>
+  <div class="commit-msg">Merge branch 'main' of https://github.com/shinji-japaaaan/real-estate</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">70533a6</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 09:17</span>
+  </div>
+  <div class="commit-msg">docs: improvement-log 稲毛区全5施策完了を記録</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">a9e25b1</code>
+    <span class="tag" style="background:#60a5fa22;color:#60a5fa;border-color:#60a5fa44">🤝 Tool3 売買</span>
+    <span class="time">2026-05-24 09:17</span>
+  </div>
+  <div class="commit-msg">feat: 施策⑤ 稲毛区ローカルマッチング実装（Tool3に新タブ追加）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">93ae627</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 09:14</span>
+  </div>
+  <div class="commit-msg">feat: 施策④ メール通知登録ページ実装（/inage/notify.html）</div>
+</div>
+<div class="commit-row">
+  <div class="commit-meta">
+    <code class="sha">104074f</code>
+    <span class="tag" style="background:#9ca3af22;color:#9ca3af;border-color:#9ca3af44">• その他</span>
+    <span class="time">2026-05-24 09:12</span>
+  </div>
+  <div class="commit-msg">feat: 施策③ Q&A掲示板実装（/inage/qa.html）</div>
+</div>
+</div>
+<div class="footer">
+  <a class="btn btn-gold" href="https://shinji-japaaaan.github.io/real-estate/" target="_blank">🌐 本番サイトを開く</a>
+  <a class="btn btn-ghost" href="index.html">← レポート一覧へ</a>
+  <a class="btn btn-ghost" href="https://github.com/shinji-japaaaan/real-estate/commits/main" target="_blank">GitHubで確認</a>
+</div>
+<div style="text-align:center;padding:16px;color:#334155;font-size:11px">Generated: 2026-05-24 19:32 JST</div>
+</body>
+</html>
