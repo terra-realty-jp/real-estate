@@ -311,7 +311,6 @@ var SAMPLE_QA = [
     town_name: '長沼町',
     title: '長沼町のマンションを売ろうと思っているが、今が売りどきか知りたい',
     body: '長沼町のマンション（2LDK・62㎡・築22年・8階・管理費1.6万円・積立金1.1万円）を所有しています。子どもが独立して夫婦2人には広すぎるので住み替えを考えています。相場が上がっているうちに売った方がいいのか、もう少し待つべきか迷っています。',
-    body: '長沼町のマンション（2LDK・62㎡・築22年・8階）を所有。子どもが独立して住み替えを検討中。今が売りどきか迷っています。',
     status: 'published',
     created_at: '2026-05-15',
     answer: '稲毛区全体で2024年は前年比+2.1%の地価上昇が続いており、長沼町も同様の傾向です。ただし2025年以降は日銀の利上げ動向・人口動態の影響で上昇ペースが鈍化する可能性があります。\n\n築22年・8階・62㎡のマンションは稲毛区内でも流動性が高い条件です。現在の相場では2,000〜2,500万円程度の売出価格が想定されます。\n\n「もう少し待つ」よりも「今動いて次の物件を探す時間を確保する」方が、住み替え全体の満足度が高い傾向があります。まず無料査定で数字を確認してから判断されることをおすすめします。'
@@ -331,6 +330,7 @@ var SAMPLE_QA = [
 // ---- フィルター状態 ----
 var filterCat = 'all';
 var filterTown = 'all';
+var currentQAData = SAMPLE_QA;
 
 function setFilter(type, val, btn) {
   if (type === 'cat') {
@@ -341,7 +341,7 @@ function setFilter(type, val, btn) {
     document.querySelectorAll('.filter-group:last-child .filter-chip').forEach(function(b) { b.classList.remove('active'); });
   }
   btn.classList.add('active');
-  renderQA(SAMPLE_QA);
+  renderQA(currentQAData);
 }
 
 // ---- カテゴリバッジ ----
@@ -429,6 +429,7 @@ function loadFromSupabase() {
           var ans = q.qa_answers && q.qa_answers.length > 0 ? q.qa_answers[0].body : null;
           return Object.assign({}, q, { answer: ans });
         });
+        currentQAData = data;
         renderQA(data);
       })
       .catch(function() { renderQA(SAMPLE_QA); });
