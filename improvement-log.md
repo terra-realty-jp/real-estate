@@ -4,23 +4,25 @@
 
 ---
 
-## 2026-05-24（品質向上・バグ修正 第2弾 + Q&A追加）
+## 2026-05-24（品質向上・バグ修正 第3弾 + Q&A大幅強化 + map/Q&A UX改善）
 
-- **対象**: tools/1-ai-satei.html, tools/2-akiya-hunter.html, tools/3-owner-direct.html, inage/qa.html
-- **施策**: 全ツール品質向上（解釈ガイド・シェアテキスト・バグ修正）+ Q&Aコンテンツ強化
+- **対象**: tools/2-akiya-hunter.html, inage/qa.html, inage/map.html
+- **施策**: 全ツール品質向上 + Q&Aコンテンツ強化 + 稲毛区ページUX改善
 - **実装内容**:
   1. Tool1: `chiba_inage`（稲毛区一般）ヒントにサブエリア選択ガイドを追加
   2. Tool1: 稲毛区エリア選択時の査定結果に「稲毛区専用ハブへの誘導バナー」を追加
   3. Tool3: `renderInageMatch()` に需要レベル判定バッジ・解釈ガイド・LINEシェアボタンを追加
-  4. Tool2: 孤立した `html+=` バグを合計72箇所修正（パターン別: 単純32件+二重加算30件+その他9件+SharedKitchen1件）
-     - LINEシェアボタンと解釈ガイドが実際には非表示になっていた（return/const/el.innerHTML+=パターン）
-     - `calcAkiyaSharedKitchen()` の `el.innerHTML += + '<str1>' '<str2>'` バグ（最後の1件）を追加修正
-  5. Q&A掲示板: サンプルデータ3件追加（計8件に拡充）
+  4. Tool2: 孤立した `html+=` バグを合計72箇所修正（calcAkiyaSharedKitchen含む）
+  5. Q&A掲示板: サンプルデータ3件追加（計8件・sample-6〜8）
      - sample-6: 稲毛団地相続（修繕積立金不足・建替え計画）
      - sample-7: 長沼町土地100坪の分割売却（試算・費用目安）
      - sample-8: 天台の自宅売却と確定申告・3,000万円控除
-     - FAQPage JSON-LDも3件追加（AEO・AI検索向け）
-- **次のアクション**: Tool2 新カード追加 or inage/map.html 改善 or index.htmlの稲毛区バナー追加
+  6. Q&A掲示板: 回答展開後にカテゴリ別CTAを追加（answerCta()関数）
+     - 売却→AI査定ツール・投資→投資分析ツール・賃貸→賃貸管理ツール 等
+  7. Q&A掲示板: エリアフィルターに作草部・稲毛本町を追加（サンプルデータと一致）
+  8. inage/map.html: ポップアップにAI査定ツールへのリンクCTAを追加（email相談に加え）
+  9. FAQPage JSON-LDに3件追加（稲毛団地・長沼町土地・天台売却税）
+- **次のアクション**: Tool2に稲毛区特化の新カード追加 / Q&Aサンプルをさらに追加
 
 ---
 
