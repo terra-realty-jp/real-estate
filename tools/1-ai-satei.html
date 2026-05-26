@@ -591,6 +591,11 @@
         <a href="../inage/index.html" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:var(--gold);color:#000;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;text-decoration:none">稲毛区専用ページを見る →</a>
       </div>
 
+      <!-- 稲毛区 実取引データ使用バッジ（Phase 2） -->
+      <div id="inage-live-data-badge" style="display:none;background:rgba(22,163,74,0.07);border:1px solid rgba(22,163,74,0.25);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.7">
+        ✅ <strong>実取引データ使用</strong>：この査定は国土交通省の実際の成約データ（<span id="inage-data-source-label" style="color:var(--green);font-weight:700"></span>）をベースに算出しています。
+      </div>
+
       <!-- 成約期間詳細パネル -->
       <div id="period-detail-panel" style="background:var(--dark3);border:1px solid rgba(0,0,0,0.06);border-radius:12px;padding:20px;margin-top:16px;display:none">
         <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--gold)">⏱ この価格帯での成約期間目安</div>
@@ -4811,6 +4816,32 @@ let AREA_UNIT = {
     .then(d => { if (d && d.prices) Object.assign(AREA_UNIT, d.prices); })
     .catch(() => {});
 })();
+
+// Phase 2: Supabase 実取引データで稲毛区 AREA_UNIT を動的更新
+let _inageLiveDataInfo = null;
+(async function loadInageLivePrices() {
+  if (typeof sbGetTownPrices !== 'function') return;
+  const INAGE_TOWNS = ['穴川','稲毛本町','小仲台','天台','長沼町','作草部','千草台','轟町','萩台町','緑町','宮野木町','柏台','黒砂台','稲毛区その他'];
+  try {
+    const prices = await sbGetTownPrices(INAGE_TOWNS);
+    if (!prices) return;
+    const getUnit = function(t, type) { var d = prices[t]; return d ? (d[type] || d.sqm || null) : null; };
+    var anakai  = getUnit('穴川', 'mansion') || getUnit('穴川', 'sqm');
+    var station = getUnit('稲毛本町', 'mansion') || getUnit('稲毛本町', 'sqm');
+    var otherPrices = ['宮野木町','長沼町','緑町'].map(function(t){ return getUnit(t,'mansion')||getUnit(t,'sqm'); }).filter(Boolean);
+    var otherUnit = otherPrices.length ? Math.round(otherPrices.reduce(function(a,b){return a+b;},0)/otherPrices.length) : null;
+    var allUnits = INAGE_TOWNS.map(function(t){ return getUnit(t,'mansion')||getUnit(t,'sqm'); }).filter(Boolean);
+    var avgUnit = allUnits.length ? Math.round(allUnits.reduce(function(a,b){return a+b;},0)/allUnits.length) : null;
+    if (anakai)    AREA_UNIT.chiba_inage_anakai  = anakai;
+    if (station)   AREA_UNIT.chiba_inage_station = station;
+    if (otherUnit) AREA_UNIT.chiba_inage_other   = otherUnit;
+    if (avgUnit)   AREA_UNIT.chiba_inage          = avgUnit;
+    var sampleData = Object.values(prices).find(function(d){ return d && d.year; });
+    if (sampleData) {
+      _inageLiveDataInfo = { year: sampleData.year, quarter: sampleData.quarter, townCount: Object.keys(prices).length };
+    }
+  } catch(e) { console.warn('[Phase2]', e.message); }
+})();
 const AREA_LABEL = {
   tokyo_central:'東京都中心部', tokyo_yamate:'東京都山手線内', tokyo_23:'東京都23区',
   tokyo_city:'東京都市部', kanagawa:'神奈川横浜・川崎', kanagawa_other:'神奈川その他',
@@ -6593,6 +6624,18 @@ function calcAndShowResult() {
   // 稲毛区エリア選択時 → 専用ハブ誘導バナーを表示
   const inageHubCta = document.getElementById('inage-result-hub-cta');
   if (inageHubCta) inageHubCta.style.display = pref.startsWith('chiba_inage') ? 'block' : 'none';
+
+  // 稲毛区 実取引データバッジ（Phase 2）
+  const liveBadge = document.getElementById('inage-live-data-badge');
+  const liveLabel = document.getElementById('inage-data-source-label');
+  if (liveBadge && liveLabel) {
+    if (pref.startsWith('chiba_inage') && _inageLiveDataInfo) {
+      liveLabel.textContent = _inageLiveDataInfo.year + '年第' + _inageLiveDataInfo.quarter + '四半期・' + _inageLiveDataInfo.townCount + '町丁目データ';
+      liveBadge.style.display = 'block';
+    } else {
+      liveBadge.style.display = 'none';
+    }
+  }
 
   // LINE シェアURL更新
   const shareText = `不動産AI査定ツールで物件価格を調べました。推定価格: ${fmtV(price)}（TERRA REALTYの無料ツール）`;
