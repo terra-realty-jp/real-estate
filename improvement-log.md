@@ -4,6 +4,38 @@
 
 ---
 
+## 2026-05-26（コンテキスト継続セッション・後半）
+
+- **対象**: inage/qa.html, index.html, inage/notify.html, sitemap.xml
+- **施策**: 品質改善・SEO・リード獲得強化
+
+### 実装内容
+
+1. **inage/qa.html 離脱意図検知ポップアップ追加** (`734fdee`)
+   - `ep_shown_inage` セッションキー共有（inage全ページで1回のみ表示）
+   - タイムアウト60秒、スクロールアップ検知、mouseleave検知
+   - Supabase `notify_subscribers` へINSERT
+
+2. **index.html 離脱意図検知ポップアップ追加** (`b694b8f`)
+   - メインランディングページからも通知登録を捕捉
+   - 同じ `ep_shown_inage` セッションキーで重複表示防止
+   - タイムアウト45秒
+
+3. **inage/notify.html にFAQPage構造化データ追加** (`b78c536`)
+   - Google検索でリッチリザルト（FAQ表示）対応
+   - 3問：無料か・届く情報・必要な個人情報
+
+4. **sitemap.xml 日付更新・優先度調整** (`99bda21`)
+   - 全ページを2026-05-26に更新
+   - 稲毛区ページ（inage/）の優先度を全体的に引き上げ
+
+### 現在の状態
+- 離脱意図ポップアップ: index.html・inage/index.html・inage/map.html・inage/qa.html の全4ページに設置完了
+- OGP・構造化データ: 全inage4ページ + index.html に設置完了
+- dev → main マージ済み・本番反映完了
+
+---
+
 ## 2026-05-26（別アカウントからの引き継ぎセッション）
 
 - **対象**: tools/4-kanri-saas.html, inage/index.html, inage/map.html, inage/qa.html, inage/notify.html
