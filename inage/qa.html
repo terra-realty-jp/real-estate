@@ -354,6 +354,11 @@
 
 <main class="main">
 
+  <!-- キーワード検索 -->
+  <div style="margin-bottom:12px">
+    <input type="search" id="qa-search" placeholder="キーワードで探す（例: 相続登記、稲毛団地、売却価格）" oninput="onSearchInput()" style="width:100%;padding:10px 14px;border:1.5px solid rgba(0,0,0,0.12);border-radius:10px;font-size:14px;font-family:inherit;color:var(--text);background:var(--dark2);box-sizing:border-box;outline:none" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='rgba(0,0,0,0.12)'">
+  </div>
+
   <!-- フィルター -->
   <div class="filter-wrap">
     <div class="filter-group">
@@ -666,7 +671,14 @@ var SAMPLE_QA = [
 // ---- フィルター状態 ----
 var filterCat = 'all';
 var filterTown = 'all';
+var searchKeyword = '';
 var currentQAData = SAMPLE_QA;
+
+function onSearchInput() {
+  var val = document.getElementById('qa-search').value;
+  searchKeyword = val.trim();
+  renderQA(currentQAData);
+}
 
 function setFilter(type, val, btn) {
   if (type === 'cat') {
@@ -732,6 +744,11 @@ function renderQA(data) {
   var filtered = data.filter(function(q) {
     if (filterCat !== 'all' && q.category !== filterCat) return false;
     if (filterTown !== 'all' && q.town_name !== filterTown) return false;
+    if (searchKeyword) {
+      var kw = searchKeyword.toLowerCase();
+      var haystack = ((q.title || '') + ' ' + (q.body || '') + ' ' + (q.town_name || '') + ' ' + (q.category || '')).toLowerCase();
+      if (haystack.indexOf(kw) === -1) return false;
+    }
     return true;
   });
 
