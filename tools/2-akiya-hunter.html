@@ -6539,10 +6539,10 @@ function calcInageChecker() {
   if (area === 'other') areaBonus = -2;
 
   // ---- 判定 ----
-  var adjustedTotal = total;
+  var adjustedTotal = total + areaBonus;
   var verdict, verdictSub, bgColor, guide;
 
-  if (total >= 33) {
+  if (adjustedTotal >= 33) {
     verdict = '今が売りどきです';
     verdictSub = '物件の価値が下がる前に、早めの売却検討をおすすめします';
     bgColor = 'linear-gradient(135deg,#7f1d1d,#991b1b)';
@@ -6550,7 +6550,7 @@ function calcInageChecker() {
       '稲毛区では築50年超の公団住宅の価値が今後さらに下落する可能性があります。' +
       (areaBonus > 0 ? '一方、お選びのエリアは買い手需要が比較的高いため、今なら相場に近い価格で売却できる可能性があります。' : '') +
       '「今すぐ売る」と決めなくても、まず査定だけ取って相場を把握することをおすすめします。';
-  } else if (total >= 20) {
+  } else if (adjustedTotal >= 20) {
     verdict = '賃貸活用も検討できます';
     verdictSub = '売却か賃貸か、両方の可能性を比べてみましょう';
     bgColor = 'linear-gradient(135deg,#78350f,#92400e)';
@@ -6598,7 +6598,10 @@ function calcInageChecker() {
       '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:4px;transition:width 0.5s ease"></div>' +
       '</div></div>';
   }).join('');
-  barsHtml += '<div style="font-size:12px;color:var(--text-muted);margin-top:8px;border-top:1px solid rgba(0,0,0,0.06);padding-top:8px">合計スコア: <strong>' + total + '/50</strong>（33以上：売却推奨 / 20〜32：要検討 / 19以下：様子見）</div>';
+  var scoreLabel = areaBonus !== 0
+    ? '合計スコア: <strong>' + total + '/50</strong>（エリア補正' + (areaBonus > 0 ? '+' : '') + areaBonus + ' → <strong>' + adjustedTotal + '</strong>）（33以上：売却推奨 / 20〜32：要検討 / 19以下：様子見）'
+    : '合計スコア: <strong>' + total + '/50</strong>（33以上：売却推奨 / 20〜32：要検討 / 19以下：様子見）';
+  barsHtml += '<div style="font-size:12px;color:var(--text-muted);margin-top:8px;border-top:1px solid rgba(0,0,0,0.06);padding-top:8px">' + scoreLabel + '</div>';
   document.getElementById('ic-score-bars').innerHTML = barsHtml;
   document.getElementById('ic-guide').textContent = guide;
 
@@ -6622,18 +6625,18 @@ function calcInageChecker() {
 
   // CTA URL
   var ctaBody = '【稲毛区 団地・古い戸建て 相談】\n\n' +
-    '診断結果：' + verdict + '（スコア' + total + '/50）\n' +
+    '診断結果：' + verdict + '（スコア' + adjustedTotal + '/50）\n' +
     '築年数：' + age + '年\n' +
     '物件種別：' + (type === 'danchi' ? '公団・分譲団地' : type === 'kodan_kodate' ? '公団戸建て' : '一戸建て') + '\n' +
     '月額費用：' + (monthlyTotal > 0 ? (monthlyTotal/10000).toFixed(1) + '万円/月' : 'なし') + '\n' +
     'エリア：' + (area || '未指定') + '\n\n' +
     'ご相談内容：';
   document.getElementById('ic-cta-btn').href =
-    'mailto:terra.realty.iam@gmail.com?subject=稲毛区団地チェッカー相談（スコア' + total + '）&body=' + encodeURIComponent(ctaBody);
+    'mailto:terra.realty.iam@gmail.com?subject=稲毛区団地チェッカー相談（スコア' + adjustedTotal + '）&body=' + encodeURIComponent(ctaBody);
 
   var shareText = '🏚️ 稲毛区団地チェッカーで診断してみた！\n\n' +
     '診断結果: 【' + verdict + '】\n' +
-    'スコア: ' + total + '/50点\n' +
+    'スコア: ' + adjustedTotal + '/50点\n' +
     '築年数: ' + age + '年 / 月額費用: ' + (monthlyTotal > 0 ? (monthlyTotal/10000).toFixed(1) + '万円' : 'なし') + '\n\n' +
     '稲毛区の団地・古い戸建てをお持ちの方へ。今後どうするか一度チェックしてみては？\n▶ 不動産かんたんツール（TERRA REALTY）';
   var shareUrl = 'https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html#tab-inage';
