@@ -954,7 +954,7 @@ function renderTable() {
     if (!price) return '';
     var tsubo = sqmToTsubo(price);
     var trendCls = d.trend === 'up' ? 'trend-up' : d.trend === 'down' ? 'trend-down' : 'trend-flat';
-    return '<tr>' +
+    return '<tr style="cursor:pointer" onclick="focusTown(\'' + d.id + '\')" title="地図で' + d.name + 'を確認する">' +
       '<td><strong>' + d.name + '</strong><br><span style="font-size:10px;color:var(--text-muted)">' + d.note.slice(0,16) + '…</span></td>' +
       '<td style="text-align:center">' + fmtPrice(d.types.house) + '<br><span style="font-size:10px;color:var(--text-muted)">万円/㎡</span></td>' +
       '<td style="text-align:center">' + fmtPrice(d.types.mansion) + '<br><span style="font-size:10px;color:var(--text-muted)">万円/㎡</span></td>' +
@@ -963,6 +963,30 @@ function renderTable() {
       '<td class="' + trendCls + '">' + d.trendLabel + '</td>' +
       '</tr>';
   }).join('');
+}
+
+// 価格テーブル行クリックで地図にフォーカス
+function focusTown(townId) {
+  var d = TOWN_DATA.find(function(x) { return x.id === townId; });
+  if (!d) return;
+  var mapEl = document.getElementById('map');
+  if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(function() {
+    if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
+      var townPolys = markers.filter(function(m) { return m._townName === d.name && m.getBounds; });
+      if (townPolys.length > 0) {
+        var combined = townPolys[0].getBounds();
+        townPolys.forEach(function(m) { combined.extend(m.getBounds()); });
+        map.fitBounds(combined, { maxZoom: 15 });
+        setTimeout(function() { townPolys[0].openPopup(combined.getCenter()); }, 300);
+        return;
+      }
+    }
+    map.setView([d.lat, d.lng], 15);
+    markers.forEach(function(m) {
+      if (m.getLatLng && Math.abs(m.getLatLng().lat - d.lat) < 0.0001) m.openPopup();
+    });
+  }, 400);
 }
 
 // URLパラメータで町名ハイライト
