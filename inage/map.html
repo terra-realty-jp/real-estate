@@ -169,8 +169,11 @@
     .price-table { width: 100%; border-collapse: collapse; background: var(--dark2); border-radius: 12px; overflow: hidden; }
     .price-table th {
       background: #1a1812; color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 700;
-      padding: 11px 14px; text-align: left;
+      padding: 11px 14px; text-align: left; cursor: pointer; user-select: none; white-space: nowrap;
     }
+    .price-table th:hover { color: var(--gold); }
+    .price-table th.sort-asc::after { content: ' ↑'; color: var(--gold); }
+    .price-table th.sort-desc::after { content: ' ↓'; color: var(--gold); }
     .price-table td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,0.05); }
     .price-table tr:last-child td { border-bottom: none; }
     .price-table tr:hover td { background: rgba(201,168,76,0.05); }
@@ -359,12 +362,12 @@
     <table class="price-table" id="priceTable">
       <thead>
         <tr>
-          <th>エリア</th>
-          <th>一戸建て</th>
-          <th>マンション</th>
-          <th>土地</th>
-          <th>坪単価目安</th>
-          <th>トレンド</th>
+          <th onclick="sortTable('name')">エリア</th>
+          <th onclick="sortTable('house')">一戸建て</th>
+          <th onclick="sortTable('mansion')">マンション</th>
+          <th onclick="sortTable('land')">土地</th>
+          <th onclick="sortTable('tsubo')">坪単価目安</th>
+          <th onclick="sortTable('trend')">トレンド</th>
         </tr>
       </thead>
       <tbody id="priceTableBody">
@@ -966,9 +969,41 @@ function renderTrendChart(contentEl, subEl, townName, trend) {
 }
 
 // テーブル描画（種別3列横並び）
+var tableSortCol = 'tsubo';
+var tableSortDir = 'desc';
+
+function getTableSortVal(d, col) {
+  if (col === 'name') return d.name;
+  if (col === 'house') return d.types.house || 0;
+  if (col === 'mansion') return d.types.mansion || 0;
+  if (col === 'land') return d.types.land || 0;
+  if (col === 'trend') return d.trend === 'up' ? 2 : d.trend === 'flat' ? 1 : 0;
+  return getFilteredPrice(d) * 0.3025;
+}
+
+function sortTable(col) {
+  if (tableSortCol === col) {
+    tableSortDir = tableSortDir === 'desc' ? 'asc' : 'desc';
+  } else {
+    tableSortCol = col;
+    tableSortDir = col === 'name' ? 'asc' : 'desc';
+  }
+  renderTable();
+}
+
 function renderTable() {
   var tbody = document.getElementById('priceTableBody');
-  var sorted = TOWN_DATA.slice().sort(function(a, b) { return getFilteredPrice(b) - getFilteredPrice(a); });
+  var sorted = TOWN_DATA.slice().sort(function(a, b) {
+    var va = getTableSortVal(a, tableSortCol);
+    var vb = getTableSortVal(b, tableSortCol);
+    if (typeof va === 'string') return tableSortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    return tableSortDir === 'asc' ? va - vb : vb - va;
+  });
+  var ths = document.querySelectorAll('#priceTable thead th');
+  var cols = ['name','house','mansion','land','tsubo','trend'];
+  ths.forEach(function(th, i) {
+    th.className = cols[i] === tableSortCol ? ('sort-' + tableSortDir) : '';
+  });
   function fmtPrice(p) {
     if (!p) return '<span style="color:#ccc">—</span>';
     return '<span class="' + priceToClass(p) + '">' + Math.round(p/10000).toFixed(1) + '万</span>';
