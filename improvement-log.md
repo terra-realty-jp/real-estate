@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-05-26（別アカウントからの引き継ぎセッション）
+
+- **対象**: tools/4-kanri-saas.html, inage/index.html, inage/map.html, inage/qa.html, inage/notify.html
+- **施策**: 品質改善・SEO強化（ペルソナ別UXレビュー）
+
+### 実装内容
+
+1. **4-kanri-saas.html 未コミット変更をコミット**
+   - 稲毛区家賃相場結果に相場マップへのリンクを追加済みだった変更をコミット
+
+2. **稲毛区4ページにOGP・Twitterカードタグ追加**（`14d2c01`）
+   - inage/index.html・map.html・qa.html・notify.html の全4ページ
+   - `og:type` / `og:title` / `og:description` / `og:url` / `twitter:card` / `twitter:title` / `twitter:description` を設定
+   - SNSシェア時のリッチプレビューに対応（これまで完全に未設定だった）
+
+3. **相場マップ FAQ 天台エリア質問を可視セクションに追加**（`300c75f`）
+   - 構造化データ（JSON-LD FAQPage）には「天台エリアの不動産価格は？」があったが、可視FAQには未掲載だった不整合を修正
+   - ペルソナ3（天台在住・住み替え検討中）向けに天台の具体的な相場数字を明示
+   - 構造化データに「地価は今後上がりますか？」も追加（可視FAQと完全同期）
+
+### 次のアクション
+- 稲毛区その他レコード再分類（MLIT_API_KEY必要。環境変数設定後 `node scripts/fetch-inage-properties.js`）
+- dev → main マージ（安定確認後）
+- 戦略文書（research/no1-strategy.md）記載の優先度A施策の実装検討
+
+---
+
 ## 2026-05-24（map.html 座標補正 + 価格2025年更新）
 
 - **対象**: inage/map.html
