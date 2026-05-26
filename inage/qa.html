@@ -708,6 +708,26 @@ function updateBodyCounter(el) {
   counter.style.color = cnt >= 20 ? 'var(--green)' : 'var(--text-muted)';
 }
 
+// URLパラメータでエリアフィルターを初期設定（相場マップからの遷移）
+(function() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var town = params.get('town');
+    if (!town) return;
+    var btn = document.querySelector('.filter-chip[onclick*="town","' + town + '"]');
+    // ボタンが見つからない場合でも filterTown をセット
+    var townChips = document.querySelectorAll('[onclick^="setFilter(\'town\'"]');
+    townChips.forEach(function(chip) {
+      if (chip.textContent.trim() === town) {
+        setFilter('town', town, chip);
+        var allTownChip = document.querySelector('[onclick="setFilter(\'town\',\'all\',this)"]');
+        if (allTownChip) allTownChip.classList.remove('active');
+        chip.classList.add('active');
+      }
+    });
+  } catch(e) {}
+})();
+
 // 初期描画
 loadFromSupabase();
 </script>
