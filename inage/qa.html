@@ -555,6 +555,12 @@ function setFilter(type, val, btn) {
   } else {
     filterTown = val;
     document.querySelectorAll('.filter-group:last-child .filter-chip').forEach(function(b) { b.classList.remove('active'); });
+    // 投稿フォームのエリア選択を連動
+    var postTown = document.getElementById('post-town');
+    if (postTown && val !== 'all') {
+      var opts = Array.from(postTown.options).map(function(o) { return o.value; });
+      if (opts.indexOf(val) !== -1) postTown.value = val;
+    }
   }
   btn.classList.add('active');
   renderQA(currentQAData);
