@@ -5001,3 +5001,18 @@ $$;
   2. qa.html: sample-2の重複bodyフィールドバグを修正
   3. qa.html: currentQAData変数でフィルター使用時もSupabaseデータを維持
 - **次のアクション**: 既存Tool1〜5の解釈ガイド補強 / Supabaseテーブル作成の実施確認
+
+## 2026-05-25（地図位置修正・MLIT API 切り替え）
+
+- **対象**: inage/map.html, scripts/fetch-inage-properties.js, .github/workflows/fetch-inage-properties.yml
+- **施策**: 施策① 相場マップ精度改善
+- **実装内容**:
+  1. map.html TOWN_DATA lat/lng を e-Stat 令和2年国勢調査小地域 重心値に全面修正（最大3km離れていた手入力値を修正）
+  2. fetch-inage-properties.js を旧 WebLand API から新 不動産情報ライブラリ API（reinfolib）に切り替え
+     - エンドポイント: https://www.reinfolib.mlit.go.jp/ex-api/external/XIT001
+     - 認証: Ocp-Apim-Subscription-Key ヘッダー（MLIT_API_KEY 環境変数）
+     - 取得方式: 直近5四半期を四半期ごとに個別リクエスト
+     - 追加正規化: 小中台町 → 小仲台、萩台 → 萩台町
+  3. GitHub Actions ワークフローに MLIT_API_KEY 環境変数を追加
+- **ドライラン結果**: 2025Q2-Q4 で 216件取得成功（稲毛区その他含む全12エリアにデータあり）
+- **次のアクション**: GitHub Secrets に MLIT_API_KEY を追加してワークフローを手動実行 → Supabase inge_properties に実データ投入

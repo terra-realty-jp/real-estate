@@ -1,27 +1,34 @@
 #!/usr/bin/env node
 /**
- * 国土交通省 不動産取引価格情報 WebLand API から
+ * 国土交通省 不動産情報ライブラリ API（reinfolib）から
  * 千葉市稲毛区（コード: 12103）の取引データを取得し
  * Supabase の inage_properties テーブルに保存するスクリプト
  *
  * 実行: node scripts/fetch-inage-properties.js
  * 依存: Node.js 標準モジュールのみ（npm install 不要）
- * 環境変数: SUPABASE_URL, SUPABASE_SERVICE_KEY
+ * 環境変数: SUPABASE_URL, SUPABASE_SERVICE_KEY, MLIT_API_KEY
+ *
+ * API: https://www.reinfolib.mlit.go.jp/ex-api/external/XIT001
+ * 認証: Ocp-Apim-Subscription-Key ヘッダー
  */
 
 const https = require('https');
+const zlib  = require('zlib');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const MLIT_API_KEY = process.env.MLIT_API_KEY || '';
 const CITY_CODE = '12103'; // 千葉市稲毛区
 
 // 稲毛区内の主要町丁目 → town_name の正規化マップ
+// includes() による部分一致: 例) '作草部町'.includes('作草部') = true
 const TOWN_NORMALIZE = {
-  '穴川':     '穴川',
-  '小仲台':   '小仲台',
-  '天台':     '天台',
-  '長沼町':   '長沼町',
-  '作草部':   '作草部',
+  '穴川':     '穴川',    // 穴川, 穴川町, 穴川1〜4丁目
+  '小仲台':   '小仲台',  // 小仲台, 小仲台1〜6丁目
+  '小中台':   '小仲台',  // 小中台町（旧称・API返却値）→ 小仲台
+  '天台':     '天台',    // 天台, 天台町
+  '長沼町':   '長沼町',  // 長沼町
+  '作草部':   '作草部',  // 作草部, 作草部町
   '稲毛本町': '稲毛本町',
   '宮野木町': '宮野木町',
   '緑町':     '緑町',
@@ -29,32 +36,57 @@ const TOWN_NORMALIZE = {
   '黒砂台':   '黒砂台',
   '柏台':     '柏台',
   '千草台':   '千草台',
+  '萩台':     '萩台町',  // 萩台町
 };
 
-function getCurrentQuarter() {
+// 直近 N 四半期のリストを返す（古い順）
+function getRecentQuarters(n) {
   const d = new Date();
-  const year = d.getFullYear();
-  const q = Math.ceil((d.getMonth() + 1) / 3);
-  return { year, q };
+  let year = d.getFullYear();
+  let q = Math.ceil((d.getMonth() + 1) / 3);
+  const list = [];
+  for (let i = 0; i < n; i++) {
+    list.unshift({ year, q });
+    if (q === 1) { year--; q = 4; } else { q--; }
+  }
+  return list;
 }
 
-function getPrevQuarter(year, q) {
-  if (q === 1) return { year: year - 1, q: 4 };
-  return { year, q: q - 1 };
-}
-
-function fetchJson(url) {
+// reinfolib API から1四半期分のデータを取得
+function fetchInageQuarter(year, quarter) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, { timeout: 20000 }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
+    if (!MLIT_API_KEY) {
+      return reject(new Error('MLIT_API_KEY が設定されていません'));
+    }
+    const path = `/ex-api/external/XIT001?priceClassification=01&year=${year}&quarter=${quarter}&city=${CITY_CODE}`;
+    const options = {
+      hostname: 'www.reinfolib.mlit.go.jp',
+      path,
+      method: 'GET',
+      headers: {
+        'Ocp-Apim-Subscription-Key': MLIT_API_KEY,
+        'Accept-Encoding': 'gzip',
+      },
+      timeout: 30000,
+    };
+    const req = https.request(options, (res) => {
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
       res.on('end', () => {
-        try { resolve(JSON.parse(data)); }
-        catch (e) { reject(new Error(`JSON parse error: ${e.message}`)); }
+        const buf = Buffer.concat(chunks);
+        const decompress = (res.headers['content-encoding'] === 'gzip')
+          ? cb => zlib.gunzip(buf, cb)
+          : cb => cb(null, buf);
+        decompress((err, data) => {
+          if (err) return reject(err);
+          try { resolve(JSON.parse(data.toString('utf8'))); }
+          catch (e) { reject(new Error(`JSON parse error: ${e.message}`)); }
+        });
       });
     });
     req.on('error', reject);
     req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    req.end();
   });
 }
 
@@ -91,7 +123,7 @@ function supabaseRequest(path, method, body) {
   });
 }
 
-// MLIT の物件タイプ文字列 → property_type
+// reinfolib API の Type 文字列 → property_type
 function classifyType(typeStr) {
   if (!typeStr) return null;
   if (typeStr.includes('マンション') || typeStr.includes('区分')) return 'mansion';
@@ -100,8 +132,9 @@ function classifyType(typeStr) {
   return null;
 }
 
-// 取引年 / 四半期を数値に変換
-function parseTradeTime(timeStr) {
+// 取引年 / 四半期を数値に変換（新 API は Period フィールド: "2024年第3四半期"）
+function parseTradeTime(r) {
+  const timeStr = r.Period || r.TimeOfTransaction || '';
   if (!timeStr) return { year: null, quarter: null };
   const m = timeStr.match(/(\d{4})年第(\d)四半期/);
   if (m) return { year: parseInt(m[1]), quarter: parseInt(m[2]) };
@@ -117,32 +150,29 @@ function normalizeTown(districtName) {
   return null;
 }
 
-async function fetchInageData(fromQ, toQ) {
-  // type=1: 宅地（マンション等）、type=2: 宅地（土地と建物）、type=3: 宅地（土地）
-  const types = ['1', '2', '3'];
+async function fetchInageData(quarters) {
   const allRecords = [];
 
-  for (const t of types) {
-    const url = `https://www.land.mlit.go.jp/webland/api/TradeListSearch?from=${fromQ}&to=${toQ}&city=${CITY_CODE}&type=${t}`;
-    console.log(`  取得中: type=${t} ...`);
+  for (const { year, q } of quarters) {
+    console.log(`  取得中: ${year}年第${q}四半期 ...`);
     try {
-      const json = await fetchJson(url);
+      const json = await fetchInageQuarter(year, q);
       if (json.data && json.data.length) {
         allRecords.push(...json.data);
         console.log(`    → ${json.data.length}件取得`);
       } else {
-        console.log(`    → データなし`);
+        console.log(`    → データなし (status: ${json.status})`);
       }
     } catch (e) {
-      console.warn(`    [WARN] type=${t}: ${e.message}`);
+      console.warn(`    [WARN] ${year}Q${q}: ${e.message}`);
     }
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 500));
   }
 
   return allRecords;
 }
 
-function transformRecords(rawData, tradeYear, tradeQuarter) {
+function transformRecords(rawData, fallbackYear, fallbackQuarter) {
   const rows = [];
   for (const r of rawData) {
     const propertyType = classifyType(r.Type);
@@ -156,7 +186,7 @@ function transformRecords(rawData, tradeYear, tradeQuarter) {
     if (areaSqm && (areaSqm < 10 || areaSqm > 5000)) continue;
 
     const townName = normalizeTown(r.DistrictName) || '稲毛区その他';
-    const { year, quarter } = parseTradeTime(r.TimeOfTransaction);
+    const { year, quarter } = parseTradeTime(r);
 
     rows.push({
       town_name:     townName,
@@ -164,8 +194,8 @@ function transformRecords(rawData, tradeYear, tradeQuarter) {
       price:         price,
       area_sqm:      areaSqm,
       price_per_sqm: pricePerSqm,
-      trade_year:    year || tradeYear,
-      trade_quarter: quarter || tradeQuarter,
+      trade_year:    year || fallbackYear,
+      trade_quarter: quarter || fallbackQuarter,
       source:        'mlit',
     });
   }
@@ -194,19 +224,20 @@ async function upsertToSupabase(rows) {
 }
 
 async function main() {
-  const cur = getCurrentQuarter();
-  const prev = getPrevQuarter(cur.year, cur.q);
-  const fromQ = `${prev.year}${prev.q}`;
-  const toQ = `${cur.year}${cur.q}`;
+  const quarters = getRecentQuarters(5); // 直近5四半期（約1年強）を取得
+  const fromLabel = `${quarters[0].year}Q${quarters[0].q}`;
+  const toLabel   = `${quarters[quarters.length-1].year}Q${quarters[quarters.length-1].q}`;
 
-  console.log('=== 稲毛区 不動産取引データ取得 ===');
-  console.log(`取得期間: ${fromQ} 〜 ${toQ}`);
-  console.log(`市区町村コード: ${CITY_CODE}（千葉市稲毛区）\n`);
+  console.log('=== 稲毛区 不動産取引データ取得（不動産情報ライブラリ API）===');
+  console.log(`取得期間: ${fromLabel} 〜 ${toLabel}（${quarters.length}四半期）`);
+  console.log(`市区町村コード: ${CITY_CODE}（千葉市稲毛区）`);
+  console.log(`API KEY: ${MLIT_API_KEY ? '設定済み' : '未設定（スキップ）'}\n`);
 
-  const rawData = await fetchInageData(fromQ, toQ);
+  const rawData = await fetchInageData(quarters);
   console.log(`\n合計取得: ${rawData.length}件`);
 
-  const rows = transformRecords(rawData, cur.year, cur.q);
+  const lastQ = quarters[quarters.length - 1];
+  const rows = transformRecords(rawData, lastQ.year, lastQ.q);
   console.log(`変換後: ${rows.length}件（異常値除外後）`);
 
   // 町丁目別集計を表示
