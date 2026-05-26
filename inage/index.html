@@ -7,6 +7,8 @@
   <meta name="description" content="千葉市稲毛区の不動産相場マップ・Q&A・稲毛団地チェッカーなど、稲毛区住民のための不動産情報プラットフォーム。長沼町・天台・穴川・小仲台の相場をエリア別に確認できます。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="window._noSupabase=true"></script>
+  <script src="../supabase-client.js"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -205,6 +207,13 @@
   </div>
 </div>
 
+<!-- ライブ相場スナップショット（Supabase実取引データ） -->
+<div id="live-prices-strip" style="background:#fff;border-bottom:2px solid rgba(201,168,76,0.2);padding:12px 20px;overflow-x:auto;white-space:nowrap;display:none">
+  <span style="font-size:11px;color:#6b6058;font-weight:700;margin-right:8px">最新相場（国土交通省実取引）:</span>
+  <span id="live-prices-list" style="font-size:11px;color:#1a1917"></span>
+  <span id="live-prices-date" style="font-size:10px;color:rgba(0,0,0,0.35);margin-left:10px"></span>
+</div>
+
 <main class="main">
 
   <div class="alert-box">
@@ -309,7 +318,7 @@
       <div style="font-size:11px;color:var(--text-muted);margin-top:3px">査定・空き家・管理・投資分析</div>
     </div>
     <div style="background:var(--dark2);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:18px 16px;text-align:center">
-      <div class="ach-num" data-target="12" style="font-size:36px;font-weight:900;color:var(--gold);line-height:1">0</div>
+      <div class="ach-num" data-target="12" data-type="qa" style="font-size:36px;font-weight:900;color:var(--gold);line-height:1">0</div>
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-top:4px">件のQ&A回答</div>
       <div style="font-size:11px;color:var(--text-muted);margin-top:3px">稲毛区の実際の相談事例</div>
     </div>
@@ -335,12 +344,12 @@
 
 <script>
 (function() {
+  // カウンターアニメーション
   var nums = document.querySelectorAll('.ach-num[data-target]');
-  if (!nums.length) return;
   var done = false;
   function animateTo(el, target) {
-    var start = 0;
-    var step = Math.ceil(target / 30);
+    var start = parseInt(el.textContent) || 0;
+    var step = Math.max(1, Math.ceil(target / 30));
     var timer = setInterval(function() {
       start += step;
       if (start >= target) { start = target; clearInterval(timer); }
@@ -350,34 +359,58 @@
   function animateCounters() {
     if (done) return;
     done = true;
-    nums.forEach(function(el) {
-      animateTo(el, parseInt(el.getAttribute('data-target'), 10));
-    });
-    // Supabaseから公開済みQ&A数を取得して更新
-    if (window.supabase && typeof getSupabaseClient === 'function') {
+    nums.forEach(function(el) { animateTo(el, parseInt(el.getAttribute('data-target'), 10)); });
+  }
+  var grid = document.getElementById('achievement-grid');
+  if (grid) {
+    if ('IntersectionObserver' in window) {
+      var obs = new IntersectionObserver(function(e) { if (e[0].isIntersecting) { animateCounters(); obs.disconnect(); } }, { threshold: 0.3 });
+      obs.observe(grid);
+    } else { animateCounters(); }
+  }
+
+  // ライブ相場スナップショット（Supabase）
+  if (typeof sbGetTownPrices === 'function') {
+    var KEY_TOWNS = ['穴川','小仲台','長沼町','天台','作草部','稲毛本町'];
+    sbGetTownPrices(KEY_TOWNS).then(function(prices) {
+      if (!prices) return;
+      var strip = document.getElementById('live-prices-strip');
+      var listEl = document.getElementById('live-prices-list');
+      var dateEl = document.getElementById('live-prices-date');
+      if (!strip || !listEl) return;
+      var parts = [];
+      KEY_TOWNS.forEach(function(town) {
+        var d = prices[town];
+        if (!d) return;
+        var unit = d.mansion || d.sqm;
+        if (!unit) return;
+        parts.push('<span style="margin-right:16px"><strong style="color:#1a1917">' + town + '</strong> <span style="color:#c9a84c;font-weight:700">' + Math.round(unit/10000) + '万円/㎡</span></span>');
+      });
+      if (!parts.length) return;
+      listEl.innerHTML = parts.join('');
+      var sample = Object.values(prices).find(function(d){ return d && d.year; });
+      if (sample && dateEl) dateEl.textContent = sample.year + '年第' + sample.quarter + '四半期';
+      strip.style.display = 'block';
+
+      // Supabaseから実取引件数を取得してカウンターに反映
       var client = getSupabaseClient();
       if (client) {
+        client.from('inage_properties').select('id', { count: 'exact', head: true })
+          .then(function(res) {
+            if (!res.error && res.count > 0) {
+              var countEl = document.querySelector('.ach-num[data-target="12"][data-type="records"]');
+              if (countEl) { countEl.setAttribute('data-target', res.count); countEl.textContent = res.count; }
+            }
+          }).catch(function() {});
         client.from('qa_questions').select('id', { count: 'exact', head: true }).eq('status', 'published')
           .then(function(res) {
             if (!res.error && res.count > 0) {
-              var qaEl = document.querySelector('.ach-num[data-target="12"]');
-              if (qaEl && res.count > 12) {
-                qaEl.setAttribute('data-target', res.count);
-                qaEl.textContent = res.count;
-              }
+              var qaEl = document.querySelector('.ach-num[data-target="12"][data-type="qa"]');
+              if (qaEl && res.count > 12) { qaEl.setAttribute('data-target', res.count); qaEl.textContent = res.count; }
             }
           }).catch(function() {});
       }
-    }
-  }
-  var grid = document.getElementById('achievement-grid');
-  if ('IntersectionObserver' in window) {
-    var obs = new IntersectionObserver(function(entries) {
-      if (entries[0].isIntersecting) { animateCounters(); obs.disconnect(); }
-    }, { threshold: 0.3 });
-    obs.observe(grid);
-  } else {
-    animateCounters();
+    }).catch(function() {});
   }
 })();
 </script>
