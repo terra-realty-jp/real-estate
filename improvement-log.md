@@ -5099,3 +5099,33 @@ $$;
 - 施策⑤ ローカルマッチング (`tools/3-owner-direct.html` 稲毛区絞り込み追加)
 - dev → main へのマージ（安定確認後）
 - 再インポート: `稲毛区その他` レコードの再分類（MLIT_API_KEY使って再実行）
+
+---
+
+## 2026-05-26 (続き)
+
+- **対象**: inage/map.html, tools/1-ai-satei.html, inage/index.html, index.html
+- **施策**: 施策① 価格推移グラフ最終仕上げ・CLAUDE.md「コンテキスト引き継ぎ」実装
+
+### 実装内容
+
+1. **相場マップ ポップアップに「📈 価格推移グラフを見る」ボタン追加** (`inage/map.html`)
+   - `buildPopupHtml()` 内に `showTrendPanel()` 呼び出しボタンを追加
+   - AI査定ボタンの前に配置
+
+2. **相場マップ → AI査定ツール エリアコンテキスト引き継ぎ** (`inage/map.html`, `tools/1-ai-satei.html`)
+   - `getTownPrefKey(townName)` 関数追加: 12町名 → `chiba_inage_*` キーへの変換マップ
+   - `buildPopupHtml()` の AI査定リンクに `?area=<prefKey>` を付与
+   - `1-ai-satei.html` に `applyAreaParam()` IIFE追加: URLの `?area=` を読み取り `#pref` セレクトを初期選択・スクロール
+   - CLAUDE.md記載「穴川クリック→AI査定が穴川初期選択で開く」を完全実装
+
+3. **稲毛区ハブ・index.html リンク修正** (`inage/index.html`, `index.html`)
+   - `inage/index.html` のAI査定リンク: `?area=chiba_inage` を付与
+   - `index.html` の「稲毛区で査定する」リンク: `?pref=` → `?area=` に修正
+
+### マージ状況
+- `dev` → `main` マージ済み・本番反映完了
+
+### 次のアクション
+- 稲毛区その他レコード再分類（MLIT_API_KEY必要。`SUPABASE_URL`・`SUPABASE_SERVICE_KEY`・`MLIT_API_KEY`を環境変数に設定してから `node scripts/fetch-inage-properties.js` を実行）
+- ペルソナ別UXレビュー（品質チェックリスト確認）
