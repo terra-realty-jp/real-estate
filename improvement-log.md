@@ -6,6 +6,40 @@
 
 ## 2026-05-27
 
+- **対象**: inage/qa.html, inage/index.html, llms.txt
+- **施策**: 施策③ Q&A掲示板 ペルソナ完全対応・JSON-LD同期
+
+### 実装内容
+
+1. **Q&A sample-15追加（ペルソナ2 佐藤健一さん対応）** (`inage/qa.html`)
+   - 「長沼町と穴川、投資用マンションを買うならどちらが利回りが高いですか？」を追加
+   - 穴川5〜7% vs 長沼町4〜6%の比較・空室リスク・初心者向け推奨を詳述
+   - SAMPLE_QA配列とJSON-LD構造化データの両方に追加
+   - これにより3ペルソナすべての典型的な疑問にQ&Aで対応完了
+
+2. **JSON-LD sample-14追加（天台 住み替え）** (`inage/qa.html`)
+   - SAMPLE_QAとJSON-LDのエントリー数を同期（両方15件）
+
+3. **Q&A件数カウンター更新** (`inage/index.html`)
+   - `data-target="14"` → `data-target="15"` に更新
+
+4. **llms.txt更新** (`llms.txt`)
+   - Q&A件数14→15件に更新（3箇所）
+   - sample-15のエントリーをリストに追加
+   - FAQ Q&Aに長沼町vs穴川比較を追記
+
+### 3ペルソナ対応状況
+- ペルソナ1（田中みちこ・稲毛団地相続）: sample-6・13・稲毛団地チェッカー ✓
+- ペルソナ2（佐藤健一・投資用マンション）: sample-2・15（長沼町vs穴川比較）✓ ← 今回追加
+- ペルソナ3（鈴木幸子・天台住み替え）: sample-14（天台住み替え 1,800〜2,400万円）✓
+
+### マージ状況
+- `dev` → `main` マージ予定
+
+---
+
+## 2026-05-27
+
 - **対象**: tools/2-akiya-hunter.html, inage/index.html, inage/map.html, inage/qa.html, tools/1-ai-satei.html, tools/4-kanri-saas.html, llms.txt
 - **施策**: 全施策 品質・データ整合性・ペルソナ対応改善
 
