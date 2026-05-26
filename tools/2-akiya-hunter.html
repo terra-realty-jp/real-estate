@@ -4405,10 +4405,16 @@
         <option value="">選択しない</option>
         <option value="anakawa">穴川（モノレール沿線）</option>
         <option value="konakadai">小仲台</option>
+        <option value="inage_honcho">稲毛本町</option>
+        <option value="todoroki">轟町</option>
         <option value="tendai">天台</option>
         <option value="naganuma">長沼町</option>
+        <option value="midori">緑町</option>
         <option value="sakusabe">作草部</option>
-        <option value="inage_honcho">稲毛本町</option>
+        <option value="kashiwadai">柏台</option>
+        <option value="chigusadai">千草台</option>
+        <option value="hagidai">萩台町</option>
+        <option value="miyanogi">宮野木町</option>
         <option value="other">その他の稲毛区内</option>
       </select>
     </div>
@@ -6539,8 +6545,13 @@ function calcInageChecker() {
 
   // ---- エリア補正 ----
   var areaBonus = 0;
-  if (area === 'anakawa' || area === 'konakadai') areaBonus = 3; // 需要高く売りやすい
-  if (area === 'sakusabe' || area === 'tendai') areaBonus = 0;
+  if (area === 'anakawa' || area === 'konakadai') areaBonus = 3; // 需要高く売りやすい（200,000・190,000円/㎡）
+  if (area === 'inage_honcho') areaBonus = 2; // 185,000円/㎡
+  if (area === 'todoroki') areaBonus = 1; // 175,000円/㎡
+  if (area === 'tendai' || area === 'naganuma' || area === 'midori' || area === 'sakusabe') areaBonus = 0;
+  if (area === 'kashiwadai') areaBonus = -1; // 163,000円/㎡
+  if (area === 'chigusadai') areaBonus = -1; // 160,000円/㎡
+  if (area === 'hagidai' || area === 'miyanogi') areaBonus = -2; // 157,000円/㎡ 前後
   if (area === 'other') areaBonus = -2;
 
   // ---- 判定 ----
@@ -6649,7 +6660,7 @@ function calcInageChecker() {
     'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(shareText);
 
   // 相場マップリンク
-  var AREA_TO_MAP_ID = { anakawa: 'anakawa', konakadai: 'konakadai', tendai: 'tendai', naganuma: 'naganuma', sakusabe: 'sakusabe', inage_honcho: 'inage_honcho' };
+  var AREA_TO_MAP_ID = { anakawa: 'anakawa', konakadai: 'konakadai', tendai: 'tendai', naganuma: 'naganuma', sakusabe: 'sakusabe', inage_honcho: 'inage_honcho', miyanogi: 'miyanogi', midori: 'midori', todoroki: 'todoroki', hagidai: 'hagidai', chigusadai: 'chigusadai', kashiwadai: 'kashiwadai' };
   var mapWrap = document.getElementById('ic-map-link-wrap');
   var mapLink = document.getElementById('ic-map-link');
   var mapId = AREA_TO_MAP_ID[area];
