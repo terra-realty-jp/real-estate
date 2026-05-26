@@ -337,7 +337,14 @@ tail -50 /home/sishizaw/real-estate-project/improvement-log.md
 3. JS構文チェック（必須）
 4. `git add [ファイル名]` → `git commit` → `git push`
 5. improvement-log.md に記録
-6. 次の実装へ。止まらない
+6. 次の実装へ。**止まらない**
+
+### レポートルール（必須）
+
+- **「次のアクション」の箇条書きをレスポンス末尾に書かない**
+- 何をやったかを1〜2文で簡潔に報告し、そのまま次の実装に移る
+- 外部APIキーや認証が必要で詰まった場合のみユーザーに確認する
+- それ以外は自律判断で実装を続ける
 
 ### 各サイクル後に必ず記録（improvement-log.md）
 
@@ -347,7 +354,6 @@ tail -50 /home/sishizaw/real-estate-project/improvement-log.md
 - **対象**: ファイル名
 - **施策**: 施策①〜⑤
 - **実装内容**: 何をどう作ったか
-- **次のアクション**: 次に何をするか
 ```
 
 ---
