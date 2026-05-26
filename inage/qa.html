@@ -552,6 +552,11 @@ function fmtDate(str) {
 }
 
 // ---- 回答後CTA（カテゴリ別） ----
+var TOWN_TO_MAP_ID = {
+  '穴川': 'anakawa', '小仲台': 'konakadai', '天台': 'tendai', '長沼町': 'naganuma',
+  '作草部': 'sakusabe', '稲毛本町': 'inage_honcho', '宮野木町': 'miyanogi',
+  '緑町': 'midori', '轟町': 'todoroki', '萩台町': 'hagidai'
+};
 function answerCta(category, townName) {
   var town = townName || '稲毛区';
   var ctaMap = {
@@ -562,9 +567,16 @@ function answerCta(category, townName) {
     '投資': { text: '投資分析ツールで利回りを試算する', href: '../tools/5-toushi-bunseki.html', color: '#22c55e' }
   };
   var cta = ctaMap[category] || { text: '無料査定・相談する', href: '../tools/1-ai-satei.html', color: '#c9a84c' };
-  return '<div style="margin-top:14px;padding:12px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
-    '<div style="font-size:12px;color:var(--text-muted)">この回答について、さらに詳しく知りたい方は：</div>' +
+  var mapId = TOWN_TO_MAP_ID[townName];
+  var mapLink = mapId
+    ? '<a href="map.html?town=' + mapId + '" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#1d4ed8;text-decoration:none;flex-shrink:0">📍 ' + town + 'の相場マップ →</a>'
+    : '';
+  return '<div style="margin-top:14px;padding:12px 14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:10px">' +
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">この回答について、さらに詳しく知りたい方は：</div>' +
+    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
     '<a href="' + cta.href + '" style="display:inline-flex;align-items:center;gap:6px;background:' + cta.color + ';color:' + (cta.color === '#c9a84c' || cta.color === '#22c55e' ? '#000' : '#fff') + ';border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none;flex-shrink:0">' + cta.text + ' →</a>' +
+    mapLink +
+    '</div>' +
     '</div>';
 }
 
