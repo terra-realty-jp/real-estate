@@ -4458,6 +4458,11 @@
           診断結果をLINEでシェア
         </a>
       </div>
+      <div id="ic-map-link-wrap" style="display:none;margin-top:10px">
+        <a id="ic-map-link" href="#" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.65);text-decoration:none;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:7px 16px">
+          📍 このエリアの相場マップを見る →
+        </a>
+      </div>
     </div>
   </div>
 
@@ -6642,6 +6647,18 @@ function calcInageChecker() {
   var shareUrl = 'https://shinji-japaaaan.github.io/real-estate/tools/2-akiya-hunter.html#tab-inage';
   document.getElementById('ic-line-share').href =
     'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(shareUrl) + '&text=' + encodeURIComponent(shareText);
+
+  // 相場マップリンク
+  var AREA_TO_MAP_ID = { anakawa: 'anakawa', konakadai: 'konakadai', tendai: 'tendai', naganuma: 'naganuma', sakusabe: 'sakusabe', inage_honcho: 'inage_honcho' };
+  var mapWrap = document.getElementById('ic-map-link-wrap');
+  var mapLink = document.getElementById('ic-map-link');
+  var mapId = AREA_TO_MAP_ID[area];
+  if (mapWrap && mapLink && mapId) {
+    mapLink.href = '../inage/map.html?town=' + mapId;
+    mapWrap.style.display = 'block';
+  } else if (mapWrap) {
+    mapWrap.style.display = 'none';
+  }
 
   try { logCardUsage('card-inage-checker', 'calc'); } catch(e) {}
 }
