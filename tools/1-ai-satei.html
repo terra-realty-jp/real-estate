@@ -14971,6 +14971,25 @@ function calcDivorceSplit() {
   function init(){document.querySelectorAll('[id$="-result"]').forEach(observe);}
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
 })();
+
+// ===== 相場マップからのエリア引き継ぎ =====
+(function() {
+  function applyAreaParam() {
+    try {
+      var area = new URLSearchParams(window.location.search).get('area');
+      if (!area) return;
+      var sel = document.getElementById('pref');
+      if (!sel) return;
+      var exists = Array.from(sel.options).some(function(o) { return o.value === area; });
+      if (!exists) return;
+      sel.value = area;
+      if (typeof updateAreaHint === 'function') updateAreaHint();
+      if (typeof previewCalc === 'function') previewCalc();
+      sel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch(e) {}
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', applyAreaParam); } else { applyAreaParam(); }
+})();
 </script>
 </body>
 </html>

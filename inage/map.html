@@ -576,6 +576,19 @@ function getFilteredPrice(d) {
   return d.types[currentFilter] || d.sqm;
 }
 
+function getTownPrefKey(townName) {
+  var townPrefMap = {
+    '穴川': 'chiba_inage_anakai', '小仲台': 'chiba_inage_anakai',
+    '天台': 'chiba_inage_anakai', '黒砂台': 'chiba_inage_anakai',
+    '柏台': 'chiba_inage_anakai', '作草部': 'chiba_inage_anakai',
+    '稲毛本町': 'chiba_inage_station',
+    '長沼町': 'chiba_inage_other', '宮野木町': 'chiba_inage_other',
+    '緑町': 'chiba_inage_other',  '轟町': 'chiba_inage_other',
+    '千草台': 'chiba_inage_other', '萩台町': 'chiba_inage_other',
+  };
+  return townPrefMap[townName] || 'chiba_inage';
+}
+
 function buildPopupHtml(d, price) {
   var tsubo = sqmToTsubo(price);
   var typeLabel = currentFilter === 'house' ? '一戸建て' : currentFilter === 'mansion' ? 'マンション' : currentFilter === 'land' ? '土地' : '全種別';
@@ -597,7 +610,7 @@ function buildPopupHtml(d, price) {
     demandHtml +
     '<div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:10px;line-height:1.5">' + d.note + '</div>' +
     '<button onclick="showTrendPanel(\'' + d.name.replace(/'/g, "\\'") + '\')" style="display:block;width:100%;background:rgba(201,168,76,0.12);color:#c9a84c;border:1px solid rgba(201,168,76,0.35);text-align:center;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">📈 価格推移グラフを見る</button>' +
-    '<a href="../tools/1-ai-satei.html" style="display:block;background:#c9a84c;color:#000;text-align:center;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;margin-bottom:6px">AI査定で概算を試算する →</a>' +
+    '<a href="../tools/1-ai-satei.html?area=' + getTownPrefKey(d.name) + '" style="display:block;background:#c9a84c;color:#000;text-align:center;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;margin-bottom:6px">AI査定で概算を試算する →</a>' +
     '<a href="mailto:terra.realty.iam@gmail.com?subject=' + encodeURIComponent(d.name + 'の物件査定希望') + '&body=' + mailBody + '" style="display:block;background:rgba(0,0,0,0.06);color:#333;text-align:center;padding:6px 12px;border-radius:7px;font-size:11px;text-decoration:none">' + d.name + 'で無料相談する</a>';
 }
 
