@@ -4,6 +4,43 @@
 
 ---
 
+## 2026-05-27（コンテキスト継続セッション・第4回）
+
+- **対象**: inage/map.html, inage/qa.html, inage/index.html, llms.txt
+- **施策**: FAQ拡充・Q&AカテゴリCTA改善・キーワード検索・Q&A21件完成
+
+### 実装内容
+
+1. **map.html FAQ 小仲台エリア相場追加（7問目）** (`e03129f`, `695f0d3`)
+   - 小仲台：191,000円/㎡（坪63万円）・上昇トレンド・22件取引・千葉大・天台病院近隣・穴川に次ぐ第2位
+   - HTML FAQ accordion + JSON-LD FAQPage Question の両方に追加
+   - llms.txt の map.html FAQ件数を6→7件に更新
+
+2. **qa.html CTA改善** (`bf27278`)
+   - 相続カテゴリのCTA: AI査定ツール → 稲毛団地チェッカー（`#tab-inage`）に変更（相続＝古い団地の可能性が高いため）
+   - 購入カテゴリのCTA: エリア名付きの動的テキスト化（「○○の相場をAI査定で確認する」）
+
+3. **inage/index.html FAQPage 6問目追加** (`5812c4b`)
+   - 萩台町・柏台エリアの不動産相場 Q&A を JSON-LD FAQPage に追加
+   - 萩台町：158,000円/㎡（坪52万円）・軟調・14件。柏台：163,000円/㎡（坪54万円）・横ばい
+
+4. **qa.html 投稿完了メッセージ改善** (`71bc2dc`)
+   - `#post-success` をスタイル付きボックスに変更
+   - 「📍 相場マップを見る」「📧 回答通知を登録」の2リンクを追加
+
+5. **qa.html キーワード検索機能追加** (`c0ed84a`)
+   - 検索入力欄をフィルターチップの上に追加（プレースホルダー：例: 相続登記、稲毛団地、売却価格）
+   - `searchKeyword` 変数と `onSearchInput()` 関数を実装
+   - `renderQA()` のフィルタリングにキーワード検索を統合（title・body・town_name・category を横断検索）
+
+6. **Q&A 天台/賃貸・小仲台/投資追加で21件完成** (`ebc70ac`)
+   - sample-20（天台/賃貸）: 千葉大周辺1K 25㎡・3.8〜5.0万円/月・学生向け・退去3月集中の注意点
+   - sample-21（小仲台/投資）: 2LDK 60㎡・取得2,200万円・表面4.9〜5.5%・実質3.5〜4.2%・穴川との比較
+   - JSON-LD FAQPage 19→21件、inage/index.html カウンター19→21、llms.txt 全件更新
+   - 最終カテゴリ分布: 売却:6・相続:5・購入:4・投資:3・賃貸:3（全12町カバー）
+
+---
+
 ## 2026-05-27（コンテキスト継続セッション・第3回）
 
 - **対象**: inage/qa.html, inage/index.html, llms.txt, tools/1-ai-satei.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html, inage/notify.html
