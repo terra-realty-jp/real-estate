@@ -345,7 +345,7 @@
       <div style="font-size:11px;color:var(--text-muted);margin-top:3px">稲毛区の実際の相談事例</div>
     </div>
     <div style="background:var(--dark2);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:18px 16px;text-align:center">
-      <div class="ach-num" data-target="12" style="font-size:36px;font-weight:900;color:var(--gold);line-height:1">0</div>
+      <div class="ach-num" data-target="12" data-type="records" style="font-size:36px;font-weight:900;color:var(--gold);line-height:1">0</div>
       <div style="font-size:12px;font-weight:700;color:var(--text);margin-top:4px">町丁目をカバー</div>
       <div style="font-size:11px;color:var(--text-muted);margin-top:3px">長沼町・天台・穴川・小仲台ほか</div>
     </div>
@@ -427,8 +427,8 @@
         client.from('qa_questions').select('id', { count: 'exact', head: true }).eq('status', 'published')
           .then(function(res) {
             if (!res.error && res.count > 0) {
-              var qaEl = document.querySelector('.ach-num[data-target="12"][data-type="qa"]');
-              if (qaEl && res.count > 12) { qaEl.setAttribute('data-target', res.count); qaEl.textContent = res.count; }
+              var qaEl = document.querySelector('.ach-num[data-type="qa"]');
+              if (qaEl && res.count > parseInt(qaEl.getAttribute('data-target') || '0')) { qaEl.setAttribute('data-target', res.count); qaEl.textContent = res.count; }
             }
           }).catch(function() {});
       }
