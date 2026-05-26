@@ -404,6 +404,13 @@
     </div>
   </div>
 
+  <!-- エリアフィルター適用バナー（?town= 遷移時のみ表示） -->
+  <div id="qa-filter-banner" style="display:none;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:var(--text-muted);display:none;align-items:center;gap:8px">
+    <span>📍</span>
+    <span id="qa-filter-banner-text"></span>
+    <button onclick="clearTownFilter()" style="margin-left:auto;background:none;border:none;color:var(--gold);font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;padding:0">全エリアに戻す ×</button>
+  </div>
+
   <!-- 件数表示 -->
   <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px" id="qa-count-label"></div>
 
@@ -947,6 +954,13 @@ function updateBodyCounter(el) {
   counter.style.color = cnt >= 20 ? 'var(--green)' : 'var(--text-muted)';
 }
 
+function clearTownFilter() {
+  var allChip = document.querySelector('[onclick="setFilter(\'town\',\'all\',this)"]');
+  if (allChip) setFilter('town', 'all', allChip);
+  var banner = document.getElementById('qa-filter-banner');
+  if (banner) banner.style.display = 'none';
+}
+
 // URLパラメータでエリアフィルターを初期設定（相場マップからの遷移）
 (function() {
   try {
@@ -960,6 +974,12 @@ function updateBodyCounter(el) {
         var allTownChip = document.querySelector('[onclick="setFilter(\'town\',\'all\',this)"]');
         if (allTownChip) allTownChip.classList.remove('active');
         chip.classList.add('active');
+        var banner = document.getElementById('qa-filter-banner');
+        var bannerText = document.getElementById('qa-filter-banner-text');
+        if (banner && bannerText) {
+          bannerText.textContent = '相場マップから遷移: ' + town + ' エリアのQ&Aを表示しています';
+          banner.style.display = 'flex';
+        }
       }
     });
   } catch(e) {}
