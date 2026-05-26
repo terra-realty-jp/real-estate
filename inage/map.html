@@ -883,12 +883,13 @@ function highlightFromUrl() {
 
   setTimeout(function() {
     if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
-      markers.forEach(function(m) {
-        if (m._townName === d.name && m.getBounds) {
-          map.fitBounds(m.getBounds(), { maxZoom: 15 });
-          m.openPopup(m.getBounds().getCenter());
-        }
-      });
+      // 同一町名の全ポリゴンを集めてバウンズを結合
+      var townPolys = markers.filter(function(m) { return m._townName === d.name && m.getBounds; });
+      if (townPolys.length === 0) return;
+      var combined = townPolys[0].getBounds();
+      townPolys.forEach(function(m) { combined.extend(m.getBounds()); });
+      map.fitBounds(combined, { maxZoom: 15 });
+      townPolys[0].openPopup(combined.getCenter());
     } else {
       map.setView([d.lat, d.lng], 15);
       markers.forEach(function(m) {
