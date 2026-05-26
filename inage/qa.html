@@ -614,7 +614,9 @@ function renderQA(data) {
   var countLabel = document.getElementById('qa-count-label');
   if (countLabel) {
     var suffix = (filterCat !== 'all' || filterTown !== 'all') ? '（絞り込み中）' : '';
-    countLabel.textContent = filtered.length + '件の投稿' + suffix + '・TERRAが全件回答済み';
+    var answeredCount = filtered.filter(function(q) { return q.answer && q.answer.length > 0; }).length;
+    var answerNote = answeredCount === filtered.length ? '・TERRAが全件回答済み' : '（うち' + answeredCount + '件回答済み）';
+    countLabel.textContent = filtered.length + '件の投稿' + suffix + answerNote;
   }
 
   if (filtered.length === 0) {
