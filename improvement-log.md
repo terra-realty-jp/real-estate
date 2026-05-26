@@ -4,6 +4,36 @@
 
 ---
 
+## 2026-05-27（コンテキスト継続セッション・第3回）
+
+- **対象**: inage/qa.html, inage/index.html, llms.txt, tools/1-ai-satei.html, tools/4-kanri-saas.html, tools/5-toushi-bunseki.html, inage/notify.html
+- **施策**: Q&A全12町カバー・全ツールへのQ&Aリンク追加
+
+### 実装内容
+
+1. **notify.html 登録完了後ナビリンク追加** (`d1c4a6a`)
+   - `#success-box` に「📍 今の相場を見る →」（map.html）と「💬 Q&Aを見る →」（qa.html）のボタンを追加
+   - 登録後のユーザーをプラットフォーム内に引き留める導線を整備
+
+2. **Q&A掲示板 全12町丁目カバー完成** (`9dc552f`)
+   - sample-18「萩台町/売却」: 価格軟調トレンド・158,000円/㎡・土地40坪1,800〜2,200万円・売り時の考え方
+   - sample-19「柏台/購入」: 小仲台との価格比較・163,000円/㎡・横ばい・車必須エリア・デメリット詳説
+   - JSON-LD FAQPage に sample-18・19 対応のQuestion 2件追加（合計19件）
+   - inage/index.html カウンター17→19に更新
+   - llms.txt Q&A件数・リスト更新
+
+3. **inage/index.html 最近の相談事例プレビュー追加** (`e80c0b8`)
+   - 「最近の相談事例」セクションを achievement-grid と CTA の間に追加
+   - 萩台町/売却・柏台/購入・千草台/相続の3件をカードで表示（各 qa.html?town=XXX にリンク）
+   - 「19件すべての相談事例を見る →」リンクで qa.html 全件へ誘導
+
+4. **全5ツールへのQ&Aリンク網羅** (`9f61ca4`, `b7ff767`)
+   - tools/4-kanri-saas.html: 稲毛区家賃相場ボックスに「→ 稲毛区Q&Aを見る」追加
+   - tools/5-toushi-bunseki.html: エリアスコア・スクリーニングの稲毛区ボックスに「→ 稲毛区の投資Q&Aを見る」追加
+   - tools/1-ai-satei.html: 稲毛区選択時のバナーを「相場マップ・Q&A事例・稲毛区特化ページ」3リンクに拡充（エリアキーによってtownパラメータも付与）
+
+---
+
 ## 2026-05-27（コンテキスト継続セッション・第2回）
 
 - **対象**: inage/qa.html, inage/map.html, inage/index.html, tools/2-akiya-hunter.html, tools/1-ai-satei.html, llms.txt
