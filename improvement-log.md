@@ -4,6 +4,45 @@
 
 ---
 
+## 2026-05-27
+
+- **対象**: tools/2-akiya-hunter.html, inage/index.html, inage/map.html, inage/qa.html, tools/1-ai-satei.html, tools/4-kanri-saas.html, llms.txt
+- **施策**: 全施策 品質・データ整合性・ペルソナ対応改善
+
+### 実装内容
+
+1. **稲毛団地チェッカー 全12町対応** (`tools/2-akiya-hunter.html`)
+   - `ic_area` ドロップダウンに宮野木町・緑町・轟町・萩台町・千草台・柏台を追加
+   - `areaBonus` 計算にinage_honcho(+2)・todoroki(+1)・新6町の補正値を追加
+   - `AREA_TO_MAP_ID` に新6町マッピング追加
+
+2. **価格データ完全統一** (`inage/index.html`, `inage/map.html`, `llms.txt`)
+   - `llms.txt` 稲毛本町: 168,000/坪55万 → **185,000/坪61万**（CRITICAL修正）
+   - `llms.txt` 長沼町: 170,000/坪56万 → 172,000/坪57万
+   - `llms.txt` 作草部: 165,000/坪54万 → 166,000/坪55万
+   - `llms.txt` 宮野木町: 155,000/坪51万 → 156,000/坪52万
+   - `inage/index.html` 長沼町データカード: 170,000/坪56万 → 172,000/坪57万
+   - `inage/map.html` JSON-LD・FAQ HTML 長沼町: 170,000/坪56万 → 172,000/坪57万
+   - `inage/map.html` JSON-LD 宮野木町坪単価: 51万 → 52万（HTML FAQと統一）
+
+3. **Q&A sample-14追加** (`inage/qa.html`, `inage/index.html`, `llms.txt`)
+   - ペルソナ3（天台・住み替え検討）対応のサンプルQ&A追加
+   - Q: 天台30年住居を住み替えへ。今の価格と進め方は？
+   - QAカウンター data-target 13→14更新、llms.txt件数更新
+
+4. **稲毛区ハブへのリンク追加** (`tools/4-kanri-saas.html`)
+   - 稲毛区エリア選択時のヒント内に `→ 稲毛区専用プラットフォームへ` リンク追加
+
+5. **AI査定ツール エリアラベル修正** (`tools/1-ai-satei.html`)
+   - `chiba_inage_anakai`: "穴川・モノレール沿線" → "穴川・小仲台・天台（モノレール・千葉大周辺）"
+   - `chiba_inage_other`: "宮野木町・駅遠エリア" → "長沼町・緑町・轟町・宮野木町ほか"
+
+### マージ状況
+- 途中コミット分は dev→main マージ済み（815fba4）
+- 今セッション後半分は dev でコミット済み、main へのマージ待ち
+
+---
+
 ## 2026-05-26（コンテキスト継続セッション・第6回）
 
 - **対象**: inage/qa.html, inage/map.html, inage/index.html, inage/notify.html, tools/3-owner-direct.html, llms.txt
