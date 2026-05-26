@@ -739,5 +739,84 @@ function updateBodyCounter(el) {
 loadFromSupabase();
 </script>
 
+<!-- 離脱意図検知ポップアップ -->
+<div id="exit-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:28px 24px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.25)">
+    <button onclick="closeExitPopup()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;color:#999;cursor:pointer;line-height:1">×</button>
+    <div style="font-size:20px;margin-bottom:6px">📧</div>
+    <h3 style="font-size:17px;font-weight:900;color:#1a1917;margin-bottom:6px;line-height:1.4">稲毛区の相場が動いたら<br>メールでお知らせします</h3>
+    <p style="font-size:12px;color:#6b6058;margin-bottom:16px;line-height:1.6">地価更新・近隣成約情報を無料でお届け。<br>今すぐ動かなくても、情報だけ受け取れます。</p>
+    <div id="exit-popup-form">
+      <input type="email" id="ep-email" placeholder="メールアドレス（例: taro@example.com）" style="width:100%;padding:11px 14px;border:1.5px solid #e0dbd5;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:10px;box-sizing:border-box">
+      <select id="ep-area" style="width:100%;padding:11px 14px;border:1.5px solid #e0dbd5;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;box-sizing:border-box;background:#fff">
+        <option value="">関心エリアを選択（任意）</option>
+        <option value="穴川">穴川</option>
+        <option value="小仲台">小仲台</option>
+        <option value="天台">天台</option>
+        <option value="長沼町">長沼町</option>
+        <option value="作草部">作草部</option>
+        <option value="稲毛本町">稲毛本町</option>
+        <option value="稲毛区全般">稲毛区全般</option>
+      </select>
+      <button onclick="submitExitPopup()" id="ep-btn" style="width:100%;padding:13px;background:#c9a84c;color:#000;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px">無料で通知を受け取る</button>
+      <button onclick="closeExitPopup()" style="width:100%;padding:9px;background:none;border:none;font-size:12px;color:#999;cursor:pointer;font-family:inherit">今はいい</button>
+    </div>
+    <div id="exit-popup-success" style="display:none;text-align:center;padding:12px 0">
+      <div style="font-size:24px;margin-bottom:8px">✅</div>
+      <div style="font-size:14px;font-weight:700;color:#1a1917;margin-bottom:4px">登録ありがとうございます</div>
+      <div style="font-size:12px;color:#6b6058">稲毛区の相場情報をお届けします</div>
+    </div>
+  </div>
+</div>
+<script>
+(function() {
+  var POPUP_KEY = 'ep_shown_inage';
+  if (sessionStorage.getItem(POPUP_KEY)) return;
+  var shown = false;
+  function showPopup() {
+    if (shown) return; shown = true;
+    sessionStorage.setItem(POPUP_KEY, '1');
+    var el = document.getElementById('exit-popup');
+    if (el) el.style.display = 'flex';
+  }
+  document.addEventListener('mouseleave', function(e) { if (e.clientY <= 0) showPopup(); });
+  var lastY = window.scrollY, upDelta = 0;
+  window.addEventListener('scroll', function() {
+    var curr = window.scrollY;
+    if (curr < lastY) { upDelta += lastY - curr; } else { upDelta = 0; }
+    lastY = curr; if (upDelta > 300 && curr < 200) showPopup();
+  }, { passive: true });
+  setTimeout(showPopup, 60000);
+})();
+function closeExitPopup() { var el = document.getElementById('exit-popup'); if (el) el.style.display = 'none'; }
+function submitExitPopup() {
+  var email = (document.getElementById('ep-email').value || '').trim();
+  var area = document.getElementById('ep-area').value;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('ep-email').style.borderColor = '#dc2626'; return;
+  }
+  document.getElementById('ep-email').style.borderColor = '#e0dbd5';
+  var btn = document.getElementById('ep-btn');
+  btn.disabled = true; btn.textContent = '登録中…';
+  var towns = area ? [area] : ['稲毛区全般'];
+  var record = { email: email, town_interests: towns, property_type: 'any', notify_freq: 'monthly', is_active: true };
+  try {
+    var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+    if (client) {
+      client.from('notify_subscribers').insert(record).then(function() { showEPSuccess(); }).catch(function() { epFallback(email, towns); });
+    } else { epFallback(email, towns); }
+  } catch(e) { epFallback(email, towns); }
+}
+function epFallback(email, towns) {
+  window.open('mailto:terra.realty.iam@gmail.com?subject=' + encodeURIComponent('稲毛区相場通知登録') + '&body=' + encodeURIComponent('【通知登録】\nメール：' + email + '\nエリア：' + towns.join('・')));
+  showEPSuccess();
+}
+function showEPSuccess() {
+  var f = document.getElementById('exit-popup-form'), s = document.getElementById('exit-popup-success');
+  if (f) f.style.display = 'none'; if (s) s.style.display = 'block';
+  setTimeout(closeExitPopup, 2500);
+}
+</script>
+
 </body>
 </html>
