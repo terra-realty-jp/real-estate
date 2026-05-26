@@ -848,7 +848,11 @@ function showTrendFallback(contentEl, subEl, townName) {
       + '</div>';
   }).join('');
   contentEl.innerHTML = '<div style="padding:4px 0">' + rows + '</div>'
-    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px">※ 四半期別推移データが蓄積され次第、グラフが表示されます</div>';
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:8px">※ 四半期別推移データが蓄積され次第、グラフが表示されます</div>'
+    + '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'
+    + '<a href="../tools/1-ai-satei.html?area=' + getTownPrefKey(d.name) + '" style="flex:1;min-width:120px;background:#c9a84c;color:#000;text-align:center;padding:8px 10px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none">このエリアで査定する →</a>'
+    + '<a href="qa.html?town=' + encodeURIComponent(d.name) + '" style="flex:1;min-width:120px;background:rgba(29,78,216,0.08);color:#1d4ed8;border:1px solid rgba(29,78,216,0.2);text-align:center;padding:8px 10px;border-radius:7px;font-size:11px;text-decoration:none">💬 Q&Aを見る →</a>'
+    + '</div>';
 }
 
 function renderTrendChart(contentEl, subEl, townName, trend) {
@@ -928,6 +932,13 @@ function renderTrendChart(contentEl, subEl, townName, trend) {
     });
     statsEl.innerHTML = statHtml;
   }
+
+  // トレンドパネル下部CTA
+  var ctaHtml = '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'
+    + '<a href="../tools/1-ai-satei.html?area=' + getTownPrefKey(townName) + '" style="flex:1;min-width:120px;background:#c9a84c;color:#000;text-align:center;padding:8px 10px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none">このエリアで査定する →</a>'
+    + '<a href="qa.html?town=' + encodeURIComponent(townName) + '" style="flex:1;min-width:120px;background:rgba(29,78,216,0.08);color:#1d4ed8;border:1px solid rgba(29,78,216,0.2);text-align:center;padding:8px 10px;border-radius:7px;font-size:11px;text-decoration:none">💬 Q&Aを見る →</a>'
+    + '</div>';
+  contentEl.insertAdjacentHTML('beforeend', ctaHtml);
 }
 
 // テーブル描画（種別3列横並び）
