@@ -5062,3 +5062,40 @@ $$;
 - **対応内容**:
 
 ---
+
+---
+
+## 2026-05-26
+
+- **対象**: tools/1-ai-satei.html, scripts/fetch-inage-properties.js, CLAUDE.md, index.html, inage/index.html
+- **施策**: 施策① Phase2・UI/UX稲毛区ファースト全体
+
+### 実装内容
+
+1. **Tool1 Phase 2完了** (`tools/1-ai-satei.html`)
+   - `loadInageLivePrices()` 追加：Supabase `inage_properties` から穴川・稲毛本町・宮野木町等の実取引中央値を取得
+   - `AREA_UNIT.chiba_inage*` 4キーを動的上書き（静的値→国土交通省実取引データ）
+   - 査定結果に「✅ 実取引データ使用：YYYY年第Q四半期・N町丁目データ」バッジ追加
+
+2. **TOWN_NORMALIZE 追加マッピング** (`scripts/fetch-inage-properties.js`)
+   - 稲毛東→稲毛本町、稲毛町→稲毛本町、園生→轟町、山王町→穴川 を追加
+   - 今後の取得で「稲毛区その他」に落ちる件数を削減
+
+3. **CLAUDE.md 方針追記**
+   - 「稲毛区ファーストへの完全切り替え」セクション追加
+   - index.html役割変更・既存ツールの扱い・実装上の注意を明文化
+
+4. **index.html 稲毛区ファースト改修**
+   - 稲毛区ハブセクション（4カード：相場マップ・査定・団地診断・ハブ）を主役位置に拡張
+   - 「状況別ワンタップ入口」先頭に稲毛区ボタンを2列スパンで追加
+   - ヘッダーバッジを「📍 稲毛区専用あり」に変更
+
+5. **inage/index.html Supabase接続・ライブ相場**
+   - supabase-client.js を読み込むように修正
+   - ページ上部にライブ相場スナップショット（穴川・小仲台・長沼町等の㎡単価）を追加
+   - 取引件数カウンターをSupabase実データで更新
+
+### 次のアクション
+- 施策⑤ ローカルマッチング (`tools/3-owner-direct.html` 稲毛区絞り込み追加)
+- dev → main へのマージ（安定確認後）
+- 再インポート: `稲毛区その他` レコードの再分類（MLIT_API_KEY使って再実行）
