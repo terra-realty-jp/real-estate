@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-05-27（コンテキスト継続セッション・第2回）
+
+- **対象**: inage/qa.html, inage/map.html
+- **施策**: バグ修正・UX改善
+
+### 実装内容
+
+1. **qa.html ?town= URLフィルター バグ修正** (`d76b514`)
+   - 相場マップから `qa.html?town=穴川` のように遷移した際にエリアフィルターが動かないバグを修正
+   - 原因: `document.querySelector('.filter-chip[onclick*="town","穴川"]')` という無効なCSSセレクタが `try-catch` 内で SyntaxError を投げ、後続の正常な処理を丸ごとスキップしていた
+   - 修正: 未使用変数 `btn` の宣言（無効セレクタ）を削除。filter処理は正常に動作
+
+2. **相場マップ 価格テーブル行クリック → 地図フォーカス** (`1b957a1`)
+   - `focusTown(townId)` 関数を追加
+   - テーブル行クリック → 地図が該当エリアにスクロール＋ズーム → ポップアップ自動表示
+   - GeoJSONポリゴンモード・CircleMarkerフォールバックの両方に対応
+   - `cursor:pointer` と既存ホバーCSSで視覚的にクリック可能と分かるように
+
+### マージ状況
+- dev でコミット済み、main へのマージ予定
+
+---
+
 ## 2026-05-27
 
 - **対象**: inage/qa.html, inage/index.html, llms.txt
