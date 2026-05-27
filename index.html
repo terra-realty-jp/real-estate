@@ -406,6 +406,9 @@
       <div class="hero-point"><span class="check">✓</span> 完全無料</div>
       <div class="hero-point"><span class="check">✓</span> スマホ対応</div>
     </div>
+    <div id="hero-usage-count" style="display:none;margin-top:16px;font-size:12px;color:rgba(30,18,9,0.5);text-align:center">
+      累計 <strong id="hero-usage-num" style="color:var(--gold);font-size:15px"></strong> 件のツール利用
+    </div>
 
     <!-- ⚡ ホームページ クイック試算: 仲介手数料 -->
     <div style="background:rgba(248,113,113,0.07);border:1.5px solid rgba(248,113,113,0.35);border-radius:16px;padding:18px 20px 16px;margin-top:24px;max-width:460px;margin-left:auto;margin-right:auto">
@@ -1544,6 +1547,24 @@
       buildScenarios();
       buildFAQ();
       buildUsageSummary();
+
+      // 累計ツール利用件数（Supabase card_usage_log）
+      if (typeof getSupabaseClient === 'function') {
+        var client = getSupabaseClient();
+        if (client) {
+          client.from('card_usage_log').select('id', { count: 'exact', head: true })
+            .then(function(res) {
+              if (!res.error && res.count > 50) {
+                var el = document.getElementById('hero-usage-count');
+                var numEl = document.getElementById('hero-usage-num');
+                if (el && numEl) {
+                  numEl.textContent = res.count.toLocaleString();
+                  el.style.display = 'block';
+                }
+              }
+            }).catch(function() {});
+        }
+      }
 
       // Supabase 認証バー + マイデータパネル
       if (typeof sbInit === 'function') {
