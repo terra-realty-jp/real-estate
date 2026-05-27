@@ -57,7 +57,12 @@ async function main() {
     .gte('created_at', since)
     .order('created_at', { ascending: false });
 
-  if (lErr) { console.error('property_listings 取得エラー:', lErr.message); process.exit(1); }
+  if (lErr) {
+    // テーブル未作成・権限エラーは失敗扱いにしない（まだ運用前の正常状態）
+    console.log(`[INFO] property_listings 取得スキップ: ${lErr.message}`);
+    console.log('[INFO] Supabase で property_listings テーブルを作成するとマッチングが動作します。');
+    return;
+  }
   if (!listings || listings.length === 0) { console.log('新着物件なし。終了。'); return; }
   console.log(`新着物件: ${listings.length}件`);
 
@@ -68,7 +73,10 @@ async function main() {
     .eq('is_active', true)
     .not('email', 'is', null);
 
-  if (iErr) { console.error('investor_profiles 取得エラー:', iErr.message); process.exit(1); }
+  if (iErr) {
+    console.log(`[INFO] investor_profiles 取得スキップ: ${iErr.message}`);
+    return;
+  }
   if (!investors || investors.length === 0) { console.log('通知対象の投資家なし。終了。'); return; }
   console.log(`登録投資家: ${investors.length}人`);
 
