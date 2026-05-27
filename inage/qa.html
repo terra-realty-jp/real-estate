@@ -975,22 +975,36 @@ function clearTownFilter() {
   try {
     var params = new URLSearchParams(window.location.search);
     var town = params.get('town');
-    if (!town) return;
-    var townChips = document.querySelectorAll('[onclick^="setFilter(\'town\'"]');
-    townChips.forEach(function(chip) {
-      if (chip.textContent.trim() === town) {
-        setFilter('town', town, chip);
-        var allTownChip = document.querySelector('[onclick="setFilter(\'town\',\'all\',this)"]');
-        if (allTownChip) allTownChip.classList.remove('active');
-        chip.classList.add('active');
-        var banner = document.getElementById('qa-filter-banner');
-        var bannerText = document.getElementById('qa-filter-banner-text');
-        if (banner && bannerText) {
-          bannerText.textContent = '相場マップから遷移: ' + town + ' エリアのQ&Aを表示しています';
-          banner.style.display = 'flex';
+    var cat = params.get('category') || params.get('cat');
+    if (!town && !cat) return;
+    if (town) {
+      var townChips = document.querySelectorAll('[onclick^="setFilter(\'town\'"]');
+      townChips.forEach(function(chip) {
+        if (chip.textContent.trim() === town) {
+          setFilter('town', town, chip);
+          var allTownChip = document.querySelector('[onclick="setFilter(\'town\',\'all\',this)"]');
+          if (allTownChip) allTownChip.classList.remove('active');
+          chip.classList.add('active');
+          var banner = document.getElementById('qa-filter-banner');
+          var bannerText = document.getElementById('qa-filter-banner-text');
+          if (banner && bannerText) {
+            bannerText.textContent = '相場マップから遷移: ' + town + ' エリアのQ&Aを表示しています';
+            banner.style.display = 'flex';
+          }
         }
-      }
-    });
+      });
+    }
+    if (cat) {
+      var catChips = document.querySelectorAll('[onclick^="setFilter(\'cat\'"]');
+      catChips.forEach(function(chip) {
+        if (chip.textContent.trim() === cat) {
+          setFilter('cat', cat, chip);
+          var allCatChip = document.querySelector('[onclick="setFilter(\'cat\',\'all\',this)"]');
+          if (allCatChip) allCatChip.classList.remove('active');
+          chip.classList.add('active');
+        }
+      });
+    }
   } catch(e) {}
 })();
 
