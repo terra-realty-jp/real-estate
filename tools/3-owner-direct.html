@@ -544,8 +544,8 @@
   <p class="page-desc">「長沼町周辺で家を探している人が今何人いるか」がわかります。エリアを絞ることで、大手ポータルにはない「自分に関係ある需要の温度感」が見えます。</p>
 
   <div style="background:var(--dark2);border:1px solid rgba(0,0,0,0.07);border-radius:14px;padding:24px;margin-bottom:24px">
-    <div style="font-size:14px;font-weight:700;margin-bottom:16px">エリアと物件種別を選んでください</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+    <div style="font-size:14px;font-weight:700;margin-bottom:16px">エリアと条件を選んでください</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
       <div>
         <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px">エリア<span style="color:var(--gold)">*</span></label>
         <select id="im-town" onchange="renderInageMatch()" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none">
@@ -573,7 +573,21 @@
           <option value="land">土地</option>
         </select>
       </div>
+      <div>
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:6px">予算上限（任意）</label>
+        <select id="im-budget" style="width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none">
+          <option value="">指定なし</option>
+          <option value="1500">〜1,500万円</option>
+          <option value="2000">〜2,000万円</option>
+          <option value="2500">〜2,500万円</option>
+          <option value="3000">〜3,000万円</option>
+          <option value="4000">〜4,000万円</option>
+          <option value="5000">〜5,000万円</option>
+          <option value="99999">5,000万円超</option>
+        </select>
+      </div>
     </div>
+    <style>@media(max-width:600px){#im-grid{grid-template-columns:1fr 1fr!important}}</style>
     <div id="inage-demand-display" style="background:var(--dark3);border-radius:10px;padding:20px;min-height:80px;display:flex;align-items:center;justify-content:center">
       <p style="color:var(--text-muted);font-size:13px">エリアを選択すると買い手候補数が表示されます</p>
     </div>
@@ -6671,10 +6685,12 @@ async function renderInageMatch() {
 async function registerBuyerInterest() {
   var town = document.getElementById('im-town').value;
   var type = document.getElementById('im-type').value;
+  var budgetEl = document.getElementById('im-budget');
+  var budget = budgetEl && budgetEl.value ? parseInt(budgetEl.value) : null;
   if (!town) return;
   var btn = document.querySelector('#inage-demand-display button');
   if (btn) { btn.disabled = true; btn.textContent = '登録中...'; }
-  var ok = await sbInsertBuyerInterest(town, type === 'all' ? 'any' : type, null);
+  var ok = await sbInsertBuyerInterest(town, type === 'all' ? 'any' : type, budget);
   if (ok) {
     if (btn) { btn.textContent = '✓ 登録しました！需要数に反映されます'; btn.style.color = '#22c55e'; btn.style.borderColor = '#22c55e'; }
     setTimeout(function() { renderInageMatch(); }, 1200);
@@ -6682,6 +6698,21 @@ async function registerBuyerInterest() {
     if (btn) { btn.textContent = '登録できませんでした（通信エラー）'; btn.disabled = false; }
   }
 }
+
+// URL ?town=長沼町 でエリアを自動選択
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var town = params.get('town');
+  if (!town) return;
+  var townEl = document.getElementById('im-town');
+  if (!townEl) return;
+  var opts = Array.from(townEl.options);
+  var found = opts.find(function(o) { return o.value === town; });
+  if (found) {
+    townEl.value = town;
+    if (typeof renderInageMatch === 'function') renderInageMatch();
+  }
+})();
 
 // Escape key でモーダルを閉じる
 document.addEventListener('keydown', function(e){
