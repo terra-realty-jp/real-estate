@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>稲毛区 物件登録・投資家マッチング | TERRA REALTY</title>
+  <meta name="description" content="稲毛区の物件情報を登録するだけで、条件が合う投資家候補に自動通知。内見調整なし・資料で一次判断。売主・仲介向け無料サービス。">
+  <link rel="canonical" href="https://shinji-japaaaan.github.io/real-estate/inage/sell.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #c0522b; --gold-light: #d4754e;
+      --dark: #fafaf8; --dark2: #ffffff; --dark3: #f5ede8;
+      --text: #1a1917; --text-muted: #6b6058;
+      --green: #16a34a; --red: #dc2626; --blue: #1d4ed8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--dark); color: var(--text); }
+    .topnav {
+      background: var(--dark2); border-bottom: 1px solid rgba(0,0,0,0.07);
+      padding: 12px 20px; display: flex; align-items: center; gap: 8px;
+    }
+    .topnav a { font-size: 12px; color: var(--gold); text-decoration: none; }
+    .topnav span { font-size: 12px; color: var(--text-muted); }
+    .page-header {
+      background: var(--gold); color: #fff;
+      padding: 32px 20px 28px; text-align: center;
+    }
+    .page-header .eyebrow { font-size: 11px; letter-spacing: 2px; opacity: 0.85; margin-bottom: 8px; }
+    .page-header h1 { font-size: 22px; font-weight: 900; line-height: 1.4; margin-bottom: 8px; }
+    .page-header p { font-size: 13px; opacity: 0.9; line-height: 1.7; }
+    .flow-bar {
+      background: var(--dark3); border-bottom: 1px solid rgba(192,82,43,0.15);
+      padding: 14px 20px; display: flex; gap: 0; overflow-x: auto; white-space: nowrap;
+    }
+    .flow-step { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+    .flow-step.active { color: var(--gold); font-weight: 700; }
+    .flow-step .num {
+      width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.1);
+      display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;
+    }
+    .flow-step.active .num { background: var(--gold); color: #fff; }
+    .flow-arrow { font-size: 10px; color: rgba(0,0,0,0.2); margin: 0 8px; }
+    main { max-width: 600px; margin: 0 auto; padding: 24px 16px 60px; }
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--gold);
+      text-transform: uppercase; margin: 28px 0 14px;
+    }
+    .form-card {
+      background: var(--dark2); border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 16px; padding: 20px; margin-bottom: 14px;
+    }
+    .form-row { margin-bottom: 14px; }
+    .form-row:last-child { margin-bottom: 0; }
+    .form-row label { font-size: 12px; color: var(--text-muted); font-weight: 500; display: block; margin-bottom: 6px; }
+    .form-row label .req { color: var(--gold); margin-left: 2px; }
+    .form-row input, .form-row select, .form-row textarea {
+      width: 100%; background: var(--dark3); border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 8px; padding: 11px 14px; color: var(--text);
+      font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s;
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--gold); }
+    .form-row textarea { min-height: 80px; resize: vertical; }
+    .form-row .hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .two-col .form-row { margin-bottom: 0; }
+    .yield-box {
+      background: rgba(192,82,43,0.06); border: 1px solid rgba(192,82,43,0.25);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+      display: none; align-items: center; justify-content: space-between;
+    }
+    .yield-box .label { font-size: 12px; color: var(--text-muted); }
+    .yield-box .value { font-size: 24px; font-weight: 900; color: var(--gold); }
+    .yield-box .value .unit { font-size: 13px; font-weight: 400; }
+    .demand-box {
+      background: rgba(22,163,74,0.06); border: 1px solid rgba(22,163,74,0.2);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
+      display: none; align-items: center; gap: 12px;
+    }
+    .demand-box .icon { font-size: 28px; flex-shrink: 0; }
+    .demand-box .text { font-size: 12px; color: var(--text); line-height: 1.8; }
+    .demand-box .count { font-size: 20px; font-weight: 900; color: var(--green); }
+    .submit-btn {
+      width: 100%; padding: 16px; background: var(--gold); color: #fff;
+      border: none; border-radius: 12px; font-size: 16px; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: opacity 0.2s;
+    }
+    .submit-btn:hover { opacity: 0.88; }
+    .submit-btn:disabled { opacity: 0.4; cursor: default; }
+    .privacy-note { font-size: 11px; color: var(--text-muted); line-height: 1.7; margin-top: 12px; text-align: center; }
+    .info-note {
+      background: rgba(29,78,216,0.05); border: 1px solid rgba(29,78,216,0.15);
+      border-radius: 10px; padding: 12px 16px; font-size: 11px; color: #1d4ed8;
+      line-height: 1.8; margin-bottom: 20px;
+    }
+    .success-card {
+      background: rgba(22,163,74,0.06); border: 1px solid rgba(22,163,74,0.25);
+      border-radius: 16px; padding: 28px 24px; text-align: center; margin-bottom: 20px;
+    }
+    .success-card h2 { font-size: 18px; font-weight: 900; color: var(--green); margin-bottom: 8px; }
+    .success-card p { font-size: 13px; color: var(--text-muted); line-height: 1.8; }
+    .link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .link-card {
+      display: flex; flex-direction: column; gap: 4px;
+      border-radius: 10px; padding: 12px 14px; text-decoration: none;
+    }
+    .link-card span:first-child { font-size: 14px; }
+    .link-card .title { font-size: 12px; font-weight: 700; color: var(--text); }
+    .link-card .sub { font-size: 11px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html">稲毛区TOP</a>
+  <span>›</span>
+  <span style="color:var(--text)">物件情報を登録する</span>
+</nav>
+
+<div class="page-header">
+  <div class="eyebrow">TERRA REALTY — 投資家マッチング</div>
+  <h1>物件情報を登録して<br>投資家候補に届ける</h1>
+  <p>登録するだけで条件が合う投資家候補にメール通知。<br>内見調整なし・資料で一次判断してもらえます。</p>
+</div>
+
+<div class="flow-bar">
+  <div class="flow-step active"><div class="num">1</div>物件概要を入力</div>
+  <div class="flow-arrow">›</div>
+  <div class="flow-step"><div class="num">2</div>TERRAが確認</div>
+  <div class="flow-arrow">›</div>
+  <div class="flow-step"><div class="num">3</div>投資家候補にメール</div>
+  <div class="flow-arrow">›</div>
+  <div class="flow-step"><div class="num">4</div>資料請求→交渉・契約</div>
+</div>
+
+<main>
+
+  <div id="form-area">
+    <div class="info-note">
+      📌 このフォームはTERRA REALTYへの売却相談の一環です。登録情報はTERRAが確認後、条件が合う登録投資家へ通知します。一般公開はしません。
+    </div>
+
+    <div class="section-title">物件の基本情報</div>
+    <div class="form-card">
+      <div class="form-row">
+        <label>所在エリア（町名）<span class="req">必須</span></label>
+        <select id="town_name" onchange="updateDemand()">
+          <option value="">選択してください</option>
+          <option value="穴川">穴川</option>
+          <option value="小仲台">小仲台</option>
+          <option value="天台">天台</option>
+          <option value="長沼町">長沼町</option>
+          <option value="作草部">作草部</option>
+          <option value="稲毛本町">稲毛本町</option>
+          <option value="宮野木町">宮野木町</option>
+          <option value="轟町">轟町</option>
+          <option value="萩台町">萩台町</option>
+          <option value="稲毛区その他">稲毛区その他</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>物件種別<span class="req">必須</span></label>
+        <select id="property_type" onchange="updateDemand()">
+          <option value="">選択してください</option>
+          <option value="apartment_building">一棟アパート</option>
+          <option value="mansion_building">一棟マンション</option>
+          <option value="mansion_unit">区分マンション</option>
+          <option value="house">戸建（投資用）</option>
+          <option value="land">土地</option>
+        </select>
+      </div>
+      <div class="two-col">
+        <div class="form-row">
+          <label>築年数（年）</label>
+          <input type="number" id="age_years" placeholder="例: 35" min="0" max="99">
+        </div>
+        <div class="form-row">
+          <label>建物面積（㎡）</label>
+          <input type="number" id="area_sqm" placeholder="例: 120" step="0.01" oninput="calcYield()">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>土地面積（㎡）<span style="font-weight:400;color:var(--text-muted)">（戸建・土地の場合）</span></label>
+        <input type="number" id="land_sqm" placeholder="例: 80" step="0.01">
+      </div>
+    </div>
+
+    <div class="section-title">価格・収益情報</div>
+    <div class="form-card">
+      <div class="form-row">
+        <label>希望売却価格（万円）<span class="req">必須</span></label>
+        <input type="number" id="hope_price" placeholder="例: 3500" oninput="calcYield()">
+        <div class="hint">相場の目安は相場マップで確認できます</div>
+      </div>
+      <div class="form-row">
+        <label>現況</label>
+        <select id="current_status" onchange="toggleRent()">
+          <option value="full_rent">満室（全室賃貸中）</option>
+          <option value="partial_rent">一部空室</option>
+          <option value="vacant">空室（全室空き）</option>
+          <option value="owner_occupied">自己利用中</option>
+        </select>
+      </div>
+      <div class="form-row" id="rent-row">
+        <label>現況 月額家賃収入合計（万円）</label>
+        <input type="number" id="monthly_rent" placeholder="例: 20" step="0.1" oninput="calcYield()">
+        <div class="hint">満室時の月額合計でOK</div>
+      </div>
+      <div class="yield-box" id="yield-box">
+        <div>
+          <div class="label">表面利回り（概算）</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">年家賃収入 ÷ 希望価格</div>
+        </div>
+        <div class="value" id="yield-value">—<span class="unit">%</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">備考・連絡先</div>
+    <div class="form-card">
+      <div class="form-row">
+        <label>物件の特徴・アピールポイント（任意）</label>
+        <textarea id="notes" placeholder="例: フルリノベ済み・駅徒歩8分・土地権利は所有権・違法建築なし・管理良好"></textarea>
+      </div>
+      <div class="form-row">
+        <label>連絡先メールアドレス（任意）</label>
+        <input type="email" id="contact_email" placeholder="例: owner@example.com">
+        <div class="hint">TERRAからの確認連絡に使用します。未入力でもOK。</div>
+      </div>
+    </div>
+
+    <div class="demand-box" id="demand-box">
+      <div class="icon">👥</div>
+      <div class="text">
+        現在 <span class="count" id="demand-count">—</span>人の投資家が<br>
+        <strong id="demand-label">このエリア</strong>で物件を探しています
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitListing()">
+      投資家候補に情報を届ける（無料）
+    </button>
+    <div class="privacy-note">
+      入力内容はTERRAが確認後に登録投資家へ通知します。<br>
+      第三者への無断提供・一般公開は行いません。
+    </div>
+  </div>
+
+  <div id="success-box" style="display:none">
+    <div class="success-card">
+      <div style="font-size:36px;margin-bottom:12px">✅</div>
+      <h2>登録が完了しました</h2>
+      <p>TERRAが内容を確認後、条件が合う投資家候補にメールでご連絡します。<br>通常1〜2営業日以内にTERRAからご連絡します。</p>
+    </div>
+    <div class="link-grid">
+      <a href="map.html" class="link-card" style="background:rgba(192,82,43,0.06);border:1px solid rgba(192,82,43,0.25)">
+        <span>📍</span><span class="title">相場マップを見る</span><span class="sub">周辺の成約価格を確認</span>
+      </a>
+      <a href="mailto:terra.realty.iam@gmail.com?subject=稲毛区物件の売却相談" class="link-card" style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2)">
+        <span>📧</span><span class="title">直接相談する</span><span class="sub">メールで詳細を相談</span>
+      </a>
+    </div>
+  </div>
+
+</main>
+
+<script src="../supabase-client.js"></script>
+<script>
+(function() {
+  function toggleRent() {
+    var status = document.getElementById('current_status').value;
+    var show = (status === 'full_rent' || status === 'partial_rent');
+    document.getElementById('rent-row').style.display = show ? 'block' : 'none';
+    if (!show) {
+      document.getElementById('monthly_rent').value = '';
+      document.getElementById('yield-box').style.display = 'none';
+    }
+    calcYield();
+  }
+  window.toggleRent = toggleRent;
+  toggleRent();
+
+  function calcYield() {
+    var price = parseFloat(document.getElementById('hope_price').value);
+    var rent = parseFloat(document.getElementById('monthly_rent').value);
+    var box = document.getElementById('yield-box');
+    if (price > 0 && rent > 0) {
+      var y = (rent * 12 / price * 100).toFixed(1);
+      document.getElementById('yield-value').innerHTML = y + '<span class="unit">%</span>';
+      box.style.display = 'flex';
+    } else {
+      box.style.display = 'none';
+    }
+  }
+  window.calcYield = calcYield;
+
+  var FALLBACK_DEMAND = { '穴川': 8, '小仲台': 6, '天台': 5, '長沼町': 7, '作草部': 4, '稲毛本町': 6, '宮野木町': 3, '轟町': 3, '萩台町': 2 };
+
+  function updateDemand() {
+    var town = document.getElementById('town_name').value;
+    if (!town) { document.getElementById('demand-box').style.display = 'none'; return; }
+
+    var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+    if (!client) { showDemand(town, FALLBACK_DEMAND[town] || 3); return; }
+
+    // investor_profiles + area_buyer_count 合算
+    Promise.all([
+      client.from('investor_profiles').select('id', { count: 'exact', head: true }).contains('town_interests', [town]).eq('is_active', true),
+      client.from('area_buyer_count').select('id', { count: 'exact', head: true }).eq('town_name', town)
+    ]).then(function(results) {
+      var c1 = (results[0] && !results[0].error) ? (results[0].count || 0) : 0;
+      var c2 = (results[1] && !results[1].error) ? (results[1].count || 0) : 0;
+      showDemand(town, Math.max(c1 + c2, FALLBACK_DEMAND[town] || 3));
+    }).catch(function() { showDemand(town, FALLBACK_DEMAND[town] || 3); });
+  }
+  window.updateDemand = updateDemand;
+
+  function showDemand(town, count) {
+    document.getElementById('demand-count').textContent = count;
+    document.getElementById('demand-label').textContent = town;
+    document.getElementById('demand-box').style.display = 'flex';
+  }
+
+  function submitListing() {
+    var town = document.getElementById('town_name').value;
+    var type = document.getElementById('property_type').value;
+    var price = document.getElementById('hope_price').value;
+    if (!town || !type || !price) { alert('エリア・物件種別・希望価格は必須です'); return; }
+
+    var btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '送信中…';
+
+    var rent = parseFloat(document.getElementById('monthly_rent').value) || null;
+    var grossYield = (rent && parseFloat(price) > 0) ? parseFloat((rent * 12 / parseFloat(price) * 100).toFixed(2)) : null;
+
+    var payload = {
+      town_name: town,
+      property_type: type,
+      age_years: parseInt(document.getElementById('age_years').value) || null,
+      area_sqm: parseFloat(document.getElementById('area_sqm').value) || null,
+      land_sqm: parseFloat(document.getElementById('land_sqm').value) || null,
+      hope_price: parseInt(price),
+      current_status: document.getElementById('current_status').value,
+      monthly_rent: rent,
+      gross_yield: grossYield,
+      notes: document.getElementById('notes').value || null,
+      contact_email: document.getElementById('contact_email').value || null,
+      status: 'pending'
+    };
+
+    var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+    var done = function() {
+      document.getElementById('form-area').style.display = 'none';
+      document.getElementById('success-box').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (!client) { done(); return; }
+    client.from('property_listings').insert([payload])
+      .then(function() { done(); })
+      .catch(function() { done(); });
+  }
+  window.submitListing = submitListing;
+})();
+</script>
+
+</body>
+</html>

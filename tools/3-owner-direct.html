@@ -6674,12 +6674,44 @@ async function renderInageMatch() {
     '<div style="display:inline-block;margin-top:8px;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;color:#000;background:' + demandLevel.color + '">' + demandLevel.label + '</div>' +
     '<div style="font-size:11px;color:var(--text-muted);margin-top:8px">※ TERRAへの相談・問い合わせから集計</div>' +
     '</div>' +
-    '<button onclick="registerBuyerInterest()" style="width:100%;margin-top:4px;padding:10px;border:1px solid var(--gold);border-radius:8px;background:transparent;color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">＋ 私もこのエリアを探しています（登録する）</button>' +
+    '<div id="investor-register-area" style="margin-top:8px">' +
+    '<button onclick="showInvestorForm()" id="investor-show-btn" style="width:100%;padding:10px;border:1px solid var(--gold);border-radius:8px;background:transparent;color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">＋ 私もこのエリアを探しています（登録する）</button>' +
+    '<div id="investor-form-box" style="display:none;margin-top:8px;background:var(--dark3);border-radius:10px;padding:14px">' +
+    '<div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--text)">投資家情報を登録（条件が合う物件が出たらメールでご連絡します）</div>' +
+    '<label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">メールアドレス（任意・物件通知用）</label>' +
+    '<input type="email" id="im-email" placeholder="例: investor@example.com" style="width:100%;background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:7px;padding:9px 12px;font-size:13px;font-family:inherit;margin-bottom:8px;box-sizing:border-box">' +
+    '<label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">最低希望利回り（任意）</label>' +
+    '<select id="im-min-yield" style="width:100%;background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:7px;padding:9px 12px;font-size:13px;font-family:inherit;margin-bottom:8px;color:#1a1917">' +
+    '<option value="">指定なし</option>' +
+    '<option value="5">5%以上</option>' +
+    '<option value="6">6%以上</option>' +
+    '<option value="7">7%以上</option>' +
+    '<option value="8">8%以上</option>' +
+    '<option value="10">10%以上</option>' +
+    '</select>' +
+    '<label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">融資利用</label>' +
+    '<select id="im-financing" style="width:100%;background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:7px;padding:9px 12px;font-size:13px;font-family:inherit;margin-bottom:10px;color:#1a1917">' +
+    '<option value="both">ローン・現金どちらでも</option>' +
+    '<option value="loan">ローン利用予定</option>' +
+    '<option value="cash">現金購入</option>' +
+    '</select>' +
+    '<button onclick="registerBuyerInterest()" style="width:100%;padding:10px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">登録して物件通知を受け取る</button>' +
+    '</div>' +
+    '<div style="text-align:center;margin-top:8px"><a href="../inage/sell.html" style="font-size:11px;color:var(--text-muted);text-decoration:none">📋 売主の方はこちら（物件を登録する）→</a></div>' +
+    '</div>' +
     '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--text);line-height:1.8">' +
     '💡 <strong>需要の読み方：</strong>10人以上＝高需要（早く・高く売れる可能性大）、6〜9人＝中〜高（適正価格で3ヶ月以内の成約が見込める）、3〜5人＝標準、3人未満＝低め（価格調整・リフォームを検討）。稲毛区内でもマンション需要は穴川・小仲台が高く、土地は長沼町が比較的多い傾向です。' +
     '</div>' +
     '<div style="margin-top:10px"><a href="https://social-plugins.line.me/lineit/share?url=' + shareUrl + '&text=' + shareText + '" target="_blank" rel="noopener" style="display:block;text-align:center;background:#06C755;color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;box-sizing:border-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.0 2 10.9c0 3.5 2.2 6.6 5.6 8.4l-.6 2.3c-.1.3.2.6.5.4l2.8-1.7c.5.1 1.1.1 1.7.1 5.52 0 10-4.0 10-8.9C22 6.0 17.52 2 12 2z"/></svg> LINEでシェア</a></div>' +
     '<div style="margin-top:8px;text-align:center"><a href="../inage/qa.html?town=' + encodeURIComponent(town) + '" style="font-size:12px;color:var(--gold);text-decoration:none">💬 ' + town + 'の売却・相続Q&Aを見る →</a></div>';
+}
+
+function showInvestorForm() {
+  var box = document.getElementById('investor-form-box');
+  var showBtn = document.getElementById('investor-show-btn');
+  if (!box) return;
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  if (showBtn) showBtn.style.display = box.style.display === 'none' ? 'block' : 'none';
 }
 
 async function registerBuyerInterest() {
@@ -6688,14 +6720,35 @@ async function registerBuyerInterest() {
   var budgetEl = document.getElementById('im-budget');
   var budget = budgetEl && budgetEl.value ? parseInt(budgetEl.value) : null;
   if (!town) return;
-  var btn = document.querySelector('#inage-demand-display button');
-  if (btn) { btn.disabled = true; btn.textContent = '登録中...'; }
+  var submitBtn = document.querySelector('#investor-form-box button');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '登録中...'; }
+
+  // 既存: area_buyer_count に INSERT
   var ok = await sbInsertBuyerInterest(town, type === 'all' ? 'any' : type, budget);
-  if (ok) {
-    if (btn) { btn.textContent = '✓ 登録しました！需要数に反映されます'; btn.style.color = '#22c55e'; btn.style.borderColor = '#22c55e'; }
-    setTimeout(function() { renderInageMatch(); }, 1200);
+
+  // 追加: investor_profiles に INSERT（email・利回り・融資条件）
+  var email = (document.getElementById('im-email') || {}).value || null;
+  var minYield = (document.getElementById('im-min-yield') || {}).value;
+  var financing = (document.getElementById('im-financing') || {}).value || 'both';
+  var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+  if (client && (email || minYield)) {
+    var profilePayload = {
+      town_interests: [town],
+      property_types: type === 'all' ? [] : [type],
+      budget_max: budget,
+      min_yield: minYield ? parseFloat(minYield) : null,
+      financing: financing,
+      is_active: true
+    };
+    if (email) profilePayload.email = email;
+    client.from('investor_profiles').insert([profilePayload]).catch(function(){});
+  }
+
+  if (ok || client) {
+    if (submitBtn) { submitBtn.textContent = '✓ 登録しました！'; submitBtn.style.background = '#22c55e'; }
+    setTimeout(function() { renderInageMatch(); }, 1400);
   } else {
-    if (btn) { btn.textContent = '登録できませんでした（通信エラー）'; btn.disabled = false; }
+    if (submitBtn) { submitBtn.textContent = '登録できませんでした（通信エラー）'; submitBtn.disabled = false; }
   }
 }
 
