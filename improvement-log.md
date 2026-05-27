@@ -5602,3 +5602,45 @@ $$;
 ### 次のアクション
 - 稲毛区その他レコード再分類（MLIT_API_KEY必要。`SUPABASE_URL`・`SUPABASE_SERVICE_KEY`・`MLIT_API_KEY`を環境変数に設定してから `node scripts/fetch-inage-properties.js` を実行）
 - ペルソナ別UXレビュー（品質チェックリスト確認）
+
+---
+
+## 2026-05-27 投資家マッチング基盤・GA4・品質改善
+
+- **対象**: inage/sell.html (NEW), tools/3-owner-direct.html, scripts/match-notify.js (NEW), .github/workflows/match-notify.yml (NEW), 全12ページ, tools/5-toushi-bunseki.html
+- **施策**: 売主・投資家マッチングプラットフォーム / GA4計測 / 品質チェックリスト
+
+### 実装内容
+
+1. **投資家マッチング基盤** (feat: 3b88cad)
+   - `inage/sell.html` NEW: 売主の物件登録フォーム。`property_listings` テーブルに INSERT。表面利回り自動計算。同エリア投資家数表示。
+   - `tools/3-owner-direct.html` 拡張: `investor_profiles` テーブルへの登録フォーム追加（メール・最低利回り・融資種別）。売主向け sell.html リンク追加。
+   - `scripts/match-notify.js` NEW: 毎日 property_listings × investor_profiles でマッチングしてResend APIでメール送信。テーブル未作成・権限なし時は正常終了（exit 0）。
+   - `.github/workflows/match-notify.yml` NEW: 毎日9:00 JST (UTC 0:00) スケジュール実行。`workflow_dispatch` + `dry_run` 入力でテスト可能。
+
+2. **GitHub Actions デバッグ → 成功** (fix: edd2249, 6344c9f)
+   - WebSocket問題: `ws` パッケージをnpm installに追加、`createClient` に `{ realtime: { transport: WebSocket } }` 渡し
+   - 権限エラー: テーブル未作成時に `process.exit(1)` → graceful `return` に修正
+   - ドライランで正常動作確認済み
+
+3. **Google Analytics GA4 (G-PRTFHJSJY3) 全ページ追加** (feat: 281948e)
+   - 対象12ページ: index.html, tools/index.html, tools/1〜5-*.html, inage/index.html, inage/map.html, inage/qa.html, inage/notify.html
+   - `<head>` 末尾に gtag.js + config スニペット追加
+
+4. **tools/index.html ダークテーマ修正** (fix: 553e413)
+   - `--dark: #0d0d0d` → `#fafaf8` に変更（唯一残っていたダークテーマ）
+   - ヒートマップの色を赤/黄/緑/青の4色（視認性重視）に戻す
+
+5. **Tool5 品質改善** (fix: 561ab7f)
+   - `s_rate` / `i_rate` デフォルト金利: 1.5% → 2.5%（2026年投資ローン実態）
+   - 簡易判断ガイドにDSCR（1.3以上/未満）・月次CF（+1万円以上）の基準追加
+   - 2026年金利水準の注意書き追加
+
+### Supabase テーブル（ユーザーが作成済み）
+```sql
+property_listings (id, town_name, property_type, age_years, area_sqm, land_sqm, hope_price, current_status, monthly_rent, gross_yield, notes, contact_email, status, created_at)
+investor_profiles (id, email, town_interests[], property_types[], budget_max, min_yield, financing, is_active, created_at)
+```
+
+### マージ状況
+- `dev` ブランチで作業中。main へのマージは安定確認後。
