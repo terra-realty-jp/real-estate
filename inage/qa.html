@@ -404,6 +404,13 @@
     </div>
   </div>
 
+  <!-- エリアフィルター適用バナー（?town= 遷移時のみ表示） -->
+  <div id="qa-filter-banner" style="display:none;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:12px;color:var(--text-muted);display:none;align-items:center;gap:8px">
+    <span>📍</span>
+    <span id="qa-filter-banner-text"></span>
+    <button onclick="clearTownFilter()" style="margin-left:auto;background:none;border:none;color:var(--gold);font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;padding:0">全エリアに戻す ×</button>
+  </div>
+
   <!-- 件数表示 -->
   <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px" id="qa-count-label"></div>
 
@@ -752,13 +759,22 @@ var TOWN_TO_MAP_ID = {
   '緑町': 'midori', '轟町': 'todoroki', '萩台町': 'hagidai',
   '千草台': 'chigusadai', '柏台': 'kashiwadai'
 };
+var TOWN_TO_AREA_PARAM = {
+  '穴川': 'chiba_inage_anakai', '小仲台': 'chiba_inage_anakai', '天台': 'chiba_inage_anakai',
+  '黒砂台': 'chiba_inage_anakai', '柏台': 'chiba_inage_anakai', '作草部': 'chiba_inage_anakai',
+  '稲毛本町': 'chiba_inage_station',
+  '長沼町': 'chiba_inage_other', '宮野木町': 'chiba_inage_other', '緑町': 'chiba_inage_other',
+  '轟町': 'chiba_inage_other', '千草台': 'chiba_inage_other', '萩台町': 'chiba_inage_other'
+};
 function answerCta(category, townName) {
   var town = townName || '稲毛区';
+  var areaParam = TOWN_TO_AREA_PARAM[townName] || 'chiba_inage';
+  var sateiUrl = '../tools/1-ai-satei.html?area=' + areaParam;
   var ctaMap = {
-    '売却': { text: town + 'の物件を無料査定する', href: '../tools/1-ai-satei.html', color: '#c9a84c' },
+    '売却': { text: town + 'の物件を無料査定する', href: sateiUrl, color: '#c9a84c' },
     '相続': { text: '稲毛団地チェッカーで診断する', href: '../tools/2-akiya-hunter.html#tab-inage', color: '#c9a84c' },
     '賃貸': { text: '賃貸管理ツールで試算する', href: '../tools/4-kanri-saas.html', color: '#3b82f6' },
-    '購入': { text: town + 'の相場をAI査定で確認する', href: '../tools/1-ai-satei.html', color: '#c9a84c' },
+    '購入': { text: town + 'の相場をAI査定で確認する', href: sateiUrl, color: '#c9a84c' },
     '投資': { text: '投資分析ツールで利回りを試算する', href: '../tools/5-toushi-bunseki.html', color: '#22c55e' }
   };
   var cta = ctaMap[category] || { text: '無料査定・相談する', href: '../tools/1-ai-satei.html', color: '#c9a84c' };
@@ -947,6 +963,13 @@ function updateBodyCounter(el) {
   counter.style.color = cnt >= 20 ? 'var(--green)' : 'var(--text-muted)';
 }
 
+function clearTownFilter() {
+  var allChip = document.querySelector('[onclick="setFilter(\'town\',\'all\',this)"]');
+  if (allChip) setFilter('town', 'all', allChip);
+  var banner = document.getElementById('qa-filter-banner');
+  if (banner) banner.style.display = 'none';
+}
+
 // URLパラメータでエリアフィルターを初期設定（相場マップからの遷移）
 (function() {
   try {
@@ -960,6 +983,12 @@ function updateBodyCounter(el) {
         var allTownChip = document.querySelector('[onclick="setFilter(\'town\',\'all\',this)"]');
         if (allTownChip) allTownChip.classList.remove('active');
         chip.classList.add('active');
+        var banner = document.getElementById('qa-filter-banner');
+        var bannerText = document.getElementById('qa-filter-banner-text');
+        if (banner && bannerText) {
+          bannerText.textContent = '相場マップから遷移: ' + town + ' エリアのQ&Aを表示しています';
+          banner.style.display = 'flex';
+        }
       }
     });
   } catch(e) {}
