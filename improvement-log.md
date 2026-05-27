@@ -4,6 +4,61 @@
 
 ---
 
+## 2026-05-27（コンテキスト継続セッション・第8回）
+
+- **対象**: tools/3-owner-direct.html
+- **施策**: 施策⑤ ローカルマッチング 予算入力・URLパラメーター対応
+
+### 実装内容
+
+1. **予算上限セレクト追加**（`tools/3-owner-direct.html`）
+   - フィルターグリッドを2列→3列に変更
+   - 「予算上限（任意）」セレクト（1,500〜5,000万円超）追加
+   - `registerBuyerInterest()` で `budget_max` を実際にSupabaseに送信（従来は`null`固定）
+
+2. **URLパラメーター対応**
+   - `?town=<町名>` でエリアを自動選択し `renderInageMatch()` 実行
+   - 将来的に `inage/index.html` や相場マップからリンクして使える
+
+### マージ状況
+- `dev` → `main` マージ済み（`8a24eb0`）
+
+### 次のアクション
+- 施策④ メール通知自動化（GitHub Actions + Resend API・3ヶ月後予定）
+- 再インポート: `MLIT_API_KEY`・`SUPABASE_URL`・`SUPABASE_SERVICE_KEY` 環境変数設定後に `node scripts/fetch-inage-properties.js` を実行
+- inge/index.html の「買い手需要を見る」リンクに `?town=` パラメーターを組み合わせたダイナミックリンクの検討
+
+---
+
+## 2026-05-27（コンテキスト継続セッション・第7回）
+
+- **対象**: inage/notify.html, inage/map.html
+- **施策**: 施策④ 投資家向け通知オプション追加
+
+### 実装内容
+
+1. **notify.html 投資家向け対応**
+   - 利回りトレンド通知カード追加（value-cardsを3→4枚、2列グリッドへ変更）
+   - ヒーロー文言を売主・投資家両方に対応した文言に更新
+   - 投資家向けメール例（穴川・小仲台・長沼町の表面利回りレポート）追加
+   - マンション選択肢に「投資利回り情報含む」明記
+   - FAQ「投資家向けの情報も届きますか？」追加
+   - `?purpose=investment` URLパラメーター対応（穴川・小仲台・長沼町自動選択＋案内バナー）
+   - `?area=<id>` URLパラメーター対応（指定エリアを自動チェック）
+
+2. **map.html ポップアップ改善**
+   - 各エリアポップアップに「📧 価格更新通知を受け取る」ボタン追加
+   - `notify.html?area=<id>` へのリンクで、クリックしたエリアをnotify.htmlで自動選択
+
+### マージ状況
+- `dev` → `main` マージ済み（`786bcdc`）
+
+### 次のアクション
+- 施策⑤ ローカルマッチング (`tools/3-owner-direct.html` 稲毛区絞り込み追加)
+- 再インポート: `MLIT_API_KEY`・`SUPABASE_URL`・`SUPABASE_SERVICE_KEY` 環境変数設定後に `node scripts/fetch-inage-properties.js` を実行
+
+---
+
 ## 2026-05-27（コンテキスト継続セッション・第6回）
 
 - **対象**: inage/map.html, inage/index.html, llms.txt
