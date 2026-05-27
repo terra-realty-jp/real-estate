@@ -5644,3 +5644,39 @@ investor_profiles (id, email, town_interests[], property_types[], budget_max, mi
 
 ### マージ状況
 - `dev` ブランチで作業中。main へのマージは安定確認後。
+
+---
+
+## 2026-05-28 SEO強化・PWA対応・品質チェックリスト完了
+
+- **対象**: 全12ページ + manifest.json + sw.js
+- **施策**: SEO強化（HowToスキーマ・タイトル最適化・PWA）/ 品質チェックリスト完了
+
+### 実装内容
+
+1. **Tool5 品質チェックリスト完了** (fix: 561ab7f)
+   - デフォルト金利 1.5% → 2.5%（2026年投資ローン実態反映）
+   - 簡易判断ガイドにDSCR基準（1.3以上）・月次CF基準（+1万円以上）・金利注意書き追加
+
+2. **HowToスキーマ 全9ページ追加** (feat: b2f4490, 48bb4fd, 418b869, 43b1a01, b48d29e, c09a567)
+   - 対象: Tool1〜5, map.html, qa.html, notify.html, sell.html, inage/index.html
+   - 各ツールの「使い方の手順」をHowTo JSON-LDで構造化
+   - Googleリッチスニペット「使い方」表示を狙う
+
+3. **ページタイトル最適化** (feat: 85ee5bc, c399051, 19035a3)
+   - index.html: 「無料不動産ツール5選 | AI査定・空き家診断・投資分析」
+   - 1-ai-satei.html: 「【無料】AI不動産査定 | 登録不要・3分で売却価格を確認」
+   - inage/index.html: 「稲毛区 不動産相場・査定・空き家診断 | 無料」
+   - map.html: 「稲毛区 不動産相場マップ | 長沼町・天台・穴川の㎡単価」
+   - qa.html: 「稲毛区 不動産Q&A | 売却・相続・稲毛団地の実例」
+   - notify.html: 「稲毛区 不動産メール通知 | 相場更新・新着物件を無料受信」
+
+4. **社会的証明カウンター** (feat: a6d6305)
+   - index.htmlのヒーロー下部にSupabase card_usage_log件数を表示
+   - 50件超の場合のみ表示（累計○○件のツール利用）
+
+5. **PWA対応** (feat: a97cb7c, 2cd989d, cb9d0f2)
+   - manifest.json: アプリ名・ショートカット（相場マップ・AI査定・投資シミュレーター）
+   - sw.js: network-first戦略でオフライン対応
+   - 全ページにmanifestリンク・theme-color・SW登録を追加
+   - Chromeの「ホーム画面に追加」機能が利用可能に
