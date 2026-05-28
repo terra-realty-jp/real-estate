@@ -4,6 +4,39 @@
 
 ---
 
+## 2026-05-28（コンテキスト継続セッション・第12回）
+
+- **対象**: inage/baikyaku-guide.html (NEW), inage/qa.html, inage/index.html, sitemap.xml, llms.txt
+- **施策**: 稲毛区 不動産売却ガイドページ新規作成・各ページへのクロスリンク整備
+
+### 実装内容
+
+1. **inage/baikyaku-guide.html 新規作成** (feat: e3ddfc2)
+   - ターゲット: 「稲毛区 不動産 売却」「稲毛区 家 売りたい」検索ユーザー
+   - 売却5ステップ（相場確認→査定→媒介契約→内見・売買契約→決済・引き渡し）を完全解説
+   - エリア別相場グリッド: 穴川200,000円・小仲台195,000円・長沼町185,000円・天台/作草部175,000円
+   - 売却費用表: 仲介手数料上限約72万・印紙税1万・抵当権抹消登記2万・譲渡所得税・清掃10万
+   - 3シーン別ツール導線: 相続/住み替え/税金試算
+   - HowToスキーマ（5ステップ）・FAQPageスキーマ（5問）・BreadcrumbList・GA4・PWA対応
+
+2. **qa.html 売却カテゴリフィルターバナー追加**
+   - 「売却」カテゴリフィルター選択時にbaikyaku-guide.htmlへの誘導バナーを表示
+   - setFilter()に `val === '売却'` 判定を追加（cat フィルター内）
+
+3. **inage/index.html 売却ガイドカード追加**
+   - 稲毛区特化ツールセクションにbaikyaku-guide.htmlのfeature-cardを追加
+   - sumai-kae.htmlカードの直後に配置
+
+4. **sitemap.xml 更新**
+   - baikyaku-guide.html を priority 0.80 で追加（高SEO価値コンテンツ）
+
+5. **llms.txt 更新**
+   - 売却ガイドの詳細説明を追加
+   - 利用対象者セクションに「稲毛区で家・マンション・土地を売りたい方」シーンを追加
+   - エリアガイドリストを5エリア完全版に更新
+
+---
+
 ## 2026-05-28（コンテキスト継続セッション・第11回）
 
 - **対象**: inage/area-kodai.html (NEW), inage/area-sakusabe.html (NEW), inage/qa.html, inage/map.html, inage/index.html, index.html, sitemap.xml, llms.txt
