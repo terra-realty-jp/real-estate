@@ -4,6 +4,37 @@
 
 ---
 
+## 2026-05-28（コンテキスト継続セッション・第9回）
+
+- **対象**: tools/6-sozoku-zei.html (NEW), tools/index.html, inage/souzoku.html, inage/index.html, index.html, sitemap.xml, llms.txt, tools/1-ai-satei.html
+- **施策**: Tool6 相続税・譲渡所得税かんたん試算ツール新規追加 / 内部リンク網整備
+
+### 実装内容
+
+1. **tools/6-sozoku-zei.html 新規作成**（相続税・譲渡所得税試算ツール）
+   - 相続税タブ: 相続財産・相続人数・小規模宅地特例・配偶者有無 → 相続税概算
+   - 譲渡所得税タブ: 売却価格・取得費・売却費用・所有年数 → 課税譲渡所得・税額
+   - 空き家特例（3,000万円控除）・居住用財産控除のオプション
+   - 取得費不明時の概算取得費（5%）ルール対応
+   - 相続不動産手続きタイムライン（3ヶ月/4ヶ月/10ヶ月/3年の視覚化）
+   - HowToスキーマ・FAQPageスキーマ・GA4・PWA対応
+   - SEOキーワード: 「相続税 計算 無料」「譲渡所得税 空き家 3000万 計算」
+
+2. **内部リンク整備**（Tool6を6箇所から参照）
+   - tools/index.html: Tool06カード追加（6 TOOLS READY）
+   - inage/souzoku.html: 診断ツールブロックに「相続税・売却税試算」追加
+   - inage/index.html: 機能カードに「相続税・売却税をかんたん試算」追加
+   - index.html: クイックリンクに「📊 相続税・売却税を試算」ピル追加
+   - tools/1-ai-satei.html: 稲毛区結果CTAに「🏚 相続した不動産の処分ガイド」ボタン追加
+   - sitemap.xml: 6-sozoku-zei.html 追加（priority 0.85）
+   - llms.txt: Tool6説明・利用シーン追記
+
+### 残課題
+- MLITデータ再インポート（SUPABASE_URL・SUPABASE_SERVICE_KEY・MLIT_API_KEY を設定して `node scripts/fetch-inage-properties.js`）
+- dev → main マージ（現在 dev が main より 35+ commits 先行）
+
+---
+
 ## 2026-05-28（コンテキスト継続セッション・第8回）
 
 - **対象**: inage/souzoku.html (NEW), inage/index.html, sitemap.xml, llms.txt, .gitignore
