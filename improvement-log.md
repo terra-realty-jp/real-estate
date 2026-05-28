@@ -4,6 +4,37 @@
 
 ---
 
+## 2026-05-28（コンテキスト継続セッション・第8回）
+
+- **対象**: inage/souzoku.html (NEW), inage/index.html, sitemap.xml, llms.txt, .gitignore
+- **施策**: 相続特化コンテンツページ追加 / ペルソナ3住み替えCTA / gitignore整備
+
+### 実装内容
+
+1. **inage/souzoku.html 新規作成**（相続不動産ガイドページ）
+   - 相続後の4択（売却・賃貸・解体・自己利用）を費用目安つきで比較
+   - 稲毛区固有の費用目安表（相続登記・解体・賃貸リフォーム・稲毛団地管理費）
+   - FAQ JSON-LD 5問（相続登記期限・稲毛団地・一戸建て価格・解体費・賃貸）
+   - HowTo JSON-LD 4ステップ / BreadcrumbList / GA4 / PWA
+   - 稲毛団地チェッカー・AI査定・Q&A（相続）への導線
+   - SEOキーワード: 「稲毛区 相続 不動産」「稲毛団地 相続」
+
+2. **inage/index.html 改善**
+   - 機能カードに「相続した不動産の処分ガイド」（souzoku.html）を追加
+   - AI査定カードの説明を「住み替え」フロー明示に更新（ペルソナ3向け）
+   - 最近の相談事例に「天台住み替え」事例追加（qa.html?town=天台 リンク）
+   - 相談件数カウント 21→22 件に更新
+
+3. **sitemap.xml 更新**: souzoku.html 追加（priority 0.85）
+4. **llms.txt 更新**: 相続ガイドページと利用対象者シーンを追記
+5. **.gitignore 新規作成**: PNG/Python/__pycache__/research/reports/*.html を除外
+
+### 残課題
+- MLITデータ再インポート（SUPABASE_URL・SUPABASE_SERVICE_KEY・MLIT_API_KEY を設定して `node scripts/fetch-inage-properties.js`）
+- dev → main マージ（現在 dev が main より 25+ commits 先行）
+
+---
+
 ## 2026-05-27（コンテキスト継続セッション・第6回）
 
 - **対象**: inage/map.html, inage/index.html, llms.txt
