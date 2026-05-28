@@ -4,6 +4,55 @@
 
 ---
 
+## 2026-05-28（コンテキスト継続セッション・第10回）
+
+- **対象**: inage/sumai-kae.html (NEW), inage/area-tenjin.html (NEW), inage/area-anakai.html (NEW), inage/area-naganuma.html (NEW), inage/index.html, sitemap.xml, llms.txt, 各エリア間クロスリンク
+- **施策**: エリア別ガイドページ群の新規作成・ハブページ強化・AEO対応
+
+### 実装内容
+
+1. **inage/sumai-kae.html 新規作成**（住み替えガイド・ペルソナ3向け）
+   - 住み替え4ステップ・売り先行vs買い先行の比較表
+   - 稲毛区の費用目安表（仲介手数料・引越し費等、合計200〜250万円）
+   - AI査定・相場マップ・Q&Aへの導線
+   - HowToスキーマ・FAQPageスキーマ・GA4・PWA対応
+   - コミット: cc66f07
+
+2. **inage/area-tenjin.html 新規作成**（天台エリアガイド）
+   - ㎡単価175,000円・一戸建て1,500〜2,500万円・賃料相場表
+   - 天台エリア特徴（千葉大学・医療機関・バスアクセス）
+   - 住み替えガイドへの専用導線（ペルソナ3対応）
+   - FAQPageスキーマ・BreadcrumbList・GA4・PWA対応
+   - コミット: ed4f008
+
+3. **inage/area-anakai.html 新規作成**（穴川エリアガイド）
+   - ㎡単価200,000円（区内No.1）・投資利回り目安5〜7%
+   - 投資利回り表（1K〜2LDK）・賃料相場表
+   - 投資シミュレーターへの青いボタン（ペルソナ2対応）
+   - FAQPageスキーマ・BreadcrumbList・GA4・PWA対応
+   - コミット: 29cf7f1
+
+4. **inage/area-naganuma.html 新規作成**（長沼町エリアガイド）
+   - ㎡単価185,000円・投資利回り目安6〜9%
+   - 稲毛団地の詳細説明（管理費・旧耐震・空き家特例・建替え計画）
+   - 稲毛団地チェッカー・相続税試算への導線（ペルソナ1対応）
+   - FAQPageスキーマ・BreadcrumbList・GA4・PWA対応
+   - コミット: 91b84ed
+
+5. **エリア間クロスリンク整備**
+   - area-tenjin / area-anakai / area-naganuma の 他のエリアナビ を相互リンクに統一
+   - inage/index.html に「エリア別ガイド（詳しく調べる）」セクション追加（3カードグリッド）
+   - qa.html: 天台フィルター時に住み替えガイドバナー表示（JavaScript）
+   - sitemap.xml: 3エリアガイドページを追加
+   - llms.txt: 3エリアガイドの詳細説明・利用シーン追記
+
+### 残課題
+- area-kodai.html（小仲台エリアガイド）未作成
+- MLITデータ再インポート（環境変数設定後に `node scripts/fetch-inage-properties.js`）
+- dev → main マージ（現在 dev が main より 45+ commits 先行）
+
+---
+
 ## 2026-05-28（コンテキスト継続セッション・第9回）
 
 - **対象**: tools/6-sozoku-zei.html (NEW), tools/index.html, inage/souzoku.html, inage/index.html, index.html, sitemap.xml, llms.txt, tools/1-ai-satei.html
