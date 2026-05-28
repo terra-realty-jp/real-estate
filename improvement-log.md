@@ -4,6 +4,43 @@
 
 ---
 
+## 2026-05-28（コンテキスト継続セッション・第11回）
+
+- **対象**: inage/area-kodai.html (NEW), inage/area-sakusabe.html (NEW), inage/qa.html, inage/map.html, inage/index.html, index.html, sitemap.xml, llms.txt
+- **施策**: CLAUDE.md 5大エリアガイドページ群の完成・全エリア間クロスリンク完成
+
+### 実装内容
+
+1. **inage/area-kodai.html 新規作成**（小仲台エリアガイド）
+   - ㎡単価195,000円（区内2位）・一戸建て1,600〜2,800万円
+   - 穴川/天台/長沼町との選び方比較表（2カラム）
+   - ファミリー向け閑静住宅街・学区人気の特徴解説
+   - FAQPageスキーマ・BreadcrumbList・GA4・PWA対応
+
+2. **inage/area-sakusabe.html 新規作成**（作草部エリアガイド）
+   - ㎡単価175,000円・投資利回り目安7〜10%（1K単身向け）
+   - 千葉大学西千葉キャンパス近くの学生需要詳細
+   - 投資の注意点（春退去集中・大学需要変動リスク）
+   - FAQPageスキーマ・BreadcrumbList・GA4・PWA対応
+
+3. **CLAUDE.md 5大エリアガイド完了**
+   - 長沼町・天台・穴川・小仲台・作草部の全5エリアガイドページ完成
+   - 全エリアページ間の双方向クロスリンク完成
+
+4. **qa.html エリアフィルターバナー完成**
+   - 穴川・長沼町・小仲台・作草部フィルター時にエリアガイドバナーを表示
+   - 天台（住み替えガイド）・相続カテゴリ（相続ガイド）も含め6種類のコンテキストバナー
+
+5. **各ページへの作草部リンク追加**
+   - inage/index.html: エリア別ガイドセクションに作草部カード追加
+   - map.html: エリアガイドリンクに作草部追加
+   - index.html (root): エリアガイドリンクピルに作草部追加
+   - 全エリアページのエリアナビに作草部リンク追加
+   - sitemap.xml: area-kodai.html・area-sakusabe.html追加
+   - llms.txt: 小仲台・作草部エリアガイドの説明・利用シーン追記
+
+---
+
 ## 2026-05-28（コンテキスト継続セッション・第10回）
 
 - **対象**: inage/sumai-kae.html (NEW), inage/area-tenjin.html (NEW), inage/area-anakai.html (NEW), inage/area-naganuma.html (NEW), inage/index.html, sitemap.xml, llms.txt, 各エリア間クロスリンク
