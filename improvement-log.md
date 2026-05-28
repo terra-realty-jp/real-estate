@@ -4,6 +4,39 @@
 
 ---
 
+## 2026-05-28（コンテキスト継続セッション・第13回）
+
+- **対象**: inage/baikyaku-guide.html (NEW), inage/koubai-guide.html (NEW), inage/toushi-guide.html (NEW), inage/chintai-guide.html (NEW), inage/qa.html, inage/index.html, sitemap.xml, llms.txt
+- **施策**: 5カテゴリ別ガイドページ完成・qa.htmlの全カテゴリ×全エリアのコンテキストバナーネットワーク完成
+
+### 実装内容
+
+1. **inage/baikyaku-guide.html 新規作成** (feat: e3ddfc2)
+   - 売却5ステップ・エリア別相場グリッド・費用表・HowToスキーマ
+   - qa.html「売却」カテゴリフィルター選択時バナー対応
+
+2. **inage/koubai-guide.html 新規作成** (feat: 81242c4)
+   - 購入5ステップ・エリア別価格帯・諸費用表・住宅ローン目安・HowToスキーマ
+   - qa.html「購入」カテゴリフィルター選択時バナー対応
+
+3. **inage/toushi-guide.html 新規作成** (feat: 4252061)
+   - エリア別投資利回り目安グリッド（穴川5〜7%・作草部7〜10%）
+   - 実質利回り計算例・物件種別比較・投資判断チェックリスト・失敗パターン4件
+   - qa.html「投資」カテゴリフィルター選択時バナー対応
+
+4. **inage/chintai-guide.html 新規作成** (feat: d241bc4)
+   - エリア別家賃相場（5エリア×4間取り）・賃貸5ステップ
+   - 普通借家vs定期借家比較・費用一覧（経費計上可否付き）
+   - qa.html「賃貸」カテゴリフィルター選択時バナー対応
+
+5. **qa.htmlコンテキストバナーネットワーク完成**（全5カテゴリ+5エリア計10バナー）
+   - 売却→baikyaku-guide / 相続→souzoku / 賃貸→chintai-guide
+   - 購入→koubai-guide / 投資→toushi-guide
+   - 天台→sumai-kae / 穴川→area-anakai / 長沼町→area-naganuma
+   - 小仲台→area-kodai / 作草部→area-sakusabe
+
+---
+
 ## 2026-05-28（コンテキスト継続セッション・第12回）
 
 - **対象**: inage/baikyaku-guide.html (NEW), inage/qa.html, inage/index.html, sitemap.xml, llms.txt
