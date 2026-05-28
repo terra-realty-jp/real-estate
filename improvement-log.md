@@ -4,6 +4,36 @@
 
 ---
 
+## 2026-05-28（コンテキスト継続セッション・第14回）
+
+- **対象**: inage/akiya-guide.html (NEW), sitemap.xml, llms.txt, inage/index.html, index.html, area-naganuma.html, qa.html, baikyaku/koubai/toushi/chintai/souzoku/sumai-kae各ガイドページ
+- **施策**: 空き家ガイド完成・全ガイド相互リンク網完成
+
+### 実装内容
+
+1. **inage/akiya-guide.html 新規作成** (feat: 080057f)
+   - ペルソナ1（田中みちこさん・稲毛団地相続）向け「稲毛区 空き家」SEOターゲット
+   - 放置リスク表（年間コスト: 戸建て12〜35万・稲毛団地41〜87万）
+   - 4つの選択肢グリッド（売る/貸す/解体/寄付）
+   - 稲毛団地特有リスク（管理費/旧耐震/修繕積立金不足/建替え不透明/相続放棄後義務）
+   - 相続空き家3,000万円控除 適用条件5項目
+   - 千葉市補助金2制度（老朽危険空き家除却最大45万・空き家バンク）
+   - FAQPageスキーマ(5問)・BreadcrumbList・GA4・PWA対応
+
+2. **全サイト相互リンク展開**
+   - sitemap.xml: akiya-guide.html を priority 0.80 で追加
+   - llms.txt: 空き家ガイドセクション・利用対象者シーン追加
+   - inage/index.html: 空き家ガイドfeatureカード追加（chintai-guideの次）
+   - index.html: ガイドピル行に「🏚 空き家 →」追加
+   - baikyaku/koubai/toushi/chintai/souzoku/sumai-kae: ガイドシリーズに空き家ガイドリンク追加
+   - area-naganuma.html: ガイドシリーズに空き家ガイドリンク追加（稲毛団地の地元）
+   - qa.html: 相続カテゴリバナーに空き家ガイドへの直リンク追加
+
+3. **ガイドシリーズ完成**
+   - 売却・購入・投資・賃貸・相続・住み替え・空き家 の7ガイドが全ページで相互リンク
+
+---
+
 ## 2026-05-28（コンテキスト継続セッション・第13回）
 
 - **対象**: inage/baikyaku-guide.html (NEW), inage/koubai-guide.html (NEW), inage/toushi-guide.html (NEW), inage/chintai-guide.html (NEW), inage/qa.html, inage/index.html, sitemap.xml, llms.txt
