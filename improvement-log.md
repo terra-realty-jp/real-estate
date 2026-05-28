@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-05-28（コンテキスト継続セッション・第17回）
+
+- **対象**: supabase-client.js, tools/1-ai-satei.html, tools/2-akiya-hunter.html, inage/map.html
+- **施策**: Data Moat — Supabaseログ拡充 + 相談CTAモーダル化
+- **実装内容**:
+  - supabase-client.js: sbLogCardUsageにresult_label列を追加送信（軟マイグレーション）
+  - AI査定CTA: mailtoリンクをSupabase qa_questions保存型インラインモーダルに全面置き換え
+    `openConsultModal()` / `closeConsultModal()` / `submitConsult()` 実装
+    査定結果サマリーをモーダルに自動表示、送信成功後に成功画面表示
+  - AI査定: calcAndShowResultで エリア×物件種別×築年グループ×価格帯をcard_idに埋め込みログ
+  - 稲毛団地チェッカー: スコア・判定・エリア・築年グループをcard_idにエンコードしてログ
+  - map.html: 町名ポリゴンクリック・テーブル行クリックをsupabaseログ追加
+  - ⚠️ Supabase Dashboard で `ALTER TABLE card_usage_log ADD COLUMN result_label TEXT;` 実行が必要
+
+---
+
 ## 2026-05-28（コンテキスト継続セッション・第16回）
 
 - **対象**: inage/qa.html（7件追加・29件）, tools/1-ai-satei.html（AREA_UNIT修正）, 12エリアページ全相互リンク, inage/index.html・root index.html・map.html（12エリアリンク整備）, llms.txt（7エリア追記）
