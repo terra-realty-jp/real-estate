@@ -263,17 +263,29 @@ CREATE TABLE area_buyer_count (
 
 ## 実装フェーズ（優先順位）
 
-| 優先度 | 施策 | featureブランチ | 理由 |
-|--------|------|----------------|------|
-| 1 | 施策①相場マップ | `feature/inage-map` | 国土交通省データ流用可・即効性最高 |
-| 2 | 施策②稲毛団地診断 | `feature/inage-checker` | 既存ツール拡張・実装コスト低 |
-| 3 | 施策③Q&A掲示板 | `feature/qa-board` | DB設計済み・長期資産になる |
-| 4 | 施策⑤ローカルマッチング | `feature/local-matching` | 既存Tool3の改修 |
-| 5 | 施策④メール通知 | `feature/email-notify` | 外部サービス設定が必要なため後回し |
+### 現在の実装状況（2026-05-28時点）
+
+| 施策 | 状態 | 詳細 |
+|------|------|------|
+| ① 相場マップ | ✅ UI完成 / ⚠️ 実データ空 | GeoJSON・静的フォールバックデータで動作中。Supabase `inage_properties` に国交省実取引データ未投入（MLIT_API_KEY必要） |
+| ② 稲毛団地チェッカー | ✅ 完成 | `tools/2-akiya-hunter.html` にタブ追加・スコア計算・Supabaseログ済み |
+| ③ Q&A掲示板 | ✅ 完成 | `inage/qa.html` 29件サンプル・投稿フォーム（Supabase INSERT）・カテゴリ/エリアフィルター完成 |
+| ⑤ ローカルマッチング | ✅ 完成 | `tools/3-owner-direct.html` 稲毛区需要タブ・`area_buyer_count` INSERT・売主フォーム `inage/sell.html` 完成 |
+| ④ メール通知 | ✅ 完成（Phase 1） | `inage/notify.html` 登録フォーム・`notify_subscribers` INSERT・GitHub Actions `match-notify.yml` 自動マッチング通知済み |
+| **dev→main マージ** | 🚨 **77コミット未反映** | devブランチの全実装が本番（main/GitHub Pages）に未反映。最優先で対応が必要 |
+
+### 次の実装優先順位
+
+| 優先度 | タスク | 理由 |
+|--------|--------|------|
+| 1 | **dev→main マージ（本番リリース）** | 77コミットが本番未反映。ユーザーに届いていない |
+| 2 | **施策① 実データ投入** | `MLIT_API_KEY` 取得後 `node scripts/fetch-inage-properties.js` でSupabaseに実取引データを投入 |
+| 3 | **Data Moat深化** | `card_usage_log` の蓄積データを分析し、ユーザーへのフィードバック（「このエリアで○人が査定しました」等）に還元 |
+| 4 | **施策④ Phase 2** | Resend APIで自動メール配信（月次・週次）の実装 |
 
 **実装ルール:**
-- 1機能 = 1featureブランチ
-- featureブランチ完成 → dev にマージ → dev 安定 → main にマージ
+- 1機能 = 1featureブランチ（新規機能の場合）
+- devブランチで安定確認 → main にマージ = 本番リリース
 - mainへのマージ = 本番リリース。必ず動作確認後に行う
 
 ---
@@ -374,11 +386,10 @@ tail -50 /home/sishizaw/real-estate-project/improvement-log.md
 ### 優先順位（この順番を守る）
 
 1. **重大バグ・動作不良** → 最優先で修正
-2. **施策① 稲毛区相場マップ** (`feature/inage-map`) → /inage/index.html + /inage/map.html
-3. **施策② 稲毛団地チェッカー** (`feature/inage-checker`) → /tools/2-akiya-hunter.html に追加
-4. **施策③ Q&A掲示板** (`feature/qa-board`) → /inage/qa.html
-5. **施策⑤ ローカルマッチング** (`feature/local-matching`) → /tools/3-owner-direct.html 改修
-6. **施策④ メール通知** (`feature/email-notify`) → /inage/notify.html
+2. **dev→main マージ** → 77コミット蓄積中。本番に未反映のため最優先でマージ
+3. **施策① 実データ投入** → MLIT_API_KEY があれば `node scripts/fetch-inage-properties.js` 実行
+4. **Data Moat深化** → card_usage_log蓄積データのフィードバックループ実装
+5. **施策④ Phase 2（Resend自動メール）** → 月次・週次の自動配信実装
 
 ### 1サイクルの手順
 
