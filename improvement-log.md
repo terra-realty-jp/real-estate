@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-05-28（コンテキスト継続セッション・第15回）
+
+- **対象**: inage/qa.html, llms.txt
+- **施策**: エリアガイド網完成・qa.htmlバナー整備
+- **実装内容**:
+  - qa.html に7つの新エリアバナー追加（稲毛本町/緑町/轟町/宮野木町/千草台/萩台町/柏台）
+  - setFilter() JS関数に7エリアのshow/hide処理を追加
+  - llms.txt に7エリアガイドの機能説明を追記、利用対象者セクションも12エリア対応に更新
+  - コミット f68d0e4、dev ブランチにプッシュ
+
+---
+
 ## 2026-05-28（コンテキスト継続セッション・第14回）
 
 - **対象**: inage/akiya-guide.html (NEW), sitemap.xml, llms.txt, inage/index.html, index.html, area-naganuma.html, qa.html, baikyaku/koubai/toushi/chintai/souzoku/sumai-kae各ガイドページ
