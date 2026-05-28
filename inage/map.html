@@ -995,6 +995,9 @@ function showTrendPanel(townName) {
   _trendPanelTown = townName;
   titleEl.textContent = townName + ' — 価格推移';
   subEl.textContent = '読み込み中…';
+
+  // Data Moat: どのエリアが注目されているかをSupabaseに蓄積
+  try { sbLogCardUsage('map', 'map-click__' + townName, 'calc', townName + 'エリア価格推移閲覧'); } catch(e) {}
   contentEl.innerHTML = '<div class="trend-loading">Supabaseからデータを取得中…</div>';
   panel.classList.add('visible');
 
@@ -1200,6 +1203,8 @@ function renderTable() {
 function focusTown(townId) {
   var d = TOWN_DATA.find(function(x) { return x.id === townId; });
   if (!d) return;
+  // Data Moat: テーブル行クリックもエリア興味シグナルとして蓄積
+  try { sbLogCardUsage('map', 'map-table__' + townId, 'calc', (d.name || townId) + 'テーブル選択'); } catch(e) {}
   var mapEl = document.getElementById('map');
   if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
   setTimeout(function() {

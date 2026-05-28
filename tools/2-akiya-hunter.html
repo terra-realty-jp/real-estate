@@ -6726,7 +6726,14 @@ function calcInageChecker() {
     qaLink.textContent = '💬 ' + townName + 'の相続・売却Q&Aを見る →';
   }
 
-  try { logCardUsage('card-inage-checker', 'calc'); } catch(e) {}
+  // Data Moat: エリア×物件種別×築年グループ×スコア×判定をcard_idに埋め込んで蓄積
+  try {
+    var _icAgeG = age < 30 ? 'new' : age < 45 ? 'mid' : age < 55 ? 'old' : 'vold';
+    var _icVerdict = adjustedTotal >= 40 ? 'sell_now' : adjustedTotal >= 28 ? 'rent' : 'wait';
+    var _icCardId = 'inage_checker__' + (area || 'unknown') + '__' + (type || 'danchi') + '__' + _icAgeG + '__s' + adjustedTotal + '__' + _icVerdict;
+    var _icLabel = verdict + '（スコア' + adjustedTotal + '/50・築' + age + '年・月' + (monthlyTotal > 0 ? (monthlyTotal/10000).toFixed(1) + '万円' : '0万円') + '）';
+    sbLogCardUsage(2, _icCardId, 'calc', _icLabel);
+  } catch(e) {}
 }
 
 // Escape key でモーダルを閉じる

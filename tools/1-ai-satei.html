@@ -853,8 +853,49 @@
       <div class="cta-box">
         <p id="cta-text">この査定結果を持って、TERRA REALTYに無料でご相談いただけます。<br>「この結果について聞きたい」という気軽なご連絡から大歓迎です。</p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">
-          <a href="mailto:terra.realty.iam@gmail.com?subject=AI査定の結果について相談したい&body=査定結果を確認しました。詳しくご相談したいです。" class="btn btn-gold" style="text-decoration:none" onclick="updateCTALink(this,1)">TERRA REALTYに相談する →</a>
+          <button class="btn btn-gold" onclick="openConsultModal()">TERRA REALTYに相談する →</button>
           <button class="btn btn-outline" onclick="resetForm()">別の物件を査定する</button>
+        </div>
+
+        <!-- インライン相談フォームモーダル -->
+        <div id="consult-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:16px">
+          <div style="background:#fff;border-radius:16px;padding:24px 20px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;position:relative">
+            <button onclick="closeConsultModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:22px;color:#999;cursor:pointer;line-height:1">×</button>
+            <div style="font-size:13px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:6px">TERRA REALTY 無料相談</div>
+            <div style="font-size:18px;font-weight:900;margin-bottom:4px">査定結果についてご相談</div>
+            <div id="consult-result-summary" style="font-size:12px;color:var(--text-muted);background:rgba(192,82,43,0.06);border:1px solid rgba(192,82,43,0.2);border-radius:8px;padding:10px 12px;margin-bottom:18px;line-height:1.7"></div>
+
+            <div id="consult-form-body">
+              <div style="margin-bottom:14px">
+                <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px">連絡先（メールまたは電話番号）<span style="color:var(--gold)">*</span></label>
+                <input id="consult-contact" type="text" placeholder="例: example@gmail.com  または  090-XXXX-XXXX"
+                  style="width:100%;border:1px solid rgba(0,0,0,0.15);border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none">
+              </div>
+              <div style="margin-bottom:14px">
+                <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px">お名前（任意）</label>
+                <input id="consult-name" type="text" placeholder="例: 田中みちこ"
+                  style="width:100%;border:1px solid rgba(0,0,0,0.15);border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none">
+              </div>
+              <div style="margin-bottom:18px">
+                <label style="font-size:12px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px">相談内容（任意）</label>
+                <textarea id="consult-body" rows="3" placeholder="例: 相続した物件で売るか貸すか迷っています。費用感も含めて相談したいです。"
+                  style="width:100%;border:1px solid rgba(0,0,0,0.15);border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;resize:vertical"></textarea>
+              </div>
+              <button onclick="submitConsult()" style="width:100%;background:var(--gold);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+                無料で相談を申し込む →
+              </button>
+              <div id="consult-error" style="display:none;color:#dc2626;font-size:12px;margin-top:8px;text-align:center"></div>
+              <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:10px;line-height:1.6">
+                ※ 送信された内容はTERRA REALTYのスタッフが確認し、1営業日以内に連絡します。
+              </div>
+            </div>
+            <div id="consult-success" style="display:none;text-align:center;padding:20px 0">
+              <div style="font-size:40px;margin-bottom:12px">✅</div>
+              <div style="font-size:17px;font-weight:900;margin-bottom:8px">ご相談を受け付けました！</div>
+              <div style="font-size:13px;color:var(--text-muted);line-height:1.7">1営業日以内にご連絡先にご連絡いたします。<br>お気軽にお待ちください。</div>
+              <button onclick="closeConsultModal()" style="margin-top:20px;background:var(--gold);color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">閉じる</button>
+            </div>
+          </div>
         </div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <a id="line-share-btn" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#06C755;color:#fff;font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none">
@@ -6345,6 +6386,15 @@ function calcAndShowResult() {
     : '6〜12ヶ月';
 
   currentEstimate = { price, low, high, tsubo, liquidity, period, periodScore, age, station, priceInMan, reform };
+
+  // Data Moat: エリア×物件種別×築年グループ×価格帯をcard_idに埋め込んでSupabaseに蓄積
+  try {
+    var _ageG = age < 15 ? 'new' : age < 30 ? 'mid' : age < 45 ? 'old' : 'vold';
+    var _priceG = priceInMan < 1000 ? 'u1000' : priceInMan < 2000 ? 'u2000' : priceInMan < 3000 ? 'u3000' : 'o3000';
+    var _cardId = 'satei__' + pref + '__' + propType + '__' + _ageG + '__' + _priceG;
+    var _label = '推定' + Math.round(priceInMan) + '万円（' + Math.round(area) + '㎡・築' + age + '年・流動性' + liquidity + '）';
+    sbLogCardUsage(1, _cardId, 'calc', _label);
+  } catch(e) {}
 
   // 表示
   const fmt = v => '約 ' + (v >= 10000 ? Math.round(v/10000)+'億' : '') + (v%10000/10000>0.05 ? Math.round(v%10000/1000000*100)/100+'万' : '') +
@@ -15008,6 +15058,114 @@ function calcDivorceSplit() {
   function init(){document.querySelectorAll('[id$="-result"]').forEach(observe);}
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
 })();
+
+// ===== 相談モーダル =====
+function openConsultModal() {
+  var modal = document.getElementById('consult-modal');
+  if (!modal) return;
+  var summary = document.getElementById('consult-result-summary');
+  if (summary && currentEstimate) {
+    var pref = document.getElementById('pref') ? document.getElementById('pref').value : '';
+    var propType = document.getElementById('propType') ? document.getElementById('propType').value : '';
+    var areaLabel = AREA_LABEL[pref] || pref;
+    var typeLabel = { mansion:'マンション', house:'一戸建て', land:'土地' }[propType] || propType;
+    summary.innerHTML =
+      '<strong>' + areaLabel + ' ' + typeLabel + '</strong><br>' +
+      '推定価格: <strong style="color:var(--gold)">' + Math.round(currentEstimate.priceInMan).toLocaleString() + '万円</strong>' +
+      '（' + Math.round(currentEstimate.priceInMan * 0.90).toLocaleString() + ' 〜 ' + Math.round(currentEstimate.priceInMan * 1.10).toLocaleString() + '万円）<br>' +
+      '築' + currentEstimate.age + '年・売却想定期間: ' + currentEstimate.period;
+  }
+  var formBody = document.getElementById('consult-form-body');
+  var success = document.getElementById('consult-success');
+  var err = document.getElementById('consult-error');
+  var contact = document.getElementById('consult-contact');
+  var name = document.getElementById('consult-name');
+  var body = document.getElementById('consult-body');
+  if (formBody) formBody.style.display = 'block';
+  if (success) success.style.display = 'none';
+  if (err) { err.style.display = 'none'; err.textContent = ''; }
+  if (contact) contact.value = '';
+  if (name) name.value = '';
+  if (body) body.value = '';
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeConsultModal() {
+  var modal = document.getElementById('consult-modal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function submitConsult() {
+  var contactEl = document.getElementById('consult-contact');
+  var nameEl = document.getElementById('consult-name');
+  var bodyEl = document.getElementById('consult-body');
+  var errEl = document.getElementById('consult-error');
+  var formBody = document.getElementById('consult-form-body');
+  var success = document.getElementById('consult-success');
+
+  var contact = contactEl ? contactEl.value.trim() : '';
+  if (!contact) {
+    if (errEl) { errEl.textContent = '連絡先（メールまたは電話番号）を入力してください'; errEl.style.display = 'block'; }
+    if (contactEl) contactEl.focus();
+    return;
+  }
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+
+  var pref = document.getElementById('pref') ? document.getElementById('pref').value : '';
+  var propType = document.getElementById('propType') ? document.getElementById('propType').value : '';
+  var areaLabel = AREA_LABEL[pref] || pref;
+  var typeLabel = { mansion:'マンション', house:'一戸建て', land:'土地' }[propType] || propType;
+  var nameVal = nameEl ? nameEl.value.trim() : '';
+  var msgVal = bodyEl ? bodyEl.value.trim() : '';
+
+  var title = 'AI査定相談：' + areaLabel + ' ' + typeLabel;
+  if (currentEstimate) title += ' 推定' + Math.round(currentEstimate.priceInMan) + '万円';
+
+  var bodyText = '【連絡先】' + contact + '\n';
+  if (nameVal) bodyText += '【お名前】' + nameVal + '\n';
+  if (currentEstimate) {
+    bodyText += '\n【査定結果】\n';
+    bodyText += 'エリア: ' + areaLabel + '\n';
+    bodyText += '物件種別: ' + typeLabel + '\n';
+    bodyText += '推定価格: ' + Math.round(currentEstimate.priceInMan).toLocaleString() + '万円\n';
+    bodyText += '価格レンジ: ' + Math.round(currentEstimate.priceInMan * 0.90).toLocaleString() + ' 〜 ' + Math.round(currentEstimate.priceInMan * 1.10).toLocaleString() + '万円\n';
+    bodyText += '築' + currentEstimate.age + '年・売却想定期間: ' + currentEstimate.period + '\n';
+  }
+  if (msgVal) bodyText += '\n【相談内容】\n' + msgVal;
+
+  var submitBtn = document.querySelector('#consult-form-body button[onclick="submitConsult()"]');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '送信中…'; }
+
+  var db = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
+  if (!db) {
+    if (errEl) { errEl.textContent = '送信エラー: 接続を確認してください'; errEl.style.display = 'block'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '無料で相談を申し込む →'; }
+    return;
+  }
+
+  db.from('qa_questions').insert({
+    category: '相談依頼',
+    title: title,
+    body: bodyText,
+    status: 'pending',
+    town_name: areaLabel,
+    session_id: (typeof _getSessionId === 'function') ? _getSessionId() : ''
+  }).then(function(res) {
+    if (res.error) {
+      if (errEl) { errEl.textContent = '送信に失敗しました。しばらくしてから再度お試しください。'; errEl.style.display = 'block'; }
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '無料で相談を申し込む →'; }
+    } else {
+      if (formBody) formBody.style.display = 'none';
+      if (success) success.style.display = 'block';
+      try { sbLogCardUsage(1, 'consult-submit__' + pref + '__' + propType, 'share', title); } catch(e) {}
+    }
+  }).catch(function() {
+    if (errEl) { errEl.textContent = '送信に失敗しました。しばらくしてから再度お試しください。'; errEl.style.display = 'block'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '無料で相談を申し込む →'; }
+  });
+}
 
 // ===== 相場マップからのエリア引き継ぎ =====
 (function() {
