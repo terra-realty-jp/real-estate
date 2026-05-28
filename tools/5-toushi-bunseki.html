@@ -191,6 +191,23 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "不動産投資シミュレーターの使い方",
+  "description": "購入価格・家賃・ローン条件を入力するだけで表面利回り・実質利回り・月次CF・IRRを無料計算できます。",
+  "totalTime": "PT5M",
+  "tool": [{"@type": "HowToTool", "name": "不動産投資シミュレーター（TERRA REALTY）"}],
+  "step": [
+    {"@type": "HowToStep", "name": "物件情報を入力", "text": "購入価格・想定月額家賃・頭金を入力します。稲毛区の場合、区分マンション2,000〜3,000万円・月額家賃7〜10万円が目安です。", "position": 1},
+    {"@type": "HowToStep", "name": "ローン条件を設定", "text": "金利（2026年の投資ローン目安2.0〜3.0%）・返済期間（20〜30年）を設定します。デフォルト値は2.5%・25年です。", "position": 2},
+    {"@type": "HowToStep", "name": "「分析する」ボタンを押す", "text": "ボタンを押すと表面利回り・実質利回り・月次CF・DSCR・CCR・IRRが即座に表示されます。", "position": 3},
+    {"@type": "HowToStep", "name": "判断ガイドで数字を解釈する", "text": "実質利回り5%以上・DSCR1.3以上・月次CF+1万円以上が良好な目安です。数字が基準を下回る場合は購入価格交渉または見送りを検討してください。", "position": 4},
+    {"@type": "HowToStep", "name": "詳細分析・10年CF予測を確認する", "text": "詳細モードでは10年分のキャッシュフロー予測・金利上昇感度分析・出口戦略シミュレーションが確認できます。", "position": 5}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
     {
@@ -244,6 +261,9 @@
     gtag("js", new Date());
     gtag("config", "G-PRTFHJSJY3");
   </script>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#c0522b">
+  <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/real-estate/sw.js").catch(function(){});}</script>
 </head>
 <body>
 <div id="sb-auth-bar" style="background:#0f1729;border-bottom:1px solid rgba(192,82,43,0.12);padding:8px 28px;display:flex;align-items:center;gap:8px;min-height:38px;font-family:'Noto Sans JP',sans-serif"></div>
@@ -340,7 +360,7 @@
         <div class="form-group"><label>購入価格（万円）*</label><input type="number" id="s_price" placeholder="2500" min="0" oninput="updateSimpleLoanPreview()"></div>
         <div class="form-group"><label>想定月額家賃（円）*</label><input type="number" id="s_rent" placeholder="80000" min="0" oninput="updateSimpleLoanPreview()"></div>
         <div class="form-group"><label>頭金（万円）</label><input type="number" id="s_downpay" placeholder="500" min="0" oninput="updateSimpleLoanPreview()"></div>
-        <div class="form-group"><label>金利（年率 %）</label><input type="number" id="s_rate" value="1.5" min="0" max="30" step="0.1" oninput="updateSimpleLoanPreview()"></div>
+        <div class="form-group"><label>金利（年率 %）</label><input type="number" id="s_rate" value="2.5" min="0" max="30" step="0.1" oninput="updateSimpleLoanPreview()"></div>
         <div class="form-group"><label>返済期間（年）</label><input type="number" id="s_term" value="25" min="1" max="50" oninput="updateSimpleLoanPreview()"></div>
       </div>
       <div id="simple-loan-preview" style="margin-top:16px;padding:14px 16px;background:rgba(192,82,43,0.06);border:1px solid rgba(192,82,43,0.2);border-radius:8px;display:none">
@@ -398,7 +418,7 @@
         <div class="card-title">🏦 ローン条件</div>
         <div class="form-grid">
           <div class="form-group"><label>借入額（万円）</label><input type="number" id="i_loan" placeholder="2000" min="0" oninput="autoCalc()"></div>
-          <div class="form-group"><label>金利（年率 %）</label><input type="number" id="i_rate" value="1.5" min="0" max="30" step="0.1" oninput="autoCalc()"></div>
+          <div class="form-group"><label>金利（年率 %）</label><input type="number" id="i_rate" value="2.5" min="0" max="30" step="0.1" oninput="autoCalc()"></div>
           <div class="form-group"><label>返済期間（年）</label><input type="number" id="i_term" value="25" min="1" max="50" oninput="autoCalc()"></div>
           <div class="form-group"><label>返済方式</label>
             <select id="i_repay" onchange="autoCalc()">
@@ -435,6 +455,15 @@
           </div>
           <div style="padding:10px;background:rgba(59,130,246,0.08);border-radius:8px;border-left:3px solid var(--blue)">
             <strong style="color:var(--blue)">CCR（自己資本利回り）10%以上</strong><br>レバレッジ効果大。高収益投資。
+          </div>
+          <div style="padding:10px;background:rgba(34,197,94,0.08);border-radius:8px;border-left:3px solid var(--green)">
+            <strong style="color:var(--green)">DSCR（返済余裕度）1.3以上</strong><br>ローン返済に余裕あり。銀行評価も高い。1.0未満は赤字リスク。
+          </div>
+          <div style="padding:10px;background:rgba(59,130,246,0.08);border-radius:8px;border-left:3px solid var(--blue)">
+            <strong style="color:var(--blue)">月次CF（手残り）+1万円以上</strong><br>毎月プラスなら安心。マイナスの場合はキャッシュで補填が必要。
+          </div>
+          <div style="padding:10px;background:rgba(0,0,0,0.04);border-radius:8px;font-size:12px;color:var(--text-muted)">
+            ※2026年の投資ローン金利は2〜3%が目安。1%台は変動型のみ（金利上昇リスクあり）。
           </div>
         </div>
       </div>

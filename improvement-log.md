@@ -4,58 +4,288 @@
 
 ---
 
-## 2026-05-27（コンテキスト継続セッション・第8回）
+## 2026-05-28（コンテキスト継続セッション・第17回）
 
-- **対象**: tools/3-owner-direct.html
-- **施策**: 施策⑤ ローカルマッチング 予算入力・URLパラメーター対応
-
-### 実装内容
-
-1. **予算上限セレクト追加**（`tools/3-owner-direct.html`）
-   - フィルターグリッドを2列→3列に変更
-   - 「予算上限（任意）」セレクト（1,500〜5,000万円超）追加
-   - `registerBuyerInterest()` で `budget_max` を実際にSupabaseに送信（従来は`null`固定）
-
-2. **URLパラメーター対応**
-   - `?town=<町名>` でエリアを自動選択し `renderInageMatch()` 実行
-   - 将来的に `inage/index.html` や相場マップからリンクして使える
-
-### マージ状況
-- `dev` → `main` マージ済み（`8a24eb0`）
-
-### 次のアクション
-- 施策④ メール通知自動化（GitHub Actions + Resend API・3ヶ月後予定）
-- 再インポート: `MLIT_API_KEY`・`SUPABASE_URL`・`SUPABASE_SERVICE_KEY` 環境変数設定後に `node scripts/fetch-inage-properties.js` を実行
-- inge/index.html の「買い手需要を見る」リンクに `?town=` パラメーターを組み合わせたダイナミックリンクの検討
+- **対象**: supabase-client.js, tools/1-ai-satei.html, tools/2-akiya-hunter.html, inage/map.html
+- **施策**: Data Moat — Supabaseログ拡充 + 相談CTAモーダル化
+- **実装内容**:
+  - supabase-client.js: sbLogCardUsageにresult_label列を追加送信（軟マイグレーション）
+  - AI査定CTA: mailtoリンクをSupabase qa_questions保存型インラインモーダルに全面置き換え
+    `openConsultModal()` / `closeConsultModal()` / `submitConsult()` 実装
+    査定結果サマリーをモーダルに自動表示、送信成功後に成功画面表示
+  - AI査定: calcAndShowResultで エリア×物件種別×築年グループ×価格帯をcard_idに埋め込みログ
+  - 稲毛団地チェッカー: スコア・判定・エリア・築年グループをcard_idにエンコードしてログ
+  - map.html: 町名ポリゴンクリック・テーブル行クリックをsupabaseログ追加
+  - ⚠️ Supabase Dashboard で `ALTER TABLE card_usage_log ADD COLUMN result_label TEXT;` 実行が必要
 
 ---
 
-## 2026-05-27（コンテキスト継続セッション・第7回）
+## 2026-05-28（コンテキスト継続セッション・第16回）
 
-- **対象**: inage/notify.html, inage/map.html
-- **施策**: 施策④ 投資家向け通知オプション追加
+- **対象**: inage/qa.html（7件追加・29件）, tools/1-ai-satei.html（AREA_UNIT修正）, 12エリアページ全相互リンク, inage/index.html・root index.html・map.html（12エリアリンク整備）, llms.txt（7エリア追記）
+- **施策**: 全サイト12エリア完備・Q&A拡充・AI査定精度修正
+- **実装内容**:
+  - 12エリアガイドページ間の完全相互クロスリンク完成（各ページから全エリアに1クリック）
+  - inage/index.html・root index.html・map.htmlに7新エリアリンクを追加
+  - Q&A 7件追加（作草部売却/千草台売却/轟町売却/宮野木町相続/萩台町賃貸/柏台売却/穴川相続）→29件体制
+  - AI査定 稲毛区AREA_UNIT値を実勢値に修正（穴川200k/小仲台195k/稲毛本町185k/その他168k）
+  - chiba_inage_kodaiキー（小仲台・天台・作草部向け195,000円）新規追加
+
+---
+
+## 2026-05-28（コンテキスト継続セッション・第15回）
+
+- **対象**: inage/qa.html, llms.txt
+- **施策**: エリアガイド網完成・qa.htmlバナー整備
+- **実装内容**:
+  - qa.html に7つの新エリアバナー追加（稲毛本町/緑町/轟町/宮野木町/千草台/萩台町/柏台）
+  - setFilter() JS関数に7エリアのshow/hide処理を追加
+  - llms.txt に7エリアガイドの機能説明を追記、利用対象者セクションも12エリア対応に更新
+  - コミット f68d0e4、dev ブランチにプッシュ
+
+---
+
+## 2026-05-28（コンテキスト継続セッション・第14回）
+
+- **対象**: inage/akiya-guide.html (NEW), sitemap.xml, llms.txt, inage/index.html, index.html, area-naganuma.html, qa.html, baikyaku/koubai/toushi/chintai/souzoku/sumai-kae各ガイドページ
+- **施策**: 空き家ガイド完成・全ガイド相互リンク網完成
 
 ### 実装内容
 
-1. **notify.html 投資家向け対応**
-   - 利回りトレンド通知カード追加（value-cardsを3→4枚、2列グリッドへ変更）
-   - ヒーロー文言を売主・投資家両方に対応した文言に更新
-   - 投資家向けメール例（穴川・小仲台・長沼町の表面利回りレポート）追加
-   - マンション選択肢に「投資利回り情報含む」明記
-   - FAQ「投資家向けの情報も届きますか？」追加
-   - `?purpose=investment` URLパラメーター対応（穴川・小仲台・長沼町自動選択＋案内バナー）
-   - `?area=<id>` URLパラメーター対応（指定エリアを自動チェック）
+1. **inage/akiya-guide.html 新規作成** (feat: 080057f)
+   - ペルソナ1（田中みちこさん・稲毛団地相続）向け「稲毛区 空き家」SEOターゲット
+   - 放置リスク表（年間コスト: 戸建て12〜35万・稲毛団地41〜87万）
+   - 4つの選択肢グリッド（売る/貸す/解体/寄付）
+   - 稲毛団地特有リスク（管理費/旧耐震/修繕積立金不足/建替え不透明/相続放棄後義務）
+   - 相続空き家3,000万円控除 適用条件5項目
+   - 千葉市補助金2制度（老朽危険空き家除却最大45万・空き家バンク）
+   - FAQPageスキーマ(5問)・BreadcrumbList・GA4・PWA対応
 
-2. **map.html ポップアップ改善**
-   - 各エリアポップアップに「📧 価格更新通知を受け取る」ボタン追加
-   - `notify.html?area=<id>` へのリンクで、クリックしたエリアをnotify.htmlで自動選択
+2. **全サイト相互リンク展開**
+   - sitemap.xml: akiya-guide.html を priority 0.80 で追加
+   - llms.txt: 空き家ガイドセクション・利用対象者シーン追加
+   - inage/index.html: 空き家ガイドfeatureカード追加（chintai-guideの次）
+   - index.html: ガイドピル行に「🏚 空き家 →」追加
+   - baikyaku/koubai/toushi/chintai/souzoku/sumai-kae: ガイドシリーズに空き家ガイドリンク追加
+   - area-naganuma.html: ガイドシリーズに空き家ガイドリンク追加（稲毛団地の地元）
+   - qa.html: 相続カテゴリバナーに空き家ガイドへの直リンク追加
 
-### マージ状況
-- `dev` → `main` マージ済み（`786bcdc`）
+3. **ガイドシリーズ完成**
+   - 売却・購入・投資・賃貸・相続・住み替え・空き家 の7ガイドが全ページで相互リンク
 
-### 次のアクション
-- 施策⑤ ローカルマッチング (`tools/3-owner-direct.html` 稲毛区絞り込み追加)
-- 再インポート: `MLIT_API_KEY`・`SUPABASE_URL`・`SUPABASE_SERVICE_KEY` 環境変数設定後に `node scripts/fetch-inage-properties.js` を実行
+---
+
+## 2026-05-28（コンテキスト継続セッション・第13回）
+
+- **対象**: inage/baikyaku-guide.html (NEW), inage/koubai-guide.html (NEW), inage/toushi-guide.html (NEW), inage/chintai-guide.html (NEW), inage/qa.html, inage/index.html, sitemap.xml, llms.txt
+- **施策**: 5カテゴリ別ガイドページ完成・qa.htmlの全カテゴリ×全エリアのコンテキストバナーネットワーク完成
+
+### 実装内容
+
+1. **inage/baikyaku-guide.html 新規作成** (feat: e3ddfc2)
+   - 売却5ステップ・エリア別相場グリッド・費用表・HowToスキーマ
+   - qa.html「売却」カテゴリフィルター選択時バナー対応
+
+2. **inage/koubai-guide.html 新規作成** (feat: 81242c4)
+   - 購入5ステップ・エリア別価格帯・諸費用表・住宅ローン目安・HowToスキーマ
+   - qa.html「購入」カテゴリフィルター選択時バナー対応
+
+3. **inage/toushi-guide.html 新規作成** (feat: 4252061)
+   - エリア別投資利回り目安グリッド（穴川5〜7%・作草部7〜10%）
+   - 実質利回り計算例・物件種別比較・投資判断チェックリスト・失敗パターン4件
+   - qa.html「投資」カテゴリフィルター選択時バナー対応
+
+4. **inage/chintai-guide.html 新規作成** (feat: d241bc4)
+   - エリア別家賃相場（5エリア×4間取り）・賃貸5ステップ
+   - 普通借家vs定期借家比較・費用一覧（経費計上可否付き）
+   - qa.html「賃貸」カテゴリフィルター選択時バナー対応
+
+5. **qa.htmlコンテキストバナーネットワーク完成**（全5カテゴリ+5エリア計10バナー）
+   - 売却→baikyaku-guide / 相続→souzoku / 賃貸→chintai-guide
+   - 購入→koubai-guide / 投資→toushi-guide
+   - 天台→sumai-kae / 穴川→area-anakai / 長沼町→area-naganuma
+   - 小仲台→area-kodai / 作草部→area-sakusabe
+
+---
+
+## 2026-05-28（コンテキスト継続セッション・第12回）
+
+- **対象**: inage/baikyaku-guide.html (NEW), inage/qa.html, inage/index.html, sitemap.xml, llms.txt
+- **施策**: 稲毛区 不動産売却ガイドページ新規作成・各ページへのクロスリンク整備
+
+### 実装内容
+
+1. **inage/baikyaku-guide.html 新規作成** (feat: e3ddfc2)
+   - ターゲット: 「稲毛区 不動産 売却」「稲毛区 家 売りたい」検索ユーザー
+   - 売却5ステップ（相場確認→査定→媒介契約→内見・売買契約→決済・引き渡し）を完全解説
+   - エリア別相場グリッド: 穴川200,000円・小仲台195,000円・長沼町185,000円・天台/作草部175,000円
+   - 売却費用表: 仲介手数料上限約72万・印紙税1万・抵当権抹消登記2万・譲渡所得税・清掃10万
+   - 3シーン別ツール導線: 相続/住み替え/税金試算
+   - HowToスキーマ（5ステップ）・FAQPageスキーマ（5問）・BreadcrumbList・GA4・PWA対応
+
+2. **qa.html 売却カテゴリフィルターバナー追加**
+   - 「売却」カテゴリフィルター選択時にbaikyaku-guide.htmlへの誘導バナーを表示
+   - setFilter()に `val === '売却'` 判定を追加（cat フィルター内）
+
+3. **inage/index.html 売却ガイドカード追加**
+   - 稲毛区特化ツールセクションにbaikyaku-guide.htmlのfeature-cardを追加
+   - sumai-kae.htmlカードの直後に配置
+
+4. **sitemap.xml 更新**
+   - baikyaku-guide.html を priority 0.80 で追加（高SEO価値コンテンツ）
+
+5. **llms.txt 更新**
+   - 売却ガイドの詳細説明を追加
+   - 利用対象者セクションに「稲毛区で家・マンション・土地を売りたい方」シーンを追加
+   - エリアガイドリストを5エリア完全版に更新
+
+---
+
+## 2026-05-28（コンテキスト継続セッション・第11回）
+
+- **対象**: inage/area-kodai.html (NEW), inage/area-sakusabe.html (NEW), inage/qa.html, inage/map.html, inage/index.html, index.html, sitemap.xml, llms.txt
+- **施策**: CLAUDE.md 5大エリアガイドページ群の完成・全エリア間クロスリンク完成
+
+### 実装内容
+
+1. **inage/area-kodai.html 新規作成**（小仲台エリアガイド）
+   - ㎡単価195,000円（区内2位）・一戸建て1,600〜2,800万円
+   - 穴川/天台/長沼町との選び方比較表（2カラム）
+   - ファミリー向け閑静住宅街・学区人気の特徴解説
+   - FAQPageスキーマ・BreadcrumbList・GA4・PWA対応
+
+2. **inage/area-sakusabe.html 新規作成**（作草部エリアガイド）
+   - ㎡単価175,000円・投資利回り目安7〜10%（1K単身向け）
+   - 千葉大学西千葉キャンパス近くの学生需要詳細
+   - 投資の注意点（春退去集中・大学需要変動リスク）
+   - FAQPageスキーマ・BreadcrumbList・GA4・PWA対応
+
+3. **CLAUDE.md 5大エリアガイド完了**
+   - 長沼町・天台・穴川・小仲台・作草部の全5エリアガイドページ完成
+   - 全エリアページ間の双方向クロスリンク完成
+
+4. **qa.html エリアフィルターバナー完成**
+   - 穴川・長沼町・小仲台・作草部フィルター時にエリアガイドバナーを表示
+   - 天台（住み替えガイド）・相続カテゴリ（相続ガイド）も含め6種類のコンテキストバナー
+
+5. **各ページへの作草部リンク追加**
+   - inage/index.html: エリア別ガイドセクションに作草部カード追加
+   - map.html: エリアガイドリンクに作草部追加
+   - index.html (root): エリアガイドリンクピルに作草部追加
+   - 全エリアページのエリアナビに作草部リンク追加
+   - sitemap.xml: area-kodai.html・area-sakusabe.html追加
+   - llms.txt: 小仲台・作草部エリアガイドの説明・利用シーン追記
+
+---
+
+## 2026-05-28（コンテキスト継続セッション・第10回）
+
+- **対象**: inage/sumai-kae.html (NEW), inage/area-tenjin.html (NEW), inage/area-anakai.html (NEW), inage/area-naganuma.html (NEW), inage/index.html, sitemap.xml, llms.txt, 各エリア間クロスリンク
+- **施策**: エリア別ガイドページ群の新規作成・ハブページ強化・AEO対応
+
+### 実装内容
+
+1. **inage/sumai-kae.html 新規作成**（住み替えガイド・ペルソナ3向け）
+   - 住み替え4ステップ・売り先行vs買い先行の比較表
+   - 稲毛区の費用目安表（仲介手数料・引越し費等、合計200〜250万円）
+   - AI査定・相場マップ・Q&Aへの導線
+   - HowToスキーマ・FAQPageスキーマ・GA4・PWA対応
+   - コミット: cc66f07
+
+2. **inage/area-tenjin.html 新規作成**（天台エリアガイド）
+   - ㎡単価175,000円・一戸建て1,500〜2,500万円・賃料相場表
+   - 天台エリア特徴（千葉大学・医療機関・バスアクセス）
+   - 住み替えガイドへの専用導線（ペルソナ3対応）
+   - FAQPageスキーマ・BreadcrumbList・GA4・PWA対応
+   - コミット: ed4f008
+
+3. **inage/area-anakai.html 新規作成**（穴川エリアガイド）
+   - ㎡単価200,000円（区内No.1）・投資利回り目安5〜7%
+   - 投資利回り表（1K〜2LDK）・賃料相場表
+   - 投資シミュレーターへの青いボタン（ペルソナ2対応）
+   - FAQPageスキーマ・BreadcrumbList・GA4・PWA対応
+   - コミット: 29cf7f1
+
+4. **inage/area-naganuma.html 新規作成**（長沼町エリアガイド）
+   - ㎡単価185,000円・投資利回り目安6〜9%
+   - 稲毛団地の詳細説明（管理費・旧耐震・空き家特例・建替え計画）
+   - 稲毛団地チェッカー・相続税試算への導線（ペルソナ1対応）
+   - FAQPageスキーマ・BreadcrumbList・GA4・PWA対応
+   - コミット: 91b84ed
+
+5. **エリア間クロスリンク整備**
+   - area-tenjin / area-anakai / area-naganuma の 他のエリアナビ を相互リンクに統一
+   - inage/index.html に「エリア別ガイド（詳しく調べる）」セクション追加（3カードグリッド）
+   - qa.html: 天台フィルター時に住み替えガイドバナー表示（JavaScript）
+   - sitemap.xml: 3エリアガイドページを追加
+   - llms.txt: 3エリアガイドの詳細説明・利用シーン追記
+
+### 残課題
+- area-kodai.html（小仲台エリアガイド）未作成
+- MLITデータ再インポート（環境変数設定後に `node scripts/fetch-inage-properties.js`）
+- dev → main マージ（現在 dev が main より 45+ commits 先行）
+
+---
+
+## 2026-05-28（コンテキスト継続セッション・第9回）
+
+- **対象**: tools/6-sozoku-zei.html (NEW), tools/index.html, inage/souzoku.html, inage/index.html, index.html, sitemap.xml, llms.txt, tools/1-ai-satei.html
+- **施策**: Tool6 相続税・譲渡所得税かんたん試算ツール新規追加 / 内部リンク網整備
+
+### 実装内容
+
+1. **tools/6-sozoku-zei.html 新規作成**（相続税・譲渡所得税試算ツール）
+   - 相続税タブ: 相続財産・相続人数・小規模宅地特例・配偶者有無 → 相続税概算
+   - 譲渡所得税タブ: 売却価格・取得費・売却費用・所有年数 → 課税譲渡所得・税額
+   - 空き家特例（3,000万円控除）・居住用財産控除のオプション
+   - 取得費不明時の概算取得費（5%）ルール対応
+   - 相続不動産手続きタイムライン（3ヶ月/4ヶ月/10ヶ月/3年の視覚化）
+   - HowToスキーマ・FAQPageスキーマ・GA4・PWA対応
+   - SEOキーワード: 「相続税 計算 無料」「譲渡所得税 空き家 3000万 計算」
+
+2. **内部リンク整備**（Tool6を6箇所から参照）
+   - tools/index.html: Tool06カード追加（6 TOOLS READY）
+   - inage/souzoku.html: 診断ツールブロックに「相続税・売却税試算」追加
+   - inage/index.html: 機能カードに「相続税・売却税をかんたん試算」追加
+   - index.html: クイックリンクに「📊 相続税・売却税を試算」ピル追加
+   - tools/1-ai-satei.html: 稲毛区結果CTAに「🏚 相続した不動産の処分ガイド」ボタン追加
+   - sitemap.xml: 6-sozoku-zei.html 追加（priority 0.85）
+   - llms.txt: Tool6説明・利用シーン追記
+
+### 残課題
+- MLITデータ再インポート（SUPABASE_URL・SUPABASE_SERVICE_KEY・MLIT_API_KEY を設定して `node scripts/fetch-inage-properties.js`）
+- dev → main マージ（現在 dev が main より 35+ commits 先行）
+
+---
+
+## 2026-05-28（コンテキスト継続セッション・第8回）
+
+- **対象**: inage/souzoku.html (NEW), inage/index.html, sitemap.xml, llms.txt, .gitignore
+- **施策**: 相続特化コンテンツページ追加 / ペルソナ3住み替えCTA / gitignore整備
+
+### 実装内容
+
+1. **inage/souzoku.html 新規作成**（相続不動産ガイドページ）
+   - 相続後の4択（売却・賃貸・解体・自己利用）を費用目安つきで比較
+   - 稲毛区固有の費用目安表（相続登記・解体・賃貸リフォーム・稲毛団地管理費）
+   - FAQ JSON-LD 5問（相続登記期限・稲毛団地・一戸建て価格・解体費・賃貸）
+   - HowTo JSON-LD 4ステップ / BreadcrumbList / GA4 / PWA
+   - 稲毛団地チェッカー・AI査定・Q&A（相続）への導線
+   - SEOキーワード: 「稲毛区 相続 不動産」「稲毛団地 相続」
+
+2. **inage/index.html 改善**
+   - 機能カードに「相続した不動産の処分ガイド」（souzoku.html）を追加
+   - AI査定カードの説明を「住み替え」フロー明示に更新（ペルソナ3向け）
+   - 最近の相談事例に「天台住み替え」事例追加（qa.html?town=天台 リンク）
+   - 相談件数カウント 21→22 件に更新
+
+3. **sitemap.xml 更新**: souzoku.html 追加（priority 0.85）
+4. **llms.txt 更新**: 相続ガイドページと利用対象者シーンを追記
+5. **.gitignore 新規作成**: PNG/Python/__pycache__/research/reports/*.html を除外
+
+### 残課題
+- MLITデータ再インポート（SUPABASE_URL・SUPABASE_SERVICE_KEY・MLIT_API_KEY を設定して `node scripts/fetch-inage-properties.js`）
+- dev → main マージ（現在 dev が main より 25+ commits 先行）
 
 ---
 
@@ -5657,3 +5887,81 @@ $$;
 ### 次のアクション
 - 稲毛区その他レコード再分類（MLIT_API_KEY必要。`SUPABASE_URL`・`SUPABASE_SERVICE_KEY`・`MLIT_API_KEY`を環境変数に設定してから `node scripts/fetch-inage-properties.js` を実行）
 - ペルソナ別UXレビュー（品質チェックリスト確認）
+
+---
+
+## 2026-05-27 投資家マッチング基盤・GA4・品質改善
+
+- **対象**: inage/sell.html (NEW), tools/3-owner-direct.html, scripts/match-notify.js (NEW), .github/workflows/match-notify.yml (NEW), 全12ページ, tools/5-toushi-bunseki.html
+- **施策**: 売主・投資家マッチングプラットフォーム / GA4計測 / 品質チェックリスト
+
+### 実装内容
+
+1. **投資家マッチング基盤** (feat: 3b88cad)
+   - `inage/sell.html` NEW: 売主の物件登録フォーム。`property_listings` テーブルに INSERT。表面利回り自動計算。同エリア投資家数表示。
+   - `tools/3-owner-direct.html` 拡張: `investor_profiles` テーブルへの登録フォーム追加（メール・最低利回り・融資種別）。売主向け sell.html リンク追加。
+   - `scripts/match-notify.js` NEW: 毎日 property_listings × investor_profiles でマッチングしてResend APIでメール送信。テーブル未作成・権限なし時は正常終了（exit 0）。
+   - `.github/workflows/match-notify.yml` NEW: 毎日9:00 JST (UTC 0:00) スケジュール実行。`workflow_dispatch` + `dry_run` 入力でテスト可能。
+
+2. **GitHub Actions デバッグ → 成功** (fix: edd2249, 6344c9f)
+   - WebSocket問題: `ws` パッケージをnpm installに追加、`createClient` に `{ realtime: { transport: WebSocket } }` 渡し
+   - 権限エラー: テーブル未作成時に `process.exit(1)` → graceful `return` に修正
+   - ドライランで正常動作確認済み
+
+3. **Google Analytics GA4 (G-PRTFHJSJY3) 全ページ追加** (feat: 281948e)
+   - 対象12ページ: index.html, tools/index.html, tools/1〜5-*.html, inage/index.html, inage/map.html, inage/qa.html, inage/notify.html
+   - `<head>` 末尾に gtag.js + config スニペット追加
+
+4. **tools/index.html ダークテーマ修正** (fix: 553e413)
+   - `--dark: #0d0d0d` → `#fafaf8` に変更（唯一残っていたダークテーマ）
+   - ヒートマップの色を赤/黄/緑/青の4色（視認性重視）に戻す
+
+5. **Tool5 品質改善** (fix: 561ab7f)
+   - `s_rate` / `i_rate` デフォルト金利: 1.5% → 2.5%（2026年投資ローン実態）
+   - 簡易判断ガイドにDSCR（1.3以上/未満）・月次CF（+1万円以上）の基準追加
+   - 2026年金利水準の注意書き追加
+
+### Supabase テーブル（ユーザーが作成済み）
+```sql
+property_listings (id, town_name, property_type, age_years, area_sqm, land_sqm, hope_price, current_status, monthly_rent, gross_yield, notes, contact_email, status, created_at)
+investor_profiles (id, email, town_interests[], property_types[], budget_max, min_yield, financing, is_active, created_at)
+```
+
+### マージ状況
+- `dev` ブランチで作業中。main へのマージは安定確認後。
+
+---
+
+## 2026-05-28 SEO強化・PWA対応・品質チェックリスト完了
+
+- **対象**: 全12ページ + manifest.json + sw.js
+- **施策**: SEO強化（HowToスキーマ・タイトル最適化・PWA）/ 品質チェックリスト完了
+
+### 実装内容
+
+1. **Tool5 品質チェックリスト完了** (fix: 561ab7f)
+   - デフォルト金利 1.5% → 2.5%（2026年投資ローン実態反映）
+   - 簡易判断ガイドにDSCR基準（1.3以上）・月次CF基準（+1万円以上）・金利注意書き追加
+
+2. **HowToスキーマ 全9ページ追加** (feat: b2f4490, 48bb4fd, 418b869, 43b1a01, b48d29e, c09a567)
+   - 対象: Tool1〜5, map.html, qa.html, notify.html, sell.html, inage/index.html
+   - 各ツールの「使い方の手順」をHowTo JSON-LDで構造化
+   - Googleリッチスニペット「使い方」表示を狙う
+
+3. **ページタイトル最適化** (feat: 85ee5bc, c399051, 19035a3)
+   - index.html: 「無料不動産ツール5選 | AI査定・空き家診断・投資分析」
+   - 1-ai-satei.html: 「【無料】AI不動産査定 | 登録不要・3分で売却価格を確認」
+   - inage/index.html: 「稲毛区 不動産相場・査定・空き家診断 | 無料」
+   - map.html: 「稲毛区 不動産相場マップ | 長沼町・天台・穴川の㎡単価」
+   - qa.html: 「稲毛区 不動産Q&A | 売却・相続・稲毛団地の実例」
+   - notify.html: 「稲毛区 不動産メール通知 | 相場更新・新着物件を無料受信」
+
+4. **社会的証明カウンター** (feat: a6d6305)
+   - index.htmlのヒーロー下部にSupabase card_usage_log件数を表示
+   - 50件超の場合のみ表示（累計○○件のツール利用）
+
+5. **PWA対応** (feat: a97cb7c, 2cd989d, cb9d0f2)
+   - manifest.json: アプリ名・ショートカット（相場マップ・AI査定・投資シミュレーター）
+   - sw.js: network-first戦略でオフライン対応
+   - 全ページにmanifestリンク・theme-color・SW登録を追加
+   - Chromeの「ホーム画面に追加」機能が利用可能に

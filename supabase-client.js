@@ -310,15 +310,17 @@ function sbLogCardUsage(toolId, cardId, action, resultLabel) {
       localStorage.setItem(_CALC_LOG_KEY, JSON.stringify(log));
     } catch(e) {}
   }
-  // Supabaseに非同期送信（テーブルがなければ静かに失敗）
+  // Supabaseに非同期送信（カラムがなければ静かに失敗）
   if (_sbOK) {
-    _db.from('card_usage_log').insert({
+    var payload = {
       tool_id: toolId,
       card_id: cardId,
       action: action,
       session_id: _getSessionId(),
       created_at: new Date().toISOString()
-    }).then(function() {}).catch(function() {});
+    };
+    if (resultLabel) payload.result_label = resultLabel;
+    _db.from('card_usage_log').insert(payload).then(function() {}).catch(function() {});
   }
 }
 

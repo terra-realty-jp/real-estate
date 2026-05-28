@@ -179,6 +179,23 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "空き家・実家の活用診断ツールの使い方",
+  "description": "稲毛団地や昭和40〜50年代の物件を「売る・貸す・待つ」で比較診断します。",
+  "totalTime": "PT5M",
+  "tool": [{"@type": "HowToTool", "name": "空き家診断ツール（TERRA REALTY）"}],
+  "step": [
+    {"@type": "HowToStep", "name": "物件の状況をチェックする", "text": "「空き家診断」タブで、現在の物件状況（空き家・賃貸中・自己利用）・築年数・管理状態を選択します。", "position": 1},
+    {"@type": "HowToStep", "name": "稲毛団地チェッカーを使う", "text": "稲毛団地や昭和40〜50年代の公団分譲をお持ちの方は「稲毛団地チェック」タブへ。築年数・管理費・修繕積立金・建替え計画を入力します。", "position": 2},
+    {"@type": "HowToStep", "name": "スコアを確認する", "text": "「今売るべき」「賃貸活用も検討できる」「様子を見てよい」の3段階のスコアと理由が表示されます。", "position": 3},
+    {"@type": "HowToStep", "name": "「待つことのコスト」を確認する", "text": "管理費・修繕積立金がある物件は、5年・10年間の維持費合計と価値下落の試算が表示されます。", "position": 4},
+    {"@type": "HowToStep", "name": "TERRA REALTYに無料相談する", "text": "診断結果をメールに自動入力して稲毛区専門スタッフに無料相談できます。稲毛区の団地・空き家に詳しいスタッフが対応します。", "position": 5}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
     {
@@ -242,6 +259,9 @@
     gtag("js", new Date());
     gtag("config", "G-PRTFHJSJY3");
   </script>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#c0522b">
+  <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/real-estate/sw.js").catch(function(){});}</script>
 </head>
 <body>
 <div id="sb-auth-bar" style="background:#0f1729;border-bottom:1px solid rgba(192,82,43,0.12);padding:8px 28px;display:flex;align-items:center;gap:8px;min-height:38px;font-family:'Noto Sans JP',sans-serif"></div>
@@ -4492,6 +4512,11 @@
           💬 同エリアの相続・売却Q&Aを見る →
         </a>
       </div>
+      <div style="margin-top:10px">
+        <a href="../inage/souzoku.html" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.65);text-decoration:none;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:7px 16px">
+          📋 相続した不動産の処分ガイドを見る →
+        </a>
+      </div>
     </div>
   </div>
 
@@ -6701,7 +6726,14 @@ function calcInageChecker() {
     qaLink.textContent = '💬 ' + townName + 'の相続・売却Q&Aを見る →';
   }
 
-  try { logCardUsage('card-inage-checker', 'calc'); } catch(e) {}
+  // Data Moat: エリア×物件種別×築年グループ×スコア×判定をcard_idに埋め込んで蓄積
+  try {
+    var _icAgeG = age < 30 ? 'new' : age < 45 ? 'mid' : age < 55 ? 'old' : 'vold';
+    var _icVerdict = adjustedTotal >= 40 ? 'sell_now' : adjustedTotal >= 28 ? 'rent' : 'wait';
+    var _icCardId = 'inage_checker__' + (area || 'unknown') + '__' + (type || 'danchi') + '__' + _icAgeG + '__s' + adjustedTotal + '__' + _icVerdict;
+    var _icLabel = verdict + '（スコア' + adjustedTotal + '/50・築' + age + '年・月' + (monthlyTotal > 0 ? (monthlyTotal/10000).toFixed(1) + '万円' : '0万円') + '）';
+    sbLogCardUsage(2, _icCardId, 'calc', _icLabel);
+  } catch(e) {}
 }
 
 // Escape key でモーダルを閉じる
