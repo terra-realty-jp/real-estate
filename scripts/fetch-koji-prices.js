@@ -75,7 +75,8 @@ function fetchReinfolib(cityCode, year, quarter) {
     if (!MLIT_API_KEY) {
       return reject(new Error('MLIT_API_KEY が設定されていません'));
     }
-    const reqPath = `/ex-api/external/XIT001?priceClassification=01&year=${year}&quarter=${quarter}&city=${cityCode}`;
+    // priceClassification=02: 宅地（土地と建物）- 住宅地の取引事例
+    const reqPath = `/ex-api/external/XIT001?priceClassification=02&year=${year}&quarter=${quarter}&city=${cityCode}`;
     const options = {
       hostname: 'www.reinfolib.mlit.go.jp',
       path: reqPath,
@@ -145,8 +146,9 @@ async function main() {
   let existing = { by_prefecture: {} };
   try { existing = JSON.parse(fs.readFileSync(OUTPUT_PATH, 'utf8')); } catch (_) {}
 
-  // 直近2四半期
+  // 直近2四半期（公開ラグ6ヶ月を考慮して6ヶ月前基準）
   const d = new Date();
+  d.setMonth(d.getMonth() - 6);
   let year = d.getFullYear(), q = Math.ceil((d.getMonth() + 1) / 3);
   const quarterPairs = [];
   for (let i = 0; i < 2; i++) {
