@@ -312,8 +312,35 @@
     .trend-stat-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
     .trend-stat-value { font-size: 15px; font-weight: 700; color: var(--text); }
 
+    /* ハザードマップ・レイヤー切り替えバー */
+    .risk-bar {
+      background: #fff8f5; border-bottom: 1px solid rgba(192,82,43,0.12);
+      padding: 10px 32px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .risk-label { font-size: 12px; color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+    .risk-btn {
+      padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.12);
+      background: #fff; font-size: 11px; font-family: inherit; cursor: pointer; color: var(--text);
+      display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s; white-space: nowrap;
+    }
+    .risk-btn:hover:not(.active) { border-color: #888; }
+    .risk-btn.flood.active  { background: rgba(59,130,246,0.12); border-color: #3b82f6; color: #1d4ed8; font-weight: 700; }
+    .risk-btn.land.active   { background: rgba(234,88,12,0.12);  border-color: #ea580c; color: #9a3412; font-weight: 700; }
+    .risk-btn.tide.active   { background: rgba(109,40,217,0.12); border-color: #7c3aed; color: #5b21b6; font-weight: 700; }
+    .risk-btn.photo.active  { background: rgba(22,163,74,0.12);  border-color: #16a34a; color: #15803d; font-weight: 700; }
+
+    #hazard-legend {
+      display: none; padding: 10px 32px;
+      border-bottom: 1px solid rgba(59,130,246,0.15);
+      background: rgba(59,130,246,0.04);
+      font-size: 11px; color: #374151; line-height: 1.7;
+    }
+    #hazard-legend.visible { display: block; }
+
     @media(max-width:640px) {
       .topnav, .page-header, .filter-bar, .legend { padding-left: 16px; padding-right: 16px; }
+      .risk-bar { padding: 8px 16px; }
+      #hazard-legend { padding: 8px 16px; }
       #map { height: 320px; }
       .price-table th, .price-table td { padding: 9px 10px; font-size: 12px; }
       #trend-panel { margin: 0 12px 24px; padding: 16px; }
@@ -367,6 +394,19 @@
       onfocus="this.style.borderColor='#c0522b'" onblur="this.style.borderColor='rgba(0,0,0,0.12)'">
   </div>
 </div>
+
+<div class="risk-bar">
+  <span class="risk-label">リスク情報：</span>
+  <button id="btn-flood" class="risk-btn flood" onclick="toggleHazard('flood')" title="洪水浸水想定区域（L2想定最大規模）">🌊 洪水浸水</button>
+  <button id="btn-land"  class="risk-btn land"  onclick="toggleHazard('land')"  title="土砂災害警戒区域・特別警戒区域">⛰ 土砂災害</button>
+  <button id="btn-tide"  class="risk-btn tide"  onclick="toggleHazard('tide')"  title="高潮浸水想定区域（L2想定最大規模）">🌊 高潮</button>
+  <button id="btn-photo" class="risk-btn photo" onclick="toggleBasePhoto()"      title="国土地理院 最新空中写真に切り替え">📷 航空写真</button>
+  <a href="https://disaportal.gsi.go.jp/" target="_blank" rel="noopener"
+     style="font-size:10px;color:var(--text-muted);margin-left:auto;text-decoration:none;white-space:nowrap">
+    出典: 国土交通省 ハザードマップポータル →
+  </a>
+</div>
+<div id="hazard-legend"></div>
 
 <div id="map"></div>
 
@@ -801,10 +841,95 @@ function sqmToTsubo(sqm) {
 
 // マップ初期化
 var map = L.map('map').setView([35.643, 140.102], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+var _osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   maxZoom: 18
 }).addTo(map);
+
+// ===== ハザードマップ・レイヤー制御 =====
+var HAZARD_CFG = {
+  flood: {
+    url: 'https://disaportaldata.gsi.go.jp/raster/01_flood_l2_shinsuishin_data/{z}/{x}/{y}.png',
+    opacity: 0.65,
+    label: '🌊 洪水浸水想定区域（想定最大規模・L2）',
+    note: '青〜赤の濃さが浸水深。花見川・都川沿いが要注意。稲毛海岸低地も対象エリアに含まれる場合あり。'
+  },
+  land: {
+    url: 'https://disaportaldata.gsi.go.jp/raster/05_dosekiryukeikaikuiki/{z}/{x}/{y}.png',
+    opacity: 0.75,
+    label: '⛰ 土砂災害警戒区域（土石流・急傾斜地崩壊）',
+    note: 'オレンジ: 警戒区域（イエローゾーン）、赤: 特別警戒区域（レッドゾーン）。崖地・急斜面近くの物件は要確認。'
+  },
+  tide: {
+    url: 'https://disaportaldata.gsi.go.jp/raster/03_hightide_l2_shinsuishin_data/{z}/{x}/{y}.png',
+    opacity: 0.65,
+    label: '🌊 高潮浸水想定区域（想定最大規模）',
+    note: '紫〜赤: 高潮による浸水リスク。稲毛海岸・千葉みなと方面の湾岸エリアが主な対象。'
+  }
+};
+var _hazardLayers = {};
+var _usePhoto = false;
+var _photoLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', {
+  attribution: '© <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>',
+  maxZoom: 18
+});
+
+function toggleHazard(type) {
+  var cfg = HAZARD_CFG[type];
+  if (!cfg) return;
+  var btn = document.getElementById('btn-' + type);
+  if (_hazardLayers[type]) {
+    map.removeLayer(_hazardLayers[type]);
+    _hazardLayers[type] = null;
+    if (btn) btn.classList.remove('active');
+  } else {
+    _hazardLayers[type] = L.tileLayer(cfg.url, {
+      opacity: cfg.opacity,
+      attribution: '© <a href="https://disaportal.gsi.go.jp/" target="_blank">国土交通省ハザードマップポータル</a>'
+    }).addTo(map);
+    if (btn) btn.classList.add('active');
+  }
+  _updateHazardLegend();
+}
+
+function _updateHazardLegend() {
+  var el = document.getElementById('hazard-legend');
+  if (!el) return;
+  var active = Object.keys(_hazardLayers).filter(function(k) { return !!_hazardLayers[k]; });
+  el.className = active.length ? 'visible' : '';
+  while (el.firstChild) el.removeChild(el.firstChild);
+  active.forEach(function(k) {
+    var row = document.createElement('div');
+    row.style.marginBottom = '2px';
+    var bold = document.createElement('b');
+    bold.textContent = HAZARD_CFG[k].label;
+    var br = document.createElement('br');
+    var note = document.createElement('span');
+    note.style.color = '#6b6058';
+    note.textContent = HAZARD_CFG[k].note;
+    row.appendChild(bold);
+    row.appendChild(br);
+    row.appendChild(note);
+    el.appendChild(row);
+  });
+}
+
+function toggleBasePhoto() {
+  var btn = document.getElementById('btn-photo');
+  if (_usePhoto) {
+    map.removeLayer(_photoLayer);
+    _osmLayer.addTo(map);
+    _usePhoto = false;
+    if (btn) btn.classList.remove('active');
+  } else {
+    map.removeLayer(_osmLayer);
+    _photoLayer.addTo(map);
+    _usePhoto = true;
+    if (btn) btn.classList.add('active');
+  }
+  // ハザードレイヤーを最前面に再描画
+  Object.values(_hazardLayers).forEach(function(l) { if (l) l.bringToFront(); });
+}
 
 var markers = [];
 var geojsonData = null;
