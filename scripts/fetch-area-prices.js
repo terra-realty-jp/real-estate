@@ -13,6 +13,7 @@
  */
 
 const https = require('https');
+const zlib  = require('zlib');
 const fs    = require('fs');
 const path  = require('path');
 
@@ -114,19 +115,23 @@ function fetchReinfolib(cityCode, year, quarter) {
       method: 'GET',
       headers: {
         'Ocp-Apim-Subscription-Key': MLIT_API_KEY,
+        'Accept-Encoding': 'gzip',
       },
       timeout: 20000,
     };
     const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
       res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          resolve(json.data || []);
-        } catch (e) {
-          reject(new Error(`JSON parse error: ${e.message}`));
-        }
+        const buf = Buffer.concat(chunks);
+        const decompress = (res.headers['content-encoding'] === 'gzip')
+          ? cb => zlib.gunzip(buf, cb)
+          : cb => cb(null, buf);
+        decompress((err, data) => {
+          if (err) return reject(err);
+          try { resolve(JSON.parse(data.toString('utf8')).data || []); }
+          catch (e) { reject(new Error(`JSON parse error: ${e.message}`)); }
+        });
       });
     });
     req.on('error', reject);
