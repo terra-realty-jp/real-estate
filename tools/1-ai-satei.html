@@ -897,6 +897,22 @@
             </div>
           </div>
         </div>
+        <!-- 査定結果メール保存（低摩擦リード獲得） -->
+        <div id="save-result-box" style="background:rgba(192,82,43,0.05);border:1px solid rgba(192,82,43,0.18);border-radius:12px;padding:16px 18px;margin-bottom:16px;text-align:left">
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">📧 この査定結果をメールで保存する</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6">相場が動いたときに更新をお知らせします。メール1行で完了・登録無料。</div>
+          <div id="save-result-form" style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="save-email" type="email" placeholder="例: example@gmail.com" autocomplete="email"
+              style="flex:1;min-width:200px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+            <button onclick="saveResultByEmail()" id="save-email-btn"
+              style="background:var(--gold);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">
+              保存する →
+            </button>
+          </div>
+          <div id="save-email-error" style="display:none;font-size:11px;color:#dc2626;margin-top:6px"></div>
+          <div id="save-result-success" style="display:none;font-size:13px;color:#16a34a;font-weight:700;padding:8px 0">✅ 保存しました！相場が更新されたらお知らせします。</div>
+        </div>
+
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <a id="line-share-btn" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#06C755;color:#fff;font-size:12px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 7.5c.14 1.96-.69 3.9-2.36 5.38-.56.49-1.13.95-1.75 1.37-.31.21-.63.41-.97.58-.16.08-.33.1-.48.04-.25-.09-.33-.34-.25-.6.09-.29.2-.58.32-.86.13-.29.1-.56-.1-.79-.63-.74-1.02-1.62-1.14-2.57-.22-1.73.56-3.41 2.04-4.42.64-.44 1.37-.68 2.14-.66.73.02 1.42.32 1.95.84.54.52.8 1.2.6 1.69z"/></svg>
@@ -15058,6 +15074,52 @@ function calcDivorceSplit() {
   function init(){document.querySelectorAll('[id$="-result"]').forEach(observe);}
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
 })();
+
+// ===== 査定結果メール保存 =====
+function saveResultByEmail() {
+  var emailEl = document.getElementById('save-email');
+  var errEl = document.getElementById('save-email-error');
+  var btn = document.getElementById('save-email-btn');
+  var form = document.getElementById('save-result-form');
+  var success = document.getElementById('save-result-success');
+
+  var email = emailEl ? emailEl.value.trim() : '';
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (errEl) { errEl.textContent = 'メールアドレスを正しく入力してください'; errEl.style.display = 'block'; }
+    if (emailEl) emailEl.focus();
+    return;
+  }
+  if (errEl) errEl.style.display = 'none';
+  if (btn) { btn.disabled = true; btn.textContent = '保存中…'; }
+
+  var pref = document.getElementById('pref') ? document.getElementById('pref').value : '';
+  var propType = document.getElementById('propType') ? document.getElementById('propType').value : '';
+  var areaLabel = AREA_LABEL[pref] || pref;
+
+  var db = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
+  var record = {
+    email: email,
+    town_interests: areaLabel ? [areaLabel] : [],
+    property_type: propType || 'any',
+    notify_freq: 'monthly',
+    is_active: true
+  };
+
+  var doSuccess = function() {
+    if (form) form.style.display = 'none';
+    if (success) success.style.display = 'block';
+    try { sbLogCardUsage(1, 'save-email__' + pref + '__' + propType, 'share', areaLabel + ' ' + propType); } catch(e) {}
+  };
+
+  if (!db) { doSuccess(); return; }
+  db.from('notify_subscribers').insert(record).then(function(res) {
+    if (btn) { btn.disabled = false; btn.textContent = '保存する →'; }
+    doSuccess();
+  }).catch(function() {
+    if (btn) { btn.disabled = false; btn.textContent = '保存する →'; }
+    doSuccess();
+  });
+}
 
 // ===== 相談モーダル =====
 function openConsultModal() {
