@@ -150,9 +150,17 @@ async function fetchCityUnitPrice(cityCode, quarterPairs) {
   }
 
   if (!allData.length) return null;
+  if (process.env.DEBUG && allData.length > 0) {
+    const sample = allData[0];
+    console.log(`    [DEBUG] sample record keys: ${Object.keys(sample).join(', ')}`);
+    console.log(`    [DEBUG] Type="${sample.Type}" TradePrice="${sample.TradePrice}" Area="${sample.Area}"`);
+  }
 
+  // priceClassification=03 のレコードは中古マンション等が主体。
+  // Type フィールドが空のケースも多いため、Area・TradePrice の存在のみでフィルタし、
+  // 極端な外れ値（50,000円未満 or 5,000,000円超/㎡）だけ除外する。
   const prices = allData
-    .filter(r => r.Area && r.TradePrice && r.Type && r.Type.includes('マンション'))
+    .filter(r => r.Area && r.TradePrice && Number(r.Area) > 0)
     .map(r => Math.round(Number(r.TradePrice) / Number(r.Area)))
     .filter(v => v > 50000 && v < 5000000);
 

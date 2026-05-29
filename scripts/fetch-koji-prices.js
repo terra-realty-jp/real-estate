@@ -75,8 +75,8 @@ function fetchReinfolib(cityCode, year, quarter) {
     if (!MLIT_API_KEY) {
       return reject(new Error('MLIT_API_KEY が設定されていません'));
     }
-    // priceClassification=02: 宅地（土地と建物）- 住宅地の取引事例
-    const reqPath = `/ex-api/external/XIT001?priceClassification=02&year=${year}&quarter=${quarter}&city=${cityCode}`;
+    // priceClassification=01: 宅地（土地と建物）- 住宅地・商業地の取引事例
+    const reqPath = `/ex-api/external/XIT001?priceClassification=01&year=${year}&quarter=${quarter}&city=${cityCode}`;
     const options = {
       hostname: 'www.reinfolib.mlit.go.jp',
       path: reqPath,
@@ -117,11 +117,13 @@ async function getPrefPrices(cityCode, quarterPairs) {
         if (!r.Area || !r.TradePrice) continue;
         const unitPrice = Math.round(Number(r.TradePrice) / Number(r.Area));
         if (unitPrice < 10000 || unitPrice > 20000000) continue;
+        // priceClassification=01 は宅地(土地と建物)が主体。
+        // 商業用途のキーワードがなければ住宅地として扱う。
         const type = r.Type || '';
-        if (type.includes('宅地') || type.includes('住宅') || type.includes('戸建')) {
-          residentialPrices.push(unitPrice);
-        } else if (type.includes('商業') || type.includes('店舗') || type.includes('事務所')) {
+        if (type.includes('商業') || type.includes('店舗') || type.includes('事務所') || type.includes('倉庫') || type.includes('工場')) {
           commercialPrices.push(unitPrice);
+        } else {
+          residentialPrices.push(unitPrice);
         }
       }
     } catch (e) {
