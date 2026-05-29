@@ -75,8 +75,8 @@ function fetchReinfolib(cityCode, year, quarter) {
     if (!MLIT_API_KEY) {
       return reject(new Error('MLIT_API_KEY が設定されていません'));
     }
-    // priceClassification=02: 宅地（土地と建物）- 住宅地の取引事例
-    const reqPath = `/ex-api/external/XIT001?priceClassification=02&year=${year}&quarter=${quarter}&city=${cityCode}`;
+    // priceClassification=01: fetch-inage-properties.jsと同一（実績あり）
+    const reqPath = `/ex-api/external/XIT001?priceClassification=01&year=${year}&quarter=${quarter}&city=${cityCode}`;
     const options = {
       hostname: 'www.reinfolib.mlit.go.jp',
       path: reqPath,
