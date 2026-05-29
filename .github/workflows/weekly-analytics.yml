@@ -1,0 +1,35 @@
+name: 週次サービス自己評価レポート
+
+on:
+  schedule:
+    # 毎週月曜 9:00 JST (= UTC 0:00)
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'DRY RUN（メール送信せず結果だけ確認）'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+
+jobs:
+  analytics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Weekly Analytics
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          RESEND_API_KEY:       ${{ secrets.RESEND_API_KEY }}
+          REPORT_EMAIL:         shinji.japaaan@gmail.com
+          DRY_RUN:              ${{ github.event.inputs.dry_run || 'false' }}
+        run: node scripts/weekly-analytics.js
