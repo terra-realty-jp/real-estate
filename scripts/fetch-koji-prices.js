@@ -148,12 +148,11 @@ async function main() {
   let existing = { by_prefecture: {} };
   try { existing = JSON.parse(fs.readFileSync(OUTPUT_PATH, 'utf8')); } catch (_) {}
 
-  // 直近2四半期（公開ラグ6ヶ月を考慮して6ヶ月前基準）
+  // 直近4四半期（reinfolib は未公開四半期でも空配列を返すだけなのでラグ調整不要）
   const d = new Date();
-  d.setMonth(d.getMonth() - 6);
   let year = d.getFullYear(), q = Math.ceil((d.getMonth() + 1) / 3);
   const quarterPairs = [];
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 4; i++) {
     quarterPairs.unshift({ year, q });
     if (q === 1) { year--; q = 4; } else { q--; }
   }

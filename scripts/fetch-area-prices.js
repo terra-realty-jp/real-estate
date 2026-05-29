@@ -19,15 +19,14 @@ const path  = require('path');
 const OUTPUT_PATH = path.join(__dirname, '..', 'data', 'area-prices.json');
 const MLIT_API_KEY = process.env.MLIT_API_KEY || '';
 
-// 利用可能な直近2四半期を返す
-// 取引事例データは公開まで約6ヶ月のラグがあるため、6ヶ月前の四半期を基準にする
+// 直近4四半期を返す（fetch-inage-properties.js と同じ方式）
+// reinfolib は未公開の四半期でも空配列を返すだけなのでラグ調整不要
 function getRecentQuarterPairs() {
   const d = new Date();
-  d.setMonth(d.getMonth() - 6); // 6ヶ月前（公開済み四半期）
   let year = d.getFullYear();
   let q = Math.ceil((d.getMonth() + 1) / 3);
   const pairs = [];
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 4; i++) {
     pairs.unshift({ year, q });
     if (q === 1) { year--; q = 4; } else { q--; }
   }
@@ -107,8 +106,8 @@ function fetchReinfolib(cityCode, year, quarter) {
     if (!MLIT_API_KEY) {
       return reject(new Error('MLIT_API_KEY が設定されていません'));
     }
-    // priceClassification=03: 中古マンション等（マンション取引単価取得に使用）
-    const reqPath = `/ex-api/external/XIT001?priceClassification=03&year=${year}&quarter=${quarter}&city=${cityCode}`;
+    // priceClassification=01: 宅地（土地と建物）- fetch-inage-properties.js と同一の動作確認済みパラメーター
+    const reqPath = `/ex-api/external/XIT001?priceClassification=01&year=${year}&quarter=${quarter}&city=${cityCode}`;
     const options = {
       hostname: 'www.reinfolib.mlit.go.jp',
       path: reqPath,
