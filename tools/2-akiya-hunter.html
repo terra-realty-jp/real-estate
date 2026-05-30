@@ -4503,6 +4503,9 @@
       </div>
     </div>
 
+    <!-- 社会的証明: 同ツール累計診断件数（Data Moatフィードバックループ） -->
+    <div id="ic-checker-count" style="display:none;text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:12px;padding:8px 16px;background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.18);border-radius:8px"></div>
+
     <div style="background:rgba(192,82,43,0.05);border:1px solid rgba(192,82,43,0.18);border-radius:16px;padding:28px;text-align:center">
       <div style="font-size:16px;font-weight:700;color:#1e1209;margin-bottom:8px">稲毛区専門のTERRAに相談する</div>
       <div style="font-size:13px;color:rgba(30,18,9,0.6);margin-bottom:20px;line-height:1.7">このスコアと入力内容を持って、無料相談してみませんか？<br>稲毛区の取引実績を持つスタッフが対応します。</div>
@@ -6746,6 +6749,23 @@ function calcInageChecker() {
     var _icCardId = 'inage_checker__' + (area || 'unknown') + '__' + (type || 'danchi') + '__' + _icAgeG + '__s' + adjustedTotal + '__' + _icVerdict;
     var _icLabel = verdict + '（スコア' + adjustedTotal + '/50・築' + age + '年・月' + (monthlyTotal > 0 ? (monthlyTotal/10000).toFixed(1) + '万円' : '0万円') + '）';
     sbLogCardUsage(2, _icCardId, 'calc', _icLabel);
+
+    // Data Moat フィードバックループ: 稲毛団地チェッカー累計診断件数を表示
+    var _icClient = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
+    if (_icClient) {
+      _icClient.from('card_usage_log')
+        .select('id', { count: 'exact', head: true })
+        .like('card_id', 'inage_checker__%')
+        .then(function(res) {
+          if (!res.error && res.count >= 3) {
+            var el = document.getElementById('ic-checker-count');
+            if (el) {
+              el.textContent = '📊 稲毛団地チェッカーはこれまでに累計 ' + res.count.toLocaleString() + ' 件の診断に利用されています';
+              el.style.display = 'block';
+            }
+          }
+        }).catch(function() {});
+    }
   } catch(e) {}
 }
 
