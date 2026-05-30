@@ -5,15 +5,11 @@ ogr2ogr 不要。Python 標準ライブラリのみ使用。
 
 使用: python3 scripts/gml-to-geojson.py <input.xml> <output.geojson>
 
-A29-19 実フィールド（デバッグで確認済み）:
-  aac  = 行政区域コード（市区町村コード）
-  dac  = 用途地域コード (1〜12) ← 実データではこのフィールド
-  kda  = 用途地域名（テキスト）
-  bar  = 建蔽率
-  cbr  = 容積率
-  lgn  = 地方公共団体名
-  pfn  = 都道府県名
-  geometry property = xlink:href で Surface要素を外部参照
+A29-19 GML 構造（デバッグ確認済み）:
+  DesignatedArea.cda → xlink:href="#sf1" → Surface (gml:id=sf1)
+    Surface/patches/PolygonPatch/exterior/Ring/curveMember → xlink:href="#cv1" → Curve
+      Curve/segments/LineStringSegment/posList → 座標列
+  属性: aac(行政区域コード), dac(用途地域コード1-12), kda(用途地域名), bar(建蔽率), cbr(容積率)
 """
 import json
 import sys
@@ -26,14 +22,12 @@ SRC  = sys.argv[1] if len(sys.argv) > 1 else '/tmp/yoto_inage.xml'
 DEST = sys.argv[2] if len(sys.argv) > 2 else 'data/yoto-inage.geojson'
 
 XLINK_HREF = '{http://www.w3.org/1999/xlink}href'
-# gml:id が使うnamespace候補（GML 3.1/3.2 両対応）
 GML_ID_KEYS = [
     '{http://www.opengis.net/gml/3.2}id',
     '{http://www.opengis.net/gml}id',
     'gml:id',
 ]
 
-# 用途地域コード → 名称マッピング
 YOTO_NAME = {
     '1': '第一種低層住居専用地域',
     '2': '第二種低層住居専用地域',
@@ -49,13 +43,23 @@ YOTO_NAME = {
     '12': '工業専用地域',
 }
 
-def collect_pos_lists(element):
-    """element以下の全posList要素から座標を収集（深いネスト対応）"""
+def collect_pos_lists(element, id_map, visited=None):
+    """element以下の全posList要素から座標を収集（xlink:href多段解決対応）"""
+    if visited is None:
+        visited = set()
     result = []
-    for pos_el in element.iter():
-        local = pos_el.tag.split('}')[-1] if '}' in pos_el.tag else pos_el.tag
-        if local == 'posList' and pos_el.text:
-            nums = [float(x) for x in pos_el.text.split()]
+    for el in element.iter():
+        local = el.tag.split('}')[-1] if '}' in el.tag else el.tag
+        href = el.attrib.get(XLINK_HREF, '')
+        if href.startswith('#'):
+            ref_id = href[1:]
+            if ref_id not in visited:
+                visited.add(ref_id)
+                ref_elem = id_map.get(ref_id)
+                if ref_elem is not None:
+                    result.extend(collect_pos_lists(ref_elem, id_map, visited))
+        elif local == 'posList' and el.text:
+            nums = [float(x) for x in el.text.split()]
             ring = []
             for i in range(0, len(nums) - 1, 2):
                 lat, lng = nums[i], nums[i + 1]
@@ -65,7 +69,6 @@ def collect_pos_lists(element):
     return result
 
 def build_geometry(pos_lists):
-    """収集した座標リングからGeoJSONジオメトリを生成"""
     if not pos_lists:
         return None
     if len(pos_lists) == 1:
@@ -76,7 +79,7 @@ print(f'読み込み: {SRC}')
 tree = ET.parse(SRC)
 root = tree.getroot()
 
-# gml:id → element のマップを構築（xlink:href 参照を解決するため）
+# gml:id → element マップ構築
 id_map = {}
 for el in root.iter():
     for key in GML_ID_KEYS:
@@ -89,7 +92,6 @@ print(f'gml:id マップ: {len(id_map)} 件')
 
 features = []
 da_count = 0
-debug_done = False
 
 for elem in root.iter():
     local = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
@@ -97,42 +99,23 @@ for elem in root.iter():
         continue
     da_count += 1
 
-    # xlink:href で参照されたジオメトリ要素を解決
-    geom_elem = None
-    href_val = None
+    # DesignatedAreaのgeometryプロパティ（xlink:href）を起点に多段解決
+    visited = set()
+    pos_lists = []
     for child in elem:
         href = child.attrib.get(XLINK_HREF, '')
         if href.startswith('#'):
-            href_val = href
             ref_id = href[1:]
-            geom_elem = id_map.get(ref_id)
-            if geom_elem is not None:
-                break
-
-    # 最初の1件だけデバッグ出力
-    if not debug_done and da_count == 1:
-        debug_done = True
-        print(f'[DEBUG] href_val={href_val!r}')
-        if geom_elem is not None:
-            geom_local = geom_elem.tag.split('}')[-1] if '}' in geom_elem.tag else geom_elem.tag
-            print(f'[DEBUG] 解決済みgeom_elem タグ: {geom_local}')
-            sub = [(e.tag.split('}')[-1] if '}' in e.tag else e.tag) for e in geom_elem.iter()]
-            print(f'[DEBUG] geom_elem以下のタグ: {sub[:20]}')
-            # posList要素の詳細
-            for pe in geom_elem.iter():
-                pl = pe.tag.split('}')[-1] if '}' in pe.tag else pe.tag
-                if pl == 'posList':
-                    print(f'[DEBUG] posList text[:80]={repr(pe.text[:80] if pe.text else None)} attribs={dict(pe.attrib)}')
+            if ref_id not in visited:
+                visited.add(ref_id)
+                geom_elem = id_map.get(ref_id)
+                if geom_elem is not None:
+                    pos_lists = collect_pos_lists(geom_elem, id_map, visited)
                     break
-        else:
-            print('[DEBUG] geom_elem=None（href未解決）')
-            print(f'[DEBUG] id_mapのキーサンプル: {list(id_map.keys())[:10]}')
 
-    if geom_elem is not None:
-        pos_lists = collect_pos_lists(geom_elem)
-    else:
+    if not pos_lists:
         # フォールバック: elem直下にgeometryが含まれる場合
-        pos_lists = collect_pos_lists(elem)
+        pos_lists = collect_pos_lists(elem, id_map)
 
     if not pos_lists:
         continue
@@ -141,14 +124,12 @@ for elem in root.iter():
     if not geometry:
         continue
 
-    # 属性値を収集
     props = {}
     for child in elem:
         cl = child.tag.split('}')[-1] if '}' in child.tag else child.tag
         if child.text and child.text.strip():
             props[cl] = child.text.strip()
 
-    # 用途地域コードと名称を正規化
     # dac = 用途地域コード(1-12), kda = 用途地域名テキスト
     zone_code = props.get('dac', '')
     zone_name = props.get('kda', '')
@@ -156,9 +137,8 @@ for elem in root.iter():
         props['用途地域名'] = YOTO_NAME[zone_code]
     elif zone_name:
         props['用途地域名'] = zone_name
-    # map.html _getYotoCode() が参照するフィールドとして cda にも格納
     if zone_code:
-        props['cda'] = zone_code
+        props['cda'] = zone_code  # map.html _getYotoCode() 互換
 
     features.append({'type': 'Feature', 'geometry': geometry, 'properties': props})
 
