@@ -263,25 +263,25 @@ CREATE TABLE area_buyer_count (
 
 ## 実装フェーズ（優先順位）
 
-### 現在の実装状況（2026-05-28時点）
+### 現在の実装状況（2026-05-30時点）
 
 | 施策 | 状態 | 詳細 |
 |------|------|------|
-| ① 相場マップ | ✅ UI完成 / ⚠️ 実データ空 | GeoJSON・静的フォールバックデータで動作中。Supabase `inage_properties` に国交省実取引データ未投入（MLIT_API_KEY必要） |
-| ② 稲毛団地チェッカー | ✅ 完成 | `tools/2-akiya-hunter.html` にタブ追加・スコア計算・Supabaseログ済み |
-| ③ Q&A掲示板 | ✅ 完成 | `inage/qa.html` 29件サンプル・投稿フォーム（Supabase INSERT）・カテゴリ/エリアフィルター完成 |
-| ⑤ ローカルマッチング | ✅ 完成 | `tools/3-owner-direct.html` 稲毛区需要タブ・`area_buyer_count` INSERT・売主フォーム `inage/sell.html` 完成 |
-| ④ メール通知 | ✅ 完成（Phase 1） | `inage/notify.html` 登録フォーム・`notify_subscribers` INSERT・GitHub Actions `match-notify.yml` 自動マッチング通知済み |
-| **dev→main マージ** | 🚨 **77コミット未反映** | devブランチの全実装が本番（main/GitHub Pages）に未反映。最優先で対応が必要 |
+| ① 相場マップ | ✅ UI完成 / ⚠️ 実データ空 | GeoJSON・静的フォールバックデータで動作中。用途地域(A29・350件)・立地適正化(A50・19件)レイヤー追加済み。Supabase `inage_properties` に国交省実取引データ未投入（MLIT_API_KEY必要） |
+| ② 稲毛団地チェッカー | ✅ 完成 | `tools/2-akiya-hunter.html` にタブ追加・スコア計算・Supabaseログ・累計診断件数フィードバック済み |
+| ③ Q&A掲示板 | ✅ 完成 | `inage/qa.html` 29件サンプル・投稿フォーム（Supabase INSERT）・カテゴリ/エリアフィルター・view_count RPC実装済み |
+| ⑤ ローカルマッチング | ✅ 完成 | `tools/3-owner-direct.html` 稲毛区需要タブ・`area_buyer_count` INSERT・売主フォーム `inage/sell.html`・投資家プロフィール登録完成 |
+| ④ メール通知 | ✅ 完成（Phase 1+2） | `inage/notify.html` 登録フォーム・`notify_subscribers` INSERT・GitHub Actions `inage-email-notify.yml` + Resend API自動配信実装済み |
+| Data Moat深化 | ✅ 完成 | card_usage_logフィードバックループ: AI査定エリア別累計件数・map.htmlポップアップ査定件数・稲毛団地チェッカー累計件数・notify登録者数 表示済み |
+| **施策① 実データ投入** | ⚠️ **MLIT_API_KEY待ち** | `MLIT_API_KEY` 取得後 `node scripts/fetch-inage-properties.js` でSupabaseに実取引データを投入 |
 
 ### 次の実装優先順位
 
 | 優先度 | タスク | 理由 |
 |--------|--------|------|
-| 1 | **dev→main マージ（本番リリース）** | 77コミットが本番未反映。ユーザーに届いていない |
-| 2 | **施策① 実データ投入** | `MLIT_API_KEY` 取得後 `node scripts/fetch-inage-properties.js` でSupabaseに実取引データを投入 |
-| 3 | **Data Moat深化** | `card_usage_log` の蓄積データを分析し、ユーザーへのフィードバック（「このエリアで○人が査定しました」等）に還元 |
-| 4 | **施策④ Phase 2** | Resend APIで自動メール配信（月次・週次）の実装 |
+| 1 | **施策① 実データ投入** | `MLIT_API_KEY` 取得後 `node scripts/fetch-inage-properties.js` でSupabaseに実取引データを投入 |
+| 2 | **エリアページSEO強化** | `inage/area-*.html` 14エリアページのコンテンツ品質・内部リンク確認 |
+| 3 | **相続税ツール連携強化** | `tools/6-sozoku-zei.html` と稲毛区固有情報の連携 |
 
 **実装ルール:**
 - 1機能 = 1featureブランチ（新規機能の場合）
