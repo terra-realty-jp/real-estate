@@ -15,8 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: GDAL（ogr2ogr）インストール
-        run: sudo apt-get install -y gdal-bin
+      - name: GDAL（ogr2ogr）インストール（オプション）
+        run: sudo apt-get install -y gdal-bin || echo "GDAL install skipped"
 
       - name: 国土数値情報 A29（用途地域）GMLをダウンロード
         run: |
@@ -27,27 +27,19 @@ jobs:
           # 稲毛区（市区町村コード: 12103）の専用ファイルを直接指定
           ls /tmp/a29/A29-19_12/ -R | grep "12103" || echo "12103ファイルなし"
 
-      - name: GML→GeoJSON変換（稲毛区専用ファイル）
+      - name: Python依存パッケージインストール
+        run: pip install defusedxml
+
+      - name: GML→GeoJSON変換（Pythonで直接パース）
         run: |
-          # A29データは市区町村ごとに別ファイル（A29-19_12103.xml = 稲毛区）
+          # 稲毛区 (12103) または千葉市 (12100) の XML を使用
           GML=$(find /tmp/a29 -name "A29-19_12103.xml" | head -1)
           if [ -z "$GML" ]; then
-            echo "稲毛区専用XMLが見つからない。全千葉県から抽出します。"
+            echo "稲毛区専用XMLが見つからない → 千葉市(12100)から抽出"
             GML=$(find /tmp/a29 -name "A29-19_12100.xml" | head -1)
           fi
           echo "使用ファイル: $GML"
-          ogrinfo -al -so "$GML" 2>/dev/null | head -40 || echo "ogrinfo失敗"
-
-          ogr2ogr \
-            -f GeoJSON \
-            -t_srs EPSG:4326 \
-            -simplify 0.00005 \
-            /tmp/yoto_inage.geojson \
-            "$GML"
-
-          echo "フィーチャー数: $(python3 -c 'import json; d=json.load(open("/tmp/yoto_inage.geojson")); print(len(d["features"]))')"
-          cp /tmp/yoto_inage.geojson data/yoto-inage.geojson
-          python3 scripts/filter-yoto.py /tmp/yoto_inage.geojson data/yoto-inage.geojson
+          python3 scripts/gml-to-geojson.py "$GML" data/yoto-inage.geojson
 
       - name: 変更があればコミット & プッシュ
         run: |
