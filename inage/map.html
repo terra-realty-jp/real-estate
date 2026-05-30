@@ -1014,7 +1014,13 @@ function _renderYotoLegend(geojson) {
 var _ritchiLayer = null;
 var _ritchiActive = false;
 
-// 区域種別カラー（convert-ritchi.py の ZONE_COLOR と対応）
+// A50_006コード→区域種別名（国土数値情報 A50 確認済み）
+var RITCHI_CODE_NAME = {
+  '1': '居住誘導区域',
+  '2': '都市機能誘導区域',
+  '3': '特定用途誘導地区',
+};
+// 区域種別カラー
 var RITCHI_COLOR = {
   '居住誘導区域':     '#6fa8dc',
   '都市機能誘導区域': '#f6b26b',
@@ -1050,7 +1056,11 @@ function toggleRitchi() {
         onEachFeature: function(feature, layer) {
           var props = feature.properties || {};
           var zoneName = _getRitchiZoneName(props) || '区域種別不明';
-          layer.bindPopup('<b>' + zoneName + '</b><br><small style="color:#888">立地適正化計画（千葉市・国土数値情報A50）</small>');
+          var areaName = (props['A50_007'] || '').trim();
+          var popup = '<b>' + zoneName + '</b>';
+          if (areaName) popup += '<br>' + areaName;
+          popup += '<br><small style="color:#888">立地適正化計画（千葉市・国土数値情報A50）</small>';
+          layer.bindPopup(popup);
         }
       }).addTo(map);
       _ritchiActive = true;
@@ -1063,13 +1073,10 @@ function toggleRitchi() {
 }
 
 function _getRitchiZoneName(props) {
-  // A50 GMLから変換した際の属性名候補
-  var candidates = ['zone_type', 'zoneName', 'A50_003', 'A50_004', 'kuikiShubetsu', '区域種別'];
-  for (var i = 0; i < candidates.length; i++) {
-    var v = props[candidates[i]];
-    if (v !== undefined && v !== null && v !== '') return String(v);
-  }
-  // 既知の区域名文字列を含むフィールドを探す
+  // A50_006 = 誘導区域種別コード（1=居住誘導区域, 2=都市機能誘導区域, 3=特定用途誘導地区）
+  var code = String(props['A50_006'] || '');
+  if (RITCHI_CODE_NAME[code]) return RITCHI_CODE_NAME[code];
+  // フォールバック: zone_type フィールドや既知の区域名文字列を探す
   var known = ['居住誘導区域', '都市機能誘導区域', '特定用途誘導地区', '市街化区域'];
   for (var k in props) {
     var s = String(props[k] || '');
