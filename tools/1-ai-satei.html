@@ -572,6 +572,8 @@
       <div class="result-eyebrow">AI査定結果 — あなたの物件の推定価格</div>
       <div class="result-price" id="resultPrice">—</div>
       <div class="result-range" id="resultRange">推定レンジ: —</div>
+      <!-- エリア別 累計査定数（Data Moat フィードバックループ） -->
+      <div id="area-usage-count" style="display:none;font-size:11px;color:var(--text-muted);text-align:right;margin-top:4px;padding-right:2px"></div>
 
       <div class="result-grid">
         <div class="result-metric">
@@ -6410,6 +6412,24 @@ function calcAndShowResult() {
     var _cardId = 'satei__' + pref + '__' + propType + '__' + _ageG + '__' + _priceG;
     var _label = '推定' + Math.round(priceInMan) + '万円（' + Math.round(area) + '㎡・築' + age + '年・流動性' + liquidity + '）';
     sbLogCardUsage(1, _cardId, 'calc', _label);
+
+    // Data Moat フィードバックループ: 同エリアの累計査定人数を表示
+    var _usageClient = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
+    if (_usageClient) {
+      _usageClient.from('card_usage_log')
+        .select('id', { count: 'exact', head: true })
+        .like('card_id', 'satei__' + pref + '__%')
+        .then(function(res) {
+          if (!res.error && res.count >= 3) {
+            var el = document.getElementById('area-usage-count');
+            var aLabel = AREA_LABEL[pref] || pref;
+            if (el) {
+              el.textContent = '📊 ' + aLabel + 'エリアで累計 ' + res.count.toLocaleString() + ' 人が査定しました';
+              el.style.display = 'block';
+            }
+          }
+        }).catch(function(){});
+    }
   } catch(e) {}
 
   // 表示
