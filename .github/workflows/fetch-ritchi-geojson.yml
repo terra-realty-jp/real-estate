@@ -1,0 +1,52 @@
+name: 立地適正化計画GeoJSON生成（千葉市稲毛区）
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 立地適正化計画は年1〜2回改定されることがある。毎年6月1日に自動実行
+    - cron: '0 3 1 6 *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python依存パッケージインストール
+        run: pip install defusedxml
+
+      - name: 国土数値情報 A50（立地適正化計画）GMLをダウンロード
+        run: |
+          wget -q \
+            "https://nlftp.mlit.go.jp/ksj/gml/data/A50/A50-20/A50-20_12_GML.zip" \
+            -O /tmp/a50.zip
+          unzip -q /tmp/a50.zip -d /tmp/a50/
+          echo "=== 解凍ファイル一覧 ==="
+          find /tmp/a50 -name "*.xml" | head -20
+
+      - name: GML→GeoJSON変換（千葉市 → 稲毛区BBOX絞り込み）
+        run: |
+          # 千葉市(12100)または稲毛区(12103)を含むXMLを探す
+          GML=$(find /tmp/a50 -name "*12100*.xml" -o -name "*12103*.xml" | head -1)
+          if [ -z "$GML" ]; then
+            echo "千葉市専用XMLなし → 千葉県全体XMLを使用"
+            GML=$(find /tmp/a50 -name "*.xml" | grep -v "META\|meta" | head -1)
+          fi
+          echo "使用ファイル: $GML"
+          # 稲毛区バウンディングボックス: north,south,east,west
+          python3 scripts/convert-ritchi.py "$GML" data/ritchi-inage.geojson "35.710,35.570,140.185,140.030"
+
+      - name: 変更があればコミット & プッシュ
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ritchi-inage.geojson
+          if git diff --cached --quiet; then
+            echo "変更なし"
+          else
+            git commit -m "data: 立地適正化計画GeoJSON更新（稲毛区・国土数値情報A50）"
+            git push origin main
+          fi
