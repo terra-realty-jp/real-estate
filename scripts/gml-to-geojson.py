@@ -5,14 +5,15 @@ ogr2ogr 不要。Python 標準ライブラリのみ使用。
 
 使用: python3 scripts/gml-to-geojson.py <input.xml> <output.geojson>
 
-A29 v2.1 の主要属性:
+A29-19 実フィールド（デバッグで確認済み）:
   aac  = 行政区域コード（市区町村コード）
-  cda  = 用途地域コード (1〜12)
-  kda  = 区域区分コード
+  dac  = 用途地域コード (1〜12) ← 実データではこのフィールド
+  kda  = 用途地域名（テキスト）
   bar  = 建蔽率
   cbr  = 容積率
   lgn  = 地方公共団体名
   pfn  = 都道府県名
+  geometry property = xlink:href で Surface要素を外部参照
 """
 import json
 import sys
@@ -23,6 +24,14 @@ except ImportError:
 
 SRC  = sys.argv[1] if len(sys.argv) > 1 else '/tmp/yoto_inage.xml'
 DEST = sys.argv[2] if len(sys.argv) > 2 else 'data/yoto-inage.geojson'
+
+XLINK_HREF = '{http://www.w3.org/1999/xlink}href'
+# gml:id が使うnamespace候補（GML 3.1/3.2 両対応）
+GML_ID_KEYS = [
+    '{http://www.opengis.net/gml/3.2}id',
+    '{http://www.opengis.net/gml}id',
+    'gml:id',
+]
 
 # 用途地域コード → 名称マッピング
 YOTO_NAME = {
@@ -41,7 +50,7 @@ YOTO_NAME = {
 }
 
 def collect_pos_lists(element):
-    """element以下の全posList要素から座標を収集"""
+    """element以下の全posList要素から座標を収集（深いネスト対応）"""
     result = []
     for pos_el in element.iter():
         local = pos_el.tag.split('}')[-1] if '}' in pos_el.tag else pos_el.tag
@@ -67,19 +76,42 @@ print(f'読み込み: {SRC}')
 tree = ET.parse(SRC)
 root = tree.getroot()
 
-# 全要素を走査してDesignatedArea(用途地域フィーチャー)を抽出
+# gml:id → element のマップを構築（xlink:href 参照を解決するため）
+id_map = {}
+for el in root.iter():
+    for key in GML_ID_KEYS:
+        gid = el.attrib.get(key)
+        if gid:
+            id_map[gid] = el
+            break
+
+print(f'gml:id マップ: {len(id_map)} 件')
+
 features = []
-all_local_tags = set()
+da_count = 0
 
 for elem in root.iter():
     local = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-    all_local_tags.add(local)
-
     if local != 'DesignatedArea':
         continue
+    da_count += 1
 
-    # 座標を収集（Surface/PolygonPatch/Ring/Curve/posList など深いネスト対応）
-    pos_lists = collect_pos_lists(elem)
+    # xlink:href で参照されたジオメトリ要素を解決
+    geom_elem = None
+    for child in elem:
+        href = child.attrib.get(XLINK_HREF, '')
+        if href.startswith('#'):
+            ref_id = href[1:]
+            geom_elem = id_map.get(ref_id)
+            if geom_elem is not None:
+                break
+
+    if geom_elem is not None:
+        pos_lists = collect_pos_lists(geom_elem)
+    else:
+        # フォールバック: elem直下にgeometryが含まれる場合
+        pos_lists = collect_pos_lists(elem)
+
     if not pos_lists:
         continue
 
@@ -90,39 +122,31 @@ for elem in root.iter():
     # 属性値を収集
     props = {}
     for child in elem:
-        child_local = child.tag.split('}')[-1] if '}' in child.tag else child.tag
-        if child.text and child.text.strip() and child_local not in ('geometry',):
-            props[child_local] = child.text.strip()
+        cl = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+        if child.text and child.text.strip():
+            props[cl] = child.text.strip()
 
-    # 用途地域名を追加
-    cda = props.get('cda', '')
-    if cda in YOTO_NAME:
-        props['用途地域名'] = YOTO_NAME[cda]
+    # 用途地域コードと名称を正規化
+    # dac = 用途地域コード(1-12), kda = 用途地域名テキスト
+    zone_code = props.get('dac', '')
+    zone_name = props.get('kda', '')
+    if zone_code in YOTO_NAME:
+        props['用途地域名'] = YOTO_NAME[zone_code]
+    elif zone_name:
+        props['用途地域名'] = zone_name
+    # map.html _getYotoCode() が参照するフィールドとして cda にも格納
+    if zone_code:
+        props['cda'] = zone_code
 
     features.append({'type': 'Feature', 'geometry': geometry, 'properties': props})
 
+print(f'DesignatedArea 総数: {da_count}')
 if not features:
-    local_list = sorted(all_local_tags)
-    print(f'フィーチャーなし。発見タグ: {local_list}')
-    # デバッグ: 最初のDesignatedAreaの構造を表示
-    for elem in root.iter():
-        local = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-        if local == 'DesignatedArea':
-            print('[DEBUG] DesignatedArea直下の子要素:')
-            for c in elem:
-                cl = c.tag.split('}')[-1] if '}' in c.tag else c.tag
-                attribs = dict(c.attrib)
-                print(f'  <{cl}> text={repr(c.text[:50] if c.text else None)} attribs={attribs}')
-            print('[DEBUG] DesignatedArea以下の全子孫タグ:')
-            sub_tags = set()
-            for d in elem.iter():
-                dl = d.tag.split('}')[-1] if '}' in d.tag else d.tag
-                sub_tags.add(dl)
-            print(f'  {sorted(sub_tags)}')
-            break
+    print('フィーチャーなし（全フィーチャーの座標が空）')
 else:
     print(f'フィーチャー数: {len(features)}')
     print('サンプルproperties:', list(features[0]['properties'].keys()))
+    print('サンプル用途地域名:', features[0]['properties'].get('用途地域名', '—'))
 
 result = {'type': 'FeatureCollection', 'features': features}
 
