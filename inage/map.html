@@ -971,7 +971,7 @@ function toggleYoto() {
           var props = feature.properties || {};
           var code = _getYotoCode(props);
           var name = code ? (YOTO_NAME[code] || '区域コード:' + code) : '用途地域不明';
-          layer.bindPopup('<b>' + name + '</b><br><small style="color:#888">国土数値情報 A29（2019年）</small>');
+          layer.bindPopup('<b>' + _esc(name) + '</b><br><small style="color:#888">国土数値情報 A29（2019年）</small>');
         }
       }).addTo(map);
       _yotoActive = true;
@@ -1010,6 +1010,10 @@ function _renderYotoLegend(geojson) {
     el.appendChild(chip);
   });
 }
+// HTML エスケープ（GeoJSONプロパティ値を安全にpopupに埋め込む）
+var _ESC_MAP = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+function _esc(s){return String(s).replace(/[&<>"']/g,function(c){return _ESC_MAP[c];});}
+
 // 立地適正化計画 レイヤー
 var _ritchiLayer = null;
 var _ritchiActive = false;
@@ -1057,8 +1061,8 @@ function toggleRitchi() {
           var props = feature.properties || {};
           var zoneName = _getRitchiZoneName(props) || '区域種別不明';
           var areaName = (props['A50_007'] || '').trim();
-          var popup = '<b>' + zoneName + '</b>';
-          if (areaName) popup += '<br>' + areaName;
+          var popup = '<b>' + _esc(zoneName) + '</b>';
+          if (areaName) popup += '<br>' + _esc(areaName);
           popup += '<br><small style="color:#888">立地適正化計画（千葉市・国土数値情報A50）</small>';
           layer.bindPopup(popup);
         }
