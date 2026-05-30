@@ -6,6 +6,10 @@
 
 ## 2026-05-30
 
+- **対象**: scripts/gml-to-geojson.py・filter-yoto.py・fetch-yoto-geojson.yml・inage/map.html
+- **施策**: 施策① 用途地域GeoJSON生成パイプライン完成
+- **実装内容**: 国土数値情報A29-19 GMLのxlink:href多段参照（DesignatedArea→Surface→Curve→posList）を再帰解決するパーサーに修正。GitHub Actionsで千葉市全体515フィーチャー生成→稲毛区BBOX絞り込み350フィーチャーのpipelineが動作確認済み。data/yoto-inage.geojsonを自動コミット。map.htmlの_getYotoCode()にcda/dacフィールド追加。
+
 - **対象**: index.html・inage/index.html
 - **施策**: UI統一（ダーク背景撤廃・完全完了）
 - **実装内容**: index.htmlの残存ダーク背景6セクション（投資リンクボタン・お問い合わせフォーム・最近のアップデート・計算結果プレビュー・体験談・クイズ）をライト配色に変換。undefined CSS変数(var(--card)等)を具体値に置換。inage/index.htmlのヒーロー数値を2025年推計値に更新。
