@@ -22,9 +22,10 @@ jobs:
 
           echo "$(date '+%Y-%m-%d %H:%M:%S') JST — Supabase ping: HTTP ${STATUS}"
 
-          if [ "$STATUS" = "200" ] || [ "$STATUS" = "404" ]; then
-            echo "OK: Supabase is alive"
+          # 2xx/3xx/4xx はすべてサーバー生存を意味する（401はsb_publishable鍵の仕様）
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 500 ]; then
+            echo "OK: Supabase is alive (HTTP ${STATUS})"
           else
-            echo "WARNING: Unexpected status ${STATUS}"
+            echo "ERROR: Supabase may be down or unreachable (HTTP ${STATUS})"
             exit 1
           fi

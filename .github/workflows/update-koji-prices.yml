@@ -25,4 +25,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/koji-prices.json
-          git diff --cached --quiet || git commit -m "data: 公示地価データを年次更新（$(date +'%Y-%m-%d')）" && git push origin main
+          if git diff --cached --quiet; then
+            echo "変更なし"
+          else
+            git commit -m "data: 公示地価データを年次更新（$(date +'%Y-%m-%d')）"
+            git pull --rebase origin main
+            git push origin main
+          fi
