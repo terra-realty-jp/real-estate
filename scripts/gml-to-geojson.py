@@ -89,6 +89,7 @@ print(f'gml:id マップ: {len(id_map)} 件')
 
 features = []
 da_count = 0
+debug_done = False
 
 for elem in root.iter():
     local = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
@@ -98,13 +99,34 @@ for elem in root.iter():
 
     # xlink:href で参照されたジオメトリ要素を解決
     geom_elem = None
+    href_val = None
     for child in elem:
         href = child.attrib.get(XLINK_HREF, '')
         if href.startswith('#'):
+            href_val = href
             ref_id = href[1:]
             geom_elem = id_map.get(ref_id)
             if geom_elem is not None:
                 break
+
+    # 最初の1件だけデバッグ出力
+    if not debug_done and da_count == 1:
+        debug_done = True
+        print(f'[DEBUG] href_val={href_val!r}')
+        if geom_elem is not None:
+            geom_local = geom_elem.tag.split('}')[-1] if '}' in geom_elem.tag else geom_elem.tag
+            print(f'[DEBUG] 解決済みgeom_elem タグ: {geom_local}')
+            sub = [(e.tag.split('}')[-1] if '}' in e.tag else e.tag) for e in geom_elem.iter()]
+            print(f'[DEBUG] geom_elem以下のタグ: {sub[:20]}')
+            # posList要素の詳細
+            for pe in geom_elem.iter():
+                pl = pe.tag.split('}')[-1] if '}' in pe.tag else pe.tag
+                if pl == 'posList':
+                    print(f'[DEBUG] posList text[:80]={repr(pe.text[:80] if pe.text else None)} attribs={dict(pe.attrib)}')
+                    break
+        else:
+            print('[DEBUG] geom_elem=None（href未解決）')
+            print(f'[DEBUG] id_mapのキーサンプル: {list(id_map.keys())[:10]}')
 
     if geom_elem is not None:
         pos_lists = collect_pos_lists(geom_elem)
