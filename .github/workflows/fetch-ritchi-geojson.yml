@@ -37,48 +37,7 @@ jobs:
             exit 0
           fi
           echo "使用ファイル: $SRC"
-          python3 - "$SRC" data/ritchi-inage.geojson << 'PYEOF'
-import json, sys
-
-SRC, DEST = sys.argv[1], sys.argv[2]
-NORTH, SOUTH = 35.710, 35.570
-EAST,  WEST  = 140.185, 140.030
-
-def centroid_in_box(coords):
-    try:
-        flat = []
-        def flatten(c):
-            if isinstance(c[0], list):
-                for x in c: flatten(x)
-            else:
-                flat.append(c)
-        flatten(coords)
-        if not flat: return False
-        return SOUTH <= sum(p[1] for p in flat)/len(flat) <= NORTH and \
-               WEST  <= sum(p[0] for p in flat)/len(flat) <= EAST
-    except: return False
-
-with open(SRC, encoding='utf-8') as f:
-    data = json.load(f)
-
-features = [feat for feat in data.get('features', [])
-            if centroid_in_box(feat.get('geometry', {}).get('coordinates', []))]
-
-# zone_colors メタデータを付加
-zone_colors = {
-    '居住誘導区域': '#6fa8dc',
-    '都市機能誘導区域': '#f6b26b',
-    '特定用途誘導地区': '#ff9900',
-}
-result = {'type': 'FeatureCollection', 'features': features, 'zone_colors': zone_colors}
-
-with open(DEST, 'w', encoding='utf-8') as f:
-    json.dump(result, f, ensure_ascii=False, separators=(',', ':'))
-
-print(f'稲毛区フィーチャー数: {len(features)}')
-if features:
-    print('サンプルproperties:', list(features[0].get('properties', {}).keys())[:8])
-PYEOF
+          python3 scripts/filter-ritchi.py "$SRC" data/ritchi-inage.geojson
 
       - name: 変更があればコミット & プッシュ
         run: |
