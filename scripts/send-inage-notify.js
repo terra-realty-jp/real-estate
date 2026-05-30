@@ -222,7 +222,20 @@ async function main() {
   console.log(`=== 稲毛区メール通知送信 (${freqToSend}) ===`);
   if (DRY_RUN) console.log('*** DRY RUN モード ***\n');
 
-  const subscribers = await getSubscribers(freqToSend);
+  let subscribers;
+  try {
+    subscribers = await getSubscribers(freqToSend);
+  } catch (e) {
+    if (e.message.includes('403') || e.message.includes('42501') || e.message.includes('permission denied')) {
+      console.log('⚠️  Supabase権限エラー: notify_subscribersへのSELECT権限が必要です');
+      console.log('   Supabase SQL Editorで以下を実行してください:');
+      console.log('   GRANT SELECT ON public.notify_subscribers TO service_role;');
+      console.log('   GRANT SELECT ON public.inage_properties TO service_role;');
+      console.log('   GRANT SELECT ON public.qa_questions TO service_role;');
+      process.exit(0); // graceful exit（権限設定待ち）
+    }
+    throw e;
+  }
   console.log(`登録者数: ${subscribers.length}件\n`);
 
   let sent = 0;

@@ -18,6 +18,7 @@ const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_KEY || '';
 const RESEND_KEY    = process.env.RESEND_API_KEY || '';
 const TO_EMAIL      = process.env.REPORT_EMAIL  || 'shinji.japaaan@gmail.com';
 const FROM_EMAIL    = 'info@terra-realty.jp';
+const FROM_NAME     = 'TERRA REALTY 稲毛区';
 const DRY_RUN       = process.env.DRY_RUN === '1';
 
 const now     = new Date();
@@ -62,7 +63,7 @@ function httpPost(hostname, path, headers, body) {
   });
 }
 
-const sbHost = new URL(SUPABASE_URL).hostname;
+const sbHost = SUPABASE_URL ? new URL(SUPABASE_URL).hostname : '';
 const sbAuth = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
 
 async function sbCount(table, filter = '') {
