@@ -1,124 +1,114 @@
 #!/usr/bin/env python3
 """
-国土数値情報 A29（用途地域）GML を GeoJSON に変換するスクリプト。
+国土数値情報 A29（用途地域）GML v2.1 を GeoJSON に変換するスクリプト。
 ogr2ogr 不要。Python 標準ライブラリのみ使用。
 
 使用: python3 scripts/gml-to-geojson.py <input.xml> <output.geojson>
+
+A29 v2.1 の主要属性:
+  aac  = 行政区域コード（市区町村コード）
+  cda  = 用途地域コード (1〜12)
+  kda  = 区域区分コード
+  bar  = 建蔽率
+  cbr  = 容積率
+  lgn  = 地方公共団体名
+  pfn  = 都道府県名
 """
 import json
 import sys
 try:
     import defusedxml.ElementTree as ET
 except ImportError:
-    import xml.etree.ElementTree as ET  # noqa: only reached in dev env
+    import xml.etree.ElementTree as ET  # noqa: trusted government source only
 
 SRC  = sys.argv[1] if len(sys.argv) > 1 else '/tmp/yoto_inage.xml'
 DEST = sys.argv[2] if len(sys.argv) > 2 else 'data/yoto-inage.geojson'
 
-# GML/KSJ 名前空間
-NS = {
-    'gml': 'http://www.opengis.net/gml/3.2',
-    'ksj': 'http://nlftp.mlit.go.jp/ksj/schemas/ksj-app',
+# 用途地域コード → 名称マッピング
+YOTO_NAME = {
+    '1': '第一種低層住居専用地域',
+    '2': '第二種低層住居専用地域',
+    '3': '第一種中高層住居専用地域',
+    '4': '第二種中高層住居専用地域',
+    '5': '第一種住居地域',
+    '6': '第二種住居地域',
+    '7': '準住居地域',
+    '8': '近隣商業地域',
+    '9': '商業地域',
+    '10': '準工業地域',
+    '11': '工業地域',
+    '12': '工業専用地域',
 }
 
-def parse_pos_list(pos_text):
-    """GML posList（緯度 経度 緯度 経度...）を [[lng,lat],...] に変換"""
-    nums = [float(x) for x in pos_text.split()]
-    coords = []
-    for i in range(0, len(nums) - 1, 2):
-        lat, lng = nums[i], nums[i + 1]
-        coords.append([lng, lat])
-    return coords
+def collect_pos_lists(element):
+    """element以下の全posList要素から座標を収集"""
+    result = []
+    for pos_el in element.iter():
+        local = pos_el.tag.split('}')[-1] if '}' in pos_el.tag else pos_el.tag
+        if local == 'posList' and pos_el.text:
+            nums = [float(x) for x in pos_el.text.split()]
+            ring = []
+            for i in range(0, len(nums) - 1, 2):
+                lat, lng = nums[i], nums[i + 1]
+                ring.append([lng, lat])
+            if ring:
+                result.append(ring)
+    return result
 
-def parse_polygon(poly_el):
-    """gml:Polygon → GeoJSON Polygon 座標"""
-    rings = []
-    for ring_tag in ('gml:exterior', 'gml:interior'):
-        ring_el = poly_el.find(f'{ring_tag}/gml:LinearRing/gml:posList', NS)
-        if ring_el is not None and ring_el.text:
-            rings.append(parse_pos_list(ring_el.text.strip()))
-    return rings if rings else None
-
-def parse_geometry(geom_el):
-    """ksj:geometry 要素以下の GML ジオメトリを解析"""
-    # Polygon
-    poly = geom_el.find('.//gml:Polygon', NS)
-    if poly is not None:
-        rings = parse_polygon(poly)
-        if rings:
-            return {'type': 'Polygon', 'coordinates': rings}
-
-    # MultiPolygon (MultiSurface/surfaceMember/Polygon)
-    polys = geom_el.findall('.//gml:Polygon', NS)
-    if len(polys) > 1:
-        multi = []
-        for p in polys:
-            rings = parse_polygon(p)
-            if rings:
-                multi.append(rings)
-        if multi:
-            return {'type': 'MultiPolygon', 'coordinates': multi}
-
-    return None
-
-def get_text(el, tag):
-    child = el.find(tag, NS)
-    return child.text.strip() if child is not None and child.text else ''
+def build_geometry(pos_lists):
+    """収集した座標リングからGeoJSONジオメトリを生成"""
+    if not pos_lists:
+        return None
+    if len(pos_lists) == 1:
+        return {'type': 'Polygon', 'coordinates': pos_lists}
+    return {'type': 'MultiPolygon', 'coordinates': [[r] for r in pos_lists]}
 
 print(f'読み込み: {SRC}')
 tree = ET.parse(SRC)
 root = tree.getroot()
 
-# A29 の特徴要素を探す（名前空間ありで検索）
-feature_tags = [
-    '{http://nlftp.mlit.go.jp/ksj/schemas/ksj-app}YoutoChiiki',
-]
-
+# 全要素を走査してDesignatedArea(用途地域フィーチャー)を抽出
 features = []
-found_tags = set()
+all_local_tags = set()
 
-# 全要素を走査して用途地域フィーチャーを探す
 for elem in root.iter():
-    found_tags.add(elem.tag)
     local = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-    if local not in ('YoutoChiiki',):
+    all_local_tags.add(local)
+
+    if local != 'DesignatedArea':
         continue
 
-    # ジオメトリを取得
-    geom_el = elem.find('ksj:geometry', NS)
-    if geom_el is None:
-        geom_el = elem.find('{http://nlftp.mlit.go.jp/ksj/schemas/ksj-app}geometry')
-    if geom_el is None:
+    # 座標を収集（Surface/PolygonPatch/Ring/Curve/posList など深いネスト対応）
+    pos_lists = collect_pos_lists(elem)
+    if not pos_lists:
         continue
 
-    geometry = parse_geometry(geom_el)
+    geometry = build_geometry(pos_lists)
     if not geometry:
         continue
 
-    # 属性値を取得（用途地域コード）
+    # 属性値を収集
     props = {}
     for child in elem:
-        local_name = child.tag.split('}')[-1] if '}' in child.tag else child.tag
-        if child.text and local_name != 'geometry':
-            props[local_name] = child.text.strip()
+        child_local = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+        if child.text and child.text.strip() and child_local not in ('geometry',):
+            props[child_local] = child.text.strip()
+
+    # 用途地域名を追加
+    cda = props.get('cda', '')
+    if cda in YOTO_NAME:
+        props['用途地域名'] = YOTO_NAME[cda]
 
     features.append({'type': 'Feature', 'geometry': geometry, 'properties': props})
 
 if not features:
-    # タグが違う可能性があるため発見したタグを表示
-    local_tags = sorted({t.split('}')[-1] for t in found_tags if '}' in t})
-    print(f'フィーチャーなし。発見したローカルタグ: {local_tags[:30]}')
-    # フォールバック: すべてのnsを試す
-    for elem in root.iter():
-        local = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-        if 'Chiiki' in local or 'chiiki' in local or 'Zone' in local or 'zone' in local:
-            print(f'  候補タグ: {elem.tag}')
+    local_list = sorted(all_local_tags)
+    print(f'フィーチャーなし。発見タグ: {local_list}')
+else:
+    print(f'フィーチャー数: {len(features)}')
+    print('サンプルproperties:', list(features[0]['properties'].keys()))
 
 result = {'type': 'FeatureCollection', 'features': features}
 
 with open(DEST, 'w', encoding='utf-8') as f:
     json.dump(result, f, ensure_ascii=False, separators=(',', ':'))
-
-print(f'フィーチャー数: {len(features)}')
-if features:
-    print('サンプルproperties:', list(features[0]['properties'].keys()))
