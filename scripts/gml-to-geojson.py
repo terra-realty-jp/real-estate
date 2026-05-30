@@ -104,6 +104,22 @@ for elem in root.iter():
 if not features:
     local_list = sorted(all_local_tags)
     print(f'フィーチャーなし。発見タグ: {local_list}')
+    # デバッグ: 最初のDesignatedAreaの構造を表示
+    for elem in root.iter():
+        local = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
+        if local == 'DesignatedArea':
+            print('[DEBUG] DesignatedArea直下の子要素:')
+            for c in elem:
+                cl = c.tag.split('}')[-1] if '}' in c.tag else c.tag
+                attribs = dict(c.attrib)
+                print(f'  <{cl}> text={repr(c.text[:50] if c.text else None)} attribs={attribs}')
+            print('[DEBUG] DesignatedArea以下の全子孫タグ:')
+            sub_tags = set()
+            for d in elem.iter():
+                dl = d.tag.split('}')[-1] if '}' in d.tag else d.tag
+                sub_tags.add(dl)
+            print(f'  {sorted(sub_tags)}')
+            break
 else:
     print(f'フィーチャー数: {len(features)}')
     print('サンプルproperties:', list(features[0]['properties'].keys()))
