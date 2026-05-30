@@ -1,0 +1,30 @@
+name: Sitemap Ping（Google/Bing クロール通知）
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.html'
+      - 'sitemap.xml'
+      - 'llms.txt'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Google Sitemap
+        env:
+          SITEMAP_URL: https://shinji-japaaaan.github.io/real-estate/sitemap.xml
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://www.google.com/ping?sitemap=${SITEMAP_URL}")
+          echo "Google ping: HTTP ${STATUS}"
+
+      - name: Ping Bing Sitemap
+        env:
+          SITEMAP_URL: https://shinji-japaaaan.github.io/real-estate/sitemap.xml
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://www.bing.com/ping?sitemap=${SITEMAP_URL}")
+          echo "Bing ping: HTTP ${STATUS}"
