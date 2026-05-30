@@ -27,20 +27,58 @@ jobs:
           echo "=== 解凍ファイル一覧（全ファイル）==="
           find /tmp/a50 -type f | sort
 
-      - name: GML→GeoJSON変換（千葉市 → 稲毛区BBOX絞り込み）
+      - name: 千葉市GeoJSONを稲毛区BBOXで絞り込み
         run: |
-          # GML/XMLを検索（KS-META等メタデータファイルを除外）
-          GML=$(find /tmp/a50 -type f \( -name "*.xml" -o -name "*.gml" \) \
-                  | grep -v "KS-META\|KS-meta\|metadata\|README" \
-                  | sort | head -1)
-          if [ -z "$GML" ]; then
-            echo "GMLファイルが見つかりません。zip内のファイル:"
-            find /tmp/a50 -type f | sort
+          # A50 zipにはGeoJSONが同梱されている（GML変換不要）
+          SRC=$(find /tmp/a50 -name "A50-20_12100.geojson" | head -1)
+          if [ -z "$SRC" ]; then
+            echo "千葉市GeoJSONが見つかりません。利用可能なGeoJSON:"
+            find /tmp/a50 -name "*.geojson" | sort
             exit 0
           fi
-          echo "使用ファイル: $GML"
-          # 稲毛区バウンディングボックス: north,south,east,west
-          python3 scripts/convert-ritchi.py "$GML" data/ritchi-inage.geojson "35.710,35.570,140.185,140.030"
+          echo "使用ファイル: $SRC"
+          python3 - "$SRC" data/ritchi-inage.geojson << 'PYEOF'
+import json, sys
+
+SRC, DEST = sys.argv[1], sys.argv[2]
+NORTH, SOUTH = 35.710, 35.570
+EAST,  WEST  = 140.185, 140.030
+
+def centroid_in_box(coords):
+    try:
+        flat = []
+        def flatten(c):
+            if isinstance(c[0], list):
+                for x in c: flatten(x)
+            else:
+                flat.append(c)
+        flatten(coords)
+        if not flat: return False
+        return SOUTH <= sum(p[1] for p in flat)/len(flat) <= NORTH and \
+               WEST  <= sum(p[0] for p in flat)/len(flat) <= EAST
+    except: return False
+
+with open(SRC, encoding='utf-8') as f:
+    data = json.load(f)
+
+features = [feat for feat in data.get('features', [])
+            if centroid_in_box(feat.get('geometry', {}).get('coordinates', []))]
+
+# zone_colors メタデータを付加
+zone_colors = {
+    '居住誘導区域': '#6fa8dc',
+    '都市機能誘導区域': '#f6b26b',
+    '特定用途誘導地区': '#ff9900',
+}
+result = {'type': 'FeatureCollection', 'features': features, 'zone_colors': zone_colors}
+
+with open(DEST, 'w', encoding='utf-8') as f:
+    json.dump(result, f, ensure_ascii=False, separators=(',', ':'))
+
+print(f'稲毛区フィーチャー数: {len(features)}')
+if features:
+    print('サンプルproperties:', list(features[0].get('properties', {}).keys())[:8])
+PYEOF
 
       - name: 変更があればコミット & プッシュ
         run: |
