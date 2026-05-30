@@ -6,6 +6,10 @@
 
 ## 2026-05-30
 
+- **対象**: scripts/filter-ritchi.py・convert-ritchi.py・fetch-ritchi-geojson.yml・inage/map.html
+- **施策**: 施策① 立地適正化計画レイヤー追加
+- **実装内容**: 国土数値情報A50（千葉市）GeoJSONをBBOXで稲毛区に絞り込み19フィーチャー取得。A50_006コード(1=居住誘導区域/2=都市機能誘導区域/3=特定用途誘導地区)でカラーリング。稲毛駅周辺・新検見川駅周辺等の区域名をポップアップに表示。data/ritchi-inage.geojson自動生成。
+
 - **対象**: scripts/gml-to-geojson.py・filter-yoto.py・fetch-yoto-geojson.yml・inage/map.html
 - **施策**: 施策① 用途地域GeoJSON生成パイプライン完成
 - **実装内容**: 国土数値情報A29-19 GMLのxlink:href多段参照（DesignatedArea→Surface→Curve→posList）を再帰解決するパーサーに修正。GitHub Actionsで千葉市全体515フィーチャー生成→稲毛区BBOX絞り込み350フィーチャーのpipelineが動作確認済み。data/yoto-inage.geojsonを自動コミット。map.htmlの_getYotoCode()にcda/dacフィールド追加。
