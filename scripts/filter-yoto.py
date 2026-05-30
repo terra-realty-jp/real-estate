@@ -46,7 +46,13 @@ for feat in data.get('features', []):
     props = feat.get('properties') or {}
     geom  = feat.get('geometry') or {}
     coords = geom.get('coordinates', [])
-    if municipality_matches(props) or centroid_in_box(coords):
+    # 入力が既に千葉市(12100)のファイルの場合、aac='12100'が全件マッチしてしまうため
+    # バウンディングボックスを優先判定基準とし、稲毛区専用ファイル(12103)の場合のみ
+    # municipality_matchesを使う
+    aac = str(props.get('aac', ''))
+    if aac == '12103' or municipality_matches(props) and aac != '12100':
+        features.append(feat)
+    elif centroid_in_box(coords):
         features.append(feat)
 
 result = {'type': 'FeatureCollection', 'features': features}

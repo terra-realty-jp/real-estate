@@ -39,7 +39,11 @@ jobs:
             GML=$(find /tmp/a29 -name "A29-19_12100.xml" | head -1)
           fi
           echo "使用ファイル: $GML"
-          python3 scripts/gml-to-geojson.py "$GML" data/yoto-inage.geojson
+          python3 scripts/gml-to-geojson.py "$GML" /tmp/yoto_all.geojson
+
+      - name: 稲毛区エリアに絞り込み
+        run: |
+          python3 scripts/filter-yoto.py /tmp/yoto_all.geojson data/yoto-inage.geojson
 
       - name: 変更があればコミット & プッシュ
         run: |
