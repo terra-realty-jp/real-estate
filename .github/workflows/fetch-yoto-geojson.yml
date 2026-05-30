@@ -34,7 +34,6 @@ jobs:
         run: |
           GML=$(find /tmp/a29 -name "*.xml" | head -1)
 
-          # 全千葉県をGeoJSONに変換（座標系をWGS84に統一）
           ogr2ogr \
             -f GeoJSON \
             -t_srs EPSG:4326 \
@@ -42,63 +41,8 @@ jobs:
             /tmp/yoto_all.geojson \
             "$GML"
 
-          echo "全フィーチャー数: $(python3 -c "import json; d=json.load(open('/tmp/yoto_all.geojson')); print(len(d['features']))")"
-
-          # Pythonで稲毛区（市区町村コード: 12103）を抽出
-          python3 << 'EOF'
-import json
-
-with open('/tmp/yoto_all.geojson', encoding='utf-8') as f:
-    data = json.load(f)
-
-# 稲毛区のbounding box（余裕を持たせる）
-NORTH, SOUTH = 35.700, 35.580
-EAST,  WEST  = 140.175, 140.040
-
-def centroid_in_box(coords_list):
-    """座標リストの重心が稲毛区bboxに入るか"""
-    try:
-        flat = []
-        def flatten(c):
-            if isinstance(c[0], list):
-                for x in c: flatten(x)
-            else:
-                flat.append(c)
-        flatten(coords_list)
-        if not flat:
-            return False
-        lng = sum(c[0] for c in flat) / len(flat)
-        lat = sum(c[1] for c in flat) / len(flat)
-        return SOUTH <= lat <= NORTH and WEST <= lng <= EAST
-    except Exception:
-        return False
-
-def municipality_matches(props):
-    """市区町村コードが稲毛区(12103)か千葉市(12100)を含むか"""
-    for k, v in props.items():
-        s = str(v)
-        if '12103' in s or s == '12100':
-            return True
-    return False
-
-features = []
-for feat in data['features']:
-    props = feat.get('properties') or {}
-    geom  = feat.get('geometry') or {}
-    coords = geom.get('coordinates', [])
-
-    if municipality_matches(props) or centroid_in_box(coords):
-        features.append(feat)
-
-result = {'type': 'FeatureCollection', 'features': features}
-
-with open('data/yoto-inage.geojson', 'w', encoding='utf-8') as f:
-    json.dump(result, f, ensure_ascii=False, separators=(',', ':'))
-
-print(f"稲毛区フィーチャー数: {len(features)}")
-if features:
-    print("サンプルproperties:", list(features[0]['properties'].keys())[:10])
-EOF
+          echo "全フィーチャー数: $(python3 -c 'import json; d=json.load(open("/tmp/yoto_all.geojson")); print(len(d["features"]))')"
+          python3 scripts/filter-yoto.py /tmp/yoto_all.geojson data/yoto-inage.geojson
 
       - name: 変更があればコミット & プッシュ
         run: |
