@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-05-30（コンテキスト継続セッション）
+
+- **対象**: tools/1-ai-satei.html
+- **施策**: Data Moat深化 — card_usage_logフィードバックループ
+- **実装内容**: AI査定の結果表示に「このエリアで累計○人が査定しました」を追加。calcAndShowResult内でsbLogCardUsage後にSupabase card_usage_logをLIKE検索（satei__pref__%）してカウントを取得、3件以上の場合のみ表示。完全に非同期・エラー無視で既存動作に影響なし。
+
+---
+
 ## 2026-05-30
 
 - **対象**: scripts/filter-ritchi.py・convert-ritchi.py・fetch-ritchi-geojson.yml・inage/map.html
