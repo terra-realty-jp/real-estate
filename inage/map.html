@@ -1235,6 +1235,13 @@ function buildPopupHtml(d, price) {
       + '<span style="color:#555">📊 表面利回り目安</span>'
       + '<span style="font-weight:700;color:#1d4ed8">' + d.yieldRange + '</span></div>'
     : '';
+  var prefKey = getTownPrefKey(d.name);
+  var sateiCount = SATEI_COUNT_CACHE[prefKey] || 0;
+  var sateiCountHtml = sateiCount >= 3
+    ? '<div style="margin-top:4px;padding:5px 8px;background:rgba(192,82,43,0.07);border-radius:5px;font-size:11px;display:flex;justify-content:space-between;align-items:center">'
+      + '<span style="color:#555">🏠 累計査定件数</span>'
+      + '<span style="font-weight:700;color:#c0522b">' + sateiCount.toLocaleString() + '件</span></div>'
+    : '';
   return '<div class="popup-town">' + d.name + '</div>' +
     '<div class="popup-price">' + Math.round(price/10000).toLocaleString() + '<span class="popup-unit">万円/㎡</span></div>' +
     '<div class="popup-row"><span>坪単価目安</span><span><b>' + tsubo + '万円/坪</b></span></div>' +
@@ -1242,6 +1249,7 @@ function buildPopupHtml(d, price) {
     '<div class="popup-row"><span>種別</span><span>' + typeLabel + '</span></div>' +
     demandHtml +
     yieldHtml +
+    sateiCountHtml +
     '<div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:10px;line-height:1.5">' + d.note + '</div>' +
     '<button onclick="showTrendPanel(\'' + d.name.replace(/'/g, "\\'") + '\')" style="display:block;width:100%;background:rgba(192,82,43,0.12);color:#c0522b;border:1px solid rgba(192,82,43,0.35);text-align:center;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">📈 価格推移グラフを見る</button>' +
     '<a href="../tools/1-ai-satei.html?area=' + getTownPrefKey(d.name) + '" style="display:block;background:#c0522b;color:#000;text-align:center;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;margin-bottom:6px">AI査定で概算を試算する →</a>' +
@@ -1661,6 +1669,26 @@ function highlightFromUrl() {
     if (badge) badge.style.display = 'inline-flex';
     if (badgeText && maxYear) badgeText.textContent = '最新データ反映済（' + maxYear + '年第' + maxQ + '四半期）';
   }).catch(function() {});
+})();
+
+// card_usage_logからエリア別累計査定数をキャッシュ（Data Moatフィードバックループ）
+var SATEI_COUNT_CACHE = {};
+(function() {
+  var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+  if (!client) return;
+  client.from('card_usage_log')
+    .select('card_id')
+    .like('card_id', 'satei__chiba_inage%')
+    .then(function(res) {
+      if (res.error || !res.data) return;
+      res.data.forEach(function(row) {
+        var parts = (row.card_id || '').split('__');
+        if (parts.length >= 2) {
+          var prefKey = parts[1];
+          SATEI_COUNT_CACHE[prefKey] = (SATEI_COUNT_CACHE[prefKey] || 0) + 1;
+        }
+      });
+    }).catch(function() {});
 })();
 
 // Supabaseから実需要数を取得してDEMAND_DATAを更新
