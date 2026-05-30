@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-05-30（コンテキスト継続セッション・第2回）
+
+- **対象**: inage/map.html・tools/2-akiya-hunter.html・inage/area-inagecho.html・area-naganuma.html・area-midoricho.html・CLAUDE.md
+- **施策**: Data Moat深化 / バグ修正 / ドキュメント更新
+
+### 実装内容
+
+1. **map.htmlポップアップに累計査定件数表示** (feat): SATEI_COUNT_CACHEをページ読み込み時にcard_usage_logから一括取得。town名→prefKey変換後に件数を表示（3件以上で表示）。Data Moatフィードバックループ完成。
+
+2. **稲毛団地チェッカー累計診断件数表示** (feat): calcInageChecker()内でsbLogCardUsage後にcard_usage_logをカウントして`#ic-checker-count`に表示。ペルソナ1（田中みちこさん）に「自分だけではない」という安心感を提供。
+
+3. **エリアページprefキーバグ修正** (fix): area-naganuma.html・area-midoricho.html・area-inagecho.htmlが存在しない`chiba_inage_naganuma`キーを使用していたため、正しいキーに修正（長沼町・緑町→`chiba_inage_other`、稲毛本町→`chiba_inage_station`）。AI査定ツールへのURL遷移でエリアが正しく初期選択されるようになった。
+
+4. **CLAUDE.md状態テーブル更新** (docs): 2026-05-28→2026-05-30に更新。用途地域・立地適正化レイヤー・Data Moat深化・Phase 2完成を反映。
+
+---
+
 ## 2026-05-30（コンテキスト継続セッション）
 
 - **対象**: tools/1-ai-satei.html
