@@ -136,37 +136,75 @@ async function sbGetTownPrices(townNames) {
     if (error) { console.warn('[Supabase] sbGetTownPrices:', error.message); return null; }
     if (!data || data.length === 0) return null;
 
-    // 直近2四半期を特定
-    const qNums = [...new Set(data.map(r => r.trade_year * 10 + r.trade_quarter))].sort((a,b) => b-a).slice(0, 2);
+    // 全四半期のqNumリスト（古い順）
+    const allQNums = [...new Set(data.map(r => r.trade_year * 10 + r.trade_quarter))].sort((a,b) => a-b);
+    // 直近2四半期（価格中央値計算用）
+    const recentQNums = allQNums.slice(-2);
+    // 最古2四半期（トレンド比較用）
+    const oldestQNums = allQNums.slice(0, 2);
 
-    const groups = {};
+    const recentGroups = {}, oldestGroups = {}, countByTown = {};
     let maxYear = 0, maxQ = 0;
     data.forEach(function(r) {
       const qNum = r.trade_year * 10 + r.trade_quarter;
-      if (!qNums.includes(qNum) || !r.price_per_sqm) return;
-      const key = r.town_name + '::' + r.property_type;
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(Math.round(r.price_per_sqm * 10000)); // 万円/㎡ → 円/㎡
-      if (r.trade_year > maxYear || (r.trade_year === maxYear && r.trade_quarter > maxQ)) {
-        maxYear = r.trade_year; maxQ = r.trade_quarter;
+      // 総件数カウント（全四半期）
+      if (r.price_per_sqm) countByTown[r.town_name] = (countByTown[r.town_name] || 0) + 1;
+      // 直近2四半期の価格
+      if (recentQNums.includes(qNum) && r.price_per_sqm) {
+        const key = r.town_name + '::' + r.property_type;
+        if (!recentGroups[key]) recentGroups[key] = [];
+        recentGroups[key].push(Math.round(r.price_per_sqm * 10000));
+        if (r.trade_year > maxYear || (r.trade_year === maxYear && r.trade_quarter > maxQ)) {
+          maxYear = r.trade_year; maxQ = r.trade_quarter;
+        }
+      }
+      // 最古2四半期の価格（トレンド計算用）
+      if (oldestQNums.includes(qNum) && r.price_per_sqm) {
+        const key = r.town_name + '::' + r.property_type;
+        if (!oldestGroups[key]) oldestGroups[key] = [];
+        oldestGroups[key].push(Math.round(r.price_per_sqm * 10000));
       }
     });
 
     const result = {};
-    Object.keys(groups).forEach(function(key) {
+    Object.keys(recentGroups).forEach(function(key) {
       const parts = key.split('::');
       const town = parts[0], type = parts[1];
-      const vals = groups[key].slice().sort((a,b) => a-b);
+      const vals = recentGroups[key].slice().sort((a,b) => a-b);
       const med = vals[Math.floor(vals.length / 2)];
       if (!result[town]) result[town] = { year: maxYear, quarter: maxQ };
       result[town][type] = med;
     });
 
-    // sqm = house/mansion/land の平均
+    // sqm = house/mansion/land の平均（直近）
     Object.keys(result).forEach(function(town) {
       const r = result[town];
       const vals = [r.house, r.mansion, r.land].filter(Boolean);
       if (vals.length) r.sqm = Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
+    });
+
+    // count（Supabase内の総取引件数）を付与
+    Object.keys(result).forEach(function(town) {
+      result[town].count = countByTown[town] || 0;
+    });
+
+    // trendLabel: 最古2四半期 vs 直近2四半期の中央値を比較して算出
+    Object.keys(result).forEach(function(town) {
+      const recentPrices = [], oldPrices = [];
+      ['house','mansion','land'].forEach(function(type) {
+        const rKey = town + '::' + type;
+        const oKey = town + '::' + type;
+        if (recentGroups[rKey]) recentPrices.push(...recentGroups[rKey]);
+        if (oldestGroups[oKey]) oldPrices.push(...oldestGroups[oKey]);
+      });
+      if (recentPrices.length >= 2 && oldPrices.length >= 2) {
+        const recentMed = recentPrices.sort((a,b)=>a-b)[Math.floor(recentPrices.length/2)];
+        const oldMed    = oldPrices.sort((a,b)=>a-b)[Math.floor(oldPrices.length/2)];
+        const change = (recentMed - oldMed) / oldMed;
+        if (change > 0.03)       result[town].trend = 'up';
+        else if (change < -0.03) result[town].trend = 'down';
+        else                     result[town].trend = 'flat';
+      }
     });
 
     return Object.keys(result).length > 0 ? result : null;
