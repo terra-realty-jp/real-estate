@@ -263,25 +263,29 @@ CREATE TABLE area_buyer_count (
 
 ## 実装フェーズ（優先順位）
 
-### 現在の実装状況（2026-05-30時点）
+### 現在の実装状況（2026-05-31時点）
 
 | 施策 | 状態 | 詳細 |
 |------|------|------|
-| ① 相場マップ | ✅ UI完成 / ⚠️ 実データ空 | GeoJSON・静的フォールバックデータで動作中。用途地域(A29・350件)・立地適正化(A50・19件)レイヤー追加済み。Supabase `inage_properties` に国交省実取引データ未投入（MLIT_API_KEY必要） |
-| ② 稲毛団地チェッカー | ✅ 完成 | `tools/2-akiya-hunter.html` にタブ追加・スコア計算・Supabaseログ・累計診断件数フィードバック済み |
-| ③ Q&A掲示板 | ✅ 完成 | `inage/qa.html` 29件サンプル・投稿フォーム（Supabase INSERT）・カテゴリ/エリアフィルター・view_count RPC実装済み |
-| ⑤ ローカルマッチング | ✅ 完成 | `tools/3-owner-direct.html` 稲毛区需要タブ・`area_buyer_count` INSERT・売主フォーム `inage/sell.html`・投資家プロフィール登録完成 |
-| ④ メール通知 | ✅ 完成（Phase 1+2） | `inage/notify.html` 登録フォーム・`notify_subscribers` INSERT・GitHub Actions `inage-email-notify.yml` + Resend API自動配信実装済み |
-| Data Moat深化 | ✅ 完成 | card_usage_logフィードバックループ: AI査定エリア別累計件数・map.htmlポップアップ査定件数・稲毛団地チェッカー累計件数・notify登録者数 表示済み |
+| ① 相場マップ | ✅ UI完成 / ⚠️ 実データ空 | GeoJSON・静的フォールバックデータで動作中。用途地域・立地適正化・津波浸水レイヤー追加済み。`inage_properties` に国交省実取引データ未投入（MLIT_API_KEY必要） |
+| ② 稲毛団地チェッカー | ✅ 完成 | `tools/2-akiya-hunter.html` タブ追加・スコア計算・Supabaseログ・累計診断件数フィードバック済み |
+| ③ Q&A掲示板 | ✅ 完成 | `inage/qa.html` サンプル投稿・Supabase INSERT・カテゴリ/エリアフィルター・view_count RPC実装済み |
+| ④ メール通知 | ✅ 完成（Phase 1+2） | `inage/notify.html` 登録フォーム・GitHub Actions + Resend API自動配信実装済み |
+| ⑤ ローカルマッチング | ✅ 完成 | `tools/3-owner-direct.html` 稲毛区需要タブ（町丁目別）・`area_buyer_count` INSERT・売主フォーム `inage/sell.html`・投資家プロフィール登録完成 |
+| 相続税ツール稲毛区連携 | ✅ 完成 | `tools/6-sozoku-zei.html` 稲毛団地FAQ・空き家特例説明・souzoku.html/map.htmlへのリンク実装済み |
+| Data Moat深化 | ✅ 完成 | card_usage_logフィードバックループ: AI査定エリア別累計件数・相場マップポップアップ査定件数・稲毛団地チェッカー累計件数・notify登録者数 表示済み |
+| UX構造刷新 | ✅ 完成（2026-05-31） | `index.html`をエリア選択ファーストに全面刷新。千葉市6区カード（稲毛区のみ稼働）→ `inage/map.html`（相場マップが入口）→ 各ツール（次のステップバー）の流れを確立。将来の他区・他市拡張に対応したスケーラブル構造 |
+| ツール間接続 | ✅ 完成（2026-05-31） | Tools 1・2・3・5・6 + map.html に「次のステップ」固定バーを追加。ツール同士がシームレスに連結 |
+| 賃貸管理ツール（Tool 4） | ✅ フッター格下げ | TERRA REALTYの事業（売買仲介）と無関係のため、メインナビから除外。フッターにのみリンク残存 |
 | **施策① 実データ投入** | ⚠️ **MLIT_API_KEY待ち** | `MLIT_API_KEY` 取得後 `node scripts/fetch-inage-properties.js` でSupabaseに実取引データを投入 |
 
 ### 次の実装優先順位
 
 | 優先度 | タスク | 理由 |
 |--------|--------|------|
-| 1 | **施策① 実データ投入** | `MLIT_API_KEY` 取得後 `node scripts/fetch-inage-properties.js` でSupabaseに実取引データを投入 |
-| 2 | **エリアページSEO強化** | `inage/area-*.html` 14エリアページのコンテンツ品質・内部リンク確認 |
-| 3 | **相続税ツール連携強化** | `tools/6-sozoku-zei.html` と稲毛区固有情報の連携 |
+| 1 | **施策① 実データ投入** | `MLIT_API_KEY` 取得後 `node scripts/fetch-inage-properties.js` 実行。相場マップが本物のデータで動く |
+| 2 | **エリアページに「次のステップ」バー追加** | `inage/area-*.html` 12本が孤立。map.html・ツールへの導線はあるがnxt-barがない |
+| 3 | **他区への拡張準備** | 中央区・美浜区等のデータ収集・ページ設計 |
 
 **実装ルール:**
 - 1機能 = 1featureブランチ（新規機能の場合）
