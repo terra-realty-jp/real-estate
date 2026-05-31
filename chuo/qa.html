@@ -503,13 +503,43 @@ function submitQuestion() {
         card.setAttribute('data-town', q.town_name || '');
         var catCls = CAT_CLASS[q.category] || 'cat-sell';
         var dateStr = q.created_at ? q.created_at.slice(0, 7).replace('-', '年') + '月' : '';
-        card.innerHTML = '<div class="qa-card-header" onclick="toggleQA(this.parentElement)">' +
-          '<span class="qa-cat-badge ' + catCls + '">' + (q.category || '') + '</span>' +
-          '<div class="qa-title">' + q.title + '</div></div>' +
-          '<div class="qa-meta">' +
-          (q.town_name ? '<span class="qa-town">📍 ' + q.town_name + '</span>' : '') +
-          '<span class="qa-date">' + dateStr + '</span></div>' +
-          '<div class="qa-body"><p>' + q.body + '</p></div>';
+
+        var header = document.createElement('div');
+        header.className = 'qa-card-header';
+        header.onclick = function() { toggleQA(card); };
+
+        var badge = document.createElement('span');
+        badge.className = 'qa-cat-badge ' + catCls;
+        badge.textContent = q.category || '';
+        header.appendChild(badge);
+
+        var titleDiv = document.createElement('div');
+        titleDiv.className = 'qa-title';
+        titleDiv.textContent = q.title || '';
+        header.appendChild(titleDiv);
+        card.appendChild(header);
+
+        var meta = document.createElement('div');
+        meta.className = 'qa-meta';
+        if (q.town_name) {
+          var town = document.createElement('span');
+          town.className = 'qa-town';
+          town.textContent = '📍 ' + q.town_name;
+          meta.appendChild(town);
+        }
+        var dateSpan = document.createElement('span');
+        dateSpan.className = 'qa-date';
+        dateSpan.textContent = dateStr;
+        meta.appendChild(dateSpan);
+        card.appendChild(meta);
+
+        var bodyDiv = document.createElement('div');
+        bodyDiv.className = 'qa-body';
+        var p = document.createElement('p');
+        p.textContent = q.body || '';
+        bodyDiv.appendChild(p);
+        card.appendChild(bodyDiv);
+
         list.insertBefore(card, list.firstChild);
       });
     }).catch(function() {});
