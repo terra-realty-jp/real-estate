@@ -21,28 +21,39 @@ const MLIT_API_KEY = process.env.MLIT_API_KEY || '';
 const CITY_CODE = '12103'; // 千葉市稲毛区
 
 // 稲毛区内の主要町丁目 → town_name の正規化マップ
-// includes() による部分一致: 例) '作草部町'.includes('作草部') = true
+// includes() による部分一致。長い（specific）キーを先に書くこと。
+// 例: '稲毛本町'.includes('稲毛') = true なので '稲毛本町' を '稲毛' より先に置く
 const TOWN_NORMALIZE = {
-  '穴川':     '穴川',    // 穴川, 穴川町, 穴川1〜4丁目
-  '小仲台':   '小仲台',  // 小仲台, 小仲台1〜6丁目
-  '小中台':   '小仲台',  // 小中台町（旧称・API返却値）→ 小仲台
-  '天台':     '天台',    // 天台, 天台町
-  '長沼町':   '長沼町',  // 長沼町
-  '作草部':   '作草部',  // 作草部, 作草部町
-  '稲毛本町': '稲毛本町',
+  // ── 主要エリア（specific なキーを先に） ──
+  '稲毛本町': '稲毛本町',  // 稲毛本町1〜5丁目
+  '稲毛東':   '稲毛本町',  // 稲毛東1〜4丁目
+  '稲毛町':   '稲毛本町',  // 稲毛町（旧称）
+  '小仲台':   '小仲台',    // 小仲台1〜8丁目
+  '小中台':   '小仲台',    // 小中台町（旧称）
   '宮野木町': '宮野木町',
-  '緑町':     '緑町',
-  '轟町':     '轟町',
-  '黒砂台':   '黒砂台',
-  '柏台':     '柏台',
-  '千草台':   '千草台',
-  '萩台':     '萩台町',  // 萩台町
-  // 追加マッピング（旧称・隣接地区）
-  '稲毛東':   '稲毛本町', // 稲毛東1〜4丁目 → JR稲毛駅東側
-  '稲毛町':   '稲毛本町', // 稲毛町 → JR稲毛駅周辺
-  '園生':     '轟町',    // 園生町 → 轟川沿い・轟町に近い
-  '山王町':   '穴川',    // 山王町 → 穴川エリア南部
-  '山王':     '穴川',    // 山王（丁目あり）
+  '長沼町':   '長沼町',
+  '作草部':   '作草部',    // 作草部, 作草部町, 作草部1〜2丁目
+  '黒砂台':   '黒砂台',    // 黒砂台1〜3丁目
+  '千草台':   '千草台',    // 千草台1〜4丁目
+  '萩台':     '萩台町',    // 萩台町
+  '穴川':     '穴川',      // 穴川, 穴川町, 穴川1〜4丁目
+  '天台':     '天台',      // 天台1〜6丁目
+  '轟町':     '轟町',      // 轟町1〜5丁目
+  '緑町':     '緑町',      // 緑町1〜3丁目
+  '柏台':     '柏台',      // 柏台1〜3丁目
+
+  // ── 追加マッピング（旧称・隣接地区） ──
+  '山王町':   '穴川',      // 山王町 → 穴川エリア南部
+  '山王':     '穴川',      // 山王1〜2丁目
+  '園生':     '轟町',      // 園生町 → 轟川沿い
+  '花園':     '稲毛本町',  // 花園1〜3丁目 → JR稲毛駅東側
+  '高品':     '長沼町',    // 高品町 → 稲毛区北部・長沼町に隣接
+  '六方':     '長沼町',    // 六方町 → 競馬場近く・稲毛区北東部
+  '長作':     '長沼町',    // 長作町 → 稲毛区北部
+  '小深':     '小仲台',    // 小深町 → 小仲台の北側
+  '茨菰':     '宮野木町',  // 茨菰町 → 稲毛区北西部
+  // '稲毛' は最後: 稲毛1〜3丁目など上記で拾えない「稲毛」を含む地名用
+  '稲毛':     '稲毛本町',  // 稲毛1〜3丁目（稲毛本町・東・町は上で拾済み）
 };
 
 // 直近 N 四半期のリストを返す（古い順）
@@ -180,6 +191,7 @@ async function fetchInageData(quarters) {
 
 function transformRecords(rawData, fallbackYear, fallbackQuarter) {
   const rows = [];
+  const unmapped = {}; // 正規化できなかった地名をカウント
   for (const r of rawData) {
     const propertyType = classifyType(r.Type);
     if (!propertyType) continue;
@@ -191,7 +203,11 @@ function transformRecords(rawData, fallbackYear, fallbackQuarter) {
     if (!price || price < 100 || price > 100000) continue; // 明らかな異常値除外
     if (areaSqm && (areaSqm < 10 || areaSqm > 5000)) continue;
 
-    const townName = normalizeTown(r.DistrictName) || '稲毛区その他';
+    const normalized = normalizeTown(r.DistrictName);
+    if (!normalized && r.DistrictName) {
+      unmapped[r.DistrictName] = (unmapped[r.DistrictName] || 0) + 1;
+    }
+    const townName = normalized || '稲毛区その他';
     const { year, quarter } = parseTradeTime(r);
 
     rows.push({
@@ -205,14 +221,39 @@ function transformRecords(rawData, fallbackYear, fallbackQuarter) {
       source:        'mlit',
     });
   }
+  // 未マッピング地名を表示（次回のTOWN_NORMALIZE改善に使う）
+  if (Object.keys(unmapped).length > 0) {
+    console.log('\n⚠ 未マッピング地名（「稲毛区その他」に分類）:');
+    Object.entries(unmapped).sort((a,b) => b[1]-a[1]).forEach(([name, cnt]) => {
+      console.log(`  ${cnt}件  "${name}"`);
+    });
+  }
   return rows;
 }
 
-async function upsertToSupabase(rows) {
+async function deleteExistingQuarters(quarters) {
+  // 処理対象の四半期の既存データを削除（重複INSERT防止）
+  for (const { year, q } of quarters) {
+    const path = `/rest/v1/inage_properties?trade_year=eq.${year}&trade_quarter=eq.${q}`;
+    try {
+      await supabaseRequest(path, 'DELETE', null);
+      console.log(`  削除: ${year}年Q${q} の既存データをクリア`);
+    } catch (e) {
+      console.warn(`  [WARN] DELETE ${year}Q${q}: ${e.message}`);
+    }
+    await new Promise(r => setTimeout(r, 200));
+  }
+}
+
+async function upsertToSupabase(rows, quarters) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     console.log('[SKIP] SUPABASE_URL/SUPABASE_SERVICE_KEY が未設定のためSupabase保存をスキップ');
     return;
   }
+  // 既存の同期間データを削除してから INSERT（重複防止）
+  console.log('\n既存データをクリア中...');
+  await deleteExistingQuarters(quarters);
+
   // バッチ100件ずつ INSERT
   const batchSize = 100;
   let saved = 0;
@@ -261,7 +302,7 @@ async function main() {
     console.log(`  ${town}: マンション${counts.mansion} 戸建${counts.house} 土地${counts.land}`);
   });
 
-  await upsertToSupabase(rows);
+  await upsertToSupabase(rows, quarters);
   console.log('\n完了');
 }
 
