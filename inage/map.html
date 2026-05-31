@@ -1250,10 +1250,14 @@ function buildPopupHtml(d, price) {
       + '<span style="color:#555">🏠 累計査定件数</span>'
       + '<span style="font-weight:700;color:#c0522b">' + sateiCount.toLocaleString() + '件</span></div>'
     : '';
+  var tradesHtml = d.trades
+    ? '<div class="popup-row"><span>取引件数</span><span><b>' + d.trades + '件</b><span style="font-size:10px;color:#999;font-weight:400;margin-left:4px">（直近3四半期）</span></span></div>'
+    : '';
   return '<div class="popup-town">' + d.name + '</div>' +
     '<div class="popup-price">' + Math.round(price/10000).toLocaleString() + '<span class="popup-unit">万円/㎡</span></div>' +
     '<div class="popup-row"><span>坪単価目安</span><span><b>' + tsubo + '万円/坪</b></span></div>' +
     '<div class="popup-row"><span>直近トレンド</span><span>' + d.trendLabel + '</span></div>' +
+    tradesHtml +
     '<div class="popup-row"><span>種別</span><span>' + typeLabel + '</span></div>' +
     demandHtml +
     yieldHtml +
@@ -1667,6 +1671,13 @@ function highlightFromUrl() {
       if (d.mansion) { t.types.mansion = d.mansion; updated = true; }
       if (d.land)    { t.types.land    = d.land;    updated = true; }
       if (d.sqm)     { t.sqm           = d.sqm;     updated = true; }
+      // Supabase実件数でtradesを更新（円サイズ・件数表示に使用）
+      if (d.count)   { t.trades        = d.count; }
+      // Supabaseデータから算出したトレンドで上書き
+      if (d.trend) {
+        t.trend = d.trend;
+        t.trendLabel = d.trend === 'up' ? '↑ 上昇' : d.trend === 'down' ? '↓ 軟調' : '→ 横ばい';
+      }
       if (d.year > maxYear || (d.year === maxYear && d.quarter > maxQ)) { maxYear = d.year; maxQ = d.quarter; }
     });
     if (!updated) return;
