@@ -6022,3 +6022,25 @@ investor_profiles (id, email, town_interests[], property_types[], budget_max, mi
    - sw.js: network-first戦略でオフライン対応
    - 全ページにmanifestリンク・theme-color・SW登録を追加
    - Chromeの「ホーム画面に追加」機能が利用可能に
+
+---
+
+## 2026-05-31 他区拡張準備・GitHub Actions Node.js 24対応
+
+- **対象**: `.github/workflows/*.yml` × 7, `chuo/index.html`, `mihama/index.html`, `midori/index.html`, `hanami/index.html`, `wakaba/index.html`, `index.html`
+- **施策**: 他区拡張準備（優先度1）/ Node.js 24対応（優先度2）
+
+### 実装内容
+
+1. **GitHub Actions Node.js 20 → 24 対応** (chore: 7e0e980)
+   - 対象7ファイル: fetch-inage-properties.yml, update-area-prices.yml, update-interest-rates.yml, update-koji-prices.yml, weekly-analytics.yml, inage-email-notify.yml, match-notify.yml
+   - 2026年9月の必須化に先行対応
+
+2. **千葉市5区 先行通知ページ新規作成** (feat: e67af88)
+   - `chuo/index.html`: 中央区（千葉中央・蘇我・生浜）
+   - `mihama/index.html`: 美浜区（幕張・検見川浜・稲毛海岸）
+   - `midori/index.html`: 緑区（おゆみ野・土気・鎌取）
+   - `hanami/index.html`: 花見川区（花見川・幕張本郷・八千代台）
+   - `wakaba/index.html`: 若葉区（千城台・都賀・みつわ台）
+   - 各ページ: エリア別町丁目紹介・公開予定コンテンツ一覧・メール通知フォーム（notify_subscribers INSERT）・GA4イベント計測
+   - index.htmlの「準備中」カード → `<a>` タグでリンク化、ラベルを「データ収集中」に変更
