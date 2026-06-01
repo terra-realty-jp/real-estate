@@ -65,8 +65,8 @@
 ## プロジェクト概要
 
 - **サービス名**: 不動産かんたんツール（powered by TERRA REALTY）
-- **対象エリア**: 千葉市稲毛区（長沼町・天台・穴川・小仲台・作草部 等）
-- **ターゲット**: 稲毛区在住の40〜60代。昭和40〜50年代の団地・戸建てを持つ世帯が主軸
+- **対象エリア**: 千葉市6区（稲毛区・中央区・美浜区・緑区・花見川区・若葉区）※稲毛区が先行稼働・他区はデータ収集中
+- **ターゲット**: 千葉市在住の40〜60代。昭和40〜50年代の団地・戸建てを持つ世帯が主軸。稲毛区が主軸
 - **技術スタック**: HTML / CSS / Vanilla JavaScript + Supabase（DB・認証）
 - **インフラ**: GitHub Pages（静的ホスティング）/ GitHub Actions（API自動更新・将来の通知）
 - **ブランチ戦略**:
@@ -87,21 +87,48 @@ git branch  # 現在地を確認
 
 ```
 /
-├── index.html                   ← 汎用ツール入口（稲毛区バナー追加済み予定）
+├── index.html                   ← エリア選択ファースト（千葉市6区カード）
 ├── tools/
-│   ├── 1-ai-satei.html          ← AI物件査定（既存・変更なし）
-│   ├── 2-akiya-hunter.html      ← 空き家診断（施策②の稲毛団地タブを追加）
-│   ├── 3-owner-direct.html      ← マッチング（施策⑤の稲毛区絞り込みを追加）
-│   ├── 4-kanri-saas.html        ← 賃貸管理（既存・変更なし）
-│   └── 5-toushi-bunseki.html    ← 投資分析（既存・変更なし）
-├── inage/
-│   ├── index.html               ← 稲毛区ハブページ（NEW・施策①〜⑤への入口）
-│   ├── map.html                 ← 相場ヒートマップ（NEW・施策①）
-│   ├── qa.html                  ← Q&A掲示板（NEW・施策③）
-│   └── notify.html              ← メール通知登録（NEW・施策④）
+│   ├── 1-ai-satei.html          ← AI物件査定
+│   ├── 2-akiya-hunter.html      ← 空き家診断（稲毛団地チェッカータブ付き）
+│   ├── 3-owner-direct.html      ← マッチング（稲毛区需要タブ付き）
+│   ├── 4-kanri-saas.html        ← 賃貸管理（フッターのみ）
+│   ├── 5-toushi-bunseki.html    ← 投資分析
+│   └── 6-sozoku-zei.html        ← 相続税試算
+├── inage/                       ← 稲毛区（先行・フル実装）
+│   ├── index.html               ← 稲毛区ハブ
+│   ├── map.html                 ← 相場ヒートマップ（Supabase実データ216件）
+│   ├── qa.html                  ← Q&A掲示板（20件投入済み）
+│   ├── notify.html              ← メール通知（GitHub Actions自動配信）
+│   ├── sell.html                ← 売主物件登録
+│   ├── souzoku.html             ← 相続ガイド
+│   ├── baikyaku-guide.html      ← 売却ガイド
+│   ├── koubai-guide.html        ← 購入ガイド
+│   ├── chintai-guide.html       ← 賃貸ガイド
+│   ├── toushi-guide.html        ← 投資ガイド
+│   ├── akiya-guide.html         ← 空き家ガイド
+│   ├── sumai-kae.html           ← 住み替えガイド
+│   └── area-*.html              ← 12エリア個別ページ
+├── chuo/                        ← 中央区（データ収集中・先行通知受付）
+│   ├── index.html / qa.html / notify.html / map.html
+│   └── sell.html / baikyaku-guide.html / souzoku.html
+├── mihama/                      ← 美浜区（同上）
+├── midori/                      ← 緑区（同上）
+├── hanami/                      ← 花見川区（同上）
+├── wakaba/                      ← 若葉区（同上）
 ├── data/
-│   └── inage-geojson.json       ← 稲毛区町境界データ（静的ファイル）
-├── supabase-client.js           ← Supabase接続（既存）
+│   ├── inage-geojson.json       ← 稲毛区町境界
+│   ├── area-prices.json         ← エリア別単価（月次更新）
+│   └── interest-rates.json      ← 金利データ（月次更新）
+├── scripts/
+│   ├── fetch-inage-properties.js  ← 稲毛区MLIT取得（毎月自動）
+│   ├── fetch-ward-properties.js   ← 他5区MLIT取得（毎月5日自動）
+│   ├── seed-qa-all-wards.sql      ← Q&Aシードデータ（投入済み）
+│   └── send-inage-notify.js       ← メール配信
+├── schema-ward.sql              ← ward_propertiesテーブル定義
+├── supabase-client.js           ← Supabase接続（全ページ共通）
+├── llms.txt                     ← AI検索エンジン向けデータ（全6区対応）
+├── sitemap.xml                  ← 全50+ページ登録済み
 └── CLAUDE.md                    ← 本ファイル
 ```
 
@@ -191,6 +218,25 @@ CREATE TABLE area_buyer_count (
 #### `card_usage_log`（既存・継続）
 既存の実装をそのまま流用。変更不要。
 
+#### `ward_properties`（千葉市5区 取引データ）2026-06-01追加
+`fetch-ward-properties.js` で毎月5日自動取得。`schema-ward.sql` で作成済み。
+
+```sql
+CREATE TABLE ward_properties (
+  id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  ward            TEXT NOT NULL,           -- 中央区 / 花見川区 / 若葉区 / 緑区 / 美浜区
+  town_name       TEXT NOT NULL,
+  property_type   TEXT NOT NULL,           -- house / mansion / land
+  price           INTEGER,
+  area_sqm        NUMERIC,
+  price_per_sqm   NUMERIC,
+  trade_year      INTEGER,
+  trade_quarter   INTEGER,
+  source          TEXT DEFAULT 'mlit',
+  created_at      TIMESTAMPTZ DEFAULT now()
+);
+```
+
 ### RLSポリシー方針
 
 | テーブル | 一般ユーザー | 管理者 |
@@ -263,29 +309,34 @@ CREATE TABLE area_buyer_count (
 
 ## 実装フェーズ（優先順位）
 
-### 現在の実装状況（2026-05-31時点）
+### 現在の実装状況（2026-06-01時点）
 
 | 施策 | 状態 | 詳細 |
 |------|------|------|
-| ① 相場マップ | ✅ 完成 / ⚠️ データ品質課題 | UI・Supabase連携・フォールバック完成。`inage_properties` に216件投入済み（2025年Q2〜Q4）。ただし98件が「稲毛区その他」に分類されエリア特定不能。稲毛本町・千草台は0件 |
-| ② 稲毛団地チェッカー | ✅ 完成 | `tools/2-akiya-hunter.html` タブ追加・スコア計算・Supabaseログ・累計診断件数フィードバック済み |
-| ③ Q&A掲示板 | ✅ 完成 | `inage/qa.html` サンプル投稿・Supabase INSERT・カテゴリ/エリアフィルター・view_count RPC実装済み |
-| ④ メール通知 | ✅ 完成（Phase 1+2） | `inage/notify.html` 登録フォーム・GitHub Actions + Resend API自動配信実装済み |
-| ⑤ ローカルマッチング | ✅ 完成 | `tools/3-owner-direct.html` 稲毛区需要タブ（町丁目別）・`area_buyer_count` INSERT・売主フォーム `inage/sell.html`・投資家プロフィール登録完成 |
-| 相続税ツール稲毛区連携 | ✅ 完成 | `tools/6-sozoku-zei.html` 稲毛団地FAQ・空き家特例説明・souzoku.html/map.htmlへのリンク実装済み |
-| Data Moat深化 | ✅ 完成 | card_usage_logフィードバックループ: AI査定エリア別累計件数・相場マップポップアップ査定件数・稲毛団地チェッカー累計件数・notify登録者数 表示済み |
-| UX構造刷新 | ✅ 完成（2026-05-31） | `index.html`をエリア選択ファーストに全面刷新。千葉市6区カード（稲毛区のみ稼働）→ `inage/map.html`（相場マップが入口）→ 各ツール（次のステップバー）の流れを確立。将来の他区・他市拡張に対応したスケーラブル構造 |
-| ツール間接続 | ✅ 完成（2026-05-31） | Tools 1・2・3・5・6 + map.html に「次のステップ」固定バーを追加。ツール同士がシームレスに連結 |
-| 賃貸管理ツール（Tool 4） | ✅ フッター格下げ | TERRA REALTYの事業（売買仲介）と無関係のため、メインナビから除外。フッターにのみリンク残存 |
-| **実データ正規化** | ✅ 完了（2026-05-31） | TOWN_NORMALIZE拡充（花園・高品・六方・黒砂・長沼原町・稲丘・あやめ台等追加）。「稲毛区その他」98件→0件に解消。未マッピングログ機能追加。重複INSERT防止のDELETE処理追加 |
+| ① 稲毛区 相場マップ | ✅ 完成 | Supabase実データ216件・TOWN_NORMALIZE完備・動的トレンド表示・取引件数表示済み |
+| ② 稲毛団地チェッカー | ✅ 完成 | スコア計算・Supabaseログ・累計診断件数フィードバック済み |
+| ③ Q&A掲示板 | ✅ 完成 | 全6区対応・本物のQ&A 20件投入済み（2026-06-01）・Supabase INSERT・フィルター・view_count RPC |
+| ④ メール通知 | ✅ 完成（Phase 1+2） | 稲毛区: GitHub Actions + Resend API自動配信済み。他5区: notify.html 先行登録受付中 |
+| ⑤ ローカルマッチング | ✅ 完成 | 稲毛区: area_buyer_count・sell.html・investor_profiles完成 |
+| 相続税ツール | ✅ 完成 | tools/6-sozoku-zei.html 稲毛団地FAQ・空き家特例・各区ガイドへのリンク |
+| UX構造刷新 | ✅ 完成 | index.htmlをエリア選択ファーストに全面刷新。6区カード→各区hub→ツールの流れ確立 |
+| ツール間接続 | ✅ 完成 | 全ツール + map.htmlに「次のステップ」固定バー |
+| **千葉市5区展開** | ✅ 完成（2026-06-01） | 中央・美浜・緑・花見川・若葉区 各7ページ（hub/qa/notify/map/sell/baikyaku/souzoku）= 計35ページ本番公開 |
+| **セキュリティ強化** | ✅ 完成（2026-06-01） | Supabase CDN SRI対応（@2.106.2・sha384）・稲毛区qa/notify/sellのCDN欠落修正・XSS修正 |
+| **Node.js 24対応** | ✅ 完成（2026-06-01） | GitHub Actions 全7ワークフローを node:20→24 に更新 |
+| **Google Search Console** | ✅ 完成（2026-06-01） | プロパティ登録・サイトマップ送信・主要5ページのインデックス登録リクエスト済み |
+| **AIインデックス** | ✅ 完成（2026-06-01） | llms.txt に全6区の相場データ・FAQ追加（ChatGPT/Perplexity対応） |
+| **他区MLITデータ基盤** | ✅ スクリプト完成 | fetch-ward-properties.js・schema-ward.sql・GitHub Actions ワークフロー完成。MLIT_API_KEY環境変数設定で即実行可能 |
 
 ### 次の実装優先順位
 
 | 優先度 | タスク | 理由 |
 |--------|--------|------|
-| 1 | **他区への拡張準備** | 中央区・美浜区等のデータ収集・ページ設計。index.htmlの「準備中」カードをアクティブ化 |
-| 2 | **GitHub Actions Node.js 24対応** | actions/checkout@v4, setup-node@v4 が2026年9月にNode.js 24必須化。早めに対応 |
-| 3 | **他区への拡張準備** | 中央区・美浜区等のデータ収集・ページ設計 |
+| 1 | **qa_answers 回答データ投入** | Q&A 20件は質問のみ。TERRAスタッフとしての回答をSupabase Table Editorから入力するとSEO・信頼性が大幅向上 |
+| 2 | **他区MLITデータ実取得** | MLIT_API_KEY を GitHub Secrets に設定 → `fetch-ward-properties.js` 実行で各区の実取引データを投入。map.htmlが本格稼働 |
+| 3 | **稲毛区 ai-satei.html の精度向上** | Phase 2: inage_propertiesの実取引データでAREA_UNITを動的更新。「この計算に使用した実取引件数:○件」表示 |
+| 4 | **他区エリア個別ページ** | 稲毛区のarea-*.htmlと同等のページを各区の主要エリアに作成（SEO長尾キーワード獲得） |
+| 5 | **notify_subscribers 活用** | 登録者への月次メール配信を他5区にも拡張（現在は稲毛区のみ） |
 
 **実装ルール:**
 - 1機能 = 1featureブランチ（新規機能の場合）
@@ -390,10 +441,10 @@ tail -50 /home/sishizaw/real-estate-project/improvement-log.md
 ### 優先順位（この順番を守る）
 
 1. **重大バグ・動作不良** → 最優先で修正
-2. **dev→main マージ** → 77コミット蓄積中。本番に未反映のため最優先でマージ
-3. **施策① 実データ投入** → MLIT_API_KEY があれば `node scripts/fetch-inage-properties.js` 実行
-4. **Data Moat深化** → card_usage_log蓄積データのフィードバックループ実装
-5. **施策④ Phase 2（Resend自動メール）** → 月次・週次の自動配信実装
+2. **dev→main マージ** → 本番に未反映のコミットがあれば最優先でマージ
+3. **他5区の完全実装** → 稲毛区と同等のUI/UX・実データ連携（後述の「他区実装方針」参照）
+4. **qa_answers 回答投入** → Supabase Table Editorから質問20件に回答を追記
+5. **稲毛区 ai-satei Phase 2** → 実取引データでAREA_UNIT動的更新
 
 ### 1サイクルの手順
 
@@ -512,3 +563,63 @@ tail -50 /home/sishizaw/real-estate-project/improvement-log.md
 - **1機能ずつコミット**。featureブランチ完成後にdevへマージ
 - **mainへの直接コミット禁止**。必ずdev経由でマージ
 - **どこかのサーバーにファイルをアップロードしない**
+
+---
+
+## 他区実装方針（2026-06-01 追加・最重要）
+
+### 現状の問題
+
+現在の他5区（中央・美浜・緑・花見川・若葉）は**稲毛区と同じUI/UXではない**。具体的な差分：
+
+| 機能 | 稲毛区 | 他5区（現状） |
+|------|--------|------------|
+| 相場マップ | ✅ Leaflet.js + GeoJSON + Supabaseリアルタイムデータ | ❌ 静的テキスト表（「データ収集中」） |
+| Q&A掲示板 | ✅ Supabase連携・カテゴリ/エリアフィルター | △ 同じコードだが区ごとのフィルタなし |
+| 通知メール | ✅ GitHub Actions自動配信 | ❌ 登録フォームのみ（配信なし） |
+| エリア個別ページ | ✅ 12ページ（area-*.html） | ❌ なし |
+| 実取引データ | ✅ 216件（inage_properties） | ❌ 0件（ward_propertiesは空） |
+
+### 完全実装のロードマップ
+
+#### Step 1：実データ取得（前提条件）
+`MLIT_API_KEY` を GitHub Secrets に登録 → `fetch-ward-properties.js` を手動実行（workflow_dispatch）または毎月5日の自動実行を待つ。
+
+千葉市区コード:
+- 中央区: 12101
+- 花見川区: 12102
+- 若葉区: 12104
+- 緑区: 12105
+- 美浜区: 12106
+
+#### Step 2：各区の map.html を稲毛区版と同等に
+- `inage/map.html` の構造をベースに、各区の GeoJSON + `ward_properties` クエリで再実装
+- 各区の GeoJSON 境界データを `data/` に追加（scripts/fetch-ward-geojson.js を新規作成）
+- ヒートマップ・ポップアップ・トレンドグラフを同等に実装
+
+#### Step 3：通知メール自動配信を他区に拡張
+- `send-inage-notify.js` を汎用化して `ward` パラメータ対応
+- GitHub Actions で各区の配信をスケジュール
+
+#### Step 4：エリア個別ページ作成
+- 各区の主要エリア（3〜5エリア）に `area-*.html` を作成
+- SEO長尾キーワード（「蘇我 不動産 相場」「千城台 団地 売却」等）で検索上位を狙う
+
+### GeoJSON データの取得方法
+
+```bash
+# 国土土地情報ダウンロードサービスから各区の境界データを取得
+# scripts/fetch-ward-geojson.js を実行（要: e-Stat API認証）
+node scripts/fetch-ward-geojson.js --ward=chuo   # 中央区
+node scripts/fetch-ward-geojson.js --ward=mihama  # 美浜区
+# etc.
+```
+
+### 実装優先区の判断基準
+
+Data Moat観点で最も価値が高い区から着手する:
+1. **若葉区（千城台）** → 「千城台団地 売却」の検索需要が高い・競合ゼロ
+2. **花見川区（八千代台）** → 「八千代台 築古 相続」需要・稲毛区に地理的に隣接
+3. **緑区（おゆみ野）** → 「あすみが丘 空き家」「おゆみ野 売却」の検索需要
+4. **美浜区（検見川浜）** → マンション売却需要・幕張エリアの投資家需要
+5. **中央区** → 競合が多いため最後
