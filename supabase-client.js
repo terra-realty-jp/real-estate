@@ -267,6 +267,86 @@ async function sbGetTownTrend(townName) {
 }
 
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// 千葉市各区 相場データ（ward_properties）
+// ─────────────────────────────────────────────
+// 戻り値: sbGetTownPrices と同形式。wardName='若葉区' など区名で絞り込む
+async function sbGetWardPrices(wardName, townNames) {
+  if (!_sbOK || !_db) return null;
+  try {
+    let q = _db
+      .from('ward_properties')
+      .select('town_name,property_type,price_per_sqm,trade_year,trade_quarter')
+      .eq('ward', wardName)
+      .order('trade_year', { ascending: false })
+      .order('trade_quarter', { ascending: false })
+      .limit(800);
+    if (townNames && townNames.length) q = q.in('town_name', townNames);
+    const { data, error } = await q;
+    if (error) { console.warn('[Supabase] sbGetWardPrices:', error.message); return null; }
+    if (!data || data.length === 0) return null;
+
+    const allQNums = [...new Set(data.map(r => r.trade_year * 10 + r.trade_quarter))].sort((a,b) => a-b);
+    const recentQNums = allQNums.slice(-2);
+    const oldestQNums = allQNums.slice(0, 2);
+    const recentGroups = {}, oldestGroups = {}, countByTown = {};
+    let maxYear = 0, maxQ = 0;
+
+    data.forEach(function(r) {
+      const qNum = r.trade_year * 10 + r.trade_quarter;
+      if (r.price_per_sqm) countByTown[r.town_name] = (countByTown[r.town_name] || 0) + 1;
+      if (recentQNums.includes(qNum) && r.price_per_sqm) {
+        const key = r.town_name + '::' + r.property_type;
+        if (!recentGroups[key]) recentGroups[key] = [];
+        recentGroups[key].push(Math.round(r.price_per_sqm * 10000));
+        if (r.trade_year > maxYear || (r.trade_year === maxYear && r.trade_quarter > maxQ)) {
+          maxYear = r.trade_year; maxQ = r.trade_quarter;
+        }
+      }
+      if (oldestQNums.includes(qNum) && r.price_per_sqm) {
+        const key = r.town_name + '::' + r.property_type;
+        if (!oldestGroups[key]) oldestGroups[key] = [];
+        oldestGroups[key].push(Math.round(r.price_per_sqm * 10000));
+      }
+    });
+
+    const result = {};
+    Object.keys(recentGroups).forEach(function(key) {
+      const parts = key.split('::');
+      const town = parts[0], type = parts[1];
+      const vals = recentGroups[key].slice().sort((a,b) => a-b);
+      const med = vals[Math.floor(vals.length / 2)];
+      if (!result[town]) result[town] = { year: maxYear, quarter: maxQ };
+      result[town][type] = med;
+    });
+    Object.keys(result).forEach(function(town) {
+      const r = result[town];
+      const vals = [r.house, r.mansion, r.land].filter(Boolean);
+      if (vals.length) r.sqm = Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
+      r.count = countByTown[town] || 0;
+    });
+    Object.keys(result).forEach(function(town) {
+      const recentPrices = [], oldPrices = [];
+      ['house','mansion','land'].forEach(function(type) {
+        const rKey = town + '::' + type;
+        if (recentGroups[rKey]) recentPrices.push(...recentGroups[rKey]);
+        if (oldestGroups[rKey]) oldPrices.push(...oldestGroups[rKey]);
+      });
+      if (recentPrices.length >= 2 && oldPrices.length >= 2) {
+        const recentMed = recentPrices.sort((a,b)=>a-b)[Math.floor(recentPrices.length/2)];
+        const oldMed = oldPrices.sort((a,b)=>a-b)[Math.floor(oldPrices.length/2)];
+        const change = (recentMed - oldMed) / oldMed;
+        result[town].trend = change > 0.03 ? 'up' : change < -0.03 ? 'down' : 'flat';
+      }
+    });
+    return Object.keys(result).length > 0 ? result : null;
+  } catch (e) {
+    console.warn('[Supabase] sbGetWardPrices exception:', e.message);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────
 // 稲毛区 買い手候補数（匿名集計）
 // ─────────────────────────────────────────────
 // area_buyer_count テーブルから町丁目×物件種別の件数を取得（認証不要・RLS SELECT許可）
