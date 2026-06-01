@@ -6023,24 +6023,49 @@ investor_profiles (id, email, town_interests[], property_types[], budget_max, mi
    - 全ページにmanifestリンク・theme-color・SW登録を追加
    - Chromeの「ホーム画面に追加」機能が利用可能に
 
+## 2026-06-01 09:56（週次ペルソナUXレビュー自動チェック）
+
+- **フェーズ**: Phase 1/2 定期UXレビュー
+- **改善内容**: 週次ペルソナUXレビューチェックリスト（GitHub Actions自動生成）
+- **直近7日のコミット数**: 71件
+
+### 仮ユーザーレビューチェックリスト
+
+> 以下を確認してください（実施後にチェックを入れてください）
+
+#### ペルソナ1: 田中みちこさん（52歳・専業主婦・スマホのみ・空き家相続）
+- [ ] Tool2（空き家活用診断）のTOP3カードを読んで「自分のことだ」と感じるか
+- [ ] 「家賃目安の立地選択」ドロップダウンが直感的に使えるか
+- [ ] 解釈ガイドの文言に専門用語が残っていないか
+
+#### ペルソナ2: 佐藤健一さん（47歳・会社員・投資初心者）
+- [ ] Tool5（投資シミュレーター）の「この数字が良いのか悪いのか」の判断基準が見えるか
+- [ ] 利回り・CF・DSCRの解釈ガイドが「なるほど」と思える内容か
+- [ ] 金利・物件価格のデフォルト値が2026年の実態に合っているか
+
+#### ペルソナ3: 鈴木幸子さん（58歳・パート・売却検討中）
+- [ ] Tool1（AI物件査定）で「売ったらいくら手取り？」が2タップ以内でわかるか
+- [ ] 手取り額・税金の計算結果が大きく・はっきり表示されているか
+- [ ] 入力項目が多すぎて途中で萎えないか（5項目以内が理想）
+
+### 先週のコミット（上位10件）
+- feat: 相場マップ動的トレンド・件数表示
+- feat: 相場マップ トレンド・取引件数をSupabaseデータで動的更新
+- docs: CLAUDE.md update
+- docs: CLAUDE.md 実データ正規化完了・次優先度更新
+- fix: TOWN_NORMALIZE 残14件対応
+- fix: TOWN_NORMALIZE 実行ログ判明の未マッピング地名を追加（黒砂・長沼原町・稲丘町・あやめ台）
+- fix: fetch-inage-properties 正規化改善
+- fix: fetch-inage-properties TOWN_NORMALIZE拡充・重複INSERT防止・未マッピングログ追加
+- Merge branch 'main' of https://github.com/shinji-japaaaan/real-estate
+- docs: CLAUDE.md update
+
+### レビュー結果メモ欄
+（レビュー担当者が実施後にここに結果を記入してください）
+
+- **実施日**:
+- **確認者**:
+- **発見した問題**:
+- **対応内容**:
+
 ---
-
-## 2026-05-31 他区拡張準備・GitHub Actions Node.js 24対応
-
-- **対象**: `.github/workflows/*.yml` × 7, `chuo/index.html`, `mihama/index.html`, `midori/index.html`, `hanami/index.html`, `wakaba/index.html`, `index.html`
-- **施策**: 他区拡張準備（優先度1）/ Node.js 24対応（優先度2）
-
-### 実装内容
-
-1. **GitHub Actions Node.js 20 → 24 対応** (chore: 7e0e980)
-   - 対象7ファイル: fetch-inage-properties.yml, update-area-prices.yml, update-interest-rates.yml, update-koji-prices.yml, weekly-analytics.yml, inage-email-notify.yml, match-notify.yml
-   - 2026年9月の必須化に先行対応
-
-2. **千葉市5区 先行通知ページ新規作成** (feat: e67af88)
-   - `chuo/index.html`: 中央区（千葉中央・蘇我・生浜）
-   - `mihama/index.html`: 美浜区（幕張・検見川浜・稲毛海岸）
-   - `midori/index.html`: 緑区（おゆみ野・土気・鎌取）
-   - `hanami/index.html`: 花見川区（花見川・幕張本郷・八千代台）
-   - `wakaba/index.html`: 若葉区（千城台・都賀・みつわ台）
-   - 各ページ: エリア別町丁目紹介・公開予定コンテンツ一覧・メール通知フォーム（notify_subscribers INSERT）・GA4イベント計測
-   - index.htmlの「準備中」カード → `<a>` タグでリンク化、ラベルを「データ収集中」に変更
