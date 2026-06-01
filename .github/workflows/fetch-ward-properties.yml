@@ -1,0 +1,34 @@
+name: 月次 千葉市各区 不動産取引データ取得
+
+on:
+  schedule:
+    # 毎月5日 09:30 JST (= UTC 00:30) — 稲毛区スクリプトの翌日
+    - cron: '30 0 5 * *'
+  workflow_dispatch:
+    inputs:
+      ward_code:
+        description: '区コード（省略=全区） 12101=中央 12102=花見川 12104=若葉 12105=緑 12106=美浜'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: 千葉市各区 取引データ取得
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          MLIT_API_KEY: ${{ secrets.MLIT_API_KEY }}
+          WARD_CODE: ${{ github.event.inputs.ward_code || '' }}
+        run: node scripts/fetch-ward-properties.js
