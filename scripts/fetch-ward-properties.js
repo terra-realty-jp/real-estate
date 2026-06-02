@@ -162,22 +162,61 @@ function supabaseRequest(path, method, body) {
   });
 }
 
+function classifyType(typeStr) {
+  if (!typeStr) return null;
+  if (typeStr.includes('マンション') || typeStr.includes('区分')) return 'mansion';
+  if (typeStr.includes('宅地(土地と建物)') || typeStr.includes('住宅')) return 'house';
+  if (typeStr.includes('宅地(土地)') || typeStr.includes('土地')) return 'land';
+  return null;
+}
+
+function parseTradeTime(item) {
+  // API は英語フィールド Period: "2024年第3四半期" を返す
+  const timeStr = item.Period || item.TimeOfTransaction || item['取引時点'] || '';
+  const m = timeStr.match(/(\d{4})年第(\d)四半期/);
+  if (m) return { year: parseInt(m[1]), quarter: parseInt(m[2]) };
+  // フォールバック: "2024年第１四半期" 形式（全角数字）
+  const m2 = timeStr.match(/(\d{4})年第([１２３４])四半期/);
+  if (m2) {
+    const qMap = { '１': 1, '２': 2, '３': 3, '４': 4 };
+    return { year: parseInt(m2[1]), quarter: qMap[m2[2]] || null };
+  }
+  return { year: null, quarter: null };
+}
+
 function parseRecord(item, normalizeMap, wardName) {
-  const town = normalizeTown(item['所在地名称'] || '', normalizeMap);
+  // API は英語フィールド名で返す（fetch-inage-properties.js と同じ）
+  const districtName = item.DistrictName || item['所在地名称'] || '';
+  const town = normalizeTown(districtName, normalizeMap);
   if (!town) return null;
-  const typeMap = { '宅地(土地と建物)': 'house', 'マンション等': 'mansion', '宅地(土地)': 'land' };
-  const propType = typeMap[item['種類']] || null;
+
+  const propType = classifyType(item.Type || item['種類'] || '');
   if (!propType) return null;
-  const price = parseInt(item['取引価格（総額）'] || '0', 10) / 10000;
-  const area = parseFloat(item['面積（㎡）'] || '0');
+
+  // TradePrice は円単位、万円に変換
+  const priceRaw = item.TradePrice || item['取引価格（総額）'] || '0';
+  const price = Math.round(Number(priceRaw) / 10000);
+  const area = parseFloat(item.Area || item['面積（㎡）'] || '0');
   if (price <= 0 || area <= 0) return null;
-  const pricePerSqm = Math.round((price / area) * 10) / 10;
-  const periodMap = { '第１四半期': 1, '第２四半期': 2, '第３四半期': 3, '第４四半期': 4 };
-  const [yearStr, periodStr] = (item['取引時点'] || '').split('年');
-  const tradeYear = parseInt(yearStr, 10);
-  const tradeQuarter = periodMap[periodStr?.trim()] || null;
+  if (price < 100 || price > 100000) return null; // 明らかな異常値除外
+  if (area < 10 || area > 5000) return null;
+
+  const pricePerSqm = Math.round((price * 10000) / area) / 10000; // 万円/㎡
+
+  const { year: tradeYear, quarter: tradeQuarter } = parseTradeTime(item);
   if (!tradeYear || !tradeQuarter) return null;
-  return { ward: wardName, town_name: town, property_type: propType, price: Math.round(price), area_sqm: area, price_per_sqm: pricePerSqm, trade_year: tradeYear, trade_quarter: tradeQuarter, source: 'mlit' };
+
+  return {
+    ward: wardName,
+    town_name: town,
+    property_type: propType,
+    price: price,
+    area_sqm: area,
+    price_per_sqm: pricePerSqm,
+    trade_year: tradeYear,
+    trade_quarter: tradeQuarter,
+    source: 'mlit',
+  };
 }
 
 async function processWard(cityCode) {
@@ -196,10 +235,11 @@ async function processWard(cityCode) {
       const items = data?.data || [];
       let count = 0;
       for (const item of items) {
-        const townRaw = item['所在地名称'] || '';
+        const townRaw = item.DistrictName || item['所在地名称'] || '';
+        const typeRaw = item.Type || item['種類'] || '';
         const rec = parseRecord(item, ward.normalize, ward.name);
         if (rec) { allRecords.push(rec); count++; }
-        else if (townRaw && !['農地', '林地', '工業用途'].includes(item['種類'])) {
+        else if (townRaw && !['農地', '林地', '工業用途'].some(t => typeRaw.includes(t))) {
           unmapped.add(townRaw.slice(0, 20));
         }
       }
