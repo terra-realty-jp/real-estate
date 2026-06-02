@@ -29,6 +29,28 @@
 
 ---
 
+## 2026-06-03 他5区に全ガイド展開＋稲毛区との構成一致を検証
+
+- **対象**: 他5区 `{akiya,chintai,koubai,toushi,sumai-kae}-guide`(計25本), 各 `index.html`, `sitemap.xml`
+- **施策**: 稲毛区とのページ構成・UI完全一致
+
+### 実装
+1. 若葉区の検証済みガイド構造を土台に、花見川/緑/美浜/中央の5ガイドを各区の正しい内容で作成（団地・路線・エリアを区ごとに事実適応）。
+2. 各区index.htmlに5ガイドのfeature-cardリンク・sitemap全25本登録。**main反映済み**。
+
+### 稲毛区との一致 検証結果（2026-06-03）
+| 項目 | 状態 |
+|---|---|
+| コアページ12種（index/map/qa/notify/sell/souzoku/baikyaku/akiya/chintai/koubai/toushi/sumai-kae） | **全5区一致 ✓** |
+| マップ重ね合わせ8種（洪水/土砂/高潮/津波/用途地域/標高/航空/立地適正化） | **全5区一致 ✓** |
+| マップ ヒートマップ＋実取引データ | **全5区一致 ✓**（ward_properties 2,078件） |
+| エリア個別ページ数 | inage12 / 各区2〜3（区固有の町数差・内容差） |
+| qa等の埋め込みQ&A量・JSON-LD FAQ | inageが多い（コンテンツ量差。テンプレ/UIは共通） |
+
+→ **構成・UIは一致**。残差は区固有のコンテンツ量（エリアページ数・Q&A件数）。
+
+---
+
 ## 2026-06-03 他5区マップに用途地域・立地適正化レイヤー追加（稲毛区と同一構成へ）
 
 - **対象**: `scripts/filter-yoto.py`, `scripts/filter-ritchi.py`, `data/yoto-*.geojson`, `data/ritchi-*.geojson`(各5区), 他5区 `map.html`
