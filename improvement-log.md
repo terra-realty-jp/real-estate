@@ -4,6 +4,47 @@
 
 ---
 
+## 2026-06-02（継続セッション） 他5区マップを稲毛区同等のGeoJSONヒートマップに
+
+- **対象**: `schema-ward.sql`, `scripts/fix-ward-grants.sql`(新), `scripts/download-estat-ward-geojson.py`(新), `scripts/fetch-ward-geojson.js`, `data/{chuo,hanami,wakaba,midori,mihama}-geojson.json`(新), 他5区 `map.html`, `scripts/seed-qa-answers.sql`
+- **施策**: ①相場マップ（他区実装・最重要）
+
+### 検証で判明した重大問題
+1. **ward_properties GRANT欠落**: fetch-ward-properties.js のINSERTが全件403（service_role権限なし）→テーブル空。anonもSELECT不可。MLITからは各区400〜480件取得成功していた。
+2. **GeoJSON全滅**: 旧Overpassスクリプトは丁目境界を取得できず全区0件。wakaba既存ファイルも実は空。
+3. **chuo map.html破損**: TOWN_DATAにlat/lng・typesが無くcircle描画もフィルタも不能。
+
+### 実装内容
+1. **seed-qa-answers.sql** (fix: 153c463): ドル引用符→単一引用符形式に修正。
+2. **GRANT修正** (fix: c413632): schema-ward.sqlにGRANT追加。fix-ward-grants.sql（Supabase実行用）作成。※実行はユーザー対応待ち。
+3. **GeoJSON生成** (feat: 7c21118): download-estat-ward-geojson.py 新規。e-Stat令和2年小地域shapefileから各区9〜10エリアの実ポリゴンを生成。町名正規化をfetch-ward-properties.jsと一致させward_propertiesと結合可能に。
+4. **ポリゴン描画移植** (feat: 7f26622/66c92da): wakaba/hanami/mihama にポリゴン+circleフォールバック実装。hanamiのgeojsonData未宣言+fetchスタブも修正。
+5. **chuo全面修復** (fix: 1df24ff): 9町をcentroid付きrichスキーマで再構築+ポリゴン描画。
+6. **TOWN_DATA拡充** (feat: 75da519): 他4区に不足町を追加。全5区でgeojson全エリアがポリゴン+価格表示。
+7. 全5区JS構文チェック済み。
+
+### 残タスク
+- ユーザーがfix-ward-grants.sql実行→Actionsワークフロー再実行で実データ投入（map.htmlトレンド本稼働）
+- 他4区のガイド5ページ×4区=20ページ作成（花見川→緑→美浜→中央の順）
+
+---
+
+## 2026-06-02（継続セッション） 若葉区に5ガイドページ追加（stage1）
+
+- **対象**: `wakaba/{akiya-guide,chintai-guide,koubai-guide,toushi-guide,sumai-kae}.html`(新), `wakaba/index.html`, `sitemap.xml`
+- **施策**: 他区ガイドページ（稲毛区同等の構成へ）
+
+### 実装内容 (feat: 5fd01c2)
+1. 若葉区に欠けていた5ガイドを作成（既存ward guideテンプレ準拠・若葉区固有内容＝千城台団地/都賀/みつわ台）。
+2. 各ページにFAQ/HowTo JSON-LD付与（SEO・AEO）。
+3. wakaba/index.html に5ガイドのfeature-cardリンク追加（従来は孤立していた）。
+4. sitemap.xml に5URL登録。
+5. 全5ページ JS構文・JSON-LD・sitemap XML 検証済み。
+
+→ これで若葉区は稲毛区とほぼ同等のページ構成（map/qa/notify/sell/baikyaku/souzoku + akiya/chintai/koubai/toushi/sumai-kae + エリア3ページ）。残4区は同テンプレで順次。
+
+---
+
 ## 2026-05-30（コンテキスト継続セッション・第2回）
 
 - **対象**: inage/map.html・tools/2-akiya-hunter.html・inage/area-inagecho.html・area-naganuma.html・area-midoricho.html・CLAUDE.md

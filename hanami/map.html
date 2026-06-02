@@ -635,6 +635,46 @@ var TOWN_DATA = [
     types: { house: 86000, mansion: null, land: 78000 },
     yieldRange: '6.5〜9.0%', yieldMin: 6.5,
     note: '花見川区北部の内陸エリア。農地・雑種地が残る。最寄り駅から遠くバス便のため地価は控えめ。'
+  },
+  {
+    id: 'kemigawa', name: '検見川',
+    lat: 35.649455, lng: 140.068554,
+    sqm: 135000,
+    trend: 'flat', trendLabel: '→ 横ばい',
+    trades: 14,
+    types: { house: 132000, mansion: 142000, land: 122000 },
+    yieldRange: '5.5〜7.0%', yieldMin: 5.5,
+    note: 'JR新検見川駅・京成検見川駅圏。総武線で都心アクセス良好。古くからの住宅地で実需が安定。'
+  },
+  {
+    id: 'yokodo', name: '横戸',
+    lat: 35.698928, lng: 140.11545,
+    sqm: 82000,
+    trend: 'down', trendLabel: '↓ 軟調',
+    trades: 6,
+    types: { house: 84000, mansion: null, land: 74000 },
+    yieldRange: '7.0〜9.5%', yieldMin: 7.0,
+    note: '花見川区最北部。八千代市に隣接する郊外住宅地。バス便中心で地価は手頃。'
+  },
+  {
+    id: 'takeishi', name: '武石',
+    lat: 35.670181, lng: 140.062668,
+    sqm: 115000,
+    trend: 'flat', trendLabel: '→ 横ばい',
+    trades: 9,
+    types: { house: 116000, mansion: 120000, land: 104000 },
+    yieldRange: '6.0〜7.5%', yieldMin: 6.0,
+    note: '幕張本郷駅圏の住宅地。幕張新都心へのアクセスが良く、ファミリー層の実需が中心。'
+  },
+  {
+    id: 'kotehashi', name: '犢橋',
+    lat: 35.671684, lng: 140.104402,
+    sqm: 90000,
+    trend: 'flat', trendLabel: '→ 横ばい',
+    trades: 7,
+    types: { house: 90000, mansion: null, land: 80000 },
+    yieldRange: '6.5〜8.5%', yieldMin: 6.5,
+    note: '花見川区中部の内陸エリア。こてはし台団地に隣接。広い敷地の戸建てが手頃な価格帯で取得できる。'
   }
 ];
 
@@ -764,6 +804,7 @@ var _ESC_MAP = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
 function _esc(s){return String(s).replace(/[&<>"']/g,function(c){return _ESC_MAP[c];});}
 
 var markers = [];
+var geojsonData = null;
 
 var TOWN_MAP = {};
 TOWN_DATA.forEach(function(d) { TOWN_MAP[d.name] = d; });
@@ -829,28 +870,75 @@ function buildPopupHtml(d, price) {
     '<a href="mailto:terra.realty.iam@gmail.com?subject=' + encodeURIComponent(d.name + 'の物件査定希望') + '&body=' + mailBody + '" style="display:block;background:rgba(0,0,0,0.06);color:#333;text-align:center;padding:6px 12px;border-radius:7px;font-size:11px;text-decoration:none">' + d.name + 'で無料相談する</a>';
 }
 
+// GeoJSONの町名はe-Stat変換時にTOWN_DATAと同じ正規化名で出力済み。念のため恒等関数。
+function normalizeTownName(s) { return (s || '').trim(); }
+
 function renderMarkers() {
   markers.forEach(function(m) { map.removeLayer(m); });
   markers = [];
 
-  TOWN_DATA.forEach(function(d) {
-    var price = getFilteredPrice(d);
-    if (!price) return;
-    var radius = 10 + Math.min(d.trades, 50) * 0.5;
-    var circle = L.circleMarker([d.lat, d.lng], {
-      radius: radius,
-      fillColor: priceToColor(price),
-      color: '#fff',
-      weight: 2,
-      fillOpacity: 0.82
-    }).bindPopup(buildPopupHtml(d, price)).addTo(map);
+  if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
+    // --- GeoJSONポリゴンモード（稲毛区と同等）---
+    var labeledTowns = {};
 
-    var label = L.divIcon({
-      html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none">' + d.name + '</div>',
-      className: '', iconAnchor: [-radius - 4, 8]
+    geojsonData.features.forEach(function(feature) {
+      var osmName = (feature.properties && feature.properties.name) || '';
+      var townName = normalizeTownName(osmName);
+      if (!townName) return;
+      var d = TOWN_MAP[townName];
+      if (!d) return;
+
+      var price = getFilteredPrice(d);
+      if (!price) return;
+
+      var poly = L.geoJSON(feature, {
+        style: {
+          fillColor: priceToColor(price),
+          fillOpacity: 0.65,
+          color: '#fff',
+          weight: 1.5
+        }
+      }).bindPopup(buildPopupHtml(d, price)).addTo(map);
+      poly._townName = townName;
+      markers.push(poly);
+
+      if (!labeledTowns[townName]) {
+        var props = feature.properties;
+        var center = (props.centroid_lat && props.centroid_lng)
+          ? L.latLng(props.centroid_lat, props.centroid_lng)
+          : poly.getBounds().getCenter();
+        var tsubo = sqmToTsubo(price);
+        var label = L.divIcon({
+          html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none;text-align:center">'
+            + townName + '<br><span style="font-size:10px">' + tsubo + '万/坪</span></div>',
+          className: '', iconAnchor: [24, 14]
+        });
+        markers.push(L.marker([center.lat, center.lng], { icon: label, interactive: false }).addTo(map));
+        labeledTowns[townName] = true;
+      }
     });
-    markers.push(circle, L.marker([d.lat, d.lng], { icon: label, interactive: false }).addTo(map));
-  });
+
+  } else {
+    // --- フォールバック: circleMarker ---
+    TOWN_DATA.forEach(function(d) {
+      var price = getFilteredPrice(d);
+      if (!price) return;
+      var radius = 10 + Math.min(d.trades, 50) * 0.5;
+      var circle = L.circleMarker([d.lat, d.lng], {
+        radius: radius,
+        fillColor: priceToColor(price),
+        color: '#fff',
+        weight: 2,
+        fillOpacity: 0.82
+      }).bindPopup(buildPopupHtml(d, price)).addTo(map);
+
+      var label = L.divIcon({
+        html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none">' + d.name + '</div>',
+        className: '', iconAnchor: [-radius - 4, 8]
+      });
+      markers.push(circle, L.marker([d.lat, d.lng], { icon: label, interactive: false }).addTo(map));
+    });
+  }
 }
 
 function setFilter(type, btn) {
@@ -866,8 +954,17 @@ function onTownSearch(query) {
   var q = query.trim();
   var d = TOWN_DATA.find(function(t) { return t.name.includes(q) || t.id.includes(q); });
   if (!d) return;
-  map.setView([d.lat, d.lng], 15);
-  markers.forEach(function(m) { if (m.getLatLng && m.getLatLng().lat === d.lat) m.openPopup(); });
+  if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
+    var townPolys = markers.filter(function(m) { return m._townName === d.name && m.getBounds; });
+    if (townPolys.length === 0) { map.setView([d.lat, d.lng], 15); return; }
+    var combined = townPolys[0].getBounds();
+    townPolys.forEach(function(m) { combined.extend(m.getBounds()); });
+    map.fitBounds(combined, { maxZoom: 15 });
+    townPolys[0].openPopup(combined.getCenter());
+  } else {
+    map.setView([d.lat, d.lng], 15);
+    markers.forEach(function(m) { if (m.getLatLng && m.getLatLng().lat === d.lat) m.openPopup(); });
+  }
 }
 
 var _trendChart = null;
@@ -1125,7 +1222,7 @@ function highlightFromUrl() {
 
   fetch('../data/hanami-geojson.json')
     .then(function(r) { if (!r.ok) throw new Error('no file'); return r.json(); })
-    .then(function() { /* GeoJSON存在時は将来対応 */ })
+    .then(function(data) { geojsonData = data; renderMarkers(); })
     .catch(function() { /* circleMarkerモードで継続 */ });
 })();
 
