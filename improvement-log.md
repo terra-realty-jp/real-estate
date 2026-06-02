@@ -6114,3 +6114,48 @@ investor_profiles (id, email, town_interests[], property_types[], budget_max, mi
 
 5. **本番リリース** (merge: ab4a042)
    - dev→main マージ完了。GitHub Pages公開済み。
+
+---
+
+## 2026-06-02（続き） 美浜区・中央区エリアページ5件 + Hub連携 + llms.txt更新
+
+- **対象**: `mihama/area-*.html`×3, `chuo/area-*.html`×2, 各区`index.html`×5, `llms.txt`, `scripts/seed-qa-answers.sql`, `sitemap.xml`
+- **施策**: 他区エリア個別ページ（優先度4継続）・AI検索最適化
+
+### 実装内容
+
+1. **美浜区 エリアページ3件** (feat: af5b040)
+   - `area-kemigawa.html`: 検見川浜（海浜最高地価210,000円/㎡・学区評価高・投資4〜5.5%）
+   - `area-isobe.html`: 磯辺（公団〜新築混在・稲毛海岸駅近・投資5〜6.5%）
+   - `area-makuhari.html`: 幕張（幕張新都心・外国人需要・民泊・投資4.5〜6%）
+
+2. **中央区 エリアページ2件** (feat: af5b040)
+   - `area-soga.html`: 蘇我（JR3路線・フクダ電子アリーナ・投資5〜7%）
+   - `area-chuo.html`: 千葉中央（行政中枢・公務員需要・投資4.5〜6%）
+
+3. **各区hub エリアリンク追加** (feat: 28082f4)
+   - wakaba/midori/hanami/mihama/chuo の index.html にエリアページへの直接リンクを追加
+
+4. **llms.txt 更新** (feat: ea32166)
+   - 5区13エリアのページ情報をAI検索エンジン向けに追記
+
+5. **scripts/seed-qa-answers.sql 生成** (feat: ea32166)
+   - qa_questions 7件への回答SQLをSupabase実行用に生成
+   - タイトルで自動照合する仕組み
+
+6. **sitemap.xml 更新** (chore: 28082f4)
+   - 87ページに更新（+10件）
+
+7. **本番リリース2回目** (merge: 3831f41)
+   - dev→main マージ完了
+
+### 全エリア個別ページ実装状況（2026-06-02時点）
+| 区 | エリアページ | 内容 |
+|---|---|---|
+| 稲毛区 | 12ページ（既存） | 穴川・天台・小仲台・作草部・長沼町・緑町・轟町・宮野木町・千草台・萩台町・柏台・稲毛本町 |
+| 若葉区 | 3ページ ✅ | 千城台・都賀・みつわ台 |
+| 緑区 | 3ページ ✅ | おゆみ野・あすみが丘・土気 |
+| 花見川区 | 2ページ ✅ | 幕張本郷・八千代台 |
+| 美浜区 | 3ページ ✅ | 検見川浜・磯辺・幕張 |
+| 中央区 | 2ページ ✅ | 千葉中央・蘇我 |
+| **合計** | **25ページ** | sitemap含めて87ページ公開中 |
