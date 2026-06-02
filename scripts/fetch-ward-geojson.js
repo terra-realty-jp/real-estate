@@ -65,9 +65,15 @@ const WARDS = [
 ];
 
 // Overpass クエリ（区名で絞り込み）
+// ※ 区名（例: 中央区）だけだと全国の同名区と衝突して解決に失敗するため、
+//   親自治体「千葉市」(admin_level 6) の配下にスコープしてから区を特定する。
 function buildQuery(wardName) {
   return `[out:json][timeout:90];
-area["name"="${wardName}"]["admin_level"="7"]->.ward;
+area["name"="千葉市"]["admin_level"="6"]->.city;
+(
+  relation["boundary"="administrative"]["admin_level"="7"]["name"="${wardName}"](area.city);
+)->.wardrel;
+.wardrel map_to_area->.ward;
 (
   relation["boundary"="administrative"]["admin_level"="8"](area.ward);
   way["boundary"="administrative"]["admin_level"="8"](area.ward);

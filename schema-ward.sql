@@ -28,8 +28,11 @@ ALTER TABLE ward_properties ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "ward_properties_select" ON ward_properties
   FOR SELECT USING (true);
 
--- サービスロール（GitHub Actions）: 全権限
--- ※ SUPABASE_SERVICE_KEY を使う場合は RLS を bypass するため追加設定不要
+-- ★テーブルレベルの GRANT（RLSポリシーとは別に必須）
+-- これが無いと anon は SELECT 不可、service_role は INSERT 不可（42501 permission denied）
+-- inage_properties は作成時に自動付与されたが、本テーブルは明示が必要。
+GRANT SELECT ON public.ward_properties TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.ward_properties TO service_role;
 
 -- 確認クエリ
 -- SELECT ward, COUNT(*), AVG(price_per_sqm) FROM ward_properties GROUP BY ward ORDER BY ward;
