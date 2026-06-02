@@ -3,16 +3,21 @@
 国土数値情報 A50（立地適正化計画）GeoJSONから稲毛区エリアを抽出するスクリプト。
 A50のzipにはGeoJSONが同梱されているのでGML変換不要。
 
-使用: python3 scripts/filter-ritchi.py <input.geojson> <output.geojson>
+使用: python3 scripts/filter-ritchi.py <input.geojson> <output.geojson> [bbox]
+  bbox: "north,south,east,west"（省略時は稲毛区）
 """
 import json
 import sys
 
 SRC  = sys.argv[1] if len(sys.argv) > 1 else '/tmp/a50_src.geojson'
 DEST = sys.argv[2] if len(sys.argv) > 2 else 'data/ritchi-inage.geojson'
+BBOX_ARG = sys.argv[3] if len(sys.argv) > 3 else None
 
-NORTH, SOUTH = 35.710, 35.570
-EAST,  WEST  = 140.185, 140.030
+if BBOX_ARG:
+    NORTH, SOUTH, EAST, WEST = [float(v) for v in BBOX_ARG.split(',')]
+else:
+    NORTH, SOUTH = 35.710, 35.570
+    EAST,  WEST  = 140.185, 140.030
 
 ZONE_COLORS = {
     '居住誘導区域':     '#6fa8dc',

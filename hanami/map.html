@@ -275,6 +275,14 @@
     .risk-btn.elev.active   { background: rgba(5,150,105,0.12);  border-color: #059669; color: #065f46; font-weight: 700; }
     .risk-btn.photo.active  { background: rgba(22,163,74,0.12);  border-color: #16a34a; color: #15803d; font-weight: 700; }
 
+    .risk-btn.yoto.active   { background: rgba(234,179,8,0.15);  border-color: #ca8a04; color: #92400e; font-weight: 700; }
+    .risk-btn.ritchi.active { background: rgba(111,168,220,0.18); border-color: #6fa8dc; color: #1a56db; font-weight: 700; }
+    #ritchi-legend { display: none; padding: 10px 32px; border-bottom: 1px solid rgba(111,168,220,0.2); background: rgba(111,168,220,0.04); font-size: 11px; line-height: 1.9; }
+    #ritchi-legend.visible { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
+    #yoto-legend { display: none; padding: 10px 32px; border-bottom: 1px solid rgba(202,138,4,0.2); background: rgba(234,179,8,0.04); font-size: 11px; line-height: 1.9; }
+    #yoto-legend.visible { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
+    .yoto-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; white-space: nowrap; }
+    .yoto-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.15); }
     #hazard-legend {
       display: none; padding: 10px 32px;
       border-bottom: 1px solid rgba(59,130,246,0.15);
@@ -347,14 +355,18 @@
   <button id="btn-land"  class="risk-btn land"  onclick="toggleHazard('land')"  title="土砂災害警戒区域・特別警戒区域">⛰ 土砂災害</button>
   <button id="btn-tide"    class="risk-btn tide"    onclick="toggleHazard('tide')"    title="高潮浸水想定区域（L2想定最大規模）">🌊 高潮</button>
   <button id="btn-tsunami" class="risk-btn tsunami" onclick="toggleHazard('tsunami')" title="津波浸水想定区域（最大クラス）">🌊 津波</button>
+  <button id="btn-yoto"  class="risk-btn yoto"  onclick="toggleYoto()"          title="用途地域（国土数値情報）">🏘 用途地域</button>
   <button id="btn-elev"  class="risk-btn elev"  onclick="toggleHazard('elev')"  title="色別標高図（国土地理院）">📊 標高図</button>
   <button id="btn-photo"  class="risk-btn photo"  onclick="toggleBasePhoto()"  title="国土地理院 最新空中写真に切り替え">📷 航空写真</button>
+  <button id="btn-ritchi" class="risk-btn ritchi" onclick="toggleRitchi()"     title="立地適正化計画（居住誘導区域・都市機能誘導区域）">🏙 立地適正化</button>
   <a href="https://disaportal.gsi.go.jp/" target="_blank" rel="noopener"
      style="font-size:10px;color:var(--text-muted);margin-left:auto;text-decoration:none;white-space:nowrap">
     出典: 国土交通省 →
   </a>
 </div>
 <div id="hazard-legend"></div>
+<div id="yoto-legend"></div>
+<div id="ritchi-legend"></div>
 
 <div id="map"></div>
 
@@ -736,6 +748,194 @@ var HAZARD_CFG = {
     note: '青〜緑が低地（洪水リスク高）、黄〜茶〜白が高台（安定地盤）。'
   }
 };
+
+// ===== 用途地域レイヤー =====
+var YOTO_COLOR = {
+  '1': '#aad4f0', '2': '#6bb8e6',
+  '3': '#f5b8c8', '4': '#e8849a',
+  '5': '#ffd09a', '6': '#f5a84a',
+  '7': '#fdf0a0',
+  '8': '#b8e8b8', '9': '#70c870',
+  '10': '#d4b8e0',
+  '11': '#b0c0c8', '12': '#8090a0'
+};
+var YOTO_NAME = {
+  '1':'第一種低層住居専用', '2':'第二種低層住居専用',
+  '3':'第一種中高層住居専用', '4':'第二種中高層住居専用',
+  '5':'第一種住居', '6':'第二種住居', '7':'準住居',
+  '8':'近隣商業', '9':'商業', '10':'準工業',
+  '11':'工業', '12':'工業専用'
+};
+var _yotoLayer = null;
+var _yotoActive = false;
+
+function _getYotoCode(props) {
+  var candidates = ['cda', 'dac', 'A29_005', 'yoto', 'YoutoChiiki', '用途地域', 'A29_004'];
+  for (var i = 0; i < candidates.length; i++) {
+    var v = props[candidates[i]];
+    if (v !== undefined && v !== null && v !== '') return String(v);
+  }
+  for (var k in props) {
+    var n = parseInt(props[k]);
+    if (n >= 1 && n <= 12) return String(n);
+  }
+  return null;
+}
+
+function toggleYoto() {
+  var btn = document.getElementById('btn-yoto');
+  if (_yotoActive) {
+    if (_yotoLayer) { map.removeLayer(_yotoLayer); _yotoLayer = null; }
+    _yotoActive = false;
+    if (btn) btn.classList.remove('active');
+    var el = document.getElementById('yoto-legend');
+    if (el) { el.className = ''; while(el.firstChild) el.removeChild(el.firstChild); }
+    return;
+  }
+  fetch('../data/yoto-hanami.geojson')
+    .then(function(r) {
+      if (!r.ok) throw new Error('GeoJSONがまだ生成されていません（GitHub Actions実行後に利用可能）');
+      return r.json();
+    })
+    .then(function(geojson) {
+      _yotoLayer = L.geoJSON(geojson, {
+        style: function(feature) {
+          var code = _getYotoCode(feature.properties || {});
+          return { fillColor: YOTO_COLOR[code] || '#e5e7eb', fillOpacity: 0.55, color: 'rgba(0,0,0,0.3)', weight: 0.8 };
+        },
+        onEachFeature: function(feature, layer) {
+          var props = feature.properties || {};
+          var code = _getYotoCode(props);
+          var name = code ? (YOTO_NAME[code] || '区域コード:' + code) : '用途地域不明';
+          layer.bindPopup('<b>' + _esc(name) + '</b><br><small style="color:#888">国土数値情報 A29（2019年）</small>');
+        }
+      }).addTo(map);
+      _yotoActive = true;
+      if (btn) btn.classList.add('active');
+      _renderYotoLegend(geojson);
+    })
+    .catch(function(e) { alert('用途地域データ: ' + e.message); });
+}
+
+function _renderYotoLegend(geojson) {
+  var el = document.getElementById('yoto-legend');
+  if (!el) return;
+  var usedCodes = {};
+  (geojson.features || []).forEach(function(f) {
+    var c = _getYotoCode(f.properties || {});
+    if (c && YOTO_NAME[c]) usedCodes[c] = true;
+  });
+  el.className = 'visible';
+  while (el.firstChild) el.removeChild(el.firstChild);
+  var label = document.createElement('span');
+  label.style.cssText = 'font-weight:700;color:#92400e;white-space:nowrap';
+  label.textContent = '🏘 用途地域：';
+  el.appendChild(label);
+  Object.keys(usedCodes).sort(function(a,b){return +a-+b;}).forEach(function(code) {
+    var chip = document.createElement('span');
+    chip.className = 'yoto-chip';
+    var dot = document.createElement('span');
+    dot.className = 'yoto-dot';
+    dot.style.background = YOTO_COLOR[code] || '#e5e7eb';
+    var txt = document.createTextNode(YOTO_NAME[code]);
+    chip.appendChild(dot);
+    chip.appendChild(txt);
+    el.appendChild(chip);
+  });
+}
+
+// 立地適正化計画 レイヤー
+var _ritchiLayer = null;
+var _ritchiActive = false;
+var RITCHI_CODE_NAME = { '1': '居住誘導区域', '2': '都市機能誘導区域', '3': '特定用途誘導地区' };
+var RITCHI_COLOR = {
+  '居住誘導区域':     '#6fa8dc',
+  '都市機能誘導区域': '#f6b26b',
+  '特定用途誘導地区': '#ff9900',
+  '市街化区域':       '#cccccc'
+};
+
+function toggleRitchi() {
+  var btn = document.getElementById('btn-ritchi');
+  if (_ritchiActive) {
+    if (_ritchiLayer) { map.removeLayer(_ritchiLayer); _ritchiLayer = null; }
+    _ritchiActive = false;
+    if (btn) btn.classList.remove('active');
+    var el = document.getElementById('ritchi-legend');
+    if (el) { el.className = ''; while(el.firstChild) el.removeChild(el.firstChild); }
+    return;
+  }
+  fetch('../data/ritchi-hanami.geojson')
+    .then(function(r) {
+      if (!r.ok) throw new Error('立地適正化計画データが準備中です（GitHub Actions実行後に利用可能）');
+      return r.json();
+    })
+    .then(function(geojson) {
+      var zoneColors = geojson.zone_colors || RITCHI_COLOR;
+      _ritchiLayer = L.geoJSON(geojson, {
+        style: function(feature) {
+          var props = feature.properties || {};
+          var zoneName = _getRitchiZoneName(props);
+          var color = (zoneColors[zoneName] || RITCHI_COLOR[zoneName]) || '#aaaaaa';
+          return { fillColor: color, fillOpacity: 0.45, color: 'rgba(0,0,0,0.25)', weight: 0.8 };
+        },
+        onEachFeature: function(feature, layer) {
+          var props = feature.properties || {};
+          var zoneName = _getRitchiZoneName(props) || '区域種別不明';
+          var areaName = (props['A50_007'] || '').trim();
+          var popup = '<b>' + _esc(zoneName) + '</b>';
+          if (areaName) popup += '<br>' + _esc(areaName);
+          popup += '<br><small style="color:#888">立地適正化計画（千葉市・国土数値情報A50）</small>';
+          layer.bindPopup(popup);
+        }
+      }).addTo(map);
+      _ritchiActive = true;
+      if (btn) btn.classList.add('active');
+      _renderRitchiLegend(geojson);
+    })
+    .catch(function(e) { alert('立地適正化計画: ' + e.message); });
+}
+
+function _getRitchiZoneName(props) {
+  var code = String(props['A50_006'] || '');
+  if (RITCHI_CODE_NAME[code]) return RITCHI_CODE_NAME[code];
+  var known = ['居住誘導区域', '都市機能誘導区域', '特定用途誘導地区', '市街化区域'];
+  for (var k in props) {
+    var s = String(props[k] || '');
+    for (var j = 0; j < known.length; j++) {
+      if (s.indexOf(known[j]) !== -1) return known[j];
+    }
+  }
+  return null;
+}
+
+function _renderRitchiLegend(geojson) {
+  var el = document.getElementById('ritchi-legend');
+  if (!el) return;
+  var usedZones = {};
+  (geojson.features || []).forEach(function(f) {
+    var name = _getRitchiZoneName(f.properties || {});
+    if (name) usedZones[name] = true;
+  });
+  var zoneColors = geojson.zone_colors || RITCHI_COLOR;
+  el.className = 'visible';
+  while (el.firstChild) el.removeChild(el.firstChild);
+  var label = document.createElement('span');
+  label.style.cssText = 'font-weight:700;color:#1a56db;white-space:nowrap';
+  label.textContent = '🏙 立地適正化計画：';
+  el.appendChild(label);
+  Object.keys(usedZones).forEach(function(name) {
+    var chip = document.createElement('span');
+    chip.className = 'yoto-chip';
+    var dot = document.createElement('span');
+    dot.className = 'yoto-dot';
+    dot.style.background = zoneColors[name] || RITCHI_COLOR[name] || '#aaaaaa';
+    var txt = document.createTextNode(name);
+    chip.appendChild(dot);
+    chip.appendChild(txt);
+    el.appendChild(chip);
+  });
+}
 
 var _hazardLayers = {};
 var _usePhoto = false;
