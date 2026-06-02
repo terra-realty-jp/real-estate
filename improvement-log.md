@@ -25,7 +25,23 @@
 
 ### 残タスク
 - ユーザーがfix-ward-grants.sql実行→Actionsワークフロー再実行で実データ投入（map.htmlトレンド本稼働）
-- 他5区のガイド5ページ×5区=25ページ作成（主要区=若葉区から段階的に）
+- 他4区のガイド5ページ×4区=20ページ作成（花見川→緑→美浜→中央の順）
+
+---
+
+## 2026-06-02（継続セッション） 若葉区に5ガイドページ追加（stage1）
+
+- **対象**: `wakaba/{akiya-guide,chintai-guide,koubai-guide,toushi-guide,sumai-kae}.html`(新), `wakaba/index.html`, `sitemap.xml`
+- **施策**: 他区ガイドページ（稲毛区同等の構成へ）
+
+### 実装内容 (feat: 5fd01c2)
+1. 若葉区に欠けていた5ガイドを作成（既存ward guideテンプレ準拠・若葉区固有内容＝千城台団地/都賀/みつわ台）。
+2. 各ページにFAQ/HowTo JSON-LD付与（SEO・AEO）。
+3. wakaba/index.html に5ガイドのfeature-cardリンク追加（従来は孤立していた）。
+4. sitemap.xml に5URL登録。
+5. 全5ページ JS構文・JSON-LD・sitemap XML 検証済み。
+
+→ これで若葉区は稲毛区とほぼ同等のページ構成（map/qa/notify/sell/baikyaku/souzoku + akiya/chintai/koubai/toushi/sumai-kae + エリア3ページ）。残4区は同テンプレで順次。
 
 ---
 
