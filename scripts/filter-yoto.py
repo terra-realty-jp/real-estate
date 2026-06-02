@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 """
-用途地域GeoJSON（国土数値情報A29）から稲毛区エリアを抽出するスクリプト。
-使用: python3 scripts/filter-yoto.py /tmp/yoto_all.geojson data/yoto-inage.geojson
+用途地域GeoJSON（国土数値情報A29）から指定エリアを抽出するスクリプト。
+使用: python3 scripts/filter-yoto.py <src> <dest> [bbox]
+  bbox: "north,south,east,west"（省略時は稲毛区）
+例:   python3 scripts/filter-yoto.py /tmp/yoto_all.geojson data/yoto-wakaba.geojson 35.667,35.551,140.273,140.117
+
+※ 千葉市A29(aac=12100)は区別が無いため、区の抽出は bbox（centroid内包）で行う。
 """
 import json
 import sys
 
 SRC  = sys.argv[1] if len(sys.argv) > 1 else '/tmp/yoto_all.geojson'
 DEST = sys.argv[2] if len(sys.argv) > 2 else 'data/yoto-inage.geojson'
+BBOX_ARG = sys.argv[3] if len(sys.argv) > 3 else None
 
-# 稲毛区を余裕を持って包むバウンディングボックス
-NORTH, SOUTH = 35.710, 35.570
-EAST,  WEST  = 140.185, 140.030
+# バウンディングボックス（デフォルト=稲毛区）
+if BBOX_ARG:
+    NORTH, SOUTH, EAST, WEST = [float(v) for v in BBOX_ARG.split(',')]
+else:
+    NORTH, SOUTH = 35.710, 35.570
+    EAST,  WEST  = 140.185, 140.030
 
 def centroid_in_box(coords_list):
     try:
