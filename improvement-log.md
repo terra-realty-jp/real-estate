@@ -6069,3 +6069,64 @@ investor_profiles (id, email, town_interests[], property_types[], budget_max, mi
 - **対応内容**:
 
 ---
+
+## 2026-05-31 他区拡張準備・GitHub Actions Node.js 24対応
+
+- **対象**: `.github/workflows/*.yml` × 7, `chuo/index.html`, `mihama/index.html`, `midori/index.html`, `hanami/index.html`, `wakaba/index.html`, `index.html`
+- **施策**: 他区拡張準備（優先度1）/ Node.js 24対応（優先度2）
+
+### 実装内容
+
+1. **GitHub Actions Node.js 20 → 24 対応** (chore: 7e0e980)
+   - 対象7ファイル: fetch-inage-properties.yml, update-area-prices.yml, update-interest-rates.yml, update-koji-prices.yml, weekly-analytics.yml, inage-email-notify.yml, match-notify.yml
+   - 2026年9月の必須化に先行対応
+
+2. **千葉市5区 先行通知ページ新規作成** (feat: e67af88)
+   - `chuo/index.html`: 中央区（千葉中央・蘇我・生浜）
+   - `mihama/index.html`: 美浜区（幕張・検見川浜・稲毛海岸）
+   - `midori/index.html`: 緑区（おゆみ野・土気・鎌取）
+   - `hanami/index.html`: 花見川区（花見川・幕張本郷・八千代台）
+   - `wakaba/index.html`: 若葉区（千城台・都賀・みつわ台）
+   - 各ページ: エリア別町丁目紹介・公開予定コンテンツ一覧・メール通知フォーム（notify_subscribers INSERT）・GA4イベント計測
+   - index.htmlの「準備中」カード → `<a>` タグでリンク化、ラベルを「データ収集中」に変更
+
+---
+
+## 2026-06-02 中央区・美浜区・緑区 相場マップ完成 + 緑区・若葉区 Q&A/通知追加
+
+- **対象**: `chuo/map.html`, `mihama/map.html`, `midori/map.html`, `midori/notify.html`, `midori/qa.html`, `wakaba/qa.html`, `data/wakaba-geojson.json`
+- **施策**: 他区実装（優先度3）
+
+### 実装内容
+
+1. **chuo/map.html 新規実装** (feat: d02780a)
+   - 中央区7エリア（蘇我・千葉中央・都町・院内・生実町・白旗・葛城）
+   - Leaflet.js + Supabase ward_properties連動ヒートマップ
+   - SRI対応・XSS対策済み・JS構文チェックOK
+
+2. **mihama/map.html 本格実装** (feat: d02780a)
+   - 美浜区6エリア（検見川浜・幕張本郷・幕張・磯辺・真砂・稲毛海岸）
+   - 若葉区の文言が残存していたため修正（OGPタグ・コメント・ログID等）
+   - SRI対応・Supabase連動・JS構文チェックOK
+
+3. **midori/map.html 完成確認** (feat: d02780a)
+   - 緑区相場マップ（稲毛区版と同等UI/UX）完成済み
+   - 1285行・SRI/Supabase/Leaflet全対応
+
+4. **midori/notify.html・midori/qa.html 新規追加** (feat: d02780a)
+   - 緑区 メール通知登録ページ・Q&A掲示板（Supabase連携）
+
+5. **wakaba/qa.html 新規追加** (feat: d02780a)
+   - 若葉区 Q&A掲示板（Supabase連携・460行）
+
+6. **data/wakaba-geojson.json 追加** (feat: d02780a)
+   - 若葉区GeoJSONデータ
+
+### 全5区実装状況（2026-06-02時点）
+| 区 | map.html | qa.html | notify.html | 状態 |
+|---|---|---|---|---|
+| 中央区 | ✅ 1256行 | ✅ 550行 | ✅ 376行 | 全7ページ完成 |
+| 美浜区 | ✅ 1333行 | ✅ 已実装 | ✅ 已実装 | 全7ページ完成 |
+| 緑区 | ✅ 1285行 | ✅ 262行 | ✅ 221行 | 全7ページ完成 |
+| 花見川区 | ✅ 1305行 | ✅ 519行 | ✅ 350行 | 全7ページ完成 |
+| 若葉区 | ✅ 1345行 | ✅ 461行 | ✅ 202行 | 全7ページ完成 |
