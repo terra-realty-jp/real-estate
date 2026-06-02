@@ -347,6 +347,62 @@ async function sbGetWardPrices(wardName, townNames) {
 }
 
 // ─────────────────────────────────────────────
+// 他5区 価格推移データ（四半期別）
+// sbGetTownTrend の ward_properties 版
+// 戻り値: [{ label:'2025Q2', year:2025, quarter:2, mansion:198000, house:175000, land:160000, count:8 }, ...]
+// 円/㎡で返す（表示側で /10000 して万円/㎡ に変換）
+// ─────────────────────────────────────────────
+async function sbGetWardTrend(wardName, townName) {
+  if (!_sbOK || !_db) return null;
+  try {
+    const { data, error } = await _db
+      .from('ward_properties')
+      .select('property_type,price_per_sqm,trade_year,trade_quarter')
+      .eq('ward', wardName)
+      .eq('town_name', townName)
+      .order('trade_year', { ascending: true })
+      .order('trade_quarter', { ascending: true })
+      .limit(500);
+    if (error) { console.warn('[Supabase] sbGetWardTrend:', error.message); return null; }
+    if (!data || data.length === 0) return null;
+
+    const groups = {};
+    data.forEach(function(r) {
+      if (!r.price_per_sqm) return;
+      const key = r.trade_year + 'Q' + r.trade_quarter;
+      if (!groups[key]) groups[key] = { year: r.trade_year, quarter: r.trade_quarter, prices: {} };
+      if (!groups[key].prices[r.property_type]) groups[key].prices[r.property_type] = [];
+      groups[key].prices[r.property_type].push(Math.round(r.price_per_sqm * 10000));
+    });
+
+    const median = function(arr) {
+      if (!arr || !arr.length) return null;
+      const s = arr.slice().sort(function(a,b){return a-b;});
+      return s[Math.floor(s.length / 2)];
+    };
+
+    return Object.values(groups)
+      .sort(function(a,b){ return (a.year*10+a.quarter) - (b.year*10+b.quarter); })
+      .map(function(g) {
+        const count = Object.values(g.prices).reduce(function(sum,arr){ return sum + arr.length; }, 0);
+        return {
+          label:   g.year + 'Q' + g.quarter,
+          year:    g.year,
+          quarter: g.quarter,
+          mansion: median(g.prices['mansion']) || null,
+          house:   median(g.prices['house'])   || null,
+          land:    median(g.prices['land'])    || null,
+          count:   count,
+        };
+      })
+      .filter(function(q){ return q.mansion || q.house || q.land; });
+  } catch (e) {
+    console.warn('[Supabase] sbGetWardTrend exception:', e.message);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────
 // 稲毛区 買い手候補数（匿名集計）
 // ─────────────────────────────────────────────
 // area_buyer_count テーブルから町丁目×物件種別の件数を取得（認証不要・RLS SELECT許可）
