@@ -29,6 +29,29 @@
 
 ---
 
+## 2026-06-03 他5区マップに用途地域・立地適正化レイヤー追加（稲毛区と同一構成へ）
+
+- **対象**: `scripts/filter-yoto.py`, `scripts/filter-ritchi.py`, `data/yoto-*.geojson`, `data/ritchi-*.geojson`(各5区), 他5区 `map.html`
+- **施策**: ①相場マップ（稲毛区との完全一致）
+
+### 背景
+ユーザー指摘「稲毛区マップにはヒートマップ＋8重ね合わせがあるのに他区が違う」。検証の結果、他区マップは重ね合わせが6種で**用途地域・立地適正化の2レイヤーが欠落**していた（稲毛区は8種）。
+
+### 実装内容 (feat: aa4745d)
+1. `filter-yoto.py`/`filter-ritchi.py` を bbox引数対応に修正。
+2. 国土数値情報 A29(用途地域)・A50(立地適正化) を各区bboxで絞り込み生成（yoto 133〜249地域・ritchi 5〜10区域）。
+3. 各区 map.html に🏘用途地域・🏙立地適正化のボタン+トグル+凡例を追加 → 重ね合わせ8種が稲毛区と一致。
+4. 全5区JS構文チェック済み。**main へマージ済み（本番反映）**。
+
+→ 他5区マップは稲毛区と同一構成（ポリゴンヒートマップ＋実取引2,078件＋8重ね合わせレイヤー）。
+
+### 残（稲毛区完全一致に向けて）
+- 他4区(chuo/hanami/midori/mihama)に5ガイド（akiya/chintai/koubai/toushi/sumai-kae）。若葉区のみ完了。
+- qa/notify/sell/souzoku/index の内容充実（稲毛区はJSON-LD FAQ等が豊富）。
+- 他区のエリア個別ページ拡充。
+
+---
+
 ## 2026-06-02（継続セッション） 若葉区に5ガイドページ追加（stage1）
 
 - **対象**: `wakaba/{akiya-guide,chintai-guide,koubai-guide,toushi-guide,sumai-kae}.html`(新), `wakaba/index.html`, `sitemap.xml`
