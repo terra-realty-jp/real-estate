@@ -6085,3 +6085,32 @@ investor_profiles (id, email, town_interests[], property_types[], budget_max, mi
 | 緑区 | ✅ 1285行 | ✅ 262行 | ✅ 221行 | 全7ページ完成 |
 | 花見川区 | ✅ 1305行 | ✅ 519行 | ✅ 350行 | 全7ページ完成 |
 | 若葉区 | ✅ 1345行 | ✅ 461行 | ✅ 202行 | 全7ページ完成 |
+
+---
+
+## 2026-06-02 他区エリア個別ページ8件追加・本番リリース
+
+- **対象**: `wakaba/area-*.html`×3, `midori/area-*.html`×3, `hanami/area-*.html`×2, `sitemap.xml`
+- **施策**: 他区エリア個別ページ（優先度4）・SEO長尾キーワード対策
+
+### 実装内容
+
+1. **若葉区 エリアページ3件** (feat: a81bb90)
+   - `area-tsurugashiro.html`: 千城台（団地売却・建替え問題・投資8〜12%）
+   - `area-tsuga.html`: 都賀（JR総武線・若葉区最高流動性・投資5.5〜7.5%）
+   - `area-mitsuwa.html`: みつわ台（バス便・広い土地・投資7〜9%）
+
+2. **緑区 エリアページ3件** (feat: a81bb90)
+   - `area-oyumino.html`: おゆみ野（鎌取駅圏・緑区最高流動性・投資6〜8%）
+   - `area-asumigaoka.html`: あすみが丘（空き家相続・バス便郊外・投資8〜10%）
+   - `area-toke.html`: 土気（農地相続・転用情報・投資8〜12%）
+
+3. **花見川区 エリアページ2件** (feat: 41ec15a)
+   - `area-makuhari.html`: 幕張本郷（JR+京成2路線・幕張新都心隣接・投資4.5〜6%）
+   - `area-yachiyodai.html`: 八千代台（京成本線・昭和40年代住宅地・投資5.5〜7.5%）
+
+4. **sitemap.xml更新** (chore: a4d2fa3)
+   - 8エリアページを追加（計77ページ）
+
+5. **本番リリース** (merge: ab4a042)
+   - dev→main マージ完了。GitHub Pages公開済み。
