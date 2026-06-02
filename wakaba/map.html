@@ -858,29 +858,76 @@ function buildPopupHtml(d, price) {
     '<a href="mailto:terra.realty.iam@gmail.com?subject=' + encodeURIComponent(d.name + 'の物件査定希望') + '&body=' + mailBody + '" style="display:block;background:rgba(0,0,0,0.06);color:#333;text-align:center;padding:6px 12px;border-radius:7px;font-size:11px;text-decoration:none">' + d.name + 'で無料相談する</a>';
 }
 
+// GeoJSONの町名はe-Stat変換時にTOWN_DATAと同じ正規化名で出力済み。念のため恒等関数。
+function normalizeTownName(s) { return (s || '').trim(); }
+
 function renderMarkers() {
   markers.forEach(function(m) { map.removeLayer(m); });
   markers = [];
 
-  // circleMarkerモード（GeoJSONなし）
-  TOWN_DATA.forEach(function(d) {
-    var price = getFilteredPrice(d);
-    if (!price) return;
-    var radius = 10 + Math.min(d.trades, 50) * 0.5;
-    var circle = L.circleMarker([d.lat, d.lng], {
-      radius: radius,
-      fillColor: priceToColor(price),
-      color: '#fff',
-      weight: 2,
-      fillOpacity: 0.82
-    }).bindPopup(buildPopupHtml(d, price)).addTo(map);
+  if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
+    // --- GeoJSONポリゴンモード（稲毛区と同等）---
+    var labeledTowns = {};
 
-    var label = L.divIcon({
-      html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none">' + d.name + '</div>',
-      className: '', iconAnchor: [-radius - 4, 8]
+    geojsonData.features.forEach(function(feature) {
+      var osmName = (feature.properties && feature.properties.name) || '';
+      var townName = normalizeTownName(osmName);
+      if (!townName) return;
+      var d = TOWN_MAP[townName];
+      if (!d) return;
+
+      var price = getFilteredPrice(d);
+      if (!price) return;
+
+      var poly = L.geoJSON(feature, {
+        style: {
+          fillColor: priceToColor(price),
+          fillOpacity: 0.65,
+          color: '#fff',
+          weight: 1.5
+        }
+      }).bindPopup(buildPopupHtml(d, price)).addTo(map);
+      poly._townName = townName;
+      markers.push(poly);
+
+      // 町ごとに1つだけラベルを置く（複数丁目があっても重複しない）
+      if (!labeledTowns[townName]) {
+        var props = feature.properties;
+        var center = (props.centroid_lat && props.centroid_lng)
+          ? L.latLng(props.centroid_lat, props.centroid_lng)
+          : poly.getBounds().getCenter();
+        var tsubo = sqmToTsubo(price);
+        var label = L.divIcon({
+          html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none;text-align:center">'
+            + townName + '<br><span style="font-size:10px">' + tsubo + '万/坪</span></div>',
+          className: '', iconAnchor: [24, 14]
+        });
+        markers.push(L.marker([center.lat, center.lng], { icon: label, interactive: false }).addTo(map));
+        labeledTowns[townName] = true;
+      }
     });
-    markers.push(circle, L.marker([d.lat, d.lng], { icon: label, interactive: false }).addTo(map));
-  });
+
+  } else {
+    // --- フォールバック: circleMarker ---
+    TOWN_DATA.forEach(function(d) {
+      var price = getFilteredPrice(d);
+      if (!price) return;
+      var radius = 10 + Math.min(d.trades, 50) * 0.5;
+      var circle = L.circleMarker([d.lat, d.lng], {
+        radius: radius,
+        fillColor: priceToColor(price),
+        color: '#fff',
+        weight: 2,
+        fillOpacity: 0.82
+      }).bindPopup(buildPopupHtml(d, price)).addTo(map);
+
+      var label = L.divIcon({
+        html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none">' + d.name + '</div>',
+        className: '', iconAnchor: [-radius - 4, 8]
+      });
+      markers.push(circle, L.marker([d.lat, d.lng], { icon: label, interactive: false }).addTo(map));
+    });
+  }
 }
 
 function setFilter(type, btn) {
@@ -897,8 +944,18 @@ function onTownSearch(query) {
   var q = query.trim();
   var d = TOWN_DATA.find(function(t) { return t.name.includes(q) || t.id.includes(q); });
   if (!d) return;
-  map.setView([d.lat, d.lng], 15);
-  markers.forEach(function(m) { if (m.getLatLng && m.getLatLng().lat === d.lat) m.openPopup(); });
+  // GeoJSONポリゴンモード
+  if (geojsonData && geojsonData.features && geojsonData.features.length > 0) {
+    var townPolys = markers.filter(function(m) { return m._townName === d.name && m.getBounds; });
+    if (townPolys.length === 0) { map.setView([d.lat, d.lng], 15); return; }
+    var combined = townPolys[0].getBounds();
+    townPolys.forEach(function(m) { combined.extend(m.getBounds()); });
+    map.fitBounds(combined, { maxZoom: 15 });
+    townPolys[0].openPopup(combined.getCenter());
+  } else {
+    map.setView([d.lat, d.lng], 15);
+    markers.forEach(function(m) { if (m.getLatLng && m.getLatLng().lat === d.lat) m.openPopup(); });
+  }
 }
 
 // ===== 価格推移パネル =====
