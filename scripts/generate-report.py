@@ -121,9 +121,9 @@ html = f"""<!DOCTYPE html>
   {commit_rows}
 </div>
 <div class="footer">
-  <a class="btn btn-gold" href="https://shinji-japaaaan.github.io/real-estate/" target="_blank">🌐 本番サイトを開く</a>
+  <a class="btn btn-gold" href="https://terra-realty-jp.github.io/real-estate/" target="_blank">🌐 本番サイトを開く</a>
   <a class="btn btn-ghost" href="index.html">← レポート一覧へ</a>
-  <a class="btn btn-ghost" href="https://github.com/shinji-japaaaan/real-estate/commits/main" target="_blank">GitHubで確認</a>
+  <a class="btn btn-ghost" href="https://github.com/terra-realty-jp/real-estate/commits/main" target="_blank">GitHubで確認</a>
 </div>
 <div style="text-align:center;padding:16px;color:#334155;font-size:11px">Generated: {generated_at}</div>
 </body>
