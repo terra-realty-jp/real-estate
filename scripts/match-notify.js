@@ -19,7 +19,7 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const DRY_RUN = process.env.DRY_RUN === 'true';
 const FROM_EMAIL = 'terra@terra-realty.jp'; // Resend で認証済みドメインに変更すること
 const FROM_NAME = 'TERRA REALTY 稲毛区マッチング';
-const BASE_URL = 'https://shinji-japaaaan.github.io/real-estate';
+const BASE_URL = 'https://terra-realty-jp.github.io/real-estate';
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('SUPABASE_URL / SUPABASE_SERVICE_KEY が未設定');

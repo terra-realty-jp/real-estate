@@ -21,7 +21,7 @@ const RESEND_KEY   = process.env.RESEND_API_KEY || '';
 const DRY_RUN      = process.env.DRY_RUN === '1';
 const FROM_EMAIL   = 'info@terra-realty.jp';
 const FROM_NAME    = 'TERRA REALTY 稲毛区';
-const SITE_URL     = 'https://shinji-japaaaan.github.io/real-estate';
+const SITE_URL     = 'https://terra-realty-jp.github.io/real-estate';
 
 // ---- HTTP ヘルパー -------------------------------------------------------
 function httpPost(hostname, path, headers, body) {
