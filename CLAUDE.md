@@ -65,7 +65,7 @@
 ## プロジェクト概要
 
 - **サービス名**: 不動産かんたんツール（powered by TERRA REALTY）
-- **対象エリア**: 千葉市6区（稲毛区・中央区・美浜区・緑区・花見川区・若葉区）※稲毛区が先行稼働・他区はデータ収集中
+- **対象エリア**: 千葉市6区（稲毛区・中央区・美浜区・緑区・花見川区・若葉区）※全6区で相場マップ・実取引データ・ガイドを公開中（稲毛区が最も情報量が多い）
 - **ターゲット**: 千葉市在住の40〜60代。昭和40〜50年代の団地・戸建てを持つ世帯が主軸。稲毛区が主軸
 - **技術スタック**: HTML / CSS / Vanilla JavaScript + Supabase（DB・認証）
 - **インフラ**: GitHub Pages（静的ホスティング）/ GitHub Actions（API自動更新・将来の通知）
@@ -109,26 +109,26 @@ git branch  # 現在地を確認
 │   ├── akiya-guide.html         ← 空き家ガイド
 │   ├── sumai-kae.html           ← 住み替えガイド
 │   └── area-*.html              ← 12エリア個別ページ
-├── chuo/                        ← 中央区（データ収集中・先行通知受付）
-│   ├── index.html / qa.html / notify.html / map.html
-│   └── sell.html / baikyaku-guide.html / souzoku.html
-├── mihama/                      ← 美浜区（同上）
-├── midori/                      ← 緑区（同上）
-├── hanami/                      ← 花見川区（同上）
-├── wakaba/                      ← 若葉区（同上）
+├── chuo/                        ← 中央区（稲毛区同等にフル実装）
+│   ├── index.html / map.html(ヒートマップ) / qa.html / notify.html / sell.html
+│   ├── souzoku.html / baikyaku-guide.html / akiya-guide.html / chintai-guide.html
+│   ├── koubai-guide.html / toushi-guide.html / sumai-kae.html
+│   └── area-*.html（主要エリア個別ページ 2〜3件）
+├── mihama/ midori/ hanami/ wakaba/  ← 美浜・緑・花見川・若葉（各区とも上記chuoと同構成）
 ├── data/
-│   ├── inage-geojson.json       ← 稲毛区町境界
-│   ├── area-prices.json         ← エリア別単価（月次更新）
-│   └── interest-rates.json      ← 金利データ（月次更新）
+│   ├── {inage,chuo,hanami,midori,mihama,wakaba}-geojson.json ← 全6区の町丁目境界
+│   ├── yoto-*.geojson / ritchi-*.geojson  ← 用途地域・立地適正化レイヤー（全6区）
+│   └── area-prices.json / koji-prices.json / rosen-prices.json / interest-rates.json
 ├── scripts/
-│   ├── fetch-inage-properties.js  ← 稲毛区MLIT取得（毎月自動）
-│   ├── fetch-ward-properties.js   ← 他5区MLIT取得（毎月5日自動）
-│   ├── seed-qa-all-wards.sql      ← Q&Aシードデータ（投入済み）
-│   └── send-inage-notify.js       ← メール配信
+│   ├── fetch-inage-properties.js / fetch-ward-properties.js  ← MLIT取得（自動）
+│   ├── download-estat-ward-geojson.py / filter-yoto.py / filter-ritchi.py  ← 境界geojson生成
+│   ├── seed-qa-all-wards.sql / seed-qa-answers.sql / dedup-qa.sql  ← Q&Aシード・回答・重複整理
+│   ├── fix-ward-grants.sql / fix-qa-grants.sql  ← Supabaseテーブル権限付与（重要・後述）
+│   └── send-inage-notify.js / weekly-analytics.js  ← メール配信・週次集計
 ├── schema-ward.sql              ← ward_propertiesテーブル定義
 ├── supabase-client.js           ← Supabase接続（全ページ共通）
 ├── llms.txt                     ← AI検索エンジン向けデータ（全6区対応）
-├── sitemap.xml                  ← 全50+ページ登録済み
+├── sitemap.xml                  ← 全107ページ登録済み
 └── CLAUDE.md                    ← 本ファイル
 ```
 
@@ -248,6 +248,8 @@ CREATE TABLE ward_properties (
 | area_buyer_count | INSERT + 集計SELECT | 全権限 |
 | card_usage_log | INSERT のみ | 全権限 |
 
+**⚠️ 重要（GRANT）**: RLSポリシーとは別に、テーブルレベルの `GRANT` が無いと anon/service_role からアクセスできず `42501 permission denied for table ...` になる（ward_properties・qa_questions 等で実際に発生し、データが公開ページに出ない／週次集計が0になる事故が起きた）。**新規テーブル作成時は必ず** `GRANT SELECT ON public.<table> TO anon, authenticated;` と `GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table> TO service_role;` を実行すること。修正用SQL: `scripts/fix-ward-grants.sql`（相場データ）/ `scripts/fix-qa-grants.sql`（Q&A・通知・ログ系）。
+
 ---
 
 ## ページ構造とナビゲーション導線
@@ -324,7 +326,7 @@ CREATE TABLE ward_properties (
 | **他5区ガイド（25本）** | ✅ 完成（2026-06-03） | 全5区に akiya/chintai/koubai/toushi/sumai-kae を各区固有内容で作成・hub/sitemap反映 |
 | **マップUI刷新** | ✅ 完成（2026-06-03） | ポップアップ→「情報シート」方式（スマホ=下部シート/PC=右下カード）。タップで地図が動かずヒートマップ常時表示。コンパクト化＋地図高さ拡大 |
 | **トップ導線統一** | ✅ 完成（2026-06-03） | 6区を対等カードに統一・各区map.html直行。次のステップバーも全区統一 |
-| **プライバシー/ブランディング** | ✅ 完成（2026-06-03） | GitHub Organization `terra-realty-jp` へ移行しURLから個人名除去。OGP/ロゴ/ツールページの実名（石澤）を全削除しTERRA REALTYに統一。クリーンなロゴ作成 |
+| **プライバシー/ブランディング** | ✅ 完成（2026-06-03） | GitHub Organization `terra-realty-jp` へ移行しURLから個人名除去。OGP/ロゴ/ツールページの個人名を全削除しTERRA REALTYに統一。クリーンなロゴ作成 |
 | **Google Search Console** | ✅ 再設定（2026-06-03） | 新URL `terra-realty-jp.github.io/real-estate/` でプロパティ追加・HTMLファイル確認・sitemap送信 |
 | **Googleビジネスプロフィール** | ✅ 素材準備（2026-06-03） | 説明文・初回投稿文・ロゴ/ヒートマップ画像を用意。登録は運営者対応 |
 | **AIインデックス(llms.txt)** | ✅ 完成 | 全6区の相場データ・FAQ。新URLに更新済み |
@@ -445,9 +447,11 @@ tail -50 /home/sishizaw/real-estate-project/improvement-log.md
 
 1. **重大バグ・動作不良** → 最優先で修正
 2. **dev→main マージ** → 本番に未反映のコミットがあれば最優先でマージ
-3. **他5区の完全実装** → 稲毛区と同等のUI/UX・実データ連携（後述の「他区実装方針」参照）
-4. **qa_answers 回答投入** → Supabase Table Editorから質問20件に回答を追記
-5. **稲毛区 ai-satei Phase 2** → 実取引データでAREA_UNIT動的更新
+3. **Supabase権限(GRANT)の確認** → 新テーブルは `fix-*-grants.sql` で anon/service_role に付与（未付与だと公開ページに出ない）
+4. **集客の初動支援** → SNSシェアボタン・OGP最適化・GBP素材・エリアページ量産（SEO長尾）
+5. **notify 他区配信** → 登録者が増えたら `send-inage-notify` を ward 汎用化
+
+（※「他5区の完全実装」「qa投入」「ai-satei Phase2」は2026-06-03までに完了済み。最新は「現在の実装状況」表を参照）
 
 ### 1サイクルの手順
 
@@ -569,19 +573,19 @@ tail -50 /home/sishizaw/real-estate-project/improvement-log.md
 
 ---
 
-## 他区実装方針（2026-06-01 追加・最重要）
+## 他区実装方針（2026-06-01 策定 → 2026-06-03 完了）
 
-### 現状の問題
+### 完了状況（✅ 他5区を稲毛区同等に実装済み）
 
-現在の他5区（中央・美浜・緑・花見川・若葉）は**稲毛区と同じUI/UXではない**。具体的な差分：
-
-| 機能 | 稲毛区 | 他5区（現状） |
+| 機能 | 稲毛区 | 他5区（2026-06-03時点） |
 |------|--------|------------|
-| 相場マップ | ✅ Leaflet.js + GeoJSON + Supabaseリアルタイムデータ | ❌ 静的テキスト表（「データ収集中」） |
-| Q&A掲示板 | ✅ Supabase連携・カテゴリ/エリアフィルター | △ 同じコードだが区ごとのフィルタなし |
-| 通知メール | ✅ GitHub Actions自動配信 | ❌ 登録フォームのみ（配信なし） |
-| エリア個別ページ | ✅ 12ページ（area-*.html） | ❌ なし |
-| 実取引データ | ✅ 216件（inage_properties） | ❌ 0件（ward_propertiesは空） |
+| 相場マップ | ✅ Leaflet + GeoJSON + Supabase | ✅ 同等（ヒートマップ＋重ね合わせ8レイヤー） |
+| Q&A掲示板 | ✅ Supabase連携・フィルター | ✅ 同等（埋め込みQ&A＋DB連携・GRANT付与済み） |
+| 通知メール | ✅ GitHub Actions自動配信 | △ 登録受付（自動配信は登録者増加後に汎用化予定） |
+| エリア個別ページ | ✅ 12ページ | △ 各区2〜3ページ（量産は今後のSEO施策） |
+| 実取引データ | ✅ 216件 | ✅ 計2,078件（ward_properties） |
+
+以下は実装時の手順記録（再現・保守用に残す）。
 
 ### 完全実装のロードマップ
 
