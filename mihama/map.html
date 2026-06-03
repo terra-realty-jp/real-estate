@@ -1447,15 +1447,13 @@ function highlightFromUrl() {
 
 // 初期化
 (function() {
-  renderMarkers();
-  renderTable();
-  highlightFromUrl();
+  function init() { renderMarkers(); renderTable(); highlightFromUrl(); }
 
   // GeoJSONを試みる（美浜区用ファイルが存在する場合に備えて）
   fetch('../data/mihama-geojson.json')
     .then(function(r) { if (!r.ok) throw new Error('no file'); return r.json(); })
-    .then(function(data) { geojsonData = data; renderMarkers(); })
-    .catch(function() { /* circleMarkerモードで継続 */ });
+    .then(function(data) { geojsonData = data; init(); })
+    .catch(function() { init(); });
 })();
 
 // Supabaseから最新相場データを取得してTOWN_DATAを更新
