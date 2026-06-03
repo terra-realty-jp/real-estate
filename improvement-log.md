@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-06-03 マップのポップアップUI刷新（スマホで消える/PCで収まらない問題を解決）
+
+- **対象**: 全6区 map.html, sw.js
+- ユーザー報告: スマホでヒートマップを触ると消える / PCでクリック時の表示が枠に収まらず読みにくい
+
+### 原因
+- ポップアップが巨大（統計多数＋ボタン5段）。スマホではLeaflet自動パン＋大ポップアップで地図が動き/覆われヒートマップが消失。PCでは表示領域に収まらず。
+
+### 改善（main反映済み）
+1. ポップアップ内容をコンパクト化（要点＋ボタン2個＋小リンク3個）。
+2. Leafletアンカーpopup廃止→『情報シート』方式（スマホ=下部シート / PC=右下カード）。タップしても地図不動でヒートマップ常時表示、×で復帰。
+3. 地図高さ拡大（PC480px / モバイル62vh）。検索・ディープリンクもシート化。
+4. sw.js: キャッシュ版数更新＋HTMLは常に最新取得（旧版が表示され続ける問題に対処）。
+- 検証: Playwrightで全6区・PC/スマホ幅ともタップ前後でポリゴン全数維持・シート表示を確認。
+
+---
+
+
 ## 2026-06-02（継続セッション） 他5区マップを稲毛区同等のGeoJSONヒートマップに
 
 - **対象**: `schema-ward.sql`, `scripts/fix-ward-grants.sql`(新), `scripts/download-estat-ward-geojson.py`(新), `scripts/fetch-ward-geojson.js`, `data/{chuo,hanami,wakaba,midori,mihama}-geojson.json`(新), 他5区 `map.html`, `scripts/seed-qa-answers.sql`
