@@ -309,34 +309,37 @@ CREATE TABLE ward_properties (
 
 ## 実装フェーズ（優先順位）
 
-### 現在の実装状況（2026-06-01時点）
+### 現在の実装状況（2026-06-03時点）
 
 | 施策 | 状態 | 詳細 |
 |------|------|------|
 | ① 稲毛区 相場マップ | ✅ 完成 | Supabase実データ216件・TOWN_NORMALIZE完備・動的トレンド表示・取引件数表示済み |
 | ② 稲毛団地チェッカー | ✅ 完成 | スコア計算・Supabaseログ・累計診断件数フィードバック済み |
-| ③ Q&A掲示板 | ✅ 完成 | 全6区対応・本物のQ&A 20件投入済み（2026-06-01）・Supabase INSERT・フィルター・view_count RPC |
+| ③ Q&A掲示板 | ✅ 完成 | 全6区対応・各ページに埋め込みQ&A・Supabase INSERT・フィルター・view_count RPC |
 | ④ メール通知 | ✅ 完成（Phase 1+2） | 稲毛区: GitHub Actions + Resend API自動配信済み。他5区: notify.html 先行登録受付中 |
 | ⑤ ローカルマッチング | ✅ 完成 | 稲毛区: area_buyer_count・sell.html・investor_profiles完成 |
 | 相続税ツール | ✅ 完成 | tools/6-sozoku-zei.html 稲毛団地FAQ・空き家特例・各区ガイドへのリンク |
-| UX構造刷新 | ✅ 完成 | index.htmlをエリア選択ファーストに全面刷新。6区カード→各区hub→ツールの流れ確立 |
-| ツール間接続 | ✅ 完成 | 全ツール + map.htmlに「次のステップ」固定バー |
-| **千葉市5区展開** | ✅ 完成（2026-06-01） | 中央・美浜・緑・花見川・若葉区 各7ページ（hub/qa/notify/map/sell/baikyaku/souzoku）= 計35ページ本番公開 |
-| **セキュリティ強化** | ✅ 完成（2026-06-01） | Supabase CDN SRI対応（@2.106.2・sha384）・稲毛区qa/notify/sellのCDN欠落修正・XSS修正 |
-| **Node.js 24対応** | ✅ 完成（2026-06-01） | GitHub Actions 全7ワークフローを node:20→24 に更新 |
-| **Google Search Console** | ✅ 完成（2026-06-01） | プロパティ登録・サイトマップ送信・主要5ページのインデックス登録リクエスト済み |
-| **AIインデックス** | ✅ 完成（2026-06-01） | llms.txt に全6区の相場データ・FAQ追加（ChatGPT/Perplexity対応） |
-| **他区MLITデータ基盤** | ✅ スクリプト完成 | fetch-ward-properties.js・schema-ward.sql・GitHub Actions ワークフロー完成。MLIT_API_KEY環境変数設定で即実行可能 |
+| **他5区 相場マップ（稲毛区同等）** | ✅ 完成（2026-06-03） | 全5区にヒートマップ（町丁目ポリゴン色分け）＋重ね合わせ8レイヤー（洪水/土砂/高潮/津波/用途地域/標高/航空/立地適正化）。data/{ward}-geojson.json・yoto-*/ritchi-* 生成済み |
+| **他5区MLIT実データ** | ✅ 完成（2026-06-03） | ward_propertiesに**計2,078件**投入（中央309/花見川410/若葉414/緑465/美浜480）。anon読取OK・トレンドグラフ稼働 |
+| **他5区ガイド（25本）** | ✅ 完成（2026-06-03） | 全5区に akiya/chintai/koubai/toushi/sumai-kae を各区固有内容で作成・hub/sitemap反映 |
+| **マップUI刷新** | ✅ 完成（2026-06-03） | ポップアップ→「情報シート」方式（スマホ=下部シート/PC=右下カード）。タップで地図が動かずヒートマップ常時表示。コンパクト化＋地図高さ拡大 |
+| **トップ導線統一** | ✅ 完成（2026-06-03） | 6区を対等カードに統一・各区map.html直行。次のステップバーも全区統一 |
+| **プライバシー/ブランディング** | ✅ 完成（2026-06-03） | GitHub Organization `terra-realty-jp` へ移行しURLから個人名除去。OGP/ロゴ/ツールページの実名（石澤）を全削除しTERRA REALTYに統一。クリーンなロゴ作成 |
+| **Google Search Console** | ✅ 再設定（2026-06-03） | 新URL `terra-realty-jp.github.io/real-estate/` でプロパティ追加・HTMLファイル確認・sitemap送信 |
+| **Googleビジネスプロフィール** | ✅ 素材準備（2026-06-03） | 説明文・初回投稿文・ロゴ/ヒートマップ画像を用意。登録は運営者対応 |
+| **AIインデックス(llms.txt)** | ✅ 完成 | 全6区の相場データ・FAQ。新URLに更新済み |
 
-### 次の実装優先順位
+### 次の実装優先順位（2026-06-03 更新）
 
 | 優先度 | タスク | 理由 |
 |--------|--------|------|
-| 1 | **qa_answers 回答データ投入** | Q&A 20件は質問のみ。TERRAスタッフとしての回答をSupabase Table Editorから入力するとSEO・信頼性が大幅向上 |
-| 2 | **他区MLITデータ実取得** | MLIT_API_KEY を GitHub Secrets に設定 → `fetch-ward-properties.js` 実行で各区の実取引データを投入。map.htmlが本格稼働 |
-| 3 | **稲毛区 ai-satei.html の精度向上** | Phase 2: inage_propertiesの実取引データでAREA_UNITを動的更新。「この計算に使用した実取引件数:○件」表示 |
-| 4 | **他区エリア個別ページ** | 稲毛区のarea-*.htmlと同等のページを各区の主要エリアに作成（SEO長尾キーワード獲得） |
-| 5 | **notify_subscribers 活用** | 登録者への月次メール配信を他5区にも拡張（現在は稲毛区のみ） |
+| 1 | **Q&A・利用ログ系テーブルのGRANT付与** | `qa_questions`/`qa_answers`/`notify_subscribers`/`area_buyer_count`/`card_usage_log` が anon SELECT不可（42501）。投入済みQ&A（回答9件）が公開ページに表示されず、週次レポートも実数を拾えない。`scripts/fix-qa-grants.sql` をSupabaseで実行すれば解消（ward_propertiesと同じ対応） |
+| 2 | **集客の初動** | 健全度スコア1/100・実ユーザーほぼ0。GBP公開・SNS/LINEシェア・団地ポスティング(QR)で最初の訪問を作る。GA4/Search Consoleで効果測定 |
+| 3 | **他区エリア個別ページ量産** | 稲毛区12に対し他区2〜3。各区主要町丁目のarea-*.htmlを増やし検索長尾を獲得 |
+| 4 | **SNSシェアボタン/OGP最適化** | 各マップ・ガイドに共有ボタン。来訪者の拡散を促す |
+| 5 | **notify_subscribers 他区配信** | 登録者が増えたら send-inage-notify を ward 対応に汎用化し各区配信 |
+
+**※ ai-satei Phase2（実取引でAREA_UNIT動的更新）は `sbGetTownPrices` 実装済みで概ね完了。**
 
 **実装ルール:**
 - 1機能 = 1featureブランチ（新規機能の場合）
