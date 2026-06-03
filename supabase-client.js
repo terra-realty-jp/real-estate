@@ -176,10 +176,13 @@ async function sbGetTownPrices(townNames) {
       result[town][type] = med;
     });
 
-    // sqm = house/mansion/land の平均（直近）
+    // sqm（すべて表示用）= 土地ベースの一戸建て・土地の平均（直近）。
+    // マンションは専有床面積ベースで土地単価と性質が異なり過大になるため overall からは除外し、
+    // 一戸建て・土地が無い町のみ、やむを得ずマンションで代替する。
     Object.keys(result).forEach(function(town) {
       const r = result[town];
-      const vals = [r.house, r.mansion, r.land].filter(Boolean);
+      const landish = [r.house, r.land].filter(Boolean);
+      const vals = landish.length ? landish : [r.mansion].filter(Boolean);
       if (vals.length) r.sqm = Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
     });
 
@@ -321,7 +324,9 @@ async function sbGetWardPrices(wardName, townNames) {
     });
     Object.keys(result).forEach(function(town) {
       const r = result[town];
-      const vals = [r.house, r.mansion, r.land].filter(Boolean);
+      // すべて表示用 sqm は土地・戸建て（土地面積ベース）のみで算出。マンション専有単価は混ぜない。
+      const landish = [r.house, r.land].filter(Boolean);
+      const vals = landish.length ? landish : [r.mansion].filter(Boolean);
       if (vals.length) r.sqm = Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
       r.count = countByTown[town] || 0;
     });
