@@ -29,6 +29,30 @@
 
 ---
 
+## 2026-06-03 ヒートマップ描画バグ修正＋導線統一＋稲毛区との機能差を網羅修正
+
+- **対象**: `index.html`, 他5区 `map.html`/`qa.html`, Playwright検証
+- **施策**: ①相場マップ（稲毛区との完全一致）・導線統一
+
+### ユーザー報告「他区はヒートマップが表示されない」→ 実機検証で複数の致命的バグを発見・修正
+1. **ヒートマップ非表示（chuo/hanami/mihama/wakaba）**: 初期化IIFEが renderMarkers() を同期で呼び、後方var宣言の SATEI_COUNT_CACHE 未定義参照でthrow→描画停止。緑区式の遅延初期化（fetch .then/.catch内で描画）に統一して修正。
+2. **中央区マップが完全崩壊**: `var map=L.map()`・currentFilter・priceToColor・priceToClass・sqmToTsubo が丸ごと欠落し map がDOM要素を指していた（元から一度も動作せず）。中央区価格帯で一式復元。
+3. **若葉区**: 初期表示中心が町の西にズレ→補正。
+4. **緑区の価格推移グラフ欠落**: showTrendPanel が常にテキストfallbackで Chart.js グラフ未描画→ sbGetWardTrend+renderTrendChart（他区同一）に統一。
+5. **離脱防止ポップアップ欠落（他5区qa）**: 稲毛区のみの exit-popup（notify_subscribers登録）を各区データで移植。
+
+### トップページ導線統一
+- 旧: 稲毛区=巨大カード(map直行) / 他5区=準備中風カード(ハブ止まり)
+- 新: 6区を対等カードに統一し全区 {区}/map.html へ直行。各区マップの「次のステップ」バーも稲毛区と同一（査定/空き家診断/○区ハブ）に統一。
+- トップFAQの「他区準備中」を「6区公開中」に更新。
+
+### 検証
+- ローカルサーバ+Playwrightで全6区ヒートマップ描画を確認（polygons: inage12/chuo9/hanami9/midori10/mihama9/wakaba9）。
+- 全66ページ（6区×11種）でJSランタイムエラー無しを確認。
+- すべて **main反映済み**。
+
+---
+
 ## 2026-06-03 他5区に全ガイド展開＋稲毛区との構成一致を検証
 
 - **対象**: 他5区 `{akiya,chintai,koubai,toushi,sumai-kae}-guide`(計25本), 各 `index.html`, `sitemap.xml`
