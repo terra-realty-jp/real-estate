@@ -144,7 +144,7 @@
     .filter-btn.active { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 700; }
     .filter-btn:hover:not(.active) { border-color: var(--gold); color: var(--gold); }
 
-    #map { height: 420px; width: 100%; }
+    #map { height: 480px; width: 100%; }
 
     .legend {
       background: var(--dark2); padding: 16px 32px; border-top: 1px solid rgba(0,0,0,0.06);
@@ -220,6 +220,30 @@
     .popup-price { font-size: 20px; font-weight: 900; color: #c0522b; }
     .popup-unit { font-size: 11px; color: #888; margin-left: 3px; }
     .popup-row { display: flex; justify-content: space-between; font-size: 12px; color: #555; margin-top: 4px; }
+    /* コンパクト・ポップアップ（収まるUI） */
+    .popup-town { font-weight: 700; font-size: 15px; margin-bottom: 4px; display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+    .popup-trendtag { font-size: 11px; font-weight: 400; color: #888; white-space: nowrap; }
+    .popup-price { font-size: 19px; font-weight: 900; color: #c0522b; display: flex; align-items: baseline; gap: 6px; }
+    .popup-unit { font-size: 11px; color: #888; font-weight: 700; }
+    .popup-tsubo { font-size: 12px; color: #555; font-weight: 700; }
+    .popup-meta { font-size: 11px; color: #666; margin: 4px 0; }
+    .popup-note { font-size: 11px; color: #888; line-height: 1.5; margin: 4px 0 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .popup-actions { display: flex; gap: 6px; margin-bottom: 6px; }
+    .popup-btn { flex: 1; text-align: center; padding: 8px 6px; border-radius: 7px; font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer; font-family: inherit; line-height: 1.3; }
+    .popup-btn-graph { background: rgba(192,82,43,0.12); color: #c0522b; border: 1px solid rgba(192,82,43,0.35); }
+    .popup-btn-satei { background: #c0522b; color: #fff; border: 1px solid #c0522b; }
+    .popup-sublinks { display: flex; gap: 6px; }
+    .popup-sublinks a { flex: 1; text-align: center; padding: 6px 4px; border-radius: 6px; font-size: 11px; text-decoration: none; background: rgba(0,0,0,0.05); color: #444; white-space: nowrap; }
+    .leaflet-popup-content { margin: 12px 14px !important; }
+    /* 下部情報シート（タップしても地図が動かず、ヒートマップが常に見える） */
+    #town-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1200; background: #fff; border-radius: 16px 16px 0 0; box-shadow: 0 -4px 24px rgba(0,0,0,0.22); padding: 18px 16px 22px; display: none; max-height: 52vh; overflow-y: auto; }
+    #town-sheet.visible { display: block; animation: sheetUp 0.22s ease; }
+    @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    #town-sheet-close { position: absolute; top: 10px; right: 14px; background: none; border: none; font-size: 24px; color: #999; cursor: pointer; line-height: 1; z-index: 2; }
+    #town-sheet .popup-town { font-size: 17px; }
+    #town-sheet .popup-price { font-size: 22px; }
+    #town-sheet .popup-note { -webkit-line-clamp: 4; }
+    @media (min-width: 768px) { #town-sheet { left: auto; right: 20px; bottom: 20px; width: 330px; border-radius: 14px; } }
 
     .faq-item {
       background: var(--dark2); border: 1px solid rgba(0,0,0,0.07);
@@ -303,7 +327,7 @@
       .topnav, .page-header, .filter-bar, .legend { padding-left: 16px; padding-right: 16px; }
       .risk-bar { padding: 8px 16px; }
       #hazard-legend { padding: 8px 16px; }
-      #map { height: 320px; }
+      #map { height: 62vh; min-height: 420px; }
       .price-table th, .price-table td { padding: 9px 10px; font-size: 12px; }
       #trend-panel { margin: 0 12px 24px; padding: 16px; }
       .trend-chart-wrap { height: 160px; }
@@ -1052,48 +1076,37 @@ function getTownPrefKey(townName) {
   return townPrefMap[townName] || 'chiba_mihama';
 }
 
+function showTownSheet(html) {
+  var s = document.getElementById('town-sheet'), b = document.getElementById('town-sheet-body');
+  if (!s || !b) return;
+  b.innerHTML = html;
+  s.classList.add('visible');
+}
+function closeTownSheet() {
+  var s = document.getElementById('town-sheet');
+  if (s) s.classList.remove('visible');
+}
+
 function buildPopupHtml(d, price) {
   var tsubo = sqmToTsubo(price);
-  var typeLabel = currentFilter === 'house' ? '一戸建て' : currentFilter === 'mansion' ? 'マンション' : currentFilter === 'land' ? '土地' : '全種別';
-  var mailBody = encodeURIComponent('【美浜区 物件査定希望】\n\nエリア：' + d.name + '\n物件種別：\n面積（㎡）：\n築年数：\nご相談内容：');
-  var demandInfo = DEMAND_DATA[d.name];
-  var demandHtml = '';
-  if (demandInfo) {
-    var demandKey = currentFilter === 'house' ? 'house' : currentFilter === 'mansion' ? 'mansion' : currentFilter === 'land' ? 'land' : null;
-    var demandCount = demandKey ? demandInfo[demandKey] : (demandInfo.house + demandInfo.mansion + demandInfo.land);
-    demandHtml = '<div style="margin-top:6px;padding:5px 8px;background:rgba(22,163,74,0.08);border-radius:5px;font-size:11px;display:flex;justify-content:space-between;align-items:center">'
-      + '<span style="color:#555">👥 買い手候補（推定）</span>'
-      + '<span style="font-weight:700;color:#16a34a">' + demandCount + '人</span></div>';
-  }
-  var yieldHtml = d.yieldRange
-    ? '<div style="margin-top:4px;padding:5px 8px;background:rgba(29,78,216,0.07);border-radius:5px;font-size:11px;display:flex;justify-content:space-between;align-items:center">'
-      + '<span style="color:#555">📊 表面利回り目安</span>'
-      + '<span style="font-weight:700;color:#1d4ed8">' + d.yieldRange + '</span></div>'
-    : '';
-  var sateiCount = SATEI_COUNT_CACHE[getTownPrefKey(d.name)] || 0;
-  var sateiCountHtml = sateiCount >= 3
-    ? '<div style="margin-top:4px;padding:5px 8px;background:rgba(192,82,43,0.07);border-radius:5px;font-size:11px;display:flex;justify-content:space-between;align-items:center">'
-      + '<span style="color:#555">🏠 累計査定件数</span>'
-      + '<span style="font-weight:700;color:#c0522b">' + sateiCount.toLocaleString() + '件</span></div>'
-    : '';
-  var tradesHtml = d.trades
-    ? '<div class="popup-row"><span>取引件数</span><span><b>' + d.trades + '件</b><span style="font-size:10px;color:#999;font-weight:400;margin-left:4px">（直近3四半期）</span></span></div>'
-    : '';
-  return '<div class="popup-town">' + d.name + '</div>' +
-    '<div class="popup-price">' + Math.round(price/10000).toLocaleString() + '<span class="popup-unit">万円/㎡</span></div>' +
-    '<div class="popup-row"><span>坪単価目安</span><span><b>' + tsubo + '万円/坪</b></span></div>' +
-    '<div class="popup-row"><span>直近トレンド</span><span>' + d.trendLabel + '</span></div>' +
-    tradesHtml +
-    '<div class="popup-row"><span>種別</span><span>' + typeLabel + '</span></div>' +
-    demandHtml +
-    yieldHtml +
-    sateiCountHtml +
-    '<div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:10px;line-height:1.5">' + d.note + '</div>' +
-    '<button onclick="showTrendPanel(\'' + d.name.replace(/'/g, "\\'") + '\')" style="display:block;width:100%;background:rgba(192,82,43,0.12);color:#c0522b;border:1px solid rgba(192,82,43,0.35);text-align:center;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">📈 価格推移グラフを見る</button>' +
-    '<a href="../tools/1-ai-satei.html?area=' + getTownPrefKey(d.name) + '" style="display:block;background:#c0522b;color:#000;text-align:center;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;margin-bottom:6px">AI査定で概算を試算する →</a>' +
-    '<a href="qa.html?town=' + encodeURIComponent(d.name) + '" style="display:block;background:rgba(59,130,246,0.07);color:#1d4ed8;border:1px solid rgba(59,130,246,0.2);text-align:center;padding:6px 12px;border-radius:7px;font-size:11px;text-decoration:none;margin-bottom:6px">💬 ' + d.name + 'のQ&Aを見る</a>' +
-    '<a href="notify.html?area=' + d.id + '" style="display:block;background:rgba(16,163,127,0.07);color:#0f766e;border:1px solid rgba(16,163,127,0.2);text-align:center;padding:6px 12px;border-radius:7px;font-size:11px;text-decoration:none;margin-bottom:6px">📧 ' + d.name + 'の価格更新通知を受け取る</a>' +
-    '<a href="mailto:terra.realty.iam@gmail.com?subject=' + encodeURIComponent(d.name + 'の物件査定希望') + '&body=' + mailBody + '" style="display:block;background:rgba(0,0,0,0.06);color:#333;text-align:center;padding:6px 12px;border-radius:7px;font-size:11px;text-decoration:none">' + d.name + 'で無料相談する</a>';
+  var mailBody = encodeURIComponent('【' + d.name + ' 物件査定希望】\n\nエリア：' + d.name + '\n物件種別：\n面積（㎡）：\n築年数：\nご相談内容：');
+  var metaParts = [];
+  if (d.trades) metaParts.push('取引' + d.trades + '件');
+  if (d.yieldRange) metaParts.push('利回り' + d.yieldRange);
+  var nm = d.name.replace(/'/g, "\\'");
+  return '<div class="popup-town">' + d.name + '<span class="popup-trendtag">' + (d.trendLabel || '') + '</span></div>'
+    + '<div class="popup-price">' + Math.round(price/10000).toLocaleString() + '<span class="popup-unit">万円/㎡</span><span class="popup-tsubo">坪' + tsubo + '万</span></div>'
+    + (metaParts.length ? '<div class="popup-meta">' + metaParts.join('　/　') + '</div>' : '')
+    + (d.note ? '<div class="popup-note">' + d.note + '</div>' : '')
+    + '<div class="popup-actions">'
+    +   '<button onclick="showTrendPanel(\'' + nm + '\')" class="popup-btn popup-btn-graph">📈 価格推移</button>'
+    +   '<a href="../tools/1-ai-satei.html?area=' + getTownPrefKey(d.name) + '" class="popup-btn popup-btn-satei">🏠 査定する</a>'
+    + '</div>'
+    + '<div class="popup-sublinks">'
+    +   '<a href="qa.html?town=' + encodeURIComponent(d.name) + '">💬 Q&A</a>'
+    +   '<a href="notify.html?area=' + d.id + '">📧 通知</a>'
+    +   '<a href="mailto:terra.realty.iam@gmail.com?subject=' + encodeURIComponent(d.name + 'の物件査定希望') + '&body=' + mailBody + '">✉ 相談</a>'
+    + '</div>';
 }
 
 // GeoJSONの町名はe-Stat変換時にTOWN_DATAと同じ正規化名で出力済み。念のため恒等関数。
@@ -1124,7 +1137,7 @@ function renderMarkers() {
           color: '#fff',
           weight: 1.5
         }
-      }).bindPopup(buildPopupHtml(d, price), { autoPan: false }).addTo(map);
+      }).on('click', (function(h){ return function(){ showTownSheet(h); }; })(buildPopupHtml(d, price))).addTo(map);
       poly._townName = townName;
       markers.push(poly);
 
@@ -1162,7 +1175,7 @@ function renderMarkers() {
         color: '#fff',
         weight: 2,
         fillOpacity: 0.82
-      }).bindPopup(buildPopupHtml(d, price), { autoPan: false }).addTo(map);
+      }).on('click', (function(h){ return function(){ showTownSheet(h); }; })(buildPopupHtml(d, price))).addTo(map);
 
       var label = L.divIcon({
         html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none">' + d.name + '</div>',
@@ -1193,10 +1206,10 @@ function onTownSearch(query) {
     var combined = townPolys[0].getBounds();
     townPolys.forEach(function(m) { combined.extend(m.getBounds()); });
     map.fitBounds(combined, { maxZoom: 15 });
-    townPolys[0].openPopup(combined.getCenter());
+    showTownSheet(buildPopupHtml(d, getFilteredPrice(d)));
   } else {
     map.setView([d.lat, d.lng], 15);
-    markers.forEach(function(m) { if (m.getLatLng && m.getLatLng().lat === d.lat) m.openPopup(); });
+    showTownSheet(buildPopupHtml(d, getFilteredPrice(d)));
   }
 }
 
@@ -1432,7 +1445,7 @@ function focusTown(townId) {
   setTimeout(function() {
     map.setView([d.lat, d.lng], 15);
     markers.forEach(function(m) {
-      if (m.getLatLng && Math.abs(m.getLatLng().lat - d.lat) < 0.0001) m.openPopup();
+      
     });
   }, 400);
 }
@@ -1447,7 +1460,7 @@ function highlightFromUrl() {
   setTimeout(function() {
     map.setView([d.lat, d.lng], 15);
     markers.forEach(function(m) {
-      if (m.getLatLng && m.getLatLng().lat === d.lat) m.openPopup();
+      
     });
   }, 500);
 }
@@ -1638,5 +1651,6 @@ function showEPSuccess() {
 </div>
 <style>body{padding-bottom:58px}@media print{#nxt-bar{display:none!important}}</style>
 <script>if(sessionStorage.getItem('nxt_closed_mihama_map'))document.getElementById('nxt-bar').style.display='none';</script>
+<div id="town-sheet"><button id="town-sheet-close" onclick="closeTownSheet()" aria-label="閉じる">×</button><div id="town-sheet-body"></div></div>
 </body>
 </html>
