@@ -171,6 +171,7 @@ async function sbGetTownPrices(townNames) {
       const parts = key.split('::');
       const town = parts[0], type = parts[1];
       const vals = recentGroups[key].slice().sort((a,b) => a-b);
+      if (vals.length < 2) return; // 直近で1件のみの種別は信頼性が低いため採用しない（誤った相場表示を防ぐ）
       const med = vals[Math.floor(vals.length / 2)];
       if (!result[town]) result[town] = { year: maxYear, quarter: maxQ };
       result[town][type] = med;
@@ -318,6 +319,7 @@ async function sbGetWardPrices(wardName, townNames) {
       const parts = key.split('::');
       const town = parts[0], type = parts[1];
       const vals = recentGroups[key].slice().sort((a,b) => a-b);
+      if (vals.length < 2) return; // 直近で1件のみの種別は信頼性が低いため採用しない（誤った相場表示を防ぐ）
       const med = vals[Math.floor(vals.length / 2)];
       if (!result[town]) result[town] = { year: maxYear, quarter: maxQ };
       result[town][type] = med;
