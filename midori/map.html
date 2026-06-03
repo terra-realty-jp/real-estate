@@ -1203,16 +1203,71 @@ function showTrendPanel(townName) {
   panel.classList.add('visible');
   setTimeout(function() { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100);
 
-  if (typeof sbGetWardPrices === 'function') {
-    var townNames = TOWN_DATA.map(function(t) { return t.name; });
-    sbGetWardPrices(WARD_NAME, townNames).then(function() {
-      showTrendFallback(contentEl, subEl, townName);
-    }).catch(function() {
-      showTrendFallback(contentEl, subEl, townName);
-    });
-  } else {
+  if (typeof sbGetWardTrend !== 'function') {
     showTrendFallback(contentEl, subEl, townName);
+    return;
   }
+  sbGetWardTrend(WARD_NAME, townName).then(function(trend) {
+    if (!trend || trend.length === 0) {
+      showTrendFallback(contentEl, subEl, townName);
+      return;
+    }
+    renderTrendChart(contentEl, subEl, townName, trend);
+  }).catch(function() {
+    showTrendFallback(contentEl, subEl, townName);
+  });
+}
+
+function renderTrendChart(contentEl, subEl, townName, trend) {
+  if (_trendChart) { try { _trendChart.destroy(); } catch(e){} _trendChart = null; }
+  var labels = trend.map(function(t) { return t.year + 'Q' + t.quarter; });
+  var datasets = [];
+  var typeConf = [
+    { key: 'mansion', label: 'マンション', color: '#c0522b' },
+    { key: 'house',   label: '一戸建て',   color: '#16a34a' },
+    { key: 'land',    label: '土地',       color: '#1d4ed8' },
+  ];
+  typeConf.forEach(function(tc) {
+    var vals = trend.map(function(t) { return t[tc.key] ? Math.round(t[tc.key]/10000*10)/10 : null; });
+    if (vals.every(function(v){ return v === null; })) return;
+    datasets.push({ label: tc.label, data: vals, borderColor: tc.color, backgroundColor: tc.color + '22', borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, tension: 0.3, spanGaps: true });
+  });
+  var totalCount = trend.reduce(function(s,t){return s+t.count;},0);
+  subEl.textContent = '実取引' + totalCount + '件 | 国土交通省データ';
+  if (datasets.length === 0) { showTrendFallback(contentEl, subEl, townName); return; }
+  contentEl.innerHTML = '<div class="trend-chart-wrap"><canvas id="trendChartCanvas"></canvas></div>'
+    + '<div class="trend-stats" id="trend-stats-row"></div>';
+  var ctx = document.getElementById('trendChartCanvas').getContext('2d');
+  _trendChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: labels, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: "'Noto Sans JP', sans-serif", size: 11 } } },
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) + '万円/㎡' : 'データなし'); } } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 11 } } },
+        y: { ticks: { font: { size: 11 }, callback: function(v) { return v + '万'; } }, title: { display: true, text: '円/㎡（万）', font: { size: 10 } } }
+      }
+    }
+  });
+  var latest = trend[trend.length - 1];
+  var statsEl = document.getElementById('trend-stats-row');
+  if (statsEl) {
+    var statHtml = '';
+    typeConf.forEach(function(tc) {
+      if (!latest[tc.key]) return;
+      statHtml += '<div class="trend-stat"><div class="trend-stat-label">' + tc.label + '</div><div class="trend-stat-value">' + Math.round(latest[tc.key]/10000).toFixed(1) + '万円/㎡</div></div>';
+    });
+    statsEl.innerHTML = statHtml;
+  }
+  var ctaHtml = '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'
+    + '<a href="../tools/1-ai-satei.html?area=' + getTownPrefKey(townName) + '" style="flex:1;min-width:120px;background:#c0522b;color:#000;text-align:center;padding:8px 10px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none">このエリアで査定する →</a>'
+    + '<a href="qa.html?town=' + encodeURIComponent(townName) + '" style="flex:1;min-width:120px;background:rgba(29,78,216,0.08);color:#1d4ed8;border:1px solid rgba(29,78,216,0.2);text-align:center;padding:8px 10px;border-radius:7px;font-size:11px;text-decoration:none">💬 Q&Aを見る →</a>'
+    + '</div>';
+  contentEl.insertAdjacentHTML('beforeend', ctaHtml);
 }
 
 function showTrendFallback(contentEl, subEl, townName) {
