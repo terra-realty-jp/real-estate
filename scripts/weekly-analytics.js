@@ -66,13 +66,24 @@ function httpPost(hostname, path, headers, body) {
 const sbHost = SUPABASE_URL ? new URL(SUPABASE_URL).hostname : '';
 const sbAuth = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
 
+// Content-Range ヘッダ（例: "0-0/123"）から実件数を取得する
+function httpGetCount(hostname, path, headers) {
+  return new Promise((resolve) => {
+    const req = https.request({ hostname, path, method: 'GET', headers, timeout: 15000 }, res => {
+      const cr = res.headers['content-range'] || '';
+      res.on('data', () => {});
+      res.on('end', () => { const m = cr.match(/\/(\d+)\s*$/); resolve(m ? parseInt(m[1], 10) : 0); });
+    });
+    req.on('error', () => resolve(-1));
+    req.on('timeout', () => { req.destroy(); resolve(-1); });
+    req.end();
+  });
+}
+
 async function sbCount(table, filter = '') {
   try {
-    const path = `/rest/v1/${table}?select=id${filter ? '&' + filter : ''}&limit=1`;
-    const res = await httpGet(sbHost, path, { ...sbAuth, 'Prefer': 'count=exact', 'Range': '0-0' });
-    // Supabase returns count in Content-Range header — parse from response
-    if (Array.isArray(res)) return res.length;
-    return 0;
+    const path = `/rest/v1/${table}?select=id${filter ? '&' + filter : ''}`;
+    return await httpGetCount(sbHost, path, { ...sbAuth, 'Prefer': 'count=exact', 'Range': '0-0' });
   } catch(e) { return -1; }
 }
 
