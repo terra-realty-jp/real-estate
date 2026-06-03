@@ -1009,6 +1009,7 @@ function _esc(s){return String(s).replace(/[&<>"']/g,function(c){return _ESC_MAP
 
 var markers = [];
 var geojsonData = null;
+var _mapFitted = false;
 
 // 町名 → TOWN_DATA の逆引きマップ
 var TOWN_MAP = {};
@@ -1104,7 +1105,7 @@ function renderMarkers() {
           color: '#fff',
           weight: 1.5
         }
-      }).bindPopup(buildPopupHtml(d, price)).addTo(map);
+      }).bindPopup(buildPopupHtml(d, price), { autoPan: false }).addTo(map);
       poly._townName = townName;
       markers.push(poly);
 
@@ -1124,6 +1125,12 @@ function renderMarkers() {
       }
     });
 
+    if (!_mapFitted) {
+      var _allB = null;
+      markers.forEach(function(m) { if (m.getBounds) { _allB = _allB ? _allB.extend(m.getBounds()) : m.getBounds(); } });
+      if (_allB && _allB.isValid && _allB.isValid()) { map.fitBounds(_allB, { padding: [25, 25], maxZoom: 14 }); _mapFitted = true; }
+    }
+
   } else {
     // --- フォールバック: circleMarker ---
     TOWN_DATA.forEach(function(d) {
@@ -1136,7 +1143,7 @@ function renderMarkers() {
         color: '#fff',
         weight: 2,
         fillOpacity: 0.82
-      }).bindPopup(buildPopupHtml(d, price)).addTo(map);
+      }).bindPopup(buildPopupHtml(d, price), { autoPan: false }).addTo(map);
 
       var label = L.divIcon({
         html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none">' + d.name + '</div>',
