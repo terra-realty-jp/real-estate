@@ -439,7 +439,21 @@
 
 <main class="main">
 
-  <div class="insight-grid">
+  
+  <!-- Feature A: 実成約価格 vs ポータル売出価格 -->
+  <div style="background:linear-gradient(135deg,rgba(29,78,216,0.07) 0%,rgba(29,78,216,0.03) 100%);border:1.5px solid rgba(29,78,216,0.25);border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-size:22px;flex-shrink:0;margin-top:1px">🏷️</div>
+    <div>
+      <div style="font-size:12px;font-weight:900;color:#1d4ed8;margin-bottom:4px">このマップが表示するのは「実際に売れた価格」です</div>
+      <div style="font-size:11px;color:#374151;line-height:1.7">SUUMOやHOME'Sに掲載される<strong>売出価格</strong>は業者が設定した希望価格で、実際の成約価格より<strong style="color:#dc2626">平均8〜15%高め</strong>に設定されています。当マップの価格は国土交通省に届け出られた<strong>実際の成約価格（取引事例）</strong>のみを使用しています。</div>
+      <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
+        <span style="font-size:10px;background:rgba(220,38,38,0.1);color:#dc2626;border-radius:100px;padding:2px 8px;font-weight:700">ポータル売出価格 ＝ 業者の希望額（高め）</span>
+        <span style="font-size:10px;background:rgba(22,163,74,0.1);color:#16a34a;border-radius:100px;padding:2px 8px;font-weight:700">当サイトの価格 ＝ 実際の成約額（国交省）</span>
+      </div>
+    </div>
+  </div>
+
+<div class="insight-grid">
     <div class="insight-card">
       <div class="num">約168,000円</div>
       <div class="desc">中央区 住宅地地価平均/㎡<br>（2025年推計・国土交通省）</div>
@@ -454,7 +468,7 @@
     </div>
   </div>
 
-  <div class="section-title">町丁目別 価格一覧（2024〜2025年 実取引ベース）</div>
+  <div class="section-title">町丁目別 価格一覧（2024〜2025年 実成約価格ベース・国交省届出）</div>
 
   <div style="background:rgba(29,78,216,0.06);border:1px solid rgba(29,78,216,0.18);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#1d4ed8;line-height:1.7">
     💼 <strong>投資目的でお探しの方：</strong>「利回り目安」列をクリックするとエリアを利回り順にソートできます。磯辺・真砂の中古マンションが実質利回り3〜5%で実績豊富。
@@ -470,7 +484,7 @@
           <th onclick="sortTable('land')">土地</th>
           <th onclick="sortTable('tsubo')">坪単価目安</th>
           <th onclick="sortTable('trend')">トレンド</th>
-          <th onclick="sortTable('yield')" title="中央区内の賃貸物件の表面利回り目安（参考値）">利回り目安</th>
+          <th onclick="sortTable('yield')" title="中央区内の賃貸物件の表面利回り目安（実成約価格・国交省）">利回り目安</th>
         </tr>
       </thead>
       <tbody id="priceTableBody">
@@ -620,7 +634,7 @@ var DEMAND_DATA = {
   '葛城':     { house: 3, mansion: 5,  land: 2 },
 };
 
-// -------- 中央区 町丁目別 価格データ（2024〜2025年参考値）--------
+// -------- 中央区 町丁目別 価格データ（2024〜2025年 実成約価格・国交省届出）--------
 // 町名・centroidは data/chuo-geojson.json（e-Stat小地域）に一致。
 // sqm/types は基準値（GRANT適用後 sbGetWardPrices が ward_properties の実値で上書き）。
 var TOWN_DATA = [
@@ -1077,7 +1091,7 @@ function buildPopupHtml(d, price) {
   var nm = d.name.replace(/'/g, "\\'");
   return '<div class="popup-town">' + d.name + '<span class="popup-trendtag">' + (d.trendLabel || '') + '</span></div>'
     + '<div class="popup-price">' + Math.round(price/10000).toLocaleString() + '<span class="popup-unit">万円/㎡</span><span class="popup-tsubo">坪' + tsubo + '万</span></div>'
-    + (metaParts.length ? '<div class="popup-meta">' + metaParts.join('　/　') + '</div>' : '')
+    + (metaParts.length ? '<div class="popup-meta"><span style="font-size:9px;background:rgba(22,163,74,0.12);color:#16a34a;border:1px solid rgba(22,163,74,0.3);border-radius:100px;padding:1px 6px;font-weight:700;white-space:nowrap">実成約価格</span> ' + metaParts.join('　/　') + '</div>' : '<div class="popup-meta"><span style="font-size:9px;background:rgba(22,163,74,0.12);color:#16a34a;border:1px solid rgba(22,163,74,0.3);border-radius:100px;padding:1px 6px;font-weight:700;white-space:nowrap">実成約価格</span></div>')
     + (d.note ? '<div class="popup-note">' + d.note + '</div>' : '')
     + '<div class="popup-actions">'
     +   '<button onclick="showTrendPanel(\'' + nm + '\')" class="popup-btn popup-btn-graph">📈 価格推移</button>'
