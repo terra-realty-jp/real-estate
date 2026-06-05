@@ -357,7 +357,11 @@
 
 <div class="page-header">
   <h1>緑区 不動産相場マップ</h1>
-  <p>町丁目ごとの㎡単価を地図上で確認できます。円の大きさが取引件数、色が価格水準を示します。</p>
+  <p>町丁目ごとの<strong>実際に売れた価格（成約㎡単価）</strong>を地図で確認できます。色が価格水準、ラベルが坪単価です。</p>
+  <div style="background:rgba(192,82,43,0.06);border:1px solid rgba(192,82,43,0.28);border-radius:10px;padding:12px 14px;margin:10px 0 2px;font-size:12.5px;line-height:1.75;color:#5a4a42">
+    <strong style="color:#c0522b">💡 これは「希望価格」ではなく「実際に売れた価格」です</strong><br>
+    ポータルサイトに出ているのは売主の<strong>希望（売出）価格</strong>。中古はそれより<strong>低く成約する</strong>のが一般的です。このマップは国土交通省の<strong>実際の取引（成約）価格</strong>なので、<strong>「本当に売れる価格」の目安</strong>になります。
+  </div>
   <div class="data-badge">
     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
     国土交通省「不動産取引価格情報」を使用
@@ -445,7 +449,7 @@
     <div style="font-size:22px;flex-shrink:0;margin-top:1px">🏷️</div>
     <div>
       <div style="font-size:12px;font-weight:900;color:#1d4ed8;margin-bottom:4px">このマップが表示するのは「実際に売れた価格」です</div>
-      <div style="font-size:11px;color:#374151;line-height:1.7">不動産ポータルサイトに掲載される<strong>売出価格</strong>は業者が設定した希望価格で、実際の成約価格より<strong style="color:#dc2626">平均8〜15%高め</strong>に設定されています。当マップの価格は国土交通省に届け出られた<strong>実際の成約価格（取引事例）</strong>のみを使用しています。</div>
+      <div style="font-size:11px;color:#374151;line-height:1.7">不動産ポータルサイトに掲載される<strong>売出価格</strong>は業者が設定した希望価格で、実際の成約価格より<strong style="color:#dc2626">高めに設定される傾向</strong>があります。当マップの価格は国土交通省に届け出られた<strong>実際の成約価格（取引事例）</strong>のみを使用しています（根拠：国土交通省 不動産情報ライブラリ）。</div>
       <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
         <span style="font-size:10px;background:rgba(220,38,38,0.1);color:#dc2626;border-radius:100px;padding:2px 8px;font-weight:700">ポータル売出価格 ＝ 業者の希望額（高め）</span>
         <span style="font-size:10px;background:rgba(22,163,74,0.1);color:#16a34a;border-radius:100px;padding:2px 8px;font-weight:700">当サイトの価格 ＝ 実際の成約額（国交省）</span>
@@ -1104,6 +1108,7 @@ function buildPopupHtml(d, price) {
   var nm = d.name.replace(/'/g, "\\'");
   return '<div class="popup-town">' + d.name + '<span class="popup-trendtag">' + (d.trendLabel || '') + '</span></div>'
     + '<div class="popup-price">' + Math.round(price/10000).toLocaleString() + '<span class="popup-unit">万円/㎡</span><span class="popup-tsubo">坪' + tsubo + '万</span></div>'
+    + '<div style="font-size:10px;color:#15803d;font-weight:700;margin-top:2px">📊 実際に売れた価格（国交省・成約ベース）</div>'
     + (metaParts.length ? '<div class="popup-meta"><span style="font-size:9px;background:rgba(22,163,74,0.12);color:#16a34a;border:1px solid rgba(22,163,74,0.3);border-radius:100px;padding:1px 6px;font-weight:700;white-space:nowrap">実成約価格</span> ' + metaParts.join('　/　') + '</div>' : '<div class="popup-meta"><span style="font-size:9px;background:rgba(22,163,74,0.12);color:#16a34a;border:1px solid rgba(22,163,74,0.3);border-radius:100px;padding:1px 6px;font-weight:700;white-space:nowrap">実成約価格</span></div>')
     + (d.note ? '<div class="popup-note">' + d.note + '</div>' : '')
     + '<div class="popup-actions">'
