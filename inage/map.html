@@ -458,6 +458,7 @@
   <button id="btn-elev"  class="risk-btn elev"  onclick="toggleHazard('elev')"  title="色別標高図（国土地理院）">📊 標高図</button>
   <button id="btn-photo"  class="risk-btn photo"  onclick="toggleBasePhoto()"  title="国土地理院 最新空中写真に切り替え">📷 航空写真</button>
   <button id="btn-ritchi" class="risk-btn ritchi" onclick="toggleRitchi()"     title="立地適正化計画（居住誘導区域・都市機能誘導区域）">🏙 立地適正化</button>
+  <button id="btn-diag" class="risk-btn" onclick="toggleDiagMode()" title="地点の用途地域・立地適正化・売りやすさを診断" style="border-color:#c0522b;color:#c0522b;font-weight:700">🔍 売りやすさ診断</button>
   <a href="https://disaportal.gsi.go.jp/" target="_blank" rel="noopener"
      style="font-size:10px;color:var(--text-muted);margin-left:auto;text-decoration:none;white-space:nowrap">
     出典: 国土交通省 →
@@ -1169,6 +1170,96 @@ function _renderRitchiLegend(geojson) {
   });
 }
 
+// ===== 売りやすさ・資産性診断（用途地域 + 立地適正化）=====
+var _DIAG_WARD = 'inage';
+var _diagOn = false, _diagYoto = null, _diagRitchi = null, _diagLoading = false;
+var _RITCHI_NAME = { '1':'居住誘導区域','2':'都市機能誘導区域','3':'特定用途誘導地区' };
+function toggleDiagMode() {
+  var btn = document.getElementById('btn-diag');
+  _diagOn = !_diagOn;
+  if (_diagOn) {
+    if (btn) btn.classList.add('active');
+    try { map._container.style.cursor = 'crosshair'; } catch(e) {}
+    _loadDiagData();
+    showTownSheet('<div class="popup-town">🔍 売りやすさ診断</div><div style="font-size:13px;color:#555;line-height:1.8;margin-top:6px">地図で<strong>調べたい場所をタップ</strong>してください。その地点の<strong>用途地域・建ぺい率/容積率・立地適正化区域</strong>と、<strong>売りやすさ・資産性の目安</strong>を表示します。</div><div style="font-size:11px;color:#999;margin-top:8px">※ もう一度「売りやすさ診断」を押すと解除します。</div>');
+  } else {
+    if (btn) btn.classList.remove('active');
+    try { map._container.style.cursor = ''; } catch(e) {}
+  }
+}
+function _loadDiagData() {
+  if ((_diagYoto && _diagRitchi) || _diagLoading) return;
+  _diagLoading = true;
+  fetch('../data/yoto-' + _DIAG_WARD + '.geojson').then(function(r){return r.ok?r.json():null;}).then(function(g){ _diagYoto = (g&&g.features)||[]; }).catch(function(){ _diagYoto = []; });
+  fetch('../data/ritchi-' + _DIAG_WARD + '.geojson').then(function(r){return r.ok?r.json():null;}).then(function(g){ _diagRitchi = (g&&g.features)||[]; }).catch(function(){ _diagRitchi = []; }).finally(function(){ _diagLoading = false; });
+}
+function _ptInRing(lng, lat, ring) {
+  var inside = false;
+  for (var i=0, j=ring.length-1; i<ring.length; j=i++) {
+    var xi=ring[i][0], yi=ring[i][1], xj=ring[j][0], yj=ring[j][1];
+    if (((yi>lat)!==(yj>lat)) && (lng < (xj-xi)*(lat-yi)/(yj-yi)+xi)) inside = !inside;
+  }
+  return inside;
+}
+function _ptInFeature(lng, lat, feat) {
+  var g = feat.geometry; if (!g) return false;
+  var polys = g.type === 'MultiPolygon' ? g.coordinates : (g.type === 'Polygon' ? [g.coordinates] : []);
+  for (var p=0; p<polys.length; p++) {
+    var rings = polys[p];
+    if (rings.length && _ptInRing(lng, lat, rings[0])) {
+      var hole = false;
+      for (var h=1; h<rings.length; h++) { if (_ptInRing(lng, lat, rings[h])) { hole = true; break; } }
+      if (!hole) return true;
+    }
+  }
+  return false;
+}
+function _findFeature(lng, lat, feats) {
+  if (!feats) return null;
+  for (var i=0; i<feats.length; i++) if (_ptInFeature(lng, lat, feats[i])) return feats[i];
+  return null;
+}
+function _diagClick(e) {
+  if (!_diagOn || !e || !e.latlng) return;
+  var lat = e.latlng.lat, lng = e.latlng.lng;
+  if (!_diagYoto || !_diagRitchi) { _loadDiagData(); showTownSheet('<div class="popup-town">読み込み中…</div><div style="font-size:12px;color:#666;margin-top:6px">データ取得中です。数秒後にもう一度タップしてください。</div>'); return; }
+  showTownSheet(_diagHtml(_findFeature(lng, lat, _diagYoto), _findFeature(lng, lat, _diagRitchi)));
+}
+function _diagHtml(yf, rf) {
+  var yp = yf ? yf.properties : null;
+  var yname = yp ? (yp['用途地域名'] || yp.kda || '') : '';
+  var bar = yp ? yp.bar : '', cbr = yp ? yp.cbr : '';
+  var rcode = rf ? String(rf.properties.A50_006 || '') : '';
+  var rname = _RITCHI_NAME[rcode] || '';
+  var housing = /低層|中高層|住居/.test(yname), commercial = /商業/.test(yname), industrial = /工業/.test(yname);
+  var inRes = rcode === '1', inUrb = rcode === '2' || rcode === '3';
+  var score = 50;
+  if (housing) score += 25; else if (commercial) score += 10; else if (industrial) score -= 20;
+  if (inRes) score += 25; else if (inUrb) score += 15; else score -= 5;
+  var verdict, vcolor;
+  if (score >= 80) { verdict = '◎ 売りやすく資産性も高い'; vcolor = '#16a34a'; }
+  else if (score >= 60) { verdict = '○ 標準的に売りやすい'; vcolor = '#1d4ed8'; }
+  else if (score >= 45) { verdict = '△ やや注意（条件次第）'; vcolor = '#c2410c'; }
+  else { verdict = '⚠ 売りにくい可能性（要確認）'; vcolor = '#dc2626'; }
+  var yc = housing ? '住宅地として標準的で需要が安定。'
+    : commercial ? '商業地で利便性は高いが、住環境より店舗・収益物件向き。'
+    : industrial ? '工業系で住宅需要が限定的。住宅としては売りにくい傾向。'
+    : (yname ? '' : '用途地域の指定が確認できませんでした（市街化調整区域などの可能性。建築制限が強く売りにくい場合あり）。');
+  var rc = inRes ? '市が将来も住宅地として人口・インフラを維持・誘導する区域。資産性が保たれやすい。'
+    : inUrb ? '都市機能（商業・公共施設等）を誘導する区域。利便性・資産性が高い。'
+    : '立地適正化の誘導区域外。将来インフラ・人口が縮小する可能性があり、長期の資産性に注意。';
+  var h = '<div class="popup-town">🔍 売りやすさ・資産性 診断</div>';
+  h += '<div style="font-size:16px;font-weight:900;color:' + vcolor + ';margin:6px 0 10px">' + verdict + '</div>';
+  h += '<div style="font-size:12px;line-height:1.7;color:#444">';
+  h += '<div style="margin-bottom:8px"><strong>📐 用途地域</strong><br>' + (yname || '指定なし／調整区域の可能性') + (bar ? '（建ぺい率' + bar + '%・容積率' + cbr + '%）' : '') + '<br><span style="color:#666">' + yc + '</span></div>';
+  h += '<div style="margin-bottom:8px"><strong>🏙 立地適正化</strong><br>' + (rname || '誘導区域外') + '<br><span style="color:#666">' + rc + '</span></div>';
+  h += '</div>';
+  h += '<div style="font-size:11px;color:#999;line-height:1.6;margin:8px 0 10px">※ 用途地域=国土数値情報A29／立地適正化=A50。浸水・土砂などの災害リスクは上の「重ね合わせ」レイヤーで併せて確認を。再建築可否・接道などの個別判断はTERRAの無料相談で。</div>';
+  h += '<div class="popup-actions"><a href="../tools/1-ai-satei.html" class="popup-btn popup-btn-satei">🏠 査定する</a><a href="mailto:terra.realty.iam@gmail.com?subject=' + encodeURIComponent('売りやすさ・資産性の相談') + '" class="popup-btn popup-btn-graph">📧 無料相談</a></div>';
+  return h;
+}
+try { map.on('click', _diagClick); } catch(e) {}
+
 var _hazardLayers = {};
 var _usePhoto = false;
 var _photoLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg', {
@@ -1326,7 +1417,7 @@ function renderMarkers() {
           color: '#fff',
           weight: 1.5
         }
-      }).on('click', (function(h){ return function(){ showTownSheet(h); }; })(buildPopupHtml(d, price))).addTo(map);
+      }).on('click', (function(h){ return function(e){ if (typeof _diagOn !== 'undefined' && _diagOn) { _diagClick(e); } else { showTownSheet(h); } }; })(buildPopupHtml(d, price))).addTo(map);
       poly._townName = townName;
       markers.push(poly);
 
@@ -1359,7 +1450,7 @@ function renderMarkers() {
         color: '#fff',
         weight: 2,
         fillOpacity: 0.82
-      }).on('click', (function(h){ return function(){ showTownSheet(h); }; })(buildPopupHtml(d, price))).addTo(map);
+      }).on('click', (function(h){ return function(e){ if (typeof _diagOn !== 'undefined' && _diagOn) { _diagClick(e); } else { showTownSheet(h); } }; })(buildPopupHtml(d, price))).addTo(map);
 
       var label = L.divIcon({
         html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none">' + d.name + '</div>',
