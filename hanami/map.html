@@ -991,6 +991,7 @@ function toggleDiagMode() {
     if (btn) btn.classList.add('active');
     try { map._container.style.cursor = 'crosshair'; } catch(e) {}
     _loadDiagData();
+    _track('diag_open', {ward:_DIAG_WARD});
     showTownSheet('<div class="popup-town">🔍 売りやすさ診断</div><div style="font-size:13px;color:#555;line-height:1.8;margin-top:6px">地図で<strong>調べたい場所をタップ</strong>してください。その地点の<strong>用途地域・建ぺい率/容積率・立地適正化区域</strong>と、<strong>売りやすさ・資産性の目安</strong>を表示します。</div><div style="font-size:11px;color:#999;margin-top:8px">※ もう一度「売りやすさ診断」を押すと解除します。</div>');
   } else {
     if (btn) btn.classList.remove('active');
@@ -1034,6 +1035,7 @@ function _diagClick(e) {
   var lat = e.latlng.lat, lng = e.latlng.lng;
   if (!_diagYoto || !_diagRitchi) { _loadDiagData(); showTownSheet('<div class="popup-town">読み込み中…</div><div style="font-size:12px;color:#666;margin-top:6px">データ取得中です。数秒後にもう一度タップしてください。</div>'); return; }
   showTownSheet(_diagHtml(_findFeature(lng, lat, _diagYoto), _findFeature(lng, lat, _diagRitchi)));
+  _track('diag_result', {ward:_DIAG_WARD});
 }
 function _diagHtml(yf, rf) {
   var yp = yf ? yf.properties : null;
@@ -1069,6 +1071,8 @@ function _diagHtml(yf, rf) {
   return h;
 }
 try { map.on('click', _diagClick); } catch(e) {}
+function _track(n, p){ try { if (typeof gtag === 'function') gtag('event', n, p || {}); } catch(e){} }
+document.addEventListener('click', function(e){ var a = (e.target && e.target.closest) ? e.target.closest('a') : null; if (a && a.href && a.href.indexOf('1-ai-satei') >= 0) _track('satei_click', {from:'map'}); }, true);
 
 var _hazardLayers = {};
 var _usePhoto = false;
@@ -1222,7 +1226,7 @@ function renderMarkers() {
           color: '#fff',
           weight: 1.5
         }
-      }).on('click', (function(h){ return function(e){ if (typeof _diagOn !== 'undefined' && _diagOn) { _diagClick(e); } else { showTownSheet(h); } }; })(buildPopupHtml(d, price))).addTo(map);
+      }).on('click', (function(h){ return function(e){ if (typeof _diagOn !== 'undefined' && _diagOn) { _diagClick(e); } else { showTownSheet(h); try{ _track('town_view', {ward:_DIAG_WARD}); }catch(e){} } }; })(buildPopupHtml(d, price))).addTo(map);
       poly._townName = townName;
       markers.push(poly);
 
@@ -1260,7 +1264,7 @@ function renderMarkers() {
         color: '#fff',
         weight: 2,
         fillOpacity: 0.82
-      }).on('click', (function(h){ return function(e){ if (typeof _diagOn !== 'undefined' && _diagOn) { _diagClick(e); } else { showTownSheet(h); } }; })(buildPopupHtml(d, price))).addTo(map);
+      }).on('click', (function(h){ return function(e){ if (typeof _diagOn !== 'undefined' && _diagOn) { _diagClick(e); } else { showTownSheet(h); try{ _track('town_view', {ward:_DIAG_WARD}); }catch(e){} } }; })(buildPopupHtml(d, price))).addTo(map);
 
       var label = L.divIcon({
         html: '<div style="font-size:11px;font-weight:700;color:#1a1917;text-shadow:0 0 4px #fff,0 0 4px #fff;white-space:nowrap;pointer-events:none">' + d.name + '</div>',
@@ -1319,6 +1323,7 @@ function showTrendPanel(townName) {
   }
   _trendPanelTown = townName;
   titleEl.textContent = townName + ' — 価格推移';
+  try{ _track('trend_view', {town: townName}); }catch(e){}
   subEl.textContent = '読み込み中…';
 
   try { sbLogCardUsage('map', 'map-click__hanami__' + townName, 'calc', townName + 'エリア価格推移閲覧'); } catch(e) {}

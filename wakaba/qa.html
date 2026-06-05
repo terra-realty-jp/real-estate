@@ -548,5 +548,17 @@ function showEPSuccess() {
 }
 </script>
 
+<script>
+document.addEventListener('click', function(e){
+  try {
+    if (typeof gtag !== 'function') return;
+    var t = e.target;
+    var btn = (t && t.closest) ? t.closest('button') : null;
+    if (btn && btn.getAttribute('onclick') && btn.getAttribute('onclick').indexOf('submitQuestion') >= 0) gtag('event','qa_post_submit',{});
+    var a = (t && t.closest) ? t.closest('a') : null;
+    if (a && a.href && a.href.indexOf('1-ai-satei') >= 0) gtag('event','satei_click',{from:'qa'});
+  } catch(_){}
+}, true);
+</script>
 </body>
 </html>
