@@ -376,6 +376,7 @@ function renderQA() {
     dateEl.className = 'qa-date';
     dateEl.textContent = (q.created_at || '').substring(0, 10);
     meta.appendChild(dateEl);
+    if (q.source === 'user') { var uTag = document.createElement('span'); uTag.textContent = '👤 住民の投稿'; uTag.style.cssText='font-size:10px;font-weight:700;color:#15803d;background:rgba(22,163,74,0.1);border-radius:4px;padding:2px 6px;margin-left:6px'; meta.appendChild(uTag); }
     if (q.answer) {
       var ans = document.createElement('span');
       ans.className = 'qa-answered';
@@ -497,9 +498,15 @@ function showPostSuccess() {
 (function() {
   renderQA();
   try {
+    var _qp = new URLSearchParams(location.search);
+    var _qt = _qp.get('town');
+    if (_qt) { var _sel = document.getElementById('post-town'); if (_sel) { for (var _i=0;_i<_sel.options.length;_i++){ if(_sel.options[_i].value===_qt){_sel.selectedIndex=_i;break;} } } }
+    if (_qp.get('post') || location.hash === '#post') { var _ps = document.querySelector('.post-section'); if (_ps) setTimeout(function(){ _ps.scrollIntoView({behavior:'smooth'}); }, 350); }
+  } catch(e) {}
+  try {
     var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
     if (!client) return;
-    client.from('qa_questions').select('id,category,town_name,title,body,status,created_at')
+    client.from('qa_questions').select('id,category,town_name,title,body,status,source,created_at')
       .eq('status', 'published')
       .order('created_at', { ascending: false })
       .limit(50)

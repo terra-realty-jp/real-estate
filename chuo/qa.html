@@ -473,7 +473,8 @@ function submitQuestion() {
     town_name: town || null,
     title: title,
     body: body,
-    status: 'pending'
+    status: 'pending',
+    source: 'user'
   };
 
   var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
@@ -502,7 +503,7 @@ function submitQuestion() {
   var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
   if (!client) return;
   client.from('qa_questions')
-    .select('id, category, town_name, title, body, created_at')
+    .select('id, category, town_name, title, body, source, created_at')
     .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(20)

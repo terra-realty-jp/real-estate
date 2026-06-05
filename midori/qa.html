@@ -241,7 +241,7 @@ function submitPost(){
   if(!body){alert('内容を入力してください');return;}
   var btn=document.getElementById('post-btn');
   btn.disabled=true;btn.textContent='送信中…';
-  var record={session_id:'anon_'+Date.now(),category:cat,town_name:town||'緑区全般',title:title,body:body,status:'pending'};
+  var record={session_id:'anon_'+Date.now(),category:cat,town_name:town||'緑区全般',title:title,body:body,status:'pending',source:'user'};
   try{
     var client=typeof getSupabaseClient==='function'?getSupabaseClient():null;
     if(client){client.from('qa_questions').insert(record).then(function(){showPostSuccess();}).catch(function(){showPostSuccess();});}
@@ -343,5 +343,12 @@ function showEPSuccess() {
 }
 </script>
 
+<script>
+(function(){ try {
+  var qp=new URLSearchParams(location.search); var t=qp.get("town");
+  if(t){ var sel=document.getElementById("post-town")||document.getElementById("q-town"); if(sel){for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===t){sel.selectedIndex=i;break;}}} }
+  if(qp.get("post")||location.hash==="#post"){ var ps=document.querySelector(".post-section")||document.getElementById("q-submit"); if(ps) setTimeout(function(){ps.scrollIntoView({behavior:"smooth"});},400); }
+} catch(e){} })();
+</script>
 </body>
 </html>
