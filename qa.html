@@ -238,18 +238,22 @@
     function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 
     function loadQuestions(){
-      var client=_client();
-      if(!client || window._noSupabase){ document.getElementById('q-list').innerHTML='<div class="loading">ただいま一覧を読み込めませんでした。上のフォームからの投稿は引き続きご利用いただけます。</div>'; return; }
-      client.from('qa_questions').select('id,category,town_name,title,body,status,source,created_at, qa_answers(body,is_official)')
-        .eq('status','published').order('created_at',{ascending:false}).limit(40)
-        .then(function(res){
-          if(res && res.error){ throw res.error; }
-          _allQ = res.data || [];
-          renderList();
-        }).catch(function(err){
-          document.getElementById('q-list').innerHTML='<div class="loading">一覧の読み込みに失敗しました。</div>';
-          console.warn('qa load error', err);
-        });
+      // 編集コンテンツ（TERRA作成のQ&A）はリポジトリのJSONから読み込む（Git更新で即反映・Supabase不要）。
+      fetch('data/qa-seed.json', { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(seed){
+        _allQ = seed || [];
+        renderList();
+        // 住民の投稿（公開済み）だけをSupabaseから追加で読み込み、上に差し込む。
+        var client=_client();
+        if(client && !window._noSupabase){
+          client.from('qa_questions').select('id,category,town_name,title,body,status,source,created_at, qa_answers(body,is_official)')
+            .eq('status','published').eq('source','user').order('created_at',{ascending:false}).limit(50)
+            .then(function(res){ if(res && !res.error && res.data && res.data.length){ _allQ = res.data.concat(seed); renderList(); } })
+            .catch(function(){});
+        }
+      }).catch(function(err){
+        document.getElementById('q-list').innerHTML='<div class="loading">一覧の読み込みに失敗しました。</div>';
+        console.warn('qa seed load error', err);
+      });
     }
 
     document.addEventListener('DOMContentLoaded', function(){
