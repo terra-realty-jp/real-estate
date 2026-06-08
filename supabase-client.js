@@ -16,7 +16,13 @@ const SUPABASE_ANON_KEY = 'sb_publishable_3M5DgUWoMnXvelUiILMiAQ_aQQeGFlf';
 // 内部状態
 // ─────────────────────────────────────────────
 const _sbOK = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
-const _db   = _sbOK ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// supabase-js のCDN読み込みが失敗してもページ全体を壊さない（getSupabaseClientがnullを返すだけにする）。
+let _db = null;
+try {
+  if (_sbOK && typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
+    _db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+} catch (e) { _db = null; }
 let _sbUser = null;
 const _sbListeners = [];
 

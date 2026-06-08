@@ -364,16 +364,16 @@ function showPostSuccess() {
 // 初期描画
 (function() {
   try {
-    var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
-    if (client) {
-      client.from('qa_questions').select('*, qa_answers(body, is_official)').eq('status', 'published').order('created_at', { ascending: false }).limit(50)
-        .then(function(res) {
-          if (!res.error && res.data && res.data.length > 0) {
-            allItems = res.data;
-          }
-          renderQA(getFiltered(allItems));
-        }).catch(function() { renderQA(getFiltered(allItems)); });
-    } else { renderQA(getFiltered(allItems)); }
+    // 編集コンテンツはリポジトリのJSONから（Git更新で即反映・Supabase不要）
+    fetch('../data/qa-seed.json', { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(seed){
+      var w = (seed || []).filter(function(q){ return q.ward === 'mihama'; });
+      if (w.length) allItems = w; renderQA(getFiltered(allItems));
+      var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+      if (client) {
+        client.from('qa_questions').select('*, qa_answers(body, is_official)').eq('status','published').eq('source','user').order('created_at',{ascending:false}).limit(50)
+          .then(function(res){ if(!res.error && res.data && res.data.length){ allItems = res.data.concat(w); renderQA(getFiltered(allItems)); } }).catch(function(){});
+      }
+    }).catch(function(){ renderQA(getFiltered(allItems)); });
   } catch(e) { renderQA(getFiltered(allItems)); }
 })();
 </script>

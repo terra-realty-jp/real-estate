@@ -504,24 +504,17 @@ function showPostSuccess() {
     if (_qp.get('post') || location.hash === '#post') { var _ps = document.querySelector('.post-section'); if (_ps) setTimeout(function(){ _ps.scrollIntoView({behavior:'smooth'}); }, 350); }
   } catch(e) {}
   try {
-    var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
-    if (!client) return;
-    client.from('qa_questions').select('*')
-      .eq('status', 'published')
-      .order('created_at', { ascending: false })
-      .limit(50)
-      .then(function(res) {
-        if (res.error || !res.data || !res.data.length) return;
-        // 花見川区・若葉区の質問のみフィルタ（town_nameで判定）
-        var hanamiTowns = ['幕張本郷','八千代台','こてはし台','花見川','武石','天戸','横戸','長作','犢橋','花見川区'];
-        var hanamiData = res.data.filter(function(q) {
-          return !q.town_name || hanamiTowns.indexOf(q.town_name) !== -1 || q.town_name.indexOf('花見川') !== -1;
-        });
-        if (hanamiData.length > 0) {
-          SAMPLE_QA = hanamiData.concat(SAMPLE_QA);
-          renderQA();
-        }
-      }).catch(function() {});
+    // 編集コンテンツはリポジトリのJSONから（Git更新で即反映・Supabase不要）
+    function _shape(q, i){ return Object.assign({}, q, { id: q.id || ('seed-' + i), answer: (q.qa_answers && q.qa_answers[0]) ? q.qa_answers[0].body : (q.answer || null) }); }
+    fetch('../data/qa-seed.json', { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(seed){
+      var w = (seed || []).filter(function(q){ return q.ward === 'hanami'; }).map(_shape);
+      if (w.length) { SAMPLE_QA = w; renderQA(); }
+      var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+      if (client) {
+        client.from('qa_questions').select('*, qa_answers(*)').eq('status','published').eq('source','user').order('created_at',{ascending:false}).limit(50)
+          .then(function(res){ if(!res.error && res.data && res.data.length){ var u=res.data.map(function(q,i){return _shape(q,'u'+i);}); SAMPLE_QA = u.concat(w); renderQA(); } }).catch(function(){});
+      }
+    }).catch(function(){});
   } catch(e) {}
 })();
 </script>

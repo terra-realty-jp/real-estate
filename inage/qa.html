@@ -1143,26 +1143,18 @@ function toggleQA(i, qid) {
 // ---- Supabaseから取得（接続できる場合） ----
 function loadFromSupabase() {
   try {
-    var client = getSupabaseClient ? getSupabaseClient() : null;
-    if (!client) { renderQA(SAMPLE_QA); return; }
-    client
-      .from('qa_questions')
-      .select('*, qa_answers(*)')
-      .eq('status', 'published')
-      .order('created_at', { ascending: false })
-      .then(function(res) {
-        if (res.error || !res.data || res.data.length === 0) {
-          renderQA(SAMPLE_QA);
-          return;
-        }
-        var data = res.data.map(function(q) {
-          var ans = q.qa_answers && q.qa_answers.length > 0 ? q.qa_answers[0].body : null;
-          return Object.assign({}, q, { answer: ans });
-        });
-        currentQAData = data;
-        renderQA(data);
-      })
-      .catch(function() { renderQA(SAMPLE_QA); });
+    function shape(q){ var ans = q.qa_answers && q.qa_answers.length > 0 ? q.qa_answers[0].body : null; return Object.assign({}, q, { answer: ans }); }
+    // 編集コンテンツはリポジトリのJSONから（Git更新で即反映・Supabase不要）
+    fetch('../data/qa-seed.json', { cache: 'no-cache' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(seed){
+      var data = (seed || []).filter(function(q){ return q.ward === 'inage'; }).map(shape);
+      currentQAData = data.length ? data : SAMPLE_QA;
+      renderQA(currentQAData);
+      var client = getSupabaseClient ? getSupabaseClient() : null;
+      if (client) {
+        client.from('qa_questions').select('*, qa_answers(*)').eq('status','published').eq('source','user').order('created_at',{ascending:false})
+          .then(function(res){ if(!res.error && res.data && res.data.length){ currentQAData = res.data.map(shape).concat(data); renderQA(currentQAData); } }).catch(function(){});
+      }
+    }).catch(function(){ renderQA(SAMPLE_QA); });
   } catch(e) {
     renderQA(SAMPLE_QA);
   }
