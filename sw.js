@@ -1,4 +1,4 @@
-const CACHE_NAME = 'terra-v3';
+const CACHE_NAME = 'terra-v4';
 const PRECACHE = [
   '/real-estate/',
   '/real-estate/inage/',
@@ -27,12 +27,10 @@ self.addEventListener('activate', function(e) {
 self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
   if (e.request.url.includes('supabase.co') || e.request.url.includes('googletagmanager')) return;
-  // HTML（map.html等の画面）は常に最新を取得する。古いキャッシュを掴ませない。
-  var isDoc = e.request.mode === 'navigate'
-    || e.request.destination === 'document'
-    || e.request.url.endsWith('.html')
-    || e.request.url.endsWith('/');
-  var req = isDoc ? fetch(e.request, { cache: 'no-cache' }) : fetch(e.request);
+  // HTML・JS・データ（geojson/json）も含め、オンライン時は常に最新を取得する。
+  // 古いキャッシュを掴ませない（ヒートマップ計算ロジック等の更新が即反映されるように）。
+  // キャッシュはオフライン時のフォールバックとしてのみ使う。
+  var req = fetch(e.request, { cache: 'no-cache' });
   e.respondWith(
     req.then(function(res) {
       var clone = res.clone();
