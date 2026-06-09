@@ -1,0 +1,30 @@
+name: 月次相場レポート自動生成
+
+# 毎月7日（fetch-ward-properties の毎月5日実行の後）に、Supabaseの実取引データから
+# 「千葉市6区 不動産相場レポート」ページを自動生成して公開する。
+# main への push で sitemap-ping.yml の IndexNow が自動発火し、検索エンジンに即通知される。
+# → 人手ゼロで毎月新しいページがGoogle/Bingに積み上がる集客フライホイール。
+
+on:
+  schedule:
+    - cron: '0 21 6 * *'   # 毎月7日 6:00 JST
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate monthly market report
+        run: node scripts/generate-market-report.js
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/market/ sitemap.xml
+          git diff --staged --quiet || git commit -m "report: $(TZ=Asia/Tokyo date '+%Y年%-m月') 相場レポートを自動生成"
+          git push

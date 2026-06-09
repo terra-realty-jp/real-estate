@@ -6388,3 +6388,12 @@ investor_profiles (id, email, town_interests[], property_types[], budget_max, mi
   - IndexNow実装。旧Google/Bing sitemap ping（2023-24年廃止で機能していなかった）をIndexNowに置換。全144URLを送信しHTTP 202確認。main pushと毎週月曜に自動送信
   - 稲毛団地向けポスティングチラシ（A4 PDF・QRコード2種・登録不要/成約価格訴求）を assets/flyer/ に作成
   - SNS投稿文7日分＋LINE/FB用（marketing/sns-posts.md）、GBP登録手順＋説明文素材（marketing/gbp-registration-guide.md）を作成。GBPはWeb検索で未公開と確認
+
+## 2026-06-10 09:10
+
+- **対象**: scripts/generate-market-report.js / .github/workflows/monthly-market-report.yml / reports/market/ / index.html / sitemap.xml
+- **施策**: 集客の初動（オンライン完結・Google注力）
+- **実装内容**:
+  - 月次相場レポート自動生成を実装。毎月7日にSupabase実取引データ（直近1年1,022件）から6区の㎡単価中央値・取引件数・前年比ページを自動生成→mainコミット→IndexNow自動発火。人手ゼロで毎月新規ページがGoogleに積み上がるフライホイール
+  - 2026年6月号を初回生成・トップページに内部リンク追加・sitemap 2URL追加
+  - 運営者方針を反映: 物理施策なし・Facebook不使用・Google/YouTube注力
