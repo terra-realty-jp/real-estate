@@ -43,7 +43,13 @@ const req = https.request({
   res.on('data', c => body += c);
   res.on('end', () => {
     // 200 = OK / 202 = 受理（キー検証は後で行われる）
+    // 403 = キー検証失敗。検証結果はIndexNow側に一定期間キャッシュされるため、
+    //       キーファイル公開直後は403が返ることがある。週次cron＋push時の再送信で自己回復するので警告扱い。
     console.log(`IndexNow 応答: HTTP ${res.statusCode} ${body}`);
+    if (res.statusCode === 403) {
+      console.warn('警告: キー検証がまだ通っていません。次回の自動送信で再試行されます。');
+      return;
+    }
     if (res.statusCode !== 200 && res.statusCode !== 202) process.exit(1);
   });
 });
