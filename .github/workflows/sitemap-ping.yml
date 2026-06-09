@@ -1,4 +1,8 @@
-name: Sitemap Ping（Google/Bing クロール通知）
+name: IndexNow送信（検索エンジンへのクロール通知）
+
+# 旧 Google/Bing sitemap ping (www.google.com/ping 等) は2023-24年に廃止されたため、
+# 後継プロトコル IndexNow (Bing/Naver/Seznam/Yandex が採用。BingはChatGPT/Copilot等の情報源) に移行。
+# Google は IndexNow 非対応のため Search Console の sitemap 登録でカバーする。
 
 on:
   push:
@@ -7,24 +11,15 @@ on:
       - '**.html'
       - 'sitemap.xml'
       - 'llms.txt'
+  schedule:
+    - cron: '0 21 * * 0'   # 毎週月曜 6:00 JST（再クロール促進）
   workflow_dispatch:
 
 jobs:
-  ping:
+  indexnow:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Google Sitemap
-        env:
-          SITEMAP_URL: https://terra-realty-jp.github.io/real-estate/sitemap.xml
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://www.google.com/ping?sitemap=${SITEMAP_URL}")
-          echo "Google ping: HTTP ${STATUS}"
+      - uses: actions/checkout@v4
 
-      - name: Ping Bing Sitemap
-        env:
-          SITEMAP_URL: https://terra-realty-jp.github.io/real-estate/sitemap.xml
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://www.bing.com/ping?sitemap=${SITEMAP_URL}")
-          echo "Bing ping: HTTP ${STATUS}"
+      - name: Submit all sitemap URLs to IndexNow
+        run: node scripts/submit-indexnow.js
