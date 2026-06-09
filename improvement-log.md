@@ -6379,3 +6379,12 @@ investor_profiles (id, email, town_interests[], property_types[], budget_max, mi
 - **対応内容**:
 
 ---
+
+## 2026-06-10 08:30
+
+- **対象**: scripts/submit-indexnow.js / .github/workflows/sitemap-ping.yml / f4156ab7....txt / assets/flyer/ / marketing/
+- **施策**: 集客の初動（優先度2支援）
+- **実装内容**:
+  - IndexNow実装。旧Google/Bing sitemap ping（2023-24年廃止で機能していなかった）をIndexNowに置換。全144URLを送信しHTTP 202確認。main pushと毎週月曜に自動送信
+  - 稲毛団地向けポスティングチラシ（A4 PDF・QRコード2種・登録不要/成約価格訴求）を assets/flyer/ に作成
+  - SNS投稿文7日分＋LINE/FB用（marketing/sns-posts.md）、GBP登録手順＋説明文素材（marketing/gbp-registration-guide.md）を作成。GBPはWeb検索で未公開と確認
