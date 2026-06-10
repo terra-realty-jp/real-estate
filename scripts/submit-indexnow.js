@@ -11,7 +11,8 @@ const path = require('path');
 const https = require('https');
 
 const HOST = 'terra-realty-jp.github.io';
-const KEY = 'f4156ab7b920c7ba99233ef63c58e73f';
+// 旧キー(f4156ab7...)は初回送信時の検証失敗がIndexNow側にキャッシュされたためローテーション(2026-06-11)
+const KEY = '8285bd3e067c72d3aebd286ccc2e7374';
 const KEY_LOCATION = `https://${HOST}/real-estate/${KEY}.txt`;
 
 const sitemap = fs.readFileSync(path.join(__dirname, '..', 'sitemap.xml'), 'utf8');
