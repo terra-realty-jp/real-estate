@@ -142,8 +142,8 @@
 
     <div id="success-box">
       <div class="big">✅</div>
-      <h3>登録完了しました</h3>
-      <p>緑区の地価情報・成約情報をお届けします。<br>最初の通知は次の地価更新タイミングにお送りします。</p>
+      <h3>確認メールを送ります</h3>
+      <p>📩 確認メールをお送りします（15分ほどで届きます）。メール内の「登録を確認する」ボタンを押すと登録が完了します。<br>緑区の地価情報・成約情報をお届けします。<br>最初の通知は次の地価更新タイミングにお送りします。</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;justify-content:center">
         <a href="map.html" style="flex:1;min-width:140px;background:rgba(192,82,43,0.1);border:1px solid rgba(192,82,43,0.3);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;color:#1e1209;text-decoration:none;text-align:center">📍 今の相場を見る →</a>
         <a href="qa.html" style="flex:1;min-width:140px;background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;color:var(--green);text-decoration:none;text-align:center">💬 Q&Aを見る →</a>
@@ -210,8 +210,8 @@ function submitNotify() {
   try {
     var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
     if (!client) return;
-    client.from('notify_subscribers').select('id',{count:'exact',head:true}).eq('is_active',true)
-      .then(function(res){ if(res.count&&res.count>0){var el=document.getElementById('reg-count');if(el)el.textContent=res.count;} }).catch(function(){});
+    client.rpc('count_active_subscribers', {})
+      .then(function(res){ if(!res.error&&typeof res.data==='number'&&res.data>0){var el=document.getElementById('reg-count');if(el)el.textContent=res.data;} }).catch(function(){});
   } catch(e) {}
 })();
 </script>

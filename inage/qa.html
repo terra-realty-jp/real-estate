@@ -1016,9 +1016,18 @@ function setFilter(type, val, btn) {
 }
 
 // ---- カテゴリバッジ ----
+// ---- HTMLエスケープ（Supabase/投稿由来の文字列は必ず通す） ----
+function escQA(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+// onclick 内に埋め込むIDは英数字とハイフンだけに制限
+function safeId(s) { return String(s == null ? '' : s).replace(/[^A-Za-z0-9_-]/g, ''); }
+
 function catBadge(cat) {
   var map = { '売却': 'cat-sell', '相続': 'cat-inherit', '賃貸': 'cat-rent', '購入': 'cat-buy', '投資': 'cat-invest' };
-  return '<span class="qa-cat-badge ' + (map[cat] || 'cat-sell') + '">' + cat + '</span>';
+  return '<span class="qa-cat-badge ' + (map[cat] || 'cat-sell') + '">' + escQA(cat) + '</span>';
 }
 
 // ---- 日付フォーマット ----
@@ -1041,7 +1050,7 @@ var TOWN_TO_AREA_PARAM = {
   '轟町': 'chiba_inage_other', '千草台': 'chiba_inage_other', '萩台町': 'chiba_inage_other'
 };
 function answerCta(category, townName) {
-  var town = townName || '稲毛区';
+  var town = escQA(townName || '稲毛区');
   var areaParam = TOWN_TO_AREA_PARAM[townName] || 'chiba_inage';
   var sateiUrl = '../tools/1-ai-satei.html?area=' + areaParam;
   var ctaMap = {
@@ -1099,26 +1108,26 @@ function renderQA(data) {
   list.innerHTML = filtered.map(function(q, i) {
     var hasAnswer = q.answer && q.answer.length > 0;
     return '<div class="qa-card">' +
-      '<div class="qa-card-header" onclick="toggleQA(' + i + ', \'' + (q.id || '') + '\')">' +
+      '<div class="qa-card-header" onclick="toggleQA(' + i + ', \'' + safeId(q.id) + '\')">' +
         catBadge(q.category) +
         '<div style="flex:1">' +
-          '<div class="qa-title">' + q.title + '</div>' +
+          '<div class="qa-title">' + escQA(q.title) + '</div>' +
         '</div>' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;transition:transform 0.2s" id="qa-arrow-' + i + '"><path d="M6 9l6 6 6-6"/></svg>' +
       '</div>' +
       '<div class="qa-meta">' +
-        (q.town_name ? '<span class="qa-town">📍 ' + q.town_name + '</span>' : '') +
-        '<span class="qa-date">' + fmtDate(q.created_at) + '</span>' +
+        (q.town_name ? '<span class="qa-town">📍 ' + escQA(q.town_name) + '</span>' : '') +
+        '<span class="qa-date">' + escQA(fmtDate(q.created_at)) + '</span>' +
         (hasAnswer
           ? '<span class="qa-answered">✓ TERRAが回答済み</span>'
           : '<span class="qa-pending">回答待ち</span>') +
       '</div>' +
       '<div class="qa-body" id="qa-body-' + i + '">' +
-        '<p class="qa-question-text">' + (q.body || q.title) + '</p>' +
+        '<p class="qa-question-text">' + escQA(q.body || q.title) + '</p>' +
         (hasAnswer
           ? '<div class="qa-answer">' +
               '<div class="qa-answer-label">🏢 TERRA REALTYの回答</div>' +
-              '<div class="qa-answer-text">' + q.answer.replace(/\n/g, '<br>') + '</div>' +
+              '<div class="qa-answer-text">' + escQA(q.answer).replace(/\n/g, '<br>') + '</div>' +
               answerCta(q.category, q.town_name) +
             '</div>'
           : '<div style="font-size:13px;color:var(--text-muted);padding:8px 0">TERRAが回答を準備中です（1〜2営業日）</div>') +
@@ -1308,8 +1317,8 @@ loadFromSupabase();
     </div>
     <div id="exit-popup-success" style="display:none;text-align:center;padding:12px 0">
       <div style="font-size:24px;margin-bottom:8px">✅</div>
-      <div style="font-size:14px;font-weight:700;color:#1a1917;margin-bottom:4px">登録ありがとうございます</div>
-      <div style="font-size:12px;color:#6b6058">稲毛区の相場情報をお届けします</div>
+      <div style="font-size:14px;font-weight:700;color:#1a1917;margin-bottom:4px">確認メールを送ります</div>
+      <div style="font-size:12px;color:#6b6058">メール内のリンクを押すと登録が完了します（15分ほどで届きます）</div>
     </div>
   </div>
 </div>
@@ -1348,7 +1357,7 @@ function submitExitPopup() {
   try {
     var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
     if (client) {
-      client.from('notify_subscribers').insert(record).then(function() { showEPSuccess(); }).catch(function() { epFallback(email, towns); });
+      client.from('notify_subscribers').insert(record).then(function(res) { if (res && res.error) { epFallback(email, towns); } else { showEPSuccess(); } }).catch(function() { epFallback(email, towns); });
     } else { epFallback(email, towns); }
   } catch(e) { epFallback(email, towns); }
 }
