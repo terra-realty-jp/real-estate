@@ -32,3 +32,10 @@ jobs:
             git pull --rebase origin main
             git push origin main
           fi
+
+  # 失敗したら必ずメールで知らせる（静かに壊れるのを防ぐ）
+  notify-failure:
+    needs: [update-koji]
+    if: failure()
+    uses: ./.github/workflows/notify-failure.yml
+    secrets: inherit

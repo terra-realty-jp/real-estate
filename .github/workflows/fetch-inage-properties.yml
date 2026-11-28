@@ -26,3 +26,10 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           MLIT_API_KEY: ${{ secrets.MLIT_API_KEY }}
         run: node scripts/fetch-inage-properties.js
+
+  # 失敗したら必ずメールで知らせる（静かに壊れるのを防ぐ）
+  notify-failure:
+    needs: [fetch-inage]
+    if: failure()
+    uses: ./.github/workflows/notify-failure.yml
+    secrets: inherit

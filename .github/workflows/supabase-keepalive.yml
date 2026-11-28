@@ -29,3 +29,10 @@ jobs:
             echo "ERROR: Supabase may be down or unreachable (HTTP ${STATUS})"
             exit 1
           fi
+
+  # 失敗したら必ずメールで知らせる（静かに壊れるのを防ぐ）
+  notify-failure:
+    needs: [ping]
+    if: failure()
+    uses: ./.github/workflows/notify-failure.yml
+    secrets: inherit

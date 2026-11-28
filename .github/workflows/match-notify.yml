@@ -32,3 +32,10 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
         run: node scripts/match-notify.js
+
+  # 失敗したら必ずメールで知らせる（静かに壊れるのを防ぐ）
+  notify-failure:
+    needs: [match-and-notify]
+    if: failure()
+    uses: ./.github/workflows/notify-failure.yml
+    secrets: inherit

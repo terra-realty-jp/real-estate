@@ -58,10 +58,16 @@ async function main() {
     .order('created_at', { ascending: false });
 
   if (lErr) {
-    // テーブル未作成・権限エラーは失敗扱いにしない（まだ運用前の正常状態）
-    console.log(`[INFO] property_listings 取得スキップ: ${lErr.message}`);
-    console.log('[INFO] Supabase で property_listings テーブルを作成するとマッチングが動作します。');
-    return;
+    // テーブル未作成（PGRST205）だけは運用前の正常な状態として許容する。
+    // 権限エラー・通信断は本物の障害なので失敗扱いにして通知を飛ばす。
+    // 以前はすべて INFO で握りつぶしており、Supabase が5か月停止していた間も
+    // このジョブは毎日 success を返し続けていた（2026-06〜11）。
+    if (lErr.code === 'PGRST205') {
+      console.log(`[INFO] property_listings 未作成のためスキップ: ${lErr.message}`);
+      return;
+    }
+    console.error(`[ERROR] property_listings の取得に失敗: ${lErr.message} (code=${lErr.code || 'なし'})`);
+    process.exit(1);
   }
   if (!listings || listings.length === 0) { console.log('新着物件なし。終了。'); return; }
   console.log(`新着物件: ${listings.length}件`);
@@ -74,8 +80,12 @@ async function main() {
     .not('email', 'is', null);
 
   if (iErr) {
-    console.log(`[INFO] investor_profiles 取得スキップ: ${iErr.message}`);
-    return;
+    if (iErr.code === 'PGRST205') {
+      console.log(`[INFO] investor_profiles 未作成のためスキップ: ${iErr.message}`);
+      return;
+    }
+    console.error(`[ERROR] investor_profiles の取得に失敗: ${iErr.message} (code=${iErr.code || 'なし'})`);
+    process.exit(1);
   }
   if (!investors || investors.length === 0) { console.log('通知対象の投資家なし。終了。'); return; }
   console.log(`登録投資家: ${investors.length}人`);
