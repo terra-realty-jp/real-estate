@@ -490,15 +490,20 @@ git checkout -b feature/<機能名>            # 整理作業なら chore/<内�
 
 ### 通信先ドメイン（ネットワーク制限のある環境で許可が必要）
 
-| ドメイン | 用途 |
-|---|---|
-| `*.supabase.co` | Supabase REST API（DB 読み書き） |
-| `www.reinfolib.mlit.go.jp` | 国交省 不動産情報ライブラリ（取引価格） |
-| `nlftp.mlit.go.jp` | 国土数値情報（用途地域・立地適正化・地価） |
-| `www.e-stat.go.jp` / `geoapi.e-stat.go.jp` | e-Stat（町丁目境界 GeoJSON） |
-| `api.resend.com` | Resend（メール送信） |
-| `api.indexnow.org` | IndexNow（検索エンジンへの更新通知） |
-| `terra-realty-jp.github.io` | 公開サイト（疎通確認・sitemap 送信） |
+| ドメイン | 用途 | 使う場所 |
+|---|---|---|
+| `<project>.supabase.co` | Supabase REST API（DB 読み書き） | `supabase-client.js`（ブラウザ）/ `fetch-*-properties.js` / `generate-market-report.js` / `match-notify.js` / `send-inage-notify.js` / `weekly-analytics.js` / `supabase-keepalive.yml` |
+| `www.reinfolib.mlit.go.jp` | 国交省 不動産情報ライブラリ（取引価格・公示地価） | `fetch-inage-properties.js` / `fetch-ward-properties.js` / `fetch-area-prices.js` / `fetch-koji-prices.js` |
+| `nlftp.mlit.go.jp` | 国土数値情報（用途地域・立地適正化） | `fetch-yoto-geojson.yml` / `fetch-ritchi-geojson.yml` |
+| `www.e-stat.go.jp` | e-Stat 境界データ（町丁目 GeoJSON の取得） | `download-estat-geojson.py` / `download-estat-ward-geojson.py` / `fetch-inage-geojson.js` |
+| `api.e-stat.go.jp` | e-Stat API（統計値の取得） | `fetch-interest-rates.js` |
+| `www.flat35.com` | 住宅金融支援機構 フラット35（金利） | `fetch-interest-rates.js` |
+| `overpass-api.de` | OpenStreetMap Overpass API（町丁目ポリゴンの補完） | `fetch-inage-geojson.js` / `fetch-ward-geojson.js` |
+| `api.resend.com` | Resend（メール送信） | `send-*.py` / `send-inage-notify.js` / `weekly-analytics.js` / `match-notify.js` |
+| `api.indexnow.org` | IndexNow（検索エンジンへの更新通知） | `submit-indexnow.js` |
+| `terra-realty-jp.github.io` | 公開サイト（疎通確認・sitemap 送信・メール本文のリンク） | `submit-indexnow.js` ほか |
+
+いずれも **HTTPS の 443 のみ**。インバウンドの受け口は持たない。
 
 ---
 
