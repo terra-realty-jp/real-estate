@@ -141,6 +141,14 @@ function buildReportHtml(ym, ymLabel, sections, latestLabel) {
   .foot { border-top:1px solid #eee; margin-top:32px; padding-top:16px; font-size:.85rem; color:#666; }
   .back { display:inline-block; margin-bottom:8px; font-size:.9rem; }
 </style>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PRTFHJSJY3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag("js", new Date());
+  gtag("config", "G-PRTFHJSJY3");
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -175,6 +183,14 @@ function buildIndexHtml(entries) {
   li { margin-bottom:8px; }
   a { color:#c45e3d; }
 </style>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PRTFHJSJY3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag("js", new Date());
+  gtag("config", "G-PRTFHJSJY3");
+</script>
 </head>
 <body>
   <h1>千葉市の不動産相場レポート（毎月自動更新）</h1>
