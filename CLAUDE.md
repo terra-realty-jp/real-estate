@@ -94,6 +94,8 @@
 - **依存パッケージ**: なし。`package.json` / `requirements.txt` を持たず、`scripts/` は
   node と python3 の**標準ライブラリのみ**で動く（`npm install` も `pip install` も不要）
 - **バッチ処理**: すべて GitHub Actions（`.github/workflows/`）。ローカル cron には依存しない
+  （ローカルの crontab は 2026-11-28 に削除済み）
+  - 生成物をコミットするワークフローは `main` に直接 push する（後述）
   - 夜間自動改善のローカル運用と、そのクラウド移行については `docs/nightly-automation.md` を参照
 
 ### ブランチ運用
@@ -445,10 +447,28 @@ git log origin/main..origin/dev --oneline   # 出力が空なら本番反映済�
 # 4. 直近の作業内容を確認
 tail -50 improvement-log.md
 
-# 5. 作業ブランチを dev から切る
+# 5. bot が main に積んだ生成物を dev に取り込む（これを忘れると dev が遅れ続ける）
 git checkout dev && git pull origin dev
+git merge origin/main
+
+# 6. 作業ブランチを dev から切る
 git checkout -b feature/<機能名>            # 整理作業なら chore/<内容>
 ```
+
+### GitHub Actions は `main` に直接 push する
+
+`schedule` 起動のワークフローは `actions/checkout` が既定ブランチ（`main`）を取得するため、
+生成物は `github-actions[bot]` 名義で **`main` に直接コミットされる**。これは意図した挙動で、
+データ更新や月次レポートが人間のマージ待ちにならないようにするため。
+
+その代わり **`dev` は放っておくと `main` から遅れ続ける**（実際に 2026-06-11〜11-28 で
+203コミット遅れた）。上の手順 5 で毎回取り込むこと。
+
+`main` への直接コミットが禁止なのは人間と Claude であり、bot はこの例外にあたる。
+
+現在 `main` に push するワークフロー:
+`update-area-prices` / `update-interest-rates` / `update-koji-prices` /
+`monthly-market-report` / `fetch-yoto-geojson` / `fetch-ritchi-geojson`
 
 実行環境の違いで変わるのは**環境変数だけ**（次節参照）。
 確認手順・ディレクトリ構成・スクリプトの実行方法はローカルとクラウドで同一である。
