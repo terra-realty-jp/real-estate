@@ -6758,6 +6758,7 @@ async function registerBuyerInterest() {
   var minYield = (document.getElementById('im-min-yield') || {}).value;
   var financing = (document.getElementById('im-financing') || {}).value || 'both';
   var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+  var profileOk = true;
   if (client && (email || minYield)) {
     var profilePayload = {
       town_interests: [town],
@@ -6768,14 +6769,30 @@ async function registerBuyerInterest() {
       is_active: true
     };
     if (email) profilePayload.email = email;
-    client.from('investor_profiles').insert([profilePayload]).catch(function(){});
+    try {
+      var res = await client.from('investor_profiles').insert([profilePayload]);
+      if (res && res.error) {
+        profileOk = false;
+        console.error('investor_profiles insert failed:', res.error.message);
+      }
+    } catch (e) {
+      profileOk = false;
+      console.error('investor_profiles insert failed:', e);
+    }
   }
 
-  if (ok || client) {
+  // 保存が成功したときだけ成功表示する。
+  // 以前は `ok || client` で、接続先があるだけで「✓ 登録しました！」を出していたため、
+  // RLS に弾かれて1件も保存されていなくても成功したように見えていた。
+  if (ok && profileOk) {
     if (submitBtn) { submitBtn.textContent = '✓ 登録しました！'; submitBtn.style.background = '#22c55e'; }
     setTimeout(function() { renderInageMatch(); }, 1400);
   } else {
-    if (submitBtn) { submitBtn.textContent = '登録できませんでした（通信エラー）'; submitBtn.disabled = false; }
+    if (submitBtn) {
+      submitBtn.textContent = '登録できませんでした。時間をおいて再度お試しください';
+      submitBtn.disabled = false;
+      submitBtn.style.background = '#c0522b';
+    }
   }
 }
 
