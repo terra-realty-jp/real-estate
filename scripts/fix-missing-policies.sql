@@ -1,6 +1,10 @@
 -- =============================================================================
 -- investor_profiles / property_listings に不足している RLS ポリシーを追加する
 --
+-- 何度流しても同じ結果になるよう DROP POLICY IF EXISTS を前置してある。
+-- Supabase の SQL Editor は複数文を1トランザクションで実行するため、途中で
+-- 42710（policy already exists）が出ると REVOKE / GRANT ごと巻き戻る。
+--
 -- 背景:
 --   2026-11-28 の調査で、この2テーブルだけ RLS が有効（relrowsecurity = true）
 --   なのに **ポリシーが1つも存在しない** ことが判明した。
@@ -23,12 +27,14 @@
 --   ブラウザは INSERT のみ（各区 sell.html の売主登録フォーム）。
 --   contact_email を含むため SELECT ポリシーは作らない。
 --   運営側の閲覧と match-notify.js の UPDATE は service_role（RLS を迂回）で行う。
+DROP POLICY IF EXISTS "public insert" ON public.property_listings;
 CREATE POLICY "public insert" ON public.property_listings
   FOR INSERT TO anon, authenticated
   WITH CHECK (true);
 
 -- investor_profiles ----------------------------------------------------------
 --   ブラウザは INSERT と、「現在○人が探しています」の件数取得のための SELECT。
+DROP POLICY IF EXISTS "public insert" ON public.investor_profiles;
 CREATE POLICY "public insert" ON public.investor_profiles
   FOR INSERT TO anon, authenticated
   WITH CHECK (true);
@@ -43,6 +49,7 @@ CREATE POLICY "public insert" ON public.investor_profiles
 REVOKE SELECT ON public.investor_profiles FROM anon, authenticated;
 GRANT  SELECT (id, town_interests, is_active) ON public.investor_profiles TO anon, authenticated;
 
+DROP POLICY IF EXISTS "count select" ON public.investor_profiles;
 CREATE POLICY "count select" ON public.investor_profiles
   FOR SELECT TO anon, authenticated
   USING (true);
