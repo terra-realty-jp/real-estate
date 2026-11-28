@@ -24,20 +24,37 @@
 --   contact_email を含むため SELECT ポリシーは作らない。
 --   運営側の閲覧と match-notify.js の UPDATE は service_role（RLS を迂回）で行う。
 CREATE POLICY "public insert" ON public.property_listings
-  FOR INSERT TO public
+  FOR INSERT TO anon, authenticated
   WITH CHECK (true);
 
 -- investor_profiles ----------------------------------------------------------
 --   ブラウザは INSERT と、「現在○人が探しています」の件数取得のための SELECT。
---   列単位 GRANT により anon が読めるのは id / town_interests / is_active だけなので、
---   SELECT ポリシーを true にしても budget_max などは露出しない。
 CREATE POLICY "public insert" ON public.investor_profiles
-  FOR INSERT TO public
+  FOR INSERT TO anon, authenticated
   WITH CHECK (true);
 
+--   USING (true) は「全行が対象」という意味なので、どの列まで見せるかは
+--   列単位 GRANT だけが決めている。その GRANT が将来うっかり
+--   `GRANT SELECT ON investor_profiles TO anon` で上書きされると、
+--   予算や融資条件まで一度に露出する。実際このプロジェクトでは
+--   2026-11-28 にその取り違えが起きている。
+--   そのためポリシーと列制限を同じファイルに入れ、この SQL を単体で流しても
+--   広がらないようにしておく。対象ロールも public ではなく anon/authenticated に絞る。
+REVOKE SELECT ON public.investor_profiles FROM anon, authenticated;
+GRANT  SELECT (id, town_interests, is_active) ON public.investor_profiles TO anon, authenticated;
+
 CREATE POLICY "count select" ON public.investor_profiles
-  FOR SELECT TO public
+  FOR SELECT TO anon, authenticated
   USING (true);
+
+--   より堅くするなら、基底テーブルを一切見せず件数だけ返す関数に置き換える方法がある。
+--   ただし各区 sell.html 6本の呼び出しを .rpc() に書き換える必要があるため、ここでは採らない。
+--     CREATE FUNCTION public.investor_count(town text) RETURNS bigint
+--       LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
+--         SELECT count(*) FROM investor_profiles
+--         WHERE is_active AND town = ANY(town_interests) $$;
+--     GRANT EXECUTE ON FUNCTION public.investor_count(text) TO anon;
+--     -- そのうえで "count select" ポリシーと列 GRANT を削除する
 
 -- =============================================================================
 -- 確認用（上を実行したあとに流す）
