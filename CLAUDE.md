@@ -72,19 +72,39 @@
 - **サービス名**: 不動産かんたんツール（powered by TERRA REALTY）
 - **対象エリア**: 千葉市6区（稲毛区・中央区・美浜区・緑区・花見川区・若葉区）※全6区で相場マップ・実取引データ・ガイドを公開中（稲毛区が最も情報量が多い）
 - **ターゲット**: 千葉市在住の40〜60代。昭和40〜50年代の団地・戸建てを持つ世帯が主軸。稲毛区が主軸
-- **技術スタック**: HTML / CSS / Vanilla JavaScript + Supabase（DB・認証）
-- **インフラ**: GitHub Pages（静的ホスティング）/ GitHub Actions（API自動更新・将来の通知）
-- **ブランチ戦略**:
-  - `main` ← 本番（触らない。GitHub Pagesはここを公開中）
-  - `dev` ← 開発主軸（ここで作業する）
-  - `feature/*` ← 機能1本ずつブランチを切る
+- **技術スタック**: HTML / CSS / Vanilla JavaScript（フレームワーク・ビルド工程なし）+ Supabase（DB）
 
-**作業開始時は必ず確認する:**
-```bash
-git checkout dev
-git pull origin dev
-git branch  # 現在地を確認
+### 構成（4つの要素だけで完結する）
+
 ```
+ブラウザ ──> GitHub Pages（main ブランチの静的ファイルをそのまま配信）
+                  │
+                  ├─ supabase-client.js ──> Supabase（PostgreSQL + REST / RLS）
+                  │
+                  └─ data/*.json（事前生成した相場・地価・境界データ）
+                              ▲
+                              │ 定期的に生成・コミット
+                        GitHub Actions（scripts/ の node / python を実行）
+                              │
+                              └──> 外部API（国交省・e-Stat）/ Resend（メール送信）
+```
+
+- **ホスティング**: GitHub Pages。`main` ブランチの内容を**ビルドせずそのまま**配信する
+- **サーバー**: 持たない。Docker・ローカルDB・ローカルサーバーは**一切使わない**
+- **依存パッケージ**: なし。`package.json` / `requirements.txt` を持たず、`scripts/` は
+  node と python3 の**標準ライブラリのみ**で動く（`npm install` も `pip install` も不要）
+- **バッチ処理**: すべて GitHub Actions（`.github/workflows/`）。ローカル cron には依存しない
+  - 夜間自動改善のローカル運用と、そのクラウド移行については `docs/nightly-automation.md` を参照
+
+### ブランチ運用
+
+| ブランチ | 役割 | 誰が触るか |
+|---|---|---|
+| `main` | 本番。GitHub Pages がここを公開している | **人間が確認してからマージする。直接コミットしない** |
+| `dev` | 開発の主軸。自動改善もここまでで止める | Claude / 自動改善が作業する |
+| `feature/*` `chore/*` | 機能・整理を1本ずつ切る | 作業ブランチ。完成したら `dev` 向けにPRを出す |
+
+`dev` → `main` のマージは**動作確認を済ませた人間の判断で行う**。自動では反映しない。
 
 ---
 
@@ -129,7 +149,12 @@ git branch  # 現在地を確認
 │   ├── download-estat-ward-geojson.py / filter-yoto.py / filter-ritchi.py  ← 境界geojson生成
 │   ├── seed-qa-all-wards.sql / seed-qa-answers.sql / dedup-qa.sql  ← Q&Aシード・回答・重複整理
 │   ├── fix-ward-grants.sql / fix-qa-grants.sql  ← Supabaseテーブル権限付与（重要・後述）
-│   └── send-inage-notify.js / weekly-analytics.js  ← メール配信・週次集計
+│   ├── send-inage-notify.js / weekly-analytics.js  ← メール配信・週次集計
+│   ├── notify_mailer.py         ← 通知メール共通処理（Resend API・標準ライブラリのみ）
+│   └── send-impl-email.py / send-notification-email.py / send-rate-limit-email.py
+│                                 ← 実装完了・自動改善結果・レート制限の通知（DRY_RUN=1 で検証可）
+├── docs/
+│   └── nightly-automation.md    ← 夜間自動改善の処理内容とクラウド移行メモ
 ├── schema-ward.sql              ← ward_propertiesテーブル定義
 ├── supabase-client.js           ← Supabase接続（全ページ共通）
 ├── llms.txt                     ← AI検索エンジン向けデータ（全6区対応）
@@ -361,8 +386,8 @@ CREATE TABLE ward_properties (
 
 **実装ルール:**
 - 1機能 = 1featureブランチ（新規機能の場合）
-- devブランチで安定確認 → main にマージ = 本番リリース
-- mainへのマージ = 本番リリース。必ず動作確認後に行う
+- devブランチで安定確認 → `main` にマージ = 本番リリース
+- `main` へのマージ = 本番リリース。**人間が動作確認したうえで人間が行う**
 
 ---
 
@@ -399,22 +424,81 @@ CREATE TABLE ward_properties (
 
 ---
 
-## gitワークフロー（セッション開始時に必ず実行）
+## セッション開始時の確認手順（ローカル / クラウド共通）
+
+どの環境でも同じコマンドで通るように、**絶対パスを使わずリポジトリのルートからの相対パス**で書く。
 
 ```bash
-# 1. 現在地確認
-git status && git branch
+# 0. リポジトリのルートに移動（ローカルでもクラウドのワークスペースでも同じ）
+cd "$(git rev-parse --show-toplevel)"
+
+# 1. 現在地と未コミットの変更を確認
+git status && git branch --show-current
 
 # 2. リモートの最新を取得
 git fetch origin
 
-# 3. devの最新を確認
+# 3. dev の最新と、main に未反映のコミットを確認
 git log origin/dev --oneline -10
+git log origin/main..origin/dev --oneline   # 出力が空なら本番反映済み
 
-# 4. 作業ブランチに移動（例: 施策①なら）
-git checkout feature/inage-map
-git pull origin feature/inage-map
+# 4. 直近の作業内容を確認
+tail -50 improvement-log.md
+
+# 5. 作業ブランチを dev から切る
+git checkout dev && git pull origin dev
+git checkout -b feature/<機能名>            # 整理作業なら chore/<内容>
 ```
+
+実行環境の違いで変わるのは**環境変数だけ**（次節参照）。
+確認手順・ディレクトリ構成・スクリプトの実行方法はローカルとクラウドで同一である。
+
+---
+
+## 環境変数（値はリポジトリに書かない）
+
+値は GitHub Secrets（またはクラウド実行環境のシークレット）に置き、コードには変数名だけを書く。
+
+### シークレット（Secrets に登録する）
+
+| 変数名 | 用途 | 使う場所 |
+|---|---|---|
+| `SUPABASE_URL` | Supabase のエンドポイント | `scripts/` のデータ取得・集計・メール配信 |
+| `SUPABASE_SERVICE_KEY` | Supabase への書き込み用キー | 同上。**ブラウザに出してはいけない** |
+| `MLIT_API_KEY` | 国土交通省 不動産情報ライブラリ API | `scripts/fetch-*-properties.js` ほか |
+| `RESEND_API_KEY` | Resend（メール送信） | `scripts/send-*.py` / `send-inage-notify.js` / `weekly-analytics.js` |
+
+### 設定値（シークレットではない。ワークフローの env に直接書いてよい）
+
+| 変数名 | 用途 |
+|---|---|
+| `REPORT_EMAIL` | レポート・通知メールの送信先 |
+| `WARD_CODE` | 取得対象の区コード（中央 12101 / 花見川 12102 / 若葉 12104 / 緑 12105 / 美浜 12106） |
+| `NOTIFY_FREQ` | 通知の対象頻度（`weekly` / `monthly`） |
+| `FROM_EMAIL` `FROM_NAME` | 送信元アドレスと表示名（未指定なら既定値を使う） |
+
+### 実行モード
+
+| 変数名 | 用途 |
+|---|---|
+| `DRY_RUN=1` | 送信・書き込みを行わず内容だけ表示する。**動作確認は必ずこれで行う** |
+| `DEBUG` | 詳細ログを出す |
+
+**ブラウザ側（公開される値）**: `supabase-client.js` の Supabase URL と `sb_publishable_...`
+（anon）キーは、RLS 前提で**公開してよい値**なのでコードに直接書いてある。これは秘密情報ではない。
+一方 `SUPABASE_SERVICE_KEY` は絶対にフロントエンドへ書かない。
+
+### 通信先ドメイン（ネットワーク制限のある環境で許可が必要）
+
+| ドメイン | 用途 |
+|---|---|
+| `*.supabase.co` | Supabase REST API（DB 読み書き） |
+| `www.reinfolib.mlit.go.jp` | 国交省 不動産情報ライブラリ（取引価格） |
+| `nlftp.mlit.go.jp` | 国土数値情報（用途地域・立地適正化・地価） |
+| `www.e-stat.go.jp` / `geoapi.e-stat.go.jp` | e-Stat（町丁目境界 GeoJSON） |
+| `api.resend.com` | Resend（メール送信） |
+| `api.indexnow.org` | IndexNow（検索エンジンへの更新通知） |
+| `terra-realty-jp.github.io` | 公開サイト（疎通確認・sitemap 送信） |
 
 ---
 
@@ -453,16 +537,17 @@ try { new Function(combined); console.log('JS OK'); } catch(e) { console.error('
 ### ループ開始時の確認手順
 
 ```bash
-git status && git branch
+cd "$(git rev-parse --show-toplevel)"
+git status && git branch --show-current
 git fetch origin
 git log origin/dev --oneline -5
-tail -50 /home/sishizaw/real-estate-project/improvement-log.md
+tail -50 improvement-log.md
 ```
 
 ### 優先順位（この順番を守る）
 
 1. **重大バグ・動作不良** → 最優先で修正
-2. **dev→main マージ** → 本番に未反映のコミットがあれば最優先でマージ
+2. **dev への反映確認** → 作業ブランチの成果を `dev` にマージする。`main` へのマージは**行わない**（人間が確認して判断する。未反映分があれば報告だけする）
 3. **Supabase権限(GRANT)の確認** → 新テーブルは `fix-*-grants.sql` で anon/service_role に付与（未付与だと公開ページに出ない）
 4. **集客の初動支援** → SNSシェアボタン・OGP最適化・GBP素材・エリアページ量産（SEO長尾）
 5. **notify 他区配信** → 登録者が増えたら `send-inage-notify` を ward 汎用化
@@ -584,7 +669,7 @@ tail -50 /home/sishizaw/real-estate-project/improvement-log.md
 - **`git add` は個別ファイル指定**。`git add -A` や `git add .` は使わない
 - **RLSを必ず設定**してからテーブルを公開する
 - **1機能ずつコミット**。featureブランチ完成後にdevへマージ
-- **mainへの直接コミット禁止**。必ずdev経由でマージ
+- **mainへの直接コミット禁止**。必ずdev経由。`dev`→`main` のマージは人間が動作確認してから行う（Claudeはマージしない）
 - **どこかのサーバーにファイルをアップロードしない**
 
 ---
