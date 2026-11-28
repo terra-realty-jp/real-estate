@@ -39,7 +39,7 @@
     {"@type": "HowToStep", "name": "メールアドレスを入力する", "text": "受け取りたいメールアドレスを入力します。登録・会員登録は不要です。", "position": 1},
     {"@type": "HowToStep", "name": "関心エリアを選ぶ", "text": "穴川・小仲台・天台・長沼町など通知を受け取りたいエリアを1つ以上チェックします。", "position": 2},
     {"@type": "HowToStep", "name": "物件種別と通知頻度を選ぶ", "text": "一戸建て・マンション・土地などの物件種別と、月1回または週1回の通知頻度を選択します。", "position": 3},
-    {"@type": "HowToStep", "name": "「通知を登録する」ボタンを押す", "text": "ボタンを押すと登録完了です。稲毛区の相場データが更新されたタイミングでメールが届きます。", "position": 4}
+    {"@type": "HowToStep", "name": "「通知を登録する」ボタンを押す", "text": "ボタンを押すと確認メールが届き、メール内のリンクを押すと登録完了です。稲毛区の相場データが更新されたタイミングでメールが届きます。", "position": 4}
   ]
 }
 </script>
@@ -323,8 +323,8 @@
 
     <div id="success-box">
       <div class="big">✅</div>
-      <h3>登録完了しました</h3>
-      <p>稲毛区の地価情報・成約情報をお届けします。<br>最初の通知は次の地価更新タイミングにお送りします。</p>
+      <h3>確認メールを送ります</h3>
+      <p>📩 確認メールをお送りします（15分ほどで届きます）。メール内の「登録を確認する」ボタンを押すと登録が完了します。<br>稲毛区の地価情報・成約情報をお届けします。<br>最初の通知は次の地価更新タイミングにお送りします。</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;justify-content:center">
         <a href="map.html" style="flex:1;min-width:140px;background:rgba(192,82,43,0.1);border:1px solid rgba(192,82,43,0.3);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;color:var(--text-dark,#1e1209);text-decoration:none;text-align:center">📍 今の相場を見る →</a>
         <a href="qa.html" style="flex:1;min-width:140px;background:rgba(29,78,216,0.06);border:1px solid rgba(29,78,216,0.2);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;text-align:center">💬 Q&Aを見る →</a>
@@ -479,12 +479,11 @@ function submitNotify() {
   try {
     var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
     if (!client) return;
-    client.from('notify_subscribers').select('id', { count: 'exact', head: true })
-      .eq('is_active', true)
+    client.rpc('count_active_subscribers', {})
       .then(function(res) {
-        if (res.count && res.count > 0) {
+        if (!res.error && typeof res.data === 'number' && res.data > 0) {
           var el = document.getElementById('reg-count');
-          if (el) el.textContent = res.count;
+          if (el) el.textContent = res.data;
         }
       }).catch(function() {});
   } catch(e) {}

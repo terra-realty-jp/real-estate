@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- URL にトークンが入るページ。検索エンジンに載せず、外部へURLを送らない -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>メール通知の設定 | TERRA REALTY</title>
+  <style>
+    body { margin: 0; background: #f4f1eb; font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif; color: #1a1917; }
+    .card { max-width: 480px; margin: 64px auto; background: #fff; border-radius: 14px; padding: 32px 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); text-align: center; }
+    .brand { color: #c9a84c; font-size: 12px; font-weight: 700; letter-spacing: 2px; }
+    h1 { font-size: 20px; margin: 10px 0 16px; }
+    p { font-size: 14px; line-height: 1.8; color: #444; }
+    a.btn { display: inline-block; margin-top: 16px; background: #c0522b; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 10px; font-weight: 700; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">TERRA REALTY</div>
+    <h1 id="title">処理しています…</h1>
+    <p id="message">少々お待ちください。</p>
+    <a class="btn" href="./">トップページへ</a>
+  </div>
+
+  <!-- 解析タグ（gtag）は読み込まない: URL 内のトークンを外部に送らないため -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2" integrity="sha384-4Cjkyy4cE1EgIS0C+Y3xzGmJ2noQFRRU91yKAW8IxtPfVtbQXPMqadSc3sYnjwou" crossorigin="anonymous" onerror="window._noSupabase=true"></script>
+  <script src="supabase-client.js"></script>
+  <script>
+  (function () {
+    var titleEl = document.getElementById('title');
+    var msgEl = document.getElementById('message');
+    function show(title, msg) { titleEl.textContent = title; msgEl.textContent = msg; }
+
+    var params = new URLSearchParams(location.search);
+    var action = params.get('a');
+    var token = params.get('t') || '';
+    // トークンを画面遷移後に残さない（履歴・共有時の漏れ防止）
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+
+    var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if ((action !== 'confirm' && action !== 'unsubscribe') || !UUID.test(token)) {
+      show('リンクが正しくありません', 'メールに記載されたリンクをもう一度開いてください。解決しない場合は info@terra-realty.jp までご連絡ください。');
+      return;
+    }
+
+    var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+    if (!client) {
+      show('ただいま処理できません', '通信に問題が発生しました。時間をおいて、もう一度メールのリンクを開いてください。');
+      return;
+    }
+
+    var fn = action === 'confirm' ? 'confirm_subscription' : 'unsubscribe';
+    client.rpc(fn, { p_token: token }).then(function (res) {
+      if (res.error) {
+        show('ただいま処理できません', '時間をおいて、もう一度メールのリンクを開いてください。解決しない場合は info@terra-realty.jp までご連絡ください。');
+        return;
+      }
+      if (action === 'confirm') {
+        if (res.data === true) show('ご登録が完了しました', 'これから、ご登録のエリアの最新情報をメールでお届けします。配信停止は各メール下部のリンクからいつでもできます。');
+        else show('登録が見つかりませんでした', 'すでに配信を停止しているか、リンクの有効期限が切れている可能性があります。お手数ですが、もう一度ご登録ください。');
+      } else {
+        if (res.data === true) show('配信を停止しました', '今後、通知メールは届きません。ご利用ありがとうございました。');
+        else show('登録が見つかりませんでした', 'すでに配信が停止されている可能性があります。');
+      }
+    }, function () {
+      show('ただいま処理できません', '通信に問題が発生しました。時間をおいて、もう一度メールのリンクを開いてください。');
+    });
+  })();
+  </script>
+</body>
+</html>

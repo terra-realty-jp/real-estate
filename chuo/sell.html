@@ -277,13 +277,9 @@
     if (!town) { document.getElementById('demand-box').style.display = 'none'; return; }
     var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
     if (!client) { showDemand(town, FALLBACK_DEMAND[town] || 3); return; }
-    Promise.all([
-      client.from('investor_profiles').select('id', { count: 'exact', head: true }).contains('town_interests', [town]).eq('is_active', true),
-      client.from('area_buyer_count').select('id', { count: 'exact', head: true }).eq('town_name', town)
-    ]).then(function(results) {
-      var c1 = (results[0] && !results[0].error) ? (results[0].count || 0) : 0;
-      var c2 = (results[1] && !results[1].error) ? (results[1].count || 0) : 0;
-      showDemand(town, Math.max(c1 + c2, FALLBACK_DEMAND[town] || 3));
+    client.rpc('count_town_demand', { p_town: town }).then(function(res) {
+      var c = (!res.error && typeof res.data === 'number') ? res.data : 0;
+      showDemand(town, Math.max(c, FALLBACK_DEMAND[town] || 3));
     }).catch(function() { showDemand(town, FALLBACK_DEMAND[town] || 3); });
   }
   window.updateDemand = updateDemand;

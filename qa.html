@@ -171,7 +171,7 @@
 
   <a href="#post" class="fab" onclick="document.getElementById('post').scrollIntoView({behavior:'smooth'});try{document.getElementById('q-cat').focus();}catch(e){}return false;">✍ 質問する</a>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2" onerror="window._noSupabase=true"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2" integrity="sha384-4Cjkyy4cE1EgIS0C+Y3xzGmJ2noQFRRU91yKAW8IxtPfVtbQXPMqadSc3sYnjwou" crossorigin="anonymous" onerror="window._noSupabase=true"></script>
   <script src="supabase-client.js"></script>
   <script>
     function _track(n,p){ try{ if(typeof gtag==='function') gtag('event',n,p||{}); }catch(e){} }
@@ -227,15 +227,15 @@
       if(!rows.length){ el.innerHTML='<div class="loading">該当する質問はまだありません。最初の投稿をしてみませんか？</div>'; return; }
       el.innerHTML = rows.map(function(q){
         var ans=(q.qa_answers||[]).filter(function(a){return a && a.body;});
-        var ansHtml = ans.length ? '<div class="q-answer"><b>回答：</b>'+ esc(ans[0].body).slice(0,400) + (ans[0].body.length>400?'…':'') +'</div>' : '';
+        var ansHtml = ans.length ? '<div class="q-answer"><b>回答：</b>'+ esc(String(ans[0].body).slice(0,400)) + (ans[0].body.length>400?'…':'') +'</div>' : '';
         var badge = q.source==='user' ? '<span class="q-badge">住民投稿</span>' : '';
-        var bodyShort = esc(q.body||'').slice(0,120) + ((q.body||'').length>120?'…':'');
+        var bodyShort = esc(String(q.body||'').slice(0,120)) + ((q.body||'').length>120?'…':'');
         return '<div class="q-item"><div class="q-meta"><span class="q-cat">'+esc(q.category||'相談')+'</span>'+
           (q.town_name?'<span class="q-town">📍 '+esc(q.town_name)+'</span>':'')+badge+
           '</div><div class="q-title">'+esc(q.title||'')+'</div><div class="q-body">'+bodyShort+'</div>'+ansHtml+'</div>';
       }).join('');
     }
-    function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 
     function loadQuestions(){
       // 編集コンテンツ（TERRA作成のQ&A）はリポジトリのJSONから読み込む（Git更新で即反映・Supabase不要）。
