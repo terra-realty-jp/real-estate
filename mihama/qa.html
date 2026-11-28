@@ -277,7 +277,7 @@ function renderQA(items) {
     var ans = (q.qa_answers && q.qa_answers.length > 0) ? q.qa_answers[0] : null;
     var dateStr = q.created_at ? new Date(q.created_at).toLocaleDateString('ja-JP', {year:'numeric',month:'numeric',day:'numeric'}) : '';
     return '<div class="qa-card"><div class="qa-card-header" onclick="toggleQA(this)">' +
-      '<span class="qa-cat-badge ' + catClass + '">' + (q.category || '') + '</span>' +
+      '<span class="qa-cat-badge ' + catClass + '">' + escHtml(q.category || '') + '</span>' +
       '<div class="qa-title">' + escHtml(q.title) + '</div></div>' +
       '<div class="qa-meta">' +
       (q.town_name ? '<span class="qa-town">📍 ' + escHtml(q.town_name) + '</span>' : '') +
@@ -346,13 +346,19 @@ function submitPost() {
   var sessionId = 'anon_' + Date.now();
   var record = { session_id: sessionId, category: cat, town_name: town || '美浜区全般', title: title, body: body, status: 'pending', source: 'user' };
 
+  // 保存に失敗したときは投稿内容を失わないよう、メール送信に切り替える
+  var postFallback = function() {
+    window.location.href = 'mailto:terra.realty.iam@gmail.com?subject=' + encodeURIComponent('【Q&A投稿】' + title) +
+      '&body=' + encodeURIComponent('【美浜区Q&A投稿】\n\nカテゴリ：' + cat + '\nエリア：' + (town || '美浜区全般') + '\nタイトル：' + title + '\n\n' + body);
+    showPostSuccess();
+  };
   try {
     var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
     if (client) {
       client.from('qa_questions').insert(record).then(function(res) {
-        showPostSuccess();
-      }).catch(function() { showPostSuccess(); });
-    } else { showPostSuccess(); }
+        if (res && res.error) { postFallback(); } else { showPostSuccess(); }
+      }).catch(postFallback);
+    } else { postFallback(); }
   } catch(e) { showPostSuccess(); }
 }
 
@@ -404,8 +410,8 @@ function showPostSuccess() {
     </div>
     <div id="exit-popup-success" style="display:none;text-align:center;padding:12px 0">
       <div style="font-size:24px;margin-bottom:8px">✅</div>
-      <div style="font-size:14px;font-weight:700;color:#1a1917;margin-bottom:4px">登録ありがとうございます</div>
-      <div style="font-size:12px;color:#6b6058">美浜区の相場情報をお届けします</div>
+      <div style="font-size:14px;font-weight:700;color:#1a1917;margin-bottom:4px">確認メールを送ります</div>
+      <div style="font-size:12px;color:#6b6058">メール内のリンクを押すと登録が完了します（15分ほどで届きます）</div>
     </div>
   </div>
 </div>
@@ -444,7 +450,7 @@ function submitExitPopup() {
   try {
     var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
     if (client) {
-      client.from('notify_subscribers').insert(record).then(function() { showEPSuccess(); }).catch(function() { epFallback(email, towns); });
+      client.from('notify_subscribers').insert(record).then(function(res) { if (res && res.error) { epFallback(email, towns); } else { showEPSuccess(); } }).catch(function() { epFallback(email, towns); });
     } else { epFallback(email, towns); }
   } catch(e) { epFallback(email, towns); }
 }

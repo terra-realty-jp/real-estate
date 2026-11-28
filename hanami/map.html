@@ -95,10 +95,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2" integrity="sha384-4Cjkyy4cE1EgIS0C+Y3xzGmJ2noQFRRU91yKAW8IxtPfVtbQXPMqadSc3sYnjwou" crossorigin="anonymous" onerror="window._noSupabase=true"></script>
   <script src="../supabase-client.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js" integrity="sha384-FcQlsUOd0TJjROrBxhJdUhXTUgNJQxTMcxZe6nHbaEfFL1zjQ+bq/uRoBQxb0KMo" crossorigin="anonymous"></script>
   <style>
     :root {
       --gold: #c0522b; --gold-light: #d4754e;
@@ -610,8 +610,8 @@
     </div>
     <div id="exit-popup-success" style="display:none;text-align:center;padding:12px 0">
       <div style="font-size:24px;margin-bottom:8px">✅</div>
-      <div style="font-size:14px;font-weight:700;color:#1a1917;margin-bottom:4px">登録ありがとうございます</div>
-      <div style="font-size:12px;color:#6b6058">花見川区の相場情報をお届けします</div>
+      <div style="font-size:14px;font-weight:700;color:#1a1917;margin-bottom:4px">確認メールを送ります</div>
+      <div style="font-size:12px;color:#6b6058">メール内のリンクを押すと登録が完了します（15分ほどで届きます）</div>
     </div>
   </div>
 </div>
@@ -1700,7 +1700,7 @@ function submitExitPopup() {
     var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
     if (client) {
       client.from('notify_subscribers').insert(record)
-        .then(function(res) { showEPSuccess(); })
+        .then(function(res) { if (res && res.error) { epFallback(email, towns); } else { showEPSuccess(); } })
         .catch(function() { epFallback(email, towns); });
     } else { epFallback(email, towns); }
   } catch(e) { epFallback(email, towns); }

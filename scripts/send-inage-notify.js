@@ -18,10 +18,24 @@ const https = require('https');
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
 const RESEND_KEY   = process.env.RESEND_API_KEY || '';
-const DRY_RUN      = process.env.DRY_RUN === '1';
+// ワークフローからは 'true'/'false'、手動実行では '1' が渡される。どちらも DRY RUN として扱う
+const DRY_RUN      = ['1', 'true'].includes(String(process.env.DRY_RUN || '').toLowerCase());
 const FROM_EMAIL   = 'info@terra-realty.jp';
 const FROM_NAME    = 'TERRA REALTY 稲毛区';
 const SITE_URL     = 'https://terra-realty-jp.github.io/real-estate';
+
+// ---- 無害化 --------------------------------------------------------------
+// town_interests は利用者が自由に登録できる値なので、HTML・URL・フィルタに入れる前に必ず通す
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function cleanTowns(list) {
+  return (Array.isArray(list) ? list : [])
+    .map(t => String(t == null ? '' : t).replace(/[\u0000-\u001f\u007f"(),\\]/g, '').trim().slice(0, 30))
+    .filter(Boolean)
+    .slice(0, 30);
+}
 
 // ---- HTTP ヘルパー -------------------------------------------------------
 function httpPost(hostname, path, headers, body) {
@@ -76,13 +90,15 @@ function supabaseGet(table, query) {
 
 // ---- Supabase データ取得 -------------------------------------------------
 async function getSubscribers(freq) {
-  const q = `is_active=eq.true&notify_freq=eq.${freq}&select=email,town_interests,property_type`;
+  const f = ['weekly', 'monthly'].includes(freq) ? freq : 'monthly';
+  // ダブルオプトインで確認済み（confirmed_at あり）の人だけに送る
+  const q = `is_active=eq.true&confirmed_at=not.is.null&notify_freq=eq.${f}&select=email,town_interests,property_type,token`;
   return supabaseGet('notify_subscribers', q);
 }
 
 async function getAreaPrices(towns) {
   // 直近2四半期の平均 price_per_sqm を町丁目・物件種別で集計
-  const q = `town_name=in.(${towns.map(t => `"${t}"`).join(',')})&select=town_name,property_type,price_per_sqm,trade_year,trade_quarter&order=trade_year.desc,trade_quarter.desc`;
+  const q = `town_name=in.(${cleanTowns(towns).map(t => encodeURIComponent(`"${t}"`)).join(',')})&select=town_name,property_type,price_per_sqm,trade_year,trade_quarter&order=trade_year.desc,trade_quarter.desc`;
   const rows = await supabaseGet('inage_properties', q);
   // 町丁目×種別ごとに最新中央値を算出
   const map = {};
@@ -109,8 +125,9 @@ async function getRecentQA(towns) {
 
 // ---- メール HTML 生成 ---------------------------------------------------
 function buildHtml(subscriber, priceData, qaList) {
-  const towns = subscriber.town_interests || [];
+  const towns = cleanTowns(subscriber.town_interests);
   const propType = subscriber.property_type || 'any';
+  const unsubscribeUrl = `${SITE_URL}/subscription.html?a=unsubscribe&t=${encodeURIComponent(subscriber.token || '')}`;
 
   const typeJa = { mansion: 'マンション', house: '一戸建て', land: '土地', any: '全種別' };
   const priceLabel = (万) => 万 ? `${Math.round(万).toLocaleString()}万円/㎡` : 'データなし';
@@ -122,7 +139,7 @@ function buildHtml(subscriber, priceData, qaList) {
     const types = propType === 'any' ? ['mansion', 'house', 'land'] : [propType];
     types.forEach(t => {
       if (d[t]) {
-        priceRows += `<tr><td style="padding:8px 12px;border-bottom:1px solid #f0f0f0">${town}</td><td style="padding:8px 12px;border-bottom:1px solid #f0f0f0">${typeJa[t]}</td><td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-weight:700;color:#c9a84c">${priceLabel(d[t])}</td></tr>`;
+        priceRows += `<tr><td style="padding:8px 12px;border-bottom:1px solid #f0f0f0">${esc(town)}</td><td style="padding:8px 12px;border-bottom:1px solid #f0f0f0">${typeJa[t]}</td><td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-weight:700;color:#c9a84c">${priceLabel(d[t])}</td></tr>`;
       }
     });
   });
@@ -131,7 +148,7 @@ function buildHtml(subscriber, priceData, qaList) {
   // 新着Q&A
   let qaRows = '';
   qaList.slice(0, 3).forEach(q => {
-    qaRows += `<li style="margin-bottom:10px;padding:10px 12px;background:#f9f7f1;border-radius:8px;font-size:14px;line-height:1.6"><strong>[${q.category || '相談'}]</strong> ${q.title}${q.town_name ? ` <span style="color:#888;font-size:12px">（${q.town_name}）</span>` : ''}</li>`;
+    qaRows += `<li style="margin-bottom:10px;padding:10px 12px;background:#f9f7f1;border-radius:8px;font-size:14px;line-height:1.6"><strong>[${esc(q.category || '相談')}]</strong> ${esc(q.title)}${q.town_name ? ` <span style="color:#888;font-size:12px">（${esc(q.town_name)}）</span>` : ''}</li>`;
   });
   if (!qaRows) qaRows = '<li style="color:#888;font-size:14px">新着Q&Aはありません</li>';
 
@@ -151,7 +168,7 @@ function buildHtml(subscriber, priceData, qaList) {
   <!-- 本文 -->
   <div style="padding:28px 32px">
     <p style="font-size:14px;color:#444;line-height:1.8;margin-bottom:24px">
-      ご登録いただいているエリア（<strong>${towns.join('・') || '稲毛区全域'}</strong>）の最新不動産情報をお届けします。
+      ご登録いただいているエリア（<strong>${esc(towns.join('・')) || '稲毛区全域'}</strong>）の最新不動産情報をお届けします。
     </p>
 
     <!-- 相場テーブル -->
@@ -184,6 +201,7 @@ function buildHtml(subscriber, priceData, qaList) {
   <!-- フッター -->
   <div style="background:#f4f1eb;padding:20px 32px;text-align:center;font-size:12px;color:#888">
     <p style="margin:0 0 8px">このメールは稲毛区不動産情報の更新通知を希望された方へお送りしています。</p>
+    <p style="margin:0 0 8px">配信停止は <a href="${unsubscribeUrl}" style="color:#c9a84c">こちら</a>（ワンクリックで停止します）。</p>
     <p style="margin:0">TERRA REALTY — <a href="mailto:info@terra-realty.jp" style="color:#c9a84c">info@terra-realty.jp</a></p>
   </div>
 </div>
@@ -192,7 +210,7 @@ function buildHtml(subscriber, priceData, qaList) {
 }
 
 // ---- Resend 送信 ---------------------------------------------------------
-async function sendEmail(to, subject, html) {
+async function sendEmail(to, subject, html, unsubscribeUrl) {
   if (DRY_RUN) {
     console.log(`  [DRY RUN] 送信先: ${to} / 件名: ${subject}`);
     return { id: 'dry-run' };
@@ -202,6 +220,7 @@ async function sendEmail(to, subject, html) {
     to: [to],
     subject,
     html,
+    ...(unsubscribeUrl ? { headers: { 'List-Unsubscribe': `<${unsubscribeUrl}>` } } : {}),
   });
 }
 
@@ -232,7 +251,7 @@ async function main() {
       console.log('   GRANT SELECT ON public.notify_subscribers TO service_role;');
       console.log('   GRANT SELECT ON public.inage_properties TO service_role;');
       console.log('   GRANT SELECT ON public.qa_questions TO service_role;');
-      process.exit(0); // graceful exit（権限設定待ち）
+      process.exit(1); // 失敗として扱い、Actions で気付けるようにする
     }
     throw e;
   }
@@ -242,7 +261,7 @@ async function main() {
   let failed = 0;
 
   for (const sub of subscribers) {
-    const towns = sub.town_interests || [];
+    const towns = cleanTowns(sub.town_interests);
     try {
       const [priceData, qaList] = await Promise.all([
         towns.length ? getAreaPrices(towns) : Promise.resolve({}),
@@ -250,7 +269,8 @@ async function main() {
       ]);
       const html = buildHtml(sub, priceData, qaList);
       const subject = `【稲毛区相場更新】${towns.slice(0,2).join('・')}${towns.length > 2 ? 'など' : ''}の最新情報`;
-      await sendEmail(sub.email, subject, html);
+      const unsub = `${SITE_URL}/subscription.html?a=unsubscribe&t=${encodeURIComponent(sub.token || '')}`;
+      await sendEmail(sub.email, subject, html, unsub);
       sent++;
       console.log(`✓ 送信: ${sub.email}`);
     } catch (e) {

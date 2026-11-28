@@ -45,6 +45,25 @@ const STATUS_LABEL = {
   owner_occupied: '自己利用中',
 };
 
+// ---- メールに差し込む値の無害化 -----------------------------------------
+// property_listings は誰でも登録できるため、本文・件名に入れる値は必ずここを通す。
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+// 備考などの自由記述からURL・メールアドレスを除去（フィッシング誘導の防止）
+function stripLinks(v) {
+  return String(v == null ? '' : v)
+    .replace(/(https?:\/\/|www\.)[^\s]+/gi, '[URL削除]')
+    .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, '[アドレス削除]')
+    .slice(0, 300);
+}
+// 件名用: 改行・制御文字を除去して短くする
+function plain(v, max) {
+  return String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, max || 50);
+}
+function num(v) { const n = Number(v); return Number.isFinite(n) ? n : null; }
+
 async function main() {
   console.log(`[match-notify] 開始 DRY_RUN=${DRY_RUN}`);
 
@@ -77,6 +96,7 @@ async function main() {
     .from('investor_profiles')
     .select('*')
     .eq('is_active', true)
+    .not('confirmed_at', 'is', null)   // ダブルオプトインで確認済みの人だけ
     .not('email', 'is', null);
 
   if (iErr) {
@@ -118,7 +138,7 @@ async function main() {
 
     // 4. 各投資家にメール送信
     for (const inv of matched) {
-      const subject = `【TERRA】${listing.town_name}に新着物件 ${listing.hope_price}万円 表面${listing.gross_yield || '—'}%`;
+      const subject = `【TERRA】${plain(listing.town_name, 20)}に新着物件 ${num(listing.hope_price) ?? '—'}万円 表面${num(listing.gross_yield) ?? '—'}%`;
       const body = buildEmailBody(listing, inv);
 
       if (DRY_RUN) {
@@ -134,7 +154,10 @@ async function main() {
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: `${FROM_NAME} <${FROM_EMAIL}>`, to: [inv.email], subject, html: body }),
+        body: JSON.stringify({
+          from: `${FROM_NAME} <${FROM_EMAIL}>`, to: [inv.email], subject, html: body,
+          headers: { 'List-Unsubscribe': `<${BASE_URL}/subscription.html?a=unsubscribe&t=${encodeURIComponent(inv.token || '')}>` },
+        }),
       });
 
       if (res.ok) {
@@ -156,10 +179,15 @@ async function main() {
 }
 
 function buildEmailBody(listing, inv) {
-  const yieldStr = listing.gross_yield ? `${listing.gross_yield}%` : '—';
-  const statusStr = STATUS_LABEL[listing.current_status] || listing.current_status;
-  const typeStr = TYPE_LABEL[listing.property_type] || listing.property_type;
-  const rentStr = listing.monthly_rent ? `${listing.monthly_rent}万円/月` : '—';
+  const yieldStr = num(listing.gross_yield) != null ? `${num(listing.gross_yield)}%` : '—';
+  const statusStr = esc(STATUS_LABEL[listing.current_status] || listing.current_status || '—');
+  const typeStr = esc(TYPE_LABEL[listing.property_type] || listing.property_type || '—');
+  const rentStr = num(listing.monthly_rent) != null ? `${num(listing.monthly_rent)}万円/月` : '—';
+  const town = esc(plain(listing.town_name, 50));
+  const price = num(listing.hope_price) != null ? num(listing.hope_price).toLocaleString() : '—';
+  const age = num(listing.age_years);
+  const notes = listing.notes ? esc(stripLinks(listing.notes)) : '';
+  const unsubscribeUrl = `${BASE_URL}/subscription.html?a=unsubscribe&t=${encodeURIComponent(inv.token || '')}`;
 
   return `
 <div style="font-family:'Noto Sans JP',sans-serif;max-width:560px;margin:0 auto;background:#fafaf8;padding:0">
@@ -175,32 +203,32 @@ function buildEmailBody(listing, inv) {
 
     <div style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:20px;margin-bottom:20px">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <tr><td style="padding:8px 0;color:#6b6058;width:40%">エリア</td><td style="padding:8px 0;font-weight:700">${listing.town_name}</td></tr>
+        <tr><td style="padding:8px 0;color:#6b6058;width:40%">エリア</td><td style="padding:8px 0;font-weight:700">${town}</td></tr>
         <tr style="border-top:1px solid #f0ede8"><td style="padding:8px 0;color:#6b6058">物件種別</td><td style="padding:8px 0;font-weight:700">${typeStr}</td></tr>
-        <tr style="border-top:1px solid #f0ede8"><td style="padding:8px 0;color:#6b6058">希望価格</td><td style="padding:8px 0;font-weight:700;font-size:18px;color:#c0522b">${listing.hope_price.toLocaleString()}万円</td></tr>
+        <tr style="border-top:1px solid #f0ede8"><td style="padding:8px 0;color:#6b6058">希望価格</td><td style="padding:8px 0;font-weight:700;font-size:18px;color:#c0522b">${price}万円</td></tr>
         <tr style="border-top:1px solid #f0ede8"><td style="padding:8px 0;color:#6b6058">表面利回り</td><td style="padding:8px 0;font-weight:700;color:#c0522b">${yieldStr}</td></tr>
         <tr style="border-top:1px solid #f0ede8"><td style="padding:8px 0;color:#6b6058">現況</td><td style="padding:8px 0">${statusStr}</td></tr>
         <tr style="border-top:1px solid #f0ede8"><td style="padding:8px 0;color:#6b6058">現況家賃収入</td><td style="padding:8px 0">${rentStr}</td></tr>
-        ${listing.age_years ? `<tr style="border-top:1px solid #f0ede8"><td style="padding:8px 0;color:#6b6058">築年数</td><td style="padding:8px 0">築${listing.age_years}年</td></tr>` : ''}
-        ${listing.notes ? `<tr style="border-top:1px solid #f0ede8"><td style="padding:8px 0;color:#6b6058">備考</td><td style="padding:8px 0;font-size:12px">${listing.notes}</td></tr>` : ''}
+        ${age != null ? `<tr style="border-top:1px solid #f0ede8"><td style="padding:8px 0;color:#6b6058">築年数</td><td style="padding:8px 0">築${age}年</td></tr>` : ''}
+        ${notes ? `<tr style="border-top:1px solid #f0ede8"><td style="padding:8px 0;color:#6b6058">備考</td><td style="padding:8px 0;font-size:12px">${notes}</td></tr>` : ''}
       </table>
     </div>
 
-    <a href="mailto:terra.realty.iam@gmail.com?subject=${encodeURIComponent(`【物件照会】${listing.town_name} ${listing.hope_price}万円`)}"
+    <a href="mailto:terra.realty.iam@gmail.com?subject=${encodeURIComponent(`【物件照会】${plain(listing.town_name, 20)} ${num(listing.hope_price) ?? ''}万円`)}"
        style="display:block;text-align:center;background:#c0522b;color:#fff;text-decoration:none;padding:14px;border-radius:10px;font-size:15px;font-weight:700;margin-bottom:16px">
       この物件の詳細を問い合わせる →
     </a>
 
     <div style="background:#f5ede8;border-radius:10px;padding:14px;font-size:11px;color:#6b6058;line-height:1.8">
       📍 <strong>周辺相場の確認はこちら：</strong>
-      <a href="${BASE_URL}/inage/map.html" style="color:#c0522b">${listing.town_name}エリア 相場マップ</a><br>
+      <a href="${BASE_URL}/inage/map.html" style="color:#c0522b">${town}エリア 相場マップ</a><br>
       📊 <strong>収益シミュレーター：</strong>
       <a href="${BASE_URL}/tools/5-toushi-bunseki.html" style="color:#c0522b">投資分析ツール</a>
     </div>
 
     <p style="font-size:10px;color:#9ca3af;margin-top:20px;line-height:1.8;text-align:center">
       このメールはTERRA REALTYの投資家通知サービスへの登録に基づき送信しています。<br>
-      配信停止をご希望の場合は <a href="mailto:terra.realty.iam@gmail.com?subject=配信停止希望" style="color:#9ca3af">こちら</a> までご連絡ください。
+      配信停止は <a href="${unsubscribeUrl}" style="color:#9ca3af">こちら</a>（ワンクリックで停止します）。
     </p>
   </div>
 </div>`;
