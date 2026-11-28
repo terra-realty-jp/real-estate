@@ -264,6 +264,7 @@ async function upsertToSupabase(rows, quarters) {
   // バッチ100件ずつ INSERT
   const batchSize = 100;
   let saved = 0;
+  let failedBatches = 0;
   for (let i = 0; i < rows.length; i += batchSize) {
     const batch = rows.slice(i, i + batchSize);
     try {
@@ -271,9 +272,15 @@ async function upsertToSupabase(rows, quarters) {
       saved += batch.length;
       console.log(`  Supabase: ${saved}/${rows.length}件保存完了`);
     } catch (e) {
+      failedBatches++;
       console.error(`  [ERROR] Supabase INSERT失敗: ${e.message}`);
     }
     await new Promise(r => setTimeout(r, 300));
+  }
+  // 保存に失敗したら必ず例外にする（main 側の catch が exit 1 にする）。
+  // 以前はエラーを表示するだけで正常終了していた。
+  if (failedBatches > 0) {
+    throw new Error(`${failedBatches}バッチの INSERT に失敗（保存できたのは ${saved}/${rows.length}件）`);
   }
 }
 

@@ -33,3 +33,10 @@ jobs:
           REPORT_EMAIL:         ${{ vars.REPORT_EMAIL }}
           DRY_RUN:              ${{ github.event.inputs.dry_run || 'false' }}
         run: node scripts/weekly-analytics.js
+
+  # 失敗したら必ずメールで知らせる（静かに壊れるのを防ぐ）
+  notify-failure:
+    needs: [analytics]
+    if: failure()
+    uses: ./.github/workflows/notify-failure.yml
+    secrets: inherit

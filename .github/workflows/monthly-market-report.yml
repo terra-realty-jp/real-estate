@@ -28,3 +28,10 @@ jobs:
           git add reports/market/ sitemap.xml
           git diff --staged --quiet || git commit -m "report: $(TZ=Asia/Tokyo date '+%Y年%-m月') 相場レポートを自動生成"
           git push
+
+  # 失敗したら必ずメールで知らせる（静かに壊れるのを防ぐ）
+  notify-failure:
+    needs: [generate]
+    if: failure()
+    uses: ./.github/workflows/notify-failure.yml
+    secrets: inherit

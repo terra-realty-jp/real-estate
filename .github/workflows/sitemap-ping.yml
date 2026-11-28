@@ -23,3 +23,10 @@ jobs:
 
       - name: Submit all sitemap URLs to IndexNow
         run: node scripts/submit-indexnow.js
+
+  # 失敗したら必ずメールで知らせる（静かに壊れるのを防ぐ）
+  notify-failure:
+    needs: [indexnow]
+    if: failure()
+    uses: ./.github/workflows/notify-failure.yml
+    secrets: inherit
