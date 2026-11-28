@@ -16,7 +16,7 @@ const https = require('https');
 const SUPABASE_URL  = process.env.SUPABASE_URL  || '';
 const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_KEY || '';
 const RESEND_KEY    = process.env.RESEND_API_KEY || '';
-const TO_EMAIL      = process.env.REPORT_EMAIL  || 'shinji.japaaan@gmail.com';
+const TO_EMAIL      = process.env.REPORT_EMAIL  || '';
 const FROM_EMAIL    = 'info@terra-realty.jp';
 const FROM_NAME     = 'TERRA REALTY 稲毛区';
 const DRY_RUN       = process.env.DRY_RUN === '1';
@@ -306,6 +306,11 @@ async function main() {
   if (!RESEND_KEY) {
     console.log('\n⚠️  RESEND_API_KEY が未設定のためメール送信をスキップします。');
     return;
+  }
+
+  if (!TO_EMAIL) {
+    console.error('\n❌ REPORT_EMAIL が未設定です（Repository variable に登録してください）。');
+    process.exit(1);
   }
 
   // ── Resend API でメール送信 ──────────────────────────────────────────────
