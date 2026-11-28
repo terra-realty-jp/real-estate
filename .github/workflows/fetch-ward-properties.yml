@@ -32,3 +32,10 @@ jobs:
           MLIT_API_KEY: ${{ secrets.MLIT_API_KEY }}
           WARD_CODE: ${{ github.event.inputs.ward_code || '' }}
         run: node scripts/fetch-ward-properties.js
+
+  # 失敗したら必ずメールで知らせる（静かに壊れるのを防ぐ）
+  notify-failure:
+    needs: [fetch]
+    if: failure()
+    uses: ./.github/workflows/notify-failure.yml
+    secrets: inherit

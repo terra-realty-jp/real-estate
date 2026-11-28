@@ -313,13 +313,41 @@
       status: 'pending'
     };
     var client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+    var showError = function(msg) {
+      var b = document.getElementById('submit-btn');
+      if (b) { b.disabled = false; b.textContent = 'もう一度送信する'; }
+      var box = document.getElementById('submit-error');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'submit-error';
+        box.setAttribute('role', 'alert');
+        box.style.cssText = 'margin:14px 0;padding:14px 16px;border:2px solid #c0522b;border-radius:10px;background:#fff5f2;color:#8a2f12;font-size:14px;line-height:1.7;text-align:left';
+        if (b && b.parentNode) b.parentNode.insertBefore(box, b);
+      }
+      box.textContent = msg;
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
     var done = function() {
       document.getElementById('form-area').style.display = 'none';
       document.getElementById('success-box').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-    if (!client) { done(); return; }
-    client.from('property_listings').insert([payload]).then(function() { done(); }).catch(function() { done(); });
+    if (!client) {
+      showError('データベースに接続できませんでした。通信環境をご確認のうえ、時間をおいて再度お試しください。');
+      return;
+    }
+    client.from('property_listings').insert([payload])
+      .then(function(res) {
+        if (res && res.error) {
+          showError('登録できませんでした（' + (res.error.message || '原因不明') + '）。時間をおいて再度お試しください。');
+          return;
+        }
+        done();
+      })
+      .catch(function(e) {
+        showError('登録できませんでした（' + ((e && e.message) || '通信エラー') + '）。時間をおいて再度お試しください。');
+      });
   }
   window.submitListing = submitListing;
 })();

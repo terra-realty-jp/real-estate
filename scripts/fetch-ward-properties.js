@@ -263,13 +263,22 @@ async function processWard(cityCode) {
   // バッチ INSERT (100件ずつ)
   const BATCH = 100;
   let inserted = 0;
+  let failedBatches = 0;
   for (let i = 0; i < allRecords.length; i += BATCH) {
     const batch = allRecords.slice(i, i + BATCH);
     const res = await supabaseRequest('/rest/v1/ward_properties', 'POST', batch);
     if (res.status >= 200 && res.status < 300) { inserted += batch.length; }
-    else { console.error(`  INSERT エラー (${res.status}):`, JSON.stringify(res.data).slice(0, 200)); }
+    else {
+      failedBatches++;
+      console.error(`  INSERT エラー (${res.status}):`, JSON.stringify(res.data).slice(0, 200));
+    }
   }
   console.log(`  INSERT 完了: ${inserted}件`);
+  // 保存に失敗したら必ず例外にする。以前はエラーを表示するだけで正常終了していたため、
+  // 国交省から取得したデータが毎月黙って捨てられていた（2026-06〜11）。
+  if (failedBatches > 0) {
+    throw new Error(`${failedBatches}バッチの INSERT に失敗（保存できたのは ${inserted}/${allRecords.length}件）`);
+  }
 }
 
 async function main() {
@@ -288,9 +297,14 @@ async function main() {
     process.exit(1);
   }
 
+  let failures = 0;
   for (const code of TARGET_CODES) {
     try { await processWard(code); }
-    catch (e) { console.error(`区${code}エラー:`, e.message); }
+    catch (e) { console.error(`区${code}エラー:`, e.message); failures++; }
+  }
+  if (failures > 0) {
+    console.error(`\n${failures}区の処理に失敗しました`);
+    process.exit(1);
   }
   console.log('\n完了');
 }

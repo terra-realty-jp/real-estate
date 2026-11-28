@@ -1,0 +1,22 @@
+name: ワークフロー失敗通知
+
+# 他のワークフローから failure() のときだけ呼ばれる共通ジョブ。
+# 失敗が誰にも通知されないまま放置されるのを防ぐためのもの。
+on:
+  workflow_call:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 失敗をメールで通知
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          REPORT_EMAIL:   ${{ vars.REPORT_EMAIL }}
+          WORKFLOW_NAME:  ${{ github.workflow }}
+          REPO:           ${{ github.repository }}
+          RUN_URL:        ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 scripts/notify-workflow-failure.py

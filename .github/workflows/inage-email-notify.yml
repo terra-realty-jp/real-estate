@@ -40,3 +40,10 @@ jobs:
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
           NOTIFY_FREQ: ${{ github.event.inputs.notify_freq || 'monthly' }}
         run: node scripts/send-inage-notify.js
+
+  # 失敗したら必ずメールで知らせる（静かに壊れるのを防ぐ）
+  notify-failure:
+    needs: [send-notify]
+    if: failure()
+    uses: ./.github/workflows/notify-failure.yml
+    secrets: inherit
