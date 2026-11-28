@@ -468,11 +468,11 @@ git checkout -b feature/<機能名>            # 整理作業なら chore/<内�
 | `MLIT_API_KEY` | 国土交通省 不動産情報ライブラリ API | `scripts/fetch-*-properties.js` ほか |
 | `RESEND_API_KEY` | Resend（メール送信） | `scripts/send-*.py` / `send-inage-notify.js` / `weekly-analytics.js` |
 
-### 設定値（シークレットではない。ワークフローの env に直接書いてよい）
+### 設定値（シークレットではない。Repository variable またはワークフローの env に書く）
 
 | 変数名 | 用途 |
 |---|---|
-| `REPORT_EMAIL` | レポート・通知メールの送信先 |
+| `REPORT_EMAIL` | レポート・通知メールの送信先。**Repository variable に登録済み**（`${{ vars.REPORT_EMAIL }}` で参照する。シークレットにしないのは、ログでマスクされると障害調査がしにくいため） |
 | `WARD_CODE` | 取得対象の区コード（中央 12101 / 花見川 12102 / 若葉 12104 / 緑 12105 / 美浜 12106） |
 | `NOTIFY_FREQ` | 通知の対象頻度（`weekly` / `monthly`） |
 | `FROM_EMAIL` `FROM_NAME` | 送信元アドレスと表示名（未指定なら既定値を使う） |
